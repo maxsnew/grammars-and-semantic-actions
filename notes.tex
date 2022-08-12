@@ -1,0 +1,635 @@
+\documentclass[12pt]{article}
+%AMS-TeX packages
+\usepackage{tikz}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb,amsmath,amsthm,stmaryrd, wasysym} 
+%geometry (sets margin) and other useful packages
+\usepackage[margin=1.25in]{geometry}
+\usepackage{graphicx,ctable,booktabs}
+\usepackage{tikz-cd}
+\usepackage{mathpartir}
+
+\usepackage[sort&compress,square,comma,authoryear]{natbib}
+\bibliographystyle{plainnat}
+
+\newcommand{\leftmultimap}{\mathop{\rotatebox[origin=c]{180}{$\multimap$}}}
+\newcommand{\Set}{\textrm{Set}}
+\newcommand{\Lang}{\textrm{Lang}}
+\newcommand{\Grammar}{\textrm{Grammar}}
+\newcommand{\Action}{\textrm{Action}}
+\newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
+\newtheorem{definition}{Definition}
+
+\newcommand\rsepimp{\mathbin{-\mkern-6mu*}}
+\newcommand\lsepimp{\mathbin{\rotatebox[origin=c]{180}{$-\mkern-6mu*$}}}
+\newcommand\sepconj{\mathbin{*}}
+\newcommand\bunch{\mathcal W}
+
+\begin{document}
+\title{Monoidal Toposes of Grammars and Semantic Actions}
+\author{Max S. New}
+\maketitle
+
+\begin{abstract}
+  We show that formal grammars (of unrestricted complexity) can be
+  modeled as objects of a monoidal topos and algebraic operations on
+  languages can be lifted to universal constructions in this
+  category. Further, this can be extended to a monoidal topos of
+  formal grammars equipped with a semantic action that produces a
+  semantic value.
+
+  Since the grammars are of unrestricted complexity, this topos can in
+  addition to modeling regular and context-free languages, also
+  constructs such as the \emph{Brzozowski derivative} of a language,
+  and familiar facts about this derivative are derivable from
+  manipulation of universal properties.
+\end{abstract}
+
+\section{Languages, Grammars and Semantic Actions}
+
+A \emph{language} over an alphabet $\Sigma$ is a subset of strings
+$\Sigma^*$. A \emph{grammar} $g$ is a syntactic object that presents a
+language. There are many descriptions of formal grammars: regular
+expressions, context-free grammars, context-sensitive etc. The problem
+of \emph{language recognition} is to take a string $w \in \Sigma^*$
+and a grammar $g$ and determine if $w$ is a member of the language
+defined by $g$.
+
+In programming applications such as compilation or communication over
+a network, we are not just interested in the problem of language
+\emph{recognition}, determining whether or not a word is in a
+language, but in the problem of \emph{parsing}, the attempt to produce
+a \emph{parse tree} from the string. We can think of the parsing as a
+``constructive'' version of the language recognition problem: the
+parse tree tells us not just \emph{whether} a word is a member of the
+language, but also \emph{why}. A language is defined as a subset of
+$\Sigma^*$, which is equivalent to a \emph{predicate} on $\Sigma^*$:
+\[ L : \Sigma^* \to \Omega \]
+where $\Omega$ is the set of \emph{truth values}\footnote{classically,
+this is equivalent to any two element set, but constructively to
+assume this set is boolean would require the language is
+decidable.}. We can categorify this situation by replacing the
+lattice of truth values $\Omega$ with the topos of sets $\Set$:
+\[ g : \Sigma^* \to \Set \]
+That is, a language is a \emph{functor} from $\Sigma^*$ (viewed as a
+discrete category) to the category of sets and functions.
+Functors from $\Sigma^*$ to $\Set$ are called \emph{presheaves} over
+$\Sigma^*$ and the category of such functors is extremely
+well-behaved. We show in the remainder of this note that this provides
+us with a rich language for constructing languages algebraically.
+\begin{quote}
+  A grammar is a presheaf over the set of strings
+\end{quote}
+Normally a formal grammar is defined to be a syntactic object in some
+formal system such as regular expressions or context-free grammars.
+%
+We see each of these notions of formal grammar as being a
+\emph{presentation} of the semantic notion of grammar. In Lawvere's
+terminology, we might call the typical formal grammars as
+\emph{subjective} and our semantic notion an \emph{objective grammar}. 
+%
+These different classes of formal grammars can be described as
+inductively generated subcategories closed under certain constructions
+definable on all grammars.
+
+Note that a presheaf $P : \Sigma^* \to \Set$ over a discrete category
+like $\Sigma^*$ is equivalent to simply a set $\int P$ of ``parse
+trees'' with a function $\pi : \int P \to \Sigma^*$ that shows what
+string each parse tree is a parse of. This is a generalization of the
+fact that a language can be thought of as a subset $L \subseteq
+\Sigma^*$. We will use the presentation in terms of presheaves
+throughout.
+
+Returning to the parsing problem, the output of a parser usually isn't
+the literal parse tree, but instead the result of some \emph{semantic
+actions} run on the parse tree, which usually serve to remove some
+syntactic details that are unnecessary for later processing.
+%
+Given a grammar in the guise of a presheaf $g$ over strings, we define
+a semantic action to be a set $S$ of with a function that produces a
+semantic element from any parse $a : \prod_{w \in \Sigma^*} g_w \to
+S$. The semantic actions can also be arranged into a structured
+category, as the category of semantic actions can be defined by the
+following pullback, a construction in topos theory known as
+\emph{Artin gluing}:
+
+% https://q.uiver.app/?q=WzAsNCxbMCwxLCJcXFNldCJdLFsxLDEsIlxcR3JhbW1hciJdLFsxLDAsIlxcR3JhbW1hcl5cXHRvIl0sWzAsMCwiXFxBY3Rpb24iXSxbMywwXSxbMCwxXSxbMywyXSxbMiwxXSxbMywxLCIiLDEseyJzdHlsZSI6eyJuYW1lIjoiY29ybmVyIn19XV0=
+\[\begin{tikzcd}
+	\Action & {\Grammar^\to} \\
+	\Set & \Grammar
+	\arrow[from=1-1, to=2-1]
+	\arrow[from=2-1, to=2-2]
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-2, to=2-2]
+	\arrow["\lrcorner"{anchor=center, pos=0.125}, draw=none, from=1-1, to=2-2]
+\end{tikzcd}\]
+
+The observations we present here are fairly mundane but we intend that
+they should form the beginnings of a general theory of grammars that
+can be extended to more structured forms such as type-checking.
+
+\section{Language Combinators in Monoidal Toposes}
+
+Next, we describe the structures present in the categories $\Grammar$
+and $\Action$ described above and how they relate to familiar aspects
+of formal grammars and parsing.
+
+First, we should consider what the morphisms are.
+
+\begin{definition}
+  A language $L$ is included in another $L'$, written $L \subseteq L'$
+  when every string in $L$ is in $L'$.
+  
+  A morphism of formal grammars $f : g \to g'$ is a natural
+  transformation. More concretely, it is a family of functions
+  \[ \prod_{w \in \Sigma^*} g_w \to g_w' \]
+
+  A morphism of semantic actions $\phi : (a,g,X) \to (a', g', X')$ is
+  a pair of a morphism of grammars $f : g \to g'$ and a function $s :
+  X \to X'$ such that for every $w \in \Sigma^*$ and parse $p \in g_w$
+  \[ s(a(p)) = a'(f_w(p)) \]
+\end{definition}
+
+Each of these notions is a refinement of the previous: a morphism of
+grammars implies an inclusion of their underlying languages, and by
+definition a morphism of semantic actions contains a morphism of the
+underlying grammars. This is formalized in the fact that there are
+functors
+
+% https://q.uiver.app/?q=WzAsMyxbMSwwLCJcXEdyYW1tYXIiXSxbMiwwLCJcXExhbmciXSxbMCwwLCJcXEFjdGlvbiJdLFsyLDAsInxcXGNkb3R8Il0sWzAsMSwifHxcXGNkb3R8fCJdXQ==
+\[\begin{tikzcd}
+	\Action & \Grammar & \Lang
+	\arrow["{|\cdot|}", from=1-1, to=1-2]
+	\arrow["{||\cdot||}", from=1-2, to=1-3]
+\end{tikzcd}\]
+
+In fact these functors both have fully faithful right adjoints
+exhibiting these as reflective subcategories. In this sense, the
+theory of semantic actions subsumes the theory of grammars subsumes
+the theory of languages.
+
+Next, we can define the most basic possible grammars: the grammars
+that accept exactly one string.
+%
+Since $\Grammar$ is a presheaf category, the \emph{Yoneda embedding}
+defines for each string $w$, the representable presheaf $Y w$. Since
+$\Sigma^*$ is a set, this takes a particularly simple form, there is a
+single parse precisely when the input string is $w$:
+\[ (Y w)_w' = \{ * | w = w' \} \]
+%
+This extends to a trivial semantic action.
+
+Next, since $\Sigma^*$ is not just a set but a \emph{monoid} with
+concatenation of strings\footnote{in fact the free monoid}, by the
+\emph{Day convolution} structure we get that the presheaf category
+$\Grammar$ has a \emph{monoidal} structure. The monoidal product is
+the \emph{concatenation} of grammars:
+\[ (g \sepconj g')w = \sum_{w_1w_2 = w} g_{w_1} \times g_{w_2}\]
+In other words, a parse of the sequenced grammar $g \sepconj g'$
+consists of a choice of splitting the input string into a prefix and a
+suffix paired with a $g$-parse of the prefix and a $g'$ parse of the
+suffix. This can be extended to a monoidal structure on semantic
+actions where the semantic data is the product
+\[ (a, g, X) \sepconj (a', g', X') = ((a\sepconj a')(p,p') = (a(p), a'(p'), g \sepconj g', X \times X'))\]
+We use the separating conjunction symbol because the semantics
+(presheaves over a monoidal category) are similar, but note that the
+monoidal structure is \emph{not} symmetric in that $g \sepconj g'$ is
+usually very different from $g' \sepconj g$.
+
+This has a unit as well, which is the language of just the empty
+string (with trivial parse tree/semantic action):
+\[ I w = w = \epsilon \]
+
+Since $\Sigma^*$ is a free monoid, every word $w$ is a concatenation
+of finitely many characters $c \in \Sigma$. Given $w = c_1c_2\cdots$
+we can now choose between two different representations:
+\[ Y(c_1c_2\cdots) \qquad \textrm{or} \qquad Yc_1 \sepconj Yc_2 \sepconj \cdots\]
+Since the Yoneda embedding preserves the monoidal structure up to
+isomorphism, these are isomorphic as grammars and semantic actions as
+well.
+
+Next, $\Lang$ has all limits and colimits. Coproducts give us the
+``union'' of languages, with initial object the empty language, and
+products give us the intersection, with the terminal object being the
+language that accepts all strings, but with no information in the
+parse.
+\[ (g_1 + g_2) w = (g_1 w) + (g_2 w) \]
+\[ 0 w = \emptyset \]
+\[ (g_1 \times g_2) w =  g_1 w \times g_2 w\]
+\[ 1 w =  1 \]
+
+
+We can also define inductively defined grammars (and so access regular
+and context free languages) as colimits, for instance the Kleene star
+operation is the colimit of the $\omega$-diagram
+\[ 0 \to (I + g * 0) \to I + g \sepconj (I + g \sepconj 0) \to \cdots \]
+
+\subsection{Closed Structure}
+
+By general properties of presheaf categories, the category of
+languages has \emph{closed} structure with respect to the monoidal
+products of sequencing $\sepconj$ and product $\times$.
+
+First, the product has a right (multi-variable) adjoints:
+\[ (L_1 \times L_2 \to  L_3) \cong L_1 \to (L_2 \Rightarrow L_3) \cong L_2 \to (L_1 \Rightarrow L_3) \]
+
+Defined by
+\[ (L \Rightarrow L')w = \textrm{Hom}((Y w \times L), L') = Lw \to L'w \]
+Informally, $(L \Rightarrow L')w$ is constructive \emph{implication}
+of languages: a parse of $w$ is a function that takes $L$-parses of
+$w$ to $L'$-parses of $w$
+
+Next, the sequencing operator $\sepconj$, since it is not symmetric, has
+two right multi-variable adjoints:
+\[ (L_1 \sepconj L_2 \to L_3) \cong (L_1 \to L_3 \lsepimp L_2) \cong (L_2 \to L_2 \rsepimp L_3) \]
+
+Defined by
+\[ (L \multimap L')w = \Pi_{w_l} L w_l \to L'(w_lw) \]
+\[ (L' \leftmultimap L)w = \Pi_{w_r} L w_r \to L'(ww_r) \]
+
+A parse of $(L \multimap L')w$ is a kind of ``partial'' parse of $L'$:
+given any parse $L w_l$, we can get a complete parse $L' (w_lw)$. So
+if $(L \multimap L') w$ successfully parses (and $L$ is non-empty),
+then we have succesfully parsed a suffix of $L'$, that when
+concatenated with a prefix that can by parsed as $L$ will yield a full
+parse of $L'$.
+
+Dually, the left hom $(L' \leftmultimap L)$ is a partial parse from
+the right of the string.
+
+These left and right hom operations can be used to define the
+\emph{derivative} of a language with respect to a character or
+word. If we focus on left-to-right parsing this would be:
+\[ d^l_c(L) = Yc \multimap L \]
+Why?
+\[ (Yc \multimap L)w = \Pi_{w_l} \{ 1 | c = w_l \} \to L(w_lw) \cong L(cw) \]
+I.e., a parse of $d^l_c(L)$ is precisely a parse of the string with
+$c$ prepended.
+%
+This allows us, for any particular string $w$, to reduce the problem
+of parsing $w$ with a grammar $g$ to the problem of producing a parse
+of an empty string for the grammar $d^l_w(g)$. Then the typical
+derivation of the Brzozowski derivative of a regular language follows
+from abstract nonsense?
+
+If we reduce to language recognition, this is a de Morgan-dual of the
+``quotient'' of a formal language.
+\[ (L_1 / L_2) w \iff \exists w' \in L_2. L_1(ww') \iff \neg (\forall w' \in L_2. \neg L_1(ww')) \iff \neg ((\neg L_1 \leftmultimap L_2) w) \]
+
+
+%% A grammar $g$ is
+%% \begin{enumerate}
+%% \item \emph{total} if for every $w$ there is at least one parse
+%% \item \emph{deterministic} if for every $w$ there is at most one parse
+%% \item \emph{empty} if for every $w$ there are no parses
+%% \end{enumerate}
+
+%% %% \begin{definition}
+%% %%   A grammar $g$ is \emph{uniquely decidable} if there exists a
+%% %%   ``complement'' $g'$ such that $g \vee g'$ is total and
+%% %%   deterministic.
+%% %% \end{definition}
+
+%% In other words, $g \vee g' \cong \top$
+
+%% \subsection{Endofunctors}
+
+%% TODO
+
+%% \section{Associativity, Precedence, and Ordering using Category-valued Presheaves}
+
+%% The presheaf of sets model of grammars allows us to reason about not
+%% just whether a string parses, but also about \emph{ambiguity} of a
+%% grammar: whether there exists \emph{more than one} parse. This is
+%% modeled by the grammar $g$ having more than one parse of the same
+%% string $w$. We can use this as above to reason about when a grammar is
+%% ambiguous or not, and if the grammar is unambiguous, we have a clear,
+%% deterministic specification for the parser.
+
+%% But what about parsing \emph{ambiguous} grammars? We can simply say
+%% that a parser should produce any parse, or perhaps all of them, but in
+%% practice many parser generators and programming languages supporting
+%% infix/mixfix notation allow for \emph{associativity} and
+%% \emph{precedence} declarations. These are described by providing an
+%% ambiguous grammar and disambiguating not by rewriting the grammar, but
+%% instead by expressing a \emph{preference} between the multiple
+%% possible parses. For instance, one of the most common sources of
+%% ambiguity in parsing is in associativity and precedence of binary
+%% operators. For an example of associativity, a grammar for subtraction
+%% might initially be written as:
+%% \begin{mathpar}
+%%   \begin{array}{rcl}
+%%     E &::= & E - E \,|\,(E)\,|\,Number\\
+%%   \end{array}
+%% \end{mathpar}
+
+%% But then we note that there are multiple, semantically different
+%% parses of $3 - 4 - 5$: trees semantically equivalent to $(3 - 4) - 5$
+%% or $3 - (4 - 5)$. We can rule out the right-nested version by
+%% \emph{factoring} the grammar:
+%% \begin{mathpar}
+%%   \begin{array}{rcl}
+%%     E &::= & E - L \,|\,L\\
+%%     L &::= & ( E ) \,|\, Number
+%%   \end{array}
+%% \end{mathpar}
+%% This grammar has fewer parses than the previous: now $3 - 4 - 5$ will
+%% only parse as a left-nested term since $4 - 5$ does not match the
+%% ``leaf'' production $L$. Instead, most languages declare that $-$ is a
+%% left associative operator. We can think of this as expressing a
+%% \emph{preference} for certain parses over others, specifically the tree
+%% % https://q.uiver.app/?q=WzAsNSxbMiwyLCJFXzIiXSxbMywxLCJFXzMiXSxbMiwwLCItIl0sWzEsMSwiLSJdLFswLDIsIkVfMSJdLFsyLDFdLFszLDRdLFszLDBdLFsyLDNdXQ==
+%% \[\begin{tikzcd}
+%% 	&& {-} \\
+%% 	& {-} && {E_3} \\
+%% 	{E_1} && {E_2}
+%% 	\arrow[from=1-3, to=2-4]
+%% 	\arrow[from=2-2, to=3-1]
+%% 	\arrow[from=2-2, to=3-3]
+%% 	\arrow[from=1-3, to=2-2]
+%% \end{tikzcd}\]
+%% is prefered over
+%% % https://q.uiver.app/?q=WzAsNSxbMSwwLCItIl0sWzAsMSwiRV8xIl0sWzIsMSwiLSJdLFsxLDIsIkVfMiJdLFszLDIsIkVfMyJdLFswLDFdLFswLDJdLFsyLDNdLFsyLDRdXQ==
+%% \[\begin{tikzcd}
+%% 	& {-} \\
+%% 	{E_1} && {-} \\
+%% 	& {E_2} && {E_3}
+%% 	\arrow[from=1-2, to=2-1]
+%% 	\arrow[from=1-2, to=2-3]
+%% 	\arrow[from=2-3, to=3-2]
+%% 	\arrow[from=2-3, to=3-4]
+%% \end{tikzcd}\]
+%% We can express this as an \emph{ordering}, where the prefered tree is
+%% ``bigger''.
+
+%% Fortunately, we can express this with a small change. Rather than
+%% taking functors from $\Sigma^*$ to \emph{sets} we can take functors to
+%% \emph{partially ordered sets}, or even more generally into
+%% \emph{categories}. So a grammar $g$ defines for each string $w$ a
+%% category $g w$ whose objects are parses and for any two parses
+%% $p_1,p_2 \in g w$, we have a set $(g w)(p_1,p_2)$ of ``reasons to
+%% prefer $p_2$ over $p_1$''. Furthermore, preference is transitive and
+%% reflexive, with associativity and unit of transitive reasoning.
+
+%% Then the parsing problem can be rephrased as, given a syntactic
+%% description of a grammar $g$ and a string $w$, what is the \emph{best}
+%% parse in $g w$, if any? In categorical language, can we construct a
+%% terminal object of $g w$?
+
+%% \section{Ordered Separation Logic for Formal Grammars}
+
+%% Next, based on our algebraic constructions in the previous section, we
+%% describe a \emph{polymorphic ordered separation logic} for
+%% grammars. While this may seem a surprising application of separation
+%% logic, it is quite natural when considering the semantics: Day
+%% convolution of presheaves over a \emph{commutative} monoid is one of
+%% the oldest semantic interpretations of separation logic proofs. For
+%% parsing, we are taking presheaves over a non-commutative monoid (if
+%% $|\Sigma| \ge 2$). This non-commutativity is obvious for instance in
+%% regular expressions: $r_1r_2$ almost never presents the same language
+%% as $r_2r_1$.
+
+%% This consists of three judgments.
+%% \begin{enumerate}
+%% \item An \emph{open} grammar $g$ parameterized by a context of grammar
+%%   variables $\Gamma = \gamma_1,\ldots$:
+%%   \[ \Gamma \vdash g \]
+%% \item For each $\Gamma$ a judgment of \emph{parse terms} of a grammar
+%%   $g$ parameterized by a ``bunch'' of parsed words $\bunch$, where $g$
+%%   and $\bunch$ are both parameterized by $\Gamma$:
+%%   \[ \Gamma | \bunch \vdash p : g \]
+%% \end{enumerate}
+
+%% The intended denotational semantics is
+%% \begin{enumerate}
+%% \item A grammar $\Gamma \vdash g$ denotes a (mixed-variance?) functor
+%%   $\sem{g} : \Lang^{|\Gamma|} \to \Lang$
+%% \item A parse term $\Gamma | \mathcal W \vdash p : g$ denotes a
+%%   natural transformation $\mathcal W \Rightarrow g$ where a bunch $\mathcal W$
+%%   is interpreted appropriately using the two monoidal structures on
+%%   $\Lang$:
+%%   \begin{align*}
+%%     \sem{\cdot_\epsilon} &= \epsilon\\
+%%     \sem{\mathcal W_m,w : g} &= \sem{\mathcal W_m}\sepconj \sem{g}\\
+%%     \sem{\mathcal W_m,\mathcal W_a} &= \sem{\mathcal W_m}\sepconj \sem{\mathcal W_a}\\
+%%     \sem{\cdot_\top} &= \top\\
+%%     \sem{\mathcal W_a;\mathcal W_m} &= \sem{\mathcal W_a} \times \sem{\mathcal W_m}        
+%%   \end{align*}
+%% \end{enumerate}
+
+%% To get a feel for the differences between the multiplicative and
+%% additive structure here are some examples.
+%% A parse term
+%% \[ \cdot_\epsilon \vdash p : g\]
+%% denotes a $g$-parse of the empty string, whereas a term
+%% \[ \cdot_\top \vdash p : g\]
+%% denotes a function from strings $w \in \Sigma^*$ to $g$-parses of $w$.
+%% The grammar $g \sepconj g'$ presents the language that parses words
+%% $w$ that can be split as $w_1w_2$ with a pair of parses $gw_1$ and
+%% $g'w_2$. On the other hand, $g \times g'$ is the intersection of the
+%% two languages: a parse of a word $w$ is a pair of a $g$ parse and a
+%% $g'$ parse of the entire word.  $g \times 1$ is equivalent to $g$,
+%% whereas a parse of $w$ using $g \sepconj 1$ is a $g$-parse of a prefix
+%% $w'$ of $w$, and correspondingly $1 \sepconj g$ parses words with a
+%% $g$ suffix. On the other hand $\epsilon \times g$ is the restriction
+%% of $g$ to only the parses of the empty string.
+
+%% \begin{figure}
+%%   \begin{mathpar}
+%%     \inferrule
+%%     {\Delta, \gamma \vdash g \and \textrm{where $\gamma$ strictly positive}}
+%%     {\Delta \vdash \mu \gamma. g}
+
+    
+%%   \end{mathpar}
+%%   \caption{Ordered Separation Logic}
+%% \end{figure}
+
+%% Given any string $w$ over our alphabet, there is a corresponding
+%% grammar $\lceil w \rceil$ that accepts precisely $w$ with a single
+%% parse. Then we can formulate the \emph{parsing problem} as a
+%% \emph{program synthesis} problem:
+%% \begin{quote}
+%%   Given a closed grammar $\cdot \vdash g$ and a word $w$, attempt to
+%%   construct a parse $x : \lceil w \rceil \vdash p : g$
+%% \end{quote}
+%% Or, even more naturally, we can break w up into its constituent
+%% characters:
+%% \begin{quote}
+%%   Given a closed grammar $\cdot \vdash g$ and a word $c_1\ldots_n$,
+%%   construct a parse $x_1 : \lceil c_1 \rceil,\ldots_n \vdash p
+%%   : g$
+%% \end{quote}
+
+%% \begin{figure}
+%%   \begin{mathpar}
+%%     \inferrule{g \in \mathcal G}{\mathcal G \vdash g}
+
+    
+
+%%   \end{mathpar}
+%%   \caption{Context-free Expressions}
+%% \end{figure}
+
+%% \section{Semantic Actions and Grammar/Parser Combinators}
+
+%% Finally, we arrive at the last main component of a parser, the
+%% so-called ``semantic actions''. While the constructive parsing
+%% approach does produce a parse \emph{tree}, it is not usually the case
+%% that this parse tree is \emph{the same} as the desired typed of
+%% ASTs. Instead, we need only that there is a \emph{function} from parse
+%% trees to ASTs. In general this might fail to be injective (such as
+%% forgetting whether parentheses were used) or surjective (if there are
+%% internal compiler forms that do not directly correspond to source
+%% programs).
+
+
+%% We can formalize this by noting that there is a functor, the constant
+%% functor $\Delta$ from $\Set$ to $\Set^{\Sigma^*}$ that sends a set $A$
+%% to the constant presheaf $\Delta(A)_w = A$. Then we can take the comma
+%% category $\Set^{\Sigma^*}/K$. The objects of this category are pairs
+%% of a grammar $g$ and a set $A$ with a function
+%% \[ \prod_{w \in \Sigma^*} g_w \to A \]
+
+%% Then the projection functor $cod : \Set^{\Sigma^*}/\Delta \to \Set$ is
+%% an opfibration. The pushforward is the ``map'' operation on
+%% grammars. We can equivalently view an opfibration as a functor from
+%% $\Set$ to $\Set^{\Sigma^*}$
+
+%% While the presheaf presentation directly captures the notion of a
+%% parse tree, in a program the parse tree described by a grammar is
+%% often massaged to express precedence data and so the tree structure of
+%% a parse is more complex than the actual data being parsed. For
+%% instance, an AST data type for a single binary arithmetic operation
+%% can be represented as a binary tree with numbers at the leaves, such
+%% as the following Haskell/Agda-like data definition:
+%% \begin{verbatim}
+%% data Tree where
+%%   op   : Tree -> Tree -> Tree
+%%   leaf : Num  -> Tree
+%% \end{verbatim}
+
+
+%% If the single operator op is defined to be left-associative (such as
+%% subtraction/division), a typical grammar for parsing these expressions
+%% would be defined by \emph{factoring} the grammar into two mutually
+%% recursive non-terminals, \emph{E} for expression and \emph{L} for
+%% leaf:
+%% \begin{mathpar}
+%%   \begin{array}{rcl}
+%%     E &::= & E - L \,|\,L\\
+%%     L &::= & ( E ) \,|\, Number
+%%   \end{array}
+%% \end{mathpar}
+
+%% This roughly corresponds to the following mutually recursive datatypes:
+%% \begin{verbatim}
+%% data Expr where
+%%   op   : Expr -> Leaf -> Expr
+%%   leaf : Leaf -> Expr
+
+%% data Leaf where
+%%   parens : Expr -> Leaf
+%%   num    : Number -> Leaf
+%% \end{verbatim}
+
+%% I.e., an \texttt{Expr} is a non-empty list of \texttt{Expr + Number}.
+
+%% This mismatch is usually handled by \emph{semantic actions}, a kind of
+%% fold over the parse tree that is compositionally expressed alongside
+%% the definition of the parser itself. This can be seen as a manually
+%% performed optimization to make up for the compiler's inability to
+%% \emph{fuse} the two functions of parsing (an unfold) with constructing
+%% the intended AST (a fold). However, semantic actions become more
+%% useful when we have a \emph{compositional} language of grammars with
+%% corresponding semantic actions, such as in parser combinator
+%% libraries.
+
+%% Parser combinator libraries are typically based on some notion of
+%% backtracking error monad: a term of type \texttt{Parser Sigma A} is a
+%% parser of strings from the alphabet Sigma that on correct parses produces
+%% an associated value of type \texttt{A}.
+%% %
+%% Intuitively, this should be semantically (though not performantly)
+%% isomorphic to a grammar $g$ paired with a function from $g$-parses to
+%% $A$.
+
+\section{Potential Extensions}
+
+What we have presented so far is quite simple. We highlight a few
+possible avenues for exploration.
+
+\subsection{Internal Language of Monoidal Toposes}
+
+A powerful tool that toposes provides is the use of \emph{internal
+languages} which in the case of a topos can interpret all of
+intuitionistic set theory or type theory. When working with specific
+toposes it is fruitful to extend the type theory with new axioms and
+structures based on the structure present in the category.
+
+For a \emph{monoidal topos} this would be some form of
+\emph{separation type theory}, a proof-relevant form of ordered
+separation logic. Is there any syntax we can use off the shelf?
+
+Since the topos of semantic actions is constructed by Artin gluing, it
+contains the category of $\Set$ as an open subtopos and $\Grammar$ as
+its closed complement. This structure can be axiomatized as an
+abstract proposition $\Phi$ which we can think of as ``when $\Phi$ is
+true we are in the subtopos $\Set$.''  Sterling and Harper have termed
+this situation a ``phase distinction''. From $\Phi$, one can define
+open and closed modalities $\fullmoon$ and $\newmoon$ that ``project
+out'' the underlying set and grammar from a semantic action.
+%
+Then we might be able to internally describe the pushforward of an
+action $(a,g,X)$ along a function $f : X \to Y$ as follows. First we
+assume we have a set $A$ (corresponding to $(a,g,X)$) and a
+$\Phi$-modal set $Y$ (corresponding to $Y$). Then given any $f : A \to
+Y$ we can define the pushforward as the refinement type
+\[ [ \Phi \hookrightarrow y : Y | \newmoon (\sum_{x:A} f(x) = b) ]\]
+
+\subsection{More General Parsing}
+
+Our goal with this theory is to have a higher explanatory power for
+real life parsing tools than existing theory of langauges. We consider
+several ad-hoc extensions of langauges and how they might be modeled
+semantically.
+
+First, almost all parser generators support \emph{precedence} rules
+for modularly defining the binding of different binary operators.
+This technically goes outside of the notion of grammar, though can be
+explained by translation to ordinary grammars.
+%
+Instead we can model this semantically by defining a \emph{precedence
+grammar} as a functor from strings to preordered sets. Then the
+parsing problem is not to find a matching parse, but instead find a
+\emph{greatest} parse.
+
+Another extension is to describe the parsing of morphisms of a
+category other than strings. This can be used to model common ad hoc
+extensions of parsing such as the end of string character \$ by
+parsing arrows from $\bullet$ to $\top$ in a category with two
+objects:
+\[% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZARgBoAGAXVJADcBDAGwFcYkQAdDnCNEAX1LpMufIRTkK1Ok1bsuAI2aNGMHAOkwoAc3hFQAMwBOEALZIyIHkkkyWbRCAAkAoSGNmLNa4kuMIvESSBkxwMNKM9AowjAAKIngE7EZY2gAW6jQM9uwAxq6GJua+3hBeIP6BKMQAHMGh4TSR0XEJYsmpGSBZsg4g+fyU-EA
+\begin{tikzcd}
+\bullet \arrow[r, "\$"] \arrow["w"', loop, distance=2em, in=305, out=235] \arrow["w'"', loop, distance=2em, in=125, out=55] & \top
+\end{tikzcd}\]
+Here the endomorphisms of $\bullet$ are the strings and a single arrow
+\$ allows you to transition to the end of string.  We could extend our
+model by viewing a grammar over a category $\mathcal C$ as a functor
+$|\mathcal C^\to| \to \Set$, which would mean a grammar gives you a
+set of parses for all hom sets. This only has a partial monoidal
+structure on the base category, but that is enough to define a
+monoidal structure on the category of presheaves.
+
+Finally, the applications of most interest to us are the extensions to
+tree grammars, or better yet, grammars for trees with binding. For
+example, given a polynomial functor $P$ describing a type of
+``operations'', we could define a tree grammar as a functor from the
+free operad of the polynomial to set $|P^*| \to \Set$, where each
+operation of the polynomial would induce its own version of the
+separating conjunction on tree grammars.
+
+
+
+\end{document}
+
