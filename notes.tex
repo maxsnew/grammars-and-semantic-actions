@@ -128,7 +128,7 @@ The observations we present here are fairly mundane but we intend that
 they should form the beginnings of a general theory of grammars that
 can be extended to more structured forms such as type-checking.
 
-\section{Language Combinators in Monoidal Toposes}
+\section{Grammar Combinators in Monoidal Toposes}
 
 Next, we describe the structures present in the categories $\Grammar$
 and $\Action$ described above and how they relate to familiar aspects
@@ -554,38 +554,47 @@ If we reduce to language recognition, this is a de Morgan-dual of the
 %% isomorphic to a grammar $g$ paired with a function from $g$-parses to
 %% $A$.
 
+\section{Internal Language for the Topos of Semantic Actions}
+
+A powerful tool for expressing constructions in a topos is the use of
+the \emph{internal language}, which for a generic topos is a form of
+extensional dependent type theory.
+%
+To extract maximum benefit from the internal language, we add axioms
+and judgments to type theory for the specific topos models we are
+working with.
+%
+For the toposes of grammars and semantic actions we have a plethora of
+structure, we highlight the three most relevant:
+
+\begin{itemize}
+\item Both are toposes so models of extensional dependent type theory
+\item They are models of the (non-dependent) ordered logic of bunched
+  implications in that they are non-symmetric monoidal closed as well
+  as Cartesian closed.
+\item The topos of semantic actions, being constructed by Artin
+  gluing, contains a proposition $\Phi$ that presents the categories
+  $\Set$ and $\Grammar$ as open and complementary closed
+  subtoposes. Sterling and Harper refer to this situation as a ``phase
+  distinction''.
+\end{itemize}
+
+Combining the internal language of dependent type theory with bunched
+implications or even just monoidal structure is tricky. The reason is
+that all constructions need to be stable under pullback to be used in
+dependent type theory, but our monoidal structure is not stable under
+pullback, as is typical.
+%
+Fortunately, the phase distinction allows for a fruitful combination
+of these aspects, called \emph{quantitative type theory}
+\cite{atkey-qtt,mcbride-nuttin}.
+%
+We will need a non-symmetric variant.
+
 \section{Potential Extensions}
 
 What we have presented so far is quite simple. We highlight a few
 possible avenues for exploration.
-
-\subsection{Internal Language of Monoidal Toposes}
-
-A powerful tool that toposes provides is the use of \emph{internal
-languages} which in the case of a topos can interpret all of
-intuitionistic set theory or type theory. When working with specific
-toposes it is fruitful to extend the type theory with new axioms and
-structures based on the structure present in the category.
-
-For a \emph{monoidal topos} this would be some form of
-\emph{separation type theory}, a proof-relevant form of ordered
-separation logic. Is there any syntax we can use off the shelf?
-
-Since the topos of semantic actions is constructed by Artin gluing, it
-contains the category of $\Set$ as an open subtopos and $\Grammar$ as
-its closed complement. This structure can be axiomatized as an
-abstract proposition $\Phi$ which we can think of as ``when $\Phi$ is
-true we are in the subtopos $\Set$.''  Sterling and Harper have termed
-this situation a ``phase distinction''. From $\Phi$, one can define
-open and closed modalities $\fullmoon$ and $\newmoon$ that ``project
-out'' the underlying set and grammar from a semantic action.
-%
-Then we might be able to internally describe the pushforward of an
-action $(a,g,X)$ along a function $f : X \to Y$ as follows. First we
-assume we have a set $A$ (corresponding to $(a,g,X)$) and a
-$\Phi$-modal set $Y$ (corresponding to $Y$). Then given any $f : A \to
-Y$ we can define the pushforward as the refinement type
-\[ [ \Phi \hookrightarrow y : Y | \newmoon (\sum_{x:A} f(x) = b) ]\]
 
 \subsection{More General Parsing}
 
@@ -629,7 +638,8 @@ free operad of the polynomial to set $|P^*| \to \Set$, where each
 operation of the polynomial would induce its own version of the
 separating conjunction on tree grammars.
 
-
+\bibliographystyle{plain}
+\bibliography{grammar}
 
 \end{document}
 
