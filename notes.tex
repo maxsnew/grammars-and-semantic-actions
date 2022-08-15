@@ -19,6 +19,7 @@
 \newcommand{\Action}{\textrm{Action}}
 \newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
 \newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
 
 \newcommand\rsepimp{\mathbin{-\mkern-6mu*}}
 \newcommand\lsepimp{\mathbin{\rotatebox[origin=c]{180}{$-\mkern-6mu*$}}}
@@ -196,8 +197,8 @@ We use the separating conjunction symbol because the semantics
 monoidal structure is \emph{not} symmetric in that $g \sepconj g'$ is
 usually very different from $g' \sepconj g$.
 
-This has a unit as well, which is the language of just the empty
-string (with trivial parse tree/semantic action):
+This has a unit as well, which is the grammar with a unique parse of
+the empty string (with trivial semantic action):
 \[ I w = w = \epsilon \]
 
 Since $\Sigma^*$ is a free monoid, every word $w$ is a concatenation
@@ -208,62 +209,86 @@ Since the Yoneda embedding preserves the monoidal structure up to
 isomorphism, these are isomorphic as grammars and semantic actions as
 well.
 
-Next, $\Lang$ has all limits and colimits. Coproducts give us the
-``union'' of languages, with initial object the empty language, and
-products give us the intersection, with the terminal object being the
-language that accepts all strings, but with no information in the
-parse.
+Next, $\Grammar$ has all limits and colimits. Binary coproducts give
+us the ``sum'' of grammars, i.e., a parse is a parse in one of the two
+languages. The initial object is the empty grammar, the grammar that
+has no parses.
 \[ (g_1 + g_2) w = (g_1 w) + (g_2 w) \]
 \[ 0 w = \emptyset \]
+The semantic actions ``lie over'' the corresponding coproduct in
+$\Set$. These correspond to the union and empty languages in $\Lang$.
+
+Products give us a kind of intersection of grammars, where a parse
+tree is a parse from each language, with the terminal object being
+the language that accepts all strings with a unique parse.
 \[ (g_1 \times g_2) w =  g_1 w \times g_2 w\]
 \[ 1 w =  1 \]
+These lie over the product and unit semantic actions.
 
+Inductively defined grammars should be initial algebras of functors $F
+: \Grammar \to \Grammar$. To define regular and context free grammars
+it should suffice to use Ad\'amek's construction generalizing Kleene's
+fixed point theorem to categories. That is, if $F$ is
+$\omega$-co-continuous, i.e., preserves $\omega$-colimits, then it has
+an initial algebra, which can be constructed as the colimit of
+\[ F^0(0) \to F^1(0) \to F^2(0) \to \cdots \]
 
-We can also define inductively defined grammars (and so access regular
-and context free languages) as colimits, for instance the Kleene star
-operation is the colimit of the $\omega$-diagram
-\[ 0 \to (I + g * 0) \to I + g \sepconj (I + g \sepconj 0) \to \cdots \]
+Then, for example the Kleene star of a grammar $g$ is given by the
+initial algebra of the functor $F(\gamma) = I + g \sepconj \gamma$,
+which is $\omega$-co-continuous because $\sepconj$ and $+$ are
+$\omega$-co-continuous.
+
+So far the interesting structure has mostly been in the category of
+grammars, and the corresponding sets of parses have been isomorphic to
+the set of parses. The simple combinator that we need is a ``map'' for
+semantic actions, that says given a semantic action $A$ that produces
+$X$ values, and a function $f : X \to Y$, we can push forward and get
+an action $f_*A$ that produces $Y$ values. If $A = (a, g, X)$ then we
+can define this simply as
+\[ f_*(a,g,X) = (f \circ a, g, Y) \]
 
 \subsection{Closed Structure}
 
 By general properties of presheaf categories, the category of
-languages has \emph{closed} structure with respect to the monoidal
+grammars has \emph{closed} structure with respect to the monoidal
 products of sequencing $\sepconj$ and product $\times$.
 
-First, the product has a right (multi-variable) adjoints:
-\[ (L_1 \times L_2 \to  L_3) \cong L_1 \to (L_2 \Rightarrow L_3) \cong L_2 \to (L_1 \Rightarrow L_3) \]
+First, the product has a right (multi-variable) adjoint:
+\[ (g_1 \times g_2 \to  g_3) \cong g_1 \to (g_2 \Rightarrow g_3) \cong g_2 \to (g_1 \Rightarrow g_3) \]
 
 Defined by
-\[ (L \Rightarrow L')w = \textrm{Hom}((Y w \times L), L') = Lw \to L'w \]
-Informally, $(L \Rightarrow L')w$ is constructive \emph{implication}
-of languages: a parse of $w$ is a function that takes $L$-parses of
-$w$ to $L'$-parses of $w$
+\[ (g \Rightarrow g')w = \textrm{Hom}((Y w \times g), g') = gw \to g'w \]
+Informally, $(g \Rightarrow g')w$ is constructive \emph{implication}
+of languages: a parse of $w$ is a function that takes $g$-parses of
+$w$ to $g'$-parses of $w$
 
 Next, the sequencing operator $\sepconj$, since it is not symmetric, has
 two right multi-variable adjoints:
-\[ (L_1 \sepconj L_2 \to L_3) \cong (L_1 \to L_3 \lsepimp L_2) \cong (L_2 \to L_2 \rsepimp L_3) \]
+\[ (g_1 \sepconj g_2 \to g_3) \cong (g_1 \to g_3 \lsepimp g_2) \cong (g_2 \to g_2 \rsepimp g_3) \]
 
 Defined by
-\[ (L \multimap L')w = \Pi_{w_l} L w_l \to L'(w_lw) \]
-\[ (L' \leftmultimap L)w = \Pi_{w_r} L w_r \to L'(ww_r) \]
+\[ (g \rsepimp g')w = \Pi_{w_l} g w_l \to g'(w_lw) \]
+\[ (g' \lsepimp g)w = \Pi_{w_r} g w_r \to g'(ww_r) \]
 
-A parse of $(L \multimap L')w$ is a kind of ``partial'' parse of $L'$:
-given any parse $L w_l$, we can get a complete parse $L' (w_lw)$. So
-if $(L \multimap L') w$ successfully parses (and $L$ is non-empty),
-then we have succesfully parsed a suffix of $L'$, that when
-concatenated with a prefix that can by parsed as $L$ will yield a full
-parse of $L'$.
+A parse of $(g \rsepimp g')w$ is a kind of ``partial'' parse of $g'$:
+given any parse $g w_l$, we can get a complete parse $g' (w_lw)$. So
+if $(g \rsepimp g') w$ successfully parses (and $g$ is non-empty),
+then we have succesfully parsed a suffix of $g'$, that when
+concatenated with a prefix that can by parsed as $g$ will yield a full
+parse of $g'$.
+%
+This Day convolution closed structure is used in separation logic.
 
-Dually, the left hom $(L' \leftmultimap L)$ is a partial parse from
+Dually, the left hom $(g' \lsepimp g)$ is a partial parse from
 the right of the string.
 
 These left and right hom operations can be used to define the
 \emph{derivative} of a language with respect to a character or
 word. If we focus on left-to-right parsing this would be:
-\[ d^l_c(L) = Yc \multimap L \]
+\[ d^l_c(g) = Yc \rsepimp g \]
 Why?
-\[ (Yc \multimap L)w = \Pi_{w_l} \{ 1 | c = w_l \} \to L(w_lw) \cong L(cw) \]
-I.e., a parse of $d^l_c(L)$ is precisely a parse of the string with
+\[ (Yc \rsepimp g)w = \Pi_{w_l} \{ 1 | c = w_l \} \to g(w_lw) \cong g(cw) \]
+I.e., a parse of $d^l_c(g)$ is precisely a parse of the string with
 $c$ prepended.
 %
 This allows us, for any particular string $w$, to reduce the problem
@@ -274,23 +299,40 @@ from abstract nonsense?
 
 If we reduce to language recognition, this is a de Morgan-dual of the
 ``quotient'' of a formal language.
-\[ (L_1 / L_2) w \iff \exists w' \in L_2. L_1(ww') \iff \neg (\forall w' \in L_2. \neg L_1(ww')) \iff \neg ((\neg L_1 \leftmultimap L_2) w) \]
+\[ (g_1 / g_2) w \iff \exists w' \in g_2. g_1(ww') \iff \neg (\forall w' \in g_2. \neg g_1(ww')) \iff \neg ((\neg g_1 \lsepimp g_2) w) \]
 
 
-%% A grammar $g$ is
-%% \begin{enumerate}
-%% \item \emph{total} if for every $w$ there is at least one parse
-%% \item \emph{deterministic} if for every $w$ there is at most one parse
-%% \item \emph{empty} if for every $w$ there are no parses
-%% \end{enumerate}
+\section{Application: Derivative of a Regular Semantic Action}
 
-%% %% \begin{definition}
-%% %%   A grammar $g$ is \emph{uniquely decidable} if there exists a
-%% %%   ``complement'' $g'$ such that $g \vee g'$ is total and
-%% %%   deterministic.
-%% %% \end{definition}
+Let $A$ be a semantic action inductively built using the constructions
+of separating conjunction, unit, binary and empty coproducts,
+characters, Kleene star, and pushforward.
 
-%% In other words, $g \vee g' \cong \top$
+Claim:
+\begin{theorem}
+  If $A$ is a regular semantic action, then for any character $c$,
+  \[ d_c(A) = Yc \rsepimp A \]
+  is isomorphic to a regular semantic action.
+\end{theorem}
+\begin{proof}
+  By induction on the definition of $A$.
+  \begin{enumerate}
+  \item $A = I$, then $Y c\rsepimp I \cong 0$
+  \item $A = A_1 \sepconj A_2$, then
+    \begin{align*}
+      Yc \rsepimp A_1 \sepconj A_2
+      \cong ((Yc \rsepimp A_1) \sepconj A_2) + ((A_1 \times I) \sepconj (Yc \rsepimp A_2))
+    \end{align*}
+  \item $A = f_*A'$, then
+    \begin{align*}
+      Y c \rsepimp f_*A \cong g_*(Yc \rsepimp A)
+    \end{align*}
+    Where $g : (1 \Rightarrow X) \to (1 \Rightarrow Y)$ is $g(h)(x) =
+    f(h(x))$.
+  \item TODO: finish
+  \end{enumerate}
+\end{proof}
+
 
 %% \subsection{Endofunctors}
 
@@ -555,6 +597,31 @@ If we reduce to language recognition, this is a de Morgan-dual of the
 %% $A$.
 
 \section{Internal Language for the Topos of Semantic Actions}
+
+%% We can define some concepts on grammars using the internal language.
+
+%% A grammar $g$ is
+%% \begin{enumerate}
+%% \item \emph{total} if for every $w$ there is at least one
+%%   parse. Equivalently, $g$ has a global element.
+%% \item \emph{deterministic} if for every $w$ there is at most one
+%%   parse. In the internal language, $g$ is a proposition.
+%% \item \emph{empty} if for every $w$ there are no parses. In the
+%%   internal language, $g \cong 0$
+%% \end{enumerate}
+
+%% \begin{definition}
+%%   A grammar $g$ is \emph{decidable} if its propositional truncation
+%%   $||g||$ is a complemented truth value.
+%% \end{definition}
+
+%% \begin{definition}
+%%   A grammar $g$ is \emph{uniquely decidable} if there exists a
+%%   ``complement'' $\neg g$ such that $g \vee \neg g$ is total and
+%%   deterministic.
+%% \end{definition}
+
+%% In other words, $g \vee g' \cong \top$
 
 A powerful tool for expressing constructions in a topos is the use of
 the \emph{internal language}, which for a generic topos is a form of
