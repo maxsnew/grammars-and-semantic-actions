@@ -14,6 +14,8 @@
 
 \newcommand{\leftmultimap}{\mathop{\rotatebox[origin=c]{180}{$\multimap$}}}
 \newcommand{\Set}{\textrm{Set}}
+\newcommand{\FinSet}{\mathbb F}
+\newcommand{\Cat}{\textrm{Cat}}
 \newcommand{\Lang}{\textrm{Lang}}
 \newcommand{\Grammar}{\textrm{Grammar}}
 \newcommand{\Action}{\textrm{Action}}
@@ -718,59 +720,101 @@ algebraic theories, notions of tree with binding structure can be
 defined as free \emph{second order} algebraic theories.
 
 \begin{definition}
-  A notion of tree with binding $\mathcal T$ is a cartesian multicategory all of
-  whose objects are exponentials $o \to^n o$ for some distinguished
-  object $o$.
+  A notion of tree with binding $\mathcal T$ is a cartesian
+  multicategory all of whose objects are exponentials $o \to^n o$ for
+  some distinguished generator object $o$.
 \end{definition}
 
-\begin{definition}
-  Given a notion of tree with binding $\mathcal T$, the topos of
-  grammars is simply $\Set^{|Arr(\mathcal T)|}$.
+The ``trees'' themselves are the morphisms of the multicategory of the
+form
+\[ \mathcal T(\cdot; o) \]
 
-  But there are many sorts here...
-\end{definition}
+The ``constructors'' of this notion of are given by the morphisms of
+the multicategory, in which can all be given in the form:
+\[ c \in \mathcal T((o \to^{n_1} o), \ldots_{p}; o) \]
+A constructor $c$ of this form has $p$ subterms each of which has
+bindings for $n_i$ new variables.
 
-Again the interesting question is what the appropriate notion of
-``separating conjunction'' is for this notion of grammar. Following
-the pattern thus far, the categorical structure we want on the
-category of grammars should be given by a pseudo-algebra of the notion
-of theory the grammars are defined over. An algebra of a 2nd-order
-theory is given by an exponentiable object in a category with
-cartesian products with an interpretation of all the operations.
+So what category do our grammars live in?
+%
+In analogy with the string and tree cases, our category of grammars
+should be some kind of \emph{pseudo}-algebra of the theory in $\Cat$.
+%
+However, unlike the string and tree case, even ``single sorted''
+second-order theories behave more like multi-sorted theories, in that
+a model of a second-order theory needs to interpret not just the
+generator $o$, but also all $n-ary$ exponentials $o \to^n o$ as
+categories.
+%
+This suggests we define for each natural number $n$, a category of
+grammars over trees with $n$ variables:
+\[ \Grammar(n) = \Set^{\mathcal T(o,\ldots_n;o)} \]
+This varies functorially in $n$, defining a functor
+\[ \Grammar(-) : \FinSet \to \Cat \]
+where $\FinSet$ is a skeleton of the category of finite sets and
+arbitrary functions, i.e., the action of ``renaming'' the variables.
 
-In this case this means that we want to interpret the 2nd-order
-operations as functors whose domain is \emph{a category of
-endofunctors}.
+Then we get for each operation $f \in \mathcal T((o^{n_1} \to o,
+\ldots_p; o^m \to o))$ a functor $\Grammar(f) : \Grammar(n_1) \times
+\cdots_p \to \Grammar(m)$ defined as a kind of separating conjunction:
+\[ \Grammar(f)(g_1,\ldots_p)(t) = \sum_{f(\vec x_1. s_1,\ldots_p) = t} (g_1(\vec x_1.s_1)) \times \cdots \]
+Does that even make sense??
 
-An example should be illuminating. One of the canonical examples of a
-second-order theory is the untyped lambda calculus. This is a single
-sorted theory with two operations :
+Maybe we can combine these into one using Grothendieck construction?
+Not sure it has a nice internal language though.
+\[ \Grammar = \int_{[n] : \FinSet} \Grammar(n) \]
 
-\begin{enumerate}
-\item \texttt{app : (0, 0)}
-\item \texttt{lam : (1)}
-\end{enumerate}
+%% Then we can construct a category of grammars for trees with binding as
+%% the Grothendieck construction:
+%% Where objects are pairs of a finite cardinal and a grammar over trees
+%% with that many variables, with a morphism being a pair of a renaming
+%% and then a parse transformer between a grammar and a ``renamed''
+%% grammar.
 
-That is, application is applied to two subterms with no introduced
-bindings, whereas lambda is applied to a subterm with an additional
-binding introduced.  As morphisms in a 2nd order algebraic theory
-viewed as a cartesian multicategory these are in the hom sets:
 
-\begin{enumerate}
-\item \texttt{app : Hom(o, o; o)}
-\item \texttt{lam : Hom(o -> o; o)}
-\end{enumerate}
+%% Again the interesting question is what the appropriate notion of
+%% ``separating conjunction'' is for this notion of grammar. Following
+%% the pattern thus far, the categorical structure we want on the
+%% category of grammars should be given by a pseudo-algebra of the notion
+%% of theory the grammars are defined over. An algebra of a 2nd-order
+%% theory is given by an exponentiable object in a category with
+%% cartesian products with an interpretation of all the operations.
 
-To give the topos of grammars $G(\mathcal T)$ an algebra structure, we
-define a functor of two arguments for \texttt{app}:
-\[ \textrm{app}(g_1,g_2)_t = \sum_{\texttt{app}(t_1,t_2)} g_1 t_1 \times g_2 t_2 \]
-and a functor whose argument is an endofunctor for \texttt{lam}:
-\[ \textrm{lam}(F)_t = \sum_{\texttt{lam}(x.s)} F(Y x)_s \]
-this doesn't quite make sense...
-%% Something something second-order algebraic theory..
+%% In this case this means that we want to interpret the 2nd-order
+%% operations as functors whose domain is \emph{a category of
+%% endofunctors}.
 
-Intuitively, the functor takes in a grammar for the variable and
-outputs a grammar over terms with that free variable in them.
+%% An example should be illuminating. One of the canonical examples of a
+%% second-order theory is the untyped lambda calculus. This is a single
+%% sorted theory with two operations :
+
+%% \begin{enumerate}
+%% \item \texttt{app : (0, 0)}
+%% \item \texttt{lam : (1)}
+%% \end{enumerate}
+
+%% That is, application is applied to two subterms with no introduced
+%% bindings, whereas lambda is applied to a subterm with an additional
+%% binding introduced.  As morphisms in a 2nd order algebraic theory
+%% viewed as a cartesian multicategory these are in the hom sets:
+
+%% \begin{enumerate}
+%% \item \texttt{app : Hom(o, o; o)}
+%% \item \texttt{lam : Hom(o -> o; o)}
+%% \end{enumerate}
+
+%% To give the topos of grammars $G(\mathcal T)$ an algebra structure, we
+%% define a functor of two arguments for \texttt{app}:
+%% \[ \textrm{app}(g_1,g_2)_t = \sum_{\texttt{app}(t_1,t_2)} g_1 t_1 \times g_2 t_2 \]
+%% and a functor whose argument is an endofunctor for \texttt{lam}:
+%% \[ \textrm{lam}(F)_t = \sum_{\texttt{lam}(x.s)} F(Y x)_s \]
+%% this doesn't quite make sense...
+%% %% Something something second-order algebraic theory..
+
+%% % Examples: Schemes' let vs letrec vs let*
+
+%% Intuitively, the functor takes in a grammar for the variable and
+%% outputs a grammar over terms with that free variable in them.
 
 \section{Potential Extensions}
 
