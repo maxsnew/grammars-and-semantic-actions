@@ -302,36 +302,36 @@ If we reduce to language recognition, this is a de Morgan-dual of the
 \[ (g_1 / g_2) w \iff \exists w' \in g_2. g_1(ww') \iff \neg (\forall w' \in g_2. \neg g_1(ww')) \iff \neg ((\neg g_1 \lsepimp g_2) w) \]
 
 
-\section{Application: Derivative of a Regular Semantic Action}
+%% \section{Application: Derivative of a Regular Semantic Action}
 
-Let $A$ be a semantic action inductively built using the constructions
-of separating conjunction, unit, binary and empty coproducts,
-characters, Kleene star, and pushforward.
+%% Let $A$ be a semantic action inductively built using the constructions
+%% of separating conjunction, unit, binary and empty coproducts,
+%% characters, Kleene star, and pushforward.
 
-Claim:
-\begin{theorem}
-  If $A$ is a regular semantic action, then for any character $c$,
-  \[ d_c(A) = Yc \rsepimp A \]
-  is isomorphic to a regular semantic action.
-\end{theorem}
-\begin{proof}
-  By induction on the definition of $A$.
-  \begin{enumerate}
-  \item $A = I$, then $Y c\rsepimp I \cong 0$
-  \item $A = A_1 \sepconj A_2$, then
-    \begin{align*}
-      Yc \rsepimp A_1 \sepconj A_2
-      \cong ((Yc \rsepimp A_1) \sepconj A_2) + ((A_1 \times I) \sepconj (Yc \rsepimp A_2))
-    \end{align*}
-  \item $A = f_*A'$, then
-    \begin{align*}
-      Y c \rsepimp f_*A \cong g_*(Yc \rsepimp A)
-    \end{align*}
-    Where $g : (1 \Rightarrow X) \to (1 \Rightarrow Y)$ is $g(h)(x) =
-    f(h(x))$.
-  \item TODO: finish
-  \end{enumerate}
-\end{proof}
+%% Claim:
+%% \begin{theorem}
+%%   If $A$ is a regular semantic action, then for any character $c$,
+%%   \[ d_c(A) = Yc \rsepimp A \]
+%%   is isomorphic to a regular semantic action.
+%% \end{theorem}
+%% \begin{proof}
+%%   By induction on the definition of $A$.
+%%   \begin{enumerate}
+%%   \item $A = I$, then $Y c\rsepimp I \cong 0$
+%%   \item $A = A_1 \sepconj A_2$, then
+%%     \begin{align*}
+%%       Yc \rsepimp A_1 \sepconj A_2
+%%       \cong ((Yc \rsepimp A_1) \sepconj A_2) + ((A_1 \times I) \sepconj (Yc \rsepimp A_2))
+%%     \end{align*}
+%%   \item $A = f_*A'$, then
+%%     \begin{align*}
+%%       Y c \rsepimp f_*A \cong g_*(Yc \rsepimp A)
+%%     \end{align*}
+%%     Where $g : (1 \Rightarrow X) \to (1 \Rightarrow Y)$ is $g(h)(x) =
+%%     f(h(x))$.
+%%   \item TODO: finish
+%%   \end{enumerate}
+%% \end{proof}
 
 
 %% \subsection{Endofunctors}
@@ -657,6 +657,120 @@ of these aspects, called \emph{quantitative type theory}
 \cite{atkey-qtt,mcbride-nuttin}.
 %
 We will need a non-symmetric variant.
+
+\section{Category Grammars}
+
+As a pre-cursor to multi-sorted tree grammars, we can also consider
+\emph{free category} grammars.
+
+\section{Tree Grammars}
+
+One advantage to our semantic approach is that the generalizations to
+tree parsing, multiple sorts etc, are clear: rather than working in a
+topos built from presheaves over strings, we simply take presheaves
+over sets of trees. The difficulty then is in adapting our axiomatic
+approach.
+
+We will take an approach parameterized in the notion of tree over
+which we are defining the grammar.
+\begin{definition}
+  A notion of single-sorted tree is a cartesian multicategory
+  $\mathcal T$ with one object.
+\end{definition}
+Usually, the notion of tree will be \emph{freely generated} from a
+finite set of operations, but allowing for non-trivial equalities
+allows tree grammars to subsume string grammars. However, if we allow
+for non-free tree grammars, we should probably allow for ``monoid
+grammars''.
+
+\begin{definition}
+  For any notion of tree $\mathcal T$, we define the topos of
+  $\mathcal T$-grammars as the topos $\Set^{|Arr(\mathcal T)|}$.
+\end{definition}
+
+The set of strings has a \emph{monoid} structure, and the category of
+string grammars inherits a \emph{monoidal} category structure from the
+Day convolution.
+%
+Similarly, a free multicategory comes with \emph{non-associative}
+operations of various arities. In the case of a binary operation that
+is not associative this is called a \emph{magma}, and so the topos of
+grammars would inherit a kind of \emph{magmoidal category} structure.
+
+For each operation $o : \mathcal T(n)$, we get an associated
+separating conjunction operation $\sepconj_o : G(T)^n \to G(T)$ defined by
+\[ \sepconj_o(g_1,\ldots)_t = \sum_{o(t_1,\ldots) = t} g_1(t_1) \times \cdots\]
+and similarly, for each $i \in [0,n)$ we get an associated right
+adjoint $(g_1,\ldots,\hat g_i,\ldots)\rsepimp_{o,i} g'$ defined by
+\[ ((g_1,\ldots,\hat g_i,\ldots)\rsepimp_{o,i} g')_t = \prod_{t_1} g_1 t_1 \to \cdots \hat g_i \to \cdots g'(o(t_1,\ldots,t,\ldots))\]
+where $\hat g_i$ indicates that the $i$th place is omitted.
+
+Focusing only on the conjunction operations, what we see here is that
+our notion of tree is a (free) algebraic theory $\mathcal T$ and our
+category of grammars is a kind of \emph{psuedo-algebra} of the theory
+that defines our notion of tree.
+
+\section{Abstract Binding Tree Grammars}
+
+Generalizing further, type systems are a kind of grammar over trees
+with binding structure. Just as notions of tree can be defined as free
+algebraic theories, notions of tree with binding structure can be
+defined as free \emph{second order} algebraic theories.
+
+\begin{definition}
+  A notion of tree with binding $\mathcal T$ is a cartesian multicategory all of
+  whose objects are exponentials $o \to^n o$ for some distinguished
+  object $o$.
+\end{definition}
+
+\begin{definition}
+  Given a notion of tree with binding $\mathcal T$, the topos of
+  grammars is simply $\Set^{|Arr(\mathcal T)|}$.
+
+  But there are many sorts here...
+\end{definition}
+
+Again the interesting question is what the appropriate notion of
+``separating conjunction'' is for this notion of grammar. Following
+the pattern thus far, the categorical structure we want on the
+category of grammars should be given by a pseudo-algebra of the notion
+of theory the grammars are defined over. An algebra of a 2nd-order
+theory is given by an exponentiable object in a category with
+cartesian products with an interpretation of all the operations.
+
+In this case this means that we want to interpret the 2nd-order
+operations as functors whose domain is \emph{a category of
+endofunctors}.
+
+An example should be illuminating. One of the canonical examples of a
+second-order theory is the untyped lambda calculus. This is a single
+sorted theory with two operations :
+
+\begin{enumerate}
+\item \texttt{app : (0, 0)}
+\item \texttt{lam : (1)}
+\end{enumerate}
+
+That is, application is applied to two subterms with no introduced
+bindings, whereas lambda is applied to a subterm with an additional
+binding introduced.  As morphisms in a 2nd order algebraic theory
+viewed as a cartesian multicategory these are in the hom sets:
+
+\begin{enumerate}
+\item \texttt{app : Hom(o, o; o)}
+\item \texttt{lam : Hom(o -> o; o)}
+\end{enumerate}
+
+To give the topos of grammars $G(\mathcal T)$ an algebra structure, we
+define a functor of two arguments for \texttt{app}:
+\[ \textrm{app}(g_1,g_2)_t = \sum_{\texttt{app}(t_1,t_2)} g_1 t_1 \times g_2 t_2 \]
+and a functor whose argument is an endofunctor for \texttt{lam}:
+\[ \textrm{lam}(F)_t = \sum_{\texttt{lam}(x.s)} F(Y x)_s \]
+this doesn't quite make sense...
+%% Something something second-order algebraic theory..
+
+Intuitively, the functor takes in a grammar for the variable and
+outputs a grammar over terms with that free variable in them.
 
 \section{Potential Extensions}
 
