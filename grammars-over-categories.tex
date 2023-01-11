@@ -1,0 +1,132 @@
+\documentclass[12pt]{article}
+%AMS-TeX packages
+\usepackage{tikz}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb,amsmath,amsthm,stmaryrd, wasysym}
+\usepackage{mathtools}
+%geometry (sets margin) and other useful packages
+\usepackage[margin=1.25in]{geometry}
+\usepackage{graphicx,ctable,booktabs}
+\usepackage{tikz-cd}
+\usepackage{mathpartir}
+
+\usepackage[sort&compress,square,comma,authoryear]{natbib}
+\bibliographystyle{plainnat}
+
+\newcommand{\leftmultimap}{\mathop{\rotatebox[origin=c]{180}{$\multimap$}}}
+\newcommand{\Set}{\textrm{Set}}
+\newcommand{\FinSet}{\mathbb F}
+\newcommand{\Cat}{\textrm{Cat}}
+\newcommand{\Lang}{\textrm{Lang}}
+\newcommand{\Grammar}{\textrm{Grammar}}
+\newcommand{\Action}{\textrm{Action}}
+\newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+
+\newcommand\rsepimp{\mathbin{-\mkern-6mu*}}
+\newcommand\lsepimp{\mathbin{\rotatebox[origin=c]{180}{$-\mkern-6mu*$}}}
+\newcommand\sepconj{\mathbin{*}}
+\newcommand\bunch{\mathcal W}
+
+\begin{document}
+\title{Grammars over Free Categories}
+\author{Max S. New}
+\maketitle
+
+We consider the semantics of \emph{formal grammars} over free
+categories as a generalization of the notion of a formal grammar over
+a free monoid. Whereas free monoids are a mathematical formalization
+of completely \emph{unstructured} data, free categories are a very
+simple class of \emph{structured} data, and so formal grammars over
+them provide a simple setting for describing grammars over
+\emph{typed} expression languages: those whose syntax is entirely
+sequential.
+
+As an example, we might consider a simple Hoare logic over a typed
+sequential programming language. \ldots TODO examples
+
+A signature for a free category $\Sigma$ is a \emph{quiver}, also
+known as a directed multigraph. Then this is completed to the free
+category $F\Sigma$. If the quiver $\Sigma$ has exactly one object,
+then the free category is the delooping of the free monoid on the set
+of edges $\Sigma_e^*$. In this way, formal grammars over free monoids,
+i.e., strings, will be a special case.
+
+\section{A Bicategory of Grammars}
+
+A formal grammar over a free monoid $\Sigma^*$ denotes a set of
+\emph{parses} for each string. This is fruitfully modeled as an object
+of the presheaf category $\Set^{\Sigma^*}$, where $\Sigma^*$ here is
+viewed as the \emph{discrete} category on the elements of
+$\Sigma^*$. In plain English: a grammar\footnote{Here we are taking a
+maximally broad view of what a grammar can be, abstracted from any
+syntactic notion of formal grammar. A Lawverian terminology would call
+this an \emph{objective} grammar as opposed to the \emph{subjective}
+grammars from specific grammar formalisms such as regular expressions,
+CFGs etc.} is a function from strings to the set of parses of the
+string.
+
+Several important structures immediately follow from this definition:
+\begin{enumerate}
+\item Since $\Set^{\Sigma^*}$ is a category, we get a notion of
+  \emph{morphism} of grammars: a function that translates parses of a
+  string $w$ in the domain grammar to parses of the same string in the
+  codomain grammar.
+\item Since $\Set^{\Sigma^*}$ is a presheaf category, we have the
+  \emph{Yoneda embedding} $\Sigma^* \to \Set^{\Sigma^*}$. This says
+  for each word $w$ in the language there is a corresponding grammar
+  $w$ that has a unique parse for $w$ and no parses for any other
+  string.
+\item Since $\Sigma^*$ is a monoid, $\Set^{\Sigma^*}$ is monoidal
+  closed with the \emph{Day Convolution} monoidal closed
+  structure. The monoidal product is the sequencing of grammars and
+  the monoidal unit is the grammar that has a unique parse for only
+  the empty string.
+\item Additionally any presheaf category is a bi-cartesian closed
+  category, which gives us conjunction, disjunction and implication of
+  grammars.
+\end{enumerate}
+Note that because we are working with a free monoid, we only ever need
+to apply the Yoneda embedding to individual generators as the Yoneda
+embedding is a strong monoidal functor.
+
+To generalize this to free categories, note that the elements of the
+monoid $\Sigma^*$ are in the free category view \emph{morphisms} of
+the free category: the endomorphisms of the single object
+$F\Sigma(*,*)$. This suggests that a \emph{grammar} over a free
+category be paramaterized by a source and target object, that is, we
+have for each pair of objects $a,b$, a grammar over the morphisms
+$F\Sigma(a,b)$, which we can define as $\Set^{F\Sigma(a,b)}$. We will
+call this category $\Grammar(a,b)$.
+
+\begin{enumerate}
+\item First, a morphism between grammars is the same as before: a
+  morphism from $\alpha: G \to H : \Grammar(a,b)$ is a family of
+  functions $\alpha_f : G(f) \to H(f)$ for every $f : a \to b$.
+\item Now for each morphism $f : a \to b$ in $F\Sigma(a,b)$ we have
+  the Yoneda embedding as a grammar $Yf : \Grammar(a,b)$ that has a
+  unique parse of only $f$, i.e., $(Yf)(g) = \{ * \,|\, f = g \}$. As
+  above we only need to use this when $f$ is a generator.
+\item We generalize the monoidal structure on grammars over strings to
+  a \emph{biclosed bicategory} structure on grammars over typed
+  strings. That is for each object $a$ we get an ``empty string''
+  grammar $\epsilon_a : \Grammar(a,a)$ that matches only the identity
+  morphism. Next, given grammars $G : \Grammar(a,b)$ and $H :
+  \Grammar(b, c)$ we can define a \emph{composition} grammar $G
+  \odot_b H : \Grammar(a,c)$ by
+  \[ (G \odot_b H)f = \sum_{g: a \to b}\sum_{h: b \to c} Gg \times Hh \]
+  Additionally, since the composition is (inherently) non-symmetric we get a covariant and contravariant hom structure:
+  \[ \inferrule{G : \Grammar(c,b) \and H : \Grammar(a,b)}{G \triangleright_{b} H : \Grammar(a,c)} \]
+  defined as
+  \[ (G \triangleright_{b} H)(f : a \to c) = \prod_{g : c \to b} G(g) \to H(gf) \]
+  and a dual
+  \[ \inferrule{H : \Grammar(b,c)\and G : \Grammar(b,a) }{H \mathop{\prescript{}{b}\triangleleft} G : \Grammar(a,c)} \]
+  defined as
+  \[ (H \mathop{\prescript{}{b}\triangleleft} G)(f : a \to c) = \prod_{g: b \to a} G(g) \to H(fg) \]
+\item Additionally, each hom-category is a bicartesian closed
+  category, giving us analogous disjunction, conjunction and
+  implication of grammars.
+\end{enumerate}
+
+\end{document}
