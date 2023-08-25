@@ -115,14 +115,35 @@ module _ (𝓐 : Set ℓ) where
     ⊤g : Grammar ℓ-zero
     ⊤g w = Unit
 
+    ⊤A : Action ℓ-zero Unit
+    ⊤A tt w = Unit
+
+    _∧A_ : ∀ {X : Type ℓx}{Y : Type ℓy} → Action ℓa X → Action ℓb Y
+         → Action (ℓ-max ℓa ℓb) (X × Y)
+    (A ∧A B) (x , y) w = A x w × B y w
+
     _⊎g_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
     (g ⊎g h) w = g w ⊎ h w
+
+    ⊥A : Action ℓ-zero ⊥
+    ⊥A ()
 
     _⊎A_ : {X : Type ℓx}{Y : Type ℓy}
           → Action ℓa X → Action ℓb Y
           → Action (ℓ-max ℓa ℓb) (X ⊎ Y)
     _⊎A_ {ℓa = ℓa}{ℓb = ℓb} A B (inl x) w = Lift {ℓa}{ℓb} (A x w)
     _⊎A_ {ℓa = ℓa}{ℓb = ℓb} A B (inr y) w = Lift {ℓb}{ℓa} (B y w)
+
+    module _ {X : Type ℓx} (A : Action ℓa X) where
+      data Kleene : List X → String → Type ((ℓ-max ℓ (ℓ-max ℓa ℓx))) where
+        [] : Kleene [] []
+        _∷_ : ∀ {x}{xs}{w}{w'} → A x w → Kleene xs w' → Kleene (x ∷ xs) (w ++ w')
+
+    push : ∀ {X : Type ℓx}{Y : Type ℓy} (f : X → Y) → Action ℓa X → Action (ℓ-max (ℓ-max ℓx ℓy) ℓa) Y
+    push f A y w = Σ[ x ∈ _ ] (f x ≡ y) × A x w
+
+    pull : ∀ {X : Type ℓx}{Y : Type ℓy} (f : X → Y) → Action ℓa Y → Action ℓa X
+    pull f A x = A (f x)
 
     Unambiguous : Grammar ℓ' → Type (ℓ-max ℓ ℓ')
     Unambiguous g = ∀ w → isProp (g w)
@@ -139,6 +160,9 @@ module _ (𝓐 : Set ℓ) where
 
     SemiParser g = Parser _ (PartialG g)
     DecParser g = Parser _ (DecG g)
+
+    Printer : (X : Type ℓx) (A : Action ℓa X) → Type _
+    Printer X A = (x : X) → Σ[ w ∈ String ] A x w
 
 -- Regexp
   -- data RE {ℓ'} : (B : Set ℓ') → Set (ℓ-max ℓ (ℓ-suc ℓ')) where
