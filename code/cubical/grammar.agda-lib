@@ -1,0 +1,4 @@
+name: grammar
+include: .
+depend: cubical
+flags: --cubical --safe
