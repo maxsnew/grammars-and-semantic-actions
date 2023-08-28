@@ -1,0 +1,170 @@
+\documentclass[12pt]{article}
+%AMS-TeX packages
+\usepackage{tikz}
+\usepackage[utf8]{inputenc}
+\usepackage{amssymb,amsmath,amsthm,stmaryrd, wasysym} 
+%geometry (sets margin) and other useful packages
+\usepackage[margin=1.25in]{geometry}
+\usepackage{graphicx,ctable,booktabs}
+\usepackage{tikz-cd}
+\usepackage{mathpartir}
+
+\usepackage[sort&compress,square,comma,authoryear]{natbib}
+\bibliographystyle{plainnat}
+
+\newcommand{\leftmultimap}{\mathop{\rotatebox[origin=c]{180}{$\multimap$}}}
+\newcommand{\Set}{\textrm{Set}}
+\newcommand{\FinSet}{\mathbb F}
+\newcommand{\Cat}{\textrm{Cat}}
+\newcommand{\Lang}{\textrm{Lang}}
+\newcommand{\Grammar}{\textrm{Grammar}}
+\newcommand{\Action}{\textrm{Action}}
+\newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+
+\newcommand\rsepimp{\mathbin{-\mkern-6mu*}}
+\newcommand\lsepimp{\mathbin{\rotatebox[origin=c]{180}{$-\mkern-6mu*$}}}
+\newcommand\sepconj{\mathbin{*}}
+\newcommand\bunch{\mathcal W}
+
+\begin{document}
+\title{Grammars as Separation Logic Programs}
+\author{Max S. New}
+\maketitle
+
+\section{Formal Languages and Formal Grammars}
+
+Formal language theory is one of the great success stories of
+theoretical computer science as a discipline, providing the foundation
+for parser generators etc. The fundamental notion of formal language
+theory is the formal language. Given an alphabet $\mathcal A$, a
+formal language is a subset of the set of strings $L \subseteq
+\mathcal A^*$. The beauty of this mathematical definition is that this
+is a universal notion of language: it provides a simple specification
+that can be used as a single semantic domain for many disparate
+grammar formalisms without a priori limiting the languages to be
+recognizable or efficiently recognizable. While formal languages
+provide a simple semantic domain, they have limitations as
+specifications for \emph{parsers}, one of the most ubiquitous sorts of
+programs. The reason is that fundamentally a formal language $L$,
+being a subset, can only properly serve by itself as the specification
+for a \emph{recognizer} which takes a string and outputs a boolean. A
+correct recognizer with respect to a language $L$ is a computable
+version of the indicator function for the subset. But parsers output
+far richer data than merely single bits, they output some kind of
+\emph{parse tree}, or in reality when combined with semantic actions
+produce an output of an arbitrary data type. Further, formal grammar
+formalisms themselves have a richer semantics than merely a formal
+language: for instance, formal grammars may be \emph{ambiguous}
+meaning there is more than one parse tree for a single input string,
+something which cannot be captured in a subset semantics.
+
+This brings us to our first definition:
+\begin{definition}
+  A grammar between strings over a type $\mathcal A$ with semantic
+  values in a type $X$ is a function
+  \[ \mathcal A^* \to X \to \textrm{Type} \]
+\end{definition}
+That is, fundamentally a grammar is simply a constructive relation
+between strings and ``things''\footnote{thanks Wadler}. Given such a
+grammar $G$, a parse tree for a string $w$ with semantic meaning $x$
+is an element $G\,w\,x$. We will show that just as formal languages
+provide a unified semantics for languages, this notion of grammar
+provides a unified semantics for grammars.
+
+Given a grammar, we can immediately specify total and partial parsers for the grammar:
+\begin{definition}
+  Let $G \in \Grammar\,{\mathcal A}\,X$. A \emph{total parser} for $G$ is a function
+  \[ (w:\mathcal A^*) \to (x: X) \times G\,w\,x\]
+  and a (decidably) \emph{partial parser} is a function
+  \[ (w : \mathcal A^*) \to 1 + ((x: X) \times G\,w\,x)\]
+\end{definition}
+That is, a parser outputs a semantic value and a parse tree that
+``proves'' that the semantic value is represented by the
+string\footnote{in a practical implementation, generating the parse
+tree at runtime is unnecessary. This could possibly be modeled using
+modalities for \emph{runtime irrelevance}.}. We say a grammar is
+\emph{unambiguous for parsing} if for every $w$, the type
+\[ (x: X) \times G\,w\,x \]
+is a sub-singleton: it has at most one element.
+
+Dually, we can just as easily define given a grammar notions of \emph{printer}:
+\begin{definition}
+  Let $G \in \Grammar\,{\mathcal A}\,X$. A \emph{printer} for $G$ is a function
+  \[ (x : X) \to (w : \mathcal A^*) \times G\,w\,x \]
+\end{definition}
+The notion of partial printer is less useful.
+
+If we think of an abstract grammar as a kind of constructive relation,
+then that inevitably leads us to the thesis of this article:
+\begin{quote}
+  Grammar formalisms are logic programming languages
+\end{quote}
+But the most interesting point of this is that the logic that grammar
+formalisms are based on is a kind of \emph{separation
+logic}. Separation logic is typically used to reason about the layout
+of data in memory and there is an analogous intuition for grammars: if
+our memory is a string of characters in $\mathcal A$, then a grammar
+describes the ways in which semantic values can be represented in
+``memory'' as strings. To demonstrate this connection, we show that
+the grammars assemble into a cartesian closed category that is also
+monoidal biclosed, i.e., a model of the logic of bunched implications.
+
+\section{A Category of Grammars}
+
+Since a grammar is parameterized by a type of characters and semantic
+values, there is some choice in defining a category of grammars: do we
+allow these parameter types to vary or stay fixed? For modeling
+grammar formalisms, it is most natural to fix a single type of
+characters $\mathcal A$ and allow the types of semantic values to
+vary. Intuitively this is like the typical situation of fixing a type
+of tokens that are output from a lexer but defining non-terminals that
+parse into many different output types.
+
+\begin{mathpar}
+  Let $\mathcal A$ be a type, the category of $\mathcal A$-grammars
+  $\Grammar\,\mathcal A$ has
+  \begin{enumerate}
+  \item as objects...
+  \item morphisms...
+  \item composition/identity...
+  \end{enumerate}
+\end{mathpar}
+
+To construct the various structures on this category, we observe that
+it can be constructed in the following fashion: $\Set^{\mathcal
+  A^*}/\Delta$, a kind of \emph{Artin Gluing} construction on toposes.
+
+\section{Grammars as Dependent Types}
+
+We define a 2-level dependent type theory for specifying grammar and
+their output types. For the remainder of this section fix an alphabet
+$\mathcal A$.
+
+
+\begin{mathpar}
+\item A context $\Gamma$ denotes a set.
+\item A substitution $\gamma : \Delta \to \Gamma$ denotes a function
+\item A type $\Gamma \vdash A$ denotes a family of sets over $\Gamma$
+  and substitution $A[\gamma]$ is restriction of the family along a
+  function.
+\item A term $\Gamma \vdash M : A$ denotes a section of the family and
+  substitution $M[\gamma]$ is restriction of a section along a
+  function.
+\item A grammar context $\Gamma \pipe \hat \Gamma$ denotes a grammar
+  $\Grammar\,{\mathcal A^*}\,\Gamma$ and substitution
+  $\hat\Gamma[\gamma]$ denotes restriction of a grammar along a
+  function.
+\item A grammar substitution $\Gamma\pipe \hat \gamma : \hat \Delta \to \hat \Gamma$ denotes a family of functions
+  \[ \hat \gamma : (w:\mathcal A^*) \to (\gamma : \Gamma) \to \hat \Delta\,w\,\gamma \to \hat \Gamma\,w\,\gamma \]
+\item A grammar type $\Gamma
+  \vdash \hat A$ denotes a pair of a family of sets $\Gamma \vdash A$
+  and a family of grammars $(\gamma :\Gamma) \to \Grammar\,{\mathcal
+    A^*}\,(A\gamma)$.
+\item A grammar term $\Gamma\pipe\hat\Gamma\vdash \hat M : \hat A$ denotes 
+\end{mathpar}
+
+\section{Subsuming Grammar Formalisms}
+
+\end{document}
