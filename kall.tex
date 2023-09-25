@@ -1,0 +1,340 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage{cmll}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{mathpartir}
+\usepackage[latin2]{inputenc}
+\usepackage{t1enc}
+\usepackage[mathscr]{eucal}
+\usepackage{indentfirst}
+\usepackage{graphicx}
+\usepackage{graphics}
+\usepackage{pict2e}
+\usepackage{epic}
+\usepackage{syntax}
+\usepackage{enumitem}
+\usepackage[colorlinks]{hyperref}
+\numberwithin{equation}{section}
+\usepackage[margin=2.9cm]{geometry}
+\usepackage{epstopdf}
+
+\usepackage{tikz-cd}
+
+\usepackage{ stmaryrd }
+
+\newcommand{\cat}{%
+\mathbf%
+}
+
+\newcommand{\sem}[1]{
+  \llbracket #1 \rrbracket
+}
+
+
+\def\numset#1{{\\mathbb #1}}
+
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{question}[theorem]{Question}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{Conj}[theorem]{Conjecture}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{?}[theorem]{Problem}
+\newtheorem{example}[theorem]{Example}
+ 
+
+\newcommand{\im}{\operatorname{im}}
+\newcommand{\Hom}{{\rm{Hom}}}
+\newcommand{\diam}{{\rm{diam}}}
+\newcommand{\ovl}{\overline}
+\newcommand{\norm}[1]{||#1||}
+\newcommand{\test}[1]{\mathcal D(#1)}
+\newcommand{\dist}[1]{\mathcal D'(#1)}
+\newcommand{\diff}[1]{(#1, \mathcal P^U_{#1})}
+\newcommand{\lto}{\multimap}
+
+
+
+
+\newcommand{\set}[2]{\{#1 \, | \, #2 \}}
+
+\newcommand{\lrang}[1]{ \langle #1 \rangle }
+
+
+\newcommand{\M}{\mathcal{M}}
+
+
+%Grammar
+\newcommand{\smid}{\ \mid \ }
+\newcommand{\defined}{\coloneqq}
+\newcommand{\subst}[3]{#1\{#2 / #3\}}
+
+%% types
+\newcommand{\nat}{\mathbb{N}}
+\newcommand{\R}{\mathbb{R}}
+
+%% stlc
+\newcommand{\lamb}[2]{\lambda #1. \ #2}
+\newcommand{\app}[2]{#1 \ #2}
+
+%% cbpv
+\newcommand{\produce}{\mathsf{produce}\ }
+\newcommand{\thunk}{\mathsf{thunk}\ }
+\newcommand{\force}{\mathsf{force}\ }
+\newcommand{\letbe}[3]{\mathsf{let}\ #1 \ \mathsf{be}\ #2 \ \mathsf{in}\ #3}
+\newcommand{\mtox}[3]{#1 \ \mathsf{to} \ #2 . \ #3}
+\newcommand{\consume}{\mathsf{consume}\ }
+\newcommand{\supply}{\mathsf{supply}\ }
+\newcommand{\supplyas}[3]{\supply #1 \ \mathsf{as} \ #2 \ \mathsf{in} \ #3}
+\newcommand{\factory}{\mathsf{factory}\ }
+% Typing rule environment
+
+
+\begin{document}
+
+\title{Proof-relevant Kleene algebra and parsing}
+
+\author{Pedro Amorim}
+
+\maketitle
+
+
+\section{Kleene algebra}
+
+A Kleene algebra (KA) $(K, \cdot, +, (-)^*, 0 , 1)$ is a set $K$ with binary operations $\cdot$ and $+$ and the Kleene star operation $(-)^*$ satisfying the axioms depicted in Figure~\ref{fig:axioms}. In particular $+$ must be idempotent ($a + a = a$) which allows us to equip $K$ with the partial order $a \leq b$ iff $a + b = b$. One of the main applications of Kleene algebra is reasoning about languages recognized by regular expressions. Intuitively, the partial order can be seen as an abstraction of language containment. In particular, testing the language membership of a word $\omega$ in a language $b$ is equivalent to proving $\omega \leq b$.
+
+\begin{example}
+  One of the most important examples of Kleene algebras is the set of regular languages over an alphabet $\Sigma$. In this case the product is language concatenation, the sum is language union, $1$ is the language with the empty string $\varepsilon$, $0$ is the empty language and $(-)^*$ is the Kleene star operation.
+\end{example}
+
+One of the main limitations of the inequational theory of Kleene algebras is that they cannot reason about language parsing, only language recognition. Indeed, when we get a proof that $\omega \leq b$, we
+only know that the word is an element of the language $b$ and not how to parse it from $b$ nor if
+there are multiple ways of parsing it.
+
+From a categorical point of view, this limitation arises from the fact that the partial order does not contain enough information for capturing anything other than containment. We address this issue by proposing a ``proof-relevant'' variant of Kleene algebras that can reason about properties other than language containment. It would be interesting if this approach could be extended to variants of Kleene algebras. For instance, by considering a probabilistic variant of KA it might be possible to consider probabilistic notions of parsing.
+%
+\begin{figure}
+  \begin{align*}
+    x + (y + z) &= (x + y) + z & x + y &= y + x\\
+    x + 0 &= x & x + x &= x\\
+    x(yz) &= (xy)z & x1 &= 1x = x\\
+    x(y + z) &= xy + xz & (x + y)z &= xz + yz\\
+    x0 &= 0x = x & & \\
+    1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
+     b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
+  \end{align*}
+  \label{fig:axioms}
+  \caption{Kleene algebra axioms}
+\end{figure}
+
+\section{Categorifying Kleene algebra} In this section we define the categorification of Kleene algebras.
+
+\begin{lemma}
+  If $\cat{K}$ is a Kleene algebra seen as a posetal category then $\cat{K}$ has coproducts and an initial object $0$.% iff $a \leq b \iff a + b = b$.
+\end{lemma}
+\begin{proof}
+  %% Assume that $\cat{K}$ has coproducts and an initial object $0$. We want to show that $a\leq b \iff a + b = b$. Assume that $a \leq b$. Furthermore, we have $b \leq b$. From the universal property of coproducts, we have $a + b \leq b$. On the other direction, we can show that $b \leq a + b$ from $0 \leq a$, $b \leq b$, $0 + b = b$ and functoriality of the coproduct.
+
+  By assumption $\cat{K}$ has a least element $0$ and $a \leq b \iff a + b = b$. We want to show that $\cat{K}$ has coproducts and an initial object $0$. It is straightforward to show that $0$ is the initial object. To show that $\cat{K}$ also has coproducts, we must show that it has the injection morphisms $a \leq a + b$. This follows easily from the axiom $a = a + a$ and by the definition of $\leq$, To show the universal property, assume that $a \leq c$ and $b \leq c$. We can then show that $(a + b) + c = a + (b + c) = a + c = c$. This concludes the proof.
+\end{proof}
+
+The theorem above shows that the idempotent sum from Kleene algebras corresponds to coproducts over posetal categories with initial object.
+
+\begin{lemma}
+  For every Kleene algebra $\cat{K}$ seen as a category, the triple $(\cat{K}, \cdot, 1)$ is a monoidal category.
+\end{lemma}
+\begin{proof}
+  Since products in Kleene algebras are monotonic in both arguments, $\cdot$ is a bifunctor and by the product laws, $1$ is a monoidal unit. The commutativity of the coherence diagrams follows from $\cat{K}$ being a poset, i.e. all parallel arrows are equal.
+\end{proof}
+
+Note that in general, and in most applications of Kleene algebras, the product is not commutative, which is why the monoidal structure is not symmetric. The distributivity of the sum over the product corresponds to distributive coproducts.
+
+\begin{definition}
+  If $\cat{C}$ is a monoidal cocartesian category, then it is said to be commutative if the canonical morphisms $(A \otimes B) + (A \otimes C) \to A \otimes (B + C)$ and
+  $(A \otimes C) + (B \otimes C) \to (A + B) \otimes C$ are isomorphisms.
+\end{definition}
+
+Given this definition it is straightforward to prove the following lemma.
+
+\begin{lemma}
+  Every Kleene algebra $\cat{K}$ is a distributive category.
+\end{lemma}
+
+Now we turn to the Kleene star. By looking at the first two axioms it becomes clear that $a^*$ should be an algebra for the functors $F_1(x) = 1 + ax$ and $G_1(x) = 1 + xa$. Furthermore, consider the third axiom when $b = 1$. It basically says that $a^*$ is the initial $F_1$-algebra. In the general case, it says that for every $b$, $a^*b$ is the initial algebra for the functor $F_b(x) = b + ax$ and $ba^*$ is the initial algebra for the functor $G_b(x) = b + xa$.
+
+\begin{question}
+  Let $\cat{C}$ be a distributive monoidal category such that for every pair of objects $A$ and $B$ the functor $F_B(X) = B + A \otimes X$ admits an initial algebra, which is represented as $\mu X.\, F_B(X)$. Does it follow that $\mu X.\, F_B(X) \cong (\mu X.\, F_1(X)) \otimes B$?
+\end{question}
+\begin{proof}
+  Assuming distributivity, we can equip $(\mu X.\, F_1(X)) \otimes B$ with an $F_B$-algebra structure as follows: $B + A \otimes (\mu X.\, F_1(X)) \otimes B \cong (1 + A \otimes \mu X.\, F_1(X)) \otimes B \xrightarrow{\alpha \otimes id_B } (\mu X.\, F_1(X)) \otimes B$, where $\alpha$ is the $F_1$-algebra
+  structure of $(\mu X.\, F_1(X))$.
+
+  It is unclear to me if we can show in the non-Cartesian case that the isomorphism does hold. If $\otimes$ is Cartesian, $(\mu X.\, F_1(X)) \otimes B$ are pairs of a list and an element of $B$, which is isomorphic to ``lists'' where the empty list is a $B$ element. I'm not so sure if this same analysis can be done in the monoidal case.
+\end{proof}
+
+We can now define the categorification of Kleene algebras.
+
+\begin{definition}
+  A proof-relevant Kleene algebra is a distributive monoidal category such that for every object $A$, the functor $F(X) = 1 + A \otimes X$ admits an initial algebra.
+\end{definition}
+
+\section{Examples}
+
+We illustrate the applicability of our definition by providing a couple of non-trivial examples of proof-relevant Kleene algebra. The simplest models are, of course, Kleene algebras seen as posetal categories.  
+
+\subsection{Ordered logic and Kleene algebra}
+
+Ordered logic is a kind of substructural logic which drops every structural rule, contrasting with linear logic which does not drop the exchange rule. For the sake of simplicity, we will consider the fragment of ordered logic which only has the conjunctive connectives and the structural modality $\oc$ that recovers the structural rules\footnote{even exchange?}. From a proof theory point of view, this modality is usually axiomatized as
+%
+\begin{mathpar}
+  \oc A \vdash 1 \and \oc A \vdash A \and  \oc A \vdash \oc A \otimes \oc A
+\end{mathpar}
+%
+%
+\begin{lemma}
+  \label{lem:ineq}
+  The following inequalities hold in every Kleene algebra:
+  \begin{itemize}
+  \item $1 \leq a^*$
+  \item $a \leq a^*$
+  \item $a^* a^*\leq a^*$
+  \end{itemize}
+\end{lemma}
+\begin{proof}
+  We can prove $1 \leq a^*$ by $1 \leq 1 + 0 \leq 1 + aa^* \leq a^*$. Next, by a similar argument we can prove that $aa^* \leq a^*$ which allows us to prove $a \leq a\cdot 1 \leq a\cdot a^* \leq a^*$. Finally, we can prove $a^*a^*$ by first observing that by using the last inequality and the idempotency of addition we get $a^* + a\cdot a^* \leq a^*$ which, by applying the second family of axioms for the Kleene star allows us to conclude.
+\end{proof}
+Note, however, that by Lemma~\ref{lem:ineq}, the inequalities $1 \leq a^*$, $aa^* \leq a^*$ and $a^*a^* \leq a^*$ can all
+be proved using the Kleene algebra axioms. This suggests that we can propose an alternate
+axiomatization for the $\oc$ modality:
+
+\begin{mathpar}
+  \inferrule{ }{\oc A \vdash 1}
+
+  \and
+
+  \inferrule{ }{\oc A \vdash A \otimes \oc A}
+
+  \and
+
+  \inferrule{ }{\oc A \vdash A \otimes \oc A}
+
+  \\
+  
+  \inferrule{\Gamma \vdash X \\ X \vdash B \\ X \vdash X \otimes A}{\Gamma \vdash \oc A \otimes B}
+
+  \and
+
+    \inferrule{\Gamma \vdash X \\ X \vdash B \\ X \vdash A \otimes X}{\Gamma \vdash B \otimes \oc A}
+
+\end{mathpar}
+
+A similar treatment of the exponential has already been explored in the literature but as they are presented above they violate the cut elimination property, though I am not sure if we care all that
+much about it in this context. Though we still have to properly characterize what this new exponential is from a category theory point of view, we can informally define what is a model of ordered logic.
+
+\begin{theorem}
+  If $\cat{K}$ is a Kleene algebra then its opposite category $\cat{K}^{op}$ is a ordered logic model. 
+\end{theorem}
+
+%% \begin{question}
+%%   With this new correspondence in mind, are there useful Kleene algebra extensions that come out of it? A simple one is understanding what happens if we consider models of ordered logic in which the functors $A \otimes -$ and $- \otimes A$ have right adjoints, i.e. left and right implications.
+
+%%   Would this still be a notion of derivative? Of course, if anything it would be a generalization of Brzozowski's derivative, since it you can differentiate any regular expression with respect to any other regular expression.
+%% \end{question}
+
+\subsection{Functorial grammars}
+
+Let $\Sigma$ be an alphabet and $\Sigma^*$ be the set of finite strings over it, which can also be seen as a discrete category.
+
+\begin{theorem}
+  The category $\cat{Set}}^{(\Sigma^*)^{op}}$ is a proof-relevant Kleene algebra.
+\end{theorem}
+\begin{proof}
+  Since every presheaf category is a topos, it has coproducts. The monoidal product is given by the Day convolution. It is also known that in presheaf categories the Day convolution is part of a monoidal closed structure, which means that it is a left adjoint and, in turn, preserves colimits, making it a distributive monoidal category.
+\end{proof}
+
+In the proof above we still need the Kleene star, which can probably be constructed using the usual semantics of inductive types based on sequential colimits.
+
+%% \section{Proof-relevant Kleene algebras}
+
+%% Now that we have a better understanding of what is a categorical model for Kleene algebras, we can
+%% start exploring what are some of its useful proof-relevant models. The canonical example, if $\cat{K}$ is a Kleene algebra, is the presheaf category $\cat{PSh(K)}$. By using the Day convolution this category is monoidal and, furthermore, it can be shown to be monoidal closed by general categorical arguments.
+
+%% We do not know if the exponential modality can also be lifted to $\cat{PSh(K)}$. Since the yoneda embedding is a dense functor, it might be possible to lift $\oc$ by a density argument...
+
+%% By unfolding the definitions, a functor $F : \cat{K}^{op} \to \cat{Set}$ assigns to each element of $\cat{K}$ a set and if $f : a \leq_{\cat{K}} b$ then $F(f): F(b) \to F(a)$ is a function. The representable functors $Y(a)$ are functors that map $b$ to the singleton set if $b \leq a$ and to the empty set otherwise.
+
+%% \begin{question}
+%%   An important result in the theory of formal languages is that regular expressions have the same expressive power as finite automata. Is there a generalization of this theorem for the non-poset case?
+%% \end{question}
+
+%% \begin{remark}
+%%   In order to connect this to the functorial approach to parsing where parsers are functors $\Sigma^* \to \cat{Set}$, where $\Sigma^*$ is the discrete category over the free monoid over a finite set $\Sigma$, maybe we should consider the functor category $[\cat{K}^{op}, \cat{PSh}(\Sigma^*)]$.
+%% \end{remark}
+
+%% \begin{Def}
+%%   A pre-KA $(K, +, \cdot, *)$ is a set equipped with binary operations $+$ and $\cdot$, and a unary operation $(-)^*$ satisfying the axioms:
+%%   \begin{align*}
+%%     & a + b = b + a\\
+%%     & a + (b + c) = (a + b) + c\\
+%%     & a + 0 = a\\
+%%     & a + a = a\\
+%%     & a \cdot b = b \cdot a\\
+%%     & a \cdot 1 = a\\
+%%     & 1 + aa^* \leq a^*\\
+%%     & b + ax \leq x \implies ba^* \leq x
+%%   \end{align*}
+%% \end{Def}
+
+
+%% \begin{theorem}
+%%   Let $\cat{K}$ be a posetal category. $\cat{K}$ is a pre-KA iff it has coproducts $+$, an initial object $0$ and a symmetric monoidal product $(\cdot, 1)$, and for every object $b$ the functors $F_b(x) = b + ax$ admit initial algebras such that the initial algebra for $F_b$ is isomorphic to $ba^*$, where $a^*$ is the initial algebra for $F_1$.
+%% \end{theorem}
+
+%% \section{From KA to LL}
+
+%% The axiomatisation of linear logic ensures that certain structural rules are only valid under the ! modality. Such rules are captured by the axioms $!A \vdash 1$ and $!A \vdash !A \otimes !A$. It is possible to show that the opposite category of every pre-KA $\cat{K}$ is a model of the exponential conjunctive fragment of linear logic (ECLL). This is a consequence of the inequalities $1 \leq a^*$, $a^* a ^* \leq a^*$, $a \leq a^*$ and $(a \leq b^* \implies a^* \leq b^*)$ being valid theorems in the inequeational theory of pre-KAs.
+
+%% What we can get out of this is that we can give an alternative axiomatisation of ECLL by importing the pre-KA axioms, resulting in the following inference rules:
+
+%% %% \begin{typing}
+%% %%   \inferrule{ }{!A \vdash 1}
+
+%% %%   \and
+
+%% %%   \inferrule{ }{!A \vdash A \otimes !A}
+
+%% %%   \and
+  
+%% %%   \inferrule{\Gamma \vdash X \\ X \vdash B \\ X \vdash X \otimes A}{\Gamma \vdash !A \otimes B}
+%% %% \end{typing}
+
+%% The last rule is not exactly the same as its pre-KA counterpart exclusively due to proof-theoretic reasons. Since $\Gamma$ may contain more than one hypothesis, if we were to import the pre-KA rule directly we would have to add the metatheoretic operation $\bigotimes \Gamma$ which folds over the context and tensors everything in it. On the other hand, as it was noted by other authors, the rule as it stands makes it impossible to validate the cut elimination theorem.
+
+
+%% \section{From LL to KA}
+
+%% It is also worth exploring what happens when going the other way: defining the Kleene star operator using the linear logic exponential axioms:
+
+%% \begin{align*}
+%%   & 1 + a + a^*a^* \leq a^*\\
+%%   & a \leq b^* \implies a^* \leq b^*
+%% \end{align*}
+
+%% When looking at the models for these axioms we see that they can admit a certain infinitary flavor\footnote{I'm being a bit loose here: when working with infinite strings, the interaction of infinity and products gets a bit subtle}. A consequence of this remark is that the axioms above are not equivalent to the original ones. To see why that is the case, consider the language model over a finite alphabet. If we interpret $a^*$ as the set of finite and infinite concatenations of $a$, it is easy to see that the pre-KA axiom $b + ax \leq x \implies ba^* \leq x$ is not valid -- consider the case where $b=1$ and $x$ only contains finite strings.  
+
+
+\bibliographystyle{acm}
+  % \bibliography{mybib}
+
+  
+\end{document}
