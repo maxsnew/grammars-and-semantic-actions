@@ -1,0 +1,187 @@
+\documentclass[acmsmall,anonymous,review,screen]{acmart}
+\usepackage{mathpartir}
+\usepackage{tikz-cd}
+\usepackage{enumitem}
+\usepackage{wrapfig}
+\usepackage{fancyvrb}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmcopyright}
+\copyrightyear{2018}
+\acmYear{2018}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%% These commands are for a PROCEEDINGS abstract or paper.
+\acmConference[Woodstock '18]{Woodstock '18: ACM Symposium on Neural
+  Gaze Detection}{June 03--05, 2018}{Woodstock, NY}
+\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+  June 03--05, 2018, Woodstock, NY}
+\acmPrice{15.00}
+\acmISBN{978-1-4503-XXXX-X/18/06}
+
+
+\begin{document}
+\title{Formal Grammars as Types in Non-commutative Bunched Type Theory}
+\author{Steven Schaefer}
+\affiliation{
+  \department{Electrical Engineering and Computer Science}
+  \institution{University of Michigan}
+  \country{USA}
+}
+\email{stschaef@umich.edu}
+
+% TODO: add Pedro's info
+
+
+\author{Max S. New}
+\affiliation{
+  \department{Electrical Engineering and Computer Science}
+  \institution{University of Michigan}
+  \country{USA}
+}
+\email{maxsnew@umich.edu}
+
+\begin{abstract}
+  We propose the category of functions from strings to sets as a
+  universal syntax-independent model of formal grammars, generalizing
+  the set of strings model of formal language theory to account for
+  ambiguity. The morphisms of this category give a notion of parse
+  transformer, and isomorphism corresponds to \emph{strong
+  equivalence} of grammars. We observe that the standard algebraic
+  constructions of regular expressions and their extension to
+  mu-regular expressions correspond to universal constructions in this
+  category, which we axiomatize as a structure we call a 2-Kleene
+  Algebra.
+
+  
+\end{abstract}
+
+\section{A Syntax-Independent Notion of Syntax}
+
+The theory of formal languages and parsing is one of the oldest and
+most thoroughly developed areas of theoretical computer science. A
+prominent topic in the 1950s and 60s led to a series of remarkable
+developments: Chomsky's hierarchy of grammar formalisms, practical
+algorithms for parsing of regular and context-free grammars and
+variants, as well as implementations of practical tools for the
+generation of efficient parsers.
+
+A central notion is that of a \emph{formal language} $L$ over an
+alphabet $\Sigma$ as simply a \emph{subset} of the set of strings $L
+\subseteq \Sigma^*$. This definition is especially useful as it gives
+a semantics to formal grammars that is completely independent of any
+particular syntactic grammar formalism: any new notion of grammar can
+be given a semantics in this common framework and it provides a
+precise mathematical speicification for implementing a
+\emph{recognizer} of a language and comparing the power of different
+formalisms by demonstrating what languages can be formalized within
+it. This also allows for completely \emph{language theoretic}
+formulations of language classes: e.g., the regular \emph{languages}
+can be characterized as those that have finitely many derivatives
+\cite{brzozowski-or-myhill-nerode-idk}. This notion is remarkable
+because it makes no reference to any specific syntactic formalism for
+defining languages such as regular expressions or finite automata.
+
+Formal language theory alone is not sufficient as a specification of a
+parser: a language $L \subseteq \Sigma^*$ is equivalently defined as
+its indicator function $\chi_L : \Sigma^* \to \Prop$ mapping each
+string $w$ to the proposition that it is in the language $w \in
+L$. This can then serve as the specification for a language
+\emph{recognizer}: a program $r$ of type $\Sigma^* \to \Bool$ such
+that $r(w) = \texttt{true}$ if and only if $\chi_L(w)$, but
+recognition is insufficient for most tasks for which the theory of
+parsing was developed: the production of \emph{semantic} structures
+from synactic descriptions in linguistics, compilation or
+deserialization. The output of a parser is not just a boolean but a
+\emph{parse tree}\footnote{such parse trees are usually not
+materialized in memory, as the construction of the parse tree is fused
+with application of semantic actions, which can be seen as a kind of
+fold over the generated tree.}.
+
+Due to this limitation, parsers are typically specified not by a
+formal language, but by some \emph{formal grammar}, which specifies
+not just \emph{which} strings are in the language but specifies what
+are the \emph{parse trees} for the string. However unlike formal
+language theory, there is no common universal notion of what
+constitutes a formal grammar, but rather many syntactic systems such
+as Chomskyan(?)  grammars, Thue systems, Montague grammars, etc which
+are all syntactic presentations of the same underlying idea of an
+abstract specification for parsing. The most common of these is the
+Chomsky hierarchy of \emph{generative} grammars which specify parse
+trees using \emph{derivations} of the string from a set of rewrite
+rules, the parse tree encoding which rules were used.
+
+Our first contribution is conceptual: we propose a simple,
+syntax-independent definition of \emph{formal grammar}:
+\begin{definition}
+  A \emph{formal grammar} over an alphabet $\Sigma$ is a function
+  $\Sigma^* \to \Set$.
+\end{definition}
+We say that a grammar $G$ associates to every string $w$ the set $Gw$
+of \emph{parses} of that string. While we will work informally in this
+paper, the collection $\Set$ can be formalized in many different
+logical foundations: as a universe in type theory, a proper class in
+set theory, etc. We argue that this is already a common intuition
+latent in much prior work on grammars, especially when comparing
+different formalisms for equivalence such as \cite{??}. This notion is
+also completely natural in the context of constructive type theories
+such as Agda which until recently did not include a universe of
+propositions, and so for example in Elliott (\cite{??}) a formal
+language was defined as a function to the universe $\Type$ with little
+comment.
+
+Every formal grammar $G$ induces a formal language, which can be seen
+most easily by using the characteristic function formulation: we can
+``squash'' any set into the proposition that it is inhabited, so
+$\chi_G(w) = ||G(w)||$ which defines a subset $L_G = \{ w \in
+\Sigma^*| G(w) \mathrm{inhabited}\}$.
+
+Formal languages naturally arrange themselves into a partial order by
+using the subset inclusion as the ordering. Formal grammars naturally
+arrange themselves into a \emph{category} where a morphism $\alpha : G
+\to H$ is given by a \emph{family} of functions
+\[ \alpha^w : Gw \to Hw \]
+for every string $w \in \Sigma^*$. The intuition is that a morphism of
+grammars is a \emph{translation of parses}: a $G$-parse of $w$ gets
+transformed to an $H$-parse of $w$. This then induces a notion of
+\emph{isomorphism} of grammars: two grammars are equivalent if there
+is a bijective translation of parses, precisely capturing the notion
+of a \emph{strong equivalence} of grammars.
+
+This category-theoretic framework can be further used to describe and
+compare different notions of formal grammar. We can define a
+\emph{notion of grammar} to be a category (or perhaps just groupoid)
+paired with a functor into $\Set^{\Sigma^*}$. This naturally forms a
+2-category the slice 2-category over $\Set^{\Sigma^*}$ and equivalence
+in this 2-category defines a sensible notion of \emph{strong
+equivalence of grammar formalisms} (TODO: check details).
+
+The category of grammars is quite rich in structure, which can be most
+easily observed from the fact that it is equivalently defined as the
+category of functors $\Set^{\Sigma^*}$ where $\Sigma^*$ is here viewed
+as a discrete category, that is, the objects are strings and only
+morphisms are identity morphisms. Such functor categories, often
+called presheaf categories, are incredibly rich in structure, which we
+will exploit in section \ref{blah} to succinctly define the semantics
+of regular and context-free grammars.
+
+\section{Future work}
+
+\subsection{Beyond Strings}
+
+While parsing typically refers to the production of semantic objects
+from their description as strings, many tasks in programming can be
+viewed as parsing of more structured objects such as trees, trees with
+binding structure or graphs. Fundamental to programming language
+implementation is \emph{type checking}, analogous to language
+recognition, or more generally \emph{typed elaboration}, analogous to
+parsing, which produces a semantic object in addition to performing
+some analysis.
+
+
+
+\end{document}
