@@ -137,7 +137,6 @@ $$
  }
 $$
 *** TODO track down a good description of the third functor
-*** TODO type up foldl
 * Encoding Automata
 ** Nondeterministic Finite Automata (NFA)
 Using the mutually recursive constructor for grammars, we are able to construct a grammar where the internal mutually recrusive terms represent the states of an NFA and the constructors of these mutually recursive terms correspond to the transitions of the NFA. We write a syntactic form declaring what it means to be in /NFA form/, then we build an isomorphism between a given regular expresssion and an equivalent grammar in NFA form. We may think of this process as internalizing Thompson's construction for the NFA of a regular expression to our formalism.
@@ -148,7 +147,9 @@ Intuitively we think of each construct $Y_i$ as some state internal to the autom
 $$ guard ::= \varepsilon ~|~ c$$
 where $c \in \Sigma$
 
-$$state ::= (guard \ast Y_j) ~|~ (internalState \lor internalState)$$
+$$Y ::= Y_{start} ~|~ Y_{end} ~|~ Y_1 ~|~ \cdots ~|~ Y_n$$
+
+$$state ::= (guard \ast Y) ~|~ (state \lor state)$$
 
 Then a gramamr is said to be in NFA form if it has the form,
 
@@ -156,8 +157,28 @@ $$\mu (Y_{start} = <state>, Y_1 = <state>, \dots, Y_n = <state>, Y_{end} = \vare
 
 As suggestively notated, we think of this an NFA with one start state and one accepting state, without loss of generality.
 
-**** TODO there is surely a cleaner and more succint way to write what an NFA form is recursively but its 7pm and I'm tired. I will fix these silly issues tomorrow
+**** TODO there is surely a cleaner and more succint way to write what an NFA form is recursively but its late and I'm tired. I will fix these silly issues tomorrow
 **** TODO type up proofs of equivalence
 
 *** Proof that NFA is equivalent to a regular expression
 We do this in two steps. First, we inductively show the equivalence of the regular expression with an intermediate grammar that nearly matches the NFA form, except it is not flattened. Then we show the equivalence of this intermediate representation and its flattening (which is in NFA form). Combining each of these proof, we arrive at a provably correct NFA that recognizes the given regular expression.
+
+In Thompson's contruction, to build an NFA for a grammar $g$ we build it up recursively by combining the automata that comprise the subgrammars of $g$. That is, for $g = g_1 \lor g_2$, to build $NFA(g)$ we first build an $NFA(g_1)$ and $NFA(g_2)$. We then connect the start state of $NFA(g)$ to the start states of each of $NFA(g_1)$ and $NFA(g_2)$ with $\varepsilon$-transitions. Then we likewise connect the accepting states of $NFA(g_1)$ and $NFA(g_2)$ to the accepting state of $NFA(g)$ with $\varepsilon$-transitions. There are similar automata combinators used for $g_1 \ast g_2$ and $g^{\ast}$, as well as base automata for $c \in \Sigma$ and $\varepsilon$.
+
+**** Intermediate Form
+We build a restricted syntax for describing the automata that result from Thompson's construction. These could probably use a better them, but they showed up as an intermediate representation along the way to showing that $g$ and $NFA(g)$ are weakly equivalent, so I've called these an "intermediate representation" in my notes and refer to them as $IR(g)$.
+
+For $c \in \Sigma$,
+$$IR(c) = \mu( Y_{start} = c \ast Y_{end}, Y_{end} = \varepsilon ) \inbf Y_{start}$$
+
+$$IR(\varepsilon) = \mu( Y_{start} = \varepsilon \ast Y_{end}, Y_{end} = \varepsilon ) \inbf Y_{start}$$
+
+$$IR(g_1 \lor g_2) =  \mu( Y_{start} = \varepsilon \ast Y_1 \lor \varepsilon \ast Y_2, Y_1 = NFA(g_1) \ast Y_{end}, Y_2 = NFA(g_2) \ast Y_{end}, Y_{end} = \varepsilon ) \inbf Y_{start}$$
+
+$$IR(g_1 \ast g_2) =  \mu( Y_{start} = NFA(g_1) \ast Y_1, Y_1 = NFA(g_2) \ast Y_{end}, Y_{end} = \varepsilon ) \inbf Y_{start}$$
+
+$$IR(g^{\ast}) =  \mu( Y_{start} = \varepsilon \ast Y_1 \lor \varepsilon \ast Y_{end}, Y_1 = NFA(g) \ast Y_2, Y_2 = \varepsilon \ast Y_1 \lor \varepsilon \ast Y_{end}, Y_{end} = \varepsilon ) \inbf Y_{start}$$
+
+From here we make an inductive argument that $g$ and $IR(g)$ are weakly equivalent.
+
+***** TODO type these out
