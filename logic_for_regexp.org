@@ -112,6 +112,30 @@ Pedro suggests that when categorifying Kleene Algebra, one needs to require that
 
 In our formalism, we are taking as primitive that the star is an intial algebra of $1 + GX$. And given the same premises as $Kl \ast E$ we are able to construct a term $\foldl$ that demonstrates that the star is also an algebra of $1 + XG$. It however is not clear to me if this an intial algebra, or if we can expect to do this for the third functor.
 
+*** $\foldl$
+We may take the analagous assumptions to a right fold ($Kl \ast E$), but with the opposite handedness. We show that a similar left fold operation does not need to be taken as primitive, rather it can be shown admissible through implementation using the right fold. This is analagous to the implementation of ~foldl~ using ~foldr~ in a functional programming language.
+
+That is, taking the assumptions $\Gamma \vdash p : g^{\ast}$, $\bullet \vdash p_{\varepsilon} : g'$, and $z : g' , x : g \vdash p_{\ast} : g'$ we have the following derivation for $\Gamma \vdash \foldl(p_{\varepsilon, p_{\ast}})$,
+
+$$
+ \infer[\sep E]{\Gamma \vdash \foldl (p_{\varepsilon}, p_{\ast}) = \appbf_{\sep}(\foldr (\textbf{id}, \textbf{step}), p_{\varepsilon} : g') }{
+ \bullet \vdash p_{\varepsilon} : g' &
+ \infer[Kl*E]
+    {\Gamma \vdash \foldr (\textbf{id}, \textbf{step}) : g' \sep g'}
+    {
+        \Gamma \vdash p : g^* &
+        \infer[\sep I]{\bullet \vdash \textbf{id} : g' \sep g'}{\infer[Id]{a : g' \vdash a : g'}{}} &
+        \infer[\sep I]
+            {x : g, y : g' \sep g'  \vdash \textbf{step} = \lambda^{\sep} z . \appbf_{\sep}(y, p_{\ast}) : g' \sep g'}
+            {\infer[\sep E]{z : g', x : g, y : g' \sep g' \vdash \appbf_{\sep}(y, p_{\ast}) : g'}
+            {
+                z : g', x : g \vdash p_{\ast} : g' &
+                \infer[Id]{y : g' \sep g' \vdash y : g' \sep g'}{}
+            }
+            }
+    }
+ }
+$$
 *** TODO track down a good description of the third functor
 *** TODO type up foldl
 * Encoding Automata
