@@ -45,6 +45,14 @@
 }
 \email{maxsnew@umich.edu}
 
+\author{Pedro H. Azevedo de Amorim}
+\affiliation{
+  \department{Department of Computer Science}
+  \institution{University of Oxford}
+  \country{UK}
+}
+\email{pedro.azevedo.de.amorim@cs.ox.ac.uk}
+
 \begin{abstract}
   We propose the category of functions from strings to sets as a
   universal syntax-independent model of formal grammars, generalizing
@@ -168,6 +176,30 @@ morphisms are identity morphisms. Such functor categories, often
 called presheaf categories, are incredibly rich in structure, which we
 will exploit in section \ref{blah} to succinctly define the semantics
 of regular and context-free grammars.
+
+\section{Related work}
+
+\paragraph{Kleene Algebra}
+
+Since the early works in the theory of formal languages, Kleene
+algebras have played an important role in its development. They
+generalize the operations known from regular languages by introducing
+operations generalizing language composition, language union and the
+Kleene star.  More generally, they are defined as inequational theory
+where the inequality is meant to capture language containment. This
+theory is extremely successful, having found applications in algebraic
+path problems, theory of programming languages, compiler optimizations
+and more.
+
+A frequently fruitful research direction is exploring varying
+extensions of Kleene algebras, Kleene algebra with tests (KAT) being
+one of the most notable ones. Our approach is radically different from
+most extensions, which usually aim at modifying or adding new
+operations to Kleene algebras, but still keeping it as an inequational
+theory. By adopting a category-theoretic treatment and allowing the
+``order structure'' to encode more information than merely
+inequalities, we were able to extend Kleene algebra to reason about
+parsing as well.
 
 \section{Future work}
 
