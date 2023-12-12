@@ -5,6 +5,8 @@
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
 
+\newcommand{\cat}[1]{\mathbf{#1}}
+
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
 %% values in them; it is your responsibility as an author to replace
@@ -176,6 +178,126 @@ morphisms are identity morphisms. Such functor categories, often
 called presheaf categories, are incredibly rich in structure, which we
 will exploit in section \ref{blah} to succinctly define the semantics
 of regular and context-free grammars.
+
+\section{Kleene Category}
+
+An important tool from the theory of formal languages was the development
+of Kleene algebras, which serve as a theoretical substrate to studying
+various kinds of formal languages. Formally, they are a set equipped
+with three operations and two constants satisfying the axioms of
+\ref{fig:axioms}.
+
+\begin{figure}
+  \begin{align*}
+    x + (y + z) &= (x + y) + z & x + y &= y + x\\
+    x + 0 &= x & x + x &= x\\
+    x(yz) &= (xy)z & x1 &= 1x = x\\
+    x(y + z) &= xy + xz & (x + y)z &= xz + yz\\
+    x0 &= 0x = x & & \\
+    1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
+     b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
+  \end{align*}
+  \label{fig:axioms}
+  \caption{Kleene algebra axioms}
+\end{figure}
+
+
+The addition operation can be used to define a partial order structure
+$a \leq b$ if $a + b = b$. In the theory of formal languages this
+order structure can be used to model language containment. What we
+want to do in this section is to categorify the concept of Kleene
+algebra and build on top of this new categorical concept as the
+theoretical basis to the formal theory of parsing.
+
+
+\begin{definition}
+  A Kleene category is a distributive monoidal category $\cat{K}$
+  such that for every objects $A$ and $B$, the endofunctors $F_{A, B}
+  = B + A \otimes X$ and $G_{A, B} = B + X \otimes A$ have initial
+  algebras (denoted $\mu X.\, F_{A, B}(X)$) such that $B \otimes (\mu
+  X.\, F_{A, 1}) \cong \mu X.\, F_{A, B}(X)$ and the analogue isomorphism
+  for $G_{A,B}$ also holds.
+\end{definition}
+
+\begin{example}
+  Every Kleene algebra, seen a posetal category, is a Kleene category.
+\end{example}
+
+\begin{example}
+  The opposite category of every Kleene category is a model of a variant of
+  conjunctive ordered logic, where the Kleene star plays the role of the ``of
+  course'' modality from substructural logics.
+\end{example}
+
+The proposed axioms are a direct translation of the Kleene algebra
+axioms to a categorical setting. Its most unusual aspect is the
+axiomatization of the Kleene star as a family os initial algebras
+satisfying certain isomorphisms. If the Kleene category $\cat{K}$ has
+more structure, then these isomorphisms hold ``for free''.
+
+\begin{theorem}
+  \label{th:kleeneclosed}
+  Let $\cat{K}$ be a Kleene category such that it is also monoidal
+  closed.  Then, the initial algebras isomorphisms hold automatically.
+\end{theorem}
+\begin{proof}
+  We prove this by the unicity (up-to isomorphism) of initial
+  algebras. Let $[hd, tl]: 1 + (\mu X.\, F_{A, 1}(X)) \otimes A \to
+  (\mu X.\, F_{A, 1}(X))$ be the initial algebra structure of $(\mu
+  X.\, F_{A, 1}(X))$ and consider the map $[hd, tl] : B + B \otimes
+  (\mu X.\, F_{A, 1}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
+    1}(X))$.
+
+  Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
+  we want to show that there is a unique algebra morphism $h : B
+  \otimes \mu X.\, F_{A,1} \to Y$. We can show existence and uniqueness
+  by showing that the diagram on the left commute if, and only if,
+  the diagram on the right commutes:
+
+  This equivalence follows by using the adjunction structure given
+  by the monoidal closed structure of $\cat{K}$. A completely analogous
+  argument for $G_{A,B}$ also holds.
+\end{proof}
+
+This result feels similar in spirit to the definition of action
+algebras, which are algebras where the product also has adjoint
+operations which results in the Kleene star being more easily
+axiomatized \cite{kozen1994}.
+
+%% \begin{theorem}
+%%   Let $\cat{K}$ be a Kleene category and $A$ a discrete category.
+%%   The functor category $[A, \cat{K}]$.
+%%   (HOW GENERAL SHOULD THIS THEOREM BE? BY ASSUMING ENOUGH STRUCTURE,
+%%   E.G. K = Set, THIS THEOREM BECOMES SIMPLE TO PROVE)
+%% \end{theorem}
+
+\begin{theorem}
+  If $\cat{C}$ is a locally small monoidal category, then the category
+  $\cat{Set}^{\cat{C}}$ is a Kleene category.
+\end{theorem}
+\begin{proof}
+  The coproduct structure exists since it is a presheaf category. The
+  monoidal structure is defined using the Day convolution and,
+  furthermore, this monoidal structure has a closed structure as well.
+  
+  From this closed structure it follows that it is a distributive
+  monoidal category, since left adjoint functors preserve colimits. As
+  for the Kleene star, since presheaf categories admit small colimits,
+  the initial algebra of the functors $F_{A,B}$ and $G_{A,B}$ can be
+  defined as the filtered colimit of the diagrams:
+
+  From Theorem~\ref{th:kleeneclosed} it follows that
+  these initial algebras satisfy the required isomorphisms.
+\end{proof}
+
+\begin{corollary}
+  For every alphabet $\Sigma$, the presheaf category $\cat{Set}^{\cat{\Sigma^*}}$
+  is a Kleene category.
+\end{corollary}
+\begin{proof}
+  Note that string concatenation makes the discrete category
+  $\Sigma^*$ a strict monoidal category.
+\end{proof}
 
 \section{Related work}
 
