@@ -6,6 +6,13 @@
 \usepackage{fancyvrb}
 
 \newcommand{\cat}[1]{\mathbf{#1}}
+\newcommand{\Set}{\mathbf{Set}}
+
+\newif\ifdraft
+\drafttrue
+\newcommand{\steven}[1]{\ifdraft{\color{orange}[{\bf Steven}: #1]}\fi}
+\newcommand{\max}[1]{\ifdraft{\color{blue}[{\bf Max}: #1]}\fi}
+\newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro}: #1]}\fi}
 
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
@@ -177,7 +184,7 @@ as a discrete category, that is, the objects are strings and only
 morphisms are identity morphisms. Such functor categories, often
 called presheaf categories, are incredibly rich in structure, which we
 will exploit in section \ref{blah} to succinctly define the semantics
-of regular and context-free grammars.
+of regular and context-free grammars. \steven{Topoi model dependent type theory. This dependence is seemingly useful for also reasoning about context sensitivity, but this doesn't work for \textit{reasons}, right?}
 
 \section{Kleene Category}
 
@@ -229,9 +236,11 @@ theoretical basis to the formal theory of parsing.
   course'' modality from substructural logics.
 \end{example}
 
+\steven{What is the ``of course'' modality? Is this ``$!$'' in linear logic?}
+
 The proposed axioms are a direct translation of the Kleene algebra
 axioms to a categorical setting. Its most unusual aspect is the
-axiomatization of the Kleene star as a family os initial algebras
+axiomatization of the Kleene star as a family of initial algebras
 satisfying certain isomorphisms. If the Kleene category $\cat{K}$ has
 more structure, then these isomorphisms hold ``for free''.
 
