@@ -6,6 +6,8 @@
 \usepackage{fancyvrb}
 
 \newcommand{\cat}[1]{\mathbf{#1}}
+\newcommand{\Set}{\cat{Set}}
+\newcommand{\lto}{\multimap}
 
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
@@ -181,11 +183,13 @@ of regular and context-free grammars.
 
 \section{Kleene Category}
 
-An important tool from the theory of formal languages was the development
-of Kleene algebras, which serve as a theoretical substrate to studying
-various kinds of formal languages. Formally, they are a set equipped
-with three operations and two constants satisfying the axioms of
-\ref{fig:axioms}.
+Kleene algebras are an important tool in the theory of regular
+languages. More broadly, they serve as a theoretical substrate to
+studying various kinds of formal languages. Formally, they are a tuple
+$(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is a set, $+$ and $\cdot$
+are binary operations over $A$, $(-)^*$ is a function over $A$, and
+$1$ and $0$ are constants. These structures satisfy the axoims depicted
+in Figure~\ref{fig:axioms}.
 
 \begin{figure}
   \begin{align*}
@@ -201,14 +205,12 @@ with three operations and two constants satisfying the axioms of
   \caption{Kleene algebra axioms}
 \end{figure}
 
-
-The addition operation can be used to define a partial order structure
-$a \leq b$ if $a + b = b$. In the theory of formal languages this
-order structure can be used to model language containment. What we
-want to do in this section is to categorify the concept of Kleene
-algebra and build on top of this new categorical concept as the
-theoretical basis to the formal theory of parsing.
-
+The addition operation can be used to define the partial order
+structure $a \leq b$ if $a + b = b$. In the theory of formal languages
+this order structure can be used to model language containment. In this
+section, we want to categorify the concept of Kleene algebra and
+build on top of it in order to define an abstract theory of parsing.
+We start by defining \emph{Kleene categories}.
 
 \begin{definition}
   A Kleene category is a distributive monoidal category $\cat{K}$
@@ -219,9 +221,14 @@ theoretical basis to the formal theory of parsing.
   for $G_{A,B}$ also holds.
 \end{definition}
 
+As a sanity check, note that Kleene algebras are indeed examples of
+Kleene categories.
+
 \begin{example}
   Every Kleene algebra, seen a posetal category, is a Kleene category.
 \end{example}
+
+An unexpected example comes from the theory of substructural logics.
 
 \begin{example}
   The opposite category of every Kleene category is a model of a variant of
@@ -229,11 +236,12 @@ theoretical basis to the formal theory of parsing.
   course'' modality from substructural logics.
 \end{example}
 
-The proposed axioms are a direct translation of the Kleene algebra
-axioms to a categorical setting. Its most unusual aspect is the
-axiomatization of the Kleene star as a family os initial algebras
-satisfying certain isomorphisms. If the Kleene category $\cat{K}$ has
-more structure, then these isomorphisms hold ``for free''.
+This proposed definition is sensible. After all, the proposed axioms
+are a direct translation of the Kleene algebra axioms to a categorical
+setting. Its most convoluted aspect is the axiomatization of the Kleene
+star as a family os initial algebras satisfying certain
+isomorphisms. If the Kleene category $\cat{K}$ has more structure,
+then these isomorphisms hold ``for free''.
 
 \begin{theorem}
   \label{th:kleeneclosed}
@@ -262,7 +270,28 @@ more structure, then these isomorphisms hold ``for free''.
 This result feels similar in spirit to the definition of action
 algebras, which are algebras where the product also has adjoint
 operations which results in the Kleene star being more easily
-axiomatized \cite{kozen1994}.
+axiomatized \cite{kozen1994}. We are now ready to prove that our
+concept of formal grammars fit nicely within our categorical
+framework. We start by presenting a well-known construction
+from presheaf categories.
+
+\begin{definition}
+  Let $\cat{C}$ be a locally small monoidal category and $F$, $G$ be
+  two functors $\cat{C} \to \Set$. Their Day convolution tensor
+  product is defined as the following coend formula:
+  \[
+  (F \otimes_{Day} G)(x) = \int^{(y,z) \in \cat{C}\times\cat{C}}\cat{C}(y\otimes z, x) \times F(y) \times G(z) 
+  \]
+  Dually, its internal hom is given by the following end formula:
+  \[
+  (F \lto_{Day} G)(x) = \int_{y} \Set(F(y), G(x \otimes y))
+  \]
+\end{definition}
+
+\begin{lemma}[\cite{day1970}]
+  Under the assumptions above, the presheaf category $\Set^{\cat{C}}$ is
+  monoidal closed.
+\end{lemma}
 
 %% \begin{theorem}
 %%   Let $\cat{K}$ be a Kleene category and $A$ a discrete category.
@@ -270,33 +299,33 @@ axiomatized \cite{kozen1994}.
 %%   (HOW GENERAL SHOULD THIS THEOREM BE? BY ASSUMING ENOUGH STRUCTURE,
 %%   E.G. K = Set, THIS THEOREM BECOMES SIMPLE TO PROVE)
 %% \end{theorem}
-
 \begin{theorem}
-  If $\cat{C}$ is a locally small monoidal category, then the category
-  $\cat{Set}^{\cat{C}}$ is a Kleene category.
+  If $\cat{C}$ is a locally small monoidal category, then
+  $\Set^{\cat{C}}$ is a Kleene category.
 \end{theorem}
 \begin{proof}
-  The coproduct structure exists since it is a presheaf category. The
-  monoidal structure is defined using the Day convolution and,
-  furthermore, this monoidal structure has a closed structure as well.
-  
-  From this closed structure it follows that it is a distributive
-  monoidal category, since left adjoint functors preserve colimits. As
-  for the Kleene star, since presheaf categories admit small colimits,
+
+  By the lemma above, $\Set^{\cat{C}}$ is monoidal closed, and since it
+  is a presheaf category, it has coproducts, and since the tensor
+  is a left adjoint, it preserves colimits and, therefore, it is
+  a distributive category.
+
+  As for the Kleene star, since presheaf categories admit small colimits,
   the initial algebra of the functors $F_{A,B}$ and $G_{A,B}$ can be
   defined as the filtered colimit of the diagrams:
 
-  From Theorem~\ref{th:kleeneclosed} it follows that
-  these initial algebras satisfy the required isomorphisms.
+  From Theorem~\ref{th:kleeneclosed} it follows that these initial
+  algebras satisfy the required isomorphisms and this concludes the
+  proof.
 \end{proof}
 
 \begin{corollary}
-  For every alphabet $\Sigma$, the presheaf category $\cat{Set}^{\cat{\Sigma^*}}$
+  For every alphabet $\Sigma$, the presheaf category $\Set^{\cat{\Sigma^*}}$
   is a Kleene category.
 \end{corollary}
 \begin{proof}
-  Note that string concatenation makes the discrete category
-  $\Sigma^*$ a strict monoidal category.
+  Note that string concatenation and the empty string make the
+  discrete category $\Sigma^*$ a strict monoidal category.
 \end{proof}
 
 \section{Related work}
