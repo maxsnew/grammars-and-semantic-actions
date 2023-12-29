@@ -1,13 +1,22 @@
-\documentclass[acmsmall,anonymous,review,screen]{acmart}
+\documentclass[sigconf,anonymous,review,screen]{acmart}
 \usepackage{mathpartir}
 \usepackage{tikz-cd}
 \usepackage{enumitem}
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
+\usepackage{stmaryrd}
 
 \newcommand{\cat}[1]{\mathbf{#1}}
-\newcommand{\Set}{\cat{Set}}
-\newcommand{\lto}{\multimap}
+\newcommand{\Set}{\mathbf{Set}}
+\newcommand{\Type}{\mathbf{Type}}
+\newcommand{\Prop}{\mathbf{Prop}}
+\newcommand{\Bool}{\mathbf{Bool}}
+
+\newif\ifdraft
+\drafttrue
+\newcommand{\steven}[1]{\ifdraft{\color{orange}[{\bf Steven}: #1]}\fi}
+\renewcommand{\max}[1]{\ifdraft{\color{blue}[{\bf Max}: #1]}\fi}
+\newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro}: #1]}\fi}
 
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
@@ -38,9 +47,6 @@
 }
 \email{stschaef@umich.edu}
 
-% TODO: add Pedro's info
-
-
 \author{Max S. New}
 \affiliation{
   \department{Electrical Engineering and Computer Science}
@@ -68,9 +74,9 @@
   mu-regular expressions correspond to universal constructions in this
   category, which we axiomatize as a structure we call a 2-Kleene
   Algebra.
-
-  
 \end{abstract}
+
+\maketitle
 
 \section{A Syntax-Independent Notion of Syntax}
 
@@ -179,7 +185,7 @@ as a discrete category, that is, the objects are strings and only
 morphisms are identity morphisms. Such functor categories, often
 called presheaf categories, are incredibly rich in structure, which we
 will exploit in section \ref{blah} to succinctly define the semantics
-of regular and context-free grammars.
+of regular and context-free grammars. \steven{Topoi model dependent type theory. This dependence is seemingly useful for also reasoning about context sensitivity, but this doesn't work for \textit{reasons}, right?}
 
 \section{Kleene Category}
 
@@ -236,12 +242,13 @@ An unexpected example comes from the theory of substructural logics.
   course'' modality from substructural logics.
 \end{example}
 
-This proposed definition is sensible. After all, the proposed axioms
-are a direct translation of the Kleene algebra axioms to a categorical
-setting. Its most convoluted aspect is the axiomatization of the Kleene
-star as a family os initial algebras satisfying certain
-isomorphisms. If the Kleene category $\cat{K}$ has more structure,
-then these isomorphisms hold ``for free''.
+\steven{What is the ``of course'' modality? Is this ``$!$'' in linear logic?}
+
+The proposed axioms are a direct translation of the Kleene algebra
+axioms to a categorical setting. Its most unusual aspect is the
+axiomatization of the Kleene star as a family of initial algebras
+satisfying certain isomorphisms. If the Kleene category $\cat{K}$ has
+more structure, then these isomorphisms hold ``for free''.
 
 \begin{theorem}
   \label{th:kleeneclosed}
@@ -352,6 +359,101 @@ theory. By adopting a category-theoretic treatment and allowing the
 inequalities, we were able to extend Kleene algebra to reason about
 parsing as well.
 
+\section{Universal Constructions in the Category of Grammars}
+
+Predicate BI: bicartesian closed, monoidal biclosed, omega-colimits
+and therefore certain initial algebras
+
+
+
+\section{A Bunched Type Theory for Grammars}
+
+
+\subsection{Semantics}
+
+Set types $A$ and set contexts $\Delta$ denotes sets, and
+grammar types $\gamma$ and grammar contexts $\Gamma$ in context
+$\Delta$ denote families of grammars $(\Set^{\Sigma^*})^\Delta$.  A
+
+\subsection{Canonicity}
+
+Let $\phi$ be a propositional BI formula over $\Sigma$. Then there are
+two obvious notions of what constitutes a ``parse'' of a string w
+according to the grammar $\phi$:
+\begin{enumerate}
+\item On the one hand we have the semantics just defined, $\llbracket \phi \rrbracket w$
+\item On the other hand, we can view the string $w$ as a formula
+  $\lceil w \rceil$ and define a parse to be an equivalence classes of
+  proofs $x:\lceil w \rceil \vdash \phi$
+\end{enumerate}
+
+It is not difficult to see that at least for the ``strictly positive''
+formulae (those featuring only the positive connectives
+$\vee,\bot,\epsilon,\otimes,\mu$ and the generators $c$) that every
+element $t \in \llbracket \phi \rrbracket w$ is a kind of tree and
+that the nodes of the tree correspond precisely to the introduction
+forms of the language. However it is far less clear that every proof
+$x:\lceil w \rceil \vdash p : \phi$ corresponds to some sequence of
+introduction forms since proofs can include elimination forms as
+well. So we want to prove a kind of \emph{canonicity} result for the
+calculus, a generalization of the disjunction theorem of constructive
+logic:
+
+\begin{enumerate}
+\item Every proof $\lceil w \rceil \vdash p : \phi \otimes \psi$ is equal to $(q,r)$ for some $q,r$
+\item Every proof $\lceil w \rceil \vdash p : \epsilon$ is equal to $()$
+\item Every proof $\lceil w \rceil \vdash p : \phi \vee \psi$ is equal to $\sigma_1q$ or $\sigma_2 r$ (but not both)
+\item Every proof $\lceil w \rceil \vdash p : c$ is equal to $x:c$
+\item Every proof $\lceil w \rceil \vdash p : \mu X. \phi$ is equal to $\textrm{roll}(q)$ where $q : \phi(\mu X.\phi/X)$
+\end{enumerate}
+
+To prove this result we will use a simple Kripke logical relation.
+
+First, let $L$ be the category of BI formulae and proofs (quotiented
+by $\beta\eta$ equality). Define a functor $N : L \to \Set^{\Sigma^*}$ by
+\[ N(\phi)(w) = L(w,\phi) \]
+
+Then define the gluing category $\mathcal G$ as the comma category
+$\Set^{\Sigma^*}/N$. That is, an object of this category is a pair of
+a formula $\phi \in L$ and an object $S \in \mathcal
+P(\Sigma^*)/N(\phi)$. We can then use the equivalence $\mathcal
+P(\Sigma^*)/N(\phi) \cong \mathcal P(\int N(\phi))$ to get a simple
+description of such an $S$: it is simply a family of sets indexed by
+proofs $L(w,\phi)$:
+\[ \prod_{w\in\Sigma^*} L(w,\phi) \to \Set \]
+This category clearly comes with a projection functor $\pi : \mathcal
+G \to \mathcal L$ and then our goal is to define a section by using
+the universal property of $\mathcal L$.
+
+To this end we define
+\begin{enumerate}
+\item $(\phi, S) \otimes (\psi, T) = (\phi \otimes \psi, S\otimes T)$ where
+  \[ (S \otimes T)(w, p) = (w_1w_2 = w) \times (q_1,q_2 = p) \times S\,w_1\,q_1 \times T\,w_2\,q_2\]
+\item $(\phi, S) \multimap (\psi, T) = (\phi \multimap \psi, S \multimap T)$ where
+  \[ (S \multimap T)(w,p) = w' \to q \to S\,w'\,q \to T (ww') (p\,q) \]
+\item $\mu X. ??$ ??
+\end{enumerate}
+
+\section{Logical Characterizations of Language Classes}
+
+Our bunched type theory 
+
+Predicate BI with existential quantifiers is already enough to define
+formulae that correspond to arbitrary recursively enumerable languages
+since we can simulate the tape of a Turing machine using two
+stacks. I.e., we can define a set $S$ of lists of tape symbols, and
+then define a formula that first ``copies'' the input onto one stack, then executes
+
+\[ \mu \textrm{Copy} : S \to *. \lambda s. (\epsilon \wedge T\,s\,[])\bigvee_{c \in \Sigma} c (S\,{c::s}) \]
+
+
+\section{Related Work}
+
+TODO 
+
+%% That paper with Fritz Henglein about regexes as types
+
+%% Vaughan Pratt on the residual operator
 \section{Future work}
 
 \subsection{Beyond Strings}
