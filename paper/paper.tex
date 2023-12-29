@@ -7,6 +7,7 @@
 \usepackage{stmaryrd}
 
 \newcommand{\cat}[1]{\mathbf{#1}}
+\newcommand{\lto}{\multimap}
 \newcommand{\Set}{\mathbf{Set}}
 \newcommand{\Type}{\mathbf{Type}}
 \newcommand{\Prop}{\mathbf{Prop}}
@@ -239,7 +240,8 @@ An unexpected example comes from the theory of substructural logics.
 \begin{example}
   The opposite category of every Kleene category is a model of a variant of
   conjunctive ordered logic, where the Kleene star plays the role of the ``of
-  course'' modality from substructural logics.
+  course'' modality from substructural logics which allows hypotheses to
+  be discarded or duplicated.
 \end{example}
 
 \steven{What is the ``of course'' modality? Is this ``$!$'' in linear logic?}
@@ -277,10 +279,11 @@ more structure, then these isomorphisms hold ``for free''.
 This result feels similar in spirit to the definition of action
 algebras, which are algebras where the product also has adjoint
 operations which results in the Kleene star being more easily
-axiomatized \cite{kozen1994}. We are now ready to prove that our
-concept of formal grammars fit nicely within our categorical
-framework. We start by presenting a well-known construction
-from presheaf categories.
+axiomatized \cite{kozen1994}.
+
+We are now ready to prove that our concept of formal grammars fits
+nicely within our categorical framework. We start by presenting a
+well-known construction from presheaf categories.
 
 \begin{definition}
   Let $\cat{C}$ be a locally small monoidal category and $F$, $G$ be
@@ -313,8 +316,8 @@ from presheaf categories.
 \begin{proof}
 
   By the lemma above, $\Set^{\cat{C}}$ is monoidal closed, and since it
-  is a presheaf category, it has coproducts, and since the tensor
-  is a left adjoint, it preserves colimits and, therefore, it is
+  is a presheaf category, it has coproducts. Furthermore, the tensor
+  is a left adjoint, i.e. it preserves colimits and, therefore, it is
   a distributive category.
 
   As for the Kleene star, since presheaf categories admit small colimits,
@@ -334,6 +337,17 @@ from presheaf categories.
   Note that string concatenation and the empty string make the
   discrete category $\Sigma^*$ a strict monoidal category.
 \end{proof}
+
+Much like in the posetal case, the abstract structure of a 2-Kleene
+algebra is expressive enough to synthetically reason about formal
+languages. A significant difference between them is that while Kleene
+algebras can reason about language containment, 2-Kleene algebras can
+reason about parsing as well.
+
+For the rest of the paper we will use the presheaf category
+$\Set^{\cat{\Sigma^*}}$ as a concrete model that will serve as our
+guide when expanding abstract formalism presented in this section so
+that it can handle more classes of languages beyond regular ones.
 
 \section{Related work}
 
@@ -426,6 +440,9 @@ G \to \mathcal L$ and then our goal is to define a section by using
 the universal property of $\mathcal L$.
 
 To this end we define
+\pedro{I'm pretty sure that these definitions have been somewhat presented
+  in ``Glueing and orthogonality for models of linear logic'' - Hyland and Schalk.
+We should probably cite them so that we don't have to rederive their constructions and proofs here.}
 \begin{enumerate}
 \item $(\phi, S) \otimes (\psi, T) = (\phi \otimes \psi, S\otimes T)$ where
   \[ (S \otimes T)(w, p) = (w_1w_2 = w) \times (q_1,q_2 = p) \times S\,w_1\,q_1 \times T\,w_2\,q_2\]
