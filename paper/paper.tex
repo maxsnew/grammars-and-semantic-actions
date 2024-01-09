@@ -8,10 +8,28 @@
 
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
+\newcommand{\tol}{\rotatebox[origin=c]{180}{$\lto$}}
 \newcommand{\Set}{\mathbf{Set}}
 \newcommand{\Type}{\mathbf{Type}}
 \newcommand{\Prop}{\mathbf{Prop}}
 \newcommand{\Bool}{\mathbf{Bool}}
+
+\newcommand{\subst}[3]{#1\{#2/#3\}}
+\newcommand{\letin}[3]{\mathsf{let}\, #1 = #2 \, \mathsf{in}\, #3}
+\newcommand{\lamb}[2]{\lambda #1.\, #2}
+\newcommand{\dlamb}[2]{\hat{\lambda} #1.\, #2}
+\newcommand{\app}[2]{#1 \, #2}
+\newcommand{\PiTy}[3]{\Pi #1 : #2.\, #3}
+\newcommand{\SigTy}[3]{\Sigma #1 : #2.\, #3}
+\newcommand{\LinPiTy}[3]{\widebar\Pi #1 : #2.\, #3}
+\newcommand{\LinSigTy}[3]{\widebar\Sigma #1 : #2.\, #3}
+\newcommand{\amp}{\mathrel{\&}}
+\newcommand{\GrTy}{\mathsf{Gr}}
+
+\newcommand{\ctxwff}[1]{#1 \,\, \mathsf{ok}}
+\newcommand{\ctxwffjdg}[2]{#1 \vdash #2 \,\, \mathsf{type}}
+\newcommand{\linctxwff}[2]{#1 \vdash #2 \,\, \mathsf{ok}}
+\newcommand{\linctxwffjdg}[2]{#1 \vdash #2 \,\, \mathsf{linear}}
 
 \newif\ifdraft
 \drafttrue
@@ -382,7 +400,227 @@ and therefore certain initial algebras
 
 \section{A Bunched Type Theory for Grammars}
 
+\subsection{Syntax}
 
+\begin{figure}
+  \label{fig:structjdg}
+  \begin{mathpar}
+    \inferrule{~}{\ctxwff \cdot}
+    \and
+    \inferrule{\ctxwff \Gamma \\ \ctxwffjdg \Gamma X}{\ctxwff {\Gamma, x : X}}
+    
+    \\
+
+    \inferrule{~}{\linctxwff \Gamma \cdot}
+    \and
+    \inferrule{\linctxwff \Gamma \Delta \\ \linctxwffjdg \gamma A}{\linctxwff \Gamma {\Delta, x : A}}
+
+    \\
+
+    \inferrule{\Gamma \vdash X : U_i}{\ctxwffjdg \Gamma X}
+
+    \and
+    
+    \inferrule{\Gamma \vdash A : L_i}{\linctxwffjdg \Gamma A}
+
+    \\
+
+    \inferrule{\Gamma \vdash X \equiv Y : U_i}{\ctxwffjdg \Gamma {X\equiv Y}}
+
+    \and
+    
+    \inferrule{\Gamma \vdash A \equiv B : L_i}{\linctxwffjdg \Gamma {A \equiv B}}
+
+  \end{mathpar}
+  \caption{Structural judgements}
+\end{figure}
+
+\begin{figure}
+  \label{fig:typewf}
+  \begin{mathpar}
+    \inferrule{~}{\Gamma \vdash U_i : U_{i+1}}
+ %   
+    \and
+%
+    \inferrule{~}{\Gamma \vdash L_i : U_{i+1}}
+%
+    \\
+%
+    \inferrule{\Gamma \vdash X : U_i \\ \hspace{-0.1cm} \Gamma, x : X \vdash Y : U_i}{\Gamma \vdash \PiTy x X Y : U_i }%
+%
+    \and
+%
+    \inferrule{\Gamma\vdash X : U_i \\ \hspace{-0.1cm} \Gamma, x : X \vdash Y : U_i}{\Gamma \vdash \SigTy x X Y : U_i}
+%
+    \\
+%
+    \inferrule{~}{\Gamma \vdash 1 : U_i}
+%
+    \and
+%
+    \inferrule{\Gamma \vdash A : L_i}{\Gamma \vdash G A : U_i}
+%
+    \\
+%
+    \inferrule{~}{\Gamma \vdash I : L_i}
+ %   
+    \and
+%
+    \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash A \otimes B : L_i}
+%
+    \and
+%
+    \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash A \lto B : L_i}
+%
+    \\
+%
+    \inferrule{\Gamma \vdash X : U_i \\ \Gamma, x : X \vdash A : L_i}{\Gamma \vdash \LinPiTy x X A : L_i}
+%
+    \and
+%
+    \inferrule{\Gamma \vdash X : U_i \\ \Gamma, x : X \vdash A : L_i}{\Gamma \vdash \LinSigTy x X A : L_i}
+%
+    \\
+%
+    \inferrule{~}{\Gamma \vdash \top : L_i}
+%
+    \and
+%
+    \inferrule{\Gamma \vdash A : L_i \\ \Gamma \vdash B : L_i}{\Gamma \vdash A \amp B : L_i}
+%
+    \\
+%
+    \inferrule{~}{\Gamma \vdash \GrTy : L_1}
+%
+    \and
+%
+    \mprset { fraction ={===}}
+    \inferrule{\Gamma \vdash X : L_1}{\Gamma \vdash : \GrTy}
+%
+    \and
+%
+    \mprset { fraction ={---}}
+    \inferrule{\Gamma, x : \GrTy \vdash A : L_i}{\Gamma \vdash \mu x.\, A : L_i}
+  \end{mathpar}
+  \caption{Type well-formedness}
+\end{figure}
+
+\begin{figure}
+  \label{fig:inttyping}
+  \begin{mathpar}
+  \inferrule{~}{\Gamma, x : X, \Gamma' \vdash x : X}
+  %
+  \and
+  %
+  \inferrule{\Gamma \vdash e : Y \quad \ctxwffjdg \Gamma {X \equiv Y}}{\Gamma \vdash e : X}
+  %
+  \and
+  %
+  \inferrule{~}{\Gamma \vdash () : 1}
+  %
+  \\
+  %
+  \inferrule{\Gamma \vdash e : X \\ \Gamma \vdash e; : \subst Y e x}{\Gamma \vdash (e, e') : \SigTy x X Y}
+  %
+  \and
+%
+  \inferrule{\Gamma \vdash e : \SigTy x X Y}{\Gamma \vdash \pi_1\, e : X}
+  %
+  \\
+  %
+  \inferrule{\Gamma \vdash e : \SigTy x X Y}{\Gamma \vdash \pi_2\, e : \subst Y {\pi_1\, e} x}
+  \and
+  \inferrule{\ctxwffjdg \Gamma {\PiTy x X Y} \\ \Gamma, x : X \vdash e : Y}{\Gamma \vdash \lamb x e : \PiTy x X Y}
+  %
+  \\
+  %
+  \inferrule{\Gamma \vdash e : \PiTy x X Y \\ \Gamma \vdash e' : X}{\Gamma \vdash \app e {e'} : \subst Y {e'} x}
+  %
+  \\
+  %
+  \inferrule{\Gamma \vdash e \equiv e' : X}{\Gamma \vdash \mathsf{refl} : e =_X e'}
+  \and
+  \inferrule{\Gamma \mid \cdot \vdash e : A}{\Gamma \vdash \mathsf G e : \mathsf G A}
+  \end{mathpar}
+  \caption{Intuitionistic typing}
+\end{figure}
+
+\begin{figure}
+  \label{fig:linsyntax}
+  \begin{mathpar}
+    \inferrule{~}{\Gamma \mid a : A \vdash a : A}
+    \and
+    \inferrule{\Gamma \mid \Delta \vdash e : B \\ \linctxwffjdg \Gamma {A \equiv B}}{\Gamma \mid \Delta \vdash e : A}
+    %
+    \\
+    %
+    \inferrule{~}{\Gamma \mid \cdot \vdash () : I}
+    \and
+    \inferrule{\Gamma \mid \Delta \vdash e : I \\ \Gamma \mid \Delta' \vdash e' : C}{\Gamma \mid \Delta,\Delta' \vdash \letin {()} e {e'} : C}
+    %
+    \\
+    %
+    \inferrule{\Gamma \mid \Delta \vdash e : A \\ \Gamma \mid \Delta' \vdash e' : B}{\Gamma \mid \Delta, \Delta' \vdash e \otimes e' : A \otimes B}
+    %
+    \\
+    %
+    \inferrule{\Gamma \mid \Delta \vdash e : A \otimes B \\ \Gamma \mid \Delta'_1, a : A, b : B, \Delta'_2 \vdash e'}{\Gamma \mid  \Delta_1', \Delta, \Delta'_2 \vdash \letin {a \otimes b} e {e'}}
+    \\
+    %
+    \inferrule{\Gamma \mid \Delta, a : A \vdash e : B}{\Gamma \mid \Delta \vdash \lamb a e : A\lto B}
+    \and
+    \inferrule{\Gamma \mid \Delta \vdash e : A \lto B \\ \Gamma \mid \Delta' \vdash e' : A}{\Gamma \mid \Delta, \Delta' \vdash \app e {e'} : A}
+    \\
+    %
+    \inferrule{\Gamma \mid a : A, \Delta \vdash e : B}{\Gamma \mid \Delta \vdash \lamb a e : A\tol B}
+    \and
+    \inferrule{\Gamma \mid \Delta \vdash e : A \tol B \\ \Gamma \mid \Delta' \vdash e' : A}{\Gamma \mid \Delta, \Delta' \vdash \app e {e'} : A}
+    %
+    \\
+    %
+    \inferrule{\Gamma, x : X \mid \Delta  \vdash e : A}{\Gamma \mid \Delta \vdash \dlamb x e : \LinPiTy x X A}
+    \and
+    \inferrule{\Gamma \mid \Delta \vdash e : \LinPiTy x X A \\ \Gamma \vdash e' : X}{\Gamma \mid \Delta \vdash \app e {e'} : \subst A {e'} x}
+    %
+    \\
+    %
+    \inferrule{~}{\Gamma \mid \Delta \vdash () : \top}
+    %
+    \\
+    %
+    \inferrule{\Gamma \mid \Delta \vdash e_1 : A_1 \quad \Gamma \mid \delta \vdash e_2 : A_2}{\Gamma \mid \Delta \vdash (e_1, e_2) : A_1 \amp A_2}
+    \and
+    \inferrule{\Gamma \mid \Delta \vdash e : A_1 \amp A_2 }{\Gamma \mid \Delta \vdash \pi_i \, e : A_i}
+    %
+    \\
+    %
+    \inferrule{\Gamma \vdash e : X \quad \Gamma \mid \Delta \vdash e' : \subst A e x}{\Gamma \mid \Delta \vdash (e, e') : \LinSigTy x X A}
+    %
+    \\
+    %
+    \inferrule{\Gamma \mid \Delta \vdash e : \LinSigTy x X A \quad \Gamma, x : X \mid \Delta'_1, a : A, \Delta'_2 \vdash e' : C}{\Gamma\mid \Delta'_1, \Delta, \Delta'_2 \vdash \letin {(x, a)} e {e'}: C}
+    %
+    \\
+    %
+    \inferrule{\Gamma \vdash e : \mathsf{G} A}{\Gamma \mid \cdot \vdash \mathsf{G}^{-1}\, e : A}
+    %
+    \\
+    %
+    \inferrule{~}{\Gamma\mid \cdot \vdash \varepsilon : \GrTy}
+    \and
+    \inferrule{\sigma \in \Sigma}{\Gamma \mid \cdot \vdash \sigma : \GrTy}
+    %
+    \\
+    %
+    \inferrule{~}{\Gamma; \Delta \vdash \mathsf{fold}\, t : \mu X.\, A}
+    \and
+    \inferrule{~}{\Gamma; \Delta \vdash \mathsf{unfold}\, t : \mu X.\, A}
+  \end{mathpar}
+  \caption{Linear typing}
+\end{figure}
+
+\pedro{Need to figure out the rules for inductive types and write down
+the judgemental equality rules}
 \subsection{Semantics}
 
 Set types $A$ and set contexts $\Delta$ denotes sets, and
@@ -441,7 +679,7 @@ the universal property of $\mathcal L$.
 
 To this end we define
 \pedro{I'm pretty sure that these definitions have been somewhat presented
-  in ``Glueing and orthogonality for models of linear logic'' - Hyland and Schalk.
+  in ``Glueing and orthogonality for models of linear logic'' by Hyland and Schalk.
 We should probably cite them so that we don't have to rederive their constructions and proofs here.}
 \begin{enumerate}
 \item $(\phi, S) \otimes (\psi, T) = (\phi \otimes \psi, S\otimes T)$ where
