@@ -6,15 +6,18 @@
 \usepackage{fancyvrb}
 \usepackage{stmaryrd}
 
+\newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
 \newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
 \newcommand{\Set}{\mathbf{Set}}
+\newcommand{\Gr}{\mathbf{Gr}}
 \newcommand{\Type}{\mathbf{Type}}
 \newcommand{\Prop}{\mathbf{Prop}}
 \newcommand{\Bool}{\mathbf{Bool}}
 
-\newcommand{\subst}[3]{#1\{#2/#3\}}
+\newcommand{\simulsubst}[2]{#1\{#2\}}
+\newcommand{\subst}[3]{\simulsubst {#1} {#2/#3}}
 \newcommand{\letin}[3]{\mathsf{let}\, #1 = #2 \, \mathsf{in}\, #3}
 \newcommand{\lamb}[2]{\lambda #1.\, #2}
 \newcommand{\lamblto}[2]{\lambda^{{\lto}} #1.\, #2}
@@ -644,7 +647,28 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
 
 \pedro{Need to figure out the rules for inductive types and write down
 the judgemental equality rules}
+
 \subsection{Semantics}
+
+For illustrative purposes, we give a brief overview of the concrete semantics in sets and grammars:
+\begin{enumerate}
+\item A non-linear context $\Gamma$ denotes a set $\sem{\Gamma}$
+\item A non-linear type $\Gamma \vdash X : U_i$ denotes a family of sets $\sem{X} : \sem{\Gamma} \to \Set_i$
+\item A non-linear term $\Gamma \vdash e : X$ denotes a section $\sem{e} : \Pi(\gamma:\sem{\Gamma})\,\sem{X}\,\gamma$
+\item Linear contexts $\Gamma \vdash \Delta$ and types $\Gamma \vdash A : L_i$ both denote families of grammars $\sem{\Gamma}\to \Gr_i$
+\item A linear term $\Gamma; \Delta \vdash e : A$ denotes a family of parse transformers $\sem{e} : \Pi(\gamma:\sem{\Gamma})\Pi(w:\Sigma^*)\,\sem{\Delta}\gamma w \Rightarrow \sem{A}\gamma w)$
+\end{enumerate}
+Most of the non-linear semantics is standard, we show just the $G$ type and the linear semantics:
+\begin{enumerate}
+\item $\sem{G A} \gamma = \sem{A} \gamma \varepsilon$
+\item $\sem{\LinPiTy x X A} \gamma w = \Pi(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
+\item $\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
+\item $\sem{I} \gamma w = \{ () \pipe w = \epsilon \}$
+\item $\sem{A \otimes B} \gamma w = \Sigma(w1,w2:\Sigma^*) w1w1 = w \wedge \sem{A} \gamma w_1 \times \sem{B} \gamma w_2$
+\item $\sem{A \lto B} \gamma w = \Pi(w_a:\Sigma^*) A \gamma w_a \Rightarrow B\gamma (w_aw)$
+\item $\sem{B \tol A} \gamma w = \Pi(w_a:\Sigma^*) A \gamma w_a \Rightarrow B\gamma (ww_a)$
+\item $\sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x)$
+\end{enumerate}
 
 Propositional fragment: monoidal biclosed category that is also
 bicartesian closed and has $\omega$-colimits. Call such a BIC.
@@ -662,27 +686,27 @@ using the pointwise-Day convolution monoidal structure.
 
 \subsection{Canonicity}
 
-Let $\cdot \vdash G$ be a grammar. Then there are
+Let $\cdot \vdash A$ be a closed linear type. Then there are
 two obvious notions of what constitutes a ``parse'' of a string w
-according to the grammar $G$:
+according to the grammar $A$:
 \begin{enumerate}
-\item On the one hand we have the semantics just defined, $\llbracket G \rrbracket w$
-\item On the other hand, we can view the string $w$ as a grammar
-  $\lceil w \rceil$ and define a parse to be a parse terms $\cdot\pipe
-  x:\lceil w \rceil \vdash p : G$ modulo $\beta\eta$ equivalence.
+\item On the one hand we have the semantics just defined, $\llbracket A \rrbracket \cdot w$
+\item On the other hand, we can view the string $w = c_1c_2\cdots$ as
+  a linear context $\lceil w \rceil = x_1:c_1,x_2:c_2,\ldots$ and
+  define a parse to be a $\beta\eta$-equivalence class of linear terms $\cdot;
+  \lceil w \rceil \vdash e : G$.
 \end{enumerate}
-
 It is not difficult to see that at least for the ``strictly positive''
 formulae (those featuring only the positive connectives
-$0,+,\epsilon,\otimes,\mu$ and the generators $c$) that every element
-$t \in \llbracket G \rrbracket w$ is a kind of tree and that the nodes
-of the tree correspond precisely to the introduction forms of the
-type. However it is far less obvious that \emph{every} proof $x:\lceil
-w \rceil \vdash p : \phi$ is equal to some sequence of introduction
-forms since proofs can include elimination forms as well. To show that
-this is indeed the case we give a \emph{canonicity} result for the
-calculus, a generalization of the disjunction theorem of constructive
-logic:
+$0,+,I,\otimes,\mu$ and the generators $c$) that every element $t \in
+\llbracket A \rrbracket w$ is a kind of tree and that the nodes of the
+tree correspond precisely to the introduction forms of the
+type. However it is far less obvious that \emph{every} linear term
+$\lceil w \rceil \vdash p : \phi$ is equal to some sequence of
+introduction forms since proofs can include elimination forms as
+well. To show that this is indeed the case we give a \emph{canonicity}
+result for the calculus, a generalization of the disjunction theorem
+of constructive logic:
 \begin{enumerate}
 \item Every term $\lceil w \rceil \vdash p : G + H$ is equal to $\sigma_1q$ or $\sigma_2 r$ (but not both)
 \item There are no terms $\lceil w \rceil \vdash p : 0$
@@ -695,8 +719,23 @@ logic:
   to $(M,q)$ where $\cdot \vdash M : A$
 \end{enumerate}
 
-To prove this result we will use a logical families construction by
-constructing a second model. First, the category with families will be
+To prove this result we will use a logical families model. We give a
+brief overview of this model concretely:
+\begin{enumerate}
+\item A context $\Gamma$ denotes a family of sets indexed by closing substitutions $\hat\Gamma : (\cdot \vdash \Gamma) \Rightarrow \Set_i$
+\item A type $\Gamma \vdash X : U_i$ denotes a family of sets $\hat X : \Pi(\gamma:\cdot \vdash \Gamma) \hat\Gamma \Rightarrow (\cdot \vdash \simulsubst X \gamma) \Rightarrow \Set_i$
+\item A term $\Gamma \vdash e : X$ denotes a section $\hat e : \Pi(\gamma)\Pi(\hat\gamma)\hat X \gamma \hat\gamma (\simulsubst e \gamma)$
+\item A linear type $\Gamma \vdash A : L_i$ denotes a family of grammars $\hat A : \Pi(\gamma:\cdot\vdash\Gamma)\,\hat\Gamma \Rightarrow \Pi(w:\Sigma^*) (\cdot;\lceil w\rceil \vdash A[\gamma])\Rightarrow \Set_i$, and the denotation of a linear context $\Delta$ is similar.
+\item A linear term $\Gamma;\Delta \vdash e : A$ denotes a function \[\hat e : \Pi(\gamma)\Pi(\hat\gamma)\Pi(w)\Pi(\delta : \lceil w \rceil \vdash \simulsubst \Delta \gamma) \hat\Delta \gamma \hat\gamma \delta \Rightarrow \hat A \gamma \hat\gamma w {(\simulsubst {\simulsubst e \gamma} \delta)}\]
+\end{enumerate}
+And some of the constructions:
+\begin{enumerate}
+\item $\widehat {(G A)} \gamma \hat\gamma e = \hat A \gamma \hat\gamma \varepsilon (G^{-1}e)$
+\item $\widehat {(A \otimes B)} \gamma \hat\gamma w e = \Sigma(w_Aw_B = w)\Sigma(e_A)\Sigma(e_B) (e_A,e_B) = e \wedge \hat A \gamma \hat \gamma w_A e_A \times \hat B \gamma \hat \gamma w_B e_B$
+\item $\widehat {(A \lto B)} \gamma \hat\gamma w e = \Pi(w_A)\Pi(e_A) \hat A \gamma\hat\gamma w_A e_A \Rightarrow \hat B \gamma\hat\gamma (ww_A) (\applto {e_A} e)$
+\end{enumerate}
+
+First, the category with families will be
 the category of logical families over set contexts/types
 $\Delta$/$A$. Then the propositional portion will be defined by
 mapping a logical family $\hat \Gamma \to \Gamma$ 
