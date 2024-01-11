@@ -8,7 +8,7 @@
 
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
-\newcommand{\tol}{\rotatebox[origin=c]{180}{$\lto$}}
+\newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
 \newcommand{\Set}{\mathbf{Set}}
 \newcommand{\Type}{\mathbf{Type}}
 \newcommand{\Prop}{\mathbf{Prop}}
@@ -17,8 +17,12 @@
 \newcommand{\subst}[3]{#1\{#2/#3\}}
 \newcommand{\letin}[3]{\mathsf{let}\, #1 = #2 \, \mathsf{in}\, #3}
 \newcommand{\lamb}[2]{\lambda #1.\, #2}
+\newcommand{\lamblto}[2]{\lambda^{{\lto}} #1.\, #2}
+\newcommand{\lambtol}[2]{\lambda^{{\tol}} #1.\, #2}
 \newcommand{\dlamb}[2]{\hat{\lambda} #1.\, #2}
 \newcommand{\app}[2]{#1 \, #2}
+\newcommand{\applto}[2]{#1 \mathop{{}^{\lto}} #2}
+\newcommand{\apptol}[2]{#1 \mathop{{}^{\tol}} #2}
 \newcommand{\PiTy}[3]{\Pi #1 : #2.\, #3}
 \newcommand{\SigTy}[3]{\Sigma #1 : #2.\, #3}
 \newcommand{\LinPiTy}[3]{\widebar\Pi #1 : #2.\, #3}
@@ -58,7 +62,7 @@
 
 
 \begin{document}
-\title{Formal Grammars as Functors and Formal Grammars as Types in Non-commutative Bunched Type Theory}
+\title{Formal Grammars as Functors and Formal Grammars as Types in Non-commutative Linear-Non-Linear Type Theory}
 \author{Steven Schaefer}
 \affiliation{
   \department{Electrical Engineering and Computer Science}
@@ -94,21 +98,23 @@
   universal properties.
 
   Based on these category-theoretic constructions we propose a new
-  syntactic formalism for formal grammars: a two-level non-commutative
-  bunched dependent type theory whose types can be interpreted as
-  grammars, and terms as parse transformers. The non-dependent
-  fragment of this type theory is already enough to express
-  regular/context-free expressions as well as finite automata,
-  generalizing the language theoretic formalisms such as Kleene
-  algebras to incorporate language ambiguity. By incorporating a
-  restricted form of type dependency, we can further express indexed
+  syntactic formalism for formal grammars: a version of dependent
+  linear-non-linear type theory in which the tensor product is not
+  commutatiev. The linear types can be interpreted as grammars, and
+  linear terms as parse transformers. The non-dependent fragment of
+  this type theory is already enough to express regular/context-free
+  expressions as well as finite automata, with the isomorphism between
+  regular languages and automata definable as linear terms. This
+  generalizes the language theoretic formalisms such as Kleene
+  algebras to incorporate ambiguity. By incorporating a dependency of
+  linear types on non-linear types, we can further express indexed
   grammars, pushdown automata and Turing machines. This provides a new
   form of ``logical characterization'' of grammar classes based on a
   substructural logic rather than ordinary first-order logic. Further,
   the type theory can not only express the grammars as types, but
   equivalences between grammars and parsers as terms of the grammar.
 
-  We give this type theory a semantics in our category of grammars and
+  We give this type theory a semantics in the category of grammars and
   prove a canonicity theorem that shows that every term in a context
   corresponding to a fixed string is equal to a term in a canonical
   form encoding a parse tree of that string.
@@ -442,7 +448,7 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
 
     \inferrule{~}{\linctxwff \Gamma \cdot}
     \and
-    \inferrule{\linctxwff \Gamma \Delta \\ \linctxwffjdg \gamma A}{\linctxwff \Gamma {\Delta, x : A}}
+    \inferrule{\linctxwff \Gamma \Delta \\ \linctxwffjdg \gamma A}{\linctxwff \Gamma {\Delta, a : A}}
 
     \\
 
@@ -501,6 +507,10 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
 %
     \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash A \lto B : L_i}
 %
+    \and
+%
+    \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash B \tol A : L_i}
+%
     \\
 %
     \inferrule{\Gamma \vdash X : U_i \\ \Gamma, x : X \vdash A : L_i}{\Gamma \vdash \LinPiTy x X A : L_i}
@@ -519,17 +529,7 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
 %
     \\
 %
-    \inferrule{~}{\Gamma \vdash \GrTy : L_1}
-%
-    \and
-%
-    \mprset { fraction ={===}}
-    \inferrule{\Gamma \vdash X : L_1}{\Gamma \vdash : \GrTy}
-%
-    \and
-%
-    \mprset { fraction ={---}}
-    \inferrule{\Gamma, x : \GrTy \vdash A : L_i}{\Gamma \vdash \mu x.\, A : L_i}
+    \inferrule{\Gamma, x : L_i \vdash A : L_i \and A \textrm{ strictly positive}}{\Gamma \vdash \mu x.\, A : L_i}
   \end{mathpar}
   \caption{Type well-formedness}
 \end{figure}
@@ -543,25 +543,25 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
   %
   \inferrule{\Gamma \vdash e : Y \quad \ctxwffjdg \Gamma {X \equiv Y}}{\Gamma \vdash e : X}
   %
-  \and
+  \\\
   %
   \inferrule{~}{\Gamma \vdash () : 1}
   %
-  \\
-  %
-  \inferrule{\Gamma \vdash e : X \\ \Gamma \vdash e; : \subst Y e x}{\Gamma \vdash (e, e') : \SigTy x X Y}
-  %
   \and
+  %
+  \inferrule{\Gamma \vdash e : X \\ \Gamma \vdash e : \subst Y e x}{\Gamma \vdash (e, e') : \SigTy x X Y}
+  %
+  \\
 %
   \inferrule{\Gamma \vdash e : \SigTy x X Y}{\Gamma \vdash \pi_1\, e : X}
   %
-  \\
+  \and
   %
   \inferrule{\Gamma \vdash e : \SigTy x X Y}{\Gamma \vdash \pi_2\, e : \subst Y {\pi_1\, e} x}
   \and
-  \inferrule{\ctxwffjdg \Gamma {\PiTy x X Y} \\ \Gamma, x : X \vdash e : Y}{\Gamma \vdash \lamb x e : \PiTy x X Y}
+  \inferrule{\Gamma, x : X \vdash e : Y}{\Gamma \vdash \lamb x e : \PiTy x X Y}
   %
-  \\
+  \and
   %
   \inferrule{\Gamma \vdash e : \PiTy x X Y \\ \Gamma \vdash e' : X}{\Gamma \vdash \app e {e'} : \subst Y {e'} x}
   %
@@ -585,7 +585,7 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
     %
     \inferrule{~}{\Gamma \mid \cdot \vdash () : I}
     \and
-    \inferrule{\Gamma \mid \Delta \vdash e : I \\ \Gamma \mid \Delta' \vdash e' : C}{\Gamma \mid \Delta,\Delta' \vdash \letin {()} e {e'} : C}
+    \inferrule{\Gamma \mid \Delta \vdash e : I \\ \Gamma \mid \Delta_1',\Delta_2' \vdash e' : C}{\Gamma \mid \Delta_1',\Delta,\Delta_2' \vdash \letin {()} e {e'} : C}
     %
     \\
     %
@@ -596,20 +596,28 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
     \inferrule{\Gamma \mid \Delta \vdash e : A \otimes B \\ \Gamma \mid \Delta'_1, a : A, b : B, \Delta'_2 \vdash e'}{\Gamma \mid  \Delta_1', \Delta, \Delta'_2 \vdash \letin {a \otimes b} e {e'}}
     \\
     %
-    \inferrule{\Gamma \mid \Delta, a : A \vdash e : B}{\Gamma \mid \Delta \vdash \lamb a e : A\lto B}
+    \inferrule{\Gamma \mid \Delta, a : A \vdash e : B}{\Gamma \mid \Delta \vdash \lamblto a e : A\lto B}
     \and
-    \inferrule{\Gamma \mid \Delta \vdash e : A \lto B \\ \Gamma \mid \Delta' \vdash e' : A}{\Gamma \mid \Delta, \Delta' \vdash \app e {e'} : A}
+    \inferrule{\Gamma \mid \Delta' \vdash e' : A \\ \Gamma \mid \Delta \vdash e : A \lto B}{\Gamma \mid \Delta', \Delta \vdash \applto {e'} {e} : B}
     \\
     %
-    \inferrule{\Gamma \mid a : A, \Delta \vdash e : B}{\Gamma \mid \Delta \vdash \lamb a e : A\tol B}
+    \inferrule{\Gamma \mid a : A, \Delta \vdash e : B}{\Gamma \mid \Delta \vdash \lambtol a e : B\tol A}
     \and
-    \inferrule{\Gamma \mid \Delta \vdash e : A \tol B \\ \Gamma \mid \Delta' \vdash e' : A}{\Gamma \mid \Delta, \Delta' \vdash \app e {e'} : A}
+    \inferrule{\Gamma \mid \Delta \vdash e : B \tol A \\ \Gamma \mid \Delta' \vdash e' : A}{\Gamma \mid \Delta, \Delta' \vdash \apptol e {e'} : B}
     %
     \\
     %
     \inferrule{\Gamma, x : X \mid \Delta  \vdash e : A}{\Gamma \mid \Delta \vdash \dlamb x e : \LinPiTy x X A}
     \and
     \inferrule{\Gamma \mid \Delta \vdash e : \LinPiTy x X A \\ \Gamma \vdash e' : X}{\Gamma \mid \Delta \vdash \app e {e'} : \subst A {e'} x}
+    %
+    \\
+    %
+    \inferrule{\Gamma \vdash e : X \quad \Gamma \mid \Delta \vdash e' : \subst A e x}{\Gamma \mid \Delta \vdash (e, e') : \LinSigTy x X A}
+    %
+    \\
+    %
+    \inferrule{\Gamma \mid \Delta \vdash e : \LinSigTy x X A \quad \Gamma, x : X \mid \Delta'_1, a : A, \Delta'_2 \vdash e' : C}{\Gamma\mid \Delta'_1, \Delta, \Delta'_2 \vdash \letin {(x, a)} e {e'}: C}
     %
     \\
     %
@@ -623,27 +631,13 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
     %
     \\
     %
-    \inferrule{\Gamma \vdash e : X \quad \Gamma \mid \Delta \vdash e' : \subst A e x}{\Gamma \mid \Delta \vdash (e, e') : \LinSigTy x X A}
-    %
-    \\
-    %
-    \inferrule{\Gamma \mid \Delta \vdash e : \LinSigTy x X A \quad \Gamma, x : X \mid \Delta'_1, a : A, \Delta'_2 \vdash e' : C}{\Gamma\mid \Delta'_1, \Delta, \Delta'_2 \vdash \letin {(x, a)} e {e'}: C}
-    %
-    \\
-    %
     \inferrule{\Gamma \vdash e : \mathsf{G} A}{\Gamma \mid \cdot \vdash \mathsf{G}^{-1}\, e : A}
     %
     \\
     %
-    \inferrule{~}{\Gamma\mid \cdot \vdash \varepsilon : \GrTy}
+    \inferrule{\Gamma; \Delta \vdash e : \subst A {\mu x.\, A} x}{\Gamma; \Delta \vdash \mathsf{cons}\, e : \mu x.\, A}
     \and
-    \inferrule{\sigma \in \Sigma}{\Gamma \mid \cdot \vdash \sigma : \GrTy}
-    %
-    \\
-    %
-    \inferrule{~}{\Gamma; \Delta \vdash \mathsf{fold}\, t : \mu X.\, A}
-    \and
-    \inferrule{~}{\Gamma; \Delta \vdash \mathsf{unfold}\, t : \mu X.\, A}
+    \inferrule{\Gamma;\Delta\vdash e' : \mu x.\,A \and \Gamma; a:\subst A B x \vdash e : B}{\Gamma;\Delta\vdash \mathsf{fold}(a.e)(e') : B}
   \end{mathpar}
   \caption{Linear typing}
 \end{figure}
