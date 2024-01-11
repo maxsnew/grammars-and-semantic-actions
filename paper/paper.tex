@@ -36,6 +36,7 @@
 \newcommand{\steven}[1]{\ifdraft{\color{orange}[{\bf Steven}: #1]}\fi}
 \renewcommand{\max}[1]{\ifdraft{\color{blue}[{\bf Max}: #1]}\fi}
 \newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro}: #1]}\fi}
+\newcommand{\pipe}{\,|\,}
 
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
@@ -57,7 +58,7 @@
 
 
 \begin{document}
-\title{Formal Grammars as Types in Non-commutative Bunched Type Theory}
+\title{Formal Grammars as Functors and Formal Grammars as Types in Non-commutative Bunched Type Theory}
 \author{Steven Schaefer}
 \affiliation{
   \department{Electrical Engineering and Computer Science}
@@ -83,16 +84,34 @@
 \email{pedro.azevedo.de.amorim@cs.ox.ac.uk}
 
 \begin{abstract}
-  We propose the category of functions from strings to sets as a
-  universal syntax-independent model of formal grammars, generalizing
-  the set of strings model of formal language theory to account for
-  ambiguity. The morphisms of this category give a notion of parse
-  transformer, and isomorphism corresponds to \emph{strong
-  equivalence} of grammars. We observe that the standard algebraic
-  constructions of regular expressions and their extension to
-  mu-regular expressions correspond to universal constructions in this
-  category, which we axiomatize as a structure we call a 2-Kleene
-  Algebra.
+  We propose a semantic framework for the study of formal
+  grammars. First, we provide a syntax-independent notion of formal
+  grammar as a function from strings to sets, generalizing the
+  familiar notion of a language as a set of strings. The set of such
+  grammars naturally form a very rich category whose notion of
+  isomorphism corresponds to strong equivalence of grammars, and for
+  which many language-theoretic constructs can be defined using
+  universal properties.
+
+  Based on these category-theoretic constructions we propose a new
+  syntactic formalism for formal grammars: a two-level non-commutative
+  bunched dependent type theory whose types can be interpreted as
+  grammars, and terms as parse transformers. The non-dependent
+  fragment of this type theory is already enough to express
+  regular/context-free expressions as well as finite automata,
+  generalizing the language theoretic formalisms such as Kleene
+  algebras to incorporate language ambiguity. By incorporating a
+  restricted form of type dependency, we can further express indexed
+  grammars, pushdown automata and Turing machines. This provides a new
+  form of ``logical characterization'' of grammar classes based on a
+  substructural logic rather than ordinary first-order logic. Further,
+  the type theory can not only express the grammars as types, but
+  equivalences between grammars and parsers as terms of the grammar.
+
+  We give this type theory a semantics in our category of grammars and
+  prove a canonicity theorem that shows that every term in a context
+  corresponding to a fixed string is equal to a term in a canonical
+  form encoding a parse tree of that string.
 \end{abstract}
 
 \maketitle
@@ -129,7 +148,7 @@ its indicator function $\chi_L : \Sigma^* \to \Prop$ mapping each
 string $w$ to the proposition that it is in the language $w \in
 L$. This can then serve as the specification for a language
 \emph{recognizer}: a program $r$ of type $\Sigma^* \to \Bool$ such
-that $r(w) = \texttt{true}$ if and only if $\chi_L(w)$, but
+that $r(w) = \texttt{true}$ if and only if $\chi_L(w)$ holds, but
 recognition is insufficient for most tasks for which the theory of
 parsing was developed: the production of \emph{semantic} structures
 from synactic descriptions in linguistics, compilation or
@@ -391,6 +410,13 @@ theory. By adopting a category-theoretic treatment and allowing the
 inequalities, we were able to extend Kleene algebra to reason about
 parsing as well.
 
+\paragraph{TODO: more stuff}
+
+%% That paper with Fritz Henglein about regexes as types
+
+%% Vaughan Pratt on the residual operator
+
+
 \section{Universal Constructions in the Category of Grammars}
 
 Predicate BI: bicartesian closed, monoidal biclosed, omega-colimits
@@ -401,6 +427,9 @@ and therefore certain initial algebras
 \section{A Bunched Type Theory for Grammars}
 
 \subsection{Syntax}
+Judgments: $\Delta$ set ctx, $\Delta \vdash A$ set, $\Delta \vdash M :
+A$ term, $\Delta \vdash \Gamma$ grammar ctx, $\Delta \vdash G$
+grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
 
 \begin{figure}
   \label{fig:structjdg}
@@ -623,43 +652,60 @@ and therefore certain initial algebras
 the judgemental equality rules}
 \subsection{Semantics}
 
-Set types $A$ and set contexts $\Delta$ denotes sets, and
-grammar types $\gamma$ and grammar contexts $\Gamma$ in context
-$\Delta$ denote families of grammars $(\Set^{\Sigma^*})^\Delta$.  A
+Propositional fragment: monoidal biclosed category that is also
+bicartesian closed and has $\omega$-colimits. Call such a BIC.
+
+Set theoretic fragment: category with families $\mathcal C$ + $\Pi,\Sigma,W$.
+
+Combination: category with families $\mathcal C$ + a functor $L : C
+\to \textrm{BIC}$.
+
+Grammatical fragment: functor from $\mathcal C$ to the category of BI-models
+
+Example: use $\Set$ as the CwF, use the functor $\Delta \mapsto
+(\Set^{\Sigma^*})^\Delta$ as the model of the propositional fragment
+using the pointwise-Day convolution monoidal structure.
 
 \subsection{Canonicity}
 
-Let $\phi$ be a propositional BI formula over $\Sigma$. Then there are
+Let $\cdot \vdash G$ be a grammar. Then there are
 two obvious notions of what constitutes a ``parse'' of a string w
-according to the grammar $\phi$:
+according to the grammar $G$:
 \begin{enumerate}
-\item On the one hand we have the semantics just defined, $\llbracket \phi \rrbracket w$
-\item On the other hand, we can view the string $w$ as a formula
-  $\lceil w \rceil$ and define a parse to be an equivalence classes of
-  proofs $x:\lceil w \rceil \vdash \phi$
+\item On the one hand we have the semantics just defined, $\llbracket G \rrbracket w$
+\item On the other hand, we can view the string $w$ as a grammar
+  $\lceil w \rceil$ and define a parse to be a parse terms $\cdot\pipe
+  x:\lceil w \rceil \vdash p : G$ modulo $\beta\eta$ equivalence.
 \end{enumerate}
 
 It is not difficult to see that at least for the ``strictly positive''
 formulae (those featuring only the positive connectives
-$\vee,\bot,\epsilon,\otimes,\mu$ and the generators $c$) that every
-element $t \in \llbracket \phi \rrbracket w$ is a kind of tree and
-that the nodes of the tree correspond precisely to the introduction
-forms of the language. However it is far less clear that every proof
-$x:\lceil w \rceil \vdash p : \phi$ corresponds to some sequence of
-introduction forms since proofs can include elimination forms as
-well. So we want to prove a kind of \emph{canonicity} result for the
+$0,+,\epsilon,\otimes,\mu$ and the generators $c$) that every element
+$t \in \llbracket G \rrbracket w$ is a kind of tree and that the nodes
+of the tree correspond precisely to the introduction forms of the
+type. However it is far less obvious that \emph{every} proof $x:\lceil
+w \rceil \vdash p : \phi$ is equal to some sequence of introduction
+forms since proofs can include elimination forms as well. To show that
+this is indeed the case we give a \emph{canonicity} result for the
 calculus, a generalization of the disjunction theorem of constructive
 logic:
-
 \begin{enumerate}
-\item Every proof $\lceil w \rceil \vdash p : \phi \otimes \psi$ is equal to $(q,r)$ for some $q,r$
-\item Every proof $\lceil w \rceil \vdash p : \epsilon$ is equal to $()$
-\item Every proof $\lceil w \rceil \vdash p : \phi \vee \psi$ is equal to $\sigma_1q$ or $\sigma_2 r$ (but not both)
-\item Every proof $\lceil w \rceil \vdash p : c$ is equal to $x:c$
-\item Every proof $\lceil w \rceil \vdash p : \mu X. \phi$ is equal to $\textrm{roll}(q)$ where $q : \phi(\mu X.\phi/X)$
+\item Every term $\lceil w \rceil \vdash p : G + H$ is equal to $\sigma_1q$ or $\sigma_2 r$ (but not both)
+\item There are no terms $\lceil w \rceil \vdash p : 0$
+\item If there is a term $\lceil w \rceil \vdash p : c$ then $w = c$ and $p = x$.
+\item Every term $\lceil w \rceil \vdash p : G \otimes H$ is equal to $(q,r)$ for some $q,r$
+\item Every term $\lceil w \rceil \vdash p : \epsilon$ is equal to $()$
+\item Every term $\lceil w \rceil \vdash p : c$ is equal to $x:c$
+\item Every term $\lceil w \rceil \vdash p : \mu X. G$ is equal to $\textrm{roll}(q)$ where $q : G(\mu X.G/X)$
+\item Every term $\lceil w \rceil \vdash p : (x:A) \times G$ is equal
+  to $(M,q)$ where $\cdot \vdash M : A$
 \end{enumerate}
 
-To prove this result we will use a simple Kripke logical relation.
+To prove this result we will use a logical families construction by
+constructing a second model. First, the category with families will be
+the category of logical families over set contexts/types
+$\Delta$/$A$. Then the propositional portion will be defined by
+mapping a logical family $\hat \Gamma \to \Gamma$ 
 
 First, let $L$ be the category of BI formulae and proofs (quotiented
 by $\beta\eta$ equality). Define a functor $N : L \to \Set^{\Sigma^*}$ by
@@ -702,13 +748,7 @@ then define a formula that first ``copies'' the input onto one stack, then execu
 \[ \mu \textrm{Copy} : S \to *. \lambda s. (\epsilon \wedge T\,s\,[])\bigvee_{c \in \Sigma} c (S\,{c::s}) \]
 
 
-\section{Related Work}
 
-TODO 
-
-%% That paper with Fritz Henglein about regexes as types
-
-%% Vaughan Pratt on the residual operator
 \section{Future work}
 
 \subsection{Beyond Strings}
@@ -720,8 +760,16 @@ binding structure or graphs. Fundamental to programming language
 implementation is \emph{type checking}, analogous to language
 recognition, or more generally \emph{typed elaboration}, analogous to
 parsing, which produces a semantic object in addition to performing
-some analysis.
-
-
+some analysis. A type system could then be interpreted as a \emph{tree
+grammar}. Our definition of string grammars as functors from
+$\Sigma^*$ to $\Set$ can then be easily adapted to functors to $\Set$
+from the set of \emph{trees} freely generated form some signature of
+nodes. Then just as the set of string grammars inherits a monoidal
+structure from the free monoid of strings using the Day convolution,
+this set of tree grammars inherits a kind of weak algebraic structure
+corresponding to the tree constructors. This suggests an even more
+unusual form of bunched type theory, where the monoidal concatenation
+and unit are replaced with context constructors corresponding to the
+tree constructors.
 
 \end{document}
