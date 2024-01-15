@@ -16,13 +16,17 @@
 \newcommand{\Prop}{\mathbf{Prop}}
 \newcommand{\Bool}{\mathbf{Bool}}
 
+\newcommand{\gluedNL}{{\mathcal G}_S}
+\newcommand{\gluedNLUniv}{{\mathcal G}_{S,i}}
+\newcommand{\gluedL}{{\mathcal G}_L}
+
 \newcommand{\simulsubst}[2]{#1\{#2\}}
 \newcommand{\subst}[3]{\simulsubst {#1} {#2/#3}}
 \newcommand{\letin}[3]{\mathsf{let}\, #1 = #2 \, \mathsf{in}\, #3}
 \newcommand{\lamb}[2]{\lambda #1.\, #2}
 \newcommand{\lamblto}[2]{\lambda^{{\lto}} #1.\, #2}
 \newcommand{\lambtol}[2]{\lambda^{{\tol}} #1.\, #2}
-\newcommand{\dlamb}[2]{\hat{\lambda} #1.\, #2}
+\newcommand{\dlamb}[2]{\overline{\lambda} #1.\, #2}
 \newcommand{\app}[2]{#1 \, #2}
 \newcommand{\applto}[2]{#1 \mathop{{}^{\lto}} #2}
 \newcommand{\apptol}[2]{#1 \mathop{{}^{\tol}} #2}
@@ -65,6 +69,7 @@
 
 
 \begin{document}
+
 \title{Formal Grammars as Functors and Formal Grammars as Types in Non-commutative Linear-Non-Linear Type Theory}
 \author{Steven Schaefer}
 \affiliation{
@@ -103,7 +108,7 @@
   Based on these category-theoretic constructions we propose a new
   syntactic formalism for formal grammars: a version of dependent
   linear-non-linear type theory in which the tensor product is not
-  commutatiev. The linear types can be interpreted as grammars, and
+  commutative. The linear types can be interpreted as grammars, and
   linear terms as parse transformers. The non-dependent fragment of
   this type theory is already enough to express regular/context-free
   expressions as well as finite automata, with the isomorphism between
@@ -426,14 +431,14 @@ parsing as well.
 %% Vaughan Pratt on the residual operator
 
 
-\section{Universal Constructions in the Category of Grammars}
+%% \section{Universal Constructions in the Category of Grammars}
 
-Predicate BI: bicartesian closed, monoidal biclosed, omega-colimits
-and therefore certain initial algebras
+%% Predicate BI: bicartesian closed, monoidal biclosed, omega-colimits
+%% and therefore certain initial algebras
 
 
 
-\section{A Bunched Type Theory for Grammars}
+\section{Non-commutative Linear-Non-Linear Type Theory as a Syntax for Grammars}
 
 \subsection{Syntax}
 Judgments: $\Delta$ set ctx, $\Delta \vdash A$ set, $\Delta \vdash M :
@@ -646,9 +651,9 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
 \end{figure}
 
 \pedro{Need to figure out the rules for inductive types and write down
-the judgemental equality rules}
+  the judgemental equality rules}
 
-\subsection{Semantics}
+\subsection{Semantics in Grammars}
 
 For illustrative purposes, we give a brief overview of the concrete semantics in sets and grammars:
 \begin{enumerate}
@@ -690,23 +695,60 @@ Let $\cdot \vdash A$ be a closed linear type. Then there are
 two obvious notions of what constitutes a ``parse'' of a string w
 according to the grammar $A$:
 \begin{enumerate}
-\item On the one hand we have the semantics just defined, $\llbracket A \rrbracket \cdot w$
+\item On the one hand we have the set-theoretic semantics just
+  defined, $\llbracket A \rrbracket \cdot w$
 \item On the other hand, we can view the string $w = c_1c_2\cdots$ as
   a linear context $\lceil w \rceil = x_1:c_1,x_2:c_2,\ldots$ and
   define a parse to be a $\beta\eta$-equivalence class of linear terms $\cdot;
   \lceil w \rceil \vdash e : G$.
 \end{enumerate}
-It is not difficult to see that at least for the ``strictly positive''
+It is not difficult to see that at least for the ``purely positive''
 formulae (those featuring only the positive connectives
-$0,+,I,\otimes,\mu$ and the generators $c$) that every element $t \in
-\llbracket A \rrbracket w$ is a kind of tree and that the nodes of the
-tree correspond precisely to the introduction forms of the
-type. However it is far less obvious that \emph{every} linear term
-$\lceil w \rceil \vdash p : \phi$ is equal to some sequence of
-introduction forms since proofs can include elimination forms as
-well. To show that this is indeed the case we give a \emph{canonicity}
-result for the calculus, a generalization of the disjunction theorem
-of constructive logic:
+$0,+,I,\otimes,\mu, \overline\Sigma,c$ and the generators $c$) that
+every element $t \in \llbracket A \rrbracket w$ is a kind of tree and
+that the nodes of the tree correspond precisely to the introduction
+forms of the type. However it is far less obvious that \emph{every}
+linear term $\lceil w \rceil \vdash p : \phi$ is equal to some
+sequence of introduction forms since proofs can include elimination
+forms as well. To show that this is indeed the case we give a
+\emph{canonicity} result for the calculus: that the parses for .
+
+\begin{definition}
+  A non-linear type $X$ is purely positive if it is built up using
+  only finite sums, finite products and least fixed points.
+
+  A linear type is purely positive if it is built up using only finite
+  sums, tensor products, generators $c$, least fixed points and linear
+  sigma types over purely positive non-linear types.
+\end{definition}
+
+\begin{definition}
+  %% Let $X$ be a closed non-linear type. The closed elements $\textrm{Cl}(X)$ of $X$ are the definitional equivalence classes of terms $\cdot \vdash e : X$.
+
+  Let $A$ be a closed linear type. The nerve $N(A)$ is a presheaf on
+  strings that takes a string $w$ to the definitional equivalence
+  classes of terms $\cdot; \lceil w\rceil \vdash e: N(A)$.
+\end{definition}
+
+\begin{theorem}[Canonicity]
+  Let $A$ be a closed, purely positive linear type. Then there is an
+  isomorphism between $\llbracket A\rrbracket$ and $N(A)$.
+\end{theorem}
+\begin{proof}
+  We outline the proof here, more details are in the appendix. The
+  proof proceeds first by a standard logical families construction
+  that combines canonicity arguments for dependent type theory
+  \cite{coquand,etc} with logical relations constructions for linear
+  types \cite{hylandschalk}. It is easy to see by induction that the
+  logical family for $A$, $\hat A$ is isomorphic to $\llbracket A
+  \rrbracket$ and the fundamental lemma proves that the projection
+  morphism $p : \hat A \to N(A)$ has a section, the canonicalization
+  procedure. Then we establish again by induction that
+  canonicalization is also a retraction by observing that introduction
+  forms are taken to constructors.
+\end{proof}
+
+
 \begin{enumerate}
 \item Every term $\lceil w \rceil \vdash p : G + H$ is equal to $\sigma_1q$ or $\sigma_2 r$ (but not both)
 \item There are no terms $\lceil w \rceil \vdash p : 0$
@@ -768,9 +810,10 @@ We should probably cite them so that we don't have to rederive their constructio
 \item $\mu X. ??$ ??
 \end{enumerate}
 
-\section{Logical Characterizations of Language Classes}
+\section{Type-theoretic Characterizations of Language Classes}
 
-Our bunched type theory 
+
+
 
 Predicate BI with existential quantifiers is already enough to define
 formulae that correspond to arbitrary recursively enumerable languages
@@ -804,5 +847,133 @@ corresponding to the tree constructors. This suggests an even more
 unusual form of bunched type theory, where the monoidal concatenation
 and unit are replaced with context constructors corresponding to the
 tree constructors.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\clearpage
+\appendix
+
+\section{Semantics in Sets and Grammars}
+
+A model of Grammar Type Theory is a category with families equipped
+with a functor $L : \mathcal C \to \textrm{GrLog}$ from the category
+of contexts to the category of grammar logic models and strict morphisms.
+
+First, we give the set theoretic model. We use the standard category
+with families structure given by the category of sets and a cumulative
+tower of universes.
+%
+Next, we define $L$ as follows:
+\[ L(\Gamma) = \mathcal P \Sigma^*/\textrm{Disc} \Gamma \]
+Where $\textrm{Disc} \Gamma$ is the presheaf that is constantly $\Gamma$.
+Note that
+\[ \mathcal P \Sigma^*/\textrm{Disc} \Gamma \cong (\Set/\Gamma)/\textrm{Disc} \Sigma^*\]
+where $\textrm{Disc} \Sigma^*$ is the projection $\Gamma \times \Sigma^*
+\to \Gamma$.  Then by the fundamental theorem of topos thoery, $\Set/\Gamma$ is
+a topos. Since $\textrm{Disc} : \Set \to \Set/\Gamma$ is monoidal,
+$\textrm{Disc} \Sigma^*$ carries a monoid structure in $\Set/\Gamma$ and
+this induces a monoidal closed structure on $(\Set/\Gamma)/\textrm{Disc}
+\Sigma^*$. Again by the fundamental theorem, it also has finite
+products and coproducts and a natural numbers object, and so can
+interpret least fixed points.\max{More details about constructing initial algebras?}
+
+Then we can define the remaining type structure as follows. Unraveling
+the above, a non-linear type $\Gamma \vdash X$ is interpreted as an
+object of $\Set/\sem{\Gamma}$ and a linear type $\Gamma \vdash A$ is
+interpreted as an object of $\mathcal P\Sigma^*/\textrm{Disc}\sem{\Gamma}$. We
+define them below in indexed style:
+\begin{enumerate}
+\item $\sem{c} \gamma w = (w = c)$
+\item $\sem{\LinPiTy x X A} \gamma w = \Pi(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
+\item $\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
+\item $\sem{G A} \gamma = \sem{A} \gamma \varepsilon$
+\item $\sem{L_i}\gamma = (\mathcal P_i\Sigma^*/\textrm{Disc}\sem{\Gamma})_0$
+\end{enumerate}
+
+\section{Canonicity}
+
+For the canonicity argument, we construct a second ``glued'' model
+that contains a projection morphism to the syntactic model.
+
+Let $S$ be the syntactic category with families for the type
+theory. Define the glued category with families to be the comma category
+% https://q.uiver.app/#q=WzAsNSxbMCwwLCJcXG1hdGhjYWwgRyJdLFswLDIsIlMiXSxbMiwyLCJcXFNldCJdLFsyLDAsIlxcU2V0Il0sWzEsMSwiXFxzd2Fycm93Il0sWzMsMl0sWzEsMl0sWzAsMV0sWzAsM11d
+\[\begin{tikzcd}[ampersand replacement=\&]
+	{\gluedNL} \&\& \Set \\
+	\& \rotatebox[origin=c]{-45}{$\Downarrow$} \\
+	S \&\& \Set
+	\arrow[Rightarrow, no head, from=1-3, to=3-3]
+	\arrow["{S(\cdot,-)}"', from=3-1, to=3-3]
+	\arrow[from=1-1, to=3-1]
+	\arrow[from=1-1, to=1-3]
+\end{tikzcd}\]
+This is a standard glued category for canonicity of dependent type
+theory, and carries a category with families structure that we will
+reuse from prior work for the (non-linear) universes,
+$\Pi/\Sigma/\textrm{Id}$ \cite{coquand}. Concretely an object of
+$\mathcal G$ is equivalent to a pair of a syntactic context $\Gamma$,
+and a family $\hat \Gamma$ over (equivalence classes of) closing
+substitutions for $\Gamma$.
+
+Next we turn to interpreting the linear types and morphisms. For this
+we define a functor $\gluedL : \gluedNL \to \textrm{MonCat}$ where
+$\textrm{MonCat}$ is the category\footnote{in univalent foundations
+this would be the category of \emph{strict} monoidal categories.} of
+monoidal categories and lax monoidal functors.  We construct
+$\gluedL(p : \hat \Gamma \to S(\cdot,\Gamma))$ as the following comma
+category:
+
+% https://q.uiver.app/#q=WzAsNixbMCwwLCJcXGdsdWVkTkwocCkiXSxbMCwyLCJMX1xcR2FtbWEiXSxbMSwyLCJcXG1hdGhjYWwgUCBcXFNpZ21hXiovXFx0ZXh0cm17RGlzY30oUyhcXGNkb3QsXFxHYW1tYSkpIl0sWzIsMiwiXFxtYXRoY2FsIFAgXFxTaWdtYV4qL1xcdGV4dHJte0Rpc2N9KFxcaGF0XFxHYW1tYSkiXSxbMiwwLCJcXG1hdGhjYWwgUCBcXFNpZ21hXiovXFx0ZXh0cm17RGlzY30oXFxoYXRcXEdhbW1hKSJdLFsxLDEsIlxccm90YXRlYm94W29yaWdpbj1jXXstNDV9e1xcRG93bmFycm93fSJdLFs0LDMsIiIsMCx7ImxldmVsIjoyLCJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzAsNF0sWzAsMV0sWzEsMiwiTiIsMl0sWzIsMywiXFx0ZXh0cm17RGlzY30ocF4qKSIsMl1d
+\[\begin{tikzcd}[ampersand replacement=\&]
+	{\gluedNL(p)} \&\& {\mathcal P \Sigma^*/\textrm{Disc}(\hat\Gamma)} \\
+	\& {\rotatebox[origin=c]{-45}{$\Downarrow$}} \\
+	{L_\Gamma} \& {\mathcal P \Sigma^*/\textrm{Disc}(S(\cdot,\Gamma))} \& {\mathcal P \Sigma^*/\textrm{Disc}(\hat\Gamma)}
+	\arrow[Rightarrow, no head, from=1-3, to=3-3]
+	\arrow[from=1-1, to=1-3]
+	\arrow[from=1-1, to=3-1]
+	\arrow["N"', from=3-1, to=3-2]
+	\arrow["{\textrm{Disc}(p^*)}"', from=3-2, to=3-3]
+\end{tikzcd}\]
+
+Where $N : L_\Gamma \to {\mathcal P
+  \Sigma^*/\textrm{Disc}(S(\cdot,\Gamma))}$ is the ``dependent nerve''
+of the inclusion $\lceil\cdot\rceil : \Sigma^* \to L_\Gamma$ of
+strings into linear contexts defined in indexed style as
+\[ N(\Gamma \vdash A) \gamma w = \lceil w \rceil \vdash \cdot :  \simulsubst A \gamma \]
+Then observe that $N$ and ${\textrm{Disc}(p^*)}$ are lax monoidal and
+${\mathcal P \Sigma^*/\textrm{Disc}(\hat\Gamma)}$ is a topos so the
+criteria for Hyland and Schalk's gluing construction apply, defining a
+biclosed monoidal structure on $\gluedNL(p)$ as well as finite
+(co-)products. Further, these constructions are all stable under
+reindexing in $\gluedNL$, and so interpret the dependent linear typing
+constructions for $I,\otimes,0,\oplus,\top,\amp,\lto,\tol$.
+
+Concretely, an object of $\gluedNL(p)$ is equivalent to a pair of a
+non-linear type $\Gamma \vdash A$ and a formal grammar $\hat A$
+indexed by $\hat \Gamma$ with a projection function from $\hat A$ to
+$N(A)$. We can think of this presheaf $\hat A$ as the presheaf of
+canonical forms of $\simulsubst A \gamma$ for closing substitutions
+$\gamma$ in contexts of the form $\lceil w \rceil$.
+
+All that remains in this model is to define the semantics of the
+non-standard connectives. We define them in an indexed style. First we
+define the interpretation of a non-linear type $\Gamma \vdash X$ as a
+family of sets $\hat X$ indexed by a closing substitution $\gamma :
+S(\cdot,\Gamma)$, a semantic substitution $\hat \gamma : \hat
+\Gamma(\gamma)$ and a closed term $\cdot \vdash e : \simulsubst A
+\gamma$. Second, we define a linear type $\Gamma \vdash A$ as a family
+$\hat A$ of grammars indexed by $\gamma,\hat\gamma$ as above along
+with a morphism $\pi : \hat A \gamma \hat \gamma \to N(\simulsubst A
+\gamma)$.
+
+\begin{enumerate}
+\item $\hat{c} \gamma \hat \gamma w = (w = c)$ and $\pi(*) = \lceil c \rceil = x_0:c \vdash x_0:c$
+\item $\widehat{(\LinSigTy x X A)} \gamma \hat \gamma w = \Sigma(\cdot \vdash e : \simulsubst X \gamma)\Sigma(\hat x: \hat X \gamma \hat \gamma e) \hat{A}(\gamma,e)(\hat\gamma,\hat x) w$
+\item $\sem{\LinPiTy x X A} \gamma w = \Sigma(x:\simulsubst X \gamma;\lceil w\rceil \vdash e:\simulsubst A \gamma)\Pi(\cdot \vdash e' : \simulsubst X \gamma)\Pi(\hat x:\hat{X}\gamma\hat\gamma x)\Sigma(\hat a : \hat A (\gamma,e')(\hat\gamma,\hat x) \times (\pi(\hat a) = \subst e {e'} x))$
+  and $\pi(e,f) = \dlamb x.e$
+\item $\widehat{G A} \gamma \hat \gamma e = \Sigma(\hat a: \hat{A} \gamma \hat\gamma \varepsilon) (p\gamma\hat\gamma \varepsilon(\hat a) = \mathsf{G}^{-1}e)$
+\item $\sem{L_i}\gamma = \gluedNLUniv(\gamma)$
+\end{enumerate}
 
 \end{document}
