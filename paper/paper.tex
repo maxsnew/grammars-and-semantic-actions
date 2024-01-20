@@ -809,9 +809,6 @@ G \to \mathcal L$ and then our goal is to define a section by using
 the universal property of $\mathcal L$.
 
 To this end we define
-\pedro{I'm pretty sure that these definitions have been somewhat presented
-  in ``Glueing and orthogonality for models of linear logic'' by Hyland and Schalk.
-We should probably cite them so that we don't have to rederive their constructions and proofs here.}
 \begin{enumerate}
 \item $(\phi, S) \otimes (\psi, T) = (\phi \otimes \psi, S\otimes T)$ where
   \[ (S \otimes T)(w, p) = (w_1w_2 = w) \times (q_1,q_2 = p) \times S\,w_1\,q_1 \times T\,w_2\,q_2\]
@@ -976,7 +973,11 @@ It is evident that the maps $NFA(g \oplus g') \to g \oplus g'$ and $g \oplus g' 
     %   \end{align*}
 % This doesn't seem worth it. But you argue formally that commuting the case statements as such is done with the eta rule. Then you get everything to cancel down to \phi(\phi^{-1}(...)) (or the same with \psi)
 
-To see this consider a case distinction on $e : NFA(g \oplus g')$. \steven{I could type out the equality proof term, but it blows up in size and doesn't seem like a useful way to capture this iso. I have a commented out version of it above. Going to refactor tomorrow to something more sane, as these as are the crux of the proofs of equality} \steven{In any case, the NFA-to-grammar direction of these isos should all follow from some $\eta$-rule on the structure of the type for the start state, right?} Without loss of generality assume that $e = \textbf{in}_{X_{s}'} u$. Then, $\mathsf{mfold}(e) = \textbf{in}_{g}(\phi^{-1}u)$ and passing this through the above case statement results in $\textbf{in}_{{X_{s}'}}(\phi(\phi^{{-1}}u)) = \textbf{in}_{{X_{s}'}}(u) = e$. Further,
+To see this consider a case distinction on $e : NFA(g \oplus g')$. \steven{I could type out the equality proof term, but it blows up in size and doesn't seem like a useful way to capture this iso. I have a commented out version of it above. Going to refactor tomorrow to something more sane, as these as are the crux of the proofs of equality} \steven{In any case, the NFA-to-grammar direction of these isos should all follow from some $\eta$-rule on the structure of the type for the start state, right?}
+\pedro{What I like doing in these cases is either presenting the high-level structure of the proof, e.g., ``by applying the rules <...> we can conclude'', or present the full proof in the appendix.
+  Since in this case it feels like it won't be a particularly illuminating proof, I suggest doing
+the former.}
+Without loss of generality assume that $e = \textbf{in}_{X_{s}'} u$. Then, $\mathsf{mfold}(e) = \textbf{in}_{g}(\phi^{-1}u)$ and passing this through the above case statement results in $\textbf{in}_{{X_{s}'}}(\phi(\phi^{{-1}}u)) = \textbf{in}_{{X_{s}'}}(u) = e$. Further,
 
 \begin{align*}
   \mathsf{mfold}(\textbf{case}~p \{\textbf{in}_{g} p_{1} \mapsto \textbf{in}_{X_{s}'}(\phi(p_{1})), \\ \textbf{in}_{g'} p_{2} \mapsto \textbf{in}_{{Z_{s}'}}(\psi(p_{2})) \})
@@ -1051,6 +1052,9 @@ and to derive a parse of $NFA(g^{*})$ from a parse of $g*$,
 \]
 
 This completes our inductive proof that $NFA(g) \cong g$ for all regular expressions $g$.
+
+\pedro{I feel like that for the sake of organizing the paper, since the proof is non-trivial,
+there should be a theorem environment with an accompanying proof environment}
 
 % \subsubsection{NFA to Grammar}
 
