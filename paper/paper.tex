@@ -818,7 +818,69 @@ To this end we define
 \item $\mu X. ??$ ??
 \end{enumerate}
 
-\section{Type-theoretic Characterizations of Language Classes}
+\section{Type Theoretic Formal Grammar Theory}
+
+Now that we have developed a type theoretic syntax for formal grammars
+and parse transformers, we show how many common concepts of formal
+language theory and grammars are naturally expressed using type
+theoretic notions, and some constructions and proofs can be carried
+out in our type theory as well.
+
+Firstly, regular expressions and their extension to context-free
+expressions are naturally expressed as a limited syntax of linear
+types. That is, regular expressions are precisely the linear types
+constructed using only $c, I, \otimes, 0, \oplus$ and the Kleene star,
+which can be defined as $A^* = \mu x. I \oplus A \otimes X$. The
+context-free expressions are similarly expressible by allowing not
+just the Kleene star, but unrestricted usage of $\mu$. Remember,
+however, that these are a notion of regular expressions that maintain
+a notion of ambiguous grammar. That is, $A \oplus A$ is not considered
+to be the same as $A$. While there does not appear to be an analogous
+weakening of this definition to naturally describe the
+context-sensitive languages, we will see shortly that the indexing of
+linear types by non-linear types allows for capturing a notion of
+context in grammars.
+
+In addition to expressing algebraic presentations of grammars, the
+type-theoretic syntax allows for naturally expressing grammars that
+capture the behavior of automata. \max{sync this up with Steven's
+  stuff, and add stuff about PDAs and Turing Machines}.
+
+A key construct in formal language theory is the Brzozowski derivative
+\cite{brzozowski}. Given a string $w$ the (left) derivative of a
+language $L$ with respect to $w$, written $\partial_w L$ is the language
+\[ (\partial_wL ) = \{ ww' \pipe w' \in L \}\]
+This semantics is given using the linear implication $w \tol
+L$. Expressing Brzozowski's calculation of the derivative of a regular
+expression relies on additional axioms to the type theory.\max{axioms
+  to carry out Brzozowski's derivative calculations plz.}
+
+Using the $G$ modality, we can internalize some of the external
+reasoning about grammars into the language of non-linear types. Recall
+that the denotation of $G A$ is the set of parses of the empty
+string. As is well known in formal language theory, all the parsing
+behavior of a grammar can be reduced to reasoning about parsing of the
+empty string by using the derivative of a grammar. For instance, the
+set of parses for a fixed string $w$ can be defined as $G(w \tol A)$
+and so the type of all parses of a grammar can be defined as
+$\Sigma(w:\textrm{String}) G(w \tol A)$. This can be used to define
+internally a notion of \emph{ambiguity} of a grammar. A grammar $A$ is
+ambiguous if for every string $w$, the type $G(w \tol A)$ of
+$w-$parses is a \emph{proposition} in the sense that all terms in $G(w
+\tol A)$ are equal.\max{I think we should add a propositional
+  truncation to the type theory.}  Similarly, the type of \emph{total
+parsers} can be defined as $G(\top \tol A)$. A total parser encodes a
+function that selects a parse for every possible string. A
+\emph{semi-parser} is then defined as $G(\top \tol A \oplus \top)$,
+where the parser is allowed to fail for any reason. This has the
+downside that the always failing semi-parser $\lambda _. \textrm{in}_r
+()$ is valid for any grammar. If we were working with a full
+\emph{bunched} type theory, we would be able to express the more
+precise type of a \emph{deciding} parser as $G(\top \tol A \oplus \neg
+A)$ where $\neg A = A \Rightarrow 0$ uses the intuitionistic
+implication.
+
+
 Classically, formal language theory is closely related to automata theory. In the styles of Chomsky and Sch\"utzenberger, there is a hierarchy of language classes and the types of automata that recognize them. Inside of the type theory of \cref{sec:typetheory}, we can characterize these language classes; moreover, we demonstrate equivalence of each class to the associated automaton as an isomorphism within our logic.
 
 Note, predicate BI with existential quantifiers is already enough to define
@@ -1144,7 +1206,14 @@ All DFAs are NFAs, so NFAs are at least as powerful as DFAs. It is perhaps surpr
 
 \steven{Put powerset construction here}
 
-\subsection{TODO More Complicated Grammars}
+\subsection{Indexed Automata}
+
+We can generalize to more powerful notions of automata by utilizing
+dependency of linear types on non-linear types. Let $S$ be a finite
+non-linear type and define $\textrm{List}\,S = \mu x. 1 + S \times
+x$. Then a pushdown automaton with $S$ as the stack alphabet can be
+defined as a mutual fixed point.
+
 Want to put PDA, CFGs, CSGs here. Basically, use this section to highlight the usefulness of the intuitionistic part of the contexts
 
 \section{Future work}
