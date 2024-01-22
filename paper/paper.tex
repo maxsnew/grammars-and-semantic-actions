@@ -818,10 +818,6 @@ To this end we define
 \item $\mu X. ??$ ??
 \end{enumerate}
 
-<<<<<<< HEAD
-\section{Type-theoretic Characterizations of Language Classes}
-Classically, formal language theory is closely related to automata theory. In the styles of Chomsky and Sch\"utzenberger, there is a hierarchy of language classes and the types of automata that recognize them. The type theory of \cref{sec:typetheory} serves as a syntax to reason about formal grammars; moreover, we describe notions of automata into this formal system via syntactic forms that describe an automaton as a grammar. This method allows us to internalize many classic automata-theoretic results as proof terms in our type theory.
-=======
 \section{Type Theoretic Formal Grammar Theory}
 
 Now that we have developed a type theoretic syntax for formal grammars
@@ -859,6 +855,33 @@ L$. Expressing Brzozowski's calculation of the derivative of a regular
 expression relies on additional axioms to the type theory.\max{axioms
   to carry out Brzozowski's derivative calculations plz.}
 
+\steven{The axioms that I think we need:
+
+$c, c'$ characters. $g$ any grammar.
+
+\begin{gather}
+  c \lto c \cong I \\
+  c \lto c' \cong 0, c \neq c' \\
+  c \lto I \cong 0 \\
+  c \lto g \otimes h \cong \left( (c \lto g) \otimes h \right) \oplus \left( (g \amp I) \otimes (c \lto h) \right) \\
+  I \lto c \cong c \\
+  c \lto (g \oplus h) \cong (c \lto g) \oplus (c \lto h) \\
+  c \lto (c' \lto g) \cong (c' \otimes c) \lto g
+\end{gather}
+
+For point $(5)$, Brzozowski has $I \lto g \cong g$ for all grammars $g$, but I don't think that holds for us because we want to preserve ambiguity. We could instead have something like $I \lto g \cong (g \amp I)^{*} \otimes g$. For our purposes the character presentation seems sufficient, as the derivative reasoning Brzozowski uses only takes derivatives with respect to strings.
+
+We want $c \lto g^{*} \cong (g \amp I)^{*} \otimes (c \lto g) \otimes g^{*}$, but this is derivable utilizing axiom $(4)$ and $g^{*} \cong I \oplus (g \otimes g^{*})$.
+
+To make the DFA proof go through I think we additionally need the map $c \otimes (c \lto A) \vdash (c \otimes \top) \amp A$ to be an iso. Specifically, this term needs an iso $\phi : c \otimes (c \lto A) \to (c \otimes \top) \amp A$ defined below,
+
+\[
+p : c \otimes (c \lto A) \vdash \phi(p) = \letin {p_{1} \otimes p_{2}} p {(p_{1} \otimes \top, p_{1}^{\lto}p_{2})} : (c \otimes \top) \amp A
+\]
+
+
+}
+
 Using the $G$ modality, we can internalize some of the external
 reasoning about grammars into the language of non-linear types. Recall
 that the denotation of $G A$ is the set of parses of the empty
@@ -869,7 +892,7 @@ set of parses for a fixed string $w$ can be defined as $G(w \tol A)$
 and so the type of all parses of a grammar can be defined as
 $\Sigma(w:\textrm{String}) G(w \tol A)$. This can be used to define
 internally a notion of \emph{ambiguity} of a grammar. A grammar $A$ is
-ambiguous if for every string $w$, the type $G(w \tol A)$ of
+ambiguous \steven{This is an unambiguous grammar, right?} if for every string $w$, the type $G(w \tol A)$ of
 $w-$parses is a \emph{proposition} in the sense that all terms in $G(w
 \tol A)$ are equal.\max{I think we should add a propositional
   truncation to the type theory.}  Similarly, the type of \emph{total
@@ -885,8 +908,10 @@ A)$ where $\neg A = A \Rightarrow 0$ uses the intuitionistic
 implication.
 
 
-Classically, formal language theory is closely related to automata theory. In the styles of Chomsky and Sch\"utzenberger, there is a hierarchy of language classes and the types of automata that recognize them. Inside of the type theory of \cref{sec:typetheory}, we can characterize these language classes; moreover, we demonstrate equivalence of each class to the associated automaton as an isomorphism within our logic.
->>>>>>> origin/main
+Classically, formal language theory is closely related to automata theory. In the styles of Chomsky and
+Sch\"utzenberger, there is a hierarchy of language classes and the types of automata that recognize them. Inside of the
+type theory of \cref{sec:typetheory}, we can characterize these language classes; moreover, we demonstrate equivalence
+of each class to the associated automaton as an isomorphism within our logic.
 
 Note, a predicate logic over LNL with existential quantifiers is already enough to define
 formulae that correspond to arbitrary recursively enumerable languages ---
@@ -896,10 +921,19 @@ then define a formula that first ``copies'' the input onto one stack, then execu
 
 \[ \mu \textrm{Copy} : S \to *. \lambda s. (\epsilon \wedge T\,s\,[])\bigvee_{c \in \Sigma} c (S\,{c::s}) \]
 
-We reflect on this expressive power to motivate why we put heavy syntactic restrictions on our presentation of certain classes of automata. For instance, when defining a pushdown automata, we could use the intuitionistic context to represent the stack, but we ought to be very careful about how this set is accessed and added to. Careless definitions may accidentally endow us with too much expressive power, launching us further up in the Chomsky hierarchy. To begin, let us focus only on language classes, and their associated automata, whose parses are definable without any mention to the inuitionistic context. When viewed as a machine, this refers to the class of automata definable without access to any memory --- i.e.\ finite state machines.
+We reflect on this expressive power to motivate why we put heavy syntactic restrictions on our presentation of certain
+classes of automata. For instance, when defining a pushdown automata, we could use the intuitionistic context to
+represent the stack, but we ought to be very careful about how this set is accessed and added to. Careless definitions
+may accidentally endow us with too much expressive power, launching us further up in the Chomsky hierarchy. To begin,
+let us focus only on language classes, and their associated automata, whose parses are definable without any mention to
+the inuitionistic context. When viewed as a machine, this refers to the class of automata definable without access to
+any memory --- i.e.\ finite state machines.
 
 \subsection{Finite State Machines}
-A finite state machine may be expressed via a particular syntactic form for grammars. A \emph{nondeterministic finite automaton} (NFA) is defined as a mutual\footnote{For convenience we refer to a mutual fixed point here, even though we only take single fixed points as primitive. As in Beki\'c's theorem, we may decompose our mutual fixed points into a series of single fixed points.} fixed point in the following manner,
+A finite state machine may be expressed via a particular syntactic form for grammars. A \emph{nondeterministic finite automaton} (NFA) is defined as a
+mutual\footnote{For convenience we refer to a mutual fixed point here, even though we
+  only take single fixed points as primitive. As in Beki\'c's theorem, we may decompose our mutual fixed points into a series of single fixed points.}
+fixed point in the following manner,
 
 \[
   NFA ::= \mu \begin{pmatrix}
@@ -913,25 +947,33 @@ where
 \[
   Q ::= c \otimes Y ~|~ Y ~|~ Q \oplus Q
 \]
-and $Y \in \{ Y_{s}, Y_{1}, \dots, Y_{N} \}$. Intuitively, we read each $Y_{j}$ as the label for a state, and the definitions in form $Q$ describe the transitions between states --- $c \otimes Y$ denotes a labeled transition, and $Y$ denotes an $\epsilon$-transition. Without loss of generality, $Y_{s}$ is reserved for a single distinguished start state, and $Y_{e}$ is reserved for a single distinguished accepting state. A disjunction\footnote{There is an admissible notion of coproduct making use of the primitive dependent pairing --- i.e. $A \oplus B := \LinPiTy b \Bool {\textbf{if}~b~A~B}$. We will utilize this without much comment to represent the usual notion of alternation of grammars.} of transitions in an NFA grammar corresponds to multiple outgoing edges of a given state in an automaton.
+and $Y \in \{ Y_{s}, Y_{1}, \dots, Y_{N} \}$. Intuitively, we read each $Y_{j}$ as the label for a state, and the
+definitions in form $Q$ describe the transitions between states --- $c \otimes Y$ denotes a labeled transition, and $Y$
+denotes an $\epsilon$-transition. Without loss of generality, $Y_{s}$ is reserved for a single distinguished start
+state, and $Y_{e}$ is reserved for a single distinguished accepting state. A
+disjunction\footnote{There is an admissible notion of coproduct making use of the primitive dependent pairing --- i.e. $A \oplus B := \LinPiTy b \Bool {\textbf{if}~b~A~B}$. We will utilize this without much comment to represent the usual notion of alternation of grammars.}
+of transitions in an NFA grammar corresponds to multiple outgoing edges of a given state in an automaton.
 
-Let $\hat{Y}_{k}$ refer to the syntactic term on the right hand side of the definition of $Y_{k}$ inside of an NFA $N$. We say that $N$ is a \emph{deterministic finite automaton} (DFA) if there are no $\epsilon$-transitions and for every definition $\hat{Y}_{k}$ the $c_{j}$ are distinct guards for each produced state.
+Let $\hat{Y}_{k}$ refer to the syntactic term on the right hand side of the definition of $Y_{k}$ inside of an NFA $N$.
+We say that $N$ is a \emph{deterministic finite automaton} (DFA) if there are no $\epsilon$-transitions and for every
+definition $\hat{Y}_{k}$ the $c_{j}$ are distinct guards for each produced state.
+
 % \steven{Is this the right notion of determinism? Perhaps, it is is better to define determinism as something like: there is at most one derivation for all $j, k$, for all $a \in \Sigma$ we have $x : Y_{k}, y : a \vdash z : Y_{j}$.}
 
 With this setting for finite automata, we can now internalize some classical theorems inside of our formal system. First, let us describe a version of Thompson's construction \cite{?} where we show that any regular expression can be recognized by some NFA\@. Moreover, we will show that this NFA is strongly equivalent to the original grammar.
 
 \subsection{Equivalence Between Regular Grammars and Finite Automata}
 
-The class of \emph{regular} grammars is given as follows:
+% The class of \emph{regular} grammars is given as follows:
 
-\[
-Reg ::= 0 ~|~ I ~|~ c ~|~ Reg \oplus Reg ~|~ Reg \otimes Reg ~|~ Reg^{*}
-\]
-where $c \in \mathcal{A}$ is a character literal drawn from a fixed alphabet, and the Kleene star $\cdot^{*}$ is derived as an admissible operation using the fixed point operator --- $g^{*} = \mu X.I \oplus (g \otimes X)$. \steven{This definition is maybe fair to assume. Also maybe better suited for a section earlier in the paper}
+% \[
+% Reg ::= 0 ~|~ I ~|~ c ~|~ Reg \oplus Reg ~|~ Reg \otimes Reg ~|~ Reg^{*}
+% \]
+% where $c \in \mathcal{A}$ is a character literal drawn from a fixed alphabet, and the Kleene star $\cdot^{*}$ is derived as an admissible operation using the fixed point operator --- $g^{*} = \mu X.I \oplus (g \otimes X)$. \steven{This definition is maybe fair to assume. Also maybe better suited for a section earlier in the paper}
 
 \begin{theorem}
   \label{thm:thompson}
-  For $g$ a regular grammar, there is an NFA $N$ that recognizes the same language as $g$. Further, $N$ and $g$ are isomorphic.
+  For $g$ a regular grammar $g$, there is an NFA $N$ that recognizes the same language as $g$. Further, $N$ and $g$ are isomorphic.
 \end{theorem}
 
 \begin{proof}
@@ -963,7 +1005,12 @@ and
 
 Similar terms are used to show the equivalence between $I$ and $NFA(I)$.
 
-We can now inductively define some NFA combinators and show that they preserve grammar equivalence. First begin with the disjunction of two NFAs. That is, assuming that $g \cong NFA(g)$ and $g' \cong NFA(g')$, we define an NFA that recognizes $g \oplus g'$. Let the states in $NFA(g)$ be represented by $X$'s and the states in $NFA(g')$ be represented by $Z$'s. Further let $\hat{X}_{k}$ refer to the syntactic term on the right hand side of the definition of $X_{k}$ inside of $NFA(g)$. Likewise define each $\hat{Z}_{k}$.
+We can now inductively define some NFA combinators and show that they preserve grammar equivalence. First begin with
+the disjunction of two NFAs. That is, assuming that $g \cong NFA(g)$ and $g' \cong NFA(g')$, we define an NFA that
+recognizes $g \oplus g'$. Let the states in $NFA(g)$ be represented by $X$'s and the states in $NFA(g')$ be represented
+by $Z$'s. Further let $\hat{X}_{k}$ refer to the syntactic term on the right hand side of the definition of $X_{k}$
+inside of $NFA(g)$. Likewise define each $\hat{Z}_{k}$.
+
 
 \[
   NFA(g \oplus g') =
@@ -976,10 +1023,19 @@ We can now inductively define some NFA combinators and show that they preserve g
         Y_{e} = I
   \end{pmatrix}~\textbf{in}~Y_{s}
 \]
-where the substitution $\{X_{s}'/X_{s}, X_{e}'/X_{e}, X_{1}'/X_{1}, \dots \}$ is given by $\delta_{X}$. Likewise define $\delta_{Z}$.
-In the construction of $NFA(g \oplus g')$ we replicate each defintion $X_{j}$ in $NFA(g)$ with an analogous definition $X_{j}'$ inside of $NFA(g \oplus g')$, except we replace $X_{k}$ with $X_{k}'$ in each production. Lastly, $X_{e}'$ has an $\epsilon$-transition to the accepting state $Y_{e}$. Likewise, we build analogous defintions for the states $Z_{j}$ in $NFA(g')$, then we flatten all of these defintions into one mutally recursive list. This has the effect of disjunctively tying together $NFA(g)$ and $NFA(g')$ into one automaton.
+where the substitution $\{X_{s}'/X_{s}, X_{e}'/X_{e}, X_{1}'/X_{1}, \dots \}$ is given by $\delta_{X}$. Likewise define
+$\delta_{Z}$.
+In the construction of $NFA(g \oplus g')$ we replicate each defintion $X_{j}$ in $NFA(g)$ with an analogous definition
+$X_{j}'$ inside of $NFA(g \oplus g')$, except we replace $X_{k}$ with $X_{k}'$ in each production. Lastly, $X_{e}'$ has
+an $\epsilon$-transition to the accepting state $Y_{e}$. Likewise, we build analogous defintions for the states
+$Z_{j}$ in $NFA(g')$, then we flatten all of these defintions into one mutally recursive list. This has the effect
+of disjunctively tying together $NFA(g)$ and $NFA(g')$ into one automaton.
 
-To show the strong equivalence of $NFA(g \oplus g')$ and $g \oplus g'$, we will demonstrate an isomorphism between them with two proof terms in our logic that mutually invert each other. To define a map $NFA(g \oplus g') \to g \oplus g'$ we will use a multi-fold over all the mutually recursive defintions of $NFA(g \oplus g')$. Note, even though multiple folding is not taken as primitive, using Beki\'c's theorem we can define a family of multifold terms to serve as elimination forms for our admissible multiple fixed points. That is, rules of the form,
+To show the strong equivalence of $NFA(g \oplus g')$ and $g \oplus g'$, we will demonstrate an isomorphism between them
+with two proof terms in our logic that mutually invert each other. To define a map $NFA(g \oplus g') \to g \oplus g'$
+we will use a multi-fold over all the mutually recursive defintions of $NFA(g \oplus g')$. Note, even though multiple
+folding is not taken as primitive, using Beki\'c's theorem we can define a family of multifold terms to serve as
+elimination forms for our admissible multiple fixed points. That is, rules of the form,
 
 \[
   \inferrule{\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n})~\textbf{in}~X_{k} \\
@@ -989,7 +1045,11 @@ To show the strong equivalence of $NFA(g \oplus g')$ and $g \oplus g'$, we will 
   }{\Gamma; \Delta \vdash \mathsf{mfold}(x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{k}}
 \]
 
-are admissible, where the substitution $\{B_{1}/X_{1},\dots,B_{n}/X_{n} \}$ is given by $\gamma$. In this instance, we wish to simultaneously fold over the mutually recursive definitions comprising $NFA(g \oplus g')$. We may think of this as an eliminator that replaces each state inside of $NFA(g \oplus g')$ with a tail-recursive call that will ultimately return a term of type $g \oplus g'$. The structure of such a derivation is given below,
+are admissible, where the substitution $\{B_{1}/X_{1},\dots,B_{n}/X_{n} \}$ is given by $\gamma$. In this instance, we
+wish to simultaneously fold over the mutually recursive definitions comprising $NFA(g \oplus g')$. We may think of this
+as an eliminator that replaces each state inside of $NFA(g \oplus g')$ with a tail-recursive call that will ultimately
+return a term of type $g \oplus g'$. The structure of such a derivation is given below,
+
 
 \[
   \inferrule{
@@ -1005,7 +1065,9 @@ are admissible, where the substitution $\{B_{1}/X_{1},\dots,B_{n}/X_{n} \}$ is g
   }{\Delta \vdash \mathsf{mfold}(e) : g \oplus g'}
 \]
 
-For each of the variables above, we simplify the type and provide the actual proof term. For instance, $\simulsubst {(X_{s}' \oplus Z'_{s})} \gamma = g \oplus g'$, so the derivation for $p_{s}$ is just the identity. The rest of the terms are given below,
+For each of the variables above, we simplify the type and provide the actual proof term. For instance,
+$\simulsubst {(X_{s}' \oplus Z'_{s})} \gamma = g \oplus g'$, so the derivation for $p_{s}$ is just the identity.
+The rest of the terms are given below,
 \begin{itemize}
   \item $y_{s}$ --- $\simulsubst {(X_{s}' \oplus Z'_{s})} \gamma = g \oplus g'$ and $p_{s} = y_{s} : g \oplus g'$
   \item $x_{s}'$ --- $\simulsubst {(\simulsubst {\hat{X}_{s}} {\delta_{X}})}{\gamma} = X_{s}$ and $p_{x,s} = \phi^{-1}(x_{s}') : g$
@@ -1017,7 +1079,9 @@ For each of the variables above, we simplify the type and provide the actual pro
   \item $y_{e}$ --- $\simulsubst {I} {\gamma} = I$ and $p_{e} = y_{e} : I$
 \end{itemize}
 
-where $\phi$ and $\psi$ are the witnesses to the isomorphisms $g \cong NFA(g)$ and $g' \cong NFA(g')$, respectively. This finshes the construction of a parse transformer $NFA(g \oplus g') \to g \oplus g'$ The map in the other direction is given the derivation,
+where $\phi$ and $\psi$ are the witnesses to the isomorphisms $g \cong NFA(g)$ and $g' \cong NFA(g')$, respectively.
+This finshes the construction of a parse transformer $NFA(g \oplus g') \to g \oplus g'$.
+The map in the other direction is given the derivation,
 
 
 \[
@@ -1053,7 +1117,10 @@ It is evident that the maps $NFA(g \oplus g') \to g \oplus g'$ and $g \oplus g' 
 % the former.}
     %
 
-By breaking into a case distinction on $e$ and then applying the $\eta$-rule for coproducts, the above proof will simplify into two cases where $\phi$ will be inverted by $\phi^{{-1}}$ and $\psi$ will be inverted by $\psi^{-1}$, ultimately cancelling to give the identity map. The other direction below simplifies in a similar manner. \steven{Most concise list for this?}
+By breaking into a case distinction on $e$ and then applying the $\eta$-rule for coproducts, the above proof will
+simplify into two cases where $\phi$ will be inverted by $\phi^{{-1}}$ and $\psi$ will be inverted by $\psi^{-1}$,
+ultimately cancelling to give the identity map. The other direction below simplifies in a similar manner.
+\steven{Most concise list for this?}
 
 % Without loss of generality assume that $e = \textbf{in}_{X_{s}'} u$. Then, $\mathsf{mfold}(e) = \textbf{in}_{g}(\phi^{-1}u)$ and passing this through the above case statement results in $\textbf{in}_{{X_{s}'}}(\phi(\phi^{{-1}}u)) = \textbf{in}_{{X_{s}'}}(u) = e$. Further,
 
@@ -1062,7 +1129,9 @@ By breaking into a case distinction on $e$ and then applying the $\eta$-rule for
   & = p
 \end{align*}
 
-This concludes the disjunctive combination of two NFAs. Because they follow a very similar style of argumentation, we include the cases for sequencing and Kleene star in \cref{sec:appendixnfa}.
+This concludes the disjunctive combination of two NFAs.
+Because they follow a very similar style of argumentation, we include the cases for sequencing and
+Kleene star in \cref{sec:appendixnfa}.
 
 
 \end{proof}
@@ -1124,12 +1193,6 @@ This concludes the disjunctive combination of two NFAs. Because they follow a ve
 
 Something like $A \cong (I \& A) \oplus \sum_{c} c \otimes (c \lto A)$
 
-For this taylor iso to hold, we need the map $c \otimes (c \lto A) \vdash (c \otimes \top) \amp A$ to be an iso. Specifically, this term needs an iso $\phi : c \otimes (c \lto A) \to (c \otimes \top) \amp A$ defined below,
-
-\[
-p : c \otimes (c \lto A) \vdash \phi(p) = \letin {p_{1} \otimes p_{2}} p {(p_{1} \otimes \top, p_{1}^{\lto}p_{2})} : (c \otimes \top) \amp A
-\]
-
 Also add the axiom that $\top \cong (\sum_{c \in \mathcal{A}} c)^{*}$
 
 If we have the above, we can then show the following isos for some alphabet $\mathcal{A}$,
@@ -1142,7 +1205,7 @@ If we have the above, we can then show the following isos for some alphabet $\ma
   & \cong (I \amp A) \oplus (\Sigma_{c }c \otimes (c \lto A)) & \text{using } \phi^{-1}
 \end{align*}
 
-From here we need to also show that derivatives of regular languages are regular (look at Brzozowksi's proof) and that regular languages have finitely many derivatives (potentially with some size constraint on the derivative?). Then the last iso in the chain above can be used to build a DFA equivalent to $A$ using Brzozowksi's algorithm.
+From here we need to also show that derivatives of regular languages are regular (look at Brzozowski's proof) and that regular languages have finitely many derivatives (potentially with some size constraint on the derivative?). Then the last iso in the chain above can be used to build a DFA equivalent to $A$ using Brzozowski's algorithm.
 
 Need to also add in axioms for $\amp$ distributing over $\oplus$ and $\lto$ distributing over $\oplus$. And that $c \amp c' \vdash 0$ for $c \neq c'$
 
@@ -1330,7 +1393,7 @@ induction on formulae again we see that this projection is also a
 section and therefore an isomorphism, establishing the canonicity
 result as stated in Section\ref{section:canonicity}.
 
-\section{NFA stuff}
+\section{Equivalence Betweeen Regular Grammars and Finite Automata}
 \label{sec:appendixnfa}
 
 We provide the final two cases of \cref{thm:thompson}.
