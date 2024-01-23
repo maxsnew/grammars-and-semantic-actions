@@ -986,32 +986,7 @@ L$. Expressing Brzozowski's calculation of the derivative of a regular
 expression relies on additional axioms to the type theory.\max{axioms
   to carry out Brzozowski's derivative calculations plz.}
 
-\steven{The axioms that I think we need:
 
-$c, c'$ characters. $g$ any grammar.
-
-\begin{gather}
-  c \lto c \cong I \\
-  c \lto c' \cong 0, c \neq c' \\
-  c \lto I \cong 0 \\
-  c \lto g \otimes h \cong \left( (c \lto g) \otimes h \right) \oplus \left( (g \amp I) \otimes (c \lto h) \right) \\
-  I \lto c \cong c \\
-  c \lto (g \oplus h) \cong (c \lto g) \oplus (c \lto h) \\
-  c \lto (c' \lto g) \cong (c' \otimes c) \lto g
-\end{gather}
-
-For point $(5)$, Brzozowski has $I \lto g \cong g$ for all grammars $g$, but I don't think that holds for us because we want to preserve ambiguity. We could instead have something like $I \lto g \cong (g \amp I)^{*} \otimes g$. For our purposes the character presentation seems sufficient, as the derivative reasoning Brzozowski uses only takes derivatives with respect to strings.
-
-We want $c \lto g^{*} \cong (g \amp I)^{*} \otimes (c \lto g) \otimes g^{*}$, but this is derivable utilizing axiom $(4)$ and $g^{*} \cong I \oplus (g \otimes g^{*})$.
-
-To make the DFA proof go through I think we additionally need the map $c \otimes (c \lto A) \vdash (c \otimes \top) \amp A$ to be an iso. Specifically, this term needs an iso $\phi : c \otimes (c \lto A) \to (c \otimes \top) \amp A$ defined below,
-
-\[
-p : c \otimes (c \lto A) \vdash \phi(p) = \letin {p_{1} \otimes p_{2}} p {(p_{1} \otimes \top, p_{1}^{\lto}p_{2})} : (c \otimes \top) \amp A
-\]
-
-
-}
 \begin{align*}
   c\tol c &\equiv I\\
   c\tol d &\equiv 0\\
@@ -1025,7 +1000,32 @@ p : c \otimes (c \lto A) \vdash \phi(p) = \letin {p_{1} \otimes p_{2}} p {(p_{1}
 \pedro{The type family $\nu$ above is equal to $I$ if its argument
   parses the empty string and zero otherwise. In order to define
   it we should probably add an extra axiom, right?}
+\steven{$\nu$ can be derived using $\amp$, $\nu(A) = I \amp A$}
 
+\steven{In addition to Pedro's axioms:
+
+$c, c'$ characters. $g$ any grammar.
+
+\begin{gather}
+  I \lto c \cong c \\
+  c \lto (c' \lto g) \cong (c' \otimes c) \lto g
+\end{gather}
+
+For axiom $(1)$, Brzozowski has $I \lto g \cong g$ for all grammars $g$, but I don't think that holds for us because we want to preserve ambiguity. We could instead have something like $I \lto g \cong (g \amp I)^{*} \otimes g$. For our purposes the character presentation seems sufficient, as the derivative reasoning Brzozowski uses only takes derivatives with respect to strings.
+
+Axiom $(2)$ might be admissible, but I'm unsure.
+
+I think for Kleene star we need $c \lto g^{*} \cong (g \amp I)^{*} \otimes (c \lto g) \otimes g^{*}$. This should derivable utilizing the product axiom and $g^{*} \cong I \oplus (g \otimes g^{*})$, or is that sort of isomorphism opaque to us right now.
+
+To make the DFA proof go through I think we additionally need to axiomatically make the map $c \otimes (c \lto A) \vdash (c \otimes \top) \amp A$ to be an iso. Specifically, this term needs an iso $\phi : c \otimes (c \lto A) \to (c \otimes \top) \amp A$ defined below,
+
+\[
+p : c \otimes (c \lto A) \vdash \phi(p) = \letin {p_{1} \otimes p_{2}} p {(p_{1} \otimes \top, p_{1}^{\lto}p_{2})} : (c \otimes \top) \amp A
+\]
+
+but this last bit isn't just Brzozowski's definitions
+
+}
 Using the $G$ modality, we can internalize some of the external
 reasoning about grammars into the language of non-linear types. Recall
 that the denotation of $G A$ is the set of parses of the empty
@@ -1330,36 +1330,31 @@ Kleene star in \cref{sec:appendixnfa}.
 %   \item $y_{e}$ --- $\simulsubst I {\delta \circ \gamma} = I$ and $p_{e} = y_{e} : I$
 % \end{itemize}
 
+% \steven{An aside on some axioms}
 
+% Something like $A \cong (I \& A) \oplus \sum_{c} c \otimes (c \lto A)$
 
+% Also add the axiom that $\top \cong (\sum_{c \in \mathcal{A}} c)^{*}$
 
-\steven{An aside on some axioms}
+% If we have the above, we can then show the following isos for some alphabet $\mathcal{A}$,
+% \begin{align*}
+%   A
+%   & \cong \top \amp A \\
+%   & \cong (\Sigma_{c \in \mathcal{A}})^{*}\amp A \\
+%   & \cong (I \oplus (\Sigma_{c} c \otimes \top)) \amp A \\
+%   & \cong (I \amp A) \oplus ((\Sigma_{c} c \otimes \top)) \amp A) \\
+%   & \cong (I \amp A) \oplus (\Sigma_{c }c \otimes (c \lto A)) & \text{using } \phi^{-1}
+% \end{align*}
 
-Something like $A \cong (I \& A) \oplus \sum_{c} c \otimes (c \lto A)$
+% From here we need to also show that derivatives of regular languages are regular (look at Brzozowski's proof) and that regular languages have finitely many derivatives (potentially with some size constraint on the derivative?). Then the last iso in the chain above can be used to build a DFA equivalent to $A$ using Brzozowski's algorithm.
 
-Also add the axiom that $\top \cong (\sum_{c \in \mathcal{A}} c)^{*}$
-
-If we have the above, we can then show the following isos for some alphabet $\mathcal{A}$,
-\begin{align*}
-  A
-  & \cong \top \amp A \\
-  & \cong (\Sigma_{c \in \mathcal{A}})^{*}\amp A \\
-  & \cong (I \oplus (\Sigma_{c} c \otimes \top)) \amp A \\
-  & \cong (I \amp A) \oplus ((\Sigma_{c} c \otimes \top)) \amp A) \\
-  & \cong (I \amp A) \oplus (\Sigma_{c }c \otimes (c \lto A)) & \text{using } \phi^{-1}
-\end{align*}
-
-From here we need to also show that derivatives of regular languages are regular (look at Brzozowski's proof) and that regular languages have finitely many derivatives (potentially with some size constraint on the derivative?). Then the last iso in the chain above can be used to build a DFA equivalent to $A$ using Brzozowski's algorithm.
-
-Need to also add in axioms for $\amp$ distributing over $\oplus$ and $\lto$ distributing over $\oplus$. And that $c \amp c' \vdash 0$ for $c \neq c'$
+% Need to also add in axioms for $\amp$ distributing over $\oplus$ and $\lto$ distributing over $\oplus$. And that $c \amp c' \vdash 0$ for $c \neq c'$
 
 \subsection{DFAs and NFAs}
 
 All DFAs are NFAs, so NFAs are at least as powerful as DFAs. It is perhaps surprising that DFAs are as powerful as NFAs too! We can internalize the classic powerset construction to transform an NFA into a DFA that recognizes the same language. Note however that this loses some information. Throughout this process we may lose data such as the ambiguity of the grammar. Effectively we are forgetting the structure of our proof terms. Under the ``grammars as types'' lens, we are erasing the structure underlying the inhabitants of the type to simply mere existence --- this is a form of propostional truncation.
 
 \steven{Worth spending some more time on the propositional truncation idea}
-
-\steven{Put powerset construction here}
 
 \subsection{Indexed Automata}
 
