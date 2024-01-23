@@ -318,11 +318,28 @@ more structure, then these isomorphisms hold ``for free''.
     1}(X))$.
 
   Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
-  we want to show that there is a unique algebra morphism $h : B
-  \otimes \mu X.\, F_{A,1} \to Y$. We can show existence and uniqueness
-  by showing that the diagram on the left commute if, and only if,
-  the diagram on the right commutes:
+  we want to show that there is a unique algebra morphism $h : \mu X.\, F_{A,1} \to B \lto Y$. We can show existence and
+  uniqueness by showing that the diagram on top commutes if, and
+  only if, the diagram on the bottom commutes:
 
+% https://q.uiver.app/#q=WzAsOCxbMCwwLCJCICsgQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFsyLDAsIkIgKyBZIFxcb3RpbWVzIEEiXSxbMiwyLCJZIl0sWzAsMiwiQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDMsIjEgKyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDUsIlxcbXUgWC5cXCwgMSArIFggXFxvdGltZXMgQSJdLFsyLDMsIjEgKyAoIEIgXFxsdG8gWSkgXFxvdGltZXMgQSJdLFsyLDUsIkIgXFxsdG8gWSJdLFswLDEsImlkICsgKGlkIFxcb3RpbWVzIGg7IGV2KSBcXG90aW1lcyBpZF9BIl0sWzEsMiwiW2YsZ10iXSxbMywyLCJpZCBcXG90aW1lcyBoOyBldiIsMl0sWzAsMywiW2lkIFxcb3RpbWVzIGgsIGlkIFxcb3RpbWVzIHRsXSIsMl0sWzQsNiwiaWQgKyAoaCBcXG90aW1lcyBYKVxcb3RpbWVzIGlkIl0sWzUsNywiaCIsMl0sWzYsNywiW2YnLCBnJ10iXSxbNCw1LCJbaGQsIHRsXSIsMl1d
+\[\begin{tikzcd}
+	{B + B \otimes (\mu X.\, 1 + X \otimes A)} && {B + Y \otimes A} \\
+	\\
+	{B \otimes (\mu X.\, 1 + X \otimes A)} && Y \\
+	{1 + (\mu X.\, 1 + X \otimes A)} && {1 + ( B \lto Y) \otimes A} \\
+	\\
+	{\mu X.\, 1 + X \otimes A} && {B \lto Y}
+	\arrow["{id + (id \otimes h; ev) \otimes id_A}", from=1-1, to=1-3]
+	\arrow["{[f,g]}", from=1-3, to=3-3]
+	\arrow["{id \otimes h; ev}"', from=3-1, to=3-3]
+	\arrow["{[id \otimes h, id \otimes tl]}"', from=1-1, to=3-1]
+	\arrow["{id + (h \otimes X)\otimes id}", from=4-1, to=4-3]
+	\arrow["h"', from=6-1, to=6-3]
+	\arrow["{[f', g']}", from=4-3, to=6-3]
+	\arrow["{[hd, tl]}"', from=4-1, to=6-1]
+\end{tikzcd}\]
+  
   This equivalence follows by using the adjunction structure given
   by the monoidal closed structure of $\cat{K}$. A completely analogous
   argument for $G_{A,B}$ also holds.
@@ -390,10 +407,10 @@ well-known construction from presheaf categories.
   discrete category $\Sigma^*$ a strict monoidal category.
 \end{proof}
 
-Much like in the posetal case, the abstract structure of a 2-Kleene
-algebra is expressive enough to synthetically reason about formal
+Much like in the posetal case, the abstract structure of a Kleene
+category is expressive enough to synthetically reason about formal
 languages. A significant difference between them is that while Kleene
-algebras can reason about language containment, 2-Kleene algebras can
+algebras can reason about language containment, Kleene categories can
 reason about parsing as well.
 
 For the rest of the paper we will use the presheaf category
@@ -403,8 +420,17 @@ that it can handle more classes of languages beyond regular ones.
 
 \paragraph{Beyond Simple Types}
 
+Though Kleene categories are expressive enough to reason about concepts
+that are outside of reach of Kleene algebras, their simply-typed nature
+makes them not so expressive from a type theory point of view.
+
+Since we are interested in design a type theory for reasoning about various
+properties of parsers, we will assume that our Kleene category is defined
+internal to a model of linear depedendently typed theory, which leads us
+to the notion of models we are interested in:
+
 \begin{definition}
-  A model is a locally Cartesian category equipped with an internal Kleene category.
+  A model is a locally Cartesian category with \pedro{add the linear logic connectives here} equipped with an internal Kleene category.
 \end{definition}
 
 \begin{theorem}
@@ -547,10 +573,115 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
     \inferrule{\Gamma \vdash A : L_i \\ \Gamma \vdash B : L_i}{\Gamma \vdash A \amp B : L_i}
 %
     \\
-%
+    %
+    \inferrule{c \in \Sigma}{\Gamma \vdash c : L_0}
+    %
+    \and
+    %
     \inferrule{\Gamma, x : L_i \vdash A : L_i \and A \textrm{ strictly positive}}{\Gamma \vdash \mu x.\, A : L_i}
   \end{mathpar}
   \caption{Type well-formedness}
+\end{figure}
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{\Gamma \vdash p : e =_X e'}{\Gamma \vdash e \equiv e' : X}
+%
+    \and
+%
+    \inferrule{~}{\Gamma \vdash \app {(\lamb x e)} {e'} \equiv \subst x e {e'} : X}
+%
+    \and
+%
+    \inferrule{~}{\Gamma \vdash e \equiv \lamb x {\app e x} : \PiTy x X Y}
+%
+    \and
+%
+    \inferrule{~}{\Gamma \vdash \pi_1\, (e_1, e_2) \equiv e_1 : X}
+%
+    \and
+%
+    \inferrule{~}{\Gamma \vdash \pi_2\, (e_1, e_2) \equiv e_2 : \subst x {e_1} Y}
+%
+    \and
+%
+    \inferrule{~}{\Gamma \vdash e \equiv (\pi_1\, e, \pi_2\, e) : \SigTy x X Y}
+%
+    \and
+%
+    \inferrule{~}{}
+%
+    \inferrule{~}{\Gamma \vdash t \equiv t' : 1}
+%   
+    \and
+%
+    \inferrule{~}{\Gamma \vdash G\, (G^{-1} \, t) \equiv t : G A}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash \app {(\lamblto a e)} {e'} \equiv \subst e x {e'} : C}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash e \equiv \lamblto a {\app e a} : A \lto B}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash \app {(\lambtol a e)} {e'} \equiv \subst e x {e'} : C}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash e \equiv \lambtol a {\app e a} : A \tol B}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash \app {(\dlamb x e)} {e'} \equiv \subst x a {e'} : C}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash e \equiv \dlamb x {\app e x} : \LinPiTy x X A}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash e \equiv e' : \top}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash e_i \equiv \pi_i (e_1, e_2) : A_i}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash e \equiv (\pi_1 e, \pi_2 e) : A\& B}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash \letin {()} {()} e \equiv e : C}
+    %
+    \and
+    %
+    \inferrule{~}{\Gamma; \Delta \vdash \letin {()} e {\subst {e'} {()} a} \equiv \subst {e'} a e : C}
+%
+    \and
+%
+    \inferrule{~}{\Gamma; \Delta \vdash \letin {e \otimes e'} {a \otimes a'} e'' \equiv \subst {e''} {a, a'} {e, e'} : C}
+%
+    \and
+    %
+    \inferrule{~}{\Gamma; \Delta \vdash \letin {a \otimes b} e {\subst {e'} {a \otimes b} c} \equiv \subst {e'} c e : C}
+%
+    \and
+%
+    \inferrule{~}{\Gamma;\Delta \vdash \letin {(x, a)} {(e, e')} {e''} \equiv \subst {e''} {x, a} {e, e'} : C} 
+    %
+    \and
+    %
+    \inferrule{~}{\Gamma; \Delta \vdash \letin {(x, a)} e {\subst {e'} {(x, a)} y} \equiv \subst {e'} e y : C}
+\end{mathpar}
+  \caption{Judgemental equality}
 \end{figure}
 
 \begin{figure}
@@ -881,6 +1012,19 @@ p : c \otimes (c \lto A) \vdash \phi(p) = \letin {p_{1} \otimes p_{2}} p {(p_{1}
 
 
 }
+\begin{align*}
+  c\tol c &\equiv I\\
+  c\tol d &\equiv 0\\
+  c\tol I &\equiv 0\\
+  c\tol 0 &\equiv 0\\
+  c\tol (A \otimes B) &\equiv (c\tol A) \otimes B + \nu(A) \otimes (c\tol B)\\
+  c\tol A^* &\equiv (c\tol A) \otimes A^*\\
+  c\tol (A + B) &\equiv (c\tol A) + (c\tol B)
+\end{align*}
+
+\pedro{The type family $\nu$ above is equal to $I$ if its argument
+  parses the empty string and zero otherwise. In order to define
+  it we should probably add an extra axiom, right?}
 
 Using the $G$ modality, we can internalize some of the external
 reasoning about grammars into the language of non-linear types. Recall
