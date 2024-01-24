@@ -1198,22 +1198,24 @@ $Z_{j}$ in $NFA(g')$, then we flatten all of these defintions into one mutally r
 of disjunctively tying together $NFA(g)$ and $NFA(g')$ into one automaton.
 
 To show the strong equivalence of $NFA(g \oplus g')$ and $g \oplus g'$, we will demonstrate an isomorphism between them
-with two proof terms in our logic that mutually invert each other. To define a map $NFA(g \oplus g') \to g \oplus g'$
+with two proof terms in our logic that mutually invert each other. To define a map from $NFA(g \oplus g')$ to $g \oplus g'$
 we will use a multi-fold over all the mutually recursive defintions of $NFA(g \oplus g')$. Note, even though multiple
-fixed points are not taken as primitive, using Beki\'c's theorem we can define admissible multiple fixed points types. Below we give rules to form $\mathsf{cons}$ and $\mathsf{mfold}$ terms to serve as the introduction and elimination rules, respectively, for multi-term fixed points,
+fixed points are not taken as primitive, using Beki\'c's theorem we can define an admissible axiom schema to define multiple fixed points types. Below we give rules to form $\mathsf{cons}$ and $\mathsf{mfold}$ terms to serve as the introduction and elimination rules, respectively, for multi-term fixed points. First, the introduction rule,
 
 \[
   \inferrule
   {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
-  {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}) . X_{k}}
+  {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
 \]
-where $\sigma$ is the substitution that unrolls the mutually recursive definition one level by replacing each $X_{k}$ with the fixed point,
-\steven{I'm not sure this is right. TODO sanity check it with a small example}
+where $\sigma$ is the substitution that unrolls the mutually recursive definition one level by replacing each $X_{k}$ with the fixed point $\mu(X_{j} = A_{j}).X_{k}$,
+\steven{I'm not sure the cons rule is right. TODO sanity check it with a small example}
+
 \begin{align*}
-  \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}) . X_{1} / X_{1} , \dots, \\
-  & \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}) . X_{n} / X_{n} \}
+  \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \\
+  & \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{n} / X_{n} \}
 \end{align*}
 
+and the elimination rule,
 \[
   \inferrule{\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k} \\
              \Gamma ; x_{1} : \simulsubst {A_{1}}{\gamma} \vdash e_{1} : B_{1} \\
@@ -1227,17 +1229,17 @@ where the substitution $\gamma$ represents $\{B_{1}/X_{1},\dots,B_{n}/X_{n} \}$.
 When defining a derivation from $NFA(g \oplus g')$ to $g \oplus g'$, we
 wish to simultaneously fold over the mutually recursive definitions comprising $NFA(g \oplus g')$. We may think of this
 as an eliminator that replaces each state inside of $NFA(g \oplus g')$ with a tail-recursive call that will ultimately
-return a term of type $g \oplus g'$. The structure of such a derivation is given below,
+return a term of type $g \oplus g'$. The structure of such a derivation instatiates the above elimination rule as follow,
 
 \[
   \inferrule{
     \Delta \vdash e : NFA(g \oplus g') \\
     y_{s} : \simulsubst {(X_{s}' \oplus Z'_{s})} \gamma \vdash p_{s} : g \oplus g' \\
     x_{s}' : \simulsubst {(\simulsubst {X_{s}} {\delta_{X}})}{\gamma} \vdash p_{x,s} : g \\
-    x_{j}' : \simulsubst {(\simulsubst {X_{j}} {\delta_{X}})}{\gamma} \vdash p_{x,j} : X_{j} \text{ where } j \not \in \{s, e\} \\
+    x_{j}' : \simulsubst {(\simulsubst {X_{j}} {\delta_{X}})}{\gamma} \vdash p_{x,j} : X_{j} \text{~where } j \not \in \{s, e\} \\
     x_{e}' : \simulsubst {Y_{e}}{\gamma} \vdash p_{x, e} : X_{e} \\
     z_{s}' : \simulsubst {(\simulsubst {Z_{s}} {\delta_{Z}})}{\gamma} \vdash p_{z,s} : g' \\
-    z_{j}' : \simulsubst {(\simulsubst {Z_{j}} {\delta_{Z}})}{\gamma} \vdash p_{z,j} : Z_{j} \text{ where } j \not \in \{s, e\} \\
+    z_{j}' : \simulsubst {(\simulsubst {Z_{j}} {\delta_{Z}})}{\gamma} \vdash p_{z,j} : Z_{j} \text{~where } j \not \in \{s, e\} \\
     z_{e}' : \simulsubst {Y_{e}}{\gamma} \vdash p_{z,e} : Z_{e} \\
     y_{e} : \simulsubst I {\gamma} \vdash p_{e} : I
   }{\Delta \vdash \mathsf{mfold}(e) : g \oplus g'}
@@ -1258,13 +1260,33 @@ The rest of the terms are given below,
 \end{itemize}
 
 where $\phi$ and $\psi$ are the witnesses to the isomorphisms $g \cong NFA(g)$ and $g' \cong NFA(g')$, respectively.
-This finshes the construction of a parse transformer from $NFA(g \oplus g')$ to $g \oplus g'$.
-The map in the other direction is given the derivation,
-
+This finshes the construction of a parse transformer from $NFA(g \oplus g')$ to $ g \oplus g'$.
+The map in the other direction is given below in a couple stages. First, we show how to turn a parse of $NFA(g)$ into a parse of $NFA(g \oplus g')$.
 
 \[
-\inferrule{p_{1} : g \vdash \textbf{in}_{X_{s}'}(\phi(p_{1})) : NFA(g \oplus g') \\ p_{2} : g' \vdash \textbf{in}_{{Z_{s}'}}(\psi(p_{2})) : NFA(g \oplus g') \\ p : g \oplus g' \vdash p : g \oplus g'}{p : g \oplus g' \vdash \textbf{case}~p \{\textbf{in}_{g} p_{1} \mapsto \textbf{in}_{X_{s}'}(\phi(p_{1})), \\ \textbf{in}_{g'} p_{2} \mapsto \textbf{in}_{{Z_{s}'}}(\psi(p_{2})) \} : NFA(g \oplus g')}
+  \inferrule
+  {
+    \Gamma ; \Delta \vdash u : NFA(g) = \mu(X_{j} = \hat{X}_{j}).X_{s} \\
+    \Gamma ; x_{s} : \simulsubst {X_{s}}{\gamma} = X_{s}' \vdash \mathsf{cons}(\textbf{in}_{X_{s}'}(x_{s})) : \mu(\dots).Y_{s} = NFA(g \oplus g')  \\
+    \Gamma ; x_{j} : \simulsubst {X_{j}}{\gamma} = X_{j}' \vdash x_{j} : X_{j}', j \not \in \{s, e\} \\
+    \Gamma ; x_{e} : \simulsubst {X_{e}}{\gamma} = I \vdash x_{e} : I = X_{e}'
+  }
+  {\Gamma ; \Delta \vdash \mathsf{mfold}(u) : NFA(g \oplus g')}
 \]
+where the dots in the above derivation take on the mutually recursive defintions present in $NFA(g \oplus g')$. \steven{Need a better way to display this without blowing up the definitions everywhere} Denote the above embedding of $NFA(g)$ into $NFA(g \oplus g')$ via $\alpha(u) := \mathsf{mfold}(u) : NFA(g \oplus g')$. Similarly define an embedding $\beta$ for an embedding of $NFA(g')$. We can then define the derivation from $g \oplus g'$ to $NFA(g \oplus g')$ by composing the maps isomorphisms $g \overset{\phi}{\cong} NFA(g)$ and $g \overset{\psi}{\cong} NFA(g')$ with $\alpha$ and $\beta$, respectively.
+
+\[
+  \inferrule
+  {
+    p : g \oplus g' \vdash p : g \oplus g' \\
+    p_{1} : g \vdash \alpha(\phi(p_{1})) : NFA(g \oplus g') \\
+    p_{2} : g' \vdash \beta(\psi(p_{2})) : NFA(g \oplus g')}
+  {
+    p : g \oplus g' \vdash \textbf{case}~p \{
+    \textbf{in}_{g} p_{1} \mapsto \alpha(\phi(p_{1})), \\
+    \textbf{in}_{g'} p_{2} \mapsto \beta(\psi(p_{2})) \} : NFA(g \oplus g')}
+\]
+
 
 It is evident that the maps $NFA(g \oplus g') \to g \oplus g'$ and $g \oplus g' \to NFA(g \oplus g')$ form an isomorphism.
 
