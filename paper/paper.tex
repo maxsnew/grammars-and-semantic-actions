@@ -1074,37 +1074,54 @@ the inuitionistic context. When viewed as a machine, this refers to the class of
 any memory --- i.e.\ finite state machines.
 
 \subsection{Finite State Machines}
-A finite state machine may be expressed via a particular syntactic form for grammars. A \emph{nondeterministic finite automaton} (NFA) is defined as a
+A \emph{nondeterministic finite automaton} (NFA) is a finite state machine where transitions are labeled with characters from a fixed alphabet $\Sigma$. These are often represented formally as a 5-tuple $(Q, \Sigma, \delta, q_{0}, F)$,
+
+\begin{itemize}
+  \item $Q$ a finite set of states
+  \item $\Sigma$ a fixed, finite alphabet
+  \item $\delta : Q \times \Sigma \to \mathcal{P}(Q)$ a labelled transition function
+  \item $q_{0}$ a start state
+  \item $F$ a set of accepting states
+\end{itemize}
+
+Intuitively, this can be thought of like a directed graph with nodes in $Q$ with an edge $q \overset{c}{\to} q'$ whenever $q' \in \delta(q, c)$. Note that transitions in an NFA may be labelled with the empty string $\epsilon$.
+
+As a gramamar in our type theory, an NFA may be encoded as a
 mutual\footnote{For convenience we refer to a mutual fixed point here, even though we
   only take single fixed points as primitive. As in Beki\'c's theorem, we may decompose our mutual fixed points into a series of single fixed points.}
-fixed point in the following manner,
+fixed point in the following manner:
+
+An NFA has finitely many states, so we may number them $Q = \{q_{1}, \dots, q_{N}\}$. For each $q_{j}$ we introduce
+a mutually recursive term $Y_{j}$ to represent the states of the NFA within this grammar presentation. We represent the transition function $\delta$ in the right hand side of each $Y_{j}$ definition. For character $c \in \Sigma \cup \{\epsilon\}$ and state $q_{j} \in Q$, we add a summand --- as a coproduct\footnote{There is an admissible notion of coproduct making use of the primitive dependent pairing --- i.e. $A \oplus B := \LinPiTy b \Bool {\textbf{if}~b~A~B}$. We will utilize this without much comment to represent the usual notion of alternation of grammars.} --- to the defintion of $Y_{j}$ for every state in the image of the transition function,
+
+\[
+Y_{j} = \bigoplus_{c \in \Sigma \cup \{\epsilon\}} \bigoplus_{q_{i} \in \delta(q_{j}, c)} c \otimes Y_{i}
+\]
+
+For convenience, refer to syntactic term on the right hand side of $Y_{j}$ as $\hat{Y}_{j}$. Further, we rename the start state to be represented by the term $Y_{s}$. Additionally, and without loss of generality, we assume that there is a single accepting state $Y_{e}$ in our encoding. This assupmtion is justified through the use of $\epsilon$-transitions. For each $q_{j} \in F$, we add an $\epsilon$-transition from $Y_{j}$ to $Y_{e}$.
+
+The above translation totals to give us a syntactic form for NFAs as grammars,
 
 \[
   NFA ::= \mu \begin{pmatrix}
-        Y_{s} = \langle Q \rangle \\
-        Y_{1} = \langle Q \rangle \\
-        \vdots \\
+        Y_{s} = \langle \hat{Y} \rangle \\
+        Y_{j} = \langle \hat{Y} \rangle, j \not \in \{s, e\} \\
         Y_{e} = I
-        \end{pmatrix}~\textbf{in}~Y_{s}
+        \end{pmatrix}.Y_{s}
 \]
 where
 \[
-  Q ::= c \otimes Y ~|~ Y ~|~ Q \oplus Q
+  \hat{Y} ::= c \otimes Y ~|~ Y ~|~ \hat{Y} \oplus \hat{Y}
 \]
-and $Y \in \{ Y_{s}, Y_{1}, \dots, Y_{N} \}$. Intuitively, we read each $Y_{j}$ as the label for a state, and the
-definitions in form $Q$ describe the transitions between states --- $c \otimes Y$ denotes a labeled transition, and $Y$
-denotes an $\epsilon$-transition. Without loss of generality, $Y_{s}$ is reserved for a single distinguished start
-state, and $Y_{e}$ is reserved for a single distinguished accepting state. A
-disjunction\footnote{There is an admissible notion of coproduct making use of the primitive dependent pairing --- i.e. $A \oplus B := \LinPiTy b \Bool {\textbf{if}~b~A~B}$. We will utilize this without much comment to represent the usual notion of alternation of grammars.}
-of transitions in an NFA grammar corresponds to multiple outgoing edges of a given state in an automaton.
 
-Let $\hat{Y}_{k}$ refer to the syntactic term on the right hand side of the definition of $Y_{k}$ inside of an NFA $N$.
-We say that $N$ is a \emph{deterministic finite automaton} (DFA) if there are no $\epsilon$-transitions and for every
-definition $\hat{Y}_{k}$ the $c_{j}$ are distinct guards for each produced state.
+and each $Y \in \{ Y_{s}, Y_{e}, Y_{1}, \dots, Y_{N} \}$. Intuitively, we read each $Y_{j}$ as the label for a state, and the
+definitions of form $\hat{Y}$ describe the transitions between states --- $c \otimes Y$ denotes a labeled transition, and $Y$
+denotes an $\epsilon$-transition. A
+disjunction of transitions in an NFA grammar corresponds to multiple outgoing edges of a given state in an automaton.
 
-% \steven{Is this the right notion of determinism? Perhaps, it is is better to define determinism as something like: there is at most one derivation for all $j, k$, for all $a \in \Sigma$ we have $x : Y_{k}, y : a \vdash z : Y_{j}$.}
+Above we give a translation from the tuple presentation of an NFA to a fixed point grammar in our type theory. We don't provide any argument that this translation is done correctly; however, we hope that the construction is straightforward and lightweight enough to demonstrate our formal system as a natural and effective syntax for reasoning about both grammars and automata.
 
-With this setting for finite automata, we can now internalize some classical theorems inside of our formal system. First, let us describe a version of Thompson's construction \cite{?} where we show that any regular expression can be recognized by some NFA\@. Moreover, we will show that this NFA is strongly equivalent to the original grammar.
+With this setting for finite automata, we can now internalize some classical theorems inside of our formal system.
 
 \subsection{Equivalence Between Regular Grammars and Finite Automata}
 
@@ -1115,7 +1132,11 @@ With this setting for finite automata, we can now internalize some classical the
 % \]
 % where $c \in \mathcal{A}$ is a character literal drawn from a fixed alphabet, and the Kleene star $\cdot^{*}$ is derived as an admissible operation using the fixed point operator --- $g^{*} = \mu X.I \oplus (g \otimes X)$. \steven{This definition is maybe fair to assume. Also maybe better suited for a section earlier in the paper}
 
-\begin{theorem}
+First, let us describe a version of Thompson's construction \cite{?} where we construct an NFA that recognizes a given regular expression. Moreover, we will show that this NFA is strongly equivalent to the original grammar.
+
+This construction
+
+\begin{theorem}[Thompson]
   \label{thm:thompson}
   For $g$ a regular grammar $g$, there is an NFA $N$ that recognizes the same language as $g$. Further, $N$ and $g$ are isomorphic.
 \end{theorem}
@@ -1128,14 +1149,14 @@ With this setting for finite automata, we can now internalize some classical the
   \mu \begin{pmatrix}
         Y_{s} = c \otimes Y_{e} \\
         Y_{e} = I
-  \end{pmatrix}~\textbf{in}~Y_{s}
+  \end{pmatrix}.Y_{s}
 \]
 \[
   NFA(I) =
   \mu \begin{pmatrix}
         Y_{s} = Y_{e} \\
         Y_{e} = I
-  \end{pmatrix}~\textbf{in}~Y_{s}
+  \end{pmatrix}.Y_{s}
 \]
 
 The isomorphism between the grammars $c$ and $NFA(c)$ are witnessed by the following derivations,
@@ -1150,11 +1171,12 @@ and
 Similar terms are used to show the equivalence between $I$ and $NFA(I)$.
 
 We can now inductively define some NFA combinators and show that they preserve grammar equivalence. First begin with
-the disjunction of two NFAs. That is, assuming that $g \cong NFA(g)$ and $g' \cong NFA(g')$, we define an NFA that
-recognizes $g \oplus g'$. Let the states in $NFA(g)$ be represented by $X$'s and the states in $NFA(g')$ be represented
+the disjunction of two NFAs. For regular grammars $g$ and $g'$, assume that $g \cong NFA(g)$ and $g' \cong NFA(g')$, and we will define an NFA that
+recognizes $g \oplus g'$.
+
+Let the states in $NFA(g)$ be represented by $X$'s and the states in $NFA(g')$ be represented
 by $Z$'s. Further let $\hat{X}_{k}$ refer to the syntactic term on the right hand side of the definition of $X_{k}$
 inside of $NFA(g)$. Likewise define each $\hat{Z}_{k}$.
-
 
 \[
   NFA(g \oplus g') =
@@ -1165,10 +1187,10 @@ inside of $NFA(g)$. Likewise define each $\hat{Z}_{k}$.
         Z_{j}' = \simulsubst {\hat{Z}_{j}} {\delta_{Z}}, j \neq e \\
         Z_{e}' = Y_{e} \\
         Y_{e} = I
-  \end{pmatrix}~\textbf{in}~Y_{s}
+  \end{pmatrix}.Y_{s}
 \]
-where the substitution $\{X_{s}'/X_{s}, X_{e}'/X_{e}, X_{1}'/X_{1}, \dots \}$ is given by $\delta_{X}$. Likewise define
-$\delta_{Z}$.
+where the substitution $\{X_{s}'/X_{s}, X_{e}'/X_{e}, X_{1}'/X_{1}, \dots \}$ is given by $\delta_{X}$ --- and $\delta_{Z}$ constructed similarly.
+
 In the construction of $NFA(g \oplus g')$ we replicate each defintion $X_{j}$ in $NFA(g)$ with an analogous definition
 $X_{j}'$ inside of $NFA(g \oplus g')$, except we replace $X_{k}$ with $X_{k}'$ in each production. Lastly, $X_{e}'$ has
 an $\epsilon$-transition to the accepting state $Y_{e}$. Likewise, we build analogous defintions for the states
@@ -1178,22 +1200,34 @@ of disjunctively tying together $NFA(g)$ and $NFA(g')$ into one automaton.
 To show the strong equivalence of $NFA(g \oplus g')$ and $g \oplus g'$, we will demonstrate an isomorphism between them
 with two proof terms in our logic that mutually invert each other. To define a map $NFA(g \oplus g') \to g \oplus g'$
 we will use a multi-fold over all the mutually recursive defintions of $NFA(g \oplus g')$. Note, even though multiple
-folding is not taken as primitive, using Beki\'c's theorem we can define a family of multifold terms to serve as
-elimination forms for our admissible multiple fixed points. That is, rules of the form,
+fixed points are not taken as primitive, using Beki\'c's theorem we can define admissible multiple fixed points types. Below we give rules to form $\mathsf{cons}$ and $\mathsf{mfold}$ terms to serve as the introduction and elimination rules, respectively, for multi-term fixed points,
 
 \[
-  \inferrule{\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n})~\textbf{in}~X_{k} \\
+  \inferrule
+  {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
+  {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}) . X_{k}}
+\]
+where $\sigma$ is the substitution that unrolls the mutually recursive definition one level by replacing each $X_{k}$ with the fixed point,
+\steven{I'm not sure this is right. TODO sanity check it with a small example}
+\begin{align*}
+  \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}) . X_{1} / X_{1} , \dots, \\
+  & \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}) . X_{n} / X_{n} \}
+\end{align*}
+
+\[
+  \inferrule{\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k} \\
              \Gamma ; x_{1} : \simulsubst {A_{1}}{\gamma} \vdash e_{1} : B_{1} \\
              \dots \\
              \Gamma ; x_{n} : \simulsubst {A_{n}}{\gamma} \vdash e_{n} : B_{n}
   }{\Gamma; \Delta \vdash \mathsf{mfold}(x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{k}}
 \]
 
-are admissible, where the substitution $\{B_{1}/X_{1},\dots,B_{n}/X_{n} \}$ is given by $\gamma$. In this instance, we
+where the substitution $\gamma$ represents $\{B_{1}/X_{1},\dots,B_{n}/X_{n} \}$.
+
+When defining a derivation from $NFA(g \oplus g')$ to $g \oplus g'$, we
 wish to simultaneously fold over the mutually recursive definitions comprising $NFA(g \oplus g')$. We may think of this
 as an eliminator that replaces each state inside of $NFA(g \oplus g')$ with a tail-recursive call that will ultimately
 return a term of type $g \oplus g'$. The structure of such a derivation is given below,
-
 
 \[
   \inferrule{
@@ -1224,7 +1258,7 @@ The rest of the terms are given below,
 \end{itemize}
 
 where $\phi$ and $\psi$ are the witnesses to the isomorphisms $g \cong NFA(g)$ and $g' \cong NFA(g')$, respectively.
-This finshes the construction of a parse transformer $NFA(g \oplus g') \to g \oplus g'$.
+This finshes the construction of a parse transformer from $NFA(g \oplus g')$ to $g \oplus g'$.
 The map in the other direction is given the derivation,
 
 
