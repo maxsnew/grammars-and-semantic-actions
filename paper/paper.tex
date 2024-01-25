@@ -1557,6 +1557,8 @@ Below we finish the proof of \cref{thm:thompson}.
 
   Given $e : NFA(g \oplus g')$,
 
+  \steven{There a weird spacing issues between these align envs. Maybe wrap these in a figure env so that spacing is better}
+
 \begin{align*}
   r_{\oplus}(s_{\oplus}(e))
   & =_{\mu \eta} r_{\oplus}(s_{\oplus}(\mathsf{cons}(e'))), \text{~where }e':\mu X_{s}' \oplus \mu Z_{s}' \\
@@ -1620,6 +1622,47 @@ Below we finish the proof of \cref{thm:thompson}.
   & =_{\mu \beta} e
 \end{align*}
 
+Likewise for $p : g \oplus g'$,
+
+\steven{This first line is a weird alignment fix, touch up}
+\begin{align*}
+  s_{\oplus}(r_{\oplus}(p))
+  &
+  = s_{\oplus}(r_{\oplus}(p)) \\
+   & \begin{aligned}
+    =_{\oplus \eta}
+      \textbf{case}~p~\{
+    \textbf{in}_{g}p_{1} \mapsto s_{\oplus}(r_{\oplus}(\textbf{in}_{g}p_{1})), \\
+    \textbf{in}_{g'}p_{2} \mapsto s_{\oplus}(r_{\oplus}(\textbf{in}_{g'}p_{2})) \}
+    \end{aligned} \\
+   & \begin{aligned}
+    =_{\oplus \beta}
+      \textbf{case}~p~\{
+    \textbf{in}_{g}p_{1} \mapsto s_{\oplus}(\alpha \phi p_{1}), \\
+    \textbf{in}_{g'}p_{2} \mapsto s_{\oplus}(\beta \psi p_{2}) \}
+    \end{aligned} \\
+   & \begin{aligned}
+    =
+      \textbf{case}~p~\{
+    \textbf{in}_{g}p_{1} \mapsto \mathsf{mfold}(\alpha \phi p_{1}), \\
+    \textbf{in}_{g'}p_{2} \mapsto \mathsf{mfold}(\beta \psi p_{2}) \}
+    \end{aligned} \\
+    & \begin{aligned}
+    =_{\mu \beta}
+      \textbf{case}~p~\{
+    \textbf{in}_{g}p_{1} \mapsto \textbf{in}_{g} (\phi^{-1} \phi p_{1}), \\
+    \textbf{in}_{g'}p_{2} \mapsto \textbf{in}_{g'}(\psi^{-1} \psi p_{2}) \}
+    \end{aligned} \\
+     & \begin{aligned}
+    =
+      \textbf{case}~p~\{
+    \textbf{in}_{g}p_{1} \mapsto \textbf{in}_{g} (p_{1}), \\
+    \textbf{in}_{g'}p_{2} \mapsto \textbf{in}_{g'}(p_{2}) \}
+    \end{aligned} \\
+  &
+    =_{\oplus \eta} p
+\end{align*}
+
 
 We now construct a combinator for the sequencing of two NFAs.
 
@@ -1635,29 +1678,48 @@ We now construct a combinator for the sequencing of two NFAs.
   \end{pmatrix}
 \]
 
-Just as before, we use a multifold to define the map to $g \otimes g'$. Here the table of terms is as follows,
+Just as before, we use a multifold to define the map $s_{\otimes}$ from $NFA(g \otimes g')$ to $g \otimes g'$. Here the table of terms is as follows,
 
 \begin{itemize}
   \item $y_{s}$ --- $\simulsubst {X_{s}'} \gamma = g \otimes g'$ and $p_{s} = y_{s} $
-  \item $x_{s}'$ --- $\simulsubst {(\simulsubst {\hat{X}_{s}} {\delta_{X}})}{\gamma} = X_{s} \otimes g'$ and $p_{x,s} = \letin {u \otimes v} {x_{s}'} {\phi^{-1}(u) \otimes v} : g \otimes g'$
-  \item $x_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{X}_{j}} {\delta_{X}})}{\gamma} = X_{j} \otimes g'$ and $p_{x, j} = x_{j}' : X_{j} \otimes g'$
+  \item $x_{s}'$ --- $\simulsubst {(\simulsubst {\hat{X}_{s}} {\delta_{X}})}{\gamma} = (\mu (X_{i}=\hat{X}_{i}).X_{s}) \otimes g' = NFA(g) \otimes g'$ and $p_{x,s} = \letin {u \otimes v} {x_{s}'} {\phi^{-1}(u) \otimes v} : g \otimes g'$
+  \item $x_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{X}_{j}} {\delta_{X}})}{\gamma} = (\mu (X_{i}=\hat{X}_{i}).X_{j}) \otimes g'$ and $p_{x, j} = x_{j}' : (\mu (X_{i}=\hat{X}_{i}).X_{j}) \otimes g'$
   \item $x_{e}'$ --- $\simulsubst {Z_{s}'}{\gamma} = g'$ and $p_{x,e} = x_{e}' : g'$
-  \item $z_{s}'$ --- $\simulsubst {(\simulsubst {\hat{Z}_{s}} {\delta_{Z}})}{\gamma} = Z_{s}$ and $p_{z,s} = \psi^{-1}(z_{s}') : g'$
-  \item $z_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{Z}_{j}} {\delta_{Z}})}{\gamma} = Z_{j}$ and $p_{z, j} = z_{j}'$
-  \item $z_{e}'$ ---  $\simulsubst {Y_{e}}{\gamma} = I$ and $p_{z,e} = z_{e}' : Z_{e} = I$
+  \item $z_{s}'$ --- $\simulsubst {(\simulsubst {\hat{Z}_{s}} {\delta_{Z}})}{\gamma} = \mu (Z_{i} = \hat{Z}_{i}).Z_{s} = NFA(g')$ and $p_{z,s} = \psi^{-1}(z_{s}') : g'$
+  \item $z_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{Z}_{j}} {\delta_{Z}})}{\gamma} = \mu (Z_{i} = \hat{Z}_{i}).Z_{j}$ and $p_{z, j} = z_{j}' : \mu (Z_{i} = \hat{Z}_{i}).Z_{j}$
+  \item $z_{e}'$ ---  $\simulsubst {Y_{e}}{\gamma} = I$ and $p_{z,e} = \mathsf{cons}(z_{e}') : \mu (Z_{i} = \hat{Z}_{i}).Z_{e} = I$
   \item $y_{e}$ --- $\simulsubst {I} {\gamma} = I$ and $p_{e} = y_{e} : I$
 \end{itemize}
 
-The map in the other direction is given as,
+The map $r_{\otimes}$ in the other direction is given as,
 
 \[
   \inferrule{
     p : g \otimes g' \vdash p : g \otimes g' \\
-    p_{1} : g, p_{2} : g' \vdash \phi(p_{1}) \otimes \psi(p_{2}) : g \otimes g'}
-  {p : g \otimes g' \vdash \letin {p_{1} \otimes p_{2}} {p} {\phi(p_{1}) \otimes \psi(p_{2})} : NFA(g \otimes g')}
+    p_{1} : g, p_{2} : g' \vdash \mathsf{cons}(\phi(p_{1}), \psi(p_{2})) : NFA(g \otimes g')}
+  {p : g \otimes g' \vdash \letin {p_{1} \otimes p_{2}} {p} {\mathsf{cons}(\phi(p_{1}), \psi(p_{2}))} : NFA(g \otimes g')}
 \]
 
-Again, these are clearly isomorphic.
+We show that $r_{\otimes}$ and $s_{\otimes}$ form an isomorhic pair,
+\steven{This proof doesn't exactly work}
+
+\begin{align*}
+r_{\otimes}(s_{\otimes}(e))
+  & =_{\mu \eta} r_{\otimes}(s_{\otimes}(\mathsf{cons}_{\mu X_{s}'}(e'))) \\
+  & = r_{\otimes}(\mathsf{mfold}(\mathsf{cons}_{\mu X_{s}'}(e'))) \\
+  & =_{\mu \beta} r_{\otimes}(\phi^{-1}(u) \otimes \psi^{-1}(v)) \\
+  & =_{\mu \beta} \mathsf{cons}(\phi \phi^{-1} u, \psi \psi^{-1} v) \\
+  & =_{\mu \eta} e
+\end{align*}
+
+\begin{align*}
+  s_{\otimes}(r_{\otimes}(p))
+  & =_{\otimes \eta} s_{\otimes}(r_{\otimes}(p_{g} \otimes p_{g'})) \\
+  & = s_{\otimes}(\mathsf{cons}(\phi p_{g}, \psi p_{g'})) \\
+  & =_{\mu \beta} \phi^{-1}\phi p_{g} \otimes \psi^{-1} \psi p_{g'} \\
+  & = p_{g} \otimes p_{g'} \\
+  & =_{\otimes \eta} p
+\end{align*}
 
 Finally, we build an automata combinator to represent the Kleene star\footnote{Which is another admissible definition via use of the fixed point constructor}.
 
@@ -1671,20 +1733,64 @@ Finally, we build an automata combinator to represent the Kleene star\footnote{W
   \end{pmatrix}
 \]
 
-We fold over these defintions to get a parse of $g^{*}$,
+Again we define $s_{*}$ as a fold over these defintions to get a parse of $g^{*}$,
 \begin{itemize}
   \item $y_{s}$ --- $\simulsubst {(X_{s}' \oplus Y_{e})} \gamma = g^{*} \oplus I$ and $p_{s} = \textbf{case}~y_{s} \{ \textbf{in}_{g^{*}} u \mapsto u, \textbf{in}_{I} v \mapsto \mathsf{cons}_{*I} v \} : g^{*}$
-  \item $x_{s}'$ --- $\simulsubst {(\simulsubst {\hat{X}_{s}} {\delta_{X}})}{\gamma} = X_{s} \otimes g^{*}$ and $p_{x,s} = \letin {u \otimes p_{*}} {x_{s}'} {\mathsf{cons}_{*}(\phi^{-1}(u), p_{*})} : g^{*} $ \steven{slight abuse of notation. Not sure how to best capture the Kleene star constructors}
-  \item $x_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{X}_{j}} {\delta_{X}})}{\gamma} = X_{j} \otimes g^{*}$ and $p_{x, j} = : X_{j} \otimes g^{*}$
-  \item $x_{e}'$ --- $\simulsubst {(X_{s}' \oplus Y_{e})}{\gamma} = g^{*} \oplus I$ and $p_{x,e} = \textbf{case}~x_{e}' \{ \textbf{in}_{g^{*}} u \mapsto u, \textbf{in}_{I} v \mapsto \mathsf{cons}_{*I} v \} : g^{*}$
+  \item $x_{s}'$ --- $\simulsubst {(\simulsubst {\hat{X}_{s}} {\delta_{X}})}{\gamma} = (\mu(X_{i}=\hat{X_{i}}).X_{s}) \otimes g^{*} = NFA(g) \otimes g^{*}$ and $p_{x,s} = \letin {u \otimes p_{*}} {x_{s}'} {\mathsf{cons}_{*}(\phi^{-1}(u), p_{*})} : g^{*} $
+  \item $x_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{X}_{j}} {\delta_{X}})}{\gamma} = (\mu(X_{i}=\hat{X_{i}}).X_{j}) \otimes g^{*}$ and $p_{x, j} = : (\mu(X_{i}=\hat{X_{i}}).X_{j}) \otimes g^{*}$
+  \item $x_{e}'$ --- $\simulsubst {(X_{s}' \oplus Y_{e})}{\gamma} = g^{*} \oplus I$ and $p_{x,e} = \mathsf{cons}_{X_{e}}(()) \otimes \textbf{case}~x_{e}' \{ \textbf{in}_{g^{*}} u \mapsto u, \textbf{in}_{I} v \mapsto \mathsf{cons}_{*I} v \} : (\mu(X_{i}=\hat{X_{i}}).X_{e}) \otimes g^{*}$
   \item $y_{e}$ --- $\simulsubst {I} {\gamma} = I$ and $p_{e} = y_{e} : I$
 \end{itemize}
 
-and to derive a parse of $NFA(g^{*})$ from a parse of $g*$,
+and to derive a parse of $NFA(g^{*})$ from a parse of $g^{*}$ we define $r_{*}$ as,
 
 \[
-  \inferrule{p : g^{*} \vdash p : g^{*} \\ \cdot \vdash \textbf{in}_{{Y_{e}}}(()) : NFA(g^{*}) \\ u : g, v : g^{*} \vdash \textbf{in}_{{X_{s}'}} (\phi(\mathsf{cons}_{*}(u, v))) : NFA(g^{*}) }{p : g^{*} \vdash \mathsf{fold}_{*}(\textbf{in}_{{Y_{e}}}(()), \textbf{in}_{{X_{s}'}} (\phi(\mathsf{cons}_{*}(u, v)))) : NFA(g^{*}) }
+  \inferrule{p : g^{*} \vdash p : g^{*} \\ \cdot \vdash \mathsf{cons}(\textbf{in}_{{Y_{e}}}(())) : NFA(g^{*}) \\ u : g, v : g^{*} \vdash \mathsf{cons}(\textbf{in}_{{X_{s}'}} (\phi(\mathsf{cons}_{*}(u, v)))) : NFA(g^{*}) }{p : g^{*} \vdash \mathsf{fold}_{*}(\mathsf{cons}(\textbf{in}_{{Y_{e}}}(())), \mathsf{cons}(\textbf{in}_{{X_{s}'}} (\phi(\mathsf{cons}_{*}(u, v)))) : NFA(g^{*}) }
 \]
+
+To see that $s_{*}$ and $r_{*}$ for an isomorphism,
+\steven{This proof also needs more work. Esp after 4th equality}
+\steven{Think I need to thread through a case distinction on what the $g^{*}$ term is. Putting a pin in this for now to type up the DFA stuff before meeting}
+\begin{align*}
+  r_{*}(s_{*}(e))
+  & =_{\mu \eta} r_{*}(s_{*}(\mathsf{cons}(e'))), \text{~where }e':\mu X_{s}' \oplus Y_{e} \\
+  &
+    \begin{aligned}
+      =_{\oplus \eta}
+      \textbf{case}~e'~\{ & \\
+      & \textbf{in}_{X_{s}'} u \mapsto r_{*}(s_{*}(\mathsf{cons}(\textbf{in}_{X_{s}'} u))), \\
+      & \textbf{in}_{Y_{e}} v \mapsto r_{*}(s_{*}(\mathsf{cons}(\textbf{in}_{Y_{e}} v))) \\
+      \}
+    \end{aligned} \\
+  &
+    \begin{aligned}
+      =_{\mu \beta}
+      \textbf{case}~e'~\{ & \\
+      & \textbf{in}_{X_{s}'} u \mapsto r_{*}(\mathsf{cons}_{*}(\phi^{-1} u, p_{*})), \\
+      & \textbf{in}_{Y_{e}} v \mapsto r_{*}(\mathsf{cons}_{*}(()) \\
+      \}
+    \end{aligned} \\
+  &
+    \begin{aligned}
+      =_{\mu \beta}
+      \textbf{case}~e'~\{ & \\
+      & \textbf{in}_{X_{s}'} u \mapsto \mathsf{cons}(\textbf{in}_{X_{s}'}(\phi(\mathsf{cons}_{*}(\phi^{-1}u,p_{*})))), \\
+      & \textbf{in}_{Y_{e}} v \mapsto \mathsf{cons}(\textbf{in}_{Y_{e}}(()) \\
+      \}
+    \end{aligned} \\
+  & = \dots \\
+  & = e
+\end{align*}
+
+\steven{for the empty case above, can I make an $\eta$ equality for all terms of type $I$ to argue $\textbf{in}(v) = \textbf{in} (())$}
+
+\begin{align*}
+  s_{*}(r_{*}(p))
+  & =_{\mu \eta} s_{*}(r_{*}(\mathsf{cons}(p_{e}, p_{*}))), \text{~where } p_{e} : I, p_{*} : g \otimes g^{*} \\
+  & =_{\mu \beta} s_{*}()
+  & = p
+\end{align*}
+
 
 This completes our inductive proof that $NFA(g) \cong g$ for all regular expressions $g$.
 
