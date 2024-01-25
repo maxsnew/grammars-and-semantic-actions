@@ -1207,7 +1207,7 @@ fixed points are not taken as primitive, using Beki\'c's theorem we can define a
   {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
   {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
 \]
-where $\sigma$ is the substitution that unrolls the mutually recursive definition one level by replacing each $X_{k}$ with the fixed point $\mu(X_{j} = A_{j}).X_{k}$,
+where $\sigma$ is the substitution that unrolls the mutually recursive definition one level by replacing each $X_{k}$ with the fixed point $\mu(X_{j} = A_{j}, \forall j).X_{k}$,
 \steven{I'm not sure the cons rule is right. TODO sanity check it with a small example}
 
 \begin{align*}
@@ -1229,7 +1229,7 @@ where the substitution $\gamma$ represents $\{B_{1}/X_{1},\dots,B_{n}/X_{n} \}$.
 When defining a derivation from $NFA(g \oplus g')$ to $g \oplus g'$, we
 wish to simultaneously fold over the mutually recursive definitions comprising $NFA(g \oplus g')$. We may think of this
 as an eliminator that replaces each state inside of $NFA(g \oplus g')$ with a tail-recursive call that will ultimately
-return a term of type $g \oplus g'$. The structure of such a derivation instatiates the above elimination rule as follow,
+return a term of type $g \oplus g'$. If folding over a term $e$, refer to the output of this multifold as $s_{\oplus}(e)$. The structure of such a derivation instatiates the above elimination rule as follow,
 
 \[
   \inferrule{
@@ -1242,7 +1242,7 @@ return a term of type $g \oplus g'$. The structure of such a derivation instatia
     z_{j}' : \simulsubst {(\simulsubst {Z_{j}} {\delta_{Z}})}{\gamma} \vdash p_{z,j} : Z_{j} \text{~where } j \not \in \{s, e\} \\
     z_{e}' : \simulsubst {Y_{e}}{\gamma} \vdash p_{z,e} : Z_{e} \\
     y_{e} : \simulsubst I {\gamma} \vdash p_{e} : I
-  }{\Delta \vdash \mathsf{mfold}(e) : g \oplus g'}
+  }{\Delta \vdash s_{\oplus}(e) := \mathsf{mfold}(e) : g \oplus g'}
 \]
 
 For each of the variables above, we simplify the type and provide the actual proof term. For instance,
@@ -1250,30 +1250,32 @@ $\simulsubst {(X_{s}' \oplus Z'_{s})} \gamma = g \oplus g'$, so the derivation f
 The rest of the terms are given below,
 \begin{itemize}
   \item $y_{s}$ --- $\simulsubst {(X_{s}' \oplus Z'_{s})} \gamma = g \oplus g'$ and $p_{s} = y_{s} : g \oplus g'$
-  \item $x_{s}'$ --- $\simulsubst {(\simulsubst {\hat{X}_{s}} {\delta_{X}})}{\gamma} = X_{s}$ and $p_{x,s} = \phi^{-1}(x_{s}') : g$
-  \item $x_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{X}_{j}} {\delta_{X}})}{\gamma} = X_{j}$ and $p_{x, j} = x_{j}'$
-  \item $x_{e}'$ --- $\simulsubst {Y_{e}}{\gamma} = I$ and $p_{x,e} = x_{e}' : X_{e} = I$
-  \item $z_{s}'$ --- $\simulsubst {(\simulsubst {\hat{Z}_{s}} {\delta_{Z}})}{\gamma} = Z_{s}$ and $p_{z,s} = \psi^{-1}(z_{s}') : g'$
-  \item $z_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{Z}_{j}} {\delta_{Z}})}{\gamma} = Z_{j}$ and $p_{z, j} = z_{j}'$
-  \item $z_{e}'$ ---  $\simulsubst {Y_{e}}{\gamma} = I$ and $p_{z,e} = z_{e}' : Z_{e} = I$
+  \item $x_{s}'$ --- $\simulsubst {(\simulsubst {\hat{X}_{s}} {\delta_{X}})}{\gamma} = \mu(X_{i} = \hat{X}_{i}, \forall i).X_{s} = NFA(g)$ and $p_{x,s} = \phi^{-1}(x_{s}') : g$
+  \item $x_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{X}_{j}} {\delta_{X}})}{\gamma} = \mu(X_{i} = \hat{X}_{i}, \forall i).X_{j}$ and $p_{x, j} = x_{j}' : \mu(X_{i} = \hat{X}_{i}, \forall i). X_{j}$
+  \item $x_{e}'$ --- $\simulsubst {Y_{e}}{\gamma} = I$ and $p_{x,e} = x_{e}' : \mu(X_{i} = \hat{X}_{i}, \forall i).X_{e} = I$
+  \item $z_{s}'$ --- $\simulsubst {(\simulsubst {\hat{Z}_{s}} {\delta_{Z}})}{\gamma} = \mu(Z_{i} = \hat{Z}_{i}, \forall i).Z_{s} = NFA(g')$ and $p_{z,s} = \psi^{-1}(z_{s}') : g'$
+  \item $z_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{Z}_{j}} {\delta_{Z}})}{\gamma} = \mu(Z_{i} = \hat{Z}_{i}, \forall i).Z_{j}$ and $p_{z, j} = z_{j}' : \mu(Z_{i} = \hat{Z}_{i}, \forall i).Z_{j}$
+  \item $z_{e}'$ ---  $\simulsubst {Y_{e}}{\gamma} = I$ and $p_{z,e} = \mathsf{cons}_{Z_{e}}(z_{e}') : \mu(Z_{i} = \hat{Z}_{i}, \forall i). Z_{e} = I$
   \item $y_{e}$ --- $\simulsubst {I} {\gamma} = I$ and $p_{e} = y_{e} : I$
 \end{itemize}
 
+\steven{Need to add argument that justifies why the $X_{j}$s are allowed to be eliminated via the identity. A priori they could be interfered with by taking an $X_{s}$ that needs to be eliminated. I think it hinges on a syntactic restriction where there are no backedges to $X_{s}$ in the NFA.Even if there were, I think I can get away with a case distinction entailment instead of the one written}
+
 where $\phi$ and $\psi$ are the witnesses to the isomorphisms $g \cong NFA(g)$ and $g' \cong NFA(g')$, respectively.
-This finshes the construction of a parse transformer from $NFA(g \oplus g')$ to $ g \oplus g'$.
-The map in the other direction is given below in a couple stages. First, we show how to turn a parse of $NFA(g)$ into a parse of $NFA(g \oplus g')$.
+This finshes the construction of a parse transformer $s_{\oplus}$ from $NFA(g \oplus g')$ to $ g \oplus g'$.
+The map $r_{\oplus}$ in the other direction is given below in a couple stages. First, we show how to turn a parse of $NFA(g)$ into a parse of $NFA(g \oplus g')$.
 
 \[
   \inferrule
   {
-    \Gamma ; \Delta \vdash u : NFA(g) = \mu(X_{j} = \hat{X}_{j}).X_{s} \\
+    \Gamma ; \Delta \vdash u : NFA(g) = \mu(X_{j} = \hat{X}_{j}, \forall j).X_{s} \\
     \Gamma ; x_{s} : \simulsubst {X_{s}}{\gamma} = X_{s}' \vdash \mathsf{cons}(\textbf{in}_{X_{s}'}(x_{s})) : \mu(\dots).Y_{s} = NFA(g \oplus g')  \\
     \Gamma ; x_{j} : \simulsubst {X_{j}}{\gamma} = X_{j}' \vdash x_{j} : X_{j}', j \not \in \{s, e\} \\
     \Gamma ; x_{e} : \simulsubst {X_{e}}{\gamma} = I \vdash x_{e} : I = X_{e}'
   }
   {\Gamma ; \Delta \vdash \mathsf{mfold}(u) : NFA(g \oplus g')}
 \]
-where the dots in the above derivation take on the mutually recursive defintions present in $NFA(g \oplus g')$. \steven{Need a better way to display this without blowing up the definitions everywhere} Denote the above embedding of $NFA(g)$ into $NFA(g \oplus g')$ via $\alpha(u) := \mathsf{mfold}(u) : NFA(g \oplus g')$. Similarly define an embedding $\beta$ for an embedding of $NFA(g')$. We can then define the derivation from $g \oplus g'$ to $NFA(g \oplus g')$ by composing the maps isomorphisms $g \overset{\phi}{\cong} NFA(g)$ and $g \overset{\psi}{\cong} NFA(g')$ with $\alpha$ and $\beta$, respectively.
+where the dots in the above derivation take on the mutually recursive defintions present in $NFA(g \oplus g')$. \steven{Need a better way to display these defs without blowing up the $\mu$ terms} Denote the above embedding of $NFA(g)$ into $NFA(g \oplus g')$ via $\alpha(u) := \mathsf{mfold}(u) : NFA(g \oplus g')$. Similarly define an embedding $\beta$ for an embedding of $NFA(g')$. We can then define the derivation from $g \oplus g'$ to $NFA(g \oplus g')$ by composing the isomorphisms $g \overset{\phi}{\cong} NFA(g)$ and $g \overset{\psi}{\cong} NFA(g')$ with maps $\alpha$ and $\beta$, respectively.
 
 \[
   \inferrule
@@ -1282,57 +1284,14 @@ where the dots in the above derivation take on the mutually recursive defintions
     p_{1} : g \vdash \alpha(\phi(p_{1})) : NFA(g \oplus g') \\
     p_{2} : g' \vdash \beta(\psi(p_{2})) : NFA(g \oplus g')}
   {
-    p : g \oplus g' \vdash \textbf{case}~p \{
+    p : g \oplus g' \vdash r_{\oplus}(p) := \textbf{case}~p \{
     \textbf{in}_{g} p_{1} \mapsto \alpha(\phi(p_{1})), \\
     \textbf{in}_{g'} p_{2} \mapsto \beta(\psi(p_{2})) \} : NFA(g \oplus g')}
 \]
 
-
-It is evident that the maps $NFA(g \oplus g') \to g \oplus g'$ and $g \oplus g' \to NFA(g \oplus g')$ form an isomorphism.
-
-\begin{align*}
-  \textbf{case}~\mathsf{mfold}(e) \{\textbf{in}_{g} p_{1} \mapsto \textbf{in}_{X_{s}'}(\phi(p_{1})), \\ \textbf{in}_{g'} p_{2} \mapsto \textbf{in}_{{Z_{s}'}}(\psi(p_{2})) \}
-  & = e
-\end{align*}
-
-% \begin{align*}
-%   \begin{aligned}
-%     \textbf{case}~\mathsf{mfold}(e) \{\textbf{in}_{g} p_{1} \mapsto \textbf{in}_{X_{s}'}(\phi(p_{1})), \\ \textbf{in}_{g'} p_{2} \mapsto \textbf{in}_{{Z_{s}'}}(\psi(p_{2}))
-%   \end{aligned}
-%   & =
-%   \begin{aligned}
-%     \textbf{case}~(&  \textbf{case}~ e \{ \\
-%     & \textbf{in}_{X_{s}'}u \mapsto \mathsf{mfold}(\textbf{in}_{X_{s}'}u), \\ & \textbf{in}_{Z_{s}'}v \mapsto \mathsf{mfold}(\textbf{in}_{Z_{s}'}v) \\ \}) \{ \\ & \textbf{in}_{g} p_{1} \mapsto \textbf{in}_{X_{s}'}(\phi(p_{1})), \\  & \textbf{in}_{g'} p_{2} \mapsto \textbf{in}_{{Z_{s}'}}(\psi(p_{2})) \}
-%   \end{aligned} \\
-%   & = \textbf{case}~e \{
-%     \textbf{in}_{X_{s}'}u \mapsto \textbf{in}_{X_{s}'}(\phi(\textsf{mfold}(\textbf{in}_{{X_{s}'}}u))) \\
-%     \textbf{in}_{Z_{s}'} v \mapsto
-%     \}
-    %   \end{align*}
-% This doesn't seem worth it. But you argue formally that commuting the case statements as such is done with the eta rule. Then you get everything to cancel down to \phi(\phi^{-1}(...)) (or the same with \psi)
-
-% \steven{I could type out the equality proof term, but it blows up in size and doesn't seem like a useful way to capture this iso. I have a commented out version of it above. Going to refactor tomorrow to something more sane, as these as are the crux of the proofs of equality} \steven{In any case, the NFA-to-grammar direction of these isos should all follow from some $\eta$-rule on the structure of the type for the start state, right?}
-% \pedro{What I like doing in these cases is either presenting the high-level structure of the proof, e.g., ``by applying the rules <...> we can conclude'', or present the full proof in the appendix.
-  % Since in this case it feels like it won't be a particularly illuminating proof, I suggest doing
-% the former.}
-    %
-
-By breaking into a case distinction on $e$ and then applying the $\eta$-rule for coproducts, the above proof will
-simplify into two cases where $\phi$ will be inverted by $\phi^{{-1}}$ and $\psi$ will be inverted by $\psi^{-1}$,
-ultimately cancelling to give the identity map. The other direction below simplifies in a similar manner.
-\steven{Most concise list for this?}
-
-% Without loss of generality assume that $e = \textbf{in}_{X_{s}'} u$. Then, $\mathsf{mfold}(e) = \textbf{in}_{g}(\phi^{-1}u)$ and passing this through the above case statement results in $\textbf{in}_{{X_{s}'}}(\phi(\phi^{{-1}}u)) = \textbf{in}_{{X_{s}'}}(u) = e$. Further,
-
-\begin{align*}
-  \mathsf{mfold}(\textbf{case}~p \{\textbf{in}_{g} p_{1} \mapsto \textbf{in}_{X_{s}'}(\phi(p_{1})), \\ \textbf{in}_{g'} p_{2} \mapsto \textbf{in}_{{Z_{s}'}}(\psi(p_{2})) \})
-  & = p
-\end{align*}
-
-This concludes the disjunctive combination of two NFAs.
-Because they follow a very similar style of argumentation, we include the cases for sequencing and
-Kleene star in \cref{sec:appendixnfa}.
-
+We include the proof that maps $s_{\oplus}$ and $r_{\oplus}$ form an isomorphism in \cref{sec:appendixnfa}. This concludes the disjunctive combination of two NFAs.
+Because they follow a very similar style of argumentation, we also include the cases for sequencing and
+Kleene star in \cref{sec:appendixnfa}. Totaling over all of these cases, this completes the proof.
 
 \end{proof}
 
@@ -1591,9 +1550,77 @@ result as stated in Section\ref{section:canonicity}.
 \section{Equivalence Betweeen Regular Grammars and Finite Automata}
 \label{sec:appendixnfa}
 
-We provide the final two cases of \cref{thm:thompson}.
-
+Below we finish the proof of \cref{thm:thompson}.
 \begin{proof}
+
+  First, we finish the provide the proof that the maps $s_{\oplus}$ and $r_{\oplus}$ provided in the disjunctive case do indeed mutually invert each other. For brevity in this proof, we will omit the list of mutually recursive bindings when appropriate. That is, write $\mu X_{s}'$ instead of $\mu(Y_{s},X_{s}',X_{j}',\dots). X_{s}'$.
+
+  Given $e : NFA(g \oplus g')$,
+
+\begin{align*}
+  r_{\oplus}(s_{\oplus}(e))
+  & =_{\mu \eta} r_{\oplus}(s_{\oplus}(\mathsf{cons}(e'))), \text{~where }e':\mu X_{s}' \oplus \mu Z_{s}' \\
+  &
+    \begin{aligned}
+      =_{\oplus \eta} r_{\oplus}(s_{\oplus}(\mathsf{cons}(\textbf{case}~e'~\{ & \\
+    \textbf{in}_{\mu X_{s}'} u \mapsto \textbf{in}_{\mu X_{s}'} u, & \\
+    \textbf{in}_{\mu Z_{s}'} v \mapsto \textbf{in}_{\mu Z_{s}'} v
+    \})))
+    \end{aligned} \\
+  &
+    \begin{aligned}
+    =_{\oplus \eta}
+    \textbf{case}~e'~\{ & \\
+    & \textbf{in}_{\mu X_{s}'} u \mapsto r_{\oplus}(s_{\oplus}(\mathsf{cons}(\textbf{in}_{\mu X_{s}'} u))), \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(s_{\oplus}(\mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v))) \\
+    \}))
+    \end{aligned} \\
+  &
+    \begin{aligned}
+    =
+    \textbf{case}~e'~\{ & \\
+    & \textbf{in}_{\mu X_{s}'} u \mapsto r_{\oplus}(\mathsf{mfold}(\mathsf{cons}(\textbf{in}_{\mu X_{s}'} u))), \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(\mathsf{mfold}(\mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v))) \\
+    \}
+    \end{aligned} \\
+  &
+    \begin{aligned}
+    =_{\mu \beta}
+    \textbf{case}~e'~\{ & \\
+    & \textbf{in}_{\mu X_{s}'} u \mapsto r_{\oplus}(\textbf{in}_{g} \phi^{-1}(\mathsf{cons}_{\mu(X_{i}=\hat{X}_{i}).X_{s}}u')), \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(\textbf{in}_{g'} \psi^{-1}(\mathsf{cons}_{\mu(Z_{i}=\hat{Z}_{i}).Z_{s}}v')) \\
+      \} \\
+      & \text{~for }u' : \mu X_{s}', v' : \mu Z_{s}'
+    \end{aligned} \\
+  &
+    \begin{aligned}
+    =_{\oplus \beta}
+    \textbf{case}~e'~\{ & \\
+    & \textbf{in}_{\mu X_{s}'} u \mapsto \alpha \phi \phi^{-1}(\mathsf{cons}(u')), \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto \beta \psi \psi^{-1}(\mathsf{cons}(v')) \\
+      \}
+    \end{aligned} \\
+  &
+    \begin{aligned}
+    =
+    \textbf{case}~e'~\{ & \\
+    & \textbf{in}_{\mu X_{s}'} u \mapsto \alpha (\mathsf{cons}(u')), \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto \beta (\mathsf{cons}(v')) \\
+      \}
+    \end{aligned} \\
+   &
+    \begin{aligned}
+    =_{\mu \beta}
+    \textbf{case}~e'~\{ & \\
+    & \textbf{in}_{\mu X_{s}'} u \mapsto \mathsf{cons}(\textbf{in}_{\mu X_{s}'} u) , \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto \mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v) \\
+      \}
+    \end{aligned} \\
+  & =_{\oplus \eta} \mathsf{cons}(e') \\
+  & =_{\mu \beta} e
+\end{align*}
+
+
 We now construct a combinator for the sequencing of two NFAs.
 
 \[
