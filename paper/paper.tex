@@ -1084,11 +1084,11 @@ A \emph{nondeterministic finite automaton} (NFA) is a finite state machine where
   \item $F$ a set of accepting states
 \end{itemize}
 
-Intuitively, this can be thought of like a directed graph with nodes in $Q$ with an edge $q \overset{c}{\to} q'$ whenever $q' \in \delta(q, c)$. Note that transitions in an NFA may be labelled with the empty string $\epsilon$.
+Intuitively, this can be thought of like a directed graph with nodes in $Q$ with an edge $q \overset{c}{\to} q'$ whenever $q' \in \delta(q, c)$. Note that transitions in an NFA may be labelled with the empty string $\epsilon$ --- such transitions are referred to as \emph{$\epsilon$-transitions}.
 
 As a gramamar in our type theory, an NFA may be encoded as a
 mutual\footnote{For convenience we refer to a mutual fixed point here, even though we
-  only take single fixed points as primitive. As in Beki\'c's theorem, we may decompose our mutual fixed points into a series of single fixed points.}
+  only take single fixed points as primitive. As in Beki\'c's theorem, we may decompose our mutual fixed points into a series of single fixed points. So this operation is admissible.}
 fixed point in the following manner:
 
 An NFA has finitely many states, so we may number them $Q = \{q_{1}, \dots, q_{N}\}$. For each $q_{j}$ we introduce
@@ -1113,6 +1113,8 @@ where
 \[
   \hat{Y} ::= c \otimes Y ~|~ Y ~|~ \hat{Y} \oplus \hat{Y}
 \]
+
+\steven{Somewhere mention that $\epsilon$ corresponds to $I$, characters $c \in \Sigma$ correspond to grammars $c$, etc}
 
 and each $Y \in \{ Y_{s}, Y_{e}, Y_{1}, \dots, Y_{N} \}$. Intuitively, we read each $Y_{j}$ as the label for a state, and the
 definitions of form $\hat{Y}$ describe the transitions between states --- $c \otimes Y$ denotes a labeled transition, and $Y$
@@ -1208,7 +1210,6 @@ fixed points are not taken as primitive, using Beki\'c's theorem we can define a
   {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
 \]
 where $\sigma$ is the substitution that unrolls the mutually recursive definition one level by replacing each $X_{k}$ with the fixed point $\mu(X_{j} = A_{j}, \forall j).X_{k}$,
-\steven{I'm not sure the cons rule is right. TODO sanity check it with a small example}
 
 \begin{align*}
   \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \\
@@ -1365,11 +1366,46 @@ Kleene star in \cref{sec:appendixnfa}. Totaling over all of these cases, this co
 
 % Need to also add in axioms for $\amp$ distributing over $\oplus$ and $\lto$ distributing over $\oplus$. And that $c \amp c' \vdash 0$ for $c \neq c'$
 
-\subsection{DFAs and NFAs}
+\subsection{Brzozowski Derivatives and Deterministic Finite Automata}
+\steven{this section sounds awkward and will be adjusted in a later editing pass}
+A \emph{deterministic finite automaton} (DFA) is an NFA whose transitions are deterministic. Meaning at every state $q \in Q$ there is exactly one transition for every character $c \in \Sigma$ --- i.e.\ the size of $\delta(q, c)$ is 1 and $\delta(q, \epsilon)$ is empty. It is clear that all DFAs happen to be NFAs, but it is perhaps surprising that the class of DFAs is as powerful as the class of NFAs when measured by the languages they recognize! \cref{thm:thompson} shows that the class of languages recognized by NFAs is exactly the regular languages. As we will soon see, the class of languages recognizable by DFAs is also the regular languages!
 
-All DFAs are NFAs, so NFAs are at least as powerful as DFAs. It is perhaps surprising that DFAs are as powerful as NFAs too! We can internalize the classic powerset construction to transform an NFA into a DFA that recognizes the same language. Note however that this loses some information. Throughout this process we may lose data such as the ambiguity of the grammar. Effectively we are forgetting the structure of our proof terms. Under the ``grammars as types'' lens, we are erasing the structure underlying the inhabitants of the type to simply mere existence --- this is a form of propostional truncation.
+There are a couple famous constructions we might use to show this, such as the powerset construction \cite{?} or Brzozowski's algorithm \cite{?}. Just as with Thompson's construction, we shall internalize a version of the latter as a proof term in our formal calculus. However, note that the construction of a DFA is lossy in some sense. That is, throughout this process we lose the ability to form an isomorphism between parses of a DFA for $g$ and parses of $g$ itself. Rather than express an isomorphism (strong equivalence) as a proof term, we shall construct a weak equivalence. This means we shall derive entailments $g \vdash DFA(g)$ and $DFA(g) \vdash g$ that do not necessarily invert each other. Semantically, this notion of weak equivalence between grammars $g$ and $g'$ means that $g$ and $g'$ both recognize the same language.
 
-\steven{Worth spending some more time on the propositional truncation idea}
+Recall that a DFA is given as a 5-tuple $(Q, \Sigma, \delta, q_{0}, F)$ in the same manner as an NFA.\ When encoding a DFA as a mutually recursive grammar, we use nearly the same process as when we encoded an NFA, with one subtle change. When we encoded NFAs, we were able to ensure we had a single accepting state by connecting all of the accepting states $q_{j} \in F$ to a single accepting state $Y_{e}$ with $\epsilon$-transitions. However, $\epsilon$-transitions are not permitted in a DFA, as they introduce a source of nondeterminism. Therefore we need a scheme to encode which states are accepting. The change we need to make is pretty lightweight, we add the grammar $I$ as a summand to distinguish which states are accepting.
+
+\[
+  DFA ::= \mu \begin{pmatrix}
+        Y_{s} = \langle \hat{Y} \rangle \\
+        Y_{j} = \langle \hat{Y} \rangle, j \not \in \{s, e\} \\
+        \end{pmatrix}.Y_{s}
+\]
+where
+\[
+\hat{Y} ::= \hat{Y_{0}} ~|~ I \oplus \hat{Y_{0}}
+\]
+\[
+  \hat{Y_{0}} ::= c \otimes Y ~|~ Y ~|~ \hat{Y_{0}} \oplus \hat{Y_{0}}, Y \in \{Y_{s}, Y_{1}, \dots, Y_{N}\}
+\]
+
+A state $Y_{j}$ in a DFA is accepting if and only if $\hat{Y}_{j}$ contains $I$ as a summand.
+
+some fluff to lead into the thoerem
+
+\begin{theorem}
+  For every regular grammar $g$, there is a DFA $D$ that is weakly equivalent to $g$.
+\end{theorem}
+
+\begin{proof}
+  \steven{This is currently word salad}
+
+  DFA construction
+
+  $DFA(g) \vdash g$ : just fold over the defs in $DFA(g)$ and have every $Y_{w}$ eliminate to $w \lto g$. This is doable bc when eliminating $Y_{w'}$ you will hold terms of type $a \otimes (w \lto g)$. These $w \lto g$ terms might not be exactly what you want, but they are weakly equivalent to some derivative that you do want! How do you know that they're weakly equivalent? if $Y_{w'}$ transitions to $Y_{w}$ via character $a$, then we know that $a \lto (w \lto g)$ is weakly equivalent to $a \lto (w' \lto g)$ \emph{by construction of the DFA}. This argument entirely hinges on the method by which we defined the DFA
+
+  $g \vdash DFA(g)$
+  Idea is to us $\top \cong \text{Char}^{*}$ and $A^{*} \cong \Sigma(n) A^{\otimes n}$ and $A \cong \top \amp A$ to turn a parse into a pair of a parse and a finite string. And then this finite string can be walked through the DFA to read off the parse, and you can show its accepting. Details currently a little shaky, and encapsulated in a bad picture of a whiteboard. \steven{Gonna has this out with Max in meeting}
+\end{proof}
 
 \subsection{Indexed Automata}
 
@@ -1378,6 +1414,8 @@ dependency of linear types on non-linear types. Let $S$ be a finite
 non-linear type and define $\textrm{List}\,S = \mu x. 1 + S \times
 x$. Then a pushdown automaton with $S$ as the stack alphabet can be
 defined as a mutual fixed point.
+
+\steven{Forms for PDAs and Turing Machines go here}
 
 Want to put PDA, CFGs, CSGs here. Basically, use this section to highlight the usefulness of the intuitionistic part of the contexts
 
