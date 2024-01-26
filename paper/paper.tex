@@ -1074,7 +1074,7 @@ represent the stack, but we ought to be very careful about how this set is acces
 may accidentally endow us with too much expressive power, launching us further up in the Chomsky hierarchy. To begin,
 let us focus only on language classes, and their associated automata, whose parses are definable without any mention to
 the inuitionistic context. When viewed as a machine, this refers to the class of automata definable without access to
-any memory --- i.e.\ finite state machines.
+a stack/tape of memory --- i.e.\ finite state machines.
 
 \subsection{Finite State Machines}
 A \emph{nondeterministic finite automaton} (NFA) is a finite state machine where transitions are labeled with characters from a fixed alphabet $\Sigma$. These are often represented formally as a 5-tuple $(Q, \Sigma, \delta, q_{0}, F)$,
@@ -1259,7 +1259,9 @@ The rest of the terms are given below,
   \item $y_{e}$ --- $\simulsubst {I} {\gamma} = I$ and $p_{e} = y_{e} : I$
 \end{itemize}
 
-\steven{Need to add argument that justifies why the $X_{j}$s are allowed to be eliminated via the identity. A priori they could be interfered with by taking an $X_{s}$ that needs to be eliminated. I think it hinges on a syntactic restriction where there are no backedges to $X_{s}$ in the NFA.Even if there were, I think I can get away with a case distinction entailment instead of the one written}
+\steven{Question raised by Pranav: why doesn't the $X_{s}'$ being eliminated to $g$ screw up what the other $X_{j}'$s get eliminated too. Need to add an argument that justifies why the $X_{j}$s are allowed to be eliminated via the identity. A priori they could be interfered with by taking in an $X_{s}'$ that needs to be eliminated.
+
+I think the crux of this arugment hinges on a syntactic restriction where there are no backedges to $X_{s}$ in the NFA.\ This is true for the $\otimes$, $\oplus$ cases, unclear in the Kleene star case. Even if there were one, we might be able to get away with a case distinction entailment instead of the one written.}
 
 where $\phi$ and $\psi$ are the witnesses to the isomorphisms $g \cong NFA(g)$ and $g' \cong NFA(g')$, respectively.
 This finshes the construction of a parse transformer $s_{\oplus}$ from $NFA(g \oplus g')$ to $ g \oplus g'$.
@@ -1366,7 +1368,6 @@ Kleene star in \cref{sec:appendixnfa}. Totaling over all of these cases, this co
 % Need to also add in axioms for $\amp$ distributing over $\oplus$ and $\lto$ distributing over $\oplus$. And that $c \amp c' \vdash 0$ for $c \neq c'$
 
 \subsection{Brzozowski Derivatives and Deterministic Finite Automata}
-\steven{this section sounds awkward and will be adjusted in a later editing pass}
 A \emph{deterministic finite automaton} (DFA) is an NFA whose transitions are deterministic. Meaning at every state $q \in Q$ there is exactly one transition for every character $c \in \Sigma$ --- i.e.\ the size of $\delta(q, c)$ is 1 and $\delta(q, \epsilon)$ is empty. It is clear that all DFAs happen to be NFAs, but it is perhaps surprising that the class of DFAs is as powerful as the class of NFAs when measured by the languages they recognize! \cref{thm:thompson} shows that the class of languages recognized by NFAs is exactly the regular languages. As we will soon see, the class of languages recognizable by DFAs is also the regular languages!
 
 There are a couple famous constructions we might use to show this, such as the powerset construction \cite{?} or Brzozowski's algorithm \cite{?}. Just as with Thompson's construction, we shall internalize a version of the latter as a proof term in our formal calculus. However, note that the construction of a DFA is lossy in some sense. That is, throughout this process we lose the ability to form an isomorphism between parses of a DFA for $g$ and parses of $g$ itself. Rather than express an isomorphism (strong equivalence) as a proof term, we shall construct a weak equivalence. This means we shall derive entailments $g \vdash DFA(g)$ and $DFA(g) \vdash g$ that do not necessarily invert each other. Semantically, this notion of weak equivalence between grammars $g$ and $g'$ means that $g$ and $g'$ both recognize the same language.
@@ -1390,6 +1391,8 @@ where
 A state $Y_{j}$ in a DFA is accepting if and only if $\hat{Y}_{j}$ contains $I$ as a summand.
 
 In the definition of a DFA, we make use of a sum ranging over all characters in the alphabet. Viewed as a machine, this is intened to have the effect of being able to run any arbitrary string input through the automaton to reach some well-defined, but not necessarily accepting, state. In our type theory, this would amount to the following entailment being derivable,
+
+\steven{This might be the wrong entailment, and I may instead want a propositional truncation. This distinction feels related to the hang ups in the second half of the DFA proof}
 
 \[
 p : \top \vdash \mathsf{run}(p) : \mu \begin{pmatrix}
@@ -1467,21 +1470,88 @@ When instantiating the above rule, we make each $B_{k} = w_{k} \lto g$. In this 
 
 Where $\phi$ witnesses the isomorphism $g \cong (I \amp g) \oplus \bigoplus_{c} (c \otimes (c \lto g))$, and $\alpha$ is a function that acts a lookup table for replacing $d_{j,c} : w_{n_{j,c}} \lto g$ with an appropriate member of its weak equivalence class. In particular, when deriving $w_{j} \lto g$ we want $\alpha(d_{j,c}) : (w_{j} \otimes c) \lto g$. Finding such an element is indeed possible \emph{by construction of our DFA}. Recall that we added a transition between $Y_{j}$ and $Y_{n_{j,c}}$ exactly when $c \lto (w_{j} \lto g) = (w_{j} \otimes c) \lto g$ was weakly equivalent to $w_{n_{j,c}} \lto g$. That is, the multifold constructed above is well-defined, and will ultimately return a term of type $B_{s} = I \lto g = g$ so we do, in fact, have a derivation from $DFA(g)$ to $g$.
 
-Now we wish to build a derivation from $g$ to $DFA(g)$.
-\steven{fill in}
+Now we wish to build a derivation from $g$ to $DFA(g)$. TODO proof.
+\steven{
+  I think there is a way to do this via extracting some string related to a parse. i.e. $p : g \vdash M : (\LinSigTy {n} {\mathbb{N}} {\text{Char}^{n}} \amp g)$. However, Max said that this style of argument --- or perhaps just pattern matching over the sigma type --- requires full bunched contexts. I don't totally see why.
+
+  The hope is to then morally run the DFA on the string, and you can show that it must be accepting by some of the properties used to construct the DFA.
+
+  An alternative to the above approach is to reflect the fact that grammars are weakly equivalent if they recognize all the same strings. Something like,
+
+  \[
+    \inferrule
+    {\Gamma \vdash M : \Pi_{w} G(w \lto A) \to G(w \to B)}
+    {\Gamma \vdash Sem(M) : G(A \lto B)}
+  \]
+
+  You then instantiate this rule for $A = g$, $B = DFA(g)$. This gives you access to the same kind of string I am trying to access above and you make the same kind of argument. I'm too tired to write the stub of that argument now, and I'm a little shaky on it, but that will be a goal for next week.
+}
 \end{proof}
 
 \subsection{Indexed Automata}
 
 We can generalize to more powerful notions of automata by utilizing
-dependency of linear types on non-linear types. Let $S$ be a finite
+dependency of linear types on non-linear types. In this section, we shall explore how we can perform these encodings for pushdown automata and Turing machines. In this paper, we don't provide any proofs of their equivalence to context-free or recursively-enumerable languages; however, to motivate this type theory as a natural and general syntax for reasoning about both languages and machines, we do show how to internalize these notions of automata.
+
+\subsubsection{Pushdown Automata}
+Let us recall that a nondeterministic \emph{pushdown automaton} (PDA) is a type of automaton that utilizes a stack of memory. Similarly to NFAs, they are often represented as 7-tuples $(Q, \Sigma, \Gamma, \delta, q_{0}, Z, F)$. Here $Q, \Sigma, q_{0},$ and $F$ all have the exact same meanings as with NFAs. Additionally PDAs now have,
+
+\begin{itemize}
+\item $\Gamma$ a fixed, finite stack alphabet. We interpret ``the stack'' as words over $\Gamma$
+\item $Z$ an initial stack symbol
+\item $\delta : Q \times (\Sigma \cup \{\epsilon\}) \times \Gamma \to Q \times \Gamma^{*}$ a transition function that consumes a state, input character, and stack character then returns a state and new stack
+\end{itemize}
+
+Just as with NFAs, we encode PDAs via a particular mutual fixed point type, except now we let these types make use of non-linear types. In particular, let $S$ be a finite
 non-linear type and define $\textrm{List}\,S = \mu x. 1 + S \times
 x$. Then a pushdown automaton with $S$ as the stack alphabet can be
 defined as a mutual fixed point.
 
-\steven{Forms for PDAs and Turing Machines go here}
+Like with NFAs, we introduce a label $Y_{j}$ for each $q_{j} \in Q$ but now the right hand side of each of their definition is a dependent type that takes into account the stack. We again say there is a single accepting state. The initial stacks $Z$ corresponds to the empty list $\mathsf{nil}$. Additionally, without loss of generality we say that every transition consumes the head of the stack --- as if a transition did not consume anything, you could pop and replace the head with the same element.
 
-Want to put PDA, CFGs, CSGs here. Basically, use this section to highlight the usefulness of the intuitionistic part of the contexts
+Consider a transition in the PDA between states $Y_{i}$ and $Y_{j}$ with current stack $\omega_{0} \in \Gamma^{*}$ that consumes stack character $a$, consumes an input character $c$, and then pushes $\omega \in \Gamma^{*}$ onto the stack. We translate this into the definition of $Y_{i}$. $\omega_{0}$ will correspond to some current list $L$, and the production on the right hand side of $Y_{i}$ will take the form of a (partial) case distinction on the head of $L$. The case corresponding to $a$ will be a dependent type that encodes the pushing of $\omega$ onto the stack as appending some list $L_{0}$ to the tail of $L$. That is, the definition of $Y_{i}$ looks like,
+
+\[
+Y_{i} = \LinSigTy {L} {\mathrm{List}\,S} {\textbf{case}~L~\{(a, tl) \mapsto \LinSigTy {\mathsf{append}(L_{0}, tl)} {\mathrm{List}\,S} {c \otimes Y_{j}}, \dots\}}
+\]
+
+In total,
+
+\steven{idk why I'm giving these as meta-level grammars. It doesn't seem like an illuminating way to share the form for PDAs, but I can't think of anything cleaner. This can definitely be put more cleanly}
+
+\[
+  PDA ::= \mu
+  \begin{pmatrix}
+    Y_{s} = \langle \hat{P}_{s} \rangle \\
+    Y_{j} = \langle \hat{P} \rangle \\
+    Y_{e} = \LinSigTy {L} {\textrm{List}\,S} {I}
+  \end{pmatrix}.Y_{s}
+\]
+
+\[
+\hat{P} ::= \LinSigTy{L}{\textrm{List}\,S}{\textbf{case}~L~\{ \langle cases \rangle \}}
+\]
+\[
+\hat{P}_{s} ::= \LinSigTy{\mathsf{nil}}{\textrm{List}\,S}{\textbf{case}~L~\{ \langle cases \rangle \}}
+\]
+\[
+cases ::= case ~|~ cases, case
+\]
+\[
+case ::= (z, tl) \mapsto T_{\oplus}
+\]
+\[
+  T_{\oplus} ::= T ~|~ T \oplus T_{\oplus}
+\]
+\[
+T ::= \LinSigTy{L'}{\textrm{List}\,S}{c \otimes Y}
+\]
+
+\subsubsection{Turing Machines}
+We can encode a Turing machine nearly identically to how we encoded PDAs. Instead of having our encoding depend on a non-linear type of lists over $S$, we have it depend on a pair of type $\mathrm{List}\,S \times \mathrm{List}\,S$.
+As mentioned earlier \steven{Probably copy that earlier bit from the beginning of the section here and reword}, we can simulate the infinite tape of a Turing machine with two stacks.
+
+\steven{I'm satisfied giving this high-level intuition and not dumping a syntactic mess for the audience, but as always its useful to have explicit examples because the claim is that the syntax is natural and easy to use.}
 
 \section{Future work}
 
@@ -1891,8 +1961,7 @@ and to derive a parse of $NFA(g^{*})$ from a parse of $g^{*}$ we define $r_{*}$ 
 \]
 
 To see that $s_{*}$ and $r_{*}$ for an isomorphism,
-\steven{This proof also needs more work. Esp after 4th equality}
-\steven{Think I need to thread through a case distinction on what the $g^{*}$ term is. Putting a pin in this for now to type up the DFA stuff before meeting}
+\steven{This proof also needs more work. Esp after 4th equality. Putting a pin in both directions of the Kleene star equality proof until I fully understand the issue with the $\otimes$ case. Each of these stems from an ignorance on $\mu$-type $\beta$ and $\eta$ rules}
 \begin{align*}
   r_{*}(s_{*}(e))
   & =_{\mu \eta} r_{*}(s_{*}(\mathsf{cons}(e'))), \text{~where }e':\mu X_{s}' \oplus Y_{e} \\
@@ -1923,8 +1992,6 @@ To see that $s_{*}$ and $r_{*}$ for an isomorphism,
   & = \dots \\
   & = e
 \end{align*}
-
-\steven{for the empty case above, can I make an $\eta$ equality for all terms of type $I$ to argue $\textbf{in}(v) = \textbf{in} (())$}
 
 \begin{align*}
   s_{*}(r_{*}(p))
