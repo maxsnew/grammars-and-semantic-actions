@@ -1009,49 +1009,26 @@ language $L$ with respect to $w$, written $\partial_w L$ is the language
 \[ (\partial_wL ) = \{ ww' \pipe w' \in L \}\]
 This semantics is given using the linear implication $w \tol
 L$. Expressing Brzozowski's calculation of the derivative of a regular
-expression relies on additional axioms to the type theory.\max{axioms
-  to carry out Brzozowski's derivative calculations plz.}
+expression relies on additional axioms to the type theory, presented in \cref{fig:brzozowskideriv}.
 
 
+
+\begin{figure}
+\label{fig:brzozowskideriv}
 \begin{align*}
   c\lto c &\equiv I\\
   c\lto d &\equiv 0\\
   c\lto I &\equiv 0\\
   c\lto 0 &\equiv 0\\
-  c\lto (A \otimes B) &\equiv (c\lto A) \otimes B + \nu(A) \otimes (c\lto B)\\
-  c\lto A^* &\equiv (c\lto A) \otimes A^*\\
+  c\lto (A \otimes B) & \equiv (c\lto A) \otimes B + (A \amp I) \otimes (c\lto B)\\
+  c\lto A^* &\equiv (A \amp I)^{*} \otimes (c \lto A) \otimes A^* \\
   c\lto (A + B) &\equiv (c\lto A) + (c\lto B)
 \end{align*}
+\caption{Equality for Brzozowski Derivatives}
+\end{figure}
 
-\pedro{The type family $\nu$ above is equal to $I$ if its argument
-  parses the empty string and zero otherwise. In order to define
-  it we should probably add an extra axiom, right?}
-\steven{$\nu$ can be derived using $\amp$, $\nu(A) = I \amp A$}
 
-\steven{In addition to Pedro's axioms:
 
-$c, c'$ characters. $g$ any grammar.
-
-\begin{gather}
-  I \lto c \cong c \\
-  c \lto (c' \lto g) \cong (c' \otimes c) \lto g
-\end{gather}
-
-For axiom $(1)$, Brzozowski has $I \lto g \cong g$ for all grammars $g$, but I don't think that holds for us because we want to preserve ambiguity. We could instead have something like $I \lto g \cong (g \amp I)^{*} \otimes g$. For our purposes the character presentation seems sufficient, as the derivative reasoning Brzozowski uses only takes derivatives with respect to strings.
-
-Axiom $(2)$ might be admissible, but I'm unsure.
-
-I think for Kleene star we need $c \lto g^{*} \cong (g \amp I)^{*} \otimes (c \lto g) \otimes g^{*}$. This should derivable utilizing the product axiom and $g^{*} \cong I \oplus (g \otimes g^{*})$, or is that sort of isomorphism opaque to us right now.
-
-To make the DFA proof go through I think we additionally need to axiomatically make the map $c \otimes (c \lto A) \vdash (c \otimes \top) \amp A$ to be an iso. Specifically, this term needs an iso $\phi : c \otimes (c \lto A) \to (c \otimes \top) \amp A$ defined below,
-
-\[
-p : c \otimes (c \lto A) \vdash \phi(p) = \letin {p_{1} \otimes p_{2}} p {(p_{1} \otimes \top, p_{1}^{\lto}p_{2})} : (c \otimes \top) \amp A
-\]
-
-but this last bit isn't just Brzozowski's definitions
-
-}
 Using the $G$ modality, we can internalize some of the external
 reasoning about grammars into the language of non-linear types. Recall
 that the denotation of $G A$ is the set of parses of the empty
@@ -1118,7 +1095,7 @@ mutual\footnote{For convenience we refer to a mutual fixed point here, even thou
 fixed point in the following manner:
 
 An NFA has finitely many states, so we may number them $Q = \{q_{1}, \dots, q_{N}\}$. For each $q_{j}$ we introduce
-a mutually recursive term $Y_{j}$ to represent the states of the NFA within this grammar presentation. We represent the transition function $\delta$ in the right hand side of each $Y_{j}$ definition. For character $c \in \Sigma \cup \{\epsilon\}$ and state $q_{j} \in Q$, we add a summand --- as a coproduct\footnote{There is an admissible notion of coproduct making use of the primitive dependent pairing --- i.e. $A \oplus B := \LinPiTy b \Bool {\textbf{if}~b~A~B}$. We will utilize this without much comment to represent the usual notion of alternation of grammars.} --- to the defintion of $Y_{j}$ for every state in the image of the transition function,
+a mutually recursive term $Y_{j}$ to represent the states of the NFA within this grammar presentation. We represent the transition function $\delta$ in the right hand side of each $Y_{j}$ definition. For character $c \in \Sigma \cup \{\epsilon\}$ and state $q_{j} \in Q$, we add a summand --- as a coproduct\footnote{There is an admissible notion of coproduct making use of the primitive dependent pairing --- i.e. $A \oplus B := \LinSigTy b \Bool {\textbf{if}~b~A~B}$. We will utilize this without much comment to represent the usual notion of alternation of grammars.} --- to the defintion of $Y_{j}$ for every state in the image of the transition function,
 
 \[
 Y_{j} = \bigoplus_{c \in \Sigma \cup \{\epsilon\}} \bigoplus_{q_{i} \in \delta(q_{j}, c)} c \otimes Y_{i}
@@ -1140,11 +1117,9 @@ where
   \hat{Y} ::= c \otimes Y ~|~ Y ~|~ \hat{Y} \oplus \hat{Y}
 \]
 
-\steven{Somewhere mention that $\epsilon$ corresponds to $I$, characters $c \in \Sigma$ correspond to grammars $c$, etc}
-
 and each $Y \in \{ Y_{s}, Y_{e}, Y_{1}, \dots, Y_{N} \}$. Intuitively, we read each $Y_{j}$ as the label for a state, and the
 definitions of form $\hat{Y}$ describe the transitions between states --- $c \otimes Y$ denotes a labeled transition, and $Y$
-denotes an $\epsilon$-transition. A
+denotes an $\epsilon$-transition. Note that here each $c$ represents a grammar that is inhabited with only a trivial parse of the single character $c$; likwise, and $\epsilon$-transtion corresponds to a transition with label $I$ and $I \otimes Y = Y$ because $I$ is the unit for the operation $\otimes$. A
 disjunction of transitions in an NFA grammar corresponds to multiple outgoing edges of a given state in an automaton.
 
 Above we give a translation from the tuple presentation of an NFA to a fixed point grammar in our type theory. We don't provide any argument that this translation is done correctly; however, we hope that the construction is straightforward and lightweight enough to demonstrate our formal system as a natural and effective syntax for reasoning about both grammars and automata.
@@ -1161,8 +1136,6 @@ With this setting for finite automata, we can now internalize some classical the
 % where $c \in \mathcal{A}$ is a character literal drawn from a fixed alphabet, and the Kleene star $\cdot^{*}$ is derived as an admissible operation using the fixed point operator --- $g^{*} = \mu X.I \oplus (g \otimes X)$. \steven{This definition is maybe fair to assume. Also maybe better suited for a section earlier in the paper}
 
 First, let us describe a version of Thompson's construction \cite{?} where we construct an NFA that recognizes a given regular expression. Moreover, we will show that this NFA is strongly equivalent to the original grammar.
-
-This construction
 
 \begin{theorem}[Thompson]
   \label{thm:thompson}
@@ -1269,7 +1242,7 @@ return a term of type $g \oplus g'$. If folding over a term $e$, refer to the ou
     z_{j}' : \simulsubst {(\simulsubst {Z_{j}} {\delta_{Z}})}{\gamma} \vdash p_{z,j} : Z_{j} \text{~where } j \not \in \{s, e\} \\
     z_{e}' : \simulsubst {Y_{e}}{\gamma} \vdash p_{z,e} : Z_{e} \\
     y_{e} : \simulsubst I {\gamma} \vdash p_{e} : I
-  }{\Delta \vdash s_{\oplus}(e) := \mathsf{mfold}(e) : g \oplus g'}
+  }{\Delta \vdash s_{\oplus}(e) := \mathsf{mfold}(y_{s}.p_{s},\dots,y_{e}.p_{e})(e) : g \oplus g'}
 \]
 
 For each of the variables above, we simplify the type and provide the actual proof term. For instance,
@@ -1297,10 +1270,10 @@ The map $r_{\oplus}$ in the other direction is given below in a couple stages. F
   {
     \Gamma ; \Delta \vdash u : NFA(g) = \mu(X_{j} = \hat{X}_{j}, \forall j).X_{s} \\
     \Gamma ; x_{s} : \simulsubst {X_{s}}{\gamma} = X_{s}' \vdash \mathsf{cons}(\textbf{in}_{X_{s}'}(x_{s})) : \mu(\dots).Y_{s} = NFA(g \oplus g')  \\
-    \Gamma ; x_{j} : \simulsubst {X_{j}}{\gamma} = X_{j}' \vdash x_{j} : X_{j}', j \not \in \{s, e\} \\
-    \Gamma ; x_{e} : \simulsubst {X_{e}}{\gamma} = I \vdash x_{e} : I = X_{e}'
+    \Gamma ; x_{j} : \simulsubst {X_{j}}{\gamma} = \mu(X_{j} = \hat{X}_{j}, \forall j).X_{j}' \vdash x_{j} : \mu(X_{j} = \hat{X}_{j}, \forall j).X_{j}', j \not \in \{s, e\} \\
+    \Gamma ; x_{e} : \simulsubst {X_{e}}{\gamma} = I \vdash \mathsf{cons}(x_{e}) : I = \mu(\dots).Y_{e} = \mu(\dots).X_{e}'
   }
-  {\Gamma ; \Delta \vdash \mathsf{mfold}(u) : NFA(g \oplus g')}
+  {\Gamma ; \Delta \vdash \mathsf{mfold}(x_{s}.\mathsf{cons}(\textbf{in}_{X_{s}'}(x_{s}), x_{1}.x_{1}, \dots, x_{e}.x_{e}))(u) : NFA(g \oplus g')}
 \]
 where the dots in the above derivation take on the mutually recursive defintions present in $NFA(g \oplus g')$. \steven{Need a better way to display these defs without blowing up the $\mu$ terms} Denote the above embedding of $NFA(g)$ into $NFA(g \oplus g')$ via $\alpha(u) := \mathsf{mfold}(u) : NFA(g \oplus g')$. Similarly define an embedding $\beta$ for an embedding of $NFA(g')$. We can then define the derivation from $g \oplus g'$ to $NFA(g \oplus g')$ by composing the isomorphisms $g \overset{\phi}{\cong} NFA(g)$ and $g \overset{\psi}{\cong} NFA(g')$ with maps $\alpha$ and $\beta$, respectively.
 
@@ -1398,7 +1371,7 @@ A \emph{deterministic finite automaton} (DFA) is an NFA whose transitions are de
 
 There are a couple famous constructions we might use to show this, such as the powerset construction \cite{?} or Brzozowski's algorithm \cite{?}. Just as with Thompson's construction, we shall internalize a version of the latter as a proof term in our formal calculus. However, note that the construction of a DFA is lossy in some sense. That is, throughout this process we lose the ability to form an isomorphism between parses of a DFA for $g$ and parses of $g$ itself. Rather than express an isomorphism (strong equivalence) as a proof term, we shall construct a weak equivalence. This means we shall derive entailments $g \vdash DFA(g)$ and $DFA(g) \vdash g$ that do not necessarily invert each other. Semantically, this notion of weak equivalence between grammars $g$ and $g'$ means that $g$ and $g'$ both recognize the same language.
 
-Recall that a DFA is given as a 5-tuple $(Q, \Sigma, \delta, q_{0}, F)$ in the same manner as an NFA.\ When encoding a DFA as a mutually recursive grammar, we use nearly the same process as when we encoded an NFA, with one subtle change. When we encoded NFAs, we were able to ensure we had a single accepting state by connecting all of the accepting states $q_{j} \in F$ to a single accepting state $Y_{e}$ with $\epsilon$-transitions. However, $\epsilon$-transitions are not permitted in a DFA, as they introduce a source of nondeterminism. Therefore we need a scheme to encode which states are accepting. The change we need to make is pretty lightweight, we add the grammar $I$ as a summand to distinguish which states are accepting.
+Recall that a DFA is given as a 5-tuple $(Q, \Sigma, \delta, q_{0}, F)$ in the same manner as an NFA.\ When encoding a DFA as a mutually recursive grammar, we use nearly the same process as when we encoded an NFA, with one subtle change. When we encoded NFAs, we were able to ensure we had a single accepting state by connecting all of the accepting states $q_{j} \in F$ to a single accepting state $Y_{e}$ with $\epsilon$-transitions. However, $\epsilon$-transitions are not permitted in a DFA, as they introduce a source of nondeterminism. Therefore we need a scheme to encode which states are accepting. The changes we need to make is pretty lightweight. First, we add the grammar $I$ as a summand to distinguish which states are accepting. Second, each state must have a transition for every character in the alphabet.
 
 \[
   DFA ::= \mu \begin{pmatrix}
@@ -1411,26 +1384,91 @@ where
 \hat{Y} ::= \hat{Y_{0}} ~|~ I \oplus \hat{Y_{0}}
 \]
 \[
-  \hat{Y_{0}} ::= c \otimes Y ~|~ Y ~|~ \hat{Y_{0}} \oplus \hat{Y_{0}}, Y \in \{Y_{s}, Y_{1}, \dots, Y_{N}\}
+  \hat{Y_{0}} ::= \bigoplus_{c : \Sigma} c \otimes Y, Y \in \{Y_{s}, Y_{1}, \dots, Y_{N}\}
 \]
 
 A state $Y_{j}$ in a DFA is accepting if and only if $\hat{Y}_{j}$ contains $I$ as a summand.
 
-some fluff to lead into the thoerem
+In the definition of a DFA, we make use of a sum ranging over all characters in the alphabet. Viewed as a machine, this is intened to have the effect of being able to run any arbitrary string input through the automaton to reach some well-defined, but not necessarily accepting, state. In our type theory, this would amount to the following entailment being derivable,
+
+\[
+p : \top \vdash \mathsf{run}(p) : \mu \begin{pmatrix}
+        Y_{s} = \langle \hat{Y} \rangle \\
+        Y_{j} = \langle \hat{Y} \rangle, j \not \in \{s, e\} \\
+        \end{pmatrix}.\bigoplus_{k} Y_{k}
+\]
+
+for some term $\mathsf{run}(p)$ that might depend on the structure of the DFA in question. That is, any input should be runnable through the DFA to return \emph{some} state. This entailment holds in the intended model, but a priori this does not hold in the type theory. Noting this point motivates taking $\top \cong (\bigoplus_{c} c)^{*}$ as an axiom. This syntactically reflects the semantic notion that parses correspond to finite strings over a fixed alphabet. Such an axiom is especially justified when crafting syntax to reason about parses of finite input strings; further, we conjecture that without this axiom we may find models of the type theory that correspond to parses of infinite sequences of characters. In this paper, we shall focus on the expressivity of the syntax to reason about parses of strings, and thus we assume $\top \cong (\bigoplus_{c} c)^{*}$.
+
+Additionally, we assume that the derivation from $c \otimes (c \lto A)$ to $(c \otimes \top) \amp A$ is an isomorphism. Specifically, the term $\phi$ defined below is assumed to have an inverse,
+
+\[
+p : c \otimes (c \lto A) \vdash \phi(p) = \letin {p_{1} \otimes p_{2}} p {(p_{1} \otimes \top, p_{1}^{\lto}p_{2})} : (c \otimes \top) \amp A
+\]
+
+Axiomatically adding an inverse for $\phi$ doesn't greatly affect our semantics. In fact, it describes a property that is simply true in the intended string model: ``if a parse of character $c$ and then a parse of any word completes to a parse of $A$, then that word was actually in fact of type $c \lto A$''. This axiom, the one desribed in the paragraph above, and the ones given in \cref{fig:brzozowskideriv} are not meant to anything particularly deep. They are a means of reflecting the intended semantic properties in our syntax.
+
+Utilizing the reflected properties we can derive the following isomorphism,
+
+\begin{align*}
+  A
+  & \cong \top \amp A \\
+  & \cong (\bigoplus_{c} c)^{*} \amp A \\
+  & \cong (I \oplus \bigoplus_{c} (c \otimes \top)) \amp A \\
+  & \cong (I \amp A) \oplus \bigoplus_{c} ((c \otimes \top) \amp A) \\
+  & \cong (I \amp A) \oplus \bigoplus_{c} (c \otimes (c \lto A))
+\end{align*}
+
+Which effectively states that parses of a grammar $A$ are either empty or begin with some character from our fixed alphabet, a fact used in our proof of \cref{thm:dfa}.
 
 \begin{theorem}
+  \label{thm:dfa}
   For every regular grammar $g$, there is a DFA $D$ that is weakly equivalent to $g$.
 \end{theorem}
 
 \begin{proof}
-  \steven{This is currently word salad}
+  First, note that regular grammars have finitely many derivatives, up to weak equivalence \cite{?}. That is, we can isolate a finite set of words $w_{1},\dots,w_{n}$ such that $w \lto g$ is weakly equivalent to $w_{j} \to g$ for some $g$. These $w_{j}$ may then serve as representatives for their weak equivalences classes.
 
-  DFA construction
+  The high-level idea underlying Brzozowski's DFA construction algorithm is that the states of the DFA are the derivative equivalence classes, and the transitions are formed by taking derivatives. If the derivative of $w \lto g$ with respect to a character $c$ is weakly equivalent to $w' \lto g$ then there is a transition from the state representing $w \lto g$ to the state representing $w' \lto g$. These pieces of data form the transition table form our DFA.\ Lastly, we make the state representing $w \lto g$ accepting if the type $I \amp (w \lto g)$ is inhabited. If it is inhabited the state for $w \lto g$ will have an $I$ as a summand, otherwise it will not. To represent this acceptance formally in our construction, use the function symbol $\mathsf{ac}(w) : 0 \oplus I$ to be $I$ if $w \lto g$ is inhabited and 0 otherwise. Similarly, $\mathsf{ac}(I)$ will represent the acceptance of the start state.
 
-  $DFA(g) \vdash g$ : just fold over the defs in $DFA(g)$ and have every $Y_{w}$ eliminate to $w \lto g$. This is doable bc when eliminating $Y_{w'}$ you will hold terms of type $a \otimes (w \lto g)$. These $w \lto g$ terms might not be exactly what you want, but they are weakly equivalent to some derivative that you do want! How do you know that they're weakly equivalent? if $Y_{w'}$ transitions to $Y_{w}$ via character $a$, then we know that $a \lto (w \lto g)$ is weakly equivalent to $a \lto (w' \lto g)$ \emph{by construction of the DFA}. This argument entirely hinges on the method by which we defined the DFA
+  We may precompute all this info and then construct the DFA by introducing states labeled $Y_{j}$ for each representative $w \in \{w_{1}, \dots, w_{n}\}$. Letting $j$ range in $\{s, 1, \dots, n\}$ and taking $w_{s} = I$ we can describe all states of the DFA with a similar structure.
 
-  $g \vdash DFA(g)$
-  Idea is to us $\top \cong \text{Char}^{*}$ and $A^{*} \cong \Sigma(n) A^{\otimes n}$ and $A \cong \top \amp A$ to turn a parse into a pair of a parse and a finite string. And then this finite string can be walked through the DFA to read off the parse, and you can show its accepting. Details currently a little shaky, and encapsulated in a bad picture of a whiteboard. \steven{Gonna has this out with Max in meeting}
+  \[
+  DFA(g) =
+  \mu \begin{pmatrix}
+        Y_{j} = \mathsf{ac}(w_{j}) \oplus \bigoplus_{c} c \otimes Y_{n_{j,c}} \\
+  \end{pmatrix}.Y_{s}
+\]
+
+Note that by construction the target state of each transition, $Y_{n_{j,c}}$, is such that $c \lto (w_{j} \lto g)$ is weakly equivalent to $w_{n_{j, c}} \lto g$.
+
+To turn a term of type $DFA(g)$ into a term of type $g$, we simply fold over the definitions of $DFA(g)$. Again, the structure of such a derivation,
+
+\[
+  \inferrule
+  {
+    \Gamma ; \Delta \vdash e : DFA(g) = \mu(Y_{j} = \hat{Y}_{j}).Y_{s} \\
+    \Gamma ; x_{s} : \simulsubst {\mathsf{ac}(w_{j}) \oplus \bigoplus_{c} c \otimes Y_{n_{s,c}}} {\gamma} = \mathsf{ac}(w_{j}) \oplus \bigoplus_{c} c \otimes B_{n_{s,c}} \vdash e_{s} : B_{s} \\
+    \Gamma ;x_{j} : \simulsubst {\mathsf{ac}(w_{j}) \oplus \bigoplus_{c} c \otimes Y_{n_{j,c}}}{\gamma} = \mathsf{ac}(w_{j}) \oplus \bigoplus_{c} c \otimes B_{n_{j,c}} \vdash e_{j} : B_{j}
+  }
+  {\Gamma ; \Delta \vdash \mathsf{mfold}(x_{s}.e_{s}, x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{s}}
+\]
+
+When instantiating the above rule, we make each $B_{k} = w_{k} \lto g$. In this manner, $B_{s} = I \lto g = g$ which is our desired output type. Let us examine one of the entailments to see how this is achievable. From a term $x_{j} : \mathsf{ac}(w_{j}) \oplus \bigoplus_{c} c \otimes (w_{n_{j,c}} \lto g)$, we need to produce some $e_{j} : w_{j} \lto g$. Which we may do in the following manner,
+
+\begin{align*}
+    \begin{aligned}
+  e_{j} =
+    \phi(\textbf{case}~x_{j}~\{&  \textbf{in}_{\mathsf{ac}} u \mapsto \mathbf{in}_{I \amp (w_{j} \to g)} u, \\
+  & \textbf{in}_{c \otimes (w_{n_{j,c}} \lto g)} (v_{c} \otimes d_{j,c}) \mapsto \mathbf{in}_{c \otimes (w_{j} \lto g)}(v_{c} \otimes \alpha(d_{j,c}))
+  \})
+    \end{aligned}
+\end{align*}
+
+Where $\phi$ witnesses the isomorphism $g \cong (I \amp g) \oplus \bigoplus_{c} (c \otimes (c \lto g))$, and $\alpha$ is a function that acts a lookup table for replacing $d_{j,c} : w_{n_{j,c}} \lto g$ with an appropriate member of its weak equivalence class. In particular, when deriving $w_{j} \lto g$ we want $\alpha(d_{j,c}) : (w_{j} \otimes c) \lto g$. Finding such an element is indeed possible \emph{by construction of our DFA}. Recall that we added a transition between $Y_{j}$ and $Y_{n_{j,c}}$ exactly when $c \lto (w_{j} \lto g) = (w_{j} \otimes c) \lto g$ was weakly equivalent to $w_{n_{j,c}} \lto g$. That is, the multifold constructed above is well-defined, and will ultimately return a term of type $B_{s} = I \lto g = g$ so we do, in fact, have a derivation from $DFA(g)$ to $g$.
+
+Now we wish to build a derivation from $g$ to $DFA(g)$.
+\steven{fill in}
 \end{proof}
 
 \subsection{Indexed Automata}
@@ -1621,65 +1659,63 @@ Below we finish the proof of \cref{thm:thompson}.
 
   Given $e : NFA(g \oplus g')$,
 
-  \steven{There a weird spacing issues between these align envs. Maybe wrap these in a figure env so that spacing is better}
-
 \begin{align*}
   r_{\oplus}(s_{\oplus}(e))
   & =_{\mu \eta} r_{\oplus}(s_{\oplus}(\mathsf{cons}(e'))), \text{~where }e':\mu X_{s}' \oplus \mu Z_{s}' \\
   &
     \begin{aligned}
-      =_{\oplus \eta} r_{\oplus}(s_{\oplus}(\mathsf{cons}(\textbf{case}~e'~\{ & \\
-    \textbf{in}_{\mu X_{s}'} u \mapsto \textbf{in}_{\mu X_{s}'} u, & \\
-    \textbf{in}_{\mu Z_{s}'} v \mapsto \textbf{in}_{\mu Z_{s}'} v
+      =_{\oplus \eta} r_{\oplus}(s_{\oplus}(\mathsf{cons}(\textbf{case}~e'~\{
+    & \textbf{in}_{\mu X_{s}'} u \mapsto \textbf{in}_{\mu X_{s}'} u, \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto \textbf{in}_{\mu Z_{s}'} v
     \})))
     \end{aligned} \\
   &
     \begin{aligned}
     =_{\oplus \eta}
-    \textbf{case}~e'~\{ & \\
+    \textbf{case}~e'~\{
     & \textbf{in}_{\mu X_{s}'} u \mapsto r_{\oplus}(s_{\oplus}(\mathsf{cons}(\textbf{in}_{\mu X_{s}'} u))), \\
-    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(s_{\oplus}(\mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v))) \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(s_{\oplus}(\mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v)))
     \}))
     \end{aligned} \\
   &
     \begin{aligned}
     =
-    \textbf{case}~e'~\{ & \\
+    \textbf{case}~e'~\{
     & \textbf{in}_{\mu X_{s}'} u \mapsto r_{\oplus}(\mathsf{mfold}(\mathsf{cons}(\textbf{in}_{\mu X_{s}'} u))), \\
-    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(\mathsf{mfold}(\mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v))) \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(\mathsf{mfold}(\mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v)))
     \}
     \end{aligned} \\
   &
     \begin{aligned}
     =_{\mu \beta}
-    \textbf{case}~e'~\{ & \\
+    \textbf{case}~e'~\{
     & \textbf{in}_{\mu X_{s}'} u \mapsto r_{\oplus}(\textbf{in}_{g} \phi^{-1}(\mathsf{cons}_{\mu(X_{i}=\hat{X}_{i}).X_{s}}u')), \\
-    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(\textbf{in}_{g'} \psi^{-1}(\mathsf{cons}_{\mu(Z_{i}=\hat{Z}_{i}).Z_{s}}v')) \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto r_{\oplus}(\textbf{in}_{g'} \psi^{-1}(\mathsf{cons}_{\mu(Z_{i}=\hat{Z}_{i}).Z_{s}}v'))
       \} \\
       & \text{~for }u' : \mu X_{s}', v' : \mu Z_{s}'
     \end{aligned} \\
   &
     \begin{aligned}
     =_{\oplus \beta}
-    \textbf{case}~e'~\{ & \\
+    \textbf{case}~e'~\{
     & \textbf{in}_{\mu X_{s}'} u \mapsto \alpha \phi \phi^{-1}(\mathsf{cons}(u')), \\
-    & \textbf{in}_{\mu Z_{s}'} v \mapsto \beta \psi \psi^{-1}(\mathsf{cons}(v')) \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto \beta \psi \psi^{-1}(\mathsf{cons}(v'))
       \}
     \end{aligned} \\
   &
     \begin{aligned}
     =
-    \textbf{case}~e'~\{ & \\
+    \textbf{case}~e'~\{
     & \textbf{in}_{\mu X_{s}'} u \mapsto \alpha (\mathsf{cons}(u')), \\
-    & \textbf{in}_{\mu Z_{s}'} v \mapsto \beta (\mathsf{cons}(v')) \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto \beta (\mathsf{cons}(v'))
       \}
     \end{aligned} \\
    &
     \begin{aligned}
     =_{\mu \beta}
-    \textbf{case}~e'~\{ & \\
+    \textbf{case}~e'~\{
     & \textbf{in}_{\mu X_{s}'} u \mapsto \mathsf{cons}(\textbf{in}_{\mu X_{s}'} u) , \\
-    & \textbf{in}_{\mu Z_{s}'} v \mapsto \mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v) \\
+    & \textbf{in}_{\mu Z_{s}'} v \mapsto \mathsf{cons}(\textbf{in}_{\mu Z_{s}'} v)
       \}
     \end{aligned} \\
   & =_{\oplus \eta} \mathsf{cons}(e') \\
@@ -1688,45 +1724,44 @@ Below we finish the proof of \cref{thm:thompson}.
 
 Likewise for $p : g \oplus g'$,
 
-\steven{This first line is a weird alignment fix, touch up}
 \begin{align*}
   s_{\oplus}(r_{\oplus}(p))
   &
-  = s_{\oplus}(r_{\oplus}(p)) \\
-   & \begin{aligned}
     =_{\oplus \eta}
       \textbf{case}~p~\{
-    \textbf{in}_{g}p_{1} \mapsto s_{\oplus}(r_{\oplus}(\textbf{in}_{g}p_{1})), \\
-    \textbf{in}_{g'}p_{2} \mapsto s_{\oplus}(r_{\oplus}(\textbf{in}_{g'}p_{2})) \}
+    \begin{aligned} \\
+    & \textbf{in}_{g}p_{1} \mapsto s_{\oplus}(r_{\oplus}(\textbf{in}_{g}p_{1})), \\
+    & \textbf{in}_{g'}p_{2} \mapsto s_{\oplus}(r_{\oplus}(\textbf{in}_{g'}p_{2})) \}
     \end{aligned} \\
    & \begin{aligned}
     =_{\oplus \beta}
       \textbf{case}~p~\{
-    \textbf{in}_{g}p_{1} \mapsto s_{\oplus}(\alpha \phi p_{1}), \\
-    \textbf{in}_{g'}p_{2} \mapsto s_{\oplus}(\beta \psi p_{2}) \}
+    & \textbf{in}_{g}p_{1} \mapsto s_{\oplus}(\alpha \phi p_{1}), \\
+    & \textbf{in}_{g'}p_{2} \mapsto s_{\oplus}(\beta \psi p_{2}) \}
     \end{aligned} \\
    & \begin{aligned}
     =
       \textbf{case}~p~\{
-    \textbf{in}_{g}p_{1} \mapsto \mathsf{mfold}(\alpha \phi p_{1}), \\
-    \textbf{in}_{g'}p_{2} \mapsto \mathsf{mfold}(\beta \psi p_{2}) \}
+    & \textbf{in}_{g}p_{1} \mapsto \mathsf{mfold}(\alpha \phi p_{1}), \\
+    & \textbf{in}_{g'}p_{2} \mapsto \mathsf{mfold}(\beta \psi p_{2}) \}
     \end{aligned} \\
     & \begin{aligned}
     =_{\mu \beta}
       \textbf{case}~p~\{
-    \textbf{in}_{g}p_{1} \mapsto \textbf{in}_{g} (\phi^{-1} \phi p_{1}), \\
-    \textbf{in}_{g'}p_{2} \mapsto \textbf{in}_{g'}(\psi^{-1} \psi p_{2}) \}
+    & \textbf{in}_{g}p_{1} \mapsto \textbf{in}_{g} (\phi^{-1} \phi p_{1}), \\
+    & \textbf{in}_{g'}p_{2} \mapsto \textbf{in}_{g'}(\psi^{-1} \psi p_{2}) \}
     \end{aligned} \\
      & \begin{aligned}
     =
       \textbf{case}~p~\{
-    \textbf{in}_{g}p_{1} \mapsto \textbf{in}_{g} (p_{1}), \\
-    \textbf{in}_{g'}p_{2} \mapsto \textbf{in}_{g'}(p_{2}) \}
+    & \textbf{in}_{g}p_{1} \mapsto \textbf{in}_{g} (p_{1}), \\
+    & \textbf{in}_{g'}p_{2} \mapsto \textbf{in}_{g'}(p_{2}) \}
     \end{aligned} \\
   &
     =_{\oplus \eta} p
 \end{align*}
 
+Thus $s_{\oplus}$ and $r_{\oplus}$ form the isomorphism $NFA(g \oplus g') \cong g \oplus g'$.
 
 We now construct a combinator for the sequencing of two NFAs.
 
@@ -1739,7 +1774,7 @@ We now construct a combinator for the sequencing of two NFAs.
     Z_{j}' = \simulsubst {\hat{Z}_{j}} {\delta_{Z}}, j \neq e \\
     Z_{e}' = Y_{e} \\
     Y_{e} = I
-  \end{pmatrix}
+  \end{pmatrix}.Y_{s}
 \]
 
 Just as before, we use a multifold to define the map $s_{\otimes}$ from $NFA(g \otimes g')$ to $g \otimes g'$. Here the table of terms is as follows,
@@ -1748,42 +1783,85 @@ Just as before, we use a multifold to define the map $s_{\otimes}$ from $NFA(g \
   \item $y_{s}$ --- $\simulsubst {X_{s}'} \gamma = g \otimes g'$ and $p_{s} = y_{s} $
   \item $x_{s}'$ --- $\simulsubst {(\simulsubst {\hat{X}_{s}} {\delta_{X}})}{\gamma} = (\mu (X_{i}=\hat{X}_{i}).X_{s}) \otimes g' = NFA(g) \otimes g'$ and $p_{x,s} = \letin {u \otimes v} {x_{s}'} {\phi^{-1}(u) \otimes v} : g \otimes g'$
   \item $x_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{X}_{j}} {\delta_{X}})}{\gamma} = (\mu (X_{i}=\hat{X}_{i}).X_{j}) \otimes g'$ and $p_{x, j} = x_{j}' : (\mu (X_{i}=\hat{X}_{i}).X_{j}) \otimes g'$
-  \item $x_{e}'$ --- $\simulsubst {Z_{s}'}{\gamma} = g'$ and $p_{x,e} = x_{e}' : g'$
+  \item $x_{e}'$ --- $\simulsubst {Z_{s}'}{\gamma} = g' = I \otimes g'$ and $p_{x,e} = \letin {mt \otimes p_{g'}} {\mathsf{cons}(mt) \otimes p_{g'}} x_{e}' : (\mu (X_{i}=\hat{X}_{i}).X_{e}) \otimes g'$
   \item $z_{s}'$ --- $\simulsubst {(\simulsubst {\hat{Z}_{s}} {\delta_{Z}})}{\gamma} = \mu (Z_{i} = \hat{Z}_{i}).Z_{s} = NFA(g')$ and $p_{z,s} = \psi^{-1}(z_{s}') : g'$
   \item $z_{j}', j \not \in \{s, e\}$ --- $\simulsubst {(\simulsubst {\hat{Z}_{j}} {\delta_{Z}})}{\gamma} = \mu (Z_{i} = \hat{Z}_{i}).Z_{j}$ and $p_{z, j} = z_{j}' : \mu (Z_{i} = \hat{Z}_{i}).Z_{j}$
   \item $z_{e}'$ ---  $\simulsubst {Y_{e}}{\gamma} = I$ and $p_{z,e} = \mathsf{cons}(z_{e}') : \mu (Z_{i} = \hat{Z}_{i}).Z_{e} = I$
   \item $y_{e}$ --- $\simulsubst {I} {\gamma} = I$ and $p_{e} = y_{e} : I$
 \end{itemize}
 
-The map $r_{\otimes}$ in the other direction is given as,
+The map $r_{\otimes}$ in the other direction is given again in two steps. Like the disjunctive case, we give maps $\alpha$ and $\beta$. First, $\beta$,
+
+\[
+  \inferrule
+  {
+    \Gamma; \Delta \vdash e : NFA(g') = \mu(Z_{j} = \hat{Z}_{j}).Z_{s} \\
+    \Gamma; z_{s} : \simulsubst {Z_{s}} \gamma = \mu Z_{s}' \vdash z_{s} : \mu Z_{s}' \\
+    \Gamma; z_{j} : \simulsubst {Z_{j}} \gamma = \mu Z_{j}' \vdash z_{j} : \mu Z_{j}' \\
+    \Gamma; z_{e} : \simulsubst {Z_{e}} \gamma = I \vdash \mathsf{cons}_{Z_{e}'}(\mathsf{cons}_{Y_{e}}(z_{e})) : \mu Z_{e}'
+  }
+  {\Gamma ; \Delta \vdash \beta(e) := \mathsf{mfold}(z_{s}.z_{s},\dots,z_{e}.\mathsf{cons}_{Z_{e}'}(\mathsf{cons}_{Y_{e}}(z_{e})))(e) : \mu Z_{s}
+  }
+\]
+
+Note that even the rule $\alpha$ shown below doesn't strictly follow the syntax for an $\mathsf{mfold}$, it can actually be shown to be admissible\footnote{To do so, one could define a new automata-like fixed point where the end state of NFA(g) is replaced with a term of type $\mu Z_{s}$}. This presentation is more compact and to the point,
+
+\[
+  \inferrule
+  {
+    \Gamma; \Delta \vdash e : NFA(g) \otimes \mu Z_{s}' = \mu(X_{j} = \hat{X}_{j}).X_{s} \otimes \mu Z_{s}' \\
+    \Gamma; x_{s} : \simulsubst {X_{s}} \gamma = \mu X_{s}' \vdash x_{s} : \mu X_{s}' \\
+    \Gamma; x_{j} : \simulsubst {X_{j}} \gamma = \mu X_{j}' \vdash x_{j} : \mu X_{j}' \\
+    \Gamma; x_{e} : \simulsubst {X_{e}} \gamma = I \otimes \mu Z_{s}' = \mu Z_{s}' \vdash \mathsf{cons}(x_{e}) : \mu X_{e}'
+  }
+  {
+    \Gamma ; \Delta \vdash \alpha(e) := \mathsf{mfold}(x_{s}.x_{s},x_{1}.x_{1},\dots,x_{e}.\mathsf{cons}(x_{e}))(e) : \mu X_{s}'
+  }
+\]
+
+We then leverage these $\alpha$ and $\beta$ to build $r_{\otimes}$,
 
 \[
   \inferrule{
     p : g \otimes g' \vdash p : g \otimes g' \\
-    p_{1} : g, p_{2} : g' \vdash \mathsf{cons}(\phi(p_{1}), \psi(p_{2})) : NFA(g \otimes g')}
-  {p : g \otimes g' \vdash \letin {p_{1} \otimes p_{2}} {p} {\mathsf{cons}(\phi(p_{1}), \psi(p_{2}))} : NFA(g \otimes g')}
+    p_{1} : g, p_{2} : g' \vdash \mathsf{cons}(\alpha(\phi(p_{1}) \otimes \beta(\psi(p_{2})))) : NFA(g \otimes g')}
+  {p : g \otimes g' \vdash \letin {p_{1} \otimes p_{2}} {p} {\mathsf{cons}(\alpha(\phi(p_{1}) \otimes \beta(\psi(p_{2}))))} : NFA(g \otimes g')}
 \]
 
-We show that $r_{\otimes}$ and $s_{\otimes}$ form an isomorhic pair,
-\steven{This proof doesn't exactly work}
+We now show that $s_{\otimes}$ and $r_{\otimes}$ form an isomorphism.
+
+\steven{This proof is a little sketchy. I'm not sure how to best write that the terms with $m$ and $n$ arise via functorial action by the term in the third equality. Moreover, I'm not sure that this third equality term is the right one}
 
 \begin{align*}
 r_{\otimes}(s_{\otimes}(e))
-  & =_{\mu \eta} r_{\otimes}(s_{\otimes}(\mathsf{cons}_{\mu X_{s}'}(e'))) \\
-  & = r_{\otimes}(\mathsf{mfold}(\mathsf{cons}_{\mu X_{s}'}(e'))) \\
-  & =_{\mu \beta} r_{\otimes}(\phi^{-1}(u) \otimes \psi^{-1}(v)) \\
-  & =_{\mu \beta} \mathsf{cons}(\phi \phi^{-1} u, \psi \psi^{-1} v) \\
+  & =_{\mu \eta} r_{\otimes}(s_{\otimes}(\mathsf{cons}(e'))) \\
+  & = r_{\otimes}(\mathsf{mfold}(\mathsf{cons}(\mathsf{mfold}(y_{s}.y_{s},\dots,y_{e}.y_{e})(e)))) \\
+  &
+    \begin{aligned}
+    =_{\mu \beta}
+    r_{\otimes} (
+    & (\letin {u \otimes v} {x_{s}'} {\phi^{-1}(u) \otimes v}) \\
+    & (\mathsf{mfold}(y_{s}.y_{s},\dots,y_{e}.y_{e})(e)))
+    \end{aligned}
+     \\
+  & = r_{\otimes}(\phi^{-1}(m) \otimes \psi^{-1}(n)) \\
+  & = \mathsf{cons}(\alpha(\phi \phi^{-1} m \otimes \beta(\psi \psi^{-1} n))) \\
+  & = \mathsf{cons}(\alpha(m \otimes \beta(n))) \\
+  & = \mathsf{cons}(\mathsf{mfold}(x_{s}.x_{s}, \dots, x_{e} . \mathsf{cons}(x_{e}))(m \otimes \beta (n))) \\
+  & = \mathsf{cons}(\mathsf{mfold}(y_{s}.y_{s}, \dots, y_{e} . y_{e})(e)) \\
   & =_{\mu \eta} e
 \end{align*}
 
 \begin{align*}
   s_{\otimes}(r_{\otimes}(p))
   & =_{\otimes \eta} s_{\otimes}(r_{\otimes}(p_{g} \otimes p_{g'})) \\
-  & = s_{\otimes}(\mathsf{cons}(\phi p_{g}, \psi p_{g'})) \\
+  & = s_{\otimes}(\mathsf{cons}(\alpha(\phi p_{g} \otimes \beta(\psi p_{g'}))) \\
   & =_{\mu \beta} \phi^{-1}\phi p_{g} \otimes \psi^{-1} \psi p_{g'} \\
   & = p_{g} \otimes p_{g'} \\
   & =_{\otimes \eta} p
 \end{align*}
+
+Thus $s_{\otimes}$ and $r_{\otimes}$ form the isomorphism $NFA(g \otimes g') \cong g \otimes g'$.
 
 Finally, we build an automata combinator to represent the Kleene star\footnote{Which is another admissible definition via use of the fixed point constructor}.
 
