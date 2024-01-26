@@ -17,6 +17,7 @@
 \newcommand{\Type}{\mathbf{Type}}
 \newcommand{\Prop}{\mathbf{Prop}}
 \newcommand{\Bool}{\mathbf{Bool}}
+\newcommand{\nat}{\mathbb{N}}
 
 \newcommand{\gluedNL}{{\mathcal G}_S}
 \newcommand{\gluedNLUniv}{{\mathcal G}_{S,i}}
@@ -262,16 +263,16 @@ in Figure~\ref{fig:axioms}.
     1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
      b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
   \end{align*}
-  \label{fig:axioms}
   \caption{Kleene algebra axioms}
+  \label{fig:axioms}
 \end{figure}
 
 The addition operation can be used to define the partial order
-structure $a \leq b$ if $a + b = b$. In the theory of formal languages
-this order structure can be used to model language containment. In this
-section, we want to categorify the concept of Kleene algebra and
-build on top of it in order to define an abstract theory of parsing.
-We start by defining \emph{Kleene categories}.
+structure $a \leq b$ if, and only if, $a + b = b$. In the theory of
+formal languages, this order structure can be used to model language
+containment. In this section, we want to categorify the concept of
+Kleene algebra and build on top of it in order to define an abstract
+theory of parsing.  We start by defining \emph{Kleene categories}.
 
 \begin{definition}
   A Kleene category is a distributive monoidal category $\cat{K}$
@@ -289,7 +290,16 @@ Kleene categories.
   Every Kleene algebra, seen a posetal category, is a Kleene category.
 \end{example}
 
-An unexpected example comes from the theory of substructural logics.
+This example illustrates how restricted Kleene algebras are in terms
+of reasoning about languages. By only having at most one morphism
+between objects, there is not a lot of information they can convey. In
+this case, the only information you get is language containment. We
+will see throughout this paper how the extra degrees of freedom
+granted by having more morphisms give you more algebraic structure for
+reasoning about languages.
+
+For the next example, we see an unexpected connection with the theory
+of substructural logics.
 
 \begin{example}
   The opposite category of every Kleene category is a model of a variant of
@@ -420,17 +430,29 @@ that it can handle more classes of languages beyond regular ones.
 
 \paragraph{Beyond Simple Types}
 
-Though Kleene categories are expressive enough to reason about concepts
-that are outside of reach of Kleene algebras, their simply-typed nature
-makes them not so expressive from a type theory point of view.
+Though Kleene categories are expressive enough to reason about
+concepts that are outside of reach of Kleene algebras, their
+simply-typed nature makes them not so expressive from a type theory
+point of view. This is limiting because type theories are tested
+syntactic frameworks for manipulating complicated categories
+structures while avoiding some issues common in category theory, such
+as coherence issues.
 
-Since we are interested in design a type theory for reasoning about various
-properties of parsers, we will assume that our Kleene category is defined
-internal to a model of linear depedendently typed theory, which leads us
-to the notion of models we are interested in:
+With this in mind, we want to design a dependent type theory that
+builds on top of Kleene categories with the goal of internalizing
+various reasoning principles for languages and their parsers. This
+leads us to the abstract notion of model we are interested in
+capturing with our type theory.
 
 \begin{definition}
-  A model is a locally Cartesian category with \pedro{add the linear logic connectives here} equipped with an internal Kleene category.
+  A model is a locally Cartesian category with two hierarchies of
+  universes $\{L_i\}_{i\in \nat}$ and $\{U_i\}_{i\in \nat}$ such that
+  every $L_i$ and $U_i$ are $U_{i+1}$-small. Furthermore, we require
+  $U_i$ to be closed under dependent products and sum,
+  $L_i$ to be closed under the Kleene category connectives, 
+  dependent products, left and right closed structures, with
+  a type constructor $G : L_i \to U_i$ and a linear dependent sum
+  going the other direction.
 \end{definition}
 
 \begin{theorem}
@@ -566,11 +588,15 @@ grammar, $\Delta\pipe \Gamma \vdash p : G$ parse term.
 %
     \\
 %
+    \inferrule{\Gamma \vdash X : U_i \quad \{\Gamma \vdash e_i : X\}_i}{\Gamma \vdash e_1 =_X e_2 : U_i}
+    %
+    \and
+    %
     \inferrule{~}{\Gamma \vdash \top : L_i}
 %
     \and
 %
-    \inferrule{\Gamma \vdash A : L_i \\ \Gamma \vdash B : L_i}{\Gamma \vdash A \amp B : L_i}
+    \inferrule{\Gamma \vdash A : L_i \quad \Gamma \vdash B : L_i}{\Gamma \vdash A \amp B : L_i}
 %
     \\
     %
@@ -988,13 +1014,13 @@ expression relies on additional axioms to the type theory.\max{axioms
 
 
 \begin{align*}
-  c\tol c &\equiv I\\
-  c\tol d &\equiv 0\\
-  c\tol I &\equiv 0\\
-  c\tol 0 &\equiv 0\\
-  c\tol (A \otimes B) &\equiv (c\tol A) \otimes B + \nu(A) \otimes (c\tol B)\\
-  c\tol A^* &\equiv (c\tol A) \otimes A^*\\
-  c\tol (A + B) &\equiv (c\tol A) + (c\tol B)
+  c\lto c &\equiv I\\
+  c\lto d &\equiv 0\\
+  c\lto I &\equiv 0\\
+  c\lto 0 &\equiv 0\\
+  c\lto (A \otimes B) &\equiv (c\lto A) \otimes B + \nu(A) \otimes (c\lto B)\\
+  c\lto A^* &\equiv (c\lto A) \otimes A^*\\
+  c\lto (A + B) &\equiv (c\lto A) + (c\lto B)
 \end{align*}
 
 \pedro{The type family $\nu$ above is equal to $I$ if its argument
