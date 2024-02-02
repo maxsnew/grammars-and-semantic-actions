@@ -21,6 +21,8 @@ open import Cubical.Reflection.Base
 open import Cubical.Reflection.RecordEquiv
 open import Cubical.Data.Sigma
 
+open import Cubical.Tactics.Reflection
+
 private
   variable ℓ ℓ' : Level
 
@@ -79,8 +81,10 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   (g ⊕ g') w = (g w .fst ⊎ g' w .fst) ,
     isSet⊎ (g w .snd) (g' w .snd)
 
-  -- KL*gg : Grammar → Grammar
-  -- KL*gg g = ILin ⊕ (g ⊗ (KL*gg g))
+  {-# TERMINATING #-}
+  KL*gg : Grammar → Grammar
+  KL*gg g = ILin ⊕ (g ⊗ (KL*gg g))
+  -- KL*gg g w = (ILin w .fst) ⊎ (Σ[ s ∈ Splitting w ] g (s .fst .fst) .fst × (KL*gg g (s .fst .snd) .fst)) , {!!}
 
   data KL*Ty (g : Grammar) (w : String) : Type ℓ where
     nil : ILin w .fst → (KL*Ty g w)
@@ -94,15 +98,25 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
 
 
   data NFA₀ (c : Σ₀ .fst) (w : String) (state : Fin 2) : Type (ℓ-suc ℓ)
-  data NFA⊗ (g g' : Grammar) (w : String) : Type (ℓ-suc ℓ)
-  data NFA (g : Grammar) (w : String) : Type (ℓ-suc ℓ)
+  -- data NFA⊗ (g g' : Grammar) (w : String) : Type (ℓ-suc ℓ)
+  -- data NFA (g : Grammar) (w : String) : Type (ℓ-suc ℓ)
   data NFA₀ c w s where
     start : (literal c) w .fst → NFA₀ c ([]) (fsuc fzero) → NFA₀ c w s
-    end : s ≡ fsuc fzero → NFA₀ c w s
-  data NFA⊗ g g' w where
-  data NFA g w where
-    times : Σ[ (g₁ , g₂) ∈ Grammar × Grammar ] ((g ≡ g₁ ⊗ g₂) × NFA⊗ g₁ g₂ w) → NFA g w
-    lit : Σ[ c ∈ Σ₀ .fst ] ((g ≡ literal c) × NFA₀ c w fzero) → NFA g w
+    end : NFA₀ c w s
+  -- data NFA⊗ g g' w where
+  -- data NFA g w where
+    -- times : Σ[ (g₁ , g₂) ∈ Grammar × Grammar ] ((g ≡ g₁ ⊗ g₂) × NFA⊗ g₁ g₂ w) → NFA g w
+    -- lit : Σ[ c ∈ Σ₀ .fst ] ((g ≡ literal c) × NFA₀ c w fzero) → NFA g w
+
+  data NFAαStart (c : Σ₀ .fst) (w : String) : Type (ℓ-suc ℓ)
+  data NFAαEnd (c : Σ₀ .fst) (w : String) : Type (ℓ-suc ℓ)
+
+  data NFAαStart c w where
+    st : (literal c) w .fst → NFAαEnd c ([]) → NFAαStart c w
+  data NFAαEnd c w where
+    end : NFAαEnd c w
+
+
 
 module _ where
   data αβ : Set ℓ-zero where
@@ -127,7 +141,40 @@ module _ where
              (((([ α ] , [ β ]) , refl) , (refl , refl)) , (nil refl))))) ,
       refl
 
+  p' : ((KL*gg (literal α ⊗ literal β)) ⊗ literal α) w .fst
+  p' =
+    (((α ∷ β ∷ α ∷ β ∷ []) , (α ∷ [])) , refl) ,
+    inr (
+      ((((α ∷ β ∷ [])) , ((α ∷ β ∷ []))) , refl) ,
+      (((([ α ] , [ β ]) , refl) , (refl , refl)) ,
+        (inr
+          ((((α ∷ β ∷ []) , []) , refl) ,
+            (((([ α ] , [ β ]) , refl) , (refl , refl)) ,
+          inl refl))
+        )
+      )
+    ) ,
+    refl
+
   w' = α ∷ []
 
-  pnfa : NFA₀ α w' (fsuc fzero)
-  pnfa = start refl (end refl)
+  -- pnfa : NFA₀ α w' (fsuc fzero)
+  -- pnfa = start refl (end refl)
+
+  pα : (literal α) w' .fst
+  pα = refl
+
+  open Iso
+
+  nfaα-iso-to-α : (word : String) → Iso (NFAαStart α word) (literal α word .fst)
+  fun (nfaα-iso-to-α word) (st lit end) = lit
+  inv (nfaα-iso-to-α word) lit = st lit (end)
+  rightInv (nfaα-iso-to-α word) _ = refl
+  leftInv (nfaα-iso-to-α word) (st lit end) = cong (λ x → st lit x) refl
+
+  -- NFA₀-iso : (word : String) → Iso (NFA₀ α word (fzero)) (literal α word .fst)
+  -- fun (NFA₀-iso word) (start a b c) = b
+  -- fun (NFA₀-iso word) (end b) = {!!}
+  -- inv (NFA₀-iso word) = {!!}
+  -- rightInv (NFA₀-iso word) = {!!}
+  -- leftInv (NFA₀-iso word) = {!!}

@@ -32,7 +32,7 @@ x ∈ xs = Any (λ y → x ≡ y) xs
 Sig₀ : (ℓ : Level) → Type (ℓ-suc ℓ)
 Sig₀ ℓ = hGroupoid ℓ
 
-module Syntax ℓ (Σ₀ : Sig₀ ℓ-zero) where
+module Syntax (Σ₀ : Sig₀ ℓ-zero) where
   record IntuitCtx {L : Level} : Type (ℓ-suc L) where
     field
       intuit-var : Type
@@ -42,14 +42,14 @@ module Syntax ℓ (Σ₀ : Sig₀ ℓ-zero) where
     intuitVarFinSet : FinSet ℓ-zero
     intuitVarFinSet = intuit-var , isFinSetIntuitVar
 
-    liftCtx : {L' : Level} → IntuitCtx {L'}
-    intuit-var (liftCtx) = Lift intuit-var
-    isFinSetIntuitVar (liftCtx) = {!!}
-    el (liftCtx) = {!!}
+    -- liftCtx : {L' : Level} → IntuitCtx {L'}
+    -- intuit-var (liftCtx) = Lift intuit-var
+    -- isFinSetIntuitVar (liftCtx) = {!!}
+    -- el (liftCtx) = {!!}
 
   open IntuitCtx
 
-  empty-intuit-ctx : IntuitCtx {ℓ}
+  empty-intuit-ctx : {L : Level} → IntuitCtx {L}
   empty-intuit-ctx .intuit-var = ⊥
   empty-intuit-ctx .isFinSetIntuitVar = isFinSetFin
   empty-intuit-ctx .el = λ ()
@@ -66,9 +66,11 @@ module Syntax ℓ (Σ₀ : Sig₀ ℓ-zero) where
   append-intuit-ctx {L}{L'} Γ Δ .el (inr x₂) = Lift {_}{ℓ-max L L'}(Δ .el x₂)
 
   data Grammar  {L : Level} {Γ : IntuitCtx {L}} : Type L
+  data StrictlyPositiveGrammar {L : Level} {Γ : IntuitCtx {L}} : Type L
 
   data Grammar {L}{Γ} where
     ILin : Grammar {L}{Γ}
+    -- Var : Γ .intuit-var → Grammar {L}{Γ}
     _⊗_ : Grammar {L}{Γ} → Grammar {L}{Γ} → Grammar {L}{Γ}
     _⊕_ : Grammar {L}{Γ} → Grammar {L}{Γ} → Grammar {L}{Γ}
     literal : Σ₀ .fst → Grammar {L}{Γ}
@@ -79,10 +81,39 @@ module Syntax ℓ (Σ₀ : Sig₀ ℓ-zero) where
     ⊤Lin : Grammar {L}{Γ}
     _&_ : Grammar {L}{Γ} → Grammar {L}{Γ} → Grammar {L}{Γ}
     KL* : Grammar {L}{Γ} → Grammar {L}{Γ}
-    μ : Grammar {L}{append-intuit-ctx Γ (singleton-intuit-ctx {L} (Grammar {L}{Γ}))} → Grammar {L}{Γ}
+    μ : (X : StrictlyPositiveGrammar {L}{Γ}) → StrictlyPositiveGrammar
+          {L}{append-intuit-ctx Γ (singleton-intuit-ctx {L} (Grammar {L}{Γ}))} →
+        Grammar {L}{Γ}
+  data StrictlyPositiveGrammar {L}{Γ} where
+    ILin : StrictlyPositiveGrammar {L}{Γ}
+    _⊗_ : StrictlyPositiveGrammar {L}{Γ} → StrictlyPositiveGrammar {L}{Γ} → StrictlyPositiveGrammar {L}{Γ}
+    _⊕_ : StrictlyPositiveGrammar {L}{Γ} → StrictlyPositiveGrammar {L}{Γ} → StrictlyPositiveGrammar {L}{Γ}
+    literal : Σ₀ .fst → StrictlyPositiveGrammar {L}{Γ}
+    -- μ : (X : StrictlyPositiveGrammar {L}{Γ}) → StrictlyPositiveGrammar
+          -- {L}{append-intuit-ctx Γ (singleton-intuit-ctx {L} (StrictlyPositiveGrammar {L}{Γ}))}
+      -- → StrictlyPositiveGrammar {L}{Γ}
 
-  -- KL*μ : ∀ {L}{Γ} → Grammar {L}{Γ} → Grammar {L}{Γ}
-  -- KL*μ {L}{Γ} g = μ (ILin ⊕ (g ⊗ (KL*μ g)))
+  inj-on-ctx : ∀ {L}{Γ}{Γ'} → Grammar {L}{Γ} → Grammar {L}{append-intuit-ctx {L}{L} Γ Γ'}
+  inj-on-ctx {L} {Γ} {Γ'} g = {!!}
+
+  strict-inj-on-ctx : ∀ {L}{Γ}{Γ'} → StrictlyPositiveGrammar {L}{Γ} → StrictlyPositiveGrammar {L}{append-intuit-ctx {L}{L} Γ Γ'}
+  strict-inj-on-ctx {L} {Γ} {Γ'} g = {!!}
+
+  Strict→Grammar : {L : Level}{Γ : IntuitCtx {L}} → StrictlyPositiveGrammar {L}{Γ} → Grammar {L}{Γ}
+  Strict→Grammar ILin = ILin
+  Strict→Grammar (g₁ ⊗ g₂) = Strict→Grammar g₁ ⊗ Strict→Grammar g₂
+  Strict→Grammar (g₁ ⊕ g₂) = Strict→Grammar g₁ ⊕ Strict→Grammar g₂
+  Strict→Grammar (literal x) = literal x
+  -- Strict→Grammar {L}{Γ} (μ X g) = μ X ?
+
+  evalμ : {L : Level}{Γ : IntuitCtx {L}} → Grammar {L}{Γ} → Grammar {L}{Γ}
+  evalμ {L} {Γ} (μ X g) = {!x!}
+  evalμ {L} {Γ} x = x
+
+  -- {-# TERMINATING #-}
+  KL*μ : ∀ {L}{Γ}{X} → StrictlyPositiveGrammar {L}{Γ} → Grammar {L}{Γ}
+  KL*μ {L}{Γ}{X} g =
+    μ X (ILin ⊕ (strict-inj-on-ctx (g ⊗ X)))
 
   LinCtx : {L : Level}(Γ : IntuitCtx {L}) → Type L
   LinCtx {L} Γ = List (Grammar {L}{Γ})
@@ -156,9 +187,9 @@ module Syntax ℓ (Σ₀ : Sig₀ ℓ-zero) where
         (e : mkCtx Γ Δ ⊢ (g & g')) →
         (mkCtx Γ Δ ⊢ g')
 
-    μ-intro : ∀ {Γ : IntuitCtx} {g : Grammar} {Δ : LinCtx Γ} →
-        (e : mkCtx Γ Δ ⊢ (μ g)) →
-        (mkCtx Γ Δ ⊢ (μ g))
+    -- μ-intro : ∀ {Γ : IntuitCtx} {g : Grammar} {Δ : LinCtx Γ} →
+        -- (e : mkCtx Γ Δ ⊢ (μ g)) →
+        -- (mkCtx Γ Δ ⊢ (μ g))
     -- μ-elim : {!!}
 
     KL*-empty : ∀ {Γ : IntuitCtx} {g : Grammar} {Δ : LinCtx Γ} →
@@ -204,8 +235,8 @@ module _ where
   isSetαβ : isSet αβ
   isSetαβ = {!!}
 
-  open Syntax ℓ-zero (αβ , isSet→isGroupoid isSetαβ)
-  int : IntuitCtx
+  open Syntax (αβ , isSet→isGroupoid isSetαβ)
+  int : IntuitCtx {ℓ-zero}
   int = empty-intuit-ctx
 
   testLinCtx : LinCtx int
@@ -223,3 +254,9 @@ module _ where
         (KL*-cons (
           (⊗-intro {Δ = [ literal a ] ++ [ literal b ]} identity identity))
         (KL*-empty I-intro))) (identity)
+
+  -- testμ : mkCtx int testLinCtx ⊢ ((KL*μ (literal a ⊗ literal b)) ⊗ literal a)
+  -- testμ =
+    -- ⊗-intro {Δ = testLinCtx}
+     -- {!!}
+     -- identity
