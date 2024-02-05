@@ -106,9 +106,9 @@ module Syntax (Σ₀ : Sig₀ ℓ-zero) where
   Strict→Grammar (literal x) = literal x
   -- Strict→Grammar {L}{Γ} (μ X g) = μ X ?
 
-  evalμ : {L : Level}{Γ : IntuitCtx {L}} → Grammar {L}{Γ} → Grammar {L}{Γ}
-  evalμ {L} {Γ} (μ X g) = {!x!}
-  evalμ {L} {Γ} x = x
+  -- evalμ : {L : Level}{Γ : IntuitCtx {L}} → Grammar {L}{Γ} → Grammar {L}{Γ}
+  -- evalμ {L} {Γ} (μ X g) = {!x!}
+  -- evalμ {L} {Γ} x = x
 
   -- {-# TERMINATING #-}
   KL*μ : ∀ {L}{Γ}{X} → StrictlyPositiveGrammar {L}{Γ} → Grammar {L}{Γ}
