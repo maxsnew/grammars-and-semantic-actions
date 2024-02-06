@@ -33,6 +33,8 @@ Sig₀ : (ℓ : Level) → Type (ℓ-suc ℓ)
 Sig₀ ℓ = hGroupoid ℓ
 
 module Syntax (Σ₀ : Sig₀ ℓ-zero) where
+  -- TODO order these for dependency
+  -- shallowly embed intuitionstic contexts, deeply embed linear contexts
   record IntuitCtx {L : Level} : Type (ℓ-suc L) where
     field
       intuit-var : Type
@@ -84,6 +86,11 @@ module Syntax (Σ₀ : Sig₀ ℓ-zero) where
     μ : (X : StrictlyPositiveGrammar {L}{Γ}) → StrictlyPositiveGrammar
           {L}{append-intuit-ctx Γ (singleton-intuit-ctx {L} (Grammar {L}{Γ}))} →
         Grammar {L}{Γ}
+        -- μ X . A
+        -- A{μ X . A / X} what is a subst here?
+        -- Γ ⊢ A : LinTy, X ∈ Γ
+        -- steal substs from Max
+        -- connor mcbride green slime? intro/elim
   data StrictlyPositiveGrammar {L}{Γ} where
     ILin : StrictlyPositiveGrammar {L}{Γ}
     _⊗_ : StrictlyPositiveGrammar {L}{Γ} → StrictlyPositiveGrammar {L}{Γ} → StrictlyPositiveGrammar {L}{Γ}
@@ -190,6 +197,11 @@ module Syntax (Σ₀ : Sig₀ ℓ-zero) where
     -- μ-intro : ∀ {Γ : IntuitCtx} {g : Grammar} {Δ : LinCtx Γ} →
         -- (e : mkCtx Γ Δ ⊢ (μ g)) →
         -- (mkCtx Γ Δ ⊢ (μ g))
+        --
+        -- A{μX.A} ≡ Y
+        -- e : Y
+        -- -------
+        -- cons e : μX.A
     -- μ-elim : {!!}
 
     KL*-empty : ∀ {Γ : IntuitCtx} {g : Grammar} {Δ : LinCtx Γ} →

@@ -57,9 +57,11 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   literal c w = ([ c ] ≡ w) , isGroupoidString ([ c ]) w
 
   _-⊗_ : Grammar → Grammar → Grammar
-  (g -⊗ g') w = (Σ[ w' ∈ String ] g w .fst × g' (w' ++ w) .fst) ,
-    isSetΣ isSetString λ w' → isSet× (g w .snd) (g' (w' ++ w) .snd)
+  (g -⊗ g') w = {!!}
+  -- ( ∀ ( w' : String ) → g w' .fst × g' (w' ++ w) .fst) ,
+    -- isSetΣ isSetString λ w' → isSet× (g w' .snd) (g' (w' ++ w) .snd)
 
+  -- TODO
   _⊗-_ : Grammar → Grammar → Grammar
   (g ⊗- g') w = (Σ[ w' ∈ String ] g (w ++ w') .fst × g' w .fst) ,
     isSetΣ isSetString λ w' → isSet× (g (w ++ w') .snd) (g' w .snd)
@@ -81,10 +83,17 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   (g ⊕ g') w = (g w .fst ⊎ g' w .fst) ,
     isSet⊎ (g w .snd) (g' w .snd)
 
+  --TODO bot
+
   {-# TERMINATING #-}
   KL*gg : Grammar → Grammar
   KL*gg g = ILin ⊕ (g ⊗ (KL*gg g))
   -- KL*gg g w = (ILin w .fst) ⊎ (Σ[ s ∈ Splitting w ] g (s .fst .fst) .fst × (KL*gg g (s .fst .snd) .fst)) , {!!}
+
+  -- TODO exponential
+
+  ParseTransformer : Grammar → Grammar → Type ℓ
+  ParseTransformer g g' = ∀ {w} → g w .fst → g' w .fst
 
   data KL*Ty (g : Grammar) (w : String) : Type ℓ where
     nil : ILin w .fst → (KL*Ty g w)
@@ -97,16 +106,13 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   KL* g w = (KL*Ty g w , isSetKL*Ty g w)
 
 
-  data NFA₀ (c : Σ₀ .fst) (w : String) (state : Fin 2) : Type (ℓ-suc ℓ)
-  -- data NFA⊗ (g g' : Grammar) (w : String) : Type (ℓ-suc ℓ)
-  -- data NFA (g : Grammar) (w : String) : Type (ℓ-suc ℓ)
-  data NFA₀ c w s where
-    start : (literal c) w .fst → NFA₀ c ([]) (fsuc fzero) → NFA₀ c w s
-    end : NFA₀ c w s
-  -- data NFA⊗ g g' w where
-  -- data NFA g w where
-    -- times : Σ[ (g₁ , g₂) ∈ Grammar × Grammar ] ((g ≡ g₁ ⊗ g₂) × NFA⊗ g₁ g₂ w) → NFA g w
-    -- lit : Σ[ c ∈ Σ₀ .fst ] ((g ≡ literal c) × NFA₀ c w fzero) → NFA g w
+  -- TODO FinSet instead of Fin 2
+  -- matrix, δ transition function presentation
+  data NFA₀ (c : Σ₀ .fst) : (state : Fin 2) → (w : String) → Type (ℓ-suc ℓ)
+  data NFA₀ c where
+    nil : NFA₀ c (fsuc fzero) []
+    cons : ∀ {w'} → (literal c) (c ∷ w') .fst → NFA₀ c (fsuc fzero) w' → NFA₀ c fzero (c ∷ w')
+
 
   data NFAαStart (c : Σ₀ .fst) (w : String) : Type (ℓ-suc ℓ)
   data NFAαEnd (c : Σ₀ .fst) (w : String) : Type (ℓ-suc ℓ)
@@ -115,7 +121,6 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
     st : (literal c) w .fst → NFAαEnd c ([]) → NFAαStart c w
   data NFAαEnd c w where
     end : NFAαEnd c w
-
 
 
 module _ where
