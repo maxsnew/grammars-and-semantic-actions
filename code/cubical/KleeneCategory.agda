@@ -55,8 +55,44 @@ module _ {ℓ ℓ' ℓS : Level}
         (bincoprod b x .binCoprodInj₂)
         .snd (id , (⋆IdR _) , (⋆IdR _))
       )
-  F-seq (coprodWith b) {x}{y}{z} f g = {!!}
-
+  F-seq (coprodWith b) {x} {y} {z} f g =
+    cong fst
+      (bincoprod b x .univProp
+        (bincoprod b z .binCoprodInj₁)
+        (f ⋆⟨ C ⟩ g ⋆⟨ C ⟩ bincoprod b z .binCoprodInj₂) .snd
+        (seq' C (F-hom (coprodWith b) f) (F-hom (coprodWith b) g) ,
+          (sym (⋆Assoc _ _ _) ∙
+           cong
+           (λ h → h ⋆⟨ C ⟩
+             bincoprod b y .univProp
+               (bincoprod b z .binCoprodInj₁)
+               (g ⋆⟨ C ⟩ bincoprod b z .binCoprodInj₂) .fst .fst)
+             (bincoprod b x .univProp
+               (bincoprod b y .binCoprodInj₁)
+               (seq' C f (bincoprod b y .binCoprodInj₂)) .fst .snd .fst) ∙
+           bincoprod b y .univProp
+             (bincoprod b z .binCoprodInj₁)
+             (seq' C g (bincoprod b z .binCoprodInj₂)) .fst .snd .fst
+           ,
+          (
+          sym (⋆Assoc _ _ _) ∙
+           cong (λ h → h ⋆⟨ C ⟩
+             bincoprod b y .univProp
+               (bincoprod b z .binCoprodInj₁)
+               (g ⋆⟨ C ⟩ bincoprod b z .binCoprodInj₂) .fst .fst)
+               (bincoprod b x .univProp
+                 (bincoprod b y .binCoprodInj₁)
+                 (seq' C f (bincoprod b y .binCoprodInj₂)) .fst .snd .snd)
+          ) ∙
+          ⋆Assoc _ _ _ ∙
+          cong (λ h → f ⋆⟨ C ⟩ h)
+            (bincoprod b y .univProp
+              (bincoprod b z .binCoprodInj₁)
+              (seq' C g (bincoprod b z .binCoprodInj₂)) .fst .snd .snd)
+          ∙
+          sym (⋆Assoc _ _ _)
+          ))
+      )
   F-Functor : (a : ob) → (b : ob) → Functor (MonoidalCategory.C K) (MonoidalCategory.C K)
   F-Functor a b = coprodWith b ∘F ─⊗─ ∘F (Constant C C a ,F Id)
 
@@ -82,11 +118,11 @@ module _ {ℓ ℓ' ℓS : Level}
       F-with-unit-iso : (a : ob) → (b : ob) →
         CatIso C
           (initialF a b .fst .carrier)
-          (b ⊗ (initialF a unit .fst .carrier))
+          ((initialF a unit .fst .carrier) ⊗ b)
       G-with-unit-iso : (a : ob) → (b : ob) →
         CatIso C
           (initialG a b .fst .carrier)
-          ((initialF a unit .fst .carrier) ⊗ b)
+          (b ⊗ (initialF a unit .fst .carrier))
 
 module _ {ℓ ℓS : Level} where
   isSetLiftedBool : isSet (Lift {ℓ-zero}{ℓS} Bool)
@@ -95,6 +131,7 @@ module _ {ℓ ℓS : Level} where
       (isSetBool (lower (x)) (lower y)
       (cong lower a) (cong lower b) i)
 
+  -- Kleene algebras with a poset structure are Kleene categories
   record KleeneAlgebra : Type (ℓ-max (ℓ-suc ℓ) (ℓ-suc ℓS)) where
     field
       K : hSet ℓ
@@ -299,52 +336,53 @@ module _ {ℓ ℓS : Level} where
       sym (⊗distR b (unitKA ⊕ (a ⊗ star a)) (star a)) ∙
       cong (λ c → c ⊗ b) (one-plus-starR a)
     fst (fst (snd (initialF KA-has-KleeneCatStr a b) y)) =
-      star-inL a b (y .FAlgebra.carrier) {!y .FAlgebra.algebra!}
+      star-inL a b
+        (y .FAlgebra.carrier)
+        (cong (λ c → c ⊕ y .FAlgebra.carrier)
+          (sym (⊕idx-bin b (a ⊗ y .FAlgebra.carrier) _ refl refl)) ∙ y .FAlgebra.algebra)
     snd (fst (snd (initialF KA-has-KleeneCatStr a b) y)) =
-      {!!}
-    snd (snd (initialF KA-has-KleeneCatStr a b) y) =
-      {!!}
-    initialG KA-has-KleeneCatStr = {!!}
-    F-with-unit-iso KA-has-KleeneCatStr = {!!}
-    G-with-unit-iso KA-has-KleeneCatStr = {!!}
-
-     -- FAlgebra.carrier (fst (initialF KA-has-KleeneCatStr a b)) =
-    --   (star a) ⊗ b
-    -- FAlgebra.algebra (fst (initialF KA-has-KleeneCatStr a b)) =
-    --   cong (λ c → (b ⊕ c) ⊕ (star a ⊗ b)) (sym (⊗assoc a (star a) b)) ∙
-    --   cong (λ c → (c ⊕ ((a ⊗ star a) ⊗ b)) ⊕ (star a ⊗ b))  (sym (⊗unitL b)) ∙
-    --   cong (λ c → c ⊕ (star a ⊗ b)) (sym (⊗distR b unitKA (a ⊗ star a))) ∙
-    --   sym (⊗distR b (unitKA ⊕ (a ⊗ star a)) (star a)) ∙
-    --   cong (λ c → c ⊗ b) (one-plus-starR a)
-    -- fst (fst (snd (initialF KA-has-KleeneCatStr a b) y)) =
-    --   star-inL a b (y .FAlgebra.carrier) (y .FAlgebra.algebra)
-    -- snd (fst (snd (initialF KA-has-KleeneCatStr a b) y)) =
-    --  isPropHom-KA-Cat
-    --    ((F-Functor KA-MonoidalCat {!!} a b) .F-ob
-    --      (fst (initialF KA-has-KleeneCatStr a b)
-    --      .FAlgebra.carrier))
-    --    (FAlgebra.carrier y)
-    --    (seq' (MonoidalCategory.C KA-MonoidalCat)
-    --      (F-Functor KA-MonoidalCat {!!} a b .F-hom
-    --       (fst (fst (snd (initialF KA-has-KleeneCatStr a b) y))))
-    --      (y .FAlgebra.algebra))
-    --    (seq' (MonoidalCategory.C KA-MonoidalCat)
-    --      (fst (initialF KA-has-KleeneCatStr a b) .FAlgebra.algebra)
-    --      (fst (fst (snd (initialF KA-has-KleeneCatStr a b) y))))
-    -- snd (snd (initialF KA-has-KleeneCatStr a b) y) z =
-    --   Σ≡Prop
-    --     (λ x → KA-Cat .Category.isSetHom
-    --       (seq' (MonoidalCategory.C KA-MonoidalCat)
-    --     (F-Functor KA-MonoidalCat {!!} a b .F-hom x)
-    --     (y .FAlgebra.algebra))
-    --     (seq' (MonoidalCategory.C KA-MonoidalCat)
-    --       (fst (initialF KA-has-KleeneCatStr a b)
-    --       .FAlgebra.algebra) x))
-    --     (isPropHom-KA-Cat
-    --       (FAlgebra.carrier (fst (initialF KA-has-KleeneCatStr a b)))
-    --       (FAlgebra.carrier y)
-    --       (fst (snd (initialF KA-has-KleeneCatStr a b) y) .fst)
-    --       (z .fst))
-    -- initialG KA-has-KleeneCatStr = {!!}
-    -- F-with-unit-iso KA-has-KleeneCatStr = {!!}
-    -- G-with-unit-iso KA-has-KleeneCatStr = {!!}
+      KA-is-poset .is-prop-valued _ _ _ _
+    snd (snd (initialF KA-has-KleeneCatStr a b) y) z =
+      Σ≡Prop
+        (λ x → KA-Cat .Category.isSetHom _ _)
+        (KA-is-poset .is-prop-valued _ _ _ _)
+    FAlgebra.carrier (fst (initialG KA-has-KleeneCatStr a b)) =
+      b ⊗ (star a)
+    FAlgebra.algebra (fst (initialG KA-has-KleeneCatStr a b)) =
+      cong (λ c → c ⊕ (b ⊗ star a)) (⊕idx-bin b ((b ⊗ star a) ⊗ a) _ refl refl) ∙
+      cong (λ c → (b ⊕ c) ⊕ (b ⊗ star a)) (⊗assoc b (star a) a) ∙
+      cong (λ c → (c ⊕ (b ⊗ (star a ⊗ a))) ⊕ (b ⊗ star a)) (sym (⊗unitR b)) ∙
+      cong (λ c → c ⊕ (b ⊗ star a)) (sym (⊗distL b unitKA (star a ⊗ a))) ∙
+      sym (⊗distL b (unitKA ⊕ (star a ⊗ a)) (star a)) ∙
+      cong (λ c → b ⊗ c) (one-plus-starL a)
+    fst (fst (snd (initialG KA-has-KleeneCatStr a b) y)) =
+      star-inR a b
+        (y .FAlgebra.carrier)
+        (cong (λ c → c ⊕ y .FAlgebra.carrier)
+          (sym (⊕idx-bin b (y .FAlgebra.carrier ⊗ a) _ refl refl)) ∙ y .FAlgebra.algebra)
+    snd (fst (snd (initialG KA-has-KleeneCatStr a b) y)) =
+      KA-is-poset .is-prop-valued _ _ _ _
+    snd (snd (initialG KA-has-KleeneCatStr a b) y) z =
+      Σ≡Prop
+        (λ x → KA-Cat .Category.isSetHom _ _)
+        (KA-is-poset .is-prop-valued _ _ _ _)
+    fst (F-with-unit-iso KA-has-KleeneCatStr a b) =
+      cong (λ c → (c ⊗ b) ⊕ ((star a ⊗ unitKA) ⊗ b)) (sym (⊗unitR (star a))) ∙
+      ⊕idem _
+    inv (snd (F-with-unit-iso KA-has-KleeneCatStr a b)) =
+      cong (λ c → (c ⊗ b) ⊕ (star a ⊗ b)) (⊗unitR (star a)) ∙
+      ⊕idem _
+    sec (snd (F-with-unit-iso KA-has-KleeneCatStr a b)) =
+      KA-is-poset .is-prop-valued _ _ _ _
+    ret (snd (F-with-unit-iso KA-has-KleeneCatStr a b)) =
+      KA-is-poset .is-prop-valued _ _ _ _
+    fst (G-with-unit-iso KA-has-KleeneCatStr a b) =
+      cong (λ c → (b ⊗ c) ⊕ (b ⊗ (star a ⊗ unitKA))) (sym (⊗unitR (star a))) ∙
+      ⊕idem _
+    inv (snd (G-with-unit-iso KA-has-KleeneCatStr a b)) =
+      cong (λ c → (b ⊗ c) ⊕ (b ⊗ star a)) (⊗unitR (star a)) ∙
+      ⊕idem _
+    sec (snd (G-with-unit-iso KA-has-KleeneCatStr a b)) =
+      KA-is-poset .is-prop-valued _ _ _ _
+    ret (snd (G-with-unit-iso KA-has-KleeneCatStr a b)) =
+      KA-is-poset .is-prop-valued _ _ _ _
