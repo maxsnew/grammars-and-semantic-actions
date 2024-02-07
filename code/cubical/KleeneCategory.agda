@@ -10,6 +10,7 @@ open import Cubical.Categories.Functors.Constant
 open import Cubical.Categories.Instances.Poset
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.Bool hiding (_⊕_ ; _≤_)
 
 open import Cubical.Relation.Binary.Poset
 
@@ -88,7 +89,13 @@ module _ {ℓ ℓ' ℓS : Level}
           ((initialF a unit .fst .carrier) ⊗ b)
 
 module _ {ℓ ℓS : Level} where
-  record KleeneAlgebra : Type (ℓ-suc ℓ) where
+  isSetLiftedBool : isSet (Lift {ℓ-zero}{ℓS} Bool)
+  isSetLiftedBool x y a b i =
+    liftExt
+      (isSetBool (lower (x)) (lower y)
+      (cong lower a) (cong lower b) i)
+
+  record KleeneAlgebra : Type (ℓ-max (ℓ-suc ℓ) (ℓ-suc ℓS)) where
     field
       K : hSet ℓ
       zeroKA : K .fst
@@ -111,6 +118,22 @@ module _ {ℓ ℓS : Level} where
       one-plus-starL : (x : K .fst) → (unitKA ⊕ ((star x) ⊗ x)) ⊕ star x ≡ star x
       star-inL : (a b x : K .fst) → (b ⊕ (a ⊗ x)) ⊕ x ≡ x → ((star a) ⊗ b) ⊕ x ≡ x
       star-inR : (a b x : K .fst) → (b ⊕ (x ⊗ a)) ⊕ x ≡ x → (b ⊗ (star a)) ⊕ x ≡ x
+      -- Add axioms for infinitary ⊕
+      ⊕idx : {S : hSet ℓS} → (idx : S .fst → K .fst) → K .fst
+      ⊕idx-distL : {S : hSet ℓS} → (idx : S .fst → K .fst) → (x : K .fst) →
+        x ⊗ (⊕idx {S} idx) ≡ ⊕idx {S} (λ y → x ⊗ (idx y))
+      ⊕idx-distR : {S : hSet ℓS} → (idx : S .fst → K .fst) → (x : K .fst) →
+        (⊕idx {S} idx) ⊗ x ≡ ⊕idx {S} (λ y → (idx y) ⊗ x)
+      ⊕idx-inj : {S : hSet ℓS} → (idx : S .fst → K .fst) →
+        (s : S .fst) → idx s ⊕ (⊕idx {S} idx) ≡ ⊕idx {S} idx
+      ⊕idx-lub : {S : hSet ℓS} → (idx : S .fst → K .fst) →
+        (z : K .fst) → ((s : S .fst) → idx s ⊕ z ≡ z) →
+        (⊕idx {S} idx) ⊕ z ≡ z
+      ⊕idx-bin :
+        (x y : K .fst) →
+        (idx : Lift {ℓ-zero}{ℓS} Bool → K .fst) →
+        (idx (lift true) ≡ x) → (idx (lift false) ≡ y) →
+        (⊕idx {Lift {ℓ-zero}{ℓS} Bool , isSetLiftedBool} idx) ≡ (x ⊕ y)
 
     _≤_ : K .fst → K .fst → Set ℓ
     _≤_ x y = x ⊕ y ≡ y
@@ -221,100 +244,71 @@ module _ {ℓ ℓS : Level} where
     open IndexedCoproduct.IndexedCoproduct
 
     KA-Cat-has-IndexedCoproducts : IndexedCoproducts {ℓ}{ℓ}{ℓS} KA-Cat
-    coprodOb (KA-Cat-has-IndexedCoproducts IdxObjs) = ?
-    iₛ (KA-Cat-has-IndexedCoproducts IdxObjs) = ?
-    univprop (KA-Cat-has-IndexedCoproducts IdxObjs) = ?
+    coprodOb (KA-Cat-has-IndexedCoproducts {S} IdxObjs) =
+      ⊕idx {S} IdxObjs
+    iₛ (KA-Cat-has-IndexedCoproducts IdxObjs) s =
+      ⊕idx-inj IdxObjs s
+    fst (fst (univprop (KA-Cat-has-IndexedCoproducts IdxObjs) {z} f)) =
+      ⊕idx-lub IdxObjs z f
+    snd (fst (univprop (KA-Cat-has-IndexedCoproducts IdxObjs) f)) s =
+     KA-is-poset .is-prop-valued _ _ _ _
+    snd (univprop (KA-Cat-has-IndexedCoproducts IdxObjs) f) y =
+      Σ≡Prop
+      (λ x → isPropΠ λ s → KA-Cat .Category.isSetHom
+        ((KA-Cat Category.⋆ iₛ (KA-Cat-has-IndexedCoproducts IdxObjs) s) x)
+        (f s))
+      (KA-is-poset .is-prop-valued _ _ _ _)
 
-    -- open BinCoproduct
+    open KleeneCategoryStr
+    open isIso
 
-    -- KA-Cat-BinCoproducts : BinCoproducts KA-Cat
-    -- binCoprodOb (KA-Cat-BinCoproducts x y) = x ⊕ y
-    -- binCoprodInj₁ (KA-Cat-BinCoproducts x y) =
-    --   sym (⊕assoc x x y) ∙
-    --   cong (λ a → a ⊕ y) (⊕idem x)
-    -- binCoprodInj₂ (KA-Cat-BinCoproducts x y) =
-    --  sym (⊕assoc y x y) ∙
-    --   cong (λ a → a ⊕ y) (⊕comm y x) ∙
-    --   ⊕assoc x y y ∙
-    --   cong (λ a → x ⊕ a) (⊕idem y)
-    -- fst (fst (univProp (KA-Cat-BinCoproducts x y) {z} f g)) =
-    --   cong (λ a → (x ⊕ y) ⊕ a) (sym (⊕idem z)) ∙
-    --   sym (⊕assoc (x ⊕ y) z z) ∙
-    --   cong (λ a → a ⊕ z) (⊕assoc x y z) ∙
-    --   cong (λ a → (x ⊕ a) ⊕ z) g ∙
-    --   ⊕assoc x z z ∙
-    --   cong (λ a → x ⊕ a) (⊕idem z) ∙
-    --   f
-    -- fst (snd (fst (univProp (KA-Cat-BinCoproducts x y) f g))) =
-    --   KA-is-poset .is-prop-valued x _
-    --   ((KA-Cat Category.⋆ binCoprodInj₁ (KA-Cat-BinCoproducts x y))
-    --     (fst (fst (univProp (KA-Cat-BinCoproducts x y) f g)))) f
-    -- snd (snd (fst (univProp (KA-Cat-BinCoproducts x y) f g))) =
-    --   KA-is-poset .is-prop-valued y _
-    --   ((KA-Cat Category.⋆ binCoprodInj₂ (KA-Cat-BinCoproducts x y))
-    --   (fst (fst (univProp (KA-Cat-BinCoproducts x y) f g)))) g
-    -- snd (univProp (KA-Cat-BinCoproducts x y) f g) z =
-    --  Σ≡Prop
-    --    (λ u →
-    --      isProp×
-    --        (KA-Cat .Category.isSetHom
-    --          ((KA-Cat Category.⋆ binCoprodInj₁
-    --            (KA-Cat-BinCoproducts x y)) u) f)
-    --        (KA-Cat .Category.isSetHom
-    --          ((KA-Cat Category.⋆ binCoprodInj₂
-    --           (KA-Cat-BinCoproducts x y)) u) g)
-    --     )
-    --    (KA-is-poset .is-prop-valued (x ⊕ y) _
-    --      (fst (univProp (KA-Cat-BinCoproducts x y) f g) .fst)
-    --      (z .fst))
+    KA-has-KleeneCatStr : KleeneCategoryStr KA-MonoidalCat KA-Cat-has-IndexedCoproducts
+    M KA-has-KleeneCatStr = KA-MonoidalCat .MonoidalCategory.monstr
+    fst (distributiveL KA-has-KleeneCatStr {S}{idx} x) =
+      cong (λ a → ((x ⊗ (⊕idx idx)) ⊕ a)) (sym (⊕idx-distL {S} idx x)) ∙
+      ⊕idem (x ⊗ ⊕idx idx) ∙
+      ⊕idx-distL {S} idx x
+    inv (snd (distributiveL KA-has-KleeneCatStr {S}{idx} x)) =
+      cong (λ a → a ⊕ (x ⊗ (⊕idx idx))) (sym (⊕idx-distL {S} idx x)) ∙
+      ⊕idem _
+    sec (snd (distributiveL KA-has-KleeneCatStr x)) =
+      KA-is-poset .is-prop-valued _ _ _ _ 
+    ret (snd (distributiveL KA-has-KleeneCatStr x)) =
+      KA-is-poset .is-prop-valued _ _ _ _
+    fst (distributiveR KA-has-KleeneCatStr {S}{idx} x) =
+      cong
+        (λ a → a ⊕ ⊕idx λ y → idx y ⊗ x)
+        (⊕idx-distR {S} idx x) ∙
+      ⊕idem _
+    inv (snd (distributiveR KA-has-KleeneCatStr {S}{idx} x)) =
+      cong (λ a → a ⊕ ((⊕idx idx) ⊗ x)) (sym (⊕idx-distR {S} idx x)) ∙
+      (⊕idem _)
+    sec (snd (distributiveR KA-has-KleeneCatStr x)) =
+      KA-is-poset .is-prop-valued _ _ _ _
+    ret (snd (distributiveR KA-has-KleeneCatStr x)) =
+      KA-is-poset .is-prop-valued _ _ _ _
+    FAlgebra.carrier (fst (initialF KA-has-KleeneCatStr a b)) =
+      (star a) ⊗ b
+    FAlgebra.algebra (fst (initialF KA-has-KleeneCatStr a b)) =
+      cong
+        (λ c → c ⊕ (star a ⊗ b))
+        (⊕idx-bin b (a ⊗ (star a ⊗ b)) _ refl refl) ∙
+      cong (λ c → (b ⊕ c) ⊕ (star a ⊗ b)) (sym (⊗assoc a (star a) b)) ∙
+      cong (λ c → (c ⊕ ((a ⊗ star a) ⊗ b)) ⊕ (star a ⊗ b))  (sym (⊗unitL b)) ∙
+      cong (λ c → c ⊕ (star a ⊗ b)) (sym (⊗distR b unitKA (a ⊗ star a))) ∙
+      sym (⊗distR b (unitKA ⊕ (a ⊗ star a)) (star a)) ∙
+      cong (λ c → c ⊗ b) (one-plus-starR a)
+    fst (fst (snd (initialF KA-has-KleeneCatStr a b) y)) =
+      star-inL a b (y .FAlgebra.carrier) {!y .FAlgebra.algebra!}
+    snd (fst (snd (initialF KA-has-KleeneCatStr a b) y)) =
+      {!!}
+    snd (snd (initialF KA-has-KleeneCatStr a b) y) =
+      {!!}
+    initialG KA-has-KleeneCatStr = {!!}
+    F-with-unit-iso KA-has-KleeneCatStr = {!!}
+    G-with-unit-iso KA-has-KleeneCatStr = {!!}
 
-    -- open KleeneCategoryStr
-    -- open isIso
-    -- KA-has-KleeneCatStr : KleeneCategoryStr KA-MonoidalCat {!!}
-    -- M KA-has-KleeneCatStr = KA-MonoidalCat .MonoidalCategory.monstr
-    -- fst (distributiveL KA-has-KleeneCatStr x y z) =
-    --   cong (λ a → (a ⊕ ((x ⊗ y) ⊕ (x ⊗ z)))) (⊗distL x y z) ∙
-    --   ⊕idem ((x ⊗ y) ⊕ (x ⊗ z))
-    -- inv (snd (distributiveL KA-has-KleeneCatStr x y z)) =
-    --   cong (λ a → a ⊕ (x ⊗ (y ⊕ z))) (sym (⊗distL x y z)) ∙
-    --   ⊕idem (x ⊗ (y ⊕ z))
-    -- sec (snd (distributiveL KA-has-KleeneCatStr x y z)) =
-    --   isPropHom-KA-Cat
-    --     ((x ⊗ y) ⊕ (x ⊗ z))
-    --     ((x ⊗ y) ⊕ (x ⊗ z))
-    --     (inv (snd (distributiveL KA-has-KleeneCatStr x y z)) ⋆⟨ KA-Cat ⟩
-    --       fst (distributiveL KA-has-KleeneCatStr x y z))
-    --     (Category.id KA-Cat)
-    -- ret (snd (distributiveL KA-has-KleeneCatStr x y z)) =
-    --  isPropHom-KA-Cat
-    --    ((KA-MonoidalCat MonoidalCategory.⊗ x)
-    --      (KA-Cat-BinCoproducts y z .binCoprodOb))
-    --    ((KA-MonoidalCat MonoidalCategory.⊗ x)
-    --      (KA-Cat-BinCoproducts y z .binCoprodOb))
-    --    ((fst (distributiveL KA-has-KleeneCatStr x y z)) ⋆⟨ KA-Cat ⟩
-    --      inv (snd (distributiveL KA-has-KleeneCatStr x y z)))
-    --    (MonoidalCategory.C KA-MonoidalCat .Category.id)
-    -- fst (distributiveR KA-has-KleeneCatStr x y z) =
-    --   cong (λ a → a ⊕ ((y ⊗ x) ⊕ (z ⊗ x))) (⊗distR x y z) ∙
-    --   ⊕idem ((y ⊗ x) ⊕ (z ⊗ x))
-    -- inv (snd (distributiveR KA-has-KleeneCatStr x y z)) =
-    --   cong (λ a → a ⊕ ((y ⊕ z) ⊗ x)) (sym (⊗distR x y z)) ∙
-    --   ⊕idem ((y ⊕ z) ⊗ x)
-    -- sec (snd (distributiveR KA-has-KleeneCatStr x y z)) =
-    --   KA-is-poset .is-prop-valued
-    --     ((y ⊗ x) ⊕ (z ⊗ x))
-    --     ((y ⊗ x) ⊕ (z ⊗ x))
-    --     (inv (snd (distributiveR KA-has-KleeneCatStr x y z)) ⋆⟨ KA-Cat ⟩
-    --       fst (distributiveR KA-has-KleeneCatStr x y z))
-    --     (KA-Cat .Category.id)
-    -- ret (snd (distributiveR KA-has-KleeneCatStr x y z)) =
-    --   KA-is-poset .is-prop-valued
-    --    ((y ⊕ z) ⊗ x)
-    --    ((y ⊕ z) ⊗ x)
-    --    (fst (distributiveR KA-has-KleeneCatStr x y z) ⋆⟨ KA-Cat ⟩
-    --      inv (snd (distributiveR KA-has-KleeneCatStr x y z)))
-    --    (KA-Cat .Category.id)
-    -- FAlgebra.carrier (fst (initialF KA-has-KleeneCatStr a b)) =
+     -- FAlgebra.carrier (fst (initialF KA-has-KleeneCatStr a b)) =
     --   (star a) ⊗ b
     -- FAlgebra.algebra (fst (initialF KA-has-KleeneCatStr a b)) =
     --   cong (λ c → (b ⊕ c) ⊕ (star a ⊗ b)) (sym (⊗assoc a (star a) b)) ∙
