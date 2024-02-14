@@ -11,6 +11,7 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Bool renaming (_⊕_ to _⊕B_)
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Empty.Base
 open import Cubical.Data.Nat
 open import Cubical.Data.SumFin
 -- open import Cubical.Data.Fin.Base renaming (Fin to Finℕ)
@@ -22,6 +23,11 @@ open import Cubical.Reflection.RecordEquiv
 open import Cubical.Data.Sigma
 open import Cubical.Functions.Embedding
 open import Cubical.Foundations.Powerset
+
+open import Cubical.HITs.PropositionalTruncation
+
+open import Cubical.Algebra.CommMonoid
+open import Cubical.Algebra.CommMonoid.Instances.FreeComMonoid
 
 open import Cubical.Tactics.Reflection
 
@@ -103,7 +109,7 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
     cons : (Σ[ s ∈ Splitting w ] g (s .fst .fst) .fst × KL*Ty g (s .fst .snd)) → KL*Ty g w
 
   isSetKL*Ty : (g : Grammar) → (w : String) → isSet (KL*Ty g w)
-  isSetKL*Ty g w (nil a) (nil b) x y = {!!}
+  isSetKL*Ty g w (nil a) (nil b) = {!!}
   isSetKL*Ty g w (nil a) (cons b) = {!!}
   isSetKL*Ty g w (cons a) (nil b) = {!!}
   isSetKL*Ty g w (cons a) (cons b) = {!!}
@@ -126,193 +132,176 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   isPropLift isPropA x y =
     liftExt (isPropA (lower x) (lower y))
 
-  data NFA
-    (Q : FinSet ℓ)
-    (δ : Q .fst → Q .fst → ℙ (Σ₀ .fst ⊎ ⊤))
-    (init : Q .fst)
-    (acc : Q .fst)
-    : (state : Q .fst) → (w : String) → Type ℓ where
-    nil : NFA Q δ init acc acc []
+
+
+  record NFA : Type (ℓ-suc ℓ) where
+    constructor mkNFA
+    field
+      Q : FinSet ℓ
+      init : Q .fst
+      acc : Q .fst
+      transition : FinSet ℓ
+      src : transition .fst → Q .fst
+      dst : transition .fst → Q .fst
+      label : transition .fst → Σ₀ .fst
+      ε-transition : FinSet ℓ
+      ε-src : ε-transition .fst → Q .fst
+      ε-dst : ε-transition .fst → Q .fst
+
+  open NFA
+
+  data NFATrace (N : NFA) : (state : N .Q .fst) → (w : String) → Type ℓ where
+    nil : NFATrace N (N .acc) []
     cons :
-      ∀ {w' s s' c} →
-      (c ∈ δ s s') →
-      literal-or-empty c w' →
-      NFA Q δ init acc s' w' →
-      NFA Q δ init acc s (unpack c ++ w')
+      ∀ {w'} →
+      {t : N .transition .fst} →
+      NFATrace N (N .dst t) w' →
+      NFATrace N (N .src t) (N .label t ∷ w')
+    ε-cons :
+      ∀ {w'} →
+      {t : N .ε-transition .fst} →
+      NFATrace N (N .ε-dst t) w' →
+      NFATrace N (N .ε-src t) w'
 
-  isSetNFA :
-    (Q : FinSet ℓ) →
-    (δ : Q .fst → Q .fst → ℙ (Σ₀ .fst ⊎ ⊤)) →
-    (init : Q .fst) → (acc : Q .fst) →
-    (s : Q .fst) → (w : String) → isSet (NFA Q δ init acc s w)
-  isSetNFA Q δ init acc s w = {!!}
+  isSetNFATrace : (N : NFA) → (state : N .Q .fst) → (w : String) → isSet (NFATrace N state w)
+  isSetNFATrace N = {!!}
 
-  NFAGrammar :
-    (Q : FinSet ℓ) →
-    (δ : Q .fst → Q .fst → ℙ (Σ₀ .fst ⊎ ⊤)) →
-    (init : Q .fst) → (acc : Q .fst) → Grammar
-  NFAGrammar Q δ init acc w =
-    (NFA Q δ init acc init w , isSetNFA Q δ init acc init w)
+  NFAGrammar : (N : NFA) → Grammar
+  NFAGrammar N w = (NFATrace N (N .init) w) , isSetNFATrace N (N .init) w
 
-  ⊗NFA :
-    (Q Q' : FinSet ℓ) →
-    (δ : Q .fst → Q .fst → ℙ (Σ₀ .fst ⊎ ⊤)) →
-    (δ' : Q' .fst → Q' .fst → ℙ (Σ₀ .fst ⊎ ⊤)) →
-    (init : Q .fst) →
-    (init' : Q' .fst) →
-    (acc : Q .fst) →
-    (acc' : Q' .fst) →
-    Grammar
-  ⊗NFA Q Q' δ δ' init init' acc acc' x =
-    NFAGrammar
-      the-states
-      the-δ
-      the-init
-      the-acc
-      x
-    where
-    -- tag the states as start ⊎ Q ⊎ Q' ⊎ end
-    the-states : FinSet ℓ
-    fst the-states = ⊤ ⊎ (Q .fst ⊎ (Q' .fst ⊎ ⊤))
-    snd the-states =
-      isFinSet⊎ (_ , isFinSetUnit)
-        (_ , (isFinSet⊎ Q (_ ,
-          (isFinSet⊎ Q' ((_ , isFinSetUnit))))))
+  isFinSetLift :
+    {L L' : Level} →
+    {A : Type L} →
+    isFinSet A → isFinSet (Lift {L}{L'} A)
+  fst (isFinSetLift {A = A} isFinSetA) = isFinSetA .fst
+  snd (isFinSetLift {A = A} isFinSetA) =
+    Cubical.HITs.PropositionalTruncation.elim
+    {P = λ _ → ∥ Lift A ≃ Fin (isFinSetA .fst) ∥₁}
+    (λ [a] → isPropPropTrunc )
+    (λ A≅Fin → ∣ compEquiv (invEquiv (LiftEquiv {A = A})) A≅Fin ∣₁)
+    (isFinSetA .snd)
 
-    the-δ : the-states .fst → the-states .fst → ℙ (Σ₀ .fst ⊎ ⊤)
-    -- init ε-transition to first NFA's init
-    the-δ (inl _) (inr (inl q')) x =
-    -- no way to really pattern match and get that q' = init easily
-      ((x ≡ inr _) × (q' ≡ init)) ,
-        (isProp× (isSetΣ₀⊎⊤ _ _) (isFinSet→isSet (Q .snd) _ _))
-    -- first NFA's transitions
-    the-δ (inr (inl q)) (inr (inl q')) = δ q q'
-    -- second NFA's transitions
-    the-δ (inr (inr (inl q))) (inr (inr (inl q'))) = δ' q q'
-    -- first NFA's acc to second NFA's init
-    the-δ (inr (inl q)) (inr (inr (inl q'))) x =
-      ((q ≡ acc) × (q' ≡ init') × (x ≡ inr _)) ,
-      isProp×
-      (isFinSet→isSet (Q .snd) _ _)
-      (isProp× (isFinSet→isSet (Q' .snd) _ _) (isSetΣ₀⊎⊤ _ _))
-    -- second NFA's acc to end
-    the-δ (inr (inr (inl q))) (inr (inr (inr q'))) x =
-      ((q ≡ acc') × (x ≡ inr _)) ,
-      (isProp× (isFinSet→isSet (Q' .snd) _ _) (isSetΣ₀⊎⊤ _ _))
-    -- No other transitions
-    the-δ q q' x = (Lift ⊥) , (isPropLift isProp⊥)
+  literalNFA : (c : Σ₀ .fst) → NFA
+  fst (Q (literalNFA c)) = Lift (Fin 2)
+  snd (Q (literalNFA c)) = isFinSetLift isFinSetFin
+  init (literalNFA c) = lift fzero
+  acc (literalNFA c) = lift (fsuc fzero)
+  transition (literalNFA c) = (Lift Unit) , (isFinSetLift isFinSetUnit)
+  src (literalNFA c) (lift _) = literalNFA c .init
+  dst (literalNFA c) (lift _) = literalNFA c .acc
+  label (literalNFA c) (lift _) = c
+  fst (ε-transition (literalNFA c)) = Lift ⊥
+  snd (ε-transition (literalNFA c)) = isFinSetLift isFinSetFin
+  ε-src (literalNFA c) (lift x) = ⊥.rec x
+  ε-dst (literalNFA c) (lift x )= ⊥.rec x
 
-    the-init : the-states .fst
-    the-init = inl _
+  ⊗NFA : (N : NFA) → (N' : NFA) → NFA
+  -- States stratified into init, N states, N' states, acc
+  Q (⊗NFA N N') .fst = ⊤ ⊎ (N .Q .fst ⊎ ((N' .Q .fst) ⊎ ⊤))
+  Q (⊗NFA N N') .snd =
+    isFinSet⊎
+      (_ , isFinSetUnit)
+      (_ , (isFinSet⊎ (N .Q)
+        (_ , (isFinSet⊎ (N' .Q) (_ , isFinSetUnit)))))
+  -- initial state
+  init (⊗NFA N N') = inl _
+  -- accepting state
+  acc (⊗NFA N N') = inr (inr (inr _))
+  -- the labeled transitions come from N and N'
+  transition (⊗NFA N N') .fst =
+    N .transition .fst ⊎ N' .transition .fst
+  transition (⊗NFA N N') .snd =
+    isFinSet⊎ (N .transition) (N' .transition)
+  -- the labeled transitions have same src, dst, and label as
+  -- in original automata
+  src (⊗NFA N N') (inl x) = inr (inl (N .src x))
+  src (⊗NFA N N') (inr x) = inr (inr (inl (N' .src x)))
+  dst (⊗NFA N N') (inl x) = inr (inl (N .dst x))
+  dst (⊗NFA N N') (inr x) = inr (inr (inl (N' .dst x)))
+  label (⊗NFA N N') (inl x) = N .label x
+  label (⊗NFA N N') (inr x) = N' .label x
+  -- 3 ε-transitions
+  -- TODO need to add the ones in from the subautomata
+  fst (ε-transition (⊗NFA N N')) = Lift (Fin 3)
+  snd (ε-transition (⊗NFA N N')) = isFinSetLift isFinSetFin
+  -- init to N init
+  ε-src (⊗NFA N N') (lift fzero) = (⊗NFA N N') .init
+  ε-dst (⊗NFA N N') (lift fzero) = inr (inl (N .init))
+  -- N acc to N' init
+  ε-src (⊗NFA N N') (lift (fsuc fzero)) = inr (inl (N .acc))
+  ε-dst (⊗NFA N N') (lift (fsuc fzero)) = inr (inr (inl (N' .init)))
+  -- N' acc to acc
+  ε-src (⊗NFA N N') (lift (fsuc (fsuc fzero))) = inr (inr (inl (N' .acc)))
+  ε-dst (⊗NFA N N') (lift (fsuc (fsuc fzero))) = (⊗NFA N N') .acc
 
-    the-acc : the-states .fst
-    the-acc = inr (inr (inr _))
+  ⊕NFA : (N : NFA) → (N' : NFA) → NFA
+  -- States stratified into init, N states, N' states, acc
+  Q (⊕NFA N N') .fst = ⊤ ⊎ (N .Q .fst ⊎ ((N' .Q .fst) ⊎ ⊤))
+  Q (⊕NFA N N') .snd =
+    isFinSet⊎
+      (_ , isFinSetUnit)
+      (_ , (isFinSet⊎ (N .Q)
+        (_ , (isFinSet⊎ (N' .Q) (_ , isFinSetUnit)))))
+  -- initial state
+  init (⊕NFA N N') = inl _
+  -- accepting state
+  acc (⊕NFA N N') = inr (inr (inr _))
+  -- the labeled transitions come from N and N'
+  transition (⊕NFA N N') .fst =
+    N .transition .fst ⊎ N' .transition .fst
+  transition (⊕NFA N N') .snd =
+    isFinSet⊎ (N .transition) (N' .transition)
+  -- the labeled transitions have same src, dst, and label as
+  -- in original automata
+  src (⊕NFA N N') (inl x) = inr (inl (N .src x))
+  src (⊕NFA N N') (inr x) = inr (inr (inl (N' .src x)))
+  dst (⊕NFA N N') (inl x) = inr (inl (N .dst x))
+  dst (⊕NFA N N') (inr x) = inr (inr (inl (N' .dst x)))
+  label (⊕NFA N N') (inl x) = N .label x
+  label (⊕NFA N N') (inr x) = N' .label x
+  -- 4 ε-transitions
+  fst (ε-transition (⊕NFA N N')) = Lift (Fin 4)
+  snd (ε-transition (⊕NFA N N')) = isFinSetLift isFinSetFin
+  -- init to N init
+  ε-src (⊕NFA N N') (lift fzero) = (⊕NFA N N') .init
+  ε-dst (⊕NFA N N') (lift fzero) = inr (inl (N .init))
+  -- init to N init
+  ε-src (⊕NFA N N') (lift (fsuc fzero)) = (⊕NFA N N') .init
+  ε-dst (⊕NFA N N') (lift (fsuc fzero)) = inr (inr (inl (N' .init)))
+  -- N acc to acc
+  ε-src (⊕NFA N N') (lift (fsuc (fsuc fzero))) = inr (inl (N .acc))
+  ε-dst (⊕NFA N N') (lift (fsuc (fsuc fzero))) = (⊕NFA N N') .acc
+  -- N' acc to acc
+  ε-src (⊕NFA N N') (lift (fsuc (fsuc (fsuc fzero)))) = inr (inr (inl (N' .acc)))
+  ε-dst (⊕NFA N N') (lift (fsuc (fsuc (fsuc fzero)))) = (⊕NFA N N') .acc
 
-  ⊕NFA :
-    (Q Q' : FinSet ℓ) →
-    (δ : Q .fst → Q .fst → ℙ (Σ₀ .fst ⊎ ⊤)) →
-    (δ' : Q' .fst → Q' .fst → ℙ (Σ₀ .fst ⊎ ⊤)) →
-    (init : Q .fst) →
-    (init' : Q' .fst) →
-    (acc : Q .fst) →
-    (acc' : Q' .fst) →
-    Grammar
-  ⊕NFA Q Q' δ δ' init init' acc acc' x =
-    NFAGrammar
-      the-states
-      the-δ
-      the-init
-      the-acc
-      x
-    where
-    the-states : FinSet ℓ
-    fst the-states = ⊤ ⊎ (Q .fst ⊎ (Q' .fst ⊎ ⊤))
-    snd the-states =
-      isFinSet⊎ (_ , isFinSetUnit)
-        (_ , (isFinSet⊎ Q (_ ,
-          (isFinSet⊎ Q' ((_ , isFinSetUnit))))))
-
-    the-δ : the-states .fst → the-states .fst → ℙ (Σ₀ .fst ⊎ ⊤)
-    -- init ε-transition to first NFA's init
-    the-δ (inl q) (inr (inl q')) x =
-      ((x ≡ inr _) × (q' ≡ init)) ,
-        (isProp× (isSetΣ₀⊎⊤ _ _) (isFinSet→isSet (Q .snd) _ _))
-    -- init ε-transition to second NFA's init
-    the-δ (inl q) (inr (inr (inl q'))) x =
-      ((x ≡ inr _) × (q' ≡ init')) ,
-        (isProp× (isSetΣ₀⊎⊤ _ _) (isFinSet→isSet (Q' .snd) _ _))
-    -- first NFA's transitions
-    the-δ (inr (inl q)) (inr (inl q')) = δ q q'
-    -- second NFA's transitions
-    the-δ (inr (inr (inl q))) (inr (inr (inl q'))) = δ' q q'
-    -- first NFA's acc to end
-    the-δ (inr (inl q)) (inr (inr (inr q'))) x =
-      ((q ≡ acc) × (x ≡ inr _)) ,
-      (isProp× (isFinSet→isSet (Q .snd) _ _) (isSetΣ₀⊎⊤ _ _))
-    -- second NFA's acc to end
-    the-δ (inr (inr (inl q))) (inr (inr (inr q'))) x =
-      ((q ≡ acc') × (x ≡ inr _)) ,
-      (isProp× (isFinSet→isSet (Q' .snd) _ _) (isSetΣ₀⊎⊤ _ _))
-    -- No other transitions
-    the-δ q q' x = (Lift ⊥) , (isPropLift isProp⊥)
-
-    the-init : the-states .fst
-    the-init = inl _
-
-    the-acc : the-states .fst
-    the-acc = inr (inr (inr _))
-
-  KL*NFA :
-    (Q : FinSet ℓ) →
-    (δ : Q .fst → Q .fst → ℙ (Σ₀ .fst ⊎ ⊤)) →
-    (init : Q .fst) →
-    (acc : Q .fst) →
-    Grammar
-  KL*NFA Q δ init acc x =
-    NFAGrammar
-      the-states
-      the-δ
-      the-init
-      the-acc
-      x
-    where
-    the-states : FinSet ℓ
-    fst the-states = ⊤ ⊎ (Q .fst ⊎ ⊤)
-    snd the-states =
-      isFinSet⊎
-        (_ , isFinSetUnit)
-        (_ , isFinSet⊎ Q (_ , isFinSetUnit))
-
-    the-δ : the-states .fst → the-states .fst → ℙ (Σ₀ .fst ⊎ ⊤)
-    -- init ε-transition to NFA's init
-    the-δ (inl _) (inr (inl q')) x =
-      ((x ≡ inr _) × (q' ≡ init)) ,
-        (isProp× (isSetΣ₀⊎⊤ _ _) (isFinSet→isSet (Q .snd) _ _))
-    -- init ε-transition to end
-    the-δ (inl _) (inr (inr q')) x =
-      ((x ≡ inr _)) ,
-      (isSetΣ₀⊎⊤ _ _)
-   -- first NFA's acc to end
-    the-δ (inr (inl q)) (inr (inr q')) x =
-      ((q ≡ acc) × (x ≡ inr _)) ,
-      (isProp× (isFinSet→isSet (Q .snd) _ _) (isSetΣ₀⊎⊤ _ _))
-    -- NFA's acc to init state
-    -- TODO : initially this was written as NFA's acc to NFA's init state
-    -- but that can't work with this pattern matching without some refactors
-    -- this difference shouldn't matter
-    the-δ (inr (inl q)) (inl _) x =
-      ((x ≡ inr _) × (q ≡ acc)) ,
-        (isProp× (isSetΣ₀⊎⊤ _ _) (isFinSet→isSet (Q .snd) _ _))
-    -- first NFA's transitions
-    the-δ (inr (inl q)) (inr (inl q')) = δ q q'
-    -- No other transitions
-    the-δ q q' x = (Lift ⊥) , (isPropLift isProp⊥)
-
-    the-init : the-states .fst
-    the-init = inl _
-
-    the-acc : the-states .fst
-    the-acc = (inr (inr _))
+  KL*NFA : (N : NFA) → NFA
+  fst (Q (KL*NFA N)) = ⊤ ⊎ (N .Q .fst ⊎ ⊤)
+  snd (Q (KL*NFA N)) =
+    isFinSet⊎
+      (_ , isFinSetUnit)
+      (_ , isFinSet⊎ (N .Q) (_ , isFinSetUnit))
+  init (KL*NFA N) = inl _
+  acc (KL*NFA N) = inr (inr _)
+  transition (KL*NFA N) = N .transition
+  src (KL*NFA N) x = inr (inl (N .src x))
+  dst (KL*NFA N) x = inr (inl (N .dst x))
+  label (KL*NFA N) x = N .label x
+  -- 4 ε-transitions
+  fst (ε-transition (KL*NFA N)) = Lift (Fin 4)
+  snd (ε-transition (KL*NFA N)) = isFinSetLift isFinSetFin
+  -- init to N init
+  ε-src (KL*NFA N) (lift fzero) = KL*NFA N .init
+  ε-dst (KL*NFA N) (lift fzero) = inr (inl (N .init))
+  -- init to acc
+  ε-src (KL*NFA N) (lift (fsuc fzero)) = KL*NFA N .init
+  ε-dst (KL*NFA N) (lift (fsuc fzero)) = KL*NFA N .acc
+  -- N acc to N init
+  ε-src (KL*NFA N) (lift (fsuc (fsuc fzero))) = inr (inl (N .acc))
+  ε-dst (KL*NFA N) (lift (fsuc (fsuc fzero))) = inr (inl (N .init))
+  -- N acc to acc
+  ε-src (KL*NFA N) (lift (fsuc (fsuc (fsuc fzero)))) = inr (inl (N .acc))
+  ε-dst (KL*NFA N) (lift (fsuc (fsuc (fsuc fzero)))) = KL*NFA N .acc
 
 module _ where
   data αβ : Set ℓ-zero where
@@ -344,66 +333,14 @@ module _ where
   pα : (literal α) wα .fst
   pα = refl
 
-  NFAtransitions : (y : αβ) → (s s' : Fin 2) → ℙ (αβ ⊎ ⊤)
-  NFAtransitions y fzero fzero x = ⊥ , isProp⊥
-  NFAtransitions y fzero (fsuc fzero) x = (x ≡ (inl y)) , isSetΣ₀⊎⊤ _ _
-  NFAtransitions y (fsuc fzero) fzero x = ⊥ , isProp⊥
-  NFAtransitions y (fsuc fzero) (fsuc fzero) x = ⊥ , isProp⊥
+  NFAαβ : NFA
+  NFAαβ = ⊗NFA (literalNFA α) (literalNFA β)
 
-  pNFAα :
-    NFA
-      (Fin 2 , isFinSetFin)
-      (NFAtransitions α) fzero (fsuc fzero)
-      fzero wα
-  pNFAα = cons refl refl nil
-
-  pNFAβ :
-    NFA
-      (Fin 2 , isFinSetFin)
-      (NFAtransitions β) fzero (fsuc fzero)
-      fzero wβ
-  pNFAβ = cons refl refl nil
-
-  α⊗βNFA : Grammar
-  α⊗βNFA =
-    ⊗NFA
-      (Fin 2 , isFinSetFin)
-      (Fin 2 , isFinSetFin)
-      (NFAtransitions α)
-      (NFAtransitions β)
-      fzero
-      fzero
-      (fsuc fzero)
-      (fsuc fzero)
-
-  pNFAαβ : α⊗βNFA (α ∷ β ∷ []) .fst
+  pNFAαβ : NFAGrammar NFAαβ (α ∷ β ∷ []) .fst
   pNFAαβ =
-    cons
-      {s' = inr (inl fzero)}
-      {c = inr _}
-     (refl , refl)
-     refl
-     (cons
-       {s' = inr (inl (fsuc fzero))}
-       {c = inl α}
-       refl
-       refl
-       (cons
-         {s' = inr (inr (inl fzero))}
-         {c = inr _}
-         (refl , (refl , refl))
-         refl
-         (cons
-           {s' = inr (inr (inl (fsuc fzero)))}
-           {c = inl β}
-           refl
-           refl
-           (cons
-             {s' = inr (inr (inr tt))}
-             {c = inr _}
-             (refl , refl)
-             refl
-             nil
-             ))))
-
-  open Iso
+    ε-cons {t = lift fzero}
+      (cons {t = inl _}
+        (ε-cons {t = lift (fsuc fzero)}
+          (cons {t = inr _}
+           (ε-cons {t = lift (fsuc (fsuc fzero))}
+             nil))))
