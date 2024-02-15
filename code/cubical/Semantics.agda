@@ -109,10 +109,7 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
     cons : (Σ[ s ∈ Splitting w ] g (s .fst .fst) .fst × KL*Ty g (s .fst .snd)) → KL*Ty g w
 
   isSetKL*Ty : (g : Grammar) → (w : String) → isSet (KL*Ty g w)
-  isSetKL*Ty g w (nil a) (nil b) = {!!}
-  isSetKL*Ty g w (nil a) (cons b) = {!!}
-  isSetKL*Ty g w (cons a) (nil b) = {!!}
-  isSetKL*Ty g w (cons a) (cons b) = {!!}
+  isSetKL*Ty g w = ?
 
   KL* : (g : Grammar) → Grammar
   KL* g w = (KL*Ty g w , isSetKL*Ty g w)
@@ -220,19 +217,27 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   dst (⊗NFA N N') (inr x) = inr (inr (inl (N' .dst x)))
   label (⊗NFA N N') (inl x) = N .label x
   label (⊗NFA N N') (inr x) = N' .label x
-  -- 3 ε-transitions
-  -- TODO need to add the ones in from the subautomata
-  fst (ε-transition (⊗NFA N N')) = Lift (Fin 3)
-  snd (ε-transition (⊗NFA N N')) = isFinSetLift isFinSetFin
+  -- 3 added ε-transitions + ones in subautomata
+  fst (ε-transition (⊗NFA N N')) = Lift (Fin 3) ⊎ (N .ε-transition .fst ⊎ N' .ε-transition .fst)
+  snd (ε-transition (⊗NFA N N')) =
+   isFinSet⊎ {ℓ}
+     (Lift (Fin 3) , isFinSetLift isFinSetFin)
+     (_ , isFinSet⊎ (N .ε-transition) (N' .ε-transition))
   -- init to N init
-  ε-src (⊗NFA N N') (lift fzero) = (⊗NFA N N') .init
-  ε-dst (⊗NFA N N') (lift fzero) = inr (inl (N .init))
+  ε-src (⊗NFA N N') (inl (lift fzero)) = (⊗NFA N N') .init
+  ε-dst (⊗NFA N N') (inl (lift fzero)) = inr (inl (N .init))
   -- N acc to N' init
-  ε-src (⊗NFA N N') (lift (fsuc fzero)) = inr (inl (N .acc))
-  ε-dst (⊗NFA N N') (lift (fsuc fzero)) = inr (inr (inl (N' .init)))
+  ε-src (⊗NFA N N') (inl (lift (fsuc fzero))) = inr (inl (N .acc))
+  ε-dst (⊗NFA N N') (inl (lift (fsuc fzero))) = inr (inr (inl (N' .init)))
   -- N' acc to acc
-  ε-src (⊗NFA N N') (lift (fsuc (fsuc fzero))) = inr (inr (inl (N' .acc)))
-  ε-dst (⊗NFA N N') (lift (fsuc (fsuc fzero))) = (⊗NFA N N') .acc
+  ε-src (⊗NFA N N') (inl (lift (fsuc (fsuc fzero)))) = inr (inr (inl (N' .acc)))
+  ε-dst (⊗NFA N N') (inl (lift (fsuc (fsuc fzero)))) = (⊗NFA N N') .acc
+  -- N ε-transitions
+  ε-src (⊗NFA N N') (inr (inl x)) = inr (inl (N .ε-src x))
+  ε-dst (⊗NFA N N') (inr (inl x)) = inr (inl (N .ε-dst x))
+  -- N' ε-transitions
+  ε-src (⊗NFA N N') (inr (inr x)) = inr (inr (inl (N' .ε-src x)))
+  ε-dst (⊗NFA N N') (inr (inr x)) = inr (inr (inl (N' .ε-dst x)))
 
   ⊕NFA : (N : NFA) → (N' : NFA) → NFA
   -- States stratified into init, N states, N' states, acc
@@ -259,21 +264,30 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   dst (⊕NFA N N') (inr x) = inr (inr (inl (N' .dst x)))
   label (⊕NFA N N') (inl x) = N .label x
   label (⊕NFA N N') (inr x) = N' .label x
-  -- 4 ε-transitions
-  fst (ε-transition (⊕NFA N N')) = Lift (Fin 4)
-  snd (ε-transition (⊕NFA N N')) = isFinSetLift isFinSetFin
+  -- 4 ε-transitions + ones in subautomata
+  fst (ε-transition (⊕NFA N N')) = Lift (Fin 4) ⊎ (N .ε-transition .fst ⊎ N' .ε-transition .fst)
+  snd (ε-transition (⊕NFA N N')) =
+    isFinSet⊎ {ℓ}
+      (_ , isFinSetLift isFinSetFin)
+      (_ , isFinSet⊎ (N .ε-transition) (N' .ε-transition))
   -- init to N init
-  ε-src (⊕NFA N N') (lift fzero) = (⊕NFA N N') .init
-  ε-dst (⊕NFA N N') (lift fzero) = inr (inl (N .init))
+  ε-src (⊕NFA N N') (inl (lift fzero)) = (⊕NFA N N') .init
+  ε-dst (⊕NFA N N') (inl (lift fzero)) = inr (inl (N .init))
   -- init to N init
-  ε-src (⊕NFA N N') (lift (fsuc fzero)) = (⊕NFA N N') .init
-  ε-dst (⊕NFA N N') (lift (fsuc fzero)) = inr (inr (inl (N' .init)))
+  ε-src (⊕NFA N N') (inl (lift (fsuc fzero))) = (⊕NFA N N') .init
+  ε-dst (⊕NFA N N') (inl (lift (fsuc fzero))) = inr (inr (inl (N' .init)))
   -- N acc to acc
-  ε-src (⊕NFA N N') (lift (fsuc (fsuc fzero))) = inr (inl (N .acc))
-  ε-dst (⊕NFA N N') (lift (fsuc (fsuc fzero))) = (⊕NFA N N') .acc
+  ε-src (⊕NFA N N') (inl (lift (fsuc (fsuc fzero)))) = inr (inl (N .acc))
+  ε-dst (⊕NFA N N') (inl (lift (fsuc (fsuc fzero)))) = (⊕NFA N N') .acc
   -- N' acc to acc
-  ε-src (⊕NFA N N') (lift (fsuc (fsuc (fsuc fzero)))) = inr (inr (inl (N' .acc)))
-  ε-dst (⊕NFA N N') (lift (fsuc (fsuc (fsuc fzero)))) = (⊕NFA N N') .acc
+  ε-src (⊕NFA N N') (inl (lift (fsuc (fsuc (fsuc fzero))))) = inr (inr (inl (N' .acc)))
+  ε-dst (⊕NFA N N') (inl (lift (fsuc (fsuc (fsuc fzero))))) = (⊕NFA N N') .acc
+  -- N ε-transitions
+  ε-src (⊕NFA N N') (inr (inl x)) = inr (inl (N .ε-src x))
+  ε-dst (⊕NFA N N') (inr (inl x)) = inr (inl (N .ε-dst x))
+  -- N' ε-transitions
+  ε-src (⊕NFA N N') (inr (inr x)) = inr (inr (inl (N' .ε-src x)))
+  ε-dst (⊕NFA N N') (inr (inr x)) = inr (inr (inl (N' .ε-dst x)))
 
   KL*NFA : (N : NFA) → NFA
   fst (Q (KL*NFA N)) = ⊤ ⊎ (N .Q .fst ⊎ ⊤)
@@ -287,21 +301,27 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   src (KL*NFA N) x = inr (inl (N .src x))
   dst (KL*NFA N) x = inr (inl (N .dst x))
   label (KL*NFA N) x = N .label x
-  -- 4 ε-transitions
-  fst (ε-transition (KL*NFA N)) = Lift (Fin 4)
-  snd (ε-transition (KL*NFA N)) = isFinSetLift isFinSetFin
+  -- 4 ε-transitions + ones in subautomata
+  fst (ε-transition (KL*NFA N)) = Lift (Fin 4) ⊎ (N .ε-transition .fst)
+  snd (ε-transition (KL*NFA N)) =
+    isFinSet⊎ {ℓ}
+      (_ , isFinSetLift isFinSetFin)
+      (N .ε-transition)
   -- init to N init
-  ε-src (KL*NFA N) (lift fzero) = KL*NFA N .init
-  ε-dst (KL*NFA N) (lift fzero) = inr (inl (N .init))
+  ε-src (KL*NFA N) (inl (lift fzero)) = KL*NFA N .init
+  ε-dst (KL*NFA N) (inl (lift fzero)) = inr (inl (N .init))
   -- init to acc
-  ε-src (KL*NFA N) (lift (fsuc fzero)) = KL*NFA N .init
-  ε-dst (KL*NFA N) (lift (fsuc fzero)) = KL*NFA N .acc
+  ε-src (KL*NFA N) (inl (lift (fsuc fzero))) = KL*NFA N .init
+  ε-dst (KL*NFA N) (inl (lift (fsuc fzero))) = KL*NFA N .acc
   -- N acc to N init
-  ε-src (KL*NFA N) (lift (fsuc (fsuc fzero))) = inr (inl (N .acc))
-  ε-dst (KL*NFA N) (lift (fsuc (fsuc fzero))) = inr (inl (N .init))
+  ε-src (KL*NFA N) (inl (lift (fsuc (fsuc fzero)))) = inr (inl (N .acc))
+  ε-dst (KL*NFA N) (inl (lift (fsuc (fsuc fzero)))) = inr (inl (N .init))
   -- N acc to acc
-  ε-src (KL*NFA N) (lift (fsuc (fsuc (fsuc fzero)))) = inr (inl (N .acc))
-  ε-dst (KL*NFA N) (lift (fsuc (fsuc (fsuc fzero)))) = KL*NFA N .acc
+  ε-src (KL*NFA N) (inl (lift (fsuc (fsuc (fsuc fzero))))) = inr (inl (N .acc))
+  ε-dst (KL*NFA N) (inl (lift (fsuc (fsuc (fsuc fzero))))) = KL*NFA N .acc
+  -- N ε-transitions
+  ε-src (KL*NFA N) (inr x) = inr (inl (N .ε-src x))
+  ε-dst (KL*NFA N) (inr x) = inr (inl (N .ε-dst x))
 
 module _ where
   data αβ : Set ℓ-zero where
@@ -338,9 +358,9 @@ module _ where
 
   pNFAαβ : NFAGrammar NFAαβ (α ∷ β ∷ []) .fst
   pNFAαβ =
-    ε-cons {t = lift fzero}
+    ε-cons {t = inl (lift fzero)}
       (cons {t = inl _}
-        (ε-cons {t = lift (fsuc fzero)}
+        (ε-cons {t = inl (lift (fsuc fzero))}
           (cons {t = inr _}
-           (ε-cons {t = lift (fsuc (fsuc fzero))}
+           (ε-cons {t = inl (lift (fsuc (fsuc fzero)))}
              nil))))
