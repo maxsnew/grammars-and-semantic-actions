@@ -1,5 +1,5 @@
 {-# OPTIONS --lossy-unification #-}
-module Semantics where
+module Semantics.NFA where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -7,7 +7,9 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Data.List
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
+open import Cubical.Data.W.Indexed
 open import Cubical.Data.Unit
+open import Cubical.Data.Maybe
 open import Cubical.Data.Bool renaming (_⊕_ to _⊕B_)
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as ⊥
@@ -30,98 +32,14 @@ open import Cubical.Algebra.CommMonoid
 open import Cubical.Algebra.CommMonoid.Instances.FreeComMonoid
 
 open import Cubical.Tactics.Reflection
+open import Semantics.Grammar
 
 private
   variable ℓ ℓ' : Level
 
-module Semantics ℓ (Σ₀ : hSet ℓ) where
-  String : Type ℓ
-  String = List (Σ₀ .fst)
 
-  isSetString : isSet String
-  isSetString = isOfHLevelList 0 (Σ₀ .snd)
-
-  isGroupoidString : isGroupoid String
-  isGroupoidString = isSet→isGroupoid isSetString
-
-  Splitting : String → Type ℓ
-  Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
-
-  isSetSplitting : (w : String) → isSet (Splitting w)
-  isSetSplitting w =
-    isSetΣ (isSet× isSetString isSetString)
-      λ s → isGroupoidString w (s .fst ++ s .snd)
-
-  Grammar : Type (ℓ-suc ℓ)
-  Grammar = String → hSet ℓ
-
-  open ListPath
-  ILin : Grammar
-  ILin w = (w ≡ []) , isGroupoidString w []
-
-  _⊗_ : Grammar → Grammar → Grammar
-  (g ⊗ g') w =
-    (Σ[ s ∈ Splitting w ] g (s .fst .fst) .fst × g' (s .fst .snd) .fst) ,
-    isSetΣ (isSetSplitting w) λ s →
-      isSet× (g (s .fst .fst) .snd) (g' (s .fst .snd) .snd)
-
-  literal : (Σ₀ .fst) → Grammar
-  literal c w = ([ c ] ≡ w) , isGroupoidString ([ c ]) w
-
-  _-⊗_ : Grammar → Grammar → Grammar
-  (g -⊗ g') w =
-    (∀ (w' : String) → g w' .fst × g' (w' ++ w) .fst) ,
-      isSetΠ (λ w' → isSet× (g w' .snd) (g' (w' ++ w) .snd))
-
-  _⊗-_ : Grammar → Grammar → Grammar
-  (g ⊗- g') w =
-    (∀ (w' : String) → g (w ++ w') .fst × g' w' .fst) ,
-      isSetΠ (λ w' → isSet× (g (w ++ w') .snd) (g' w' .snd))
-
-  ΠLin : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
-  ΠLin {A} f w = (∀ (a : A .fst) → f a w .fst) , isSetΠ λ a → f a w .snd
-
-  ΣLin : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
-  ΣLin {A} f w =
-    (Σ[ a ∈ A .fst ] f a w .fst) ,
-      isSetΣ (A .snd) λ a → f a w .snd
-
-  ⊤Lin : Grammar
-  ⊤Lin w = Unit* , isSetUnit*
-
-  _&_ : Grammar → Grammar → Grammar
-  (g & g') w = (g w .fst × g' w .fst) ,
-    isSet× (g w .snd) (g' w .snd)
-
-  _⊕_ : Grammar → Grammar → Grammar
-  (g ⊕ g') w = (g w .fst ⊎ g' w .fst) ,
-    isSet⊎ (g w .snd) (g' w .snd)
-
-  ⊥Lin : Grammar
-  ⊥Lin w = Lift ⊥ ,
-    λ x y a b i →
-      liftExt (isProp→isSet isProp⊥ (lower x) (lower y)
-        (cong lower a) (cong lower b) i)
-
-  _⇒_ : Grammar → Grammar → Grammar
-  (g ⇒ g') w =
-    (g w .fst → g' w .fst) ,
-    isSetΠ (λ p → g' w .snd)
-
-  ParseTransformer : Grammar → Grammar → Type ℓ
-  ParseTransformer g g' = ∀ {w} → g w .fst → g' w .fst
-
-  data KL*Ty (g : Grammar) (w : String) : Type ℓ where
-    nil : ILin w .fst → (KL*Ty g w)
-    cons :
-      (Σ[ s ∈ Splitting w ]
-        g (s .fst .fst) .fst × KL*Ty g (s .fst .snd)) → KL*Ty g w
-
-  isSetKL*Ty : (g : Grammar) → (w : String) → isSet (KL*Ty g w)
-  isSetKL*Ty g w = {!!}
-
-  KL* : (g : Grammar) → Grammar
-  KL* g w = (KL*Ty g w , isSetKL*Ty g w)
+module NFA ℓ (Σ₀ : hSet ℓ) where
+  open GrammarDefs ℓ Σ₀ public
 
   record NFA : Type (ℓ-suc ℓ) where
     constructor mkNFA
@@ -151,6 +69,51 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
       {t : N .ε-transition .fst} →
       NFATrace N (N .ε-dst t) w' →
       NFATrace N (N .ε-src t) w'
+
+  module isSetNFATraceProof
+    (N : NFA)
+    where
+    NFATrace-X = N .Q .fst × String
+    NFATrace-S : NFATrace-X → Type ℓ
+    NFATrace-S (s , w) =
+      ((s ≡ N .acc) × (w ≡ [])) ⊎ (
+      Σ (fiber (N .src) s) (λ t → fiber (λ w' → (N .label (t .fst)) ∷ w') w)  ⊎
+      fiber (N .ε-src) s)
+
+    NFATrace-P : ∀ x → NFATrace-S x → Type ℓ
+    NFATrace-P (state , word) (inl S) = Lift ⊥
+    NFATrace-P (state , word) (inr (inl (x , y))) =
+      -- Σ (fiber (N .dst) state) λ t → t .fst ≡ x .fst
+      Σ (N .Q .fst) λ st → st ≡ N .dst (x .fst)
+    NFATrace-P (state , word) (inr (inr S)) =
+      -- Σ (fiber (N .ε-dst) state) λ t → t .fst ≡ S .fst
+      Σ (N .Q .fst) λ st → st ≡ N .ε-dst (S .fst)
+
+    NFATrace-inX : ∀ x (s : NFATrace-S x) → NFATrace-P x s → NFATrace-X
+    -- NFATrace-inX = {!!}
+    NFATrace-inX (state , word) (inr (inl x)) f = f .fst , x .snd .fst
+    NFATrace-inX (state , word) (inr (inr x)) f = (f .fst) , word
+
+    NFATrace→W :
+      ∀ {s : N .Q .fst} {w : String} →
+      NFATrace N s w → IW NFATrace-S NFATrace-P NFATrace-inX ((s , w))
+    NFATrace→W {.(N .acc)} {.[]} nil =
+      node (inl (refl , refl)) (λ ())
+    NFATrace→W {.(N .src _)} {.(N .label _ ∷ _)} (cons {w}{t} x) =
+      node (inr (inl ((t , refl) , w , refl)))
+        (λ p → NFATrace→W (subst (λ y → NFATrace N y w) (sym (p .snd)) x))
+    NFATrace→W {.(N .ε-src _)} (ε-cons {w'}{t} x) =
+      node (inr (inr (t , refl)))
+        λ p → NFATrace→W (subst (λ y → NFATrace N y w') (sym (p .snd)) x)
+
+    -- W→NFATrace : ∀ {s} {w} →
+    --   IW NFATrace-S NFATrace-P NFATrace-inX ((s , w)) → NFATrace N s w
+    -- W→NFATrace (node (inl x) subtree) =
+    --   subst2 (λ a b → NFATrace N a b) (sym (x .fst)) (sym (x .snd)) (NFATrace.nil {N = N})
+    -- W→NFATrace {s}{w} (node (fsuc (inl x)) subtree) =
+    --   subst2 (λ a b → NFATrace N a b) {!x .fst .snd!} {!!}
+    --     (W→NFATrace (subtree (N .dst (fst x .fst) , refl)))
+    -- W→NFATrace {s}{w} (node (fsuc (fsuc x)) subtree) = {!!}
 
   isSetNFATrace :
     (N : NFA) → (state : N .Q .fst) →
@@ -197,6 +160,11 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   ε-transition emptyNFA = Lift Unit , isFinSetLift isFinSetUnit
   ε-src emptyNFA _ = emptyNFA .init
   ε-dst emptyNFA _ = emptyNFA .acc
+
+  -- how to show that p must be ε-cons nil
+  emptyNFA≡[] :
+    ∀ {w} → NFATrace emptyNFA (emptyNFA .init) w → w ≡ []
+  emptyNFA≡[] p = {!!}
 
   ⊗NFA : (N : NFA) → (N' : NFA) → NFA
   -- States stratified into init, N states, N' states, acc
@@ -333,43 +301,16 @@ module Semantics ℓ (Σ₀ : hSet ℓ) where
   ε-src (KL*NFA N) (inr x) = inr (inl (N .ε-src x))
   ε-dst (KL*NFA N) (inr x) = inr (inl (N .ε-dst x))
 
-module _ where
-  data αβ : Set ℓ-zero where
-    α : αβ
-    β : αβ
+-- TODO : Move this into another file after resolving all metas
+module Thompson ℓ (Σ₀ : hSet ℓ) where
+  open NFA ℓ Σ₀ public
 
-  isSetαβ : isSet αβ
-  isSetαβ = {!!}
+  ILin-to-emptyNFA : ParseTransformer (ILin) (NFAGrammar emptyNFA)
+  ILin-to-emptyNFA {w} p =
+    subst
+    (λ w' → NFAGrammar emptyNFA w' .fst)
+    (sym p)
+    (ε-cons nil)
 
-  open Semantics ℓ-zero (αβ , isSetαβ)
-  word : String
-  word = α ∷ β ∷ α ∷ β ∷ α ∷ []
-
-  g : Grammar
-  g = (KL* (literal α ⊗ literal β) ⊗ literal α)
-
-  p : g word .fst
-  p = ((α ∷ β ∷ α ∷ β ∷ [] , α ∷ []) , refl) ,
-      cons (((α ∷ β ∷ [] , α ∷ β ∷ []) , refl) ,
-           ((([ α ] , [ β ]) , refl) , (refl , refl)) ,
-           (cons ((((α ∷ β ∷ []) , []) , refl) ,
-             (((([ α ] , [ β ]) , refl) , (refl , refl)) , (nil refl))))) ,
-      refl
-
-  wα = α ∷ []
-  wβ = β ∷ []
-
-  pα : (literal α) wα .fst
-  pα = refl
-
-  NFAαβ : NFA
-  NFAαβ = ⊗NFA (literalNFA α) (literalNFA β)
-
-  pNFAαβ : NFAGrammar NFAαβ (α ∷ β ∷ []) .fst
-  pNFAαβ =
-    ε-cons {t = inl (lift fzero)}
-      (cons {t = inl _}
-        (ε-cons {t = inl (lift (fsuc fzero))}
-          (cons {t = inr _}
-           (ε-cons {t = inl (lift (fsuc (fsuc fzero)))}
-             nil))))
+  emptyNFA-to-NFA : ParseTransformer (NFAGrammar emptyNFA) ILin
+  emptyNFA-to-NFA {w} p = {!p!}
