@@ -80,46 +80,85 @@ module NFA ℓ (Σ₀ : hSet ℓ) where
       Σ (fiber (N .src) s) (λ t → fiber (λ w' → (N .label (t .fst)) ∷ w') w)  ⊎
       fiber (N .ε-src) s)
 
-    NFATrace-P : ∀ x → NFATrace-S x → Type ℓ
-    NFATrace-P (state , word) (inl S) = Lift ⊥
-    NFATrace-P (state , word) (inr (inl (x , y))) =
-      -- Σ (fiber (N .dst) state) λ t → t .fst ≡ x .fst
-      Σ (N .Q .fst) λ st → st ≡ N .dst (x .fst)
-    NFATrace-P (state , word) (inr (inr S)) =
-      -- Σ (fiber (N .ε-dst) state) λ t → t .fst ≡ S .fst
-      Σ (N .Q .fst) λ st → st ≡ N .ε-dst (S .fst)
+    NFATrace-P : ∀ x → NFATrace-S x → Type
+    NFATrace-P (state , word) (inl S) = ⊥
+    NFATrace-P (state , word) (inr (inl (x , y))) = ⊤
+    NFATrace-P (state , word) (inr (inr S)) = ⊤
 
     NFATrace-inX : ∀ x (s : NFATrace-S x) → NFATrace-P x s → NFATrace-X
-    -- NFATrace-inX = {!!}
-    NFATrace-inX (state , word) (inr (inl x)) f = f .fst , x .snd .fst
-    NFATrace-inX (state , word) (inr (inr x)) f = (f .fst) , word
+    NFATrace-inX x (fsuc (inl (t , fibt))) _ = (N .dst (t .fst)) , (fibt .fst)
+    NFATrace-inX x (fsuc (fsuc t)) _ = (N .ε-dst (t .fst)) , (x .snd)
 
     NFATrace→W :
       ∀ {s : N .Q .fst} {w : String} →
       NFATrace N s w → IW NFATrace-S NFATrace-P NFATrace-inX ((s , w))
-    NFATrace→W {.(N .acc)} {.[]} nil =
+    NFATrace→W nil =
       node (inl (refl , refl)) (λ ())
-    NFATrace→W {.(N .src _)} {.(N .label _ ∷ _)} (cons {w}{t} x) =
-      node (inr (inl ((t , refl) , w , refl)))
-        (λ p → NFATrace→W (subst (λ y → NFATrace N y w) (sym (p .snd)) x))
-    NFATrace→W {.(N .ε-src _)} (ε-cons {w'}{t} x) =
+    NFATrace→W {s}{w} (cons {w'}{t} x) =
+      node (inr (inl ((t , refl) , w' , refl)))
+        (λ _ → NFATrace→W x)
+    NFATrace→W {s}{w} (ε-cons {w'}{t} x) =
       node (inr (inr (t , refl)))
-        λ p → NFATrace→W (subst (λ y → NFATrace N y w') (sym (p .snd)) x)
+        (λ _ → NFATrace→W x)
 
-    -- W→NFATrace : ∀ {s} {w} →
-    --   IW NFATrace-S NFATrace-P NFATrace-inX ((s , w)) → NFATrace N s w
-    -- W→NFATrace (node (inl x) subtree) =
-    --   subst2 (λ a b → NFATrace N a b) (sym (x .fst)) (sym (x .snd)) (NFATrace.nil {N = N})
-    -- W→NFATrace {s}{w} (node (fsuc (inl x)) subtree) =
-    --   subst2 (λ a b → NFATrace N a b) {!x .fst .snd!} {!!}
-    --     (W→NFATrace (subtree (N .dst (fst x .fst) , refl)))
-    -- W→NFATrace {s}{w} (node (fsuc (fsuc x)) subtree) = {!!}
+    W→NFATrace :
+      ∀ {s : N .Q .fst} {w : String} →
+      IW NFATrace-S NFATrace-P NFATrace-inX ((s , w)) → NFATrace N s w
+    W→NFATrace (node (inl x) subtree) =
+      transport
+        (sym (cong₂ (λ a b → NFATrace N a b)
+          (x .fst) (x .snd)))
+        (NFATrace.nil {N = N})
+    W→NFATrace (node (fsuc (inl x)) subtree) =
+      transport
+        (cong₂ (λ a b → NFATrace N a b)
+          (x .fst .snd) (x .snd .snd))
+        (NFATrace.cons {N = N} (W→NFATrace (subtree _)))
+    W→NFATrace {s}{w} (node (fsuc (fsuc x)) subtree) =
+      transport
+        (cong (λ a → NFATrace N a w) (x .snd))
+        (NFATrace.ε-cons {N = N} (W→NFATrace (subtree _)))
 
-  isSetNFATrace :
-    (N : NFA) → (state : N .Q .fst) →
-    (w : String) → isSet (NFATrace N state w)
-  isSetNFATrace N = {!!}
+    NFATraceRetractofW : ∀ {s}{w} (tr : NFATrace N s w) →
+      W→NFATrace (NFATrace→W tr) ≡ tr
+    NFATraceRetractofW nil = transportRefl nil
+    NFATraceRetractofW (cons tr) =
+      transportRefl (cons (W→NFATrace (NFATrace→W tr))) ∙
+      cong (λ a → cons a) (NFATraceRetractofW tr)
+    NFATraceRetractofW (ε-cons tr) =
+      transportRefl (ε-cons (W→NFATrace (NFATrace→W tr))) ∙
+      cong (λ a → ε-cons a) (NFATraceRetractofW tr)
 
+    isSetNFATrace-S : ∀ s w → isSet (NFATrace-S (s , w))
+    isSetNFATrace-S s w =
+      isSet⊎
+        (isSet×
+          (isSet→isGroupoid
+            (isFinSet→isSet (N .Q .snd)) _ _)
+          (isGroupoidString _ _))
+        (isSet⊎
+          (isSetΣ
+            (isSetΣ (isFinSet→isSet (N .transition .snd))
+            (λ t → isSet→isGroupoid (isFinSet→isSet (N .Q .snd)) _ _))
+            λ fib → isSetΣ isSetString
+              (λ w' → isGroupoidString _ _))
+          (isSetΣ (isFinSet→isSet (N .ε-transition .snd))
+            (λ t → isSet→isGroupoid
+              (isFinSet→isSet (N .Q .snd)) _ _)))
+
+    isSetNFATrace :
+      (state : N .Q .fst) →
+      (w : String) → isSet (NFATrace N state w)
+    isSetNFATrace s w =
+      isSetRetract
+        NFATrace→W
+        W→NFATrace
+        NFATraceRetractofW
+        (isOfHLevelSuc-IW 1
+          (λ x → isSetNFATrace-S (x .fst) (x .snd))
+          ((s , w)))
+
+  open isSetNFATraceProof
   NFAGrammar : (N : NFA) → Grammar
   NFAGrammar N w = (NFATrace N (N .init) w) , isSetNFATrace N (N .init) w
 

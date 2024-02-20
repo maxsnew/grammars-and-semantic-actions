@@ -116,41 +116,64 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
     nil : (KL*Ty g [])
     cons :
       ∀ {w w'} →
-        g w .fst × KL*Ty g w' → KL*Ty g (w ++ w')
+        g w .fst → KL*Ty g w' → KL*Ty g (w ++ w')
       -- (Σ[ s ∈ Splitting w ]
         -- g (s .fst .fst) .fst × KL*Ty g (s .fst .snd)) → KL*Ty g w
 
   module isSetKL*TyProof (g : Grammar) where
     KL*Ty-X = String
 
-    KL*Ty-S : KL*Ty-X → Type {!!}
+    KL*Ty-S : KL*Ty-X → Type ℓ
     KL*Ty-S w =
       (w ≡ []) ⊎
       (Σ[ s ∈ Splitting w ] g (s .fst .fst) .fst)
 
-    KL*Ty-P : ∀ w → KL*Ty-S w → Type {!!}
-    KL*Ty-P w (inl x) = Lift ⊥
-    KL*Ty-P w (inr (s , p)) = KL*Ty g (s .fst .snd)
+    KL*Ty-P : ∀ w → KL*Ty-S w → Type ℓ-zero
+    KL*Ty-P w (inl x) = ⊥
+    KL*Ty-P w (fsuc x) = ⊤
 
     KL*Ty-inX : ∀ w (s : KL*Ty-S w) → KL*Ty-P w s → KL*Ty-X
-    KL*Ty-inX w (fsuc (s , parse)) p = s .fst .snd
+    KL*Ty-inX w (fsuc (s , sp)) x = s .fst .snd
+
 
     KL*Ty→W : ∀ {w} → KL*Ty g w → IW KL*Ty-S KL*Ty-P KL*Ty-inX w
-    KL*Ty→W {.[]} nil = node (inl refl) λ ()
-    KL*Ty→W {.(_ ++ _)} (cons {w}{w'} x) =
-      node (fsuc (((w , w') , refl) , (x .fst)))
-        (λ p → KL*Ty→W (x .snd))
+    KL*Ty→W nil = node (inl refl) (λ ())
+    KL*Ty→W (cons {w}{w'} x p) = node (fsuc (((w , w') , refl) , x)) λ _ → KL*Ty→W p
 
     W→KL*Ty : ∀ {w} → IW KL*Ty-S KL*Ty-P KL*Ty-inX w → KL*Ty g w
     W→KL*Ty (node (inl x) subtree) =
-      transport (cong (λ a → KL*Ty g a) (sym x)) (KL*Ty.nil {g = g})
+      transport
+        (cong (λ a → KL*Ty g a) (sym x))
+        (KL*Ty.nil {g = g})
     W→KL*Ty (node (fsuc x) subtree) =
-      transport {!!}
-        (KL*Ty.cons {g = g} ((x .snd) ,
-        (W→KL*Ty (subtree {!!}))))
+      transport
+      (cong (λ a → KL*Ty g a) (sym (x .fst .snd)))
+      (KL*Ty.cons {g = g} (x .snd) (W→KL*Ty (subtree _)))
 
-  -- isSetKL*Ty : (g : Grammar) → (w : String) → isSet (KL*Ty g w)
-  -- isSetKL*Ty g w = {!!}
+    KL*TyRetractofW :
+      ∀ {w} (p : KL*Ty g w) →
+      W→KL*Ty (KL*Ty→W p) ≡ p
+    KL*TyRetractofW nil = transportRefl (KL*Ty.nil {g = g})
+    KL*TyRetractofW (cons x p) =
+      transportRefl (cons x (W→KL*Ty (KL*Ty→W p))) ∙
+      cong (λ a → cons x a) (KL*TyRetractofW p)
 
-  -- KL* : (g : Grammar) → Grammar
-  -- KL* g w = (KL*Ty g w , isSetKL*Ty g w)
+    isSetKL*Ty-S : ∀ w → isSet (KL*Ty-S w)
+    isSetKL*Ty-S w =
+      isSet⊎
+        (isGroupoidString _ _)
+        (isSetΣ
+          (isSetSplitting _)
+          λ s → g (s .fst .fst) .snd
+        )
+
+    isSetKL*Ty : ∀ w → isSet (KL*Ty g w)
+    isSetKL*Ty w =
+      isSetRetract
+        KL*Ty→W W→KL*Ty
+        KL*TyRetractofW
+        (isOfHLevelSuc-IW 1 isSetKL*Ty-S w)
+
+  open isSetKL*TyProof
+  KL* : Grammar → Grammar
+  KL* g w = KL*Ty g w , isSetKL*Ty _ _
