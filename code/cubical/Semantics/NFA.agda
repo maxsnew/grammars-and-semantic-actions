@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS #-}
 module Semantics.NFA where
 
 open import Cubical.Foundations.Prelude
@@ -101,6 +101,8 @@ module NFA ℓ (Σ₀ : hSet ℓ) where
       node (inr (inr (t , refl)))
         (λ _ → NFATrace→W x)
 
+    IWNFA = IW NFATrace-S NFATrace-P NFATrace-inX 
+
     W→NFATrace :
       ∀ {s : N .Q .fst} {w : String} →
       IW NFATrace-S NFATrace-P NFATrace-inX ((s , w)) → NFATrace N s w
@@ -199,11 +201,6 @@ module NFA ℓ (Σ₀ : hSet ℓ) where
   ε-transition emptyNFA = Lift Unit , isFinSetLift isFinSetUnit
   ε-src emptyNFA _ = emptyNFA .init
   ε-dst emptyNFA _ = emptyNFA .acc
-
-  -- how to show that p must be ε-cons nil
-  emptyNFA≡[] :
-    ∀ {w} → NFATrace emptyNFA (emptyNFA .init) w → w ≡ []
-  emptyNFA≡[] p = {!!}
 
   ⊗NFA : (N : NFA) → (N' : NFA) → NFA
   -- States stratified into init, N states, N' states, acc
@@ -340,16 +337,4 @@ module NFA ℓ (Σ₀ : hSet ℓ) where
   ε-src (KL*NFA N) (inr x) = inr (inl (N .ε-src x))
   ε-dst (KL*NFA N) (inr x) = inr (inl (N .ε-dst x))
 
--- TODO : Move this into another file after resolving all metas
-module Thompson ℓ (Σ₀ : hSet ℓ) where
-  open NFA ℓ Σ₀ public
 
-  ILin-to-emptyNFA : ParseTransformer (ILin) (NFAGrammar emptyNFA)
-  ILin-to-emptyNFA {w} p =
-    subst
-    (λ w' → NFAGrammar emptyNFA w' .fst)
-    (sym p)
-    (ε-cons nil)
-
-  emptyNFA-to-NFA : ParseTransformer (NFAGrammar emptyNFA) ILin
-  emptyNFA-to-NFA {w} p = {!p!}

@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS  #-}
 module Semantics.Grammar where
 
 open import Cubical.Foundations.Prelude
@@ -112,6 +112,46 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   ParseTransformer : Grammar → Grammar → Type ℓ
   ParseTransformer g g' = ∀ {w} → g w .fst → g' w .fst
 
+  isEquivalentGrammar : Grammar → Grammar → Type ℓ
+  isEquivalentGrammar g g' = ∀ {w} → Iso (g w .fst) (g' w .fst)
+
+  module _ (g : Grammar) where
+    open Iso
+    ILin⊗g→g : ParseTransformer (ILin ⊗ g) g
+    ILin⊗g→g {w} p =
+      transport
+        (cong (λ a → g a .fst) (
+          cong (λ a → a ++ (p .fst .fst .snd)) (sym (p .snd .fst)) ∙
+          sym (p .fst .snd)))
+        (p .snd .snd)
+
+    g→ILin⊗g : ParseTransformer g (ILin ⊗ g)
+    g→ILin⊗g {w} p = (([] , _) , refl) , (refl , p)
+
+    -- ILinUnitL : isEquivalentGrammar (ILin ⊗ g) g
+    -- fun (ILinUnitL) = ILin⊗g→g
+    -- inv (ILinUnitL) = g→ILin⊗g
+    -- rightInv (ILinUnitL {w}) b = {!!}
+    -- leftInv ILinUnitL a = {!!}
+
+    g⊗ILin→g : ParseTransformer (g ⊗ ILin) g
+    g⊗ILin→g {w} p =
+      transport
+        (cong (λ a → g a .fst)
+          ((sym (++-unit-r _) ∙
+            cong (λ a → (p .fst .fst .fst ++ a)) (sym (p .snd .snd))) ∙
+            sym (p .fst .snd) ))
+        (p .snd .fst)
+
+    g→g⊗ILin : ParseTransformer g (g ⊗ ILin)
+    g→g⊗ILin {w} p = ((w , []) , (sym (++-unit-r _))) , (p , refl)
+
+    -- ILinUnitR : isEquivalentGrammar (g ⊗ ILin) g
+    -- fun (ILinUnitR) = {!!}
+    -- inv (ILinUnitR) = {!!}
+    -- rightInv (ILinUnitR) = {!!}
+    -- leftInv (ILinUnitR) = {!!}
+
   data KL*Ty (g : Grammar) : (w : String) → Type ℓ where
     nil : (KL*Ty g [])
     cons :
@@ -177,3 +217,17 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   open isSetKL*TyProof
   KL* : Grammar → Grammar
   KL* g w = KL*Ty g w , isSetKL*Ty _ _
+
+  data RegularGrammar : Type ℓ where
+    ILinReg : RegularGrammar
+    _⊗Reg_ : RegularGrammar → RegularGrammar → RegularGrammar
+    literalReg : (Σ₀ .fst) → RegularGrammar
+    _⊕Reg_ : RegularGrammar → RegularGrammar → RegularGrammar
+    KL*Reg : RegularGrammar → RegularGrammar
+
+  RegularGrammar→Grammar : RegularGrammar → Grammar
+  RegularGrammar→Grammar ILinReg = ILin
+  RegularGrammar→Grammar (g ⊗Reg g') = (RegularGrammar→Grammar g) ⊗ (RegularGrammar→Grammar g')
+  RegularGrammar→Grammar (literalReg c) = literal c
+  RegularGrammar→Grammar (g ⊕Reg g') = RegularGrammar→Grammar g ⊕ RegularGrammar→Grammar g'
+  RegularGrammar→Grammar (KL*Reg g) = KL* (RegularGrammar→Grammar g)
