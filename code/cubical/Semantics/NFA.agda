@@ -38,7 +38,7 @@ private
   variable ℓ ℓ' : Level
 
 
-module NFA ℓ (Σ₀ : hSet ℓ) where
+module NFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public
 
   record NFA : Type (ℓ-suc ℓ) where
