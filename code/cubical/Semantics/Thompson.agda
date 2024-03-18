@@ -94,13 +94,24 @@ module Thompson ℓ (Σ₀ : hSet ℓ) where
   -- IW→literal {c} {s} {w} (node (fsuc (inl ((t , p) , w' , c∷w'≡w))) subtree) =
     -- (literal c ⊗ IW→literal (subtree _) .fst) ,
       -- (([ c ] , w') , (sym (c∷w'≡w))) , refl , (IW→literal (subtree _) .snd)
+      --
+  literalNFATraceIWElim : ∀ c s {w} →
+   IWNFA (literalNFA c) (s , w) → Σ[ a ∈ String ] w ≡ a
+  literalNFATraceIWElim c s (node (inl (fs , w≡[])) subtree) = [] , w≡[]
+  literalNFATraceIWElim c s (node (fsuc (inl (fs , w' , [c]∷w'≡w))) subtree) =
+    c ∷ rec-call .fst ,
+    (sym ([c]∷w'≡w) ∙ cong (λ v → c ∷ v) (rec-call .snd))
+    where
+      rec-call = literalNFATraceIWElim c (literalNFA c .dst (fs .fst)) (subtree _)
 
   literalNFA→literal : ∀ {c} →
     ParseTransformer (NFAGrammar (literalNFA c)) (literal c)
-  literalNFA→literal {c} {w} x = {!!}
+  literalNFA→literal {c} {w} x =
+    sym (the-call .snd ∙ {!!})
     where
-      x' : literalNFATraceElim c _ x .fst ≡ (literal c ⊗ {!!})
-      x' = {!refl!}
+    the-w = NFATrace→W (literalNFA c) x
+    the-call = literalNFATraceIWElim c (literalNFA c .init) the-w
+    the-call-2 = literalNFATraceIWElim c {!!} (getSubtree (getSubtree the-w {!()!}) {!getSubtree!})
 
   equivalentLiteral : (c : Σ₀ .fst) → equivalentNFA (literal c)
   equivalentLiteral c .fst = literalNFA c
