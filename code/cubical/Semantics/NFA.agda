@@ -351,6 +351,7 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
 
   -- This is the first step toward a correct-by-construction parser
   -- Want to get out exectuable code that runs an NFA
+  -- implement with a lazy list
   module _
     (N : NFA)
     (decEq : Discrete (N .Q .fst))
