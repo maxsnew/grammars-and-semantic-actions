@@ -4,6 +4,8 @@ module Semantics.NFA where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
@@ -337,4 +339,50 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
   ε-src (KL*NFA N) (inr x) = inr (inl (N .ε-src x))
   ε-dst (KL*NFA N) (inr x) = inr (inl (N .ε-dst x))
 
+  open Iso
+  flattenList : {A : Type ℓ} → List A → Type ℓ
+  flattenList [] = ⊥*
+  flattenList (x ∷ L) = singl x ⊎ flattenList L
 
+  filterDec : {A : Type ℓ} → (P : A → DecProp ℓ) → List A → List (Σ[ a ∈ A ] P a .fst .fst)
+  filterDec p [] = []
+  filterDec p (x ∷ L) =
+    decRec (λ y → (x , y) ∷ (filterDec p L)) (λ _ → (filterDec p L)) (p x .snd)
+
+  -- This is the first step toward a correct-by-construction parser
+  -- Want to get out exectuable code that runs an NFA
+  module _
+    (N : NFA)
+    (decEq : Discrete (N .Q .fst))
+    (decEqTr : Discrete (N .transition .fst))
+    (decEqΣ : Discrete (Σ₀ .fst))
+    (trListΣ : Σ[ L ∈ List (N .transition .fst) ] flattenList L ≃ N .transition .fst)
+    (εtr-ListΣ : Σ[ L ∈ List (N .ε-transition .fst) ] flattenList L ≃ N .ε-transition .fst)
+    where
+
+    trL = trListΣ .fst
+    εtr-L = εtr-ListΣ .fst
+
+    run : (q : N .Q .fst) → (w : String) → Maybe (NFATrace N q w)
+    run q [] =
+      decRec
+      (λ acc≡q → just (subst (λ x → NFATrace N x []) acc≡q nil))
+      (λ acc≡q→⊥ → nothing) (decEq (N .acc) q)
+    run q (c ∷ w) = {!!}
+      where
+      label≡c : List (Σ[ t ∈ N .transition .fst ] N .label t ≡ c )
+      label≡c =
+        filterDec (λ t → (_ , (Σ₀ .snd _ _)) , decEqΣ (N .label t) c) trL
+
+      src≡q : List (Σ (Σ[ t ∈ N .transition .fst ] N .label t ≡ c)
+                    (λ a → N .src (fst a) ≡ q))
+      src≡q =
+        filterDec (λ (t , p) →
+          (_ , isFinSet→isSet (N .Q .snd) _ _) , (decEq (N .src t) q)) label≡c
+
+      takeTransition :
+        (a : Σ (Σ[ t ∈ N .transition .fst ] N .label t ≡ c)
+          (λ a → N .src (fst a) ≡ q)) →
+        Maybe (NFATrace N (N .src (a .fst .fst)) (N .label (fst (fst a)) ∷ w))
+      takeTransition ((t , p) , q) =
+        map-Maybe (λ tail → cons tail ) (run (N .dst t) w)
