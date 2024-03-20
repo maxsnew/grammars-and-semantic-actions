@@ -157,17 +157,13 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
         (KL* ⊕Σ₀)
         (DFAGrammar D ⊕ DFAGrammar (negate D))
     run p =
-      fold*
+      fold*l
         ⊕Σ₀
         (DFAGrammar D ⊕ DFAGrammar (negate D))
         mt-case
         cons-case
         p
       where
-      -- TODO : do this by state rather than from the init state always
-      elim-D⊕¬D-by-state : D .Q .fst → {!!}
-      elim-D⊕¬D-by-state q = {!!}
-
       mt-case : ParseTransformer
         ILin (DFAGrammar D ⊕ DFAGrammar (negate D))
       mt-case w≡[] =
@@ -188,9 +184,9 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
           (D .isAcc (D .init) .snd)
 
       cons-case : ParseTransformer
-        (⊕Σ₀ ⊗ (DFAGrammar D ⊕ DFAGrammar (negate D)))
+        ((DFAGrammar D ⊕ DFAGrammar (negate D)) ⊗ ⊕Σ₀)
         (DFAGrammar D ⊕ DFAGrammar (negate D))
-      cons-case {w''} (((w , w') , w''≡w++w') , (c , w≡c) , s) =
+      cons-case {w''} (((w , w') , w''≡w++w') , s , (c , w≡c)) =
         {!!}
 
 
