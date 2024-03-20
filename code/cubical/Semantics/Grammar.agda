@@ -71,13 +71,13 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
 
   _-⊗_ : Grammar → Grammar → Grammar
   (g -⊗ g') w =
-    (∀ (w' : String) → g w' .fst × g' (w' ++ w) .fst) ,
-      isSetΠ (λ w' → isSet× (g w' .snd) (g' (w' ++ w) .snd))
+    (∀ (w' : String) → g w' .fst → g' (w' ++ w) .fst) ,
+    isSetΠ (λ w' → isSetΠ λ p → g' (w' ++ w) .snd)
 
   _⊗-_ : Grammar → Grammar → Grammar
   (g ⊗- g') w =
-    (∀ (w' : String) → g (w ++ w') .fst × g' w' .fst) ,
-      isSetΠ (λ w' → isSet× (g (w ++ w') .snd) (g' w' .snd))
+    (∀ (w' : String) → g (w ++ w') .fst → g' w' .fst) ,
+     isSetΠ (λ w' → isSetΠ (λ p → g' w' .snd))
 
   ΠLin : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
   ΠLin {A} f w = (∀ (a : A .fst) → f a w .fst) , isSetΠ λ a → f a w .snd
@@ -111,6 +111,30 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
 
   ParseTransformer : Grammar → Grammar → Type ℓ
   ParseTransformer g g' = ∀ {w} → g w .fst → g' w .fst
+
+  -- Recall that a parse transformer is the shallow
+  -- embedding of a term from the syntax
+  --
+  -- So we can embed some inference rules
+  --
+  module _ (g : Grammar) where
+
+    idPT : ParseTransformer g g
+    idPT x = x
+
+    id-⊗ : ParseTransformer ILin (g -⊗ g)
+    id-⊗ {w'} pI w gw =
+      transport
+        (cong (λ a → g a .fst)
+          (sym (++-unit-r w) ∙
+          cong (λ a → w ++ a) (sym pI) ))
+        gw
+
+    ⊗appPT : ParseTransformer (g ⊗ (g -⊗ g)) g
+    ⊗appPT x =
+      transport
+        (sym (cong (λ b → g b .fst) (x .fst .snd)))
+        (x .snd .snd (fst (fst (x .fst))) (x .snd .fst))
 
   isEquivalentGrammar : Grammar → Grammar → Type ℓ
   isEquivalentGrammar g g' = ∀ {w} → Iso (g w .fst) (g' w .fst)
@@ -218,16 +242,47 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   KL* : Grammar → Grammar
   KL* g w = KL*Ty g w , isSetKL*Ty _ _
 
-  fold* :
+  fold*r :
     (g h : Grammar) →
     ParseTransformer ILin h →
     ParseTransformer (g ⊗ h) h →
     ParseTransformer (KL* g) h
-  fold* g h pε p⊗ nil = pε refl
-  fold* g h pε p⊗ (cons {w}{w'} x g*parse) =
+  fold*r g h pε p⊗ nil = pε refl
+  fold*r g h pε p⊗ (cons {w}{w'} x g*parse) =
     p⊗
       (((w , w') , refl) ,
-       (x , (fold* g h pε p⊗ g*parse)))
+       (x , (fold*r g h pε p⊗ g*parse)))
+
+  fold*l :
+    (g h : Grammar) →
+    ParseTransformer ILin h →
+    ParseTransformer (h ⊗ g) h →
+    ParseTransformer (KL* g) h
+  fold*l g h pε p⊗ g*parse =
+    fold*r
+      g
+      (h -⊗ h)
+      (id-⊗ h)
+      the-cons-step
+      g*parse
+      []
+      (pε refl)
+    where
+    -⊗intro-and-sub-PT : ParseTransformer ((h ⊗ g) ⊗ (h -⊗ h)) h
+    -⊗intro-and-sub-PT x =
+      ⊗appPT h
+        ((((fst x .fst .fst) , (fst x .fst .snd)) , (x .fst .snd)) ,
+        ((p⊗ (x .snd .fst)) , (x .snd .snd)))
+
+    the-cons-step : ParseTransformer (g ⊗ (h -⊗ h)) (h -⊗ h)
+    the-cons-step {w'} f w hw =
+      -⊗intro-and-sub-PT
+        (((w ++ fst f .fst .fst , fst f .fst .snd) ,
+        cong (λ b → w ++ b) (f .fst .snd) ∙
+        sym (++-assoc w (f .fst .fst .fst) (fst f .fst .snd))) ,
+        ((((w , fst f .fst .fst) , refl) ,
+        hw , (f .snd .fst)) ,
+        f .snd .snd))
 
   data RegularGrammar : Type ℓ where
     ILinReg : RegularGrammar
