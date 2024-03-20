@@ -218,6 +218,17 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   KL* : Grammar → Grammar
   KL* g w = KL*Ty g w , isSetKL*Ty _ _
 
+  fold* :
+    (g h : Grammar) →
+    ParseTransformer ILin h →
+    ParseTransformer (g ⊗ h) h →
+    ParseTransformer (KL* g) h
+  fold* g h pε p⊗ nil = pε refl
+  fold* g h pε p⊗ (cons {w}{w'} x g*parse) =
+    p⊗
+      (((w , w') , refl) ,
+       (x , (fold* g h pε p⊗ g*parse)))
+
   data RegularGrammar : Type ℓ where
     ILinReg : RegularGrammar
     _⊗Reg_ : RegularGrammar → RegularGrammar → RegularGrammar

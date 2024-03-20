@@ -6,6 +6,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
 open import Cubical.Data.FinSet
@@ -45,6 +46,15 @@ negateDecProp ((A , isPropA) , yes p) =
   ((¬ A) , isProp→ isProp⊥) , no (λ x → x p)
 negateDecProp ((A , isPropA) , no ¬p) =
   ((¬ A) , isProp→ isProp⊥) , yes ¬p
+
+
+negateCompute : ∀ {ℓ} {A : DecProp ℓ} →
+  ¬ A .fst .fst → (negateDecProp A) .fst .fst
+negateCompute {ℓ} {A} x =
+  decRec
+    (λ a → a)
+    (λ ¬a → {!Stable¬!})
+    (negateDecProp A .snd)
 
 module DFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public
@@ -125,6 +135,73 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
   open isSetDFATraceProof
   DFAGrammar : (D : DFA) → Grammar
   DFAGrammar D w = DFATrace D (D .init) w , isSetDFATrace D _ _
+
+  module _
+    (D : DFA)
+    (decEqQ : Discrete (D .Q .fst))
+    (isFinSetΣ₀ : isFinSet (Σ₀ .fst))
+    where
+
+    open Iso
+
+    ⊕Σ₀ : Grammar
+    ⊕Σ₀ w =
+      (Σ[ c ∈ Σ₀ .fst ] literal c w .fst) ,
+      isSetΣ (Σ₀ .snd) (λ c → literal c w .snd)
+
+    decEqΣ₀ : Discrete (Σ₀ .fst)
+    decEqΣ₀ = isFinSet→Discrete isFinSetΣ₀
+
+    run :
+      ParseTransformer
+        (KL* ⊕Σ₀)
+        (DFAGrammar D ⊕ DFAGrammar (negate D))
+    run p =
+      fold*
+        ⊕Σ₀
+        (DFAGrammar D ⊕ DFAGrammar (negate D))
+        mt-case
+        cons-case
+        p
+      where
+      -- TODO : do this by state rather than from the init state always
+      elim-D⊕¬D-by-state : D .Q .fst → {!!}
+      elim-D⊕¬D-by-state q = {!!}
+
+      mt-case : ParseTransformer
+        ILin (DFAGrammar D ⊕ DFAGrammar (negate D))
+      mt-case w≡[] =
+        decRec
+          (λ initIsAcc →
+            inl (
+              transport
+                (cong (λ a → DFATrace D (D .init) a) (sym w≡[]))
+                (DFATrace.nil {D = D} initIsAcc)))
+          (λ initIsAcc→⊥ →
+            inr
+              (
+              transport
+                (cong (λ a → DFATrace (negate D) ((negate D) .init) a) (sym w≡[]))
+                (DFATrace.nil {D = negate D} {!!})
+              )
+          )
+          (D .isAcc (D .init) .snd)
+
+      cons-case : ParseTransformer
+        (⊕Σ₀ ⊗ (DFAGrammar D ⊕ DFAGrammar (negate D)))
+        (DFAGrammar D ⊕ DFAGrammar (negate D))
+      cons-case {w''} (((w , w') , w''≡w++w') , (c , w≡c) , s) =
+        {!!}
+
+
+    -- run {.[]} GrammarDefs.nil =
+    --   decRec
+    --     (λ initIsAcc → inl (nil initIsAcc))
+    --     (λ initIsAcc→⊥ → inr (nil {!!}))
+    --     (D .isAcc (D .init) .snd)
+    -- run {.(_ ++ _)} (GrammarDefs.cons (c , c≡w) p) =
+    --   {!!}
+
 
 module examples where
   data zero-one : Type ℓ-zero where
