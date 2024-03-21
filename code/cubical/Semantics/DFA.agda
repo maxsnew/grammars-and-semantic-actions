@@ -318,6 +318,7 @@ module examples where
   fone = fsuc fzero
 
   w = fone ∷ fzero ∷ fzero ∷ fone ∷ []
+  w' = fzero ∷ fzero ∷ fone ∷ []
 
   p : DFAGrammar D w .fst
   p = DFADefs.cons (DFADefs.cons
@@ -329,12 +330,21 @@ module examples where
   _ : qAcc ≡ (fzero , refl)
   _ = refl
 
-  doesItRun : (DFAGrammar D ⊕ DFAGrammar (negate D)) w .fst
-  doesItRun =
+  runString : (a : String) → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst
+  runString a =
     run D
       isFinSetFin
-      (String→KL* w)
+      (String→KL* a)
 
-  _ : doesItRun ≡ inl p
-  -- Get a 30000 line hcomp error
-  _ = {!!}
+  check-side : ∀ {a} → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst → ℕ
+  check-side p =
+    Cubical.Data.Sum.rec
+      (λ _ → 0) -- inl
+      (λ _ → 1) -- inr
+      p
+
+  check-w : check-side (runString w) ≡ 0
+  check-w = refl
+
+  check-w' : check-side (runString w') ≡ 1
+  check-w' = refl
