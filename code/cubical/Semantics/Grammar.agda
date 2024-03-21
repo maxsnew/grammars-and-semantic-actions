@@ -242,6 +242,16 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   KL* : Grammar → Grammar
   KL* g w = KL*Ty g w , isSetKL*Ty _ _
 
+  ⊕Σ₀ : Grammar
+  ⊕Σ₀ w =
+    (Σ[ c ∈ Σ₀ .fst ] literal c w .fst) ,
+    isSetΣ (Σ₀ .snd) (λ c → literal c w .snd)
+
+  String→KL* : (w : String) → KL* ⊕Σ₀ w .fst
+  String→KL* [] = nil
+  String→KL* (c ∷ w) =
+    cons (c , refl) (String→KL* w)
+
   fold*r :
     (g h : Grammar) →
     ParseTransformer ILin h →

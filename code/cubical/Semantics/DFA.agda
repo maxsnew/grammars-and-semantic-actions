@@ -1,5 +1,5 @@
 
-{-# OPTIONS #-}
+{-# OPTIONS --lossy-unification #-}
 module Semantics.DFA where
 
 open import Cubical.Foundations.Prelude
@@ -214,14 +214,9 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
 
     open Iso
 
-
-    ⊕Σ₀ : Grammar
-    ⊕Σ₀ w =
-      (Σ[ c ∈ Σ₀ .fst ] literal c w .fst) ,
-      isSetΣ (Σ₀ .snd) (λ c → literal c w .snd)
-
     decEqΣ₀ : Discrete (Σ₀ .fst)
     decEqΣ₀ = isFinSet→Discrete isFinSetΣ₀
+
 
     run :
       ParseTransformer
@@ -305,31 +300,24 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
             (D .δ (getAcceptingState (negate D) w' (D .init) p .fst) c) .snd)
 
 module examples where
-  data zero-one : Type ℓ-zero where
-    zero : zero-one
-    one : zero-one
-
-  isSet-zero-one : isSet zero-one
-  isSet-zero-one = {!!}
-
-  zero-one-hSet : hSet ℓ-zero
-  zero-one-hSet = zero-one , isSet-zero-one
-
-  open DFADefs ℓ-zero zero-one-hSet public
+  open DFADefs ℓ-zero (Fin 2 , isSetFin) public
   open DFADefs.DFA
 
   D : DFA
   Q D = (Fin 3) , isFinSetFin
   init D = inl _
   isAcc D = λ x → ((x ≡ fzero) , isSetFin x fzero) , discreteFin x fzero
-  δ D fzero zero = fromℕ 0
-  δ D fzero one = fromℕ 1
-  δ D (fsuc fzero) zero = fromℕ 2
-  δ D (fsuc fzero) one = fromℕ 0
-  δ D (fsuc (fsuc fzero)) zero = fromℕ 1
-  δ D (fsuc (fsuc fzero)) one = fromℕ 2
+  δ D fzero fzero = fromℕ 0
+  δ D fzero (fsuc fzero) = fromℕ 1
+  δ D (fsuc fzero) fzero = fromℕ 2
+  δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
+  δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
+  δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
 
-  w = one ∷ zero ∷ zero ∷ one ∷ []
+  fone : Fin 2
+  fone = fsuc fzero
+
+  w = fone ∷ fzero ∷ fzero ∷ fone ∷ []
 
   p : DFAGrammar D w .fst
   p = DFADefs.cons (DFADefs.cons
@@ -344,5 +332,9 @@ module examples where
   doesItRun : (DFAGrammar D ⊕ DFAGrammar (negate D)) w .fst
   doesItRun =
     run D
-      {!!}
-      {!!}
+      isFinSetFin
+      (String→KL* w)
+
+  _ : doesItRun ≡ inl p
+  -- Get a 30000 line hcomp error
+  _ = {!!}
