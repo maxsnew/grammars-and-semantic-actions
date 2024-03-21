@@ -336,15 +336,15 @@ module examples where
       isFinSetFin
       (String→KL* a)
 
-  check-side : ∀ {a} → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst → ℕ
+  check-side : ∀ {a} → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst → Bool
   check-side p =
     Cubical.Data.Sum.rec
-      (λ _ → 0) -- inl
-      (λ _ → 1) -- inr
+      (λ _ → true) -- inl
+      (λ _ → false) -- inr
       p
 
-  check-w : check-side (runString w) ≡ 0
+  check-w : check-side (runString w) ≡ true
   check-w = refl
 
-  check-w' : check-side (runString w') ≡ 1
+  check-w' : check-side (runString w') ≡ false
   check-w' = refl
