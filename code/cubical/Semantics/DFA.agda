@@ -22,24 +22,6 @@ open import Semantics.Grammar
 private
   variable ℓ ℓ' : Level
 
-negateDecProp : ∀ {ℓ} → DecProp ℓ → DecProp ℓ
-fst (fst (negateDecProp A)) = ¬ A .fst .fst
-snd (fst (negateDecProp A)) = isProp→ isProp⊥
-snd (negateDecProp A) =
-  decRec
-    (λ a → no (λ x → x a))
-    (λ ¬a → yes ¬a)
-    (A .snd)
-
-doubleNegDecProp :
-  ∀ {ℓ} (A : DecProp ℓ) →
-  negateDecProp (negateDecProp A) .fst .fst →
-  A .fst .fst
-doubleNegDecProp A x =
-  decRec
-  (λ a → a)
-  (λ ¬a → ⊥.elim (x ¬a))
-  (A .snd)
 
 module DFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public
@@ -198,7 +180,6 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
     decEqΣ₀ : Discrete (Σ₀ .fst)
     decEqΣ₀ = isFinSet→Discrete isFinSetΣ₀
 
-
     run :
       ParseTransformer
         (KL* ⊕Σ₀)
@@ -287,7 +268,9 @@ module examples where
   D : DFA
   Q D = (Fin 3) , isFinSetFin
   init D = inl _
-  isAcc D = λ x → ((x ≡ fzero) , isSetFin x fzero) , discreteFin x fzero
+  isAcc D x =
+    ((x ≡ fzero) , isSetFin x fzero) ,
+    discreteFin x fzero
   δ D fzero fzero = fromℕ 0
   δ D fzero (fsuc fzero) = fromℕ 1
   δ D (fsuc fzero) fzero = fromℕ 2

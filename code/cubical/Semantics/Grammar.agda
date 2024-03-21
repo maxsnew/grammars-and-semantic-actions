@@ -4,6 +4,8 @@ module Semantics.Grammar where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
 open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
@@ -14,6 +16,26 @@ open import Cubical.Data.Sigma
 
 private
   variable ℓ ℓ' : Level
+
+-- TODO : cubical upstream?
+negateDecProp : ∀ {ℓ} → DecProp ℓ → DecProp ℓ
+fst (fst (negateDecProp A)) = ¬ A .fst .fst
+snd (fst (negateDecProp A)) = isProp→ isProp⊥
+snd (negateDecProp A) =
+  decRec
+    (λ a → no (λ x → x a))
+    (λ ¬a → yes ¬a)
+    (A .snd)
+
+doubleNegDecProp :
+  ∀ {ℓ} (A : DecProp ℓ) →
+  negateDecProp (negateDecProp A) .fst .fst →
+  A .fst .fst
+doubleNegDecProp A x =
+  decRec
+  (λ a → a)
+  (λ ¬a → ⊥.elim (x ¬a))
+  (A .snd)
 
 module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   String : Type ℓ
