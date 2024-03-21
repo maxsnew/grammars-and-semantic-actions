@@ -161,8 +161,6 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
     cons :
       ∀ {w w'} →
         g w .fst → KL*Ty g w' → KL*Ty g (w ++ w')
-      -- (Σ[ s ∈ Splitting w ]
-        -- g (s .fst .fst) .fst × KL*Ty g (s .fst .snd)) → KL*Ty g w
 
   module isSetKL*TyProof (g : Grammar) where
     KL*Ty-X = String
@@ -182,7 +180,8 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
 
     KL*Ty→W : ∀ {w} → KL*Ty g w → IW KL*Ty-S KL*Ty-P KL*Ty-inX w
     KL*Ty→W nil = node (inl refl) (λ ())
-    KL*Ty→W (cons {w}{w'} x p) = node (fsuc (((w , w') , refl) , x)) λ _ → KL*Ty→W p
+    KL*Ty→W (cons {w}{w'} x p) =
+      node (fsuc (((w , w') , refl) , x)) λ _ → KL*Ty→W p
 
     W→KL*Ty : ∀ {w} → IW KL*Ty-S KL*Ty-P KL*Ty-inX w → KL*Ty g w
     W→KL*Ty (node (inl x) subtree) =
@@ -283,7 +282,9 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
 
   RegularGrammar→Grammar : RegularGrammar → Grammar
   RegularGrammar→Grammar ILinReg = ILin
-  RegularGrammar→Grammar (g ⊗Reg g') = (RegularGrammar→Grammar g) ⊗ (RegularGrammar→Grammar g')
+  RegularGrammar→Grammar (g ⊗Reg g') =
+    (RegularGrammar→Grammar g) ⊗ (RegularGrammar→Grammar g')
   RegularGrammar→Grammar (literalReg c) = literal c
-  RegularGrammar→Grammar (g ⊕Reg g') = RegularGrammar→Grammar g ⊕ RegularGrammar→Grammar g'
+  RegularGrammar→Grammar (g ⊕Reg g') =
+    RegularGrammar→Grammar g ⊕ RegularGrammar→Grammar g'
   RegularGrammar→Grammar (KL*Reg g) = KL* (RegularGrammar→Grammar g)
