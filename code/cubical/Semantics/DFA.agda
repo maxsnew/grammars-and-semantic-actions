@@ -42,19 +42,13 @@ private
   variable ℓ ℓ' : Level
 
 negateDecProp : ∀ {ℓ} → DecProp ℓ → DecProp ℓ
-negateDecProp ((A , isPropA) , yes p) =
-  ((¬ A) , isProp→ isProp⊥) , no (λ x → x p)
-negateDecProp ((A , isPropA) , no ¬p) =
-  ((¬ A) , isProp→ isProp⊥) , yes ¬p
-
-
-negateCompute : ∀ {ℓ} {A : DecProp ℓ} →
-  ¬ A .fst .fst → (negateDecProp A) .fst .fst
-negateCompute {ℓ} {A} x =
+fst (fst (negateDecProp A)) = ¬ A .fst .fst
+snd (fst (negateDecProp A)) = isProp→ isProp⊥
+snd (negateDecProp A) =
   decRec
-    (λ a → a)
-    (λ ¬a → {!!})
-    (negateDecProp A .snd)
+    (λ a → no (λ x → x a))
+    (λ ¬a → yes ¬a)
+    (A .snd)
 
 module DFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public
@@ -238,7 +232,7 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
               (
               transport
                 (cong (λ a → DFATrace (negate D) ((negate D) .init) a) (sym w≡[]))
-                (DFATrace.nil {D = negate D} {!!})
+                (DFATrace.nil {D = negate D} initIsAcc→⊥)
               )
           )
           (D .isAcc (D .init) .snd)
@@ -259,7 +253,7 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
             inr (
                 transport
                   (cong (λ b → DFATrace (negate D) ((negate D) .init) b) (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                  (extendTraceByLiteralIntoNegation D c (D .init) w' p {!nextIsAcc→⊥!} .fst)
+                  (extendTraceByLiteralIntoNegation D c (D .init) w' p nextIsAcc→⊥ .fst)
             )
           )
           (D .isAcc (D .δ (getAcceptingState D w' (D .init) p .fst) c) .snd)
