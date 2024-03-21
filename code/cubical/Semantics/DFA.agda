@@ -50,6 +50,16 @@ snd (negateDecProp A) =
     (λ ¬a → yes ¬a)
     (A .snd)
 
+doubleNegDecProp :
+  ∀ {ℓ} (A : DecProp ℓ) →
+  negateDecProp (negateDecProp A) .fst .fst →
+  A .fst .fst
+doubleNegDecProp A x =
+  decRec
+  (λ a → a)
+  (λ ¬a → ⊥.elim (x ¬a))
+  (A .snd)
+
 module DFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public
 
@@ -147,7 +157,8 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
       (tr : DFATrace D q w) →
       D .isAcc (D .δ (getAcceptingState w q tr .fst) c) .fst .fst →
       Σ[ t ∈ DFATrace D q (w ++ [ c ]) ]
-          D .δ (getAcceptingState w q tr .fst) c ≡ getAcceptingState (w ++ [ c ]) q t .fst
+          D .δ (getAcceptingState w q tr .fst) c ≡
+            getAcceptingState (w ++ [ c ]) q t .fst
     extendTraceByLiteral c q .[] (nil x) δcisAcc = (cons (nil δcisAcc)) , refl
     extendTraceByLiteral c q .(_ ∷ _) (cons {c = c'} tr) δcisAcc =
       cons (the-rec-call .fst) ,
@@ -162,36 +173,42 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
       (q : D .Q .fst) →
       (w : String) →
       (tr : DFATrace D q w) →
-      (negate D) .isAcc ((negate D) .δ (getAcceptingState D w q tr .fst) c) .fst .fst →
+      (negate D) .isAcc
+        ((negate D) .δ (getAcceptingState D w q tr .fst) c) .fst .fst →
       Σ[ t ∈ DFATrace (negate D) q (w ++ [ c ]) ]
           (negate D) .δ (getAcceptingState D w q tr .fst) c ≡
             getAcceptingState (negate D) (w ++ [ c ]) q t .fst
-    extendTraceByLiteralIntoNegation c q .[] (nil x₁) δcnotAcc = (cons (nil δcnotAcc)) , refl
+    extendTraceByLiteralIntoNegation c q .[] (nil x₁) δcnotAcc =
+      (cons (nil δcnotAcc)) , refl
     extendTraceByLiteralIntoNegation c q .(_ ∷ _) (cons tr) δcnotAcc =
       (cons (the-rec-call .fst)) ,
       the-rec-call .snd
       where
-      the-rec-call = extendTraceByLiteralIntoNegation c (negate D .δ q _) _ tr δcnotAcc
+      the-rec-call =
+        extendTraceByLiteralIntoNegation c (negate D .δ q _) _ tr δcnotAcc
 
     extendTraceByLiteralNegationIntoRegular :
       (c : Σ₀ .fst) →
       (q : D .Q .fst) →
       (w : String) →
       (tr : DFATrace (negate D) q w) →
-      D .isAcc ((negate D) .δ (getAcceptingState (negate D) w q tr .fst) c) .fst .fst →
+      D .isAcc ((negate D) .δ
+        (getAcceptingState (negate D) w q tr .fst) c) .fst .fst →
       Σ[ t ∈ DFATrace D q (w ++ [ c ]) ]
           (negate D) .δ (getAcceptingState (negate D) w q tr .fst) c ≡
             getAcceptingState D (w ++ [ c ]) q t .fst
-    extendTraceByLiteralNegationIntoRegular c q .[] (nil x₁) δcIsAcc = (cons (nil δcIsAcc)) , refl
+    extendTraceByLiteralNegationIntoRegular c q .[] (nil x₁) δcIsAcc =
+      (cons (nil δcIsAcc)) , refl
     extendTraceByLiteralNegationIntoRegular c q .(_ ∷ _) (cons tr) δcIsAcc =
       cons (the-rec-call .fst),
       the-rec-call .snd
       where
-      the-rec-call = extendTraceByLiteralNegationIntoRegular c (negate D .δ q _) _ tr δcIsAcc
+      the-rec-call =
+        extendTraceByLiteralNegationIntoRegular c
+          (negate D .δ q _) _ tr δcIsAcc
 
   module _
     (D : DFA)
-    (decEqQ : Discrete (D .Q .fst))
     (isFinSetΣ₀ : isFinSet (Σ₀ .fst))
     where
 
@@ -231,7 +248,8 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
             inr
               (
               transport
-                (cong (λ a → DFATrace (negate D) ((negate D) .init) a) (sym w≡[]))
+                (cong (λ a → DFATrace (negate D)
+                  ((negate D) .init) a) (sym w≡[]))
                 (DFATrace.nil {D = negate D} initIsAcc→⊥)
               )
           )
@@ -245,15 +263,19 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
           (λ nextIsAcc →
             inl (
               transport
-                (cong (λ b → DFATrace D (D .init) b) (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+                (cong (λ b → DFATrace D (D .init) b)
+                  (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
                 (extendTraceByLiteral D c (D .init) w' p nextIsAcc .fst)
             )
           )
           (λ nextIsAcc→⊥ →
             inr (
                 transport
-                  (cong (λ b → DFATrace (negate D) ((negate D) .init) b) (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                  (extendTraceByLiteralIntoNegation D c (D .init) w' p nextIsAcc→⊥ .fst)
+                  (cong (λ b → DFATrace (negate D)
+                    ((negate D) .init) b)
+                      (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+                  (extendTraceByLiteralIntoNegation D c
+                    (D .init) w' p nextIsAcc→⊥ .fst)
             )
           )
           (D .isAcc (D .δ (getAcceptingState D w' (D .init) p .fst) c) .snd)
@@ -262,18 +284,25 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
           (λ nextAccByNeg →
             inr
               (transport
-                (cong (λ b → DFATrace (negate D) (D .init) b) (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                (extendTraceByLiteral (negate D) c (D .init) w' p nextAccByNeg .fst)
+                (cong (λ b → DFATrace (negate D) (D .init) b)
+                  (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+                (extendTraceByLiteral
+                  (negate D) c (D .init) w' p nextAccByNeg .fst)
                 )
           )
           (λ nextAccByNeg→⊥ →
             inl
               (transport
-                (cong (λ b → DFATrace D (D .init) b) (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                (extendTraceByLiteralNegationIntoRegular D c (D .init) w' p {!!} .fst)
+                (cong (λ b → DFATrace D (D .init) b)
+                  (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+                (extendTraceByLiteralNegationIntoRegular D c (D .init) w' p
+                  (doubleNegDecProp
+                    (D .isAcc (D .δ (getAcceptingState (negate D)
+                      w' (D .init) p .fst) c)) nextAccByNeg→⊥) .fst)
                 )
           )
-          ((negate D) .isAcc (D .δ (getAcceptingState (negate D) w' (D .init) p .fst) c) .snd)
+          ((negate D) .isAcc
+            (D .δ (getAcceptingState (negate D) w' (D .init) p .fst) c) .snd)
 
 module examples where
   data zero-one : Type ℓ-zero where
@@ -303,10 +332,17 @@ module examples where
   w = one ∷ zero ∷ zero ∷ one ∷ []
 
   p : DFAGrammar D w .fst
-  p = DFADefs.cons (DFADefs.cons (DFADefs.cons (DFADefs.cons (DFADefs.nil refl))))
+  p = DFADefs.cons (DFADefs.cons
+    (DFADefs.cons (DFADefs.cons (DFADefs.nil refl))))
 
   qAcc : Σ (D .Q .fst) (λ q' → D .isAcc q' .fst .fst)
   qAcc = getAcceptingState D w (D .init) p
 
   _ : qAcc ≡ (fzero , refl)
   _ = refl
+
+  doesItRun : (DFAGrammar D ⊕ DFAGrammar (negate D)) w .fst
+  doesItRun =
+    run D
+      {!!}
+      {!!}
