@@ -53,7 +53,7 @@ negateCompute : ∀ {ℓ} {A : DecProp ℓ} →
 negateCompute {ℓ} {A} x =
   decRec
     (λ a → a)
-    (λ ¬a → {!Stable¬!})
+    (λ ¬a → {!!})
     (negateDecProp A .snd)
 
 module DFADefs ℓ (Σ₀ : hSet ℓ) where
@@ -74,9 +74,6 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
   init (negate D) = D .init
   isAcc (negate D) q = negateDecProp (D .isAcc q)
   δ (negate D) = D .δ
-
-  negateInvol : (D : DFA) → D ≡ negate (negate D)
-  negateInvol D = {!refl!}
 
   data DFATrace (D : DFA) : D .Q .fst → String → Type ℓ where
     nil : ∀ {q} → D .isAcc q .fst .fst → DFATrace D q []
@@ -182,6 +179,22 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
       where
       the-rec-call = extendTraceByLiteralIntoNegation c (negate D .δ q _) _ tr δcnotAcc
 
+    extendTraceByLiteralNegationIntoRegular :
+      (c : Σ₀ .fst) →
+      (q : D .Q .fst) →
+      (w : String) →
+      (tr : DFATrace (negate D) q w) →
+      D .isAcc ((negate D) .δ (getAcceptingState (negate D) w q tr .fst) c) .fst .fst →
+      Σ[ t ∈ DFATrace D q (w ++ [ c ]) ]
+          (negate D) .δ (getAcceptingState (negate D) w q tr .fst) c ≡
+            getAcceptingState D (w ++ [ c ]) q t .fst
+    extendTraceByLiteralNegationIntoRegular c q .[] (nil x₁) δcIsAcc = (cons (nil δcIsAcc)) , refl
+    extendTraceByLiteralNegationIntoRegular c q .(_ ∷ _) (cons tr) δcIsAcc =
+      cons (the-rec-call .fst),
+      the-rec-call .snd
+      where
+      the-rec-call = extendTraceByLiteralNegationIntoRegular c (negate D .δ q _) _ tr δcIsAcc
+
   module _
     (D : DFA)
     (decEqQ : Discrete (D .Q .fst))
@@ -262,8 +275,8 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
           (λ nextAccByNeg→⊥ →
             inl
               (transport
-                (cong₂ (λ a b → DFATrace a ({!negate D!} .init) b) (sym (negateInvol D)) (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                (extendTraceByLiteralIntoNegation (negate D) c (D .init) w' p {!!} .fst)
+                (cong (λ b → DFATrace D (D .init) b) (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+                (extendTraceByLiteralNegationIntoRegular D c (D .init) w' p {!!} .fst)
                 )
           )
           ((negate D) .isAcc (D .δ (getAcceptingState (negate D) w' (D .init) p .fst) c) .snd)
