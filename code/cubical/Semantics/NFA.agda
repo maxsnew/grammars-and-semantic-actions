@@ -10,6 +10,7 @@ open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
 open import Cubical.Data.FinSet
+open import Cubical.Data.FinSet.DecidablePredicate
 open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.Maybe
@@ -19,6 +20,7 @@ open import Cubical.Data.Nat
 open import Cubical.Data.SumFin
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
+open import Cubical.HITs.PropositionalTruncation
 
 open import Semantics.Grammar public
 
@@ -58,6 +60,18 @@ snd (DecPropΣ A B) =
       (B a .snd))
     (λ ¬a → no (λ x → ¬a (x .fst)))
     (A .snd)
+
+DecProp∃ :
+  ∀ {ℓ}{ℓ'} → (A : FinSet ℓ) → (B : A .fst → DecProp ℓ') →
+  DecProp {!!}
+fst (fst (DecProp∃ A B)) = ∥ (Σ[ a ∈ A .fst ] B a .fst .fst) ∥₁
+snd (fst (DecProp∃ A B)) = isPropPropTrunc
+snd (DecProp∃ A B) =
+  decRec
+    {!!}
+    {!!}
+    {!!}
+-- TODO refactor everything to use alternate decprop fuckkkk
 
 module NFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public
@@ -239,7 +253,10 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
       DecProp⊎
         (DecPropΣ
           (((fiber (inr ∘ inl) x) , inr∘inl-prop-fibs) ,
-            {!!})
+            decRec
+              {!!}
+              {!!}
+              {!isDecProp∃ (⊕NFA N N' .Q) ? !})
           (N .isAcc ∘ fst))
         (DecPropΣ
           ((fiber (inr ∘ inr ∘ inl) x , inr∘inr∘inl-prop-fibs) ,
@@ -258,9 +275,9 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
                 (q .snd ∙ (sym (q' .snd))))))
 
         DecPropFiber :
-          ∀ {A}{B}{ℓ} → (f : A → B) →
+          ∀ {A}{B : DecProp ℓ}{ℓ} → (f : A → B .fst .fst) →
           hasPropFibers f →
-          (b : B) → DecProp ℓ
+          (b : B .fst .fst) → DecProp ℓ
         DecPropFiber {A} {B} f x b =
           ((fiber f b) , (x b)) , {!!}
 
