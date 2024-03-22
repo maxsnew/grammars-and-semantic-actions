@@ -253,9 +253,10 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
                 (cong (λ b → DFATrace D (D .init) b)
                   (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
                 (extendTraceByLiteralNegationIntoRegular D c (D .init) w' p
-                  (doubleNegDecProp
+                  (doubleNegDecProp'
                     (D .isAcc (D .δ (getAcceptingState (negate D)
-                      w' (D .init) p .fst) c)) nextAccByNeg→⊥) .fst)
+                      w' (D .init) p .fst) c))
+                      nextAccByNeg→⊥) .fst)
                 )
           )
           ((negate D) .isAcc

@@ -5,6 +5,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
 open import Cubical.Data.FinSet
@@ -30,15 +31,11 @@ snd (negateDecProp A) =
     (λ ¬a → yes ¬a)
     (A .snd)
 
-doubleNegDecProp :
+doubleNegDecProp' :
   ∀ {ℓ} (A : DecProp ℓ) →
   negateDecProp (negateDecProp A) .fst .fst →
   A .fst .fst
-doubleNegDecProp A x =
-  decRec
-  (λ a → a)
-  (λ ¬a → ⊥.elim (x ¬a))
-  (A .snd)
+doubleNegDecProp' A x = Dec→Stable (A .snd) x
 
 -- TODO : add to cubical?
 isSetLift :
