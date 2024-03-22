@@ -18,44 +18,12 @@ open import Cubical.Data.SumFin
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
 
-open import Cubical.HITs.PropositionalTruncation
 
-open import Semantics.Grammar
+open import Semantics.Grammar public
 
 private
   variable ℓ ℓ' : Level
 
--- TODO : add to cubical?
-isSetLift :
-  {L L' : Level} →
-  {A : Type L} →
-  isSet A → isSet (Lift {L}{L'} A)
-isSetLift isSetA x y a b i =
-  liftExt
-    (isSetA (lower x) (lower y)
-    (cong lower a) (cong lower b) i)
-
-discreteLift :
-  {L L' : Level} →
-  {A : Type L} →
-  Discrete A → Discrete (Lift {L}{L'} A)
-discreteLift discreteA x y =
-  decRec
-    (λ lx≡ly → yes (liftExt lx≡ly))
-    (λ lx≢ly → no (λ p → lx≢ly (cong lower p)))
-    (discreteA (lower x) (lower y))
-
-isFinSetLift :
-  {L L' : Level} →
-  {A : Type L} →
-  isFinSet A → isFinSet (Lift {L}{L'} A)
-fst (isFinSetLift {A = A} isFinSetA) = isFinSetA .fst
-snd (isFinSetLift {A = A} isFinSetA) =
-  Cubical.HITs.PropositionalTruncation.elim
-  {P = λ _ → ∥ Lift A ≃ Fin (isFinSetA .fst) ∥₁}
-  (λ [a] → isPropPropTrunc )
-  (λ A≅Fin → ∣ compEquiv (invEquiv (LiftEquiv {A = A})) A≅Fin ∣₁)
-  (isFinSetA .snd)
 
 module NFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public

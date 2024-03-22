@@ -7,12 +7,15 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
+open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.Unit
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.SumFin
+open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
+open import Cubical.HITs.PropositionalTruncation
 
 private
   variable ℓ ℓ' : Level
@@ -36,6 +39,38 @@ doubleNegDecProp A x =
   (λ a → a)
   (λ ¬a → ⊥.elim (x ¬a))
   (A .snd)
+
+-- TODO : add to cubical?
+isSetLift :
+  {L L' : Level} →
+  {A : Type L} →
+  isSet A → isSet (Lift {L}{L'} A)
+isSetLift isSetA x y a b i =
+  liftExt
+    (isSetA (lower x) (lower y)
+    (cong lower a) (cong lower b) i)
+
+discreteLift :
+  {L L' : Level} →
+  {A : Type L} →
+  Discrete A → Discrete (Lift {L}{L'} A)
+discreteLift discreteA x y =
+  decRec
+    (λ lx≡ly → yes (liftExt lx≡ly))
+    (λ lx≢ly → no (λ p → lx≢ly (cong lower p)))
+    (discreteA (lower x) (lower y))
+
+isFinSetLift :
+  {L L' : Level} →
+  {A : Type L} →
+  isFinSet A → isFinSet (Lift {L}{L'} A)
+fst (isFinSetLift {A = A} isFinSetA) = isFinSetA .fst
+snd (isFinSetLift {A = A} isFinSetA) =
+  Cubical.HITs.PropositionalTruncation.elim
+  {P = λ _ → ∥ Lift A ≃ Fin (isFinSetA .fst) ∥₁}
+  (λ [a] → isPropPropTrunc )
+  (λ A≅Fin → ∣ compEquiv (invEquiv (LiftEquiv {A = A})) A≅Fin ∣₁)
+  (isFinSetA .snd)
 
 module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   String : Type ℓ

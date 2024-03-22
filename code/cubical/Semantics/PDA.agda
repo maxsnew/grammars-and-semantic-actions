@@ -4,6 +4,8 @@ module Semantics.PDA where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
@@ -27,7 +29,7 @@ module PDADefs ℓ ℓ' (Σ₀ : hSet ℓ) (Γ₀ : hSet ℓ') where
     field
       Q : FinSet ℓ
       init : Q .fst
-      acc : Q .fst
+      isAcc : Q .fst → DecProp ℓ
       init-stack-sym : Γ₀ .fst
       transition : FinSet ℓ
       src : transition .fst → Q .fst
@@ -47,7 +49,8 @@ module PDADefs ℓ ℓ' (Σ₀ : hSet ℓ) (Γ₀ : hSet ℓ') where
     (state : P .Q .fst) →
     (w : String) → (l : Stack) →
     Type (ℓ-max ℓ ℓ') where
-    nil : ∀ {l} → PDATrace P (P .acc) [] l
+    nil : ∀ {l}{q} → P .isAcc q .fst .fst →
+      PDATrace P q [] l
     cons :
       ∀ {w'}{l} → {t : P .transition .fst} →
       PDATrace P (P .dst t) w' (rev(P .push t) ++ l) →
@@ -64,7 +67,9 @@ module _ where
   0ⁿ1ⁿ : PDA
   Q 0ⁿ1ⁿ = Lift (Fin 3) , isFinSetLift isFinSetFin
   init 0ⁿ1ⁿ = lift (inl _)
-  acc 0ⁿ1ⁿ = lift (inr (inr (inl _)))
+  isAcc 0ⁿ1ⁿ x =
+    ((x ≡ lift (fsuc (fsuc fzero))) , isSetLift isSetFin _ _) ,
+    discreteLift discreteFin x (lift (fsuc (fsuc fzero)))
   init-stack-sym 0ⁿ1ⁿ = fzero
   transition 0ⁿ1ⁿ = Lift (Fin 3) , isFinSetLift isFinSetFin
   src 0ⁿ1ⁿ (lift fzero) = lift (fzero)
@@ -100,18 +105,17 @@ module _ where
   0ⁿ1ⁿParse w =
     PDATrace 0ⁿ1ⁿ (0ⁿ1ⁿ .init) w [ 0ⁿ1ⁿ .init-stack-sym ]
 
-
   mt : 0ⁿ1ⁿParse []
   mt =
     ε-cons {t = lift (fsuc fzero)}
-      (ε-cons {t = lift (fsuc (fsuc fzero))} nil)
+      (ε-cons {t = lift (fsuc (fsuc fzero))} (nil refl))
 
   zeroone : 0ⁿ1ⁿParse (fzero ∷ [ fsuc fzero ])
   zeroone =
     cons {t = lift fzero}(
       ε-cons {t = lift fzero}(
         cons {t = lift (fsuc (fsuc fzero))}(
-          ε-cons {t = lift (fsuc (fsuc fzero))} nil)))
+          ε-cons {t = lift (fsuc (fsuc fzero))} (nil refl))))
 
   zero⁴one⁴ :
     0ⁿ1ⁿParse (
@@ -127,4 +131,4 @@ module _ where
                 (cons {t = lift (fsuc (fsuc fzero))}
                   (cons {t = lift (fsuc (fsuc fzero))}
                     (cons {t = lift (fsuc (fsuc fzero))}
-                      (ε-cons {t = lift (fsuc (fsuc fzero))} nil)))))))))
+                      (ε-cons {t = lift (fsuc (fsuc fzero))} (nil refl))))))))))
