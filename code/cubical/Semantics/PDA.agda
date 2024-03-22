@@ -8,21 +8,8 @@ open import Cubical.Data.List
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
-open import Cubical.Data.Unit
-open import Cubical.Data.Maybe
-open import Cubical.Data.Bool renaming (_⊕_ to _⊕B_)
 open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.Empty.Base
-open import Cubical.Data.Nat
 open import Cubical.Data.SumFin
--- open import Cubical.Data.Fin.Base renaming (Fin to Finℕ)
-open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
-open import Cubical.Categories.Monoidal
-open import Cubical.Categories.Category.Base
-open import Cubical.Reflection.Base
-open import Cubical.Reflection.RecordEquiv
-open import Cubical.Data.Sigma
 
 open import Semantics.Grammar
 open import Semantics.NFA
@@ -35,7 +22,7 @@ module PDADefs ℓ ℓ' (Σ₀ : hSet ℓ) (Γ₀ : hSet ℓ') where
 
   Stack = List (Γ₀ .fst)
 
-  record PDA : Type {!!} where
+  record PDA : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
     constructor mkPDA
     field
       Q : FinSet ℓ
@@ -57,7 +44,9 @@ module PDADefs ℓ ℓ' (Σ₀ : hSet ℓ) (Γ₀ : hSet ℓ') where
   open PDA
 
   data PDATrace (P : PDA) :
-    (state : P .Q .fst) → (w : String) → (l : Stack) → Type (ℓ-max ℓ ℓ') where
+    (state : P .Q .fst) →
+    (w : String) → (l : Stack) →
+    Type (ℓ-max ℓ ℓ') where
     nil : ∀ {l} → PDATrace P (P .acc) [] l
     cons :
       ∀ {w'}{l} → {t : P .transition .fst} →
@@ -69,54 +58,47 @@ module PDADefs ℓ ℓ' (Σ₀ : hSet ℓ) (Γ₀ : hSet ℓ') where
       PDATrace P (P .ε-src t) w' (P .ε-pop t ∷ l)
 
 module _ where
-  data zo : Type ℓ-zero where
-    zero : zo
-    one : zo
-
-  data AZ : Type ℓ-zero where
-    a :  AZ
-    z : AZ
-
-  open PDADefs ℓ-zero ℓ-zero (zo , {!!}) (AZ , {!!})
+  open PDADefs ℓ-zero ℓ-zero (Fin 2 , isSetFin) (Fin 2 , isSetFin)
   open PDADefs.PDA
 
   0ⁿ1ⁿ : PDA
   Q 0ⁿ1ⁿ = Lift (Fin 3) , isFinSetLift isFinSetFin
   init 0ⁿ1ⁿ = lift (inl _)
   acc 0ⁿ1ⁿ = lift (inr (inr (inl _)))
-  init-stack-sym 0ⁿ1ⁿ = z
+  init-stack-sym 0ⁿ1ⁿ = fzero
   transition 0ⁿ1ⁿ = Lift (Fin 3) , isFinSetLift isFinSetFin
-  src 0ⁿ1ⁿ (lift fzero) = lift (inl _)
-  dst 0ⁿ1ⁿ (lift fzero) = lift (inl _)
-  pop 0ⁿ1ⁿ (lift fzero) = z
-  push 0ⁿ1ⁿ (lift fzero) = z ∷ [ a ]
-  label 0ⁿ1ⁿ (lift fzero) = zero
-  src 0ⁿ1ⁿ (lift (fsuc fzero)) = lift (inl _)
-  dst 0ⁿ1ⁿ (lift (fsuc fzero)) = lift (inl _)
-  pop 0ⁿ1ⁿ (lift (fsuc fzero)) = a
-  push 0ⁿ1ⁿ (lift (fsuc fzero)) = a ∷ [ a ]
-  label 0ⁿ1ⁿ (lift (fsuc fzero)) = zero
-  src 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = lift (inr (inl _))
-  dst 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = lift (inr (inl _))
-  pop 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = a
+  src 0ⁿ1ⁿ (lift fzero) = lift (fzero)
+  dst 0ⁿ1ⁿ (lift fzero) = lift (fzero)
+  pop 0ⁿ1ⁿ (lift fzero) = fzero
+  push 0ⁿ1ⁿ (lift fzero) = fzero ∷ [ fsuc fzero ]
+  label 0ⁿ1ⁿ (lift fzero) = fzero
+  src 0ⁿ1ⁿ (lift (fsuc fzero)) = lift (fzero)
+  dst 0ⁿ1ⁿ (lift (fsuc fzero)) = lift (fzero)
+  pop 0ⁿ1ⁿ (lift (fsuc fzero)) = fsuc fzero
+  push 0ⁿ1ⁿ (lift (fsuc fzero)) = fsuc fzero ∷ [ fsuc fzero ]
+  label 0ⁿ1ⁿ (lift (fsuc fzero)) = fzero
+  src 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = lift (fsuc fzero)
+  dst 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = lift (fsuc fzero)
+  pop 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = fsuc fzero
   push 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = []
-  label 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = one
+  label 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = fsuc fzero
   ε-transition 0ⁿ1ⁿ = Lift (Fin 3) , isFinSetLift isFinSetFin
-  ε-src 0ⁿ1ⁿ (lift fzero) = lift (inl _)
-  ε-dst 0ⁿ1ⁿ (lift fzero) = lift (inr (inl _))
-  ε-pop 0ⁿ1ⁿ (lift fzero) = a
-  ε-push 0ⁿ1ⁿ (lift fzero) = [ a ]
-  ε-src 0ⁿ1ⁿ (lift (fsuc fzero)) = lift (inl _)
-  ε-dst 0ⁿ1ⁿ (lift (fsuc fzero)) = lift (inr (inl _))
-  ε-pop 0ⁿ1ⁿ (lift (fsuc fzero)) = z
-  ε-push 0ⁿ1ⁿ (lift (fsuc fzero)) = [ z ]
-  ε-src 0ⁿ1ⁿ (lift (fsuc  (fsuc fzero))) = lift (inr (inl _))
-  ε-dst 0ⁿ1ⁿ (lift (fsuc  (fsuc fzero))) = lift ((inr (inr (inl _))))
-  ε-pop 0ⁿ1ⁿ (lift (fsuc  (fsuc fzero))) = z
-  ε-push 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = [ z ]
+  ε-src 0ⁿ1ⁿ (lift fzero) = lift (fzero)
+  ε-dst 0ⁿ1ⁿ (lift fzero) = lift (fsuc fzero)
+  ε-pop 0ⁿ1ⁿ (lift fzero) = (fsuc fzero)
+  ε-push 0ⁿ1ⁿ (lift fzero) = [ (fsuc fzero) ]
+  ε-src 0ⁿ1ⁿ (lift (fsuc fzero)) = lift fzero
+  ε-dst 0ⁿ1ⁿ (lift (fsuc fzero)) = lift (fsuc fzero)
+  ε-pop 0ⁿ1ⁿ (lift (fsuc fzero)) = fzero
+  ε-push 0ⁿ1ⁿ (lift (fsuc fzero)) = [ fzero ]
+  ε-src 0ⁿ1ⁿ (lift (fsuc  (fsuc fzero))) = lift (fsuc fzero)
+  ε-dst 0ⁿ1ⁿ (lift (fsuc  (fsuc fzero))) = lift (fsuc (fsuc fzero))
+  ε-pop 0ⁿ1ⁿ (lift (fsuc  (fsuc fzero))) = fzero
+  ε-push 0ⁿ1ⁿ (lift (fsuc (fsuc fzero))) = [ fzero ]
 
   0ⁿ1ⁿParse : (w : String) → Type ℓ-zero
-  0ⁿ1ⁿParse w = PDATrace 0ⁿ1ⁿ (0ⁿ1ⁿ .init) w [ 0ⁿ1ⁿ .init-stack-sym ]
+  0ⁿ1ⁿParse w =
+    PDATrace 0ⁿ1ⁿ (0ⁿ1ⁿ .init) w [ 0ⁿ1ⁿ .init-stack-sym ]
 
 
   mt : 0ⁿ1ⁿParse []
@@ -124,14 +106,17 @@ module _ where
     ε-cons {t = lift (fsuc fzero)}
       (ε-cons {t = lift (fsuc (fsuc fzero))} nil)
 
-  zeroone : 0ⁿ1ⁿParse (zero ∷ [ one ])
+  zeroone : 0ⁿ1ⁿParse (fzero ∷ [ fsuc fzero ])
   zeroone =
     cons {t = lift fzero}(
       ε-cons {t = lift fzero}(
         cons {t = lift (fsuc (fsuc fzero))}(
           ε-cons {t = lift (fsuc (fsuc fzero))} nil)))
 
-  zero⁴one⁴ :  0ⁿ1ⁿParse (zero ∷ zero ∷ zero ∷ zero ∷ one ∷ one ∷ one ∷ [ one ])
+  zero⁴one⁴ :
+    0ⁿ1ⁿParse (
+      fzero ∷ fzero ∷ fzero ∷ fzero ∷
+      (fsuc fzero) ∷ (fsuc fzero) ∷ (fsuc fzero) ∷ [ fsuc fzero ])
   zero⁴one⁴ =
     cons {t = lift fzero}
       (cons {t = lift (fsuc fzero)}
