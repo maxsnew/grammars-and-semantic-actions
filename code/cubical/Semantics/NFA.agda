@@ -7,6 +7,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
 open import Cubical.Data.FinSet
@@ -61,17 +62,6 @@ snd (DecPropΣ A B) =
     (λ ¬a → no (λ x → ¬a (x .fst)))
     (A .snd)
 
-DecProp∃ :
-  ∀ {ℓ}{ℓ'} → (A : FinSet ℓ) → (B : A .fst → DecProp ℓ') →
-  DecProp {!!}
-fst (fst (DecProp∃ A B)) = ∥ (Σ[ a ∈ A .fst ] B a .fst .fst) ∥₁
-snd (fst (DecProp∃ A B)) = isPropPropTrunc
-snd (DecProp∃ A B) =
-  decRec
-    {!!}
-    {!!}
-    {!!}
--- TODO refactor everything to use alternate decprop fuckkkk
 
 module NFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public
@@ -254,50 +244,47 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
         (DecPropΣ
           (((fiber (inr ∘ inl) x) , inr∘inl-prop-fibs) ,
             decRec
-              {!!}
-              {!!}
-              {!isDecProp∃ (⊕NFA N N' .Q) ? !})
+              (Cubical.HITs.PropositionalTruncation.elim
+                  (λ _ → isPropDec inr∘inl-prop-fibs)
+                  (λ y → yes y))
+              (λ ∄preimage →
+                no λ y → ∄preimage ∣ y ∣₁
+              )
+              (DecPropIso .Iso.inv
+                (_ , isDecProp∃ (N .Q)
+                  (λ y → (inr (inl y) ≡ x) ,
+                    isDecProp≡ (⊕NFA N N' .Q) (inr (inl y)) x) ) .snd))
           (N .isAcc ∘ fst))
         (DecPropΣ
           ((fiber (inr ∘ inr ∘ inl) x , inr∘inr∘inl-prop-fibs) ,
-            {!!})
+            decRec
+              (Cubical.HITs.PropositionalTruncation.elim
+                (λ _ → isPropDec inr∘inr∘inl-prop-fibs)
+                λ y → yes y)
+              (λ ∄preimage → no λ y → ∄preimage ∣ y ∣₁)
+              (DecPropIso .Iso.inv
+                ((_ , isDecProp∃ (N' .Q) λ y → (inr (inr (inl y)) ≡ x) ,
+                  (isDecProp≡ (⊕NFA N N' .Q) (inr (inr (inl y))) x))) .snd))
           (N' .isAcc ∘ fst))
         mutex
         where
-        inr∘inl-prop-fibs = {!!}
+        inr∘inl-prop-fibs =
+          isEmbedding→hasPropFibers
+            (compEmbedding (_ , isEmbedding-inr)
+                           (_ , isEmbedding-inl) .snd) x
 
-        inr∘inr∘inl-prop-fibs = {!!}
+        inr∘inr∘inl-prop-fibs =
+          isEmbedding→hasPropFibers
+            (compEmbedding
+              (_ , isEmbedding-inr)
+              (compEmbedding (_ , isEmbedding-inr)
+                             (_ , isEmbedding-inl)) .snd) x
 
         mutex =
           (λ (q , _) (q' , _) →
             lower (⊎Path.encode _ _
               (isEmbedding→Inj isEmbedding-inr _ _
                 (q .snd ∙ (sym (q' .snd))))))
-
-        DecPropFiber :
-          ∀ {A}{B : DecProp ℓ}{ℓ} → (f : A → B .fst .fst) →
-          hasPropFibers f →
-          (b : B .fst .fst) → DecProp ℓ
-        DecPropFiber {A} {B} f x b =
-          ((fiber f b) , (x b)) , {!!}
-
-        -- (((Σ[ q ∈ fiber (inr ∘ inl) x ] N .isAcc (q .fst) .fst .fst) ,
-        --   isPropΣ
-        --   (isEmbedding→hasPropFibers
-        --     (compEmbedding (_ , isEmbedding-inr)
-        --                    (_ , isEmbedding-inl) .snd) x)
-        --   λ q → N .isAcc (q .fst) .fst .snd
-        -- ) ,
-        -- {!!})
-        -- (((Σ[ q ∈ fiber (inr ∘ inr ∘ inl) x ] N' .isAcc (q .fst) .fst .fst) ,
-        -- isPropΣ
-        --   (isEmbedding→hasPropFibers
-        --     (compEmbedding (_ , isEmbedding-inr)
-        --       (compEmbedding (_ , isEmbedding-inr)
-        --                      (_ , isEmbedding-inl)) .snd) x)
-        --   λ q → N' .isAcc (q .fst) .fst .snd) ,
-        -- {!!})
-    -- the labeled transitions come from N and N'
     transition (⊕NFA N N') .fst =
       N .transition .fst ⊎ N' .transition .fst
     transition (⊕NFA N N') .snd =

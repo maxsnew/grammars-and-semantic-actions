@@ -8,6 +8,7 @@ open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
+open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
@@ -68,6 +69,41 @@ snd (isFinSetLift {A = A} isFinSetA) =
   (λ [a] → isPropPropTrunc )
   (λ A≅Fin → ∣ compEquiv (invEquiv (LiftEquiv {A = A})) A≅Fin ∣₁)
   (isFinSetA .snd)
+
+isPropCod→isProp≃ :
+  {a : Type ℓ}{b : Type ℓ'} →
+  isProp b → isProp (a ≃ b)
+isPropCod→isProp≃ isPropB =
+  isPropΣ
+    (isProp→ isPropB)
+    λ f → isPropIsEquiv f
+
+open Iso
+DecPropIso : ∀ {ℓ} → Iso (DecProp ℓ) (DecProp' ℓ)
+fun DecPropIso x =
+  decRec
+    (λ y → x .fst .fst ,
+      (true , isContr→Equiv (y , x .fst .snd y) isContrUnit))
+    (λ ¬y → x .fst .fst , (false , uninhabEquiv ¬y (λ x → x)))
+    (x .snd)
+fst (fst (inv DecPropIso (a , b , c))) = a
+snd (fst (inv DecPropIso (a , b , c))) = isDecProp→isProp (b , c)
+snd (inv DecPropIso (a , false , c)) =
+  no (equivToIso c .fun)
+snd (inv DecPropIso (a , true , c)) =
+  yes (equivToIso c .inv tt)
+rightInv DecPropIso (a , false , c) =
+  ΣPathP (refl , (ΣPathP (refl ,
+    isPropCod→isProp≃ isProp⊥ _ c )))
+rightInv DecPropIso (a , true , c) =
+  ΣPathP (refl , (ΣPathP (refl ,
+    isPropCod→isProp≃ isPropUnit _ c)))
+leftInv DecPropIso (A , yes p) =
+  Σ≡Prop (λ x → isPropDec (x .snd))
+    (ΣPathP (refl , (isPropIsProp _ _)))
+leftInv DecPropIso (A , no ¬p) =
+  Σ≡Prop (λ x → isPropDec (x .snd))
+    (ΣPathP (refl , (isPropIsProp _ _)))
 
 module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   String : Type ℓ
