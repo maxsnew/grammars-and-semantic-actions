@@ -1,5 +1,3 @@
-
-{-# OPTIONS --lossy-unification #-}
 module Semantics.DFA where
 
 open import Cubical.Foundations.Prelude

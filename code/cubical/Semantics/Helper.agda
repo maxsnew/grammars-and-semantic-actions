@@ -103,3 +103,37 @@ leftInv DecPropIso (A , yes p) =
 leftInv DecPropIso (A , no ¬p) =
   Σ≡Prop (λ x → isPropDec (x .snd))
     (ΣPathP (refl , (isPropIsProp _ _)))
+
+DecProp⊎ :
+  ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
+  (A .fst .fst → B .fst .fst → ⊥) → DecProp ℓ
+fst (fst (DecProp⊎ A B AB→⊥)) = A .fst .fst ⊎ B .fst .fst
+snd (fst (DecProp⊎ A B AB→⊥)) =
+  isProp⊎ (A .fst .snd) (B .fst .snd) AB→⊥
+snd (DecProp⊎ A B AB→⊥) =
+  decRec
+    (λ a → yes (inl a))
+    (λ ¬a →
+      decRec
+        (λ b → yes (inr b))
+        (λ ¬b → no (Cubical.Data.Sum.rec ¬a ¬b))
+        (B .snd))
+    (A .snd)
+
+DecPropΣ :
+  ∀ {ℓ} → (A : DecProp ℓ) → (B : A .fst .fst → DecProp ℓ) →
+  DecProp ℓ
+fst (fst (DecPropΣ A B)) = Σ[ a ∈ A .fst .fst ] B a .fst .fst
+snd (fst (DecPropΣ A B)) = isPropΣ (A .fst .snd) (λ a → B a .fst .snd)
+snd (DecPropΣ A B) =
+  decRec
+    (λ a →
+    decRec
+      (λ ba → yes (a , ba))
+      (λ ¬ba →
+        no (λ x →
+          ¬ba (transport
+            (cong (λ c → B c .fst .fst) (A .fst .snd _ _)) (x .snd) )))
+      (B a .snd))
+    (λ ¬a → no (λ x → ¬a (x .fst)))
+    (A .snd)

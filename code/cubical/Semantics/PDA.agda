@@ -1,4 +1,3 @@
-{-# OPTIONS #-}
 module Semantics.PDA where
 
 open import Cubical.Foundations.Prelude

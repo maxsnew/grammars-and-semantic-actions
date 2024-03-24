@@ -1,4 +1,3 @@
-{-# OPTIONS #-}
 module Semantics.NFA where
 
 open import Cubical.Foundations.Prelude
@@ -27,41 +26,6 @@ open import Semantics.Grammar public
 
 private
   variable ℓ ℓ' : Level
-
-DecProp⊎ :
-  ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
-  (A .fst .fst → B .fst .fst → ⊥) → DecProp ℓ
-fst (fst (DecProp⊎ A B AB→⊥)) = A .fst .fst ⊎ B .fst .fst
-snd (fst (DecProp⊎ A B AB→⊥)) =
-  isProp⊎ (A .fst .snd) (B .fst .snd) AB→⊥
-snd (DecProp⊎ A B AB→⊥) =
-  decRec
-    (λ a → yes (inl a))
-    (λ ¬a →
-      decRec
-        (λ b → yes (inr b))
-        (λ ¬b → no (Cubical.Data.Sum.rec ¬a ¬b))
-        (B .snd))
-    (A .snd)
-
-DecPropΣ :
-  ∀ {ℓ} → (A : DecProp ℓ) → (B : A .fst .fst → DecProp ℓ) →
-  DecProp ℓ
-fst (fst (DecPropΣ A B)) = Σ[ a ∈ A .fst .fst ] B a .fst .fst
-snd (fst (DecPropΣ A B)) = isPropΣ (A .fst .snd) (λ a → B a .fst .snd)
-snd (DecPropΣ A B) =
-  decRec
-    (λ a →
-    decRec
-      (λ ba → yes (a , ba))
-      (λ ¬ba →
-        no (λ x →
-          ¬ba (transport
-            (cong (λ c → B c .fst .fst) (A .fst .snd _ _)) (x .snd) )))
-      (B a .snd))
-    (λ ¬a → no (λ x → ¬a (x .fst)))
-    (A .snd)
-
 
 module NFADefs ℓ (Σ₀ : hSet ℓ) where
   open GrammarDefs ℓ Σ₀ public
@@ -230,16 +194,16 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
 
     ⊕NFA : (N : NFA) → (N' : NFA) → NFA
     -- States stratified into init, N states, N' states, acc
-    Q (⊕NFA N N') .fst = ⊤ ⊎ (N .Q .fst ⊎ ((N' .Q .fst) ⊎ ⊤))
+    Q (⊕NFA N N') .fst = ⊤ ⊎ (N .Q .fst ⊎ N' .Q .fst)
     Q (⊕NFA N N') .snd =
       isFinSet⊎
         (_ , isFinSetUnit)
-        (_ , (isFinSet⊎ (N .Q)
-          (_ , (isFinSet⊎ (N' .Q) (_ , isFinSetUnit)))))
+        (_ , (isFinSet⊎ (N .Q) (N' .Q)))
     -- initial state
     init (⊕NFA N N') = inl _
     -- Acceptance at subautomata accepting states
     isAcc (⊕NFA N N') x =
+      -- TODO need to factor this out into some reusable pieces of code
       DecProp⊎
         (DecPropΣ
           (((fiber (inr ∘ inl) x) , inr∘inl-prop-fibs) ,
@@ -256,15 +220,15 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
                     isDecProp≡ (⊕NFA N N' .Q) (inr (inl y)) x) ) .snd))
           (N .isAcc ∘ fst))
         (DecPropΣ
-          ((fiber (inr ∘ inr ∘ inl) x , inr∘inr∘inl-prop-fibs) ,
+          ((fiber (inr ∘ inr) x , inr∘inr-prop-fibs) ,
             decRec
               (Cubical.HITs.PropositionalTruncation.elim
-                (λ _ → isPropDec inr∘inr∘inl-prop-fibs)
+                (λ _ → isPropDec inr∘inr-prop-fibs)
                 λ y → yes y)
               (λ ∄preimage → no λ y → ∄preimage ∣ y ∣₁)
               (DecPropIso .Iso.inv
-                ((_ , isDecProp∃ (N' .Q) λ y → (inr (inr (inl y)) ≡ x) ,
-                  (isDecProp≡ (⊕NFA N N' .Q) (inr (inr (inl y))) x))) .snd))
+                ((_ , isDecProp∃ (N' .Q) λ y → (inr (inr  y) ≡ x) ,
+                  (isDecProp≡ (⊕NFA N N' .Q) (inr (inr y)) x))) .snd))
           (N' .isAcc ∘ fst))
         mutex
         where
@@ -273,12 +237,11 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
             (compEmbedding (_ , isEmbedding-inr)
                            (_ , isEmbedding-inl) .snd) x
 
-        inr∘inr∘inl-prop-fibs =
+        inr∘inr-prop-fibs =
           isEmbedding→hasPropFibers
             (compEmbedding
               (_ , isEmbedding-inr)
-              (compEmbedding (_ , isEmbedding-inr)
-                             (_ , isEmbedding-inl)) .snd) x
+              (_ , isEmbedding-inr) .snd) x
 
         mutex =
           (λ (q , _) (q' , _) →
@@ -292,61 +255,28 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
     -- the labeled transitions have same src, dst, and label as
     -- in original automata
     src (⊕NFA N N') (inl x) = inr (inl (N .src x))
-    src (⊕NFA N N') (inr x) = inr (inr (inl (N' .src x)))
+    src (⊕NFA N N') (inr x) = inr (inr (N' .src x))
     dst (⊕NFA N N') (inl x) = inr (inl (N .dst x))
-    dst (⊕NFA N N') (inr x) = inr (inr (inl (N' .dst x)))
+    dst (⊕NFA N N') (inr x) = inr (inr (N' .dst x))
     label (⊕NFA N N') (inl x) = N .label x
     label (⊕NFA N N') (inr x) = N' .label x
     fst (ε-transition (⊕NFA N N')) =
       Fin 2 ⊎
-      ((Σ[ q ∈ N .Q .fst ] N .isAcc q .fst .fst) ⊎
-      ((Σ[ q ∈ N' .Q .fst ] N' .isAcc q .fst .fst) ⊎
-      (N .ε-transition .fst ⊎
-      N' .ε-transition .fst)))
+      (N .ε-transition .fst ⊎ N' .ε-transition .fst)
     snd (ε-transition (⊕NFA N N')) =
       isFinSet⊎
         (_ , isFinSetFin)
-        (_ , isFinSet⊎ (_ ,
-          isFinSetΣ (N .Q) (λ q → N .isAcc q .fst .fst ,
-            isDecProp→isFinSet
-              (N .isAcc q .fst .snd) (N .isAcc q .snd)))
-          (_ , (isFinSet⊎ (_ ,
-            isFinSetΣ (N' .Q) (λ q → N' .isAcc q .fst .fst ,
-            isDecProp→isFinSet
-              (N' .isAcc q .fst .snd) (N' .isAcc q .snd)))
-            (_ , isFinSet⊎ (N .ε-transition) (N' .ε-transition)))))
+        (_ , isFinSet⊎ (N .ε-transition) (N' .ε-transition))
     -- ε-transitions to subautomata initial states
     ε-src (⊕NFA N N') (inl fzero) = ⊕NFA N N' .init
     ε-dst (⊕NFA N N') (inl fzero) = inr (inl (N .init))
     ε-src (⊕NFA N N') (inl (inr fzero)) = ⊕NFA N N' .init
-    ε-dst (⊕NFA N N') (inl (inr fzero)) = inr (inr (inl (N' .init)))
-    -- ε-transitions from subautomata accepting states to accepting state
-    ε-src (⊕NFA N N') (inr (inl x)) = {!!}
-    ε-dst (⊕NFA N N') (inr (inl x)) = {!!}
-    ε-src (⊕NFA N N') (inr (inr (inl x))) = {!!}
-    ε-dst (⊕NFA N N') (inr (inr (inl x))) = {!!}
-    ε-src (⊕NFA N N') (inr (inr (inr (inl x)))) = {!!}
-    ε-dst (⊕NFA N N') (inr (inr (inr (inl x)))) = {!!}
-    ε-src (⊕NFA N N') (inr (inr (inr (inr x)))) = {!!}
-    ε-dst (⊕NFA N N') (inr (inr (inr (inr x)))) = {!!}
-    -- ε-src (⊗NFA N N') (inl (lift fzero)) = (⊗NFA N N') .init
-    -- ε-dst (⊗NFA N N') (inl (lift fzero)) = inr (inl (N .init))
-    -- -- N acc to N' init
-    -- -- ε-src (⊗NFA N N') (inl (lift (fsuc fzero))) = inr (inl (N .acc))
-    -- ε-src (⊗NFA N N') (inl (lift (fsuc fzero))) = {!!}
-    -- ε-dst (⊗NFA N N') (inl (lift (fsuc fzero))) = inr (inr (inl (N' .init)))
-    -- -- N' acc to acc
-    -- ε-src (⊗NFA N N') (inl (lift (fsuc (fsuc fzero)))) =
-    --   -- inr (inr (inl (N' .acc)))
-    --   {!!}
-    -- -- ε-dst (⊗NFA N N') (inl (lift (fsuc (fsuc fzero)))) = (⊗NFA N N') .acc
-    -- ε-dst (⊗NFA N N') (inl (lift (fsuc (fsuc fzero)))) = {!!}
-    -- -- N ε-transitions
-    -- ε-src (⊗NFA N N') (inr (inl x)) = inr (inl (N .ε-src x))
-    -- ε-dst (⊗NFA N N') (inr (inl x)) = inr (inl (N .ε-dst x))
-    -- -- N' ε-transitions
-    -- ε-src (⊗NFA N N') (inr (inr x)) = inr (inr (inl (N' .ε-src x)))
-    -- ε-dst (⊗NFA N N') (inr (inr x)) = inr (inr (inl (N' .ε-dst x)))
+    ε-dst (⊕NFA N N') (inl (inr fzero)) = inr (inr (N' .init))
+    -- internal ε-transitions from subautomata
+    ε-src (⊕NFA N N') (inr (inl x)) = inr (inl (N .ε-src x))
+    ε-dst (⊕NFA N N') (inr (inl x)) = inr (inl (N .ε-dst x))
+    ε-src (⊕NFA N N') (inr (inr x)) = inr (inr (N' .ε-src x))
+    ε-dst (⊕NFA N N') (inr (inr x)) = inr (inr (N' .ε-dst x))
 
   -- ⊕NFA : (N : NFA) → (N' : NFA) → NFA
   -- -- States stratified into init, N states, N' states, acc
