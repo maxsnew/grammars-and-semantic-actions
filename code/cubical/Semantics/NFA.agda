@@ -187,6 +187,34 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
   ε-src emptyNFA _ = emptyNFA .init
   ε-dst emptyNFA _ = lift (fsuc fzero)
 
+  emptyIW→w≡[] : ∀ {q}{w} →
+    IW (NFATrace-S emptyNFA) (NFATrace-P emptyNFA)
+    (NFATrace-inX emptyNFA) (q , w) → w ≡ []
+  emptyIW→w≡[] (node (inl x) subtree) = x .snd
+  emptyIW→w≡[] (node (inr (inr x)) subtree) =
+    emptyIW→w≡[] (subtree _)
+
+  module _ (c : Σ₀ .fst) where
+    NFAc = literalNFA c
+
+    -- TODO try with RepIW trees
+    literalIW→w≡[c] : ∀ {q}{w} →
+      IW (NFATrace-S NFAc) (NFATrace-P NFAc)
+      (NFATrace-inX NFAc) (q , w) → (w ≡ []) ⊎ (w ≡ [ c ])
+    literalIW→w≡[c] (node (inl x) subtree) = inl (x .snd)
+    literalIW→w≡[c] (node (inr (inl x)) subtree) = {!!}
+      -- inr (
+        -- Cubical.Data.Sum.elim
+          -- (λ mt → sym (x .snd .snd) ∙ cong (λ a → c ∷ a) mt)
+          -- (λ cp → {!!})
+          -- (literalIW→w≡[c] (subtree _)))
+
+    literalCanonical : ∀ {w} → NFATrace NFAc (NFAc .init) w → Σ Grammar (λ g → g w .fst)
+    literalCanonical p = {!!}
+      where
+      canonical : literalCanonical p .fst ≡ {!ILin!}
+      canonical = refl
+
   -- NFA Combinators
   module _
     (N : NFA)
@@ -316,11 +344,6 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
       ε-src ⊗NFA (inr (inr x)) = inr (N' .ε-src x)
       ε-dst ⊗NFA (inr (inr x)) = inr (N' .ε-dst x)
 
-    -- TODO : does this formulation actually work?
-    -- Meaning, do I really need to add extra states and then
-    -- ε-transition or is this sufficient just adding ε-transitions
-    -- TODO : you do actually need the extra states for the
-    -- empty case.
     KL*NFA : NFA
     Q KL*NFA .fst = N .Q .fst ⊎ ⊤
     Q KL*NFA .snd = isFinSet⊎ (N .Q) (_ , isFinSetUnit)
@@ -359,3 +382,37 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
     ε-dst KL*NFA (inr (inl x)) = inl (N .init)
     ε-src KL*NFA (inr (inr x)) = inl (x .fst)
     ε-dst KL*NFA (inr (inr x)) = inr _
+
+  NFAfromRegularGrammar : RegularGrammar → NFA
+  NFAfromRegularGrammar ILinReg = emptyNFA
+  NFAfromRegularGrammar (g ⊗Reg h) =
+    ⊗NFA (NFAfromRegularGrammar g) (NFAfromRegularGrammar h)
+  NFAfromRegularGrammar (literalReg c) = literalNFA c
+  NFAfromRegularGrammar (g ⊕Reg h) =
+    ⊕NFA (NFAfromRegularGrammar g) (NFAfromRegularGrammar h)
+  NFAfromRegularGrammar (KL*Reg g) = KL*NFA (NFAfromRegularGrammar g)
+
+  NFA→Reg : (g : RegularGrammar) →
+    ParseTransformer
+      (NFAGrammar (NFAfromRegularGrammar g))
+      (RegularGrammar→Grammar g)
+  NFA→Reg GrammarDefs.ILinReg x = {!!}
+  NFA→Reg (g GrammarDefs.⊗Reg g₁) x = {!!}
+  NFA→Reg (GrammarDefs.literalReg x₁) x = {!!}
+  NFA→Reg (g GrammarDefs.⊕Reg g₁) x = {!!}
+  NFA→Reg (GrammarDefs.KL*Reg g) x = {!!}
+
+  module _ (a b : Σ₀ .fst) where
+    g : RegularGrammar
+    g = literalReg a ⊗Reg literalReg b
+
+    N = NFAfromRegularGrammar (KL*Reg g)
+
+    -- Parsing larger strings is borderline unusable,
+    -- even though technically possible,
+    -- because you need to manually give the transition parameter
+    w : String
+    w = []
+
+    p : NFAGrammar N w .fst
+    p = ε-cons {t = inl tt} (nil tt*)
