@@ -227,6 +227,8 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
     run p =
       fold*l
         ⊕Σ₀
+        -- TODO : h here should be WAY MORE simple
+        -- Σ_{q}
         (DFAGrammar D ⊕ DFAGrammar (negate D))
         mt-case
         cons-case
