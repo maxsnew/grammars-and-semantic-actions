@@ -44,6 +44,7 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
   isAcc (negate D) q = negateDecProp (D .isAcc q)
   δ (negate D) = D .δ
 
+  -- TODO : define this w parse transformers
   data DFATrace (D : DFA) : D .Q .fst → String → Type ℓ where
     nil : ∀ {q} → D .isAcc q .fst .fst → DFATrace D q []
     cons :
@@ -113,6 +114,9 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
       Σ[ q' ∈ D .Q .fst ] (D .isAcc q' .fst .fst)
     getAcceptingState .[] q (nil x) = q , x
     getAcceptingState .(_ ∷ _) q (cons p) = getAcceptingState _ (D .δ q _) p
+
+    -- TODO : might want to have a type of traces indexed by both endpoints
+    -- irrespective of acceptance criteria of right endpoint
 
     extendTraceByLiteral :
       (c : Σ₀ .fst) →
@@ -298,6 +302,7 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
           ((negate D) .isAcc
             (D .δ (getAcceptingState (negate D) w' (D .init) p .fst) c) .snd)
 
+    -- TODO : no indexed pattern match ughhhhh
     -- onSameState : ∀ w {q} → (p : DFATrace D q w) →
     --   (p' : DFATrace (negate D) q w) →
     --   getAcceptingState D w q p .fst ≡ getAcceptingState (negate D) w q p' .fst
@@ -309,8 +314,8 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
         (DFATrace-inX D) ((q , w))) →
       (p' : IW (DFATrace-S (negate D)) (DFATrace-P (negate D))
         (DFATrace-inX (negate D)) ((q , w))) →
-      getAcceptingState D w q (W→DFATrace _ p) .fst ≡
-        getAcceptingState (negate D) w q (W→DFATrace _ p') .fst
+      getAcceptingState D w q (W→DFATrace D p) .fst ≡
+        getAcceptingState (negate D) w q (W→DFATrace (negate D) p') .fst
     onSameState q w (node (inl x) subtree) (node (inl x₁) subtree₁) =
       refl
     onSameState q w (node (inl x) subtree) (node (inr x₁) subtree₁) =
@@ -318,10 +323,10 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
     onSameState q w (node (inr x) subtree) (node (inl x₁) subtree₁) =
       ⊥.rec (¬cons≡nil (x .snd .snd ∙ x₁ .snd))
     onSameState q w (node (inr x) subtree) (node (inr x₁) subtree₁) =
-      {!!}
-      -- {! onSameState
+       {!!}
+      -- {!onSameState
         -- ? (x .snd .fst)
-        -- (subtree _) (transport {!!} (subtree₁ _)) !}
+          -- (subtree _) (transport (cong (λ a → IW ? ? ? ?) ?) (subtree₁ _)) !}
       where
       x≡x₁ : x ≡ x₁
       x≡x₁ =
@@ -330,75 +335,79 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
             (injEmbedding isSetString (λ z → cons-inj₂ z))
             w)
           (cons-inj₁ (x .snd .snd ∙ sym (x₁ .snd .snd)))
---     ¬parseD-is-¬Dparse :
---       (w : String) →
---       Iso (¬ (DFAGrammar D w .fst)) (DFAGrammar (negate D) w .fst)
---     fun (¬parseD-is-¬Dparse w) Dw→⊥ =
---       Cubical.Data.Sum.elim
---         (λ Dw → ⊥.elim (Dw→⊥ Dw))
---         (λ negDw → negDw)
---         (run (String→KL* w) )
---     inv (¬parseD-is-¬Dparse w) negDw Dw =
---       neg-acc .snd (transport ((cong (λ a → D .isAcc a .fst .fst) the-fst-path)) (acc .snd))
---       where
---       acc = getAcceptingState D w (D .init) Dw
---       neg-acc = getAcceptingState (negate D) w (( negate D ) .init) negDw
 
---       the-fst-path : acc .fst ≡ neg-acc .fst
---       the-fst-path = onSameState w Dw negDw
---     rightInv (¬parseD-is-¬Dparse w) b =
---       isPropDFATrace (negate D) ((negate D) .init) w _ _
---     leftInv (¬parseD-is-¬Dparse w) a =
---       funExt (λ x → isProp⊥ _ _)
+    ¬parseD-is-¬Dparse :
+      (w : String) →
+      Iso (¬ (DFAGrammar D w .fst)) (DFAGrammar (negate D) w .fst)
+    fun (¬parseD-is-¬Dparse w) Dw→⊥ =
+      Cubical.Data.Sum.elim
+        (λ Dw → ⊥.elim (Dw→⊥ Dw))
+        (λ negDw → negDw)
+        (run (String→KL* w) )
+    inv (¬parseD-is-¬Dparse w) negDw Dw =
+      neg-acc .snd
+        (transport (cong (λ a → D .isAcc a .fst .fst) {!!}) (acc .snd))
+      where
+      acc = getAcceptingState D w (D .init) Dw
+      neg-acc = getAcceptingState (negate D) w (( negate D ) .init) negDw
 
--- module examples where
---   open DFADefs ℓ-zero (Fin 2 , isSetFin) public
---   open DFADefs.DFA
+      -- TODO : why does this need acc ≡ neg-acc if I try refl
+      the-fst-path : acc .fst ≡ neg-acc .fst
+      -- the-fst-path = onSameState (D .init) w Dw negDw
+      the-fst-path = {!!}
+    rightInv (¬parseD-is-¬Dparse w) b =
+      isPropDFATrace (negate D) ((negate D) .init) w _ _
+    leftInv (¬parseD-is-¬Dparse w) a =
+      funExt (λ x → isProp⊥ _ _)
 
---   D : DFA
---   Q D = (Fin 3) , isFinSetFin
---   init D = inl _
---   isAcc D x =
---     ((x ≡ fzero) , isSetFin x fzero) ,
---     discreteFin x fzero
---   δ D fzero fzero = fromℕ 0
---   δ D fzero (fsuc fzero) = fromℕ 1
---   δ D (fsuc fzero) fzero = fromℕ 2
---   δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
---   δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
---   δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
+module examples where
+  open DFADefs ℓ-zero (Fin 2 , isSetFin) public
+  open DFADefs.DFA
 
---   fone : Fin 2
---   fone = fsuc fzero
+  D : DFA
+  Q D = (Fin 3) , isFinSetFin
+  init D = inl _
+  isAcc D x =
+    ((x ≡ fzero) , isSetFin x fzero) ,
+    discreteFin x fzero
+  δ D fzero fzero = fromℕ 0
+  δ D fzero (fsuc fzero) = fromℕ 1
+  δ D (fsuc fzero) fzero = fromℕ 2
+  δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
+  δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
+  δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
 
---   w = fone ∷ fzero ∷ fzero ∷ fone ∷ []
---   w' = fzero ∷ fzero ∷ fone ∷ []
+  fone : Fin 2
+  fone = fsuc fzero
 
---   p : DFAGrammar D w .fst
---   p = DFADefs.cons (DFADefs.cons
---     (DFADefs.cons (DFADefs.cons (DFADefs.nil refl))))
+  w = fone ∷ fzero ∷ fzero ∷ fone ∷ []
+  w' = fzero ∷ fzero ∷ fone ∷ []
 
---   qAcc : Σ (D .Q .fst) (λ q' → D .isAcc q' .fst .fst)
---   qAcc = getAcceptingState D w (D .init) p
+  p : DFAGrammar D w .fst
+  p = DFADefs.cons (DFADefs.cons
+    (DFADefs.cons (DFADefs.cons (DFADefs.nil refl))))
 
---   _ : qAcc ≡ (fzero , refl)
---   _ = refl
+  qAcc : Σ (D .Q .fst) (λ q' → D .isAcc q' .fst .fst)
+  qAcc = getAcceptingState D w (D .init) p
 
---   runString : (a : String) → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst
---   runString a =
---     run D
---       isFinSetFin
---       (String→KL* a)
+  _ : qAcc ≡ (fzero , refl)
+  _ = refl
 
---   check-side : ∀ {a} → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst → Bool
---   check-side p =
---     Cubical.Data.Sum.rec
---       (λ _ → true) -- inl
---       (λ _ → false) -- inr
---       p
+  runString : (a : String) → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst
+  runString a =
+    run D
+      isFinSetFin
+      (String→KL* a)
 
---   check-w : check-side (runString w) ≡ true
---   check-w = refl
+  check-side : ∀ {a} → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst → Bool
+  check-side p =
+    Cubical.Data.Sum.rec
+      (λ _ → true) -- inl
+      (λ _ → false) -- inr
+      p
 
---   check-w' : check-side (runString w') ≡ false
---   check-w' = refl
+  check-w : check-side (runString w) ≡ true
+  check-w = refl
+
+  check-w' : check-side (runString w') ≡ false
+  check-w' = refl
