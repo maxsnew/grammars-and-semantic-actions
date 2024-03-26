@@ -197,23 +197,46 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
   module _ (c : Σ₀ .fst) where
     NFAc = literalNFA c
 
-    -- TODO try with RepIW trees
-    literalIW→w≡[c] : ∀ {q}{w} →
+    e : ∀ {q}{w} →
       IW (NFATrace-S NFAc) (NFATrace-P NFAc)
       (NFATrace-inX NFAc) (q , w) → (w ≡ []) ⊎ (w ≡ [ c ])
-    literalIW→w≡[c] (node (inl x) subtree) = inl (x .snd)
-    literalIW→w≡[c] (node (inr (inl x)) subtree) = {!!}
+    -- "nil"
+    e {lift fzero} (node (inl x) subtree) = inl (x .snd)
+    e {lift (fsuc fzero)} (node (inl x) subtree) = inl (x .snd)
+    -- "cons"
+    e {lift fzero}
+      (node (fsuc (inl ((tt* , snd₂) , snd₁))) subtree) =
+      Cubical.Data.Sum.elim
+        (λ mt → {!snd₁ .snd!})
+        (λ b → inr {!snd₁ .snd!})
+        (e (subtree _))
+    e {lift (fsuc fzero)}
+      (node (fsuc (inl
+        ((tt* , b) , snd₁))) subtree) =
+          ⊥.elim (fzero≠fone (cong lower b))
       -- inr (
+      --
         -- Cubical.Data.Sum.elim
-          -- (λ mt → sym (x .snd .snd) ∙ cong (λ a → c ∷ a) mt)
-          -- (λ cp → {!!})
-          -- (literalIW→w≡[c] (subtree _)))
+          -- (λ a → sym (x .snd .snd) ∙ cong (λ d → c ∷ d) a)
+          -- (λ xsndfst≡[c] → {!x .fst .fst!})
+          -- (e (subtree _)))
 
-    literalCanonical : ∀ {w} → NFATrace NFAc (NFAc .init) w → Σ Grammar (λ g → g w .fst)
-    literalCanonical p = {!!}
-      where
-      canonical : literalCanonical p .fst ≡ {!ILin!}
-      canonical = refl
+    literalIW→w≡[c] : ∀ {q}{w} →
+      IW (NFATrace-S NFAc) (NFATrace-P NFAc)
+      (NFATrace-inX NFAc) (q , w) → Σ[ g ∈ Grammar ] g w .fst
+    literalIW→w≡[c] (node (inl x) subtree) = ILin , x .snd
+    literalIW→w≡[c] {w} (node (fsuc (inl x)) subtree) =
+      literal c ⊗ (literalIW→w≡[c] (subtree _) .fst) ,
+        (([ c ] , fst (x .snd)) , (sym (x .snd .snd))) ,
+          (refl , (literalIW→w≡[c] (subtree _) .snd))
+
+    -- TODO : elim IW trees?
+    -- TODO : can I prove that  ¬ [ D w ] == [ ¬ D w ]
+
+    o : (w : String) → (p : IW (NFATrace-S NFAc) (NFATrace-P NFAc) (NFATrace-inX NFAc) (NFAc .init , w)) →
+      literalIW→w≡[c] p .fst ≡ {!!}
+    o w (node (inl x) subtree) = {!!}
+    o w (node (fsuc (inl x)) subtree) = {!!}
 
   -- NFA Combinators
   module _

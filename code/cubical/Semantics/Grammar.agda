@@ -296,3 +296,6 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   RegularGrammar→Grammar (g ⊕Reg g') =
     RegularGrammar→Grammar g ⊕ RegularGrammar→Grammar g'
   RegularGrammar→Grammar (KL*Reg g) = KL* (RegularGrammar→Grammar g)
+
+  Language : Grammar → Type ℓ
+  Language g = Σ[ w ∈ String ] ∥ g w .fst ∥₁

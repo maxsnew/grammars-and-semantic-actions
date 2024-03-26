@@ -1,8 +1,10 @@
+{-# OPTIONS --lossy-unification #-}
 module Semantics.DFA where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
@@ -49,7 +51,6 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
       {q : D .Q .fst} →
       DFATrace D (D .δ q c) w' →
       DFATrace D q (c ∷ w')
-
 
   module isSetDFATraceProof (D : DFA) where
     DFATrace-X = D .Q .fst × String
@@ -131,185 +132,253 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
 
 
   module _ (D : DFA) where
-    extendTraceByLiteralIntoNegation :
-      (c : Σ₀ .fst) →
-      (q : D .Q .fst) →
-      (w : String) →
-      (tr : DFATrace D q w) →
-      (negate D) .isAcc
-        ((negate D) .δ (getAcceptingState D w q tr .fst) c) .fst .fst →
-      Σ[ t ∈ DFATrace (negate D) q (w ++ [ c ]) ]
-          (negate D) .δ (getAcceptingState D w q tr .fst) c ≡
-            getAcceptingState (negate D) (w ++ [ c ]) q t .fst
-    extendTraceByLiteralIntoNegation c q .[] (nil x₁) δcnotAcc =
-      (cons (nil δcnotAcc)) , refl
-    extendTraceByLiteralIntoNegation c q .(_ ∷ _) (cons tr) δcnotAcc =
-      (cons (the-rec-call .fst)) ,
-      the-rec-call .snd
+    isPropDFATraceW : ∀ q w →
+      isProp (IW (DFATrace-S D) (DFATrace-P D) (DFATrace-inX D) ((q , w)))
+    isPropDFATraceW q [] (node (inl x) subtree) (node (inl x₁) subtree₁) =
+      wExt _ _
+        (cong inl
+          (isProp× (D .isAcc q .fst .snd) (isSetString [] []) x x₁))
+          (funExt ⊥.elim)
+    isPropDFATraceW q [] (node (inl x) subtree) (node (inr x₁) subtree₁) =
+      ⊥.rec (¬cons≡nil (x₁ .snd .snd))
+    isPropDFATraceW q [] (node (inr x) subtree) (node (inl x₁) subtree₁) =
+      ⊥.rec (¬cons≡nil (x .snd .snd))
+    isPropDFATraceW q [] (node (inr x) subtree) (node (inr x₁) subtree₁) =
+      ⊥.rec (¬cons≡nil (x .snd .snd))
+    isPropDFATraceW q (c ∷ w) (node (inl x) subtree) (node (inl x₁) subtree₁) =
+      ⊥.rec (¬cons≡nil (x .snd))
+    isPropDFATraceW q (c ∷ w) (node (inl x) subtree) (node (inr x₁) subtree₁) =
+      ⊥.rec (¬cons≡nil (x .snd))
+    isPropDFATraceW q (c ∷ w) (node (inr x) subtree) (node (inl x₁) subtree₁) =
+      ⊥.rec (¬cons≡nil (x₁ .snd))
+    isPropDFATraceW q (c ∷ w) (node (inr x) subtree) (node (inr x₁) subtree₁) =
+      wExt _ _ (cong inr x≡x₁)
+        (funExt (λ _ → toPathP (isPropDFATraceW _ _ _ _)))
       where
-      the-rec-call =
-        extendTraceByLiteralIntoNegation c (negate D .δ q _) _ tr δcnotAcc
+      x≡x₁ : x ≡ x₁
+      x≡x₁ =
+        Σ≡Prop
+        (λ a → isEmbedding→hasPropFibers
+          (injEmbedding isSetString (λ z → cons-inj₂ z)) (c ∷ w))
+        (cons-inj₁ (x .snd .snd ∙ sym (x₁ .snd .snd)))
 
-    extendTraceByLiteralNegationIntoRegular :
-      (c : Σ₀ .fst) →
-      (q : D .Q .fst) →
-      (w : String) →
-      (tr : DFATrace (negate D) q w) →
-      D .isAcc ((negate D) .δ
-        (getAcceptingState (negate D) w q tr .fst) c) .fst .fst →
-      Σ[ t ∈ DFATrace D q (w ++ [ c ]) ]
-          (negate D) .δ (getAcceptingState (negate D) w q tr .fst) c ≡
-            getAcceptingState D (w ++ [ c ]) q t .fst
-    extendTraceByLiteralNegationIntoRegular c q .[] (nil x₁) δcIsAcc =
-      (cons (nil δcIsAcc)) , refl
-    extendTraceByLiteralNegationIntoRegular c q .(_ ∷ _) (cons tr) δcIsAcc =
-      cons (the-rec-call .fst),
-      the-rec-call .snd
-      where
-      the-rec-call =
-        extendTraceByLiteralNegationIntoRegular c
-          (negate D .δ q _) _ tr δcIsAcc
+    isPropDFATrace : ∀ q w → isProp (DFATrace D q w)
+    isPropDFATrace q w =
+      isPropRetract (DFATrace→W D) (W→DFATrace D)
+        (DFATraceRetractofW D) (isPropDFATraceW q w)
 
-  module _
-    (D : DFA)
-    (isFinSetΣ₀ : isFinSet (Σ₀ .fst))
-    where
+    -- isPropDFATrace : ∀ q w → isProp (DFATrace D q w)
+    -- isPropDFATrace q [] (nil x) (nil y) =
+    --   cong (λ a → DFATrace.nil {D = D} a) (D .isAcc q .fst .snd x y)
+    -- isPropDFATrace q (c ∷ w) (cons x) (cons y) =
+      -- cong (λ a → DFATrace.cons {D = D} a) (isPropDFATrace (D .δ q c) w x y)
 
-    open Iso
+--     extendTraceByLiteralIntoNegation :
+--       (c : Σ₀ .fst) →
+--       (q : D .Q .fst) →
+--       (w : String) →
+--       (tr : DFATrace D q w) →
+--       (negate D) .isAcc
+--         ((negate D) .δ (getAcceptingState D w q tr .fst) c) .fst .fst →
+--       Σ[ t ∈ DFATrace (negate D) q (w ++ [ c ]) ]
+--           (negate D) .δ (getAcceptingState D w q tr .fst) c ≡
+--             getAcceptingState (negate D) (w ++ [ c ]) q t .fst
+--     extendTraceByLiteralIntoNegation c q .[] (nil x₁) δcnotAcc =
+--       (cons (nil δcnotAcc)) , refl
+--     extendTraceByLiteralIntoNegation c q .(_ ∷ _) (cons tr) δcnotAcc =
+--       (cons (the-rec-call .fst)) ,
+--       the-rec-call .snd
+--       where
+--       the-rec-call =
+--         extendTraceByLiteralIntoNegation c (negate D .δ q _) _ tr δcnotAcc
 
-    decEqΣ₀ : Discrete (Σ₀ .fst)
-    decEqΣ₀ = isFinSet→Discrete isFinSetΣ₀
+--     extendTraceByLiteralNegationIntoRegular :
+--       (c : Σ₀ .fst) →
+--       (q : D .Q .fst) →
+--       (w : String) →
+--       (tr : DFATrace (negate D) q w) →
+--       D .isAcc ((negate D) .δ
+--         (getAcceptingState (negate D) w q tr .fst) c) .fst .fst →
+--       Σ[ t ∈ DFATrace D q (w ++ [ c ]) ]
+--           (negate D) .δ (getAcceptingState (negate D) w q tr .fst) c ≡
+--             getAcceptingState D (w ++ [ c ]) q t .fst
+--     extendTraceByLiteralNegationIntoRegular c q .[] (nil x₁) δcIsAcc =
+--       (cons (nil δcIsAcc)) , refl
+--     extendTraceByLiteralNegationIntoRegular c q .(_ ∷ _) (cons tr) δcIsAcc =
+--       cons (the-rec-call .fst),
+--       the-rec-call .snd
+--       where
+--       the-rec-call =
+--         extendTraceByLiteralNegationIntoRegular c
+--           (negate D .δ q _) _ tr δcIsAcc
 
-    run :
-      ParseTransformer
-        (KL* ⊕Σ₀)
-        (DFAGrammar D ⊕ DFAGrammar (negate D))
-    run p =
-      fold*l
-        ⊕Σ₀
-        (DFAGrammar D ⊕ DFAGrammar (negate D))
-        mt-case
-        cons-case
-        p
-      where
-      mt-case : ParseTransformer
-        ILin (DFAGrammar D ⊕ DFAGrammar (negate D))
-      mt-case w≡[] =
-        decRec
-          (λ initIsAcc →
-            inl (
-              transport
-                (cong (λ a → DFATrace D (D .init) a) (sym w≡[]))
-                (DFATrace.nil {D = D} initIsAcc)))
-          (λ initIsAcc→⊥ →
-            inr
-              (
-              transport
-                (cong (λ a → DFATrace (negate D)
-                  ((negate D) .init) a) (sym w≡[]))
-                (DFATrace.nil {D = negate D} initIsAcc→⊥)
-              )
-          )
-          (D .isAcc (D .init) .snd)
+--   module _
+--     (D : DFA)
+--     (isFinSetΣ₀ : isFinSet (Σ₀ .fst))
+--     where
 
-      cons-case : ParseTransformer
-        ((DFAGrammar D ⊕ DFAGrammar (negate D)) ⊗ ⊕Σ₀)
-        (DFAGrammar D ⊕ DFAGrammar (negate D))
-      cons-case {w} (((w' , w'') , w≡w'++w'') , inl p , c , w''≡c) =
-        decRec
-          (λ nextIsAcc →
-            inl (
-              transport
-                (cong (λ b → DFATrace D (D .init) b)
-                  (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                (extendTraceByLiteral D c (D .init) w' p nextIsAcc .fst)
-            )
-          )
-          (λ nextIsAcc→⊥ →
-            inr (
-                transport
-                  (cong (λ b → DFATrace (negate D)
-                    ((negate D) .init) b)
-                      (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                  (extendTraceByLiteralIntoNegation D c
-                    (D .init) w' p nextIsAcc→⊥ .fst)
-            )
-          )
-          (D .isAcc (D .δ (getAcceptingState D w' (D .init) p .fst) c) .snd)
-      cons-case {w} (((w' , w'') , w≡w'++w'') , inr p , c , w''≡c) =
-        decRec
-          (λ nextAccByNeg →
-            inr
-              (transport
-                (cong (λ b → DFATrace (negate D) (D .init) b)
-                  (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                (extendTraceByLiteral
-                  (negate D) c (D .init) w' p nextAccByNeg .fst)
-                )
-          )
-          (λ nextAccByNeg→⊥ →
-            inl
-              (transport
-                (cong (λ b → DFATrace D (D .init) b)
-                  (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
-                (extendTraceByLiteralNegationIntoRegular D c (D .init) w' p
-                  (doubleNegDecProp'
-                    (D .isAcc (D .δ (getAcceptingState (negate D)
-                      w' (D .init) p .fst) c))
-                      nextAccByNeg→⊥) .fst)
-                )
-          )
-          ((negate D) .isAcc
-            (D .δ (getAcceptingState (negate D) w' (D .init) p .fst) c) .snd)
+--     open Iso
 
-module examples where
-  open DFADefs ℓ-zero (Fin 2 , isSetFin) public
-  open DFADefs.DFA
+--     decEqΣ₀ : Discrete (Σ₀ .fst)
+--     decEqΣ₀ = isFinSet→Discrete isFinSetΣ₀
 
-  D : DFA
-  Q D = (Fin 3) , isFinSetFin
-  init D = inl _
-  isAcc D x =
-    ((x ≡ fzero) , isSetFin x fzero) ,
-    discreteFin x fzero
-  δ D fzero fzero = fromℕ 0
-  δ D fzero (fsuc fzero) = fromℕ 1
-  δ D (fsuc fzero) fzero = fromℕ 2
-  δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
-  δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
-  δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
+--     run :
+--       ParseTransformer
+--         (KL* ⊕Σ₀)
+--         (DFAGrammar D ⊕ DFAGrammar (negate D))
+--     run p =
+--       fold*l
+--         ⊕Σ₀
+--         (DFAGrammar D ⊕ DFAGrammar (negate D))
+--         mt-case
+--         cons-case
+--         p
+--       where
+--       mt-case : ParseTransformer
+--         ILin (DFAGrammar D ⊕ DFAGrammar (negate D))
+--       mt-case w≡[] =
+--         decRec
+--           (λ initIsAcc →
+--             inl (
+--               transport
+--                 (cong (λ a → DFATrace D (D .init) a) (sym w≡[]))
+--                 (DFATrace.nil {D = D} initIsAcc)))
+--           (λ initIsAcc→⊥ →
+--             inr
+--               (
+--               transport
+--                 (cong (λ a → DFATrace (negate D)
+--                   ((negate D) .init) a) (sym w≡[]))
+--                 (DFATrace.nil {D = negate D} initIsAcc→⊥)
+--               )
+--           )
+--           (D .isAcc (D .init) .snd)
 
-  fone : Fin 2
-  fone = fsuc fzero
+--       cons-case : ParseTransformer
+--         ((DFAGrammar D ⊕ DFAGrammar (negate D)) ⊗ ⊕Σ₀)
+--         (DFAGrammar D ⊕ DFAGrammar (negate D))
+--       cons-case {w} (((w' , w'') , w≡w'++w'') , inl p , c , w''≡c) =
+--         decRec
+--           (λ nextIsAcc →
+--             inl (
+--               transport
+--                 (cong (λ b → DFATrace D (D .init) b)
+--                   (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+--                 (extendTraceByLiteral D c (D .init) w' p nextIsAcc .fst)
+--             )
+--           )
+--           (λ nextIsAcc→⊥ →
+--             inr (
+--                 transport
+--                   (cong (λ b → DFATrace (negate D)
+--                     ((negate D) .init) b)
+--                       (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+--                   (extendTraceByLiteralIntoNegation D c
+--                     (D .init) w' p nextIsAcc→⊥ .fst)
+--             )
+--           )
+--           (D .isAcc (D .δ (getAcceptingState D w' (D .init) p .fst) c) .snd)
+--       cons-case {w} (((w' , w'') , w≡w'++w'') , inr p , c , w''≡c) =
+--         decRec
+--           (λ nextAccByNeg →
+--             inr
+--               (transport
+--                 (cong (λ b → DFATrace (negate D) (D .init) b)
+--                   (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+--                 (extendTraceByLiteral
+--                   (negate D) c (D .init) w' p nextAccByNeg .fst)
+--                 )
+--           )
+--           (λ nextAccByNeg→⊥ →
+--             inl
+--               (transport
+--                 (cong (λ b → DFATrace D (D .init) b)
+--                   (cong (λ a → w' ++ a) w''≡c ∙ sym w≡w'++w''))
+--                 (extendTraceByLiteralNegationIntoRegular D c (D .init) w' p
+--                   (doubleNegDecProp'
+--                     (D .isAcc (D .δ (getAcceptingState (negate D)
+--                       w' (D .init) p .fst) c))
+--                       nextAccByNeg→⊥) .fst)
+--                 )
+--           )
+--           ((negate D) .isAcc
+--             (D .δ (getAcceptingState (negate D) w' (D .init) p .fst) c) .snd)
 
-  w = fone ∷ fzero ∷ fzero ∷ fone ∷ []
-  w' = fzero ∷ fzero ∷ fone ∷ []
+--     onSameState : ∀ w {q} → (p : DFATrace D q w) →
+--       (p' : DFATrace (negate D) q w) →
+--       getAcceptingState D w q p .fst ≡ getAcceptingState (negate D) w q p' .fst
+--     onSameState [] (nil x) (nil y) = refl
+--     onSameState (c ∷ w) (cons p) (cons p') = onSameState w p p'
 
-  p : DFAGrammar D w .fst
-  p = DFADefs.cons (DFADefs.cons
-    (DFADefs.cons (DFADefs.cons (DFADefs.nil refl))))
+--     ¬parseD-is-¬Dparse :
+--       (w : String) →
+--       Iso (¬ (DFAGrammar D w .fst)) (DFAGrammar (negate D) w .fst)
+--     fun (¬parseD-is-¬Dparse w) Dw→⊥ =
+--       Cubical.Data.Sum.elim
+--         (λ Dw → ⊥.elim (Dw→⊥ Dw))
+--         (λ negDw → negDw)
+--         (run (String→KL* w) )
+--     inv (¬parseD-is-¬Dparse w) negDw Dw =
+--       neg-acc .snd (transport ((cong (λ a → D .isAcc a .fst .fst) the-fst-path)) (acc .snd))
+--       where
+--       acc = getAcceptingState D w (D .init) Dw
+--       neg-acc = getAcceptingState (negate D) w (( negate D ) .init) negDw
 
-  qAcc : Σ (D .Q .fst) (λ q' → D .isAcc q' .fst .fst)
-  qAcc = getAcceptingState D w (D .init) p
+--       the-fst-path : acc .fst ≡ neg-acc .fst
+--       the-fst-path = onSameState w Dw negDw
+--     rightInv (¬parseD-is-¬Dparse w) b =
+--       isPropDFATrace (negate D) ((negate D) .init) w _ _
+--     leftInv (¬parseD-is-¬Dparse w) a =
+--       funExt (λ x → isProp⊥ _ _)
 
-  _ : qAcc ≡ (fzero , refl)
-  _ = refl
+-- module examples where
+--   open DFADefs ℓ-zero (Fin 2 , isSetFin) public
+--   open DFADefs.DFA
 
-  runString : (a : String) → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst
-  runString a =
-    run D
-      isFinSetFin
-      (String→KL* a)
+--   D : DFA
+--   Q D = (Fin 3) , isFinSetFin
+--   init D = inl _
+--   isAcc D x =
+--     ((x ≡ fzero) , isSetFin x fzero) ,
+--     discreteFin x fzero
+--   δ D fzero fzero = fromℕ 0
+--   δ D fzero (fsuc fzero) = fromℕ 1
+--   δ D (fsuc fzero) fzero = fromℕ 2
+--   δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
+--   δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
+--   δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
 
-  check-side : ∀ {a} → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst → Bool
-  check-side p =
-    Cubical.Data.Sum.rec
-      (λ _ → true) -- inl
-      (λ _ → false) -- inr
-      p
+--   fone : Fin 2
+--   fone = fsuc fzero
 
-  check-w : check-side (runString w) ≡ true
-  check-w = refl
+--   w = fone ∷ fzero ∷ fzero ∷ fone ∷ []
+--   w' = fzero ∷ fzero ∷ fone ∷ []
 
-  check-w' : check-side (runString w') ≡ false
-  check-w' = refl
+--   p : DFAGrammar D w .fst
+--   p = DFADefs.cons (DFADefs.cons
+--     (DFADefs.cons (DFADefs.cons (DFADefs.nil refl))))
+
+--   qAcc : Σ (D .Q .fst) (λ q' → D .isAcc q' .fst .fst)
+--   qAcc = getAcceptingState D w (D .init) p
+
+--   _ : qAcc ≡ (fzero , refl)
+--   _ = refl
+
+--   runString : (a : String) → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst
+--   runString a =
+--     run D
+--       isFinSetFin
+--       (String→KL* a)
+
+--   check-side : ∀ {a} → (DFAGrammar D ⊕ DFAGrammar (negate D)) a .fst → Bool
+--   check-side p =
+--     Cubical.Data.Sum.rec
+--       (λ _ → true) -- inl
+--       (λ _ → false) -- inr
+--       p
+
+--   check-w : check-side (runString w) ≡ true
+--   check-w = refl
+
+--   check-w' : check-side (runString w') ≡ false
+--   check-w' = refl
