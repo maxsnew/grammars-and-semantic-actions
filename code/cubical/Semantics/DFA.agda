@@ -356,7 +356,7 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
       -- TODO : why does this need acc ≡ neg-acc if I try refl
       the-fst-path : acc .fst ≡ neg-acc .fst
       -- the-fst-path = onSameState (D .init) w Dw negDw
-      the-fst-path = {!!}
+      the-fst-path = {!refl {?}{D .Q .fst}!}
     rightInv (¬parseD-is-¬Dparse w) b =
       isPropDFATrace (negate D) ((negate D) .init) w _ _
     leftInv (¬parseD-is-¬Dparse w) a =

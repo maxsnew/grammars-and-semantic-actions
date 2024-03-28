@@ -3,200 +3,157 @@ module Semantics.Grammar where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
-open import Cubical.Relation.Nullary.Base
-open import Cubical.Relation.Nullary.Properties
-open import Cubical.Relation.Nullary.DecidablePropositions
+
 open import Cubical.Data.List
-open import Cubical.Data.Bool hiding (_⊕_)
-open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.Unit
 open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.SumFin
-open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
+open import Cubical.Data.SumFin hiding (fsuc)
 open import Cubical.Data.Sigma
-open import Cubical.HITs.PropositionalTruncation
+
+open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Helper public
+open import Semantics.String public
 
 private
   variable ℓ ℓ' : Level
 
 module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
-  String : Type ℓ
-  String = List (Σ₀ .fst)
-
-  isSetString : isSet String
-  isSetString = isOfHLevelList 0 (Σ₀ .snd)
-
-  isGroupoidString : isGroupoid String
-  isGroupoidString = isSet→isGroupoid isSetString
-
-  Splitting : String → Type ℓ
-  Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
-
-  isSetSplitting : (w : String) → isSet (Splitting w)
-  isSetSplitting w =
-    isSetΣ (isSet× isSetString isSetString)
-      λ s → isGroupoidString w (s .fst ++ s .snd)
-
+  open StringDefs ℓ Σ₀
   Grammar : Type (ℓ-suc ℓ)
-  Grammar = String → hSet ℓ
+  Grammar = String → Type ℓ
 
-  open ListPath
-  ILin : Grammar
-  ILin w = (w ≡ []) , isGroupoidString w []
+  ParsesAreSets : Grammar → Type ℓ
+  ParsesAreSets g = ∀ w → isSet (g w)
+
+  hGrammar : Type (ℓ-suc ℓ)
+  hGrammar = Σ[ g ∈ Grammar ] ParsesAreSets g
+
+  ε-grammar : Grammar
+  ε-grammar w = w ≡ []
+
+  ParsesAreSets-ε-grammar : ParsesAreSets ε-grammar
+  ParsesAreSets-ε-grammar _ = isGroupoidString _ _
 
   _⊗_ : Grammar → Grammar → Grammar
-  (g ⊗ g') w =
-    (Σ[ s ∈ Splitting w ] g (s .fst .fst) .fst × g' (s .fst .snd) .fst) ,
-    isSetΣ (isSetSplitting w) λ s →
-      isSet× (g (s .fst .fst) .snd) (g' (s .fst .snd) .snd)
+  (g ⊗ g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
+
+  ParsesAreSets-⊗ : (g g' : hGrammar) → ParsesAreSets (g .fst ⊗ g' .fst)
+  ParsesAreSets-⊗ g g' _ =
+    isSetΣ (isSetSplitting _) (λ s → isSet× (g .snd _) (g' .snd _))
 
   literal : (Σ₀ .fst) → Grammar
-  literal c w = ([ c ] ≡ w) , isGroupoidString ([ c ]) w
+  literal c w = w ≡ [ c ]
+
+  ParsesAreSets-literal : ∀ c → ParsesAreSets (literal c)
+  ParsesAreSets-literal c w = isGroupoidString _ _
 
   _-⊗_ : Grammar → Grammar → Grammar
-  (g -⊗ g') w =
-    (∀ (w' : String) → g w' .fst → g' (w' ++ w) .fst) ,
-    isSetΠ (λ w' → isSetΠ λ p → g' (w' ++ w) .snd)
+  (g -⊗ g') w = ∀ (w' : String) → g w' → g' (w' ++ w)
+
+  ParsesAreSets--⊗ : (g g' : hGrammar) → ParsesAreSets (g .fst -⊗ g' .fst)
+  ParsesAreSets--⊗ g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
 
   _⊗-_ : Grammar → Grammar → Grammar
-  (g ⊗- g') w =
-    (∀ (w' : String) → g (w ++ w') .fst → g' w' .fst) ,
-     isSetΠ (λ w' → isSetΠ (λ p → g' w' .snd))
+  (g ⊗- g') w = ∀ (w' : String) → g (w ++ w') → g' w'
 
-  ΠLin : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
-  ΠLin {A} f w = (∀ (a : A .fst) → f a w .fst) , isSetΠ λ a → f a w .snd
+  ParsesAreSets-⊗- : (g g' : hGrammar) → ParsesAreSets (g .fst ⊗- g' .fst)
+  ParsesAreSets-⊗- g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
 
-  ΣLin : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
-  ΣLin {A} f w =
-    (Σ[ a ∈ A .fst ] f a w .fst) ,
-      isSetΣ (A .snd) λ a → f a w .snd
+  LinearΠ : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
+  LinearΠ {A} f w = ∀ (a : A .fst) → f a w
 
-  ⊤Lin : Grammar
-  ⊤Lin w = Unit* , isSetUnit*
+  ParsesAreSets-LinearΠ :
+    {A : hSet ℓ} → (B : A .fst → hGrammar) →
+    ParsesAreSets (LinearΠ {A} (λ a → B a .fst))
+  ParsesAreSets-LinearΠ {A} B _ = isSetΠ (λ a → B a .snd _)
+
+  LinearΣ : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
+  LinearΣ {A} f w = Σ[ a ∈ A .fst ] f a w
+
+  ParsesAreSets-LinearΣ :
+    {A : hSet ℓ} → (B : A .fst → hGrammar) →
+    ParsesAreSets (LinearΣ {A} (λ a → B a .fst))
+  ParsesAreSets-LinearΣ {A} B _ = isSetΣ (A .snd) (λ a → B a .snd _)
+
+  ⊤-grammar : Grammar
+  ⊤-grammar _ = Unit*
+
+  ParsesAreSets-⊤-grammar : ParsesAreSets ⊤-grammar
+  ParsesAreSets-⊤-grammar _ = isSetUnit*
 
   _&_ : Grammar → Grammar → Grammar
-  (g & g') w = (g w .fst × g' w .fst) ,
-    isSet× (g w .snd) (g' w .snd)
+  (g & g') w = g w × g' w
+
+  ParsesAreSets-& :
+    (g : hGrammar) → (g' : hGrammar) → ParsesAreSets (g .fst & g' .fst)
+  ParsesAreSets-& g g' _ = isSet× (g .snd _) (g' .snd _)
 
   _⊕_ : Grammar → Grammar → Grammar
-  (g ⊕ g') w = (g w .fst ⊎ g' w .fst) ,
-    isSet⊎ (g w .snd) (g' w .snd)
+  (g ⊕ g') w = g w ⊎ g' w
 
-  ⊥Lin : Grammar
-  ⊥Lin w = Lift ⊥ ,
-    λ x y a b i →
-      liftExt (isProp→isSet isProp⊥ (lower x) (lower y)
-        (cong lower a) (cong lower b) i)
+  ParsesAreSets-⊕ :
+    (g : hGrammar) → (g' : hGrammar) → ParsesAreSets (g .fst ⊕ g' .fst)
+  ParsesAreSets-⊕ g g' _ = isSet⊎ (g .snd _) (g' .snd _)
 
+  ⊥-grammar : Grammar
+  ⊥-grammar _ = Lift ⊥
+
+  ParsesAreSets-⊥-grammar : ParsesAreSets ⊥-grammar
+  ParsesAreSets-⊥-grammar _ = isProp→isSet isProp⊥*
+
+  -- Meant to be the exponential in the type theory
   _⇒_ : Grammar → Grammar → Grammar
-  (g ⇒ g') w =
-    (g w .fst → g' w .fst) ,
-    isSetΠ (λ p → g' w .snd)
+  (g ⇒ g') w = g w → g' w
+
+  ParsesAreSets-⇒ :
+    {g : Grammar} → (g' : hGrammar) → ParsesAreSets ( g ⇒ g' .fst )
+  ParsesAreSets-⇒ g' _ = isSet→ (g' .snd _)
 
   ParseTransformer : Grammar → Grammar → Type ℓ
-  ParseTransformer g g' = ∀ {w} → g w .fst → g' w .fst
-
-  -- Recall that a parse transformer is the shallow
-  -- embedding of a term from the syntax
-  --
-  -- So we can embed some inference rules
-  --
-  module _ (g : Grammar) where
-
-    idPT : ParseTransformer g g
-    idPT x = x
-
-    id-⊗ : ParseTransformer ILin (g -⊗ g)
-    id-⊗ {w'} pI w gw =
-      transport
-        (cong (λ a → g a .fst)
-          (sym (++-unit-r w) ∙
-          cong (λ a → w ++ a) (sym pI) ))
-        gw
-
-    ⊗appPT : ParseTransformer (g ⊗ (g -⊗ g)) g
-    ⊗appPT x =
-      transport
-        (sym (cong (λ b → g b .fst) (x .fst .snd)))
-        (x .snd .snd (fst (fst (x .fst))) (x .snd .fst))
-
-  isEquivalentGrammar : Grammar → Grammar → Type ℓ
-  isEquivalentGrammar g g' = ∀ {w} → Iso (g w .fst) (g' w .fst)
-
-  module _ (g : Grammar) where
-    open Iso
-    ILin⊗g→g : ParseTransformer (ILin ⊗ g) g
-    ILin⊗g→g {w} p =
-      transport
-        (cong (λ a → g a .fst) (
-          cong (λ a → a ++ (p .fst .fst .snd)) (sym (p .snd .fst)) ∙
-          sym (p .fst .snd)))
-        (p .snd .snd)
-
-    g→ILin⊗g : ParseTransformer g (ILin ⊗ g)
-    g→ILin⊗g {w} p = (([] , _) , refl) , (refl , p)
-
-    -- ILinUnitL : isEquivalentGrammar (ILin ⊗ g) g
-    -- fun (ILinUnitL) = ILin⊗g→g
-    -- inv (ILinUnitL) = g→ILin⊗g
-    -- rightInv (ILinUnitL {w}) b = {!!}
-    -- leftInv ILinUnitL a = {!!}
-
-    g⊗ILin→g : ParseTransformer (g ⊗ ILin) g
-    g⊗ILin→g {w} p =
-      transport
-        (cong (λ a → g a .fst)
-          ((sym (++-unit-r _) ∙
-            cong (λ a → (p .fst .fst .fst ++ a)) (sym (p .snd .snd))) ∙
-            sym (p .fst .snd) ))
-        (p .snd .fst)
-
-    g→g⊗ILin : ParseTransformer g (g ⊗ ILin)
-    g→g⊗ILin {w} p = ((w , []) , (sym (++-unit-r _))) , (p , refl)
-
-    -- ILinUnitR : isEquivalentGrammar (g ⊗ ILin) g
-    -- fun (ILinUnitR) = {!!}
-    -- inv (ILinUnitR) = {!!}
-    -- rightInv (ILinUnitR) = {!!}
-    -- leftInv (ILinUnitR) = {!!}
+  ParseTransformer g g' = ∀ {w} → g w → g' w
 
   data KL*Ty (g : Grammar) : (w : String) → Type ℓ where
     nil : (KL*Ty g [])
     cons :
       ∀ {w w'} →
-        g w .fst → KL*Ty g w' → KL*Ty g (w ++ w')
+        g w → KL*Ty g w' → KL*Ty g (w ++ w')
 
-  module isSetKL*TyProof (g : Grammar) where
+  -- Use IW trees to prove that Kleene star forms a set
+  -- (provided that the original grammar outputs sets)
+  module isSetKL*TyProof
+    (hg : hGrammar)
+    where
+    g = hg .fst
+    setParses = hg .snd
+
     KL*Ty-X = String
 
     KL*Ty-S : KL*Ty-X → Type ℓ
     KL*Ty-S w =
       (w ≡ []) ⊎
-      (Σ[ s ∈ Splitting w ] g (s .fst .fst) .fst)
+      (Σ[ s ∈ Splitting w ] g (s .fst .fst))
 
     KL*Ty-P : ∀ w → KL*Ty-S w → Type ℓ-zero
     KL*Ty-P w (inl x) = ⊥
-    KL*Ty-P w (fsuc x) = ⊤
+    KL*Ty-P w (inr x) = ⊤
 
     KL*Ty-inX : ∀ w (s : KL*Ty-S w) → KL*Ty-P w s → KL*Ty-X
-    KL*Ty-inX w (fsuc (s , sp)) x = s .fst .snd
-
+    KL*Ty-inX w (inr (s , sp)) x = s .fst .snd
 
     KL*Ty→W : ∀ {w} → KL*Ty g w → IW KL*Ty-S KL*Ty-P KL*Ty-inX w
     KL*Ty→W nil = node (inl refl) (λ ())
     KL*Ty→W (cons {w}{w'} x p) =
-      node (fsuc (((w , w') , refl) , x)) λ _ → KL*Ty→W p
+      node (inr (((w , w') , refl) , x)) λ _ → KL*Ty→W p
 
     W→KL*Ty : ∀ {w} → IW KL*Ty-S KL*Ty-P KL*Ty-inX w → KL*Ty g w
     W→KL*Ty (node (inl x) subtree) =
       transport
         (cong (λ a → KL*Ty g a) (sym x))
         (KL*Ty.nil {g = g})
-    W→KL*Ty (node (fsuc x) subtree) =
+    W→KL*Ty (node (inr x) subtree) =
       transport
       (cong (λ a → KL*Ty g a) (sym (x .fst .snd)))
       (KL*Ty.cons {g = g} (x .snd) (W→KL*Ty (subtree _)))
@@ -213,10 +170,7 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
     isSetKL*Ty-S w =
       isSet⊎
         (isGroupoidString _ _)
-        (isSetΣ
-          (isSetSplitting _)
-          λ s → g (s .fst .fst) .snd
-        )
+        (isSetΣ (isSetSplitting _) λ _ → setParses _)
 
     isSetKL*Ty : ∀ w → isSet (KL*Ty g w)
     isSetKL*Ty w =
@@ -227,69 +181,103 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
 
   open isSetKL*TyProof
   KL* : Grammar → Grammar
-  KL* g w = KL*Ty g w , isSetKL*Ty _ _
+  KL* g w = KL*Ty g w
+
+  ParsesAreSets-KL* : (g : hGrammar) → ParsesAreSets (KL* (g .fst))
+  ParsesAreSets-KL* g _ = isSetKL*Ty g _
 
   ⊕Σ₀ : Grammar
-  ⊕Σ₀ w =
-    (Σ[ c ∈ Σ₀ .fst ] literal c w .fst) ,
-    isSetΣ (Σ₀ .snd) (λ c → literal c w .snd)
+  ⊕Σ₀ w = Σ[ c ∈ Σ₀ .fst ] literal c w
 
-  String→KL* : (w : String) → KL* ⊕Σ₀ w .fst
+  ParsesAreSets-⊕Σ₀ : ParsesAreSets ⊕Σ₀
+  ParsesAreSets-⊕Σ₀ _ = isSetΣ (Σ₀ .snd) (λ _ → ParsesAreSets-literal _ _)
+
+  String→KL* : (w : String) → KL* ⊕Σ₀ w
   String→KL* [] = nil
   String→KL* (c ∷ w) =
     cons (c , refl) (String→KL* w)
 
-  fold*r :
-    (g h : Grammar) →
-    ParseTransformer ILin h →
-    ParseTransformer (g ⊗ h) h →
-    ParseTransformer (KL* g) h
-  fold*r g h pε p⊗ nil = pε refl
-  fold*r g h pε p⊗ (cons {w}{w'} x g*parse) =
-    p⊗
-      (((w , w') , refl) ,
-       (x , (fold*r g h pε p⊗ g*parse)))
+  -- Recall that a parse transformer is the shallow
+  -- embedding of a term from the syntax
+  --
+  -- So we can embed some inference rules where parse transformers
+  -- from g to g' correspond to judgements like
+  -- x : g ⊢ M : g'
+  module _ (g : Grammar) where
+    id-PT : ParseTransformer g g
+    id-PT x = x
 
-  fold*l :
-    (g h : Grammar) →
-    ParseTransformer ILin h →
-    ParseTransformer (h ⊗ g) h →
-    ParseTransformer (KL* g) h
-  fold*l g h pε p⊗ g*parse =
-    fold*r
-      g
-      (h -⊗ h)
-      (id-⊗ h)
-      the-cons-step
-      g*parse
-      []
-      (pε refl)
+    -- linear identity function
+    id-⊗-PT : ParseTransformer ε-grammar (g -⊗ g)
+    id-⊗-PT {w'} pI w gw =
+      transport
+        (cong (λ a → g a)
+          (sym (++-unit-r w) ∙
+          cong (λ a → w ++ a) (sym pI) ))
+        gw
+
+    ⊗appL-PT : ParseTransformer (g ⊗ (g -⊗ g)) g
+    ⊗appL-PT x =
+      transport
+        (sym (cong g (x .fst .snd)))
+        (x .snd .snd (x .fst .fst .fst) (x .snd .fst))
+
+    module _
+      (h : Grammar)
+      where
+
+      fold*r :
+        ParseTransformer ε-grammar h →
+        ParseTransformer (g ⊗ h) h →
+        ParseTransformer (KL* g) h
+      fold*r pε p⊗ nil = pε refl
+      fold*r pε p⊗ (cons {w}{w'} x g*parse) =
+        p⊗
+          (((w , w') , refl) ,
+           (x , (fold*r pε p⊗ g*parse)))
+  module _
+    (g : Grammar)
+    (h : Grammar)
     where
-    -⊗intro-and-sub-PT : ParseTransformer ((h ⊗ g) ⊗ (h -⊗ h)) h
-    -⊗intro-and-sub-PT x =
-      ⊗appPT h
-        ((((fst x .fst .fst) , (fst x .fst .snd)) , (x .fst .snd)) ,
-        ((p⊗ (x .snd .fst)) , (x .snd .snd)))
 
-    the-cons-step : ParseTransformer (g ⊗ (h -⊗ h)) (h -⊗ h)
-    the-cons-step {w'} f w hw =
-      -⊗intro-and-sub-PT
-        (((w ++ fst f .fst .fst , fst f .fst .snd) ,
-        cong (λ b → w ++ b) (f .fst .snd) ∙
-        sym (++-assoc w (f .fst .fst .fst) (fst f .fst .snd))) ,
-        ((((w , fst f .fst .fst) , refl) ,
-        hw , (f .snd .fst)) ,
-        f .snd .snd))
+    fold*l :
+      ParseTransformer ε-grammar h →
+      ParseTransformer (h ⊗ g) h →
+      ParseTransformer (KL* g) h
+    fold*l pε p⊗ g*parse =
+      fold*r
+        g
+        (h -⊗ h)
+        (id-⊗-PT h)
+        the-cons-step
+        g*parse
+        []
+        (pε refl)
+      where
+      -⊗intro-and-sub-PT : ParseTransformer ((h ⊗ g) ⊗ (h -⊗ h)) h
+      -⊗intro-and-sub-PT x =
+        ⊗appL-PT h
+          ((((fst x .fst .fst) , (fst x .fst .snd)) , (x .fst .snd)) ,
+          ((p⊗ (x .snd .fst)) , (x .snd .snd)))
+      the-cons-step : ParseTransformer (g ⊗ (h -⊗ h)) (h -⊗ h)
+      the-cons-step {w'} f w hw =
+        -⊗intro-and-sub-PT
+          (((w ++ fst f .fst .fst , fst f .fst .snd) ,
+          cong (λ b → w ++ b) (f .fst .snd) ∙
+          sym (++-assoc w (f .fst .fst .fst) (fst f .fst .snd))) ,
+          ((((w , fst f .fst .fst) , refl) ,
+          hw , (f .snd .fst)) ,
+          f .snd .snd))
 
   data RegularGrammar : Type ℓ where
-    ILinReg : RegularGrammar
+    ε-Reg : RegularGrammar
     _⊗Reg_ : RegularGrammar → RegularGrammar → RegularGrammar
     literalReg : (Σ₀ .fst) → RegularGrammar
     _⊕Reg_ : RegularGrammar → RegularGrammar → RegularGrammar
     KL*Reg : RegularGrammar → RegularGrammar
 
   RegularGrammar→Grammar : RegularGrammar → Grammar
-  RegularGrammar→Grammar ILinReg = ILin
+  RegularGrammar→Grammar ε-Reg = ε-grammar
   RegularGrammar→Grammar (g ⊗Reg g') =
     (RegularGrammar→Grammar g) ⊗ (RegularGrammar→Grammar g')
   RegularGrammar→Grammar (literalReg c) = literal c
@@ -298,4 +286,57 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   RegularGrammar→Grammar (KL*Reg g) = KL* (RegularGrammar→Grammar g)
 
   Language : Grammar → Type ℓ
-  Language g = Σ[ w ∈ String ] ∥ g w .fst ∥₁
+  Language g = Σ[ w ∈ String ] ∥ g w ∥₁
+
+  isSetLanguage : (g : hGrammar) → isSet (Language (g .fst))
+  isSetLanguage g = isSetΣ isSetString (λ w → isProp→isSet isPropPropTrunc)
+
+  module _ (g g' : Grammar) where
+
+    isLogicallyEquivalent : Type ℓ
+    isLogicallyEquivalent = ParseTransformer g g' × ParseTransformer g' g
+
+    isWeaklyEquivalent : Type ℓ
+    isWeaklyEquivalent = Iso (Language g) (Language g')
+
+    open Iso
+    isLogicalEquivalence→WeakEquivalence :
+      isLogicallyEquivalent → isWeaklyEquivalent
+    fst (fun (isLogicalEquivalence→WeakEquivalence logEq) x) = x .fst
+    snd (fun (isLogicalEquivalence→WeakEquivalence logEq) x) =
+      PT.rec
+        isPropPropTrunc
+        (λ p → ∣ logEq .fst p ∣₁)
+        (x .snd)
+    fst (inv (isLogicalEquivalence→WeakEquivalence logEq) x) = x .fst
+    snd (inv (isLogicalEquivalence→WeakEquivalence logEq) x) =
+      PT.rec
+        isPropPropTrunc
+        (λ p → ∣ logEq .snd p ∣₁)
+        (x .snd)
+    rightInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
+      Σ≡Prop (λ _ → isPropPropTrunc) refl
+    leftInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
+      Σ≡Prop (λ _ → isPropPropTrunc) refl
+
+    isStronglyEquivalent : Type ℓ
+    isStronglyEquivalent = ∀ w → Iso (g w) (g' w)
+
+    isStronglyEquivalent→isWeaklyEquivalent :
+      isStronglyEquivalent → isWeaklyEquivalent
+    fst (fun (isStronglyEquivalent→isWeaklyEquivalent strEq) x) = x .fst
+    snd (fun (isStronglyEquivalent→isWeaklyEquivalent strEq) x) =
+      PT.rec
+        isPropPropTrunc
+        (λ p → ∣ strEq (x .fst) .fun p ∣₁)
+        (x .snd)
+    fst (inv (isStronglyEquivalent→isWeaklyEquivalent strEq) x) = x .fst
+    snd (inv (isStronglyEquivalent→isWeaklyEquivalent strEq) x) =
+      PT.rec
+        isPropPropTrunc
+        (λ p → ∣ strEq (x .fst) .inv p ∣₁)
+        (x .snd)
+    rightInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
+      Σ≡Prop (λ _ → isPropPropTrunc) refl
+    leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
+      Σ≡Prop (λ _ → isPropPropTrunc) refl
