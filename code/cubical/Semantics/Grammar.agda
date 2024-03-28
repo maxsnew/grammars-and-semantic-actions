@@ -12,6 +12,10 @@ open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.SumFin hiding (fsuc)
 open import Cubical.Data.Sigma
 
+open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.Properties
+open import Cubical.Relation.Nullary.DecidablePropositions
+
 open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Helper public
@@ -103,6 +107,10 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
 
   ParsesAreSets-⊥-grammar : ParsesAreSets ⊥-grammar
   ParsesAreSets-⊥-grammar _ = isProp→isSet isProp⊥*
+
+  DecProp-grammar : DecProp ℓ → Grammar
+  DecProp-grammar d =
+    decRec (λ _ → ⊤-grammar) (λ _ → ⊥-grammar) (d .snd)
 
   -- Meant to be the exponential in the type theory
   _⇒_ : Grammar → Grammar → Grammar
