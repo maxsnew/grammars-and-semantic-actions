@@ -30,9 +30,9 @@ private
   variable ℓ ℓ' : Level
 
 
-module DFADefs ℓ (Σ₀ : hSet ℓ) where
-  open GrammarDefs ℓ Σ₀ public
-  open StringDefs ℓ Σ₀ public
+module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀) public
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀) public
 
   record DFA : Type (ℓ-suc ℓ) where
     constructor mkDFA
@@ -40,7 +40,7 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
       Q : FinSet ℓ
       init : Q .fst
       isAcc : Q .fst → DecProp ℓ
-      δ : Q .fst → Σ₀ .fst → Q .fst
+      δ : Q .fst → Σ₀ → Q .fst
 
     decEqQ : Discrete (Q .fst)
     decEqQ = isFinSet→Discrete (Q .snd)
@@ -55,10 +55,53 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
     Parses : String → Type ℓ
     Parses w = DFATrace init w
 
+    negate : DFA
+    Q negate = Q
+    init negate = init
+    isAcc negate q = negateDecProp (isAcc q)
+    δ negate = δ
+
+
   open DFA
 
+  module _ (D : DFA) where
+    acceptingState : ∀ q w → DFATrace D q w → D .Q .fst
+    acceptingState q [] (nil x) = q
+    acceptingState q [] (cons c x) =
+      ⊥.rec (¬cons≡nil {!!})
+      where
+      x₁₁₁≡[] : x .fst .fst .fst ≡ []
+      x₁₁₁≡[] = {!cons-inj₁  !}
+    acceptingState q (c ∷ w) (nil x) =
+      ⊥.rec {!!}
+    acceptingState q (c ∷ w) (cons c' x) =
+      decRec
+        (λ c≡c' → acceptingState (D .δ q c') w
+          (transport
+            (cong (λ a → DFATrace D (D .δ q c') a)
+              (sym (cons-inj₂ ((x .fst .snd) ∙
+                cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst)))))
+            (x .snd .snd)))
+        (λ ¬c≡c' → ⊥.rec {!x .snd .fst!})
+        (DiscreteΣ₀ c c')
+      where
+      a : c ≡ c'
+      a = {!x .snd !}
+      -- TODO need to prove that literal c' ⊗ ... (c ∷ w) splits
+      -- properly
+
+    ¬D : DFA
+    ¬D = negate D
+
+    run :
+      ParseTransformer
+        (KL* ⊕Σ₀)
+        ((LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] D .isAcc q' .fst .fst) ] {!!}) ⊕ {!!})
+    run p = {!!}
+
+
 module examples where
-  open DFADefs ℓ-zero (Fin 2 , isSetFin)
+  open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
 
   open DFA
 

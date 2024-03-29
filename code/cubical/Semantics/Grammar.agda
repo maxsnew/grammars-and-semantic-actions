@@ -11,6 +11,7 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.SumFin hiding (fsuc)
 open import Cubical.Data.Sigma
+open import Cubical.Data.FinSet
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
@@ -24,8 +25,8 @@ open import Semantics.String public
 private
   variable ℓ ℓ' : Level
 
-module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
-  open StringDefs ℓ Σ₀
+module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
   Grammar : Type (ℓ-suc ℓ)
   Grammar = String → Type ℓ
 
@@ -48,7 +49,7 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   ParsesAreSets-⊗ g g' _ =
     isSetΣ (isSetSplitting _) (λ s → isSet× (g .snd _) (g' .snd _))
 
-  literal : (Σ₀ .fst) → Grammar
+  literal : Σ₀ → Grammar
   literal c w = w ≡ [ c ]
 
   ParsesAreSets-literal : ∀ c → ParsesAreSets (literal c)
@@ -66,20 +67,25 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   ParsesAreSets-⊗- : (g g' : hGrammar) → ParsesAreSets (g .fst ⊗- g' .fst)
   ParsesAreSets-⊗- g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
 
-  LinearΠ : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
-  LinearΠ {A} f w = ∀ (a : A .fst) → f a w
+  LinearΠ : {A : Type ℓ} → (A → Grammar) → Grammar
+  LinearΠ {A} f w = ∀ (a : A) → f a w
 
   ParsesAreSets-LinearΠ :
     {A : hSet ℓ} → (B : A .fst → hGrammar) →
-    ParsesAreSets (LinearΠ {A} (λ a → B a .fst))
+    ParsesAreSets (LinearΠ {A .fst} (λ a → B a .fst))
   ParsesAreSets-LinearΠ {A} B _ = isSetΠ (λ a → B a .snd _)
 
-  LinearΣ : {A : hSet ℓ} → (A .fst → Grammar) → Grammar
-  LinearΣ {A} f w = Σ[ a ∈ A .fst ] f a w
+  LinearΣ : {A : Type ℓ} → (A → Grammar) → Grammar
+  LinearΣ {A} f w = Σ[ a ∈ A ] f a w
+
+  LinearΣ-syntax : {A : Type ℓ} → (A → Grammar) → Grammar
+  LinearΣ-syntax = LinearΣ
+
+  syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
 
   ParsesAreSets-LinearΣ :
     {A : hSet ℓ} → (B : A .fst → hGrammar) →
-    ParsesAreSets (LinearΣ {A} (λ a → B a .fst))
+    ParsesAreSets (LinearΣ {A .fst} (λ a → B a .fst))
   ParsesAreSets-LinearΣ {A} B _ = isSetΣ (A .snd) (λ a → B a .snd _)
 
   ⊤-grammar : Grammar
@@ -196,17 +202,17 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   ParsesAreSets-KL* g _ = isSetKL*Ty g _
 
   ⊕Σ₀ : Grammar
-  ⊕Σ₀ w = Σ[ c ∈ Σ₀ .fst ] literal c w
+  ⊕Σ₀ w = Σ[ c ∈ Σ₀ ] literal c w
 
   ParsesAreSets-⊕Σ₀ : ParsesAreSets ⊕Σ₀
-  ParsesAreSets-⊕Σ₀ _ = isSetΣ (Σ₀ .snd) (λ _ → ParsesAreSets-literal _ _)
+  ParsesAreSets-⊕Σ₀ _ = isSetΣ isSetΣ₀ (λ _ → ParsesAreSets-literal _ _)
 
   String→KL* : (w : String) → KL* ⊕Σ₀ w
   String→KL* [] = nil
   String→KL* (c ∷ w) =
     cons (c , refl) (String→KL* w)
 
-  stepLiteral : ∀ {w}{g : Grammar} → {c : Σ₀ .fst} → g w → ( literal c ⊗ g ) (c ∷ w)
+  stepLiteral : ∀ {w}{g : Grammar} → {c : Σ₀ } → g w → ( literal c ⊗ g ) (c ∷ w)
   stepLiteral {w} {c = c} p = splitChar c w , refl , p
 
   -- Recall that a parse transformer is the shallow
@@ -284,7 +290,7 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   data RegularGrammar : Type ℓ where
     ε-Reg : RegularGrammar
     _⊗Reg_ : RegularGrammar → RegularGrammar → RegularGrammar
-    literalReg : (Σ₀ .fst) → RegularGrammar
+    literalReg : Σ₀ → RegularGrammar
     _⊕Reg_ : RegularGrammar → RegularGrammar → RegularGrammar
     KL*Reg : RegularGrammar → RegularGrammar
 

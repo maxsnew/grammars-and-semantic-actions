@@ -23,12 +23,18 @@ open import Semantics.Helper public
 private
   variable ℓ ℓ' : Level
 
-module StringDefs ℓ (Σ₀ : hSet ℓ) where
+module StringDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+  isSetΣ₀ : isSet Σ₀
+  isSetΣ₀ = isFinSet→isSet isFinSetΣ₀
+
+  DiscreteΣ₀ : Discrete Σ₀
+  DiscreteΣ₀ = isFinSet→Discrete isFinSetΣ₀
+
   String : Type ℓ
-  String = List (Σ₀ .fst)
+  String = List Σ₀
 
   isSetString : isSet String
-  isSetString = isOfHLevelList 0 (Σ₀ .snd)
+  isSetString = isOfHLevelList 0 isSetΣ₀
 
   isGroupoidString : isGroupoid String
   isGroupoidString = isSet→isGroupoid isSetString
@@ -41,6 +47,6 @@ module StringDefs ℓ (Σ₀ : hSet ℓ) where
     isSetΣ (isSet× isSetString isSetString)
       λ s → isGroupoidString w (s .fst ++ s .snd)
 
-  module _ (c : Σ₀ .fst) where
+  module _ (c : Σ₀) where
     splitChar : (w : String) → Splitting (c ∷ w)
     splitChar w = ([ c ] , w) , refl
