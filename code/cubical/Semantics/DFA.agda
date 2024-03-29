@@ -41,11 +41,6 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
       init : Q .fst
       isAcc : Q .fst → DecProp ℓ
       δ : Q .fst → Σ₀ .fst → Q .fst
-      -- TODO : delete these
-      -- they don't actually work bc its not a least fixed point
-      -- gram : Q .fst → Grammar
-      -- pts : ∀ {q c} → ParseTransformer (literal c ⊗ gram q) (gram (δ q c))
-      -- accept-pt : ∀ {q} → isAcc q .fst .fst → ParseTransformer ε-grammar (gram q)
 
     decEqQ : Discrete (Q .fst)
     decEqQ = isFinSet→Discrete (Q .snd)
@@ -53,12 +48,9 @@ module DFADefs ℓ (Σ₀ : hSet ℓ) where
     acc? : Q .fst → Grammar
     acc? q = DecProp-grammar (isAcc q) ε-grammar ⊥-grammar
 
-    -- TODO can't literally define this with parse transformers
-    -- however this mocks their behavior pretty faithfully
     data DFATrace (q : Q .fst) : String → Type ℓ where
-      nil : ∀ {w} → acc? q w → DFATrace q w
-      -- nil : {!ParseTransformer (acc? q) (DFATrace q)!}
-      cons : ∀ {w}{c} → (literal c ⊗ DFATrace (δ q c)) w  → DFATrace q w
+      nil : ParseTransformer (acc? q) (DFATrace q)
+      cons : ∀ c → ParseTransformer (literal c ⊗ DFATrace (δ q c)) (DFATrace q)
 
     Parses : String → Type ℓ
     Parses w = DFATrace init w
@@ -88,8 +80,7 @@ module examples where
 
   p : Parses D w
   p =
-    cons ((([ fzero ] , _) , refl) , refl ,
-      cons ((([ fsuc fzero ] , _) , refl) , (refl ,
-        cons ((([ fsuc fzero ] , _) , refl) , refl ,
-          (cons ((([ fzero ] , _) , refl) , (refl , (nil refl))))))))
-
+    cons fzero (stepLiteral (
+      cons (fsuc fzero) (stepLiteral (
+        cons (fsuc fzero) (stepLiteral (
+          cons fzero (stepLiteral (nil refl))))))))

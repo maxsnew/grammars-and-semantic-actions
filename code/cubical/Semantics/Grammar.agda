@@ -206,6 +206,9 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   String→KL* (c ∷ w) =
     cons (c , refl) (String→KL* w)
 
+  stepLiteral : ∀ {w}{g : Grammar} → {c : Σ₀ .fst} → g w → ( literal c ⊗ g ) (c ∷ w)
+  stepLiteral {w} {c = c} p = splitChar c w , refl , p
+
   -- Recall that a parse transformer is the shallow
   -- embedding of a term from the syntax
   --

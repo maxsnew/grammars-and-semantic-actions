@@ -40,3 +40,7 @@ module StringDefs ℓ (Σ₀ : hSet ℓ) where
   isSetSplitting w =
     isSetΣ (isSet× isSetString isSetString)
       λ s → isGroupoidString w (s .fst ++ s .snd)
+
+  module _ (c : Σ₀ .fst) where
+    splitChar : (w : String) → Splitting (c ∷ w)
+    splitChar w = ([ c ] , w) , refl
