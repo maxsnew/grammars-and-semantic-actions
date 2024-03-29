@@ -3,6 +3,7 @@ module Semantics.Grammar where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 
 open import Cubical.Data.List
 open import Cubical.Data.Sum
@@ -214,6 +215,27 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
   stepLiteral : ∀ {w}{g : Grammar} → {c : Σ₀ } → g w → ( literal c ⊗ g ) (c ∷ w)
   stepLiteral {w} {c = c} p = splitChar c w , refl , p
+
+  a : ∀ c w g → (literal c ⊗ g) w → Σ[ w' ∈ fiber (λ a → c ∷ a) w ] g (w' .fst)
+  a c [] g p = ⊥.rec (¬nil≡cons (p .fst .snd ∙ ( cong (λ a → a ++ p .fst .fst .snd) (p .snd .fst))))
+  a c (c' ∷ w) g p =
+    -- decRec
+    --   (λ q → (w , (cong (λ a → a ++ w) (sym (p .snd .fst) ∙ q))) ,
+    --     transport (cong g (p₁₁₂≡w q)) (p .snd .snd) )
+    --   (λ ¬q → ⊥.rec {!p .fst .snd!})
+    --   (discreteList DiscreteΣ₀ (p .fst .fst .fst) ([ c' ]) )
+    {!!}
+    where
+
+    c≡c' : p .fst .fst .fst ≡ [ c' ] → c ≡ c'
+    c≡c' q = cons-inj₁ (sym (p .snd .fst) ∙ q)
+
+    p₁₁₂≡w : p .fst .fst .fst ≡ [ c' ] → p .fst .fst .snd ≡ w
+    p₁₁₂≡w q =
+      cons-inj₂
+        (cong (λ a → a ++ p .fst .fst .snd) (sym q) ∙ sym (p .fst .snd))
+
+
 
   -- Recall that a parse transformer is the shallow
   -- embedding of a term from the syntax
