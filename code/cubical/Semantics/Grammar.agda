@@ -108,9 +108,10 @@ module GrammarDefs ℓ (Σ₀ : hSet ℓ) where
   ParsesAreSets-⊥-grammar : ParsesAreSets ⊥-grammar
   ParsesAreSets-⊥-grammar _ = isProp→isSet isProp⊥*
 
-  DecProp-grammar : DecProp ℓ → Grammar
-  DecProp-grammar d =
-    decRec (λ _ → ⊤-grammar) (λ _ → ⊥-grammar) (d .snd)
+  DecProp-grammar :
+    DecProp ℓ → Grammar → Grammar → Grammar
+  DecProp-grammar d ifyes ifno =
+    decRec (λ _ → ifyes) (λ _ → ifno) (d .snd)
 
   -- Meant to be the exponential in the type theory
   _⇒_ : Grammar → Grammar → Grammar
