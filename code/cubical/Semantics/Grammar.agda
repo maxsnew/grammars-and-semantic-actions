@@ -216,26 +216,23 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   stepLiteral : ∀ {w}{g : Grammar} → {c : Σ₀ } → g w → ( literal c ⊗ g ) (c ∷ w)
   stepLiteral {w} {c = c} p = splitChar c w , refl , p
 
-  a : ∀ c w g → (literal c ⊗ g) w → Σ[ w' ∈ fiber (λ a → c ∷ a) w ] g (w' .fst)
-  a c [] g p = ⊥.rec (¬nil≡cons (p .fst .snd ∙ ( cong (λ a → a ++ p .fst .fst .snd) (p .snd .fst))))
-  a c (c' ∷ w) g p =
-    -- decRec
-    --   (λ q → (w , (cong (λ a → a ++ w) (sym (p .snd .fst) ∙ q))) ,
-    --     transport (cong g (p₁₁₂≡w q)) (p .snd .snd) )
-    --   (λ ¬q → ⊥.rec {!p .fst .snd!})
-    --   (discreteList DiscreteΣ₀ (p .fst .fst .fst) ([ c' ]) )
-    {!!}
+  literalSplit : ∀ c w g → (literal c ⊗ g) w → Σ[ w' ∈ fiber (λ a → c ∷ a) w ] g (w' .fst)
+  literalSplit c [] g p =
+    ⊥.rec
+      (¬nil≡cons (p .fst .snd ∙
+        ( cong (λ a → a ++ p .fst .fst .snd) (p .snd .fst))))
+  literalSplit c (c' ∷ w) g p =
+    (w , (cong (λ z → z ∷ w) c≡c')) , transport (cong g p₁₁₂≡w) (p .snd .snd)
     where
+    the-string-path =
+      (cong (λ z → z ++ p .fst .fst .snd) (sym (p .snd .fst)) ∙
+        (sym (p .fst .snd)))
 
-    c≡c' : p .fst .fst .fst ≡ [ c' ] → c ≡ c'
-    c≡c' q = cons-inj₁ (sym (p .snd .fst) ∙ q)
+    c≡c' : c ≡ c'
+    c≡c' = cons-inj₁ the-string-path
 
-    p₁₁₂≡w : p .fst .fst .fst ≡ [ c' ] → p .fst .fst .snd ≡ w
-    p₁₁₂≡w q =
-      cons-inj₂
-        (cong (λ a → a ++ p .fst .fst .snd) (sym q) ∙ sym (p .fst .snd))
-
-
+    p₁₁₂≡w : p .fst .fst .snd ≡ w
+    p₁₁₂≡w = cons-inj₂ the-string-path
 
   -- Recall that a parse transformer is the shallow
   -- embedding of a term from the syntax
