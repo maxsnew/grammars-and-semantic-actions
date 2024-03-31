@@ -68,27 +68,35 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     acceptingState : ∀ q w → DFATrace D q w → D .Q .fst
     acceptingState q [] (nil x) = q
     acceptingState q [] (cons c x) =
-      ⊥.rec (¬cons≡nil {!!})
+      ⊥.rec (¬cons≡nil (sym the-string-path))
       where
-      x₁₁₁≡[] : x .fst .fst .fst ≡ []
-      x₁₁₁≡[] = {!cons-inj₁  !}
+      the-string-path =
+          (x .fst .snd ∙
+          cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))
     acceptingState q (c ∷ w) (nil x) =
-      ⊥.rec {!!}
-    acceptingState q (c ∷ w) (cons c' x) =
       decRec
-        (λ c≡c' → acceptingState (D .δ q c') w
-          (transport
-            (cong (λ a → DFATrace D (D .δ q c') a)
-              (sym (cons-inj₂ ((x .fst .snd) ∙
-                cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst)))))
-            (x .snd .snd)))
-        (λ ¬c≡c' → ⊥.rec {!x .snd .fst!})
-        (DiscreteΣ₀ c c')
+        (λ acc → ⊥.rec
+          -- TODO same below
+          (¬cons≡nil (transport (DecProp-grammar-yes-path (D .isAcc q) _ _ acc _) x) )
+          )
+        {!!}
+        (D .isAcc q .snd)
+    acceptingState q (c ∷ w) (cons c' x) =
+      acceptingState (D .δ q c') w (
+        transport
+          (cong (λ z → DFATrace D (D .δ q c') z) x₁₁₂≡w)
+          (x .snd .snd))
       where
-      a : c ≡ c'
-      a = {!x .snd !}
-      -- TODO need to prove that literal c' ⊗ ... (c ∷ w) splits
-      -- properly
+
+      the-string-path =
+          (x .fst .snd ∙
+          cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))
+
+      c≡c' : c ≡ c'
+      c≡c' = cons-inj₁ the-string-path
+
+      x₁₁₂≡w : x .fst .fst .snd ≡ w
+      x₁₁₂≡w = sym (cons-inj₂ the-string-path)
 
     ¬D : DFA
     ¬D = negate D

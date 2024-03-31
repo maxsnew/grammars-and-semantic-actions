@@ -120,6 +120,28 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   DecProp-grammar d ifyes ifno =
     decRec (λ _ → ifyes) (λ _ → ifno) (d .snd)
 
+  -- TODO naming
+  DecProp-grammar-yes-path :
+    (d : DecProp ℓ) → (ifyes : Grammar) →
+    (ifno : Grammar) →
+    d .fst .fst → (w : String) →
+    DecProp-grammar d ifyes ifno w ≡ ifyes w
+  DecProp-grammar-yes-path (fst₁ , yes p) ifyes ifno x w =
+    refl
+  DecProp-grammar-yes-path (fst₁ , no ¬p) ifyes ifno x w =
+    ⊥.rec (¬p x)
+
+  DecProp-grammar-no-path :
+    (d : DecProp ℓ) → (ifyes : Grammar) →
+    (ifno : Grammar) →
+    (d .fst .fst → ⊥) → (w : String) →
+    DecProp-grammar d ifyes ifno w ≡ ifno w
+  DecProp-grammar-no-path (fst₁ , yes p) ifyes ifno x w =
+    ⊥.rec (x p)
+  DecProp-grammar-no-path (fst₁ , no ¬p) ifyes ifno x w =
+    refl
+
+
   -- Meant to be the exponential in the type theory
   _⇒_ : Grammar → Grammar → Grammar
   (g ⇒ g') w = g w → g' w
@@ -131,6 +153,7 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   ParseTransformer : Grammar → Grammar → Type ℓ
   ParseTransformer g g' = ∀ {w} → g w → g' w
 
+  -- TODO can I do this with parse transformers?
   data KL*Ty (g : Grammar) : (w : String) → Type ℓ where
     nil : (KL*Ty g [])
     cons :
@@ -216,7 +239,9 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   stepLiteral : ∀ {w}{g : Grammar} → {c : Σ₀ } → g w → ( literal c ⊗ g ) (c ∷ w)
   stepLiteral {w} {c = c} p = splitChar c w , refl , p
 
-  literalSplit : ∀ c w g → (literal c ⊗ g) w → Σ[ w' ∈ fiber (λ a → c ∷ a) w ] g (w' .fst)
+  -- TODO better name
+  literalSplit : ∀ c w g →
+    (literal c ⊗ g) w → Σ[ w' ∈ fiber (λ a → c ∷ a) w ] g (w' .fst)
   literalSplit c [] g p =
     ⊥.rec
       (¬nil≡cons (p .fst .snd ∙
