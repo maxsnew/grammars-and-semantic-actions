@@ -19,7 +19,7 @@ open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.Bool renaming (_⊕_ to _⊕B_)
 open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.SumFin hiding (fzero ; fsuc)
+open import Cubical.Data.SumFin
 open import Cubical.Data.Sigma
 
 open import Semantics.Grammar
@@ -161,30 +161,57 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     run : ParseTransformer (KL* ⊕Σ₀) (Parses D ⊕ Parses ¬D)
     run p = toParse (run' p)
 
--- module examples where
---   open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
+    decideDFA : String → Bool
+    decideDFA w =
+      Cubical.Data.Sum.rec
+        (λ _ → true)
+        (λ _ → false)
+        (run (String→KL* w))
 
---   open DFA
+module examples where
+  open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
 
---   D : DFA
---   Q D = (Fin 3) , isFinSetFin
---   init D = inl _
---   isAcc D x =
---     ((x ≡ fzero) , isSetFin x fzero) ,
---     discreteFin x fzero
---   δ D fzero fzero = fromℕ 0
---   δ D fzero (fsuc fzero) = fromℕ 1
---   δ D (fsuc fzero) fzero = fromℕ 2
---   δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
---   δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
---   δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
+  open DFA
 
---   w : String
---   w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
+  D : DFA
+  Q D = (Fin 3) , isFinSetFin
+  init D = inl _
+  isAcc D x =
+    ((x ≡ fzero) , isSetFin x fzero) ,
+    discreteFin x fzero
+  δ D fzero fzero = fromℕ 0
+  δ D fzero (fsuc fzero) = fromℕ 1
+  δ D (fsuc fzero) fzero = fromℕ 2
+  δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
+  δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
+  δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
 
---   p : Parses D w
---   p =
---     cons fzero (stepLiteral (
---       cons (fsuc fzero) (stepLiteral (
---         cons (fsuc fzero) (stepLiteral (
---           cons fzero (stepLiteral (nil refl))))))))
+  w : String
+  w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
+
+  w' : String
+  w' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
+
+  w'' : String
+  w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
+
+
+  p : Parses D w
+  p =
+    (fzero , refl) ,
+    (cons fzero (stepLiteral
+      (cons (fsuc fzero) (stepLiteral
+        (cons (fsuc fzero) (stepLiteral
+          (cons fzero (stepLiteral (nil refl)))))))))
+
+  ex1 : decideDFA D w ≡ true
+  ex1 = refl
+
+  ex2 : decideDFA D w' ≡ true
+  ex2 = refl
+
+  ex3 : decideDFA D w'' ≡ false
+  ex3 = refl
+
+  ex4 : decideDFA D [] ≡ true
+  ex4 = refl
