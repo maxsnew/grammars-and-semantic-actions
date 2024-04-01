@@ -131,6 +131,13 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   DecProp-grammar-yes-path (fst₁ , no ¬p) ifyes ifno x w =
     ⊥.rec (¬p x)
 
+  DecProp-grammar-yes :
+    (d : DecProp ℓ) → (ifyes : Grammar) →
+    (ifno : Grammar) → d .fst .fst → (w : String) → ifyes w →
+    DecProp-grammar d ifyes ifno w
+  DecProp-grammar-yes d ifyes ifno y w x =
+    transport (sym (DecProp-grammar-yes-path d ifyes ifno y w)) x
+
   DecProp-grammar-no-path :
     (d : DecProp ℓ) → (ifyes : Grammar) →
     (ifno : Grammar) →
@@ -141,6 +148,12 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   DecProp-grammar-no-path (fst₁ , no ¬p) ifyes ifno x w =
     refl
 
+  DecProp-grammar-no :
+    (d : DecProp ℓ) → (ifyes : Grammar) →
+    (ifno : Grammar) → (d .fst .fst → ⊥) → (w : String) → ifno w →
+    DecProp-grammar d ifyes ifno w
+  DecProp-grammar-no d ifyes ifno y w x =
+    transport (sym (DecProp-grammar-no-path d ifyes ifno y w)) x
 
   -- Meant to be the exponential in the type theory
   _⇒_ : Grammar → Grammar → Grammar

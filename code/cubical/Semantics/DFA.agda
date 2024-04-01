@@ -19,7 +19,7 @@ open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.Bool renaming (_⊕_ to _⊕B_)
 open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.SumFin
+open import Cubical.Data.SumFin hiding (fzero ; fsuc)
 open import Cubical.Data.Sigma
 
 open import Semantics.Grammar
@@ -48,6 +48,9 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     acc? : Q .fst → Grammar
     acc? q = DecProp-grammar (isAcc q) ε-grammar ⊥-grammar
 
+    rej? : Q .fst → Grammar
+    rej? q = DecProp-grammar (negateDecProp (isAcc q)) ε-grammar ⊥-grammar
+
     data DFATrace (q : Q .fst) (q-end : Q .fst) : String → Type ℓ where
       nil : ParseTransformer ε-grammar (DFATrace q q-end)
       cons : ∀ c →
@@ -65,9 +68,9 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     δ negate = δ
 
 
---   open DFA
+  open DFA
 
---   module _ (D : DFA) where
+  module _ (D : DFA) where
 --     acceptingState : ∀ q w → DFATrace D q w → D .Q .fst
 --     acceptingState q [] (nil x) = q
 --     acceptingState q [] (cons c x) =
@@ -105,15 +108,51 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 --     ¬D : DFA
 --     ¬D = negate D
 
---     AcceptingAt : D .Q .fst → D .Q .fst → String → Type ℓ
---     AcceptingAt q-start q-end w =
---       Σ[ p ∈ DFATrace D q-start w ] acceptingState q-start w p ≡ q-end
+    AcceptingFrom : D .Q .fst → Grammar
+    AcceptingFrom q-start =
+      LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] D .isAcc q' .fst .fst) ]
+        DFATrace D q-start (q .fst)
 
---     run :
---       ParseTransformer
---         (KL* ⊕Σ₀)
---         ((LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] D .isAcc q' .fst .fst) ] {!!}) ⊕ {!!})
---     run p = {!!}
+    RejectingFrom : D .Q .fst → Grammar
+    RejectingFrom q-start =
+      LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] ¬ D .isAcc q' .fst .fst) ]
+        DFATrace D q-start (q .fst)
+
+    -- h = AcceptingFrom (D .init) ⊕ RejectingFrom (D .init)
+    h =
+      LinΣ[ q ∈ D .Q .fst ]
+        (DFATrace D (D .init) q
+          & (acc? D q ⊕ rej? D q))
+
+    run :
+      ParseTransformer
+        (KL* ⊕Σ₀)
+        h
+    run p =
+      fold*l
+        ⊕Σ₀
+        h
+        mt-case
+        cons-case
+        p
+      where
+
+      mt-case : ParseTransformer ε-grammar h
+      fst (mt-case p) = D .init
+      fst (snd (mt-case p)) = nil p
+      snd (snd (mt-case p)) =
+        decRec
+          (λ acc → inl (DecProp-grammar-yes (D .isAcc (D .init)) _ _ acc _ p))
+          (λ ¬acc → inr (DecProp-grammar-yes (negateDecProp (D .isAcc (D .init)))
+            _ _ ¬acc _ p))
+          (D .isAcc (D .init) .snd)
+
+      cons-case : ParseTransformer (h ⊗ ⊕Σ₀) h
+      cons-case {[]} p = {!!}
+      fst (cons-case {c ∷ w} p) = D .δ (p .snd .fst .fst) (p .snd .snd .fst)
+      fst (snd (cons-case {c ∷ w} p)) =
+        cons c ((splitChar c w) , (refl , {!!}))
+      snd (snd (cons-case {c ∷ w} p)) = {!!}
 
 
 -- module examples where
