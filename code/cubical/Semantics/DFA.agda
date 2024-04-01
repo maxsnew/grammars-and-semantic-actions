@@ -48,12 +48,15 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     acc? : Q .fst → Grammar
     acc? q = DecProp-grammar (isAcc q) ε-grammar ⊥-grammar
 
-    data DFATrace (q : Q .fst) : String → Type ℓ where
-      nil : ParseTransformer (acc? q) (DFATrace q)
-      cons : ∀ c → ParseTransformer (literal c ⊗ DFATrace (δ q c)) (DFATrace q)
+    data DFATrace (q : Q .fst) (q-end : Q .fst) : String → Type ℓ where
+      nil : ParseTransformer ε-grammar (DFATrace q q-end)
+      cons : ∀ c →
+        ParseTransformer
+          (literal c ⊗ DFATrace (δ q c) q-end) (DFATrace q q-end)
 
-    Parses : String → Type ℓ
-    Parses w = DFATrace init w
+    Parses : Grammar
+    Parses =
+      LinΣ[ q ∈ Σ[ q' ∈ Q .fst ] isAcc q' .fst .fst ] DFATrace init (q .fst)
 
     negate : DFA
     Q negate = Q
@@ -62,76 +65,81 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     δ negate = δ
 
 
-  open DFA
+--   open DFA
 
-  module _ (D : DFA) where
-    acceptingState : ∀ q w → DFATrace D q w → D .Q .fst
-    acceptingState q [] (nil x) = q
-    acceptingState q [] (cons c x) =
-      ⊥.rec (¬cons≡nil (sym the-string-path))
-      where
-      the-string-path =
-          (x .fst .snd ∙
-          cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))
-    acceptingState q (c ∷ w) (nil x) =
-      decRec
-        (λ acc → ⊥.rec
-          -- TODO same below
-          (¬cons≡nil (transport (DecProp-grammar-yes-path (D .isAcc q) _ _ acc _) x) )
-          )
-        {!!}
-        (D .isAcc q .snd)
-    acceptingState q (c ∷ w) (cons c' x) =
-      acceptingState (D .δ q c') w (
-        transport
-          (cong (λ z → DFATrace D (D .δ q c') z) x₁₁₂≡w)
-          (x .snd .snd))
-      where
+--   module _ (D : DFA) where
+--     acceptingState : ∀ q w → DFATrace D q w → D .Q .fst
+--     acceptingState q [] (nil x) = q
+--     acceptingState q [] (cons c x) =
+--       ⊥.rec (¬cons≡nil (sym the-string-path))
+--       where
+--       the-string-path =
+--           (x .fst .snd ∙
+--           cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))
+--     acceptingState q (c ∷ w) (nil x) =
+--       decRec
+--         (λ acc → ⊥.rec
+--           (¬cons≡nil (transport
+--             (DecProp-grammar-yes-path (D .isAcc q) _ _ acc _) x) )
+--           )
+--         (λ ¬acc → ⊥.rec (lower (transport
+--           (DecProp-grammar-no-path (D .isAcc q) _ _ ¬acc _) x)))
+--         (D .isAcc q .snd)
+--     acceptingState q (c ∷ w) (cons c' x) =
+--       acceptingState (D .δ q c') w (
+--         transport
+--           (cong (λ z → DFATrace D (D .δ q c') z) x₁₁₂≡w)
+--           (x .snd .snd))
+--       where
 
-      the-string-path =
-          (x .fst .snd ∙
-          cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))
+--       the-string-path =
+--           (x .fst .snd ∙
+--           cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))
 
-      c≡c' : c ≡ c'
-      c≡c' = cons-inj₁ the-string-path
+--       c≡c' : c ≡ c'
+--       c≡c' = cons-inj₁ the-string-path
 
-      x₁₁₂≡w : x .fst .fst .snd ≡ w
-      x₁₁₂≡w = sym (cons-inj₂ the-string-path)
+--       x₁₁₂≡w : x .fst .fst .snd ≡ w
+--       x₁₁₂≡w = sym (cons-inj₂ the-string-path)
 
-    ¬D : DFA
-    ¬D = negate D
+--     ¬D : DFA
+--     ¬D = negate D
 
-    run :
-      ParseTransformer
-        (KL* ⊕Σ₀)
-        ((LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] D .isAcc q' .fst .fst) ] {!!}) ⊕ {!!})
-    run p = {!!}
+--     AcceptingAt : D .Q .fst → D .Q .fst → String → Type ℓ
+--     AcceptingAt q-start q-end w =
+--       Σ[ p ∈ DFATrace D q-start w ] acceptingState q-start w p ≡ q-end
+
+--     run :
+--       ParseTransformer
+--         (KL* ⊕Σ₀)
+--         ((LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] D .isAcc q' .fst .fst) ] {!!}) ⊕ {!!})
+--     run p = {!!}
 
 
-module examples where
-  open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
+-- module examples where
+--   open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
 
-  open DFA
+--   open DFA
 
-  D : DFA
-  Q D = (Fin 3) , isFinSetFin
-  init D = inl _
-  isAcc D x =
-    ((x ≡ fzero) , isSetFin x fzero) ,
-    discreteFin x fzero
-  δ D fzero fzero = fromℕ 0
-  δ D fzero (fsuc fzero) = fromℕ 1
-  δ D (fsuc fzero) fzero = fromℕ 2
-  δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
-  δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
-  δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
+--   D : DFA
+--   Q D = (Fin 3) , isFinSetFin
+--   init D = inl _
+--   isAcc D x =
+--     ((x ≡ fzero) , isSetFin x fzero) ,
+--     discreteFin x fzero
+--   δ D fzero fzero = fromℕ 0
+--   δ D fzero (fsuc fzero) = fromℕ 1
+--   δ D (fsuc fzero) fzero = fromℕ 2
+--   δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
+--   δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
+--   δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
 
-  w : String
-  w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
+--   w : String
+--   w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
 
-  p : Parses D w
-  p =
-    cons fzero (stepLiteral (
-      cons (fsuc fzero) (stepLiteral (
-        cons (fsuc fzero) (stepLiteral (
-          cons fzero (stepLiteral (nil refl))))))))
+--   p : Parses D w
+--   p =
+--     cons fzero (stepLiteral (
+--       cons (fsuc fzero) (stepLiteral (
+--         cons (fsuc fzero) (stepLiteral (
+--           cons fzero (stepLiteral (nil refl))))))))
