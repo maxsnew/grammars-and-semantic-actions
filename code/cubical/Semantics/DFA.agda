@@ -46,16 +46,34 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     decEqQ = isFinSet→Discrete (Q .snd)
 
     acc? : Q .fst → Grammar
-    acc? q = DecProp-grammar (isAcc q) ε-grammar ⊥-grammar
+    acc? q = DecProp-grammar (isAcc q) ⊤-grammar ⊥-grammar
 
     rej? : Q .fst → Grammar
-    rej? q = DecProp-grammar (negateDecProp (isAcc q)) ε-grammar ⊥-grammar
+    rej? q = DecProp-grammar (negateDecProp (isAcc q)) ⊤-grammar ⊥-grammar
 
     data DFATrace (q : Q .fst) (q-end : Q .fst) : String → Type ℓ where
       nil : ParseTransformer ε-grammar (DFATrace q q-end)
       cons : ∀ c →
         ParseTransformer
           (literal c ⊗ DFATrace (δ q c) q-end) (DFATrace q q-end)
+
+    -- This is the only sus helper function
+    -- This adds to a trace in the wrong order, however this is definable
+    -- in the paper type theory via the same principle as below
+    extendTrace : ∀ {q q' : Q .fst} {w} → DFATrace q q' w → (c : Σ₀) →
+      DFATrace q (δ q' c) (w ++ [ c ])
+    extendTrace (nil x) c =
+      cons c (((c ∷ [] , _) ,
+        cong (λ a → a ++ [ c ]) x ∙ sym (cong (λ a → c ∷ a) x)) ,
+          (refl , (nil x)))
+    extendTrace {q}{q'} (cons c' x) c =
+      cons c' (the-split , (refl , (extendTrace (x .snd .snd) c)))
+      where
+      the-split : Splitting (_ ++ [ c ])
+      the-split = ([ c' ] , x .fst .fst .snd ++ [ c ]) ,
+        (cong (λ a → a ++ [ c ]) (x .fst .snd) ∙
+          (cong (λ a → (a ++ (x .fst .fst .snd)) ++ [ c ]) (x .snd .fst)))
+          ∙ ++-assoc [ c' ] (x .fst .fst .snd) [ c ]
 
     Parses : Grammar
     Parses =
@@ -67,46 +85,17 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     isAcc negate q = negateDecProp (isAcc q)
     δ negate = δ
 
-
   open DFA
 
+
   module _ (D : DFA) where
---     acceptingState : ∀ q w → DFATrace D q w → D .Q .fst
---     acceptingState q [] (nil x) = q
---     acceptingState q [] (cons c x) =
---       ⊥.rec (¬cons≡nil (sym the-string-path))
---       where
---       the-string-path =
---           (x .fst .snd ∙
---           cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))
---     acceptingState q (c ∷ w) (nil x) =
---       decRec
---         (λ acc → ⊥.rec
---           (¬cons≡nil (transport
---             (DecProp-grammar-yes-path (D .isAcc q) _ _ acc _) x) )
---           )
---         (λ ¬acc → ⊥.rec (lower (transport
---           (DecProp-grammar-no-path (D .isAcc q) _ _ ¬acc _) x)))
---         (D .isAcc q .snd)
---     acceptingState q (c ∷ w) (cons c' x) =
---       acceptingState (D .δ q c') w (
---         transport
---           (cong (λ z → DFATrace D (D .δ q c') z) x₁₁₂≡w)
---           (x .snd .snd))
---       where
+    ¬D : DFA
+    ¬D = negate D
 
---       the-string-path =
---           (x .fst .snd ∙
---           cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))
-
---       c≡c' : c ≡ c'
---       c≡c' = cons-inj₁ the-string-path
-
---       x₁₁₂≡w : x .fst .fst .snd ≡ w
---       x₁₁₂≡w = sym (cons-inj₂ the-string-path)
-
---     ¬D : DFA
---     ¬D = negate D
+    trace→negationTrace : ∀ {q}{q'}{w} → DFATrace D q q' w → DFATrace ¬D q q' w
+    trace→negationTrace (nil x) = nil x
+    trace→negationTrace (cons c x) =
+      cons c (x .fst , (x .snd .fst , (trace→negationTrace (x .snd .snd))))
 
     AcceptingFrom : D .Q .fst → Grammar
     AcceptingFrom q-start =
@@ -118,17 +107,16 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] ¬ D .isAcc q' .fst .fst) ]
         DFATrace D q-start (q .fst)
 
-    -- h = AcceptingFrom (D .init) ⊕ RejectingFrom (D .init)
     h =
       LinΣ[ q ∈ D .Q .fst ]
         (DFATrace D (D .init) q
           & (acc? D q ⊕ rej? D q))
 
-    run :
+    run' :
       ParseTransformer
         (KL* ⊕Σ₀)
         h
-    run p =
+    run' p =
       fold*l
         ⊕Σ₀
         h
@@ -142,18 +130,36 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       fst (snd (mt-case p)) = nil p
       snd (snd (mt-case p)) =
         decRec
-          (λ acc → inl (DecProp-grammar-yes (D .isAcc (D .init)) _ _ acc _ p))
+          (λ acc → inl (DecProp-grammar-yes (D .isAcc (D .init)) _ _ acc _ _))
           (λ ¬acc → inr (DecProp-grammar-yes (negateDecProp (D .isAcc (D .init)))
-            _ _ ¬acc _ p))
+            _ _ ¬acc _ _))
           (D .isAcc (D .init) .snd)
 
       cons-case : ParseTransformer (h ⊗ ⊕Σ₀) h
-      cons-case {[]} p = {!!}
-      fst (cons-case {c ∷ w} p) = D .δ (p .snd .fst .fst) (p .snd .snd .fst)
-      fst (snd (cons-case {c ∷ w} p)) =
-        cons c ((splitChar c w) , (refl , {!!}))
-      snd (snd (cons-case {c ∷ w} p)) = {!!}
+      fst (cons-case p) = D .δ (p .snd .fst .fst) (p .snd .snd .fst)
+      fst (snd (cons-case p)) = 
+        transport
+        (cong (λ a → DFATrace D _ _ a)
+          (cong (λ a → p .fst .fst .fst ++ a)
+            (sym (p .snd .snd .snd)) ∙ sym (p .fst .snd)))
+        (extendTrace D (p .snd .fst .snd .fst) (p .snd .snd .fst))
+      snd (snd (cons-case p)) =
+        decRec
+          (λ acc → inl (DecProp-grammar-yes (D .isAcc _) _ _ acc _ _))
+          (λ ¬acc → inr (
+            DecProp-grammar-yes (negateDecProp (D .isAcc _))
+              _ _ ¬acc _ _))
+          (D .isAcc (D .δ (p .snd .fst .fst) (p .snd .snd .fst)) .snd)
 
+    toParse : ParseTransformer h (Parses D ⊕ Parses ¬D)
+    toParse (a , b , inl x) =
+      inl ((a , elimSimpleDecProp-grammar (D .isAcc _) _ x) , b)
+    toParse (a , b , inr x) =
+      inr ((a , elimSimpleDecProp-grammar (negateDecProp (D .isAcc _)) _ x) ,
+        trace→negationTrace b)
+
+    run : ParseTransformer (KL* ⊕Σ₀) (Parses D ⊕ Parses ¬D)
+    run p = toParse (run' p)
 
 -- module examples where
 --   open DFADefs ℓ-zero (Fin 2 , isFinSetFin)

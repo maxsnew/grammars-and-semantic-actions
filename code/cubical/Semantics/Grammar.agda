@@ -155,6 +155,12 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   DecProp-grammar-no d ifyes ifno y w x =
     transport (sym (DecProp-grammar-no-path d ifyes ifno y w)) x
 
+  elimSimpleDecProp-grammar :
+    (d : DecProp ℓ) → (w : String) →
+    (DecProp-grammar d ⊤-grammar ⊥-grammar w) →
+    d .fst .fst
+  elimSimpleDecProp-grammar (fst₁ , yes p) w x = p
+
   -- Meant to be the exponential in the type theory
   _⇒_ : Grammar → Grammar → Grammar
   (g ⇒ g') w = g w → g' w
