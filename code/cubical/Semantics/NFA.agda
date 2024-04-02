@@ -4,6 +4,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Powerset
 open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
@@ -68,7 +69,6 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         (src t ≡ q) →
         ParseTransformer
           (NFATrace (dst t) q-end) (NFATrace q q-end)
-
 
     Parses : Grammar
     Parses =
@@ -142,14 +142,23 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       δ deterministicNFA q c =
         N .dst (deter .snd q .snd c .fst .fst .fst)
 
+  module _ (N : NFA) where
+    powersetNFA : NFA
+    Q powersetNFA = ?
+    init powersetNFA = ?
+    isAcc powersetNFA = ?
+    transition powersetNFA = ?
+    src powersetNFA = ?
+    dst powersetNFA = ?
+    label powersetNFA = ?
+    ε-transition powersetNFA = ?
+    ε-src powersetNFA = ?
+    ε-dst powersetNFA = ?
+
 
   -- NFA Combinators
-  module _
-    (N : NFA)
-    where
-    module _
-      (N' : NFA)
-      where
+  module _ (N : NFA) where
+    module _ (N' : NFA) where
 
       ⊕NFA : NFA
       -- States stratified into init, N states, N' states

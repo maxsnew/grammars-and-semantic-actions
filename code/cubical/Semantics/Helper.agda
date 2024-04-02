@@ -3,10 +3,13 @@ module Semantics.Helper where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Powerset
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
+open import Cubical.Data.Nat
+open import Cubical.Data.Nat.Order
 open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
@@ -14,6 +17,8 @@ open import Cubical.Data.W.Indexed
 open import Cubical.Data.Unit
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.SumFin
+import Cubical.Data.Fin as Fin
+import Cubical.Data.Fin.Arithmetic as Arith
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation
@@ -137,3 +142,40 @@ snd (DecPropΣ A B) =
       (B a .snd))
     (λ ¬a → no (λ x → ¬a (x .fst)))
     (A .snd)
+
+FinSetℙ : ∀ {ℓ} → FinSet ℓ → FinSet (ℓ-suc ℓ)
+fst (FinSetℙ A) = ℙ (A .fst)
+snd (FinSetℙ A) =
+  Cubical.HITs.PropositionalTruncation.rec
+    isPropIsFinSet
+    (λ A≃Fin → (2 ^ A .snd .fst) ,
+      ∣ the-equiv A≃Fin ∣₁)
+    (A .snd .snd)
+    where
+    the-equiv :
+      A .fst ≃ Fin (A .snd .fst) →
+      ℙ (A .fst) ≃ Fin (2 ^ A .snd .fst)
+    the-equiv x = {!!}
+
+    2<2^n+2 : (n : ℕ) → 2 < (2 ^ (n + 2))
+    2<2^n+2 zero = 1 , refl
+    2<2^n+2 (suc n) = 2<2^n+2 n .fst + 2 ^ (n + 2) ,
+      {!cong (λ a → a + 2 ^ (n + 2)) (2<2^n+2 n .snd)!}
+
+    sumOverFin : ∀ {n : ℕ} → (Fin.Fin n) →
+      (Fin.Fin n → Fin.Fin n) → (Fin.Fin (2 ^ (n + 1)))
+    sumOverFin {n} (zero , 0<n) f =
+      Fin.inject< {!!}
+        (Fin.fromℕ≤ 1 1 _)
+    sumOverFin {n} (suc m , m<n) f =
+      {!Fin.inject<!}
+
+
+    the-iso :
+      A .fst ≃ Fin (A .snd .fst) →
+      Iso (ℙ (A .fst)) (Fin (2 ^ A .snd .fst))
+    fun (the-iso x) S =
+      {!!}
+    inv (the-iso x) = {!!}
+    rightInv (the-iso x) = {!!}
+    leftInv (the-iso x) = {!!}
