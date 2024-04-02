@@ -29,7 +29,6 @@ open import Semantics.Helper
 private
   variable ℓ ℓ' : Level
 
-
 module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀) public
   open StringDefs ℓ (Σ₀ , isFinSetΣ₀) public
@@ -131,7 +130,8 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       snd (snd (mt-case p)) =
         decRec
           (λ acc → inl (DecProp-grammar-yes (D .isAcc (D .init)) _ _ acc _ _))
-          (λ ¬acc → inr (DecProp-grammar-yes (negateDecProp (D .isAcc (D .init)))
+          (λ ¬acc → inr (DecProp-grammar-yes
+            (negateDecProp (D .isAcc (D .init)))
             _ _ ¬acc _ _))
           (D .isAcc (D .init) .snd)
 
@@ -169,6 +169,8 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         (run (String→KL* w))
 
 module examples where
+  -- examples are over alphabet drawn from Fin 2
+  -- characters are fzero and (fsuc fzero)
   open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
 
   open DFA

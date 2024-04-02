@@ -24,12 +24,14 @@ open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation
 
 open import Semantics.Grammar public
+open import Semantics.DFA
 
 private
   variable ℓ ℓ' : Level
 
-module NFADefs ℓ (Σ₀ : hSet ℓ) where
-  open GrammarDefs ℓ Σ₀ public
+module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀) public
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀) public
 
   record NFA : Type (ℓ-suc ℓ) where
     constructor mkNFA
@@ -40,7 +42,7 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
       transition : FinSet ℓ
       src : transition .fst → Q .fst
       dst : transition .fst → Q .fst
-      label : transition .fst → Σ₀ .fst
+      label : transition .fst → Σ₀
       ε-transition : FinSet ℓ
       ε-src : ε-transition .fst → Q .fst
       ε-dst : ε-transition .fst → Q .fst
@@ -48,130 +50,58 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
     decEqQ : Discrete (Q .fst)
     decEqQ = isFinSet→Discrete (Q .snd)
 
+    acc? : Q .fst → Grammar
+    acc? q = DecProp-grammar (isAcc q) ⊤-grammar ⊥-grammar
+
+    rej? : Q .fst → Grammar
+    rej? q = DecProp-grammar (negateDecProp (isAcc q)) ⊤-grammar ⊥-grammar
+
+    data NFATrace
+      (q : Q .fst)
+      (q-end : Q .fst) : (w : String) → Type ℓ where
+      nil : ParseTransformer ε-grammar (NFATrace q q-end)
+      cons : ∀ {t} →
+        (src t ≡ q) →
+        ParseTransformer
+          (literal (label t) ⊗ NFATrace (dst t) q-end) (NFATrace q q-end)
+      ε-cons : ∀ {t} →
+        (src t ≡ q) →
+        ParseTransformer
+          (NFATrace (dst t) q-end) (NFATrace q q-end)
+
+
+    Parses : Grammar
+    Parses =
+      LinΣ[ q ∈ Σ[ q' ∈ Q .fst ] isAcc q' .fst .fst ] NFATrace init (q .fst)
+
+    negate : NFA
+    Q negate = Q
+    init negate = init
+    isAcc negate q = negateDecProp (isAcc q)
+    transition negate = transition
+    src negate = src
+    dst negate = dst
+    label negate = label
+    ε-transition negate = ε-transition
+    ε-src negate = ε-src
+    ε-dst negate = ε-dst
+
   open NFA
-
-  data NFATrace (N : NFA) : (state : N .Q .fst) → (w : String) → Type ℓ where
-    nil : ∀ {q} → N .isAcc q .fst .fst → NFATrace N q []
-    cons :
-      ∀ {w'} →
-      {t : N .transition .fst} →
-      NFATrace N (N .dst t) w' →
-      NFATrace N (N .src t) (N .label t ∷ w')
-    ε-cons :
-      ∀ {w'} →
-      {t : N .ε-transition .fst} →
-      NFATrace N (N .ε-dst t) w' →
-      NFATrace N (N .ε-src t) w'
-
-  module isSetNFATraceProof
-    (N : NFA)
-    where
-    NFATrace-X = N .Q .fst × String
-    NFATrace-S : NFATrace-X → Type ℓ
-    NFATrace-S (s , w) =
-      (N .isAcc s .fst .fst × (w ≡ [])) ⊎ (
-      Σ (fiber (N .src) s) (λ t → fiber (λ w' → (N .label (t .fst)) ∷ w') w)  ⊎
-      fiber (N .ε-src) s)
-
-    NFATrace-P : ∀ x → NFATrace-S x → Type
-    NFATrace-P (state , word) (inl S) = ⊥
-    NFATrace-P (state , word) (inr (inl (x , y))) = ⊤
-    NFATrace-P (state , word) (inr (inr S)) = ⊤
-
-    NFATrace-inX : ∀ x (s : NFATrace-S x) → NFATrace-P x s → NFATrace-X
-    NFATrace-inX x (fsuc (inl (t , fibt))) _ = (N .dst (t .fst)) , (fibt .fst)
-    NFATrace-inX x (fsuc (fsuc t)) _ = (N .ε-dst (t .fst)) , (x .snd)
-
-    NFATrace→W :
-      ∀ {s : N .Q .fst} {w : String} →
-      NFATrace N s w → IW NFATrace-S NFATrace-P NFATrace-inX ((s , w))
-    NFATrace→W (nil x) =
-      node (inl (x , refl)) (λ ())
-    NFATrace→W {s}{w} (cons {w'}{t} x) =
-      node (inr (inl ((t , refl) , w' , refl)))
-        (λ _ → NFATrace→W x)
-    NFATrace→W {s}{w} (ε-cons {w'}{t} x) =
-      node (inr (inr (t , refl)))
-        (λ _ → NFATrace→W x)
-
-    IWNFA = IW NFATrace-S NFATrace-P NFATrace-inX
-
-    W→NFATrace :
-      ∀ {s : N .Q .fst} {w : String} →
-      IW NFATrace-S NFATrace-P NFATrace-inX ((s , w)) → NFATrace N s w
-    W→NFATrace (node (inl x) subtree) =
-      transport
-        (sym (cong₂ (λ a b → NFATrace N a b)
-          refl (x .snd)))
-        (NFATrace.nil {N = N} (x .fst))
-    W→NFATrace (node (fsuc (inl x)) subtree) =
-      transport
-        (cong₂ (λ a b → NFATrace N a b)
-          (x .fst .snd) (x .snd .snd))
-        (NFATrace.cons {N = N} (W→NFATrace (subtree _)))
-    W→NFATrace {s}{w} (node (fsuc (fsuc x)) subtree) =
-      transport
-        (cong (λ a → NFATrace N a w) (x .snd))
-        (NFATrace.ε-cons {N = N} (W→NFATrace (subtree _)))
-
-    NFATraceRetractofW : ∀ {s}{w} (tr : NFATrace N s w) →
-      W→NFATrace (NFATrace→W tr) ≡ tr
-    NFATraceRetractofW (nil x) = transportRefl (nil x)
-    NFATraceRetractofW (cons tr) =
-      transportRefl (cons (W→NFATrace (NFATrace→W tr))) ∙
-      cong (λ a → cons a) (NFATraceRetractofW tr)
-    NFATraceRetractofW (ε-cons tr) =
-      transportRefl (ε-cons (W→NFATrace (NFATrace→W tr))) ∙
-      cong (λ a → ε-cons a) (NFATraceRetractofW tr)
-
-    isSetNFATrace-S : ∀ s w → isSet (NFATrace-S (s , w))
-    isSetNFATrace-S s w =
-      isSet⊎
-        (isSet×
-          (isProp→isSet (N .isAcc s .fst .snd))
-          (isGroupoidString _ _)
-          )
-        (isSet⊎
-          (isSetΣ
-            (isSetΣ (isFinSet→isSet (N .transition .snd))
-            (λ t → isSet→isGroupoid (isFinSet→isSet (N .Q .snd)) _ _))
-            λ fib → isSetΣ isSetString
-              (λ w' → isGroupoidString _ _))
-          (isSetΣ (isFinSet→isSet (N .ε-transition .snd))
-            (λ t → isSet→isGroupoid
-              (isFinSet→isSet (N .Q .snd)) _ _)))
-
-    isSetNFATrace :
-      (state : N .Q .fst) →
-      (w : String) → isSet (NFATrace N state w)
-    isSetNFATrace s w =
-      isSetRetract
-        NFATrace→W
-        W→NFATrace
-        NFATraceRetractofW
-        (isOfHLevelSuc-IW 1
-          (λ x → isSetNFATrace-S (x .fst) (x .snd))
-          ((s , w)))
-
-  open isSetNFATraceProof
-  NFAGrammar : (N : NFA) → Grammar
-  NFAGrammar N w = (NFATrace N (N .init) w) , isSetNFATrace N (N .init) w
-
-  literalNFA : (c : Σ₀ .fst) → NFA
-  fst (Q (literalNFA c)) = Lift (Fin 2)
-  snd (Q (literalNFA c)) = isFinSetLift isFinSetFin
-  init (literalNFA c) = lift fzero
-  isAcc (literalNFA c) x =
-    ((x ≡ lift (fsuc fzero)) , isSetLift isSetFin _ _) ,
-    discreteLift discreteFin x (lift (fsuc fzero))
-  transition (literalNFA c) = (Lift Unit) , (isFinSetLift isFinSetUnit)
-  src (literalNFA c) (lift _) = literalNFA c .init
-  dst (literalNFA c) (lift _) = lift (fsuc fzero)
-  label (literalNFA c) (lift _) = c
-  fst (ε-transition (literalNFA c)) = Lift ⊥
-  snd (ε-transition (literalNFA c)) = isFinSetLift isFinSetFin
-  ε-src (literalNFA c) (lift x) = ⊥.rec x
-  ε-dst (literalNFA c) (lift x )= ⊥.rec x
+  module _ (c : Σ₀) where
+    literalNFA : NFA
+    fst (Q literalNFA) = Lift (Fin 2)
+    snd (Q literalNFA) = isFinSetLift isFinSetFin
+    init literalNFA = lift (inl tt)
+    fst (fst (isAcc literalNFA x)) = x ≡ lift (inr (inl tt))
+    snd (fst (isAcc literalNFA x)) = isSetLift isSetFin _ _
+    snd (isAcc literalNFA x) = discreteLift discreteFin _ _
+    transition literalNFA = Lift Unit , isFinSetLift isFinSetUnit
+    src literalNFA _ = lift (inl tt)
+    dst literalNFA _ = lift (inr (inl tt))
+    label literalNFA _ = c
+    ε-transition literalNFA = Lift ⊥ , isFinSetLift isFinSetFin
+    ε-src literalNFA x = ⊥.rec (lower x)
+    ε-dst literalNFA x = ⊥.rec (lower x)
 
   emptyNFA : NFA
   Q emptyNFA = Lift (Fin 2) , isFinSetLift isFinSetFin
@@ -187,62 +117,36 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
   ε-src emptyNFA _ = emptyNFA .init
   ε-dst emptyNFA _ = lift (fsuc fzero)
 
-  emptyIW→w≡[] : ∀ {q}{w} →
-    IW (NFATrace-S emptyNFA) (NFATrace-P emptyNFA)
-    (NFATrace-inX emptyNFA) (q , w) → w ≡ []
-  emptyIW→w≡[] (node (inl x) subtree) = x .snd
-  emptyIW→w≡[] (node (inr (inr x)) subtree) =
-    emptyIW→w≡[] (subtree _)
+  module _ (N : NFA) where
+    isDeterministic : Type ℓ
+    isDeterministic =
+      -- No ε-transitions
+      (N .ε-transition .fst ≃ Fin 0) ×
+      -- forall states
+      (∀ (q : N .Q .fst) →
+        -- there are only Σ₀-many transitions (may be redundant)
+        (fiber (N .dst) q ≃ Σ₀) ×
+        -- and there is exactly one for each label c
+        (∀ (c : Σ₀) →
+          isContr (Σ[ t ∈ fiber (N .dst) q ]
+           (N .label (t .fst) ≡ c))))
 
-  module _ (c : Σ₀ .fst) where
-    NFAc = literalNFA c
+    module _ (deter : isDeterministic) where
+      open DFADefs ℓ (Σ₀ , isFinSetΣ₀)
+      open DFADefs.DFA
 
-    e : ∀ {q}{w} →
-      IW (NFATrace-S NFAc) (NFATrace-P NFAc)
-      (NFATrace-inX NFAc) (q , w) → (w ≡ []) ⊎ (w ≡ [ c ])
-    -- "nil"
-    e {lift fzero} (node (inl x) subtree) = inl (x .snd)
-    e {lift (fsuc fzero)} (node (inl x) subtree) = inl (x .snd)
-    -- "cons"
-    e {lift fzero}
-      (node (fsuc (inl ((tt* , snd₂) , snd₁))) subtree) =
-      Cubical.Data.Sum.elim
-        (λ mt → {!snd₁ .snd!})
-        (λ b → inr {!snd₁ .snd!})
-        (e (subtree _))
-    e {lift (fsuc fzero)}
-      (node (fsuc (inl
-        ((tt* , b) , snd₁))) subtree) =
-          ⊥.elim (fzero≠fone (cong lower b))
-      -- inr (
-      --
-        -- Cubical.Data.Sum.elim
-          -- (λ a → sym (x .snd .snd) ∙ cong (λ d → c ∷ d) a)
-          -- (λ xsndfst≡[c] → {!x .fst .fst!})
-          -- (e (subtree _)))
+      deterministicNFA : DFA
+      Q deterministicNFA = N .Q
+      init deterministicNFA = N .init
+      isAcc deterministicNFA = N .isAcc
+      δ deterministicNFA q c =
+        N .dst (deter .snd q .snd c .fst .fst .fst)
 
-    literalIW→w≡[c] : ∀ {q}{w} →
-      IW (NFATrace-S NFAc) (NFATrace-P NFAc)
-      (NFATrace-inX NFAc) (q , w) → Σ[ g ∈ Grammar ] g w .fst
-    literalIW→w≡[c] (node (inl x) subtree) = ILin , x .snd
-    literalIW→w≡[c] {w} (node (fsuc (inl x)) subtree) =
-      literal c ⊗ (literalIW→w≡[c] (subtree _) .fst) ,
-        (([ c ] , fst (x .snd)) , (sym (x .snd .snd))) ,
-          (refl , (literalIW→w≡[c] (subtree _) .snd))
-
-    -- TODO : elim IW trees?
-    -- TODO : can I prove that  ¬ [ D w ] == [ ¬ D w ]
-
-    o : (w : String) → (p : IW (NFATrace-S NFAc) (NFATrace-P NFAc) (NFATrace-inX NFAc) (NFAc .init , w)) →
-      literalIW→w≡[c] p .fst ≡ {!!}
-    o w (node (inl x) subtree) = {!!}
-    o w (node (fsuc (inl x)) subtree) = {!!}
 
   -- NFA Combinators
   module _
     (N : NFA)
     where
-
     module _
       (N' : NFA)
       where
@@ -407,35 +311,10 @@ module NFADefs ℓ (Σ₀ : hSet ℓ) where
     ε-dst KL*NFA (inr (inr x)) = inr _
 
   NFAfromRegularGrammar : RegularGrammar → NFA
-  NFAfromRegularGrammar ILinReg = emptyNFA
+  NFAfromRegularGrammar ε-Reg = emptyNFA
   NFAfromRegularGrammar (g ⊗Reg h) =
     ⊗NFA (NFAfromRegularGrammar g) (NFAfromRegularGrammar h)
   NFAfromRegularGrammar (literalReg c) = literalNFA c
   NFAfromRegularGrammar (g ⊕Reg h) =
     ⊕NFA (NFAfromRegularGrammar g) (NFAfromRegularGrammar h)
   NFAfromRegularGrammar (KL*Reg g) = KL*NFA (NFAfromRegularGrammar g)
-
-  NFA→Reg : (g : RegularGrammar) →
-    ParseTransformer
-      (NFAGrammar (NFAfromRegularGrammar g))
-      (RegularGrammar→Grammar g)
-  NFA→Reg GrammarDefs.ILinReg x = {!!}
-  NFA→Reg (g GrammarDefs.⊗Reg g₁) x = {!!}
-  NFA→Reg (GrammarDefs.literalReg x₁) x = {!!}
-  NFA→Reg (g GrammarDefs.⊕Reg g₁) x = {!!}
-  NFA→Reg (GrammarDefs.KL*Reg g) x = {!!}
-
-  module _ (a b : Σ₀ .fst) where
-    g : RegularGrammar
-    g = literalReg a ⊗Reg literalReg b
-
-    N = NFAfromRegularGrammar (KL*Reg g)
-
-    -- Parsing larger strings is borderline unusable,
-    -- even though technically possible,
-    -- because you need to manually give the transition parameter
-    w : String
-    w = []
-
-    p : NFAGrammar N w .fst
-    p = ε-cons {t = inl tt} (nil tt*)
