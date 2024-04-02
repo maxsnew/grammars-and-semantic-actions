@@ -96,16 +96,6 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     trace→negationTrace (cons c x) =
       cons c (x .fst , (x .snd .fst , (trace→negationTrace (x .snd .snd))))
 
-    AcceptingFrom : D .Q .fst → Grammar
-    AcceptingFrom q-start =
-      LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] D .isAcc q' .fst .fst) ]
-        DFATrace D q-start (q .fst)
-
-    RejectingFrom : D .Q .fst → Grammar
-    RejectingFrom q-start =
-      LinΣ[ q ∈ (Σ[ q' ∈ D .Q .fst ] ¬ D .isAcc q' .fst .fst) ]
-        DFATrace D q-start (q .fst)
-
     h =
       LinΣ[ q ∈ D .Q .fst ]
         (DFATrace D (D .init) q

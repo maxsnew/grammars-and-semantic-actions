@@ -142,18 +142,6 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       δ deterministicNFA q c =
         N .dst (deter .snd q .snd c .fst .fst .fst)
 
-  module _ (N : NFA) where
-    powersetNFA : NFA
-    Q powersetNFA = ?
-    init powersetNFA = ?
-    isAcc powersetNFA = ?
-    transition powersetNFA = ?
-    src powersetNFA = ?
-    dst powersetNFA = ?
-    label powersetNFA = ?
-    ε-transition powersetNFA = ?
-    ε-src powersetNFA = ?
-    ε-dst powersetNFA = ?
 
 
   -- NFA Combinators
@@ -327,3 +315,21 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   NFAfromRegularGrammar (g ⊕Reg h) =
     ⊕NFA (NFAfromRegularGrammar g) (NFAfromRegularGrammar h)
   NFAfromRegularGrammar (KL*Reg g) = KL*NFA (NFAfromRegularGrammar g)
+
+open NFADefs
+open NFA
+module _ {ℓ} ((Σ₀ , isFinSetΣ₀) : FinSet ℓ)
+  (N : NFA ℓ (Σ₀ , isFinSetΣ₀))
+  where
+  powersetNFA : NFA (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
+  fst (Q powersetNFA) = ℙ (N .Q .fst)
+  snd (Q powersetNFA) = {!!}
+  init powersetNFA = {!!}
+  isAcc powersetNFA = {!!}
+  transition powersetNFA = {!!}
+  src powersetNFA = {!!}
+  dst powersetNFA = {!!}
+  label powersetNFA = {!!}
+  ε-transition powersetNFA = {!!}
+  ε-src powersetNFA = {!!}
+  ε-dst powersetNFA = {!!}

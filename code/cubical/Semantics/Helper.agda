@@ -12,6 +12,7 @@ open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
 open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.FinSet
+open import Cubical.Data.FinSet.DecidablePredicate
 open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.Unit
@@ -79,7 +80,7 @@ isPropCod→isProp≃ :
   isProp b → isProp (a ≃ b)
 isPropCod→isProp≃ isPropB =
   isPropΣ
-    (isProp→ isPropB)
+     (isProp→ isPropB)
     λ f → isPropIsEquiv f
 
 open Iso
@@ -143,8 +144,11 @@ snd (DecPropΣ A B) =
     (λ ¬a → no (λ x → ¬a (x .fst)))
     (A .snd)
 
+Decℙ : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
+Decℙ {ℓ} A = A → DecProp ℓ
+
 FinSetℙ : ∀ {ℓ} → FinSet ℓ → FinSet (ℓ-suc ℓ)
-fst (FinSetℙ A) = ℙ (A .fst)
+fst (FinSetℙ A) = Decℙ (A .fst)
 snd (FinSetℙ A) =
   Cubical.HITs.PropositionalTruncation.rec
     isPropIsFinSet
@@ -152,30 +156,39 @@ snd (FinSetℙ A) =
       ∣ the-equiv A≃Fin ∣₁)
     (A .snd .snd)
     where
-    the-equiv :
+
+    Bitvector : (n : ℕ) → Type
+    Bitvector n = Fin.FinVec Bool n
+
+    bv-iso :
       A .fst ≃ Fin (A .snd .fst) →
-      ℙ (A .fst) ≃ Fin (2 ^ A .snd .fst)
-    the-equiv x = {!!}
-
-    2<2^n+2 : (n : ℕ) → 2 < (2 ^ (n + 2))
-    2<2^n+2 zero = 1 , refl
-    2<2^n+2 (suc n) = 2<2^n+2 n .fst + 2 ^ (n + 2) ,
-      {!cong (λ a → a + 2 ^ (n + 2)) (2<2^n+2 n .snd)!}
-
-    sumOverFin : ∀ {n : ℕ} → (Fin.Fin n) →
-      (Fin.Fin n → Fin.Fin n) → (Fin.Fin (2 ^ (n + 1)))
-    sumOverFin {n} (zero , 0<n) f =
-      Fin.inject< {!!}
-        (Fin.fromℕ≤ 1 1 _)
-    sumOverFin {n} (suc m , m<n) f =
-      {!Fin.inject<!}
-
+      Iso (Decℙ (A .fst)) (Bitvector (A .snd .fst))
+    fun (bv-iso x) S m =
+      decRec
+        (λ _ → true)
+        (λ _ → false)
+        (S the-a .snd)
+      where
+      the-a = x .snd .equiv-proof (Fin→SumFin m) .fst .fst
+    inv (bv-iso x) v a =
+      Cubical.Data.Bool.elim
+        (DecPropIso .inv (Unit* ,
+          (true , (isContr→Equiv isContrUnit* isContrUnit))))
+        (DecPropIso .inv (⊥* ,
+          (false , uninhabEquiv (λ x → lower x) λ x → x)))
+        (v (SumFin→Fin (x .fst a)))
+    rightInv (bv-iso x) b = {!!}
+    leftInv (bv-iso x) a = {!!}
 
     the-iso :
       A .fst ≃ Fin (A .snd .fst) →
-      Iso (ℙ (A .fst)) (Fin (2 ^ A .snd .fst))
-    fun (the-iso x) S =
-      {!!}
+      Iso (Decℙ (A .fst)) (Fin (2 ^ A .snd .fst))
+    fun (the-iso x) S = {!!}
     inv (the-iso x) = {!!}
     rightInv (the-iso x) = {!!}
     leftInv (the-iso x) = {!!}
+
+    the-equiv :
+      A .fst ≃ Fin (A .snd .fst) →
+      Decℙ (A .fst) ≃ Fin (2 ^ A .snd .fst)
+    the-equiv x = isoToEquiv (the-iso x)
