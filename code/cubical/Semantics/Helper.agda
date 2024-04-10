@@ -4,6 +4,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Powerset
+open import Cubical.Foundations.Function
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
@@ -145,10 +146,16 @@ snd (DecPropΣ A B) =
     (λ ¬a → no (λ x → ¬a (x .fst)))
     (A .snd)
 
+
+
+
 Decℙ : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
 Decℙ {ℓ} A = A → DecProp ℓ
 
+
+
 -- TODO decidable powerset
+--
 -- fromℕ< : (m n : ℕ) → m Ord.< n → Fin n
 -- fromℕ< zero (suc n) _ = fzero
 -- fromℕ< (suc m) (suc n) p = fsuc (fromℕ< m n p )
@@ -163,87 +170,93 @@ Decℙ {ℓ} A = A → DecProp ℓ
 --     (A .snd .snd)
 --     where
 
---     Bitvector : (n : ℕ) → Type
---     Bitvector n = Fin.FinVec Bool n
+--     -- Bitvector : (n : ℕ) → Type
+--     -- Bitvector n = Fin.FinVec Bool n
 
---     bv-iso :
---       A .fst ≃ Fin (A .snd .fst) →
---       Iso (Decℙ (A .fst)) (Bitvector (A .snd .fst))
---     fun (bv-iso x) S m =
---       decRec
---         (λ _ → true)
---         (λ _ → false)
---         (S the-a .snd)
---       where
---       the-a = x .snd .equiv-proof (Fin→SumFin m) .fst .fst
---     inv (bv-iso x) v a =
---       Cubical.Data.Bool.elim
---         (DecPropIso .inv (Unit* ,
---           (true , (isContr→Equiv isContrUnit* isContrUnit))))
---         (DecPropIso .inv (⊥* ,
---           (false , uninhabEquiv (λ x → lower x) λ x → x)))
---         (v (SumFin→Fin (x .fst a)))
---     rightInv (bv-iso x) b = {!refl!}
---     leftInv (bv-iso x) a = {!!}
+--     -- bv-iso :
+--     --   A .fst ≃ Fin (A .snd .fst) →
+--     --   Iso (Decℙ (A .fst)) (Bitvector (A .snd .fst))
+--     -- fun (bv-iso x) S m =
+--     --   decRec
+--     --     (λ _ → true)
+--     --     (λ _ → false)
+--     --     (S the-a .snd)
+--     --   where
+--     --   the-a = x .snd .equiv-proof (Fin→SumFin m) .fst .fst
+--     -- inv (bv-iso x) v a =
+--     --   Cubical.Data.Bool.elim
+--     --     (DecPropIso .inv (Unit* ,
+--     --       (true , (isContr→Equiv isContrUnit* isContrUnit))))
+--     --     (DecPropIso .inv (⊥* ,
+--     --       (false , uninhabEquiv (λ x → lower x) λ x → x)))
+--     --     (v (SumFin→Fin (x .fst a)))
+--     -- rightInv (bv-iso x) b = {!refl!}
+--     -- leftInv (bv-iso x) a = {!!}
 
 
---     help : ∀ {m} → (n : ℕ) → n Ord.< m → (Fin m → DecProp ℓ) → ℕ
---     help {m = m} zero p S = decRec (λ _ → 1) (λ _ → 0) (S (fromℕ< 0 m p) .snd)
---     help {m = m} (suc n) p S =
---       decRec
---         (λ _ → (2 ^ (suc n)) + help n a S)
---         (λ _ → help n a S)
---         (S (fromℕ< (suc n) m p) .snd)
---       where
---       a = Ord.<-weaken {suc n}{m} p
+--     -- help : ∀ {m} → (n : ℕ) → n Ord.< m → (Fin m → DecProp ℓ) → ℕ
+--     -- help {m = m} zero p S = decRec (λ _ → 1) (λ _ → 0) (S (fromℕ< 0 m p) .snd)
+--     -- help {m = m} (suc n) p S =
+--     --   decRec
+--     --     (λ _ → (2 ^ (suc n)) + help n a S)
+--     --     (λ _ → help n a S)
+--     --     (S (fromℕ< (suc n) m p) .snd)
+--     --   where
+--     --   a = Ord.<-weaken {suc n}{m} p
 
---     the-iso :
---       0 Ord.< A .snd .fst →
---       A .fst ≃ Fin (A .snd .fst) →
---       Iso (Decℙ (A .fst)) (Fin (2 ^ A .snd .fst))
---     fun (the-iso p x) S =
---       fromℕ< (help {m = A .snd .fst} (predℕ (A .snd .fst)) (pred< (A .snd .fst) p)
---         λ a → S (x .snd .equiv-proof a .fst .fst)) (2 ^ A .snd .fst) {!!}
---       where
---       pred< : (n : ℕ) → 0 Ord.< n → predℕ n Ord.< n
---       pred< (suc n) x = Ord.≤-refl n
+--     -- the-iso :
+--     --   0 Ord.< A .snd .fst →
+--     --   A .fst ≃ Fin (A .snd .fst) →
+--     --   Iso (Decℙ (A .fst)) (Fin (2 ^ A .snd .fst))
+--     -- fun (the-iso p x) S =
+--     --   fromℕ< (help {m = A .snd .fst} (predℕ (A .snd .fst)) (pred< (A .snd .fst) p)
+--     --     λ a → S (x .snd .equiv-proof a .fst .fst)) (2 ^ A .snd .fst) {!!}
+--     --   where
+--     --   pred< : (n : ℕ) → 0 Ord.< n → predℕ n Ord.< n
+--     --   pred< (suc n) x = Ord.≤-refl n
 
---       caseDec : ∀ {ℓ ℓ' ℓ''} {P : Type ℓ} {A : Type ℓ'}(B : A → Type ℓ'') → (ifyes : P → A) →
---         (ifno : ¬ P → A) →
---         ((p : P) → B (ifyes p)) →
---         ((¬p : ¬ P) → B (ifno ¬p)) →
---         (d : Dec P) →
---           B (decRec ifyes ifno d)
---       caseDec B ifyes ifno fy fn (yes p) = fy p
---       caseDec B ifyes ifno fy fn (no ¬p) = fn ¬p
+--     --   caseDec : ∀ {ℓ ℓ' ℓ''} {P : Type ℓ} {A : Type ℓ'}(B : A → Type ℓ'') → (ifyes : P → A) →
+--     --     (ifno : ¬ P → A) →
+--     --     ((p : P) → B (ifyes p)) →
+--     --     ((¬p : ¬ P) → B (ifno ¬p)) →
+--     --     (d : Dec P) →
+--     --       B (decRec ifyes ifno d)
+--     --   caseDec B ifyes ifno fy fn (yes p) = fy p
+--     --   caseDec B ifyes ifno fy fn (no ¬p) = fn ¬p
 
---       lem : (n : ℕ) → (x : 0 Ord.< n) → (S : Fin n → DecProp ℓ) →
---        help (predℕ n) (pred< n x) S Ord.< (2 ^ n)
---       lem (suc zero) _ S =
---         caseDec
---           (λ a → a Ord.< 2)
---           ((λ _ → 1))
---           (λ _ → 0)
---           (λ _ → tt)
---           (λ _  → tt)
---           (S (fromℕ< 0 1 (pred< 1 _)) .snd)
---       lem (suc (suc n)) x S =
---         -- {!!}
---         caseDec
---           (λ a → a Ord.< (2 ^ n) + ((2 ^ n) + zero) + ((2 ^ n) + ((2 ^ n) + zero) + zero))
---           (λ _ →
---             (2 ^ n) + ((2 ^ n) + zero) +
---             help n (Ord.<-weaken n (Ord.≤-refl n) S) S)
---           (λ _ → help n (Ord.<-weaken n (Ord.≤-refl n) S) S)
---           (λ p → {!!})
---           (λ ¬p → {!!} )
---           (S (fsuc (fromℕ< n (suc n) (Ord.≤-refl n))) .snd)
+--     --   lem : (n : ℕ) → (x : 0 Ord.< n) → (S : Fin n → DecProp ℓ) →
+--     --    help (predℕ n) (pred< n x) S Ord.< (2 ^ n)
+--     --   lem (suc zero) _ S =
+--     --     caseDec
+--     --       (λ a → a Ord.< 2)
+--     --       ((λ _ → 1))
+--     --       (λ _ → 0)
+--     --       (λ _ → tt)
+--     --       (λ _  → tt)
+--     --       (S (fromℕ< 0 1 (pred< 1 _)) .snd)
+--     --   lem (suc (suc n)) x S =
+--     --     -- {!!}
+--     --     caseDec
+--     --       (λ a → a Ord.< (2 ^ n) + ((2 ^ n) + zero) + ((2 ^ n) + ((2 ^ n) + zero) + zero))
+--     --       (λ _ →
+--     --         (2 ^ n) + ((2 ^ n) + zero) +
+--     --         help n (Ord.<-weaken n (Ord.≤-refl n) S) S)
+--     --       (λ _ → help n (Ord.<-weaken n (Ord.≤-refl n) S) S)
+--     --       (λ p → {!!})
+--     --       (λ ¬p → {!!} )
+--     --       (S (fsuc (fromℕ< n (suc n) (Ord.≤-refl n))) .snd)
 
---     inv (the-iso p x) = {!!}
---     rightInv (the-iso p x) = {!!}
---     leftInv (the-iso p x) = {!!}
+--     -- inv (the-iso p x) = {!!}
+--     -- rightInv (the-iso p x) = {!!}
+--     -- leftInv (the-iso p x) = {!!}
 
 --     the-equiv :
 --       A .fst ≃ Fin (A .snd .fst) →
 --       Decℙ (A .fst) ≃ Fin (2 ^ A .snd .fst)
---     the-equiv x = isoToEquiv (the-iso {!!} x)
+--     fst (the-equiv x) f =
+--       SumFinℙ≃ (A .snd .fst) .fst
+--         (fst ∘ snd ∘ (DecPropIso .fun) ∘ f ∘ equivToIso x .inv)
+--     fst (fst (equiv-proof (snd (the-equiv x)) y)) a =
+--       {!equivToIso (SumFinℙ≃ (A .snd .fst)) .inv ?!}
+--     snd (fst (equiv-proof (snd (the-equiv x)) y)) = {!!}
+--     snd (equiv-proof (snd (the-equiv x)) y) fib = {!!}

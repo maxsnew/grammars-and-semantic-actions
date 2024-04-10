@@ -1,4 +1,6 @@
+{-# OPTIONS --lossy-unification #-}
 module Semantics.NFA where
+
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -22,7 +24,7 @@ open import Cubical.Data.Nat
 open import Cubical.Data.SumFin
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
-open import Cubical.HITs.PropositionalTruncation
+open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Grammar public
 open import Semantics.DFA
@@ -31,8 +33,8 @@ private
   variable ℓ ℓ' : Level
 
 module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
-  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀) public
-  open StringDefs ℓ (Σ₀ , isFinSetΣ₀) public
+  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
 
   record NFA : Type (ℓ-suc ℓ) where
     constructor mkNFA
@@ -66,9 +68,48 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         ParseTransformer
           (literal (label t) ⊗ NFATrace (dst t) q-end) (NFATrace q q-end)
       ε-cons : ∀ {t} →
-        (src t ≡ q) →
+        (ε-src t ≡ q) →
         ParseTransformer
-          (NFATrace (dst t) q-end) (NFATrace q q-end)
+          (NFATrace (ε-dst t) q-end) (NFATrace q q-end)
+
+    NFAelim :
+      (P : ∀ q q' w → (NFATrace q q' w) → Type ℓ) →
+      (nil-case : ∀ {q}{q'}{w}{x} → P q q' w (nil x)) →
+      (cons-case : ∀ {q}{q'}{w} → (t : transition .fst) →
+        (p : src t ≡ q) →
+        -- TODO there is something redundant here about having y and tr
+        -- but it seems to make things easier to have them
+        -- because it lets us handle arbitrary y
+        (y : (literal (label t) ⊗ NFATrace (dst t) q') (label t ∷ w)) →
+        (tr : NFATrace (dst t) q' w) →
+        P (dst t) q' w tr →
+        P q q' (label t ∷ w) (cons p y)) →
+      (ε-cons-case : ∀ {q}{q'}{w} → (t : ε-transition .fst) →
+        (p : ε-src t ≡ q) →
+        (tr : NFATrace (ε-dst t) q' w) →
+        P (ε-dst t) q' w tr →
+        P q q' w (ε-cons p tr)) →
+      (q q' : Q .fst) → (w : String) →
+      (tr : NFATrace q q' w) →
+      P q q' w tr
+    NFAelim P nil-case cons-case ε-cons-case q q' w (nil x) = nil-case
+    NFAelim P nil-case cons-case ε-cons-case q q' w (cons {t} x y) =
+      transport
+        (cong₂ (λ a b → P q q' a (cons x b)) the-string-path (symP (toPathP refl)))
+        (cons-case t x the-parse (y .snd .snd)
+          (NFAelim P nil-case cons-case ε-cons-case (dst t) q' (y .fst .fst .snd) (y .snd .snd)))
+      where
+      the-string-path : label t ∷ y .fst .fst .snd ≡ w
+      the-string-path =
+        sym (y .fst .snd ∙ cong (λ a → a ++ y .fst .fst .snd) (y .snd .fst))
+
+      the-parse : (literal (label t) ⊗ NFATrace (dst t) q') (label t ∷ y .fst .fst .snd)
+      the-parse =
+        transport
+        ( sym (cong (λ a → (_ ⊗ _) a) the-string-path) )
+        y
+    NFAelim P nil-case cons-case ε-cons-case q q' w (ε-cons {t} x tr) =
+      ε-cons-case t x tr (NFAelim P nil-case cons-case ε-cons-case (ε-dst t) q' w tr)
 
     Parses : Grammar
     Parses =
@@ -165,7 +206,7 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
           (DecPropΣ
             (((fiber (inr ∘ inl) x) , inr∘inl-prop-fibs) ,
               decRec
-                (Cubical.HITs.PropositionalTruncation.elim
+                (PT.elim
                     (λ _ → isPropDec inr∘inl-prop-fibs)
                     (λ y → yes y))
                 (λ ∄preimage →
@@ -179,7 +220,7 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
           (DecPropΣ
             ((fiber (inr ∘ inr) x , inr∘inr-prop-fibs) ,
               decRec
-                (Cubical.HITs.PropositionalTruncation.elim
+                (PT.elim
                   (λ _ → isPropDec inr∘inr-prop-fibs)
                   λ y → yes y)
                 (λ ∄preimage → no λ y → ∄preimage ∣ y ∣₁)
@@ -316,20 +357,93 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     ⊕NFA (NFAfromRegularGrammar g) (NFAfromRegularGrammar h)
   NFAfromRegularGrammar (KL*Reg g) = KL*NFA (NFAfromRegularGrammar g)
 
+  open Iso
+  module regex-isos where
+    ε-P : ∀ q q' w → NFATrace emptyNFA q q' w → Type ℓ
+    ε-P q q' w tr = {!!}
+
+    ε-regex-iso : isStronglyEquivalent ε-grammar (Parses emptyNFA)
+    fun (ε-regex-iso w) = {!!}
+    inv (ε-regex-iso w) = {!!}
+    rightInv (ε-regex-iso w) = {!!}
+    leftInv (ε-regex-iso w) = {!!}
+
+  isStronglyEquivalent-NFA-Regex : (g : RegularGrammar) →
+    isStronglyEquivalent
+      (RegularGrammar→Grammar g)
+      (Parses (NFAfromRegularGrammar g))
+  isStronglyEquivalent-NFA-Regex GrammarDefs.ε-Reg = regex-isos.ε-regex-iso
+  isStronglyEquivalent-NFA-Regex (GrammarDefs.literalReg x) w = {!!}
+  isStronglyEquivalent-NFA-Regex (g GrammarDefs.⊗Reg g₁) w = {!!}
+  isStronglyEquivalent-NFA-Regex (g GrammarDefs.⊕Reg g₁) w = {!!}
+  isStronglyEquivalent-NFA-Regex (GrammarDefs.KL*Reg g) w = {!!}
+
+
 open NFADefs
 open NFA
+open DFADefs
+open DFA
 module _ {ℓ} ((Σ₀ , isFinSetΣ₀) : FinSet ℓ)
   (N : NFA ℓ (Σ₀ , isFinSetΣ₀))
   where
-  powersetNFA : NFA (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
-  fst (Q powersetNFA) = ℙ (N .Q .fst)
-  snd (Q powersetNFA) = {!!}
-  init powersetNFA = {!!}
-  isAcc powersetNFA = {!!}
-  transition powersetNFA = {!!}
-  src powersetNFA = {!!}
-  dst powersetNFA = {!!}
-  label powersetNFA = {!!}
-  ε-transition powersetNFA = {!!}
-  ε-src powersetNFA = {!!}
-  ε-dst powersetNFA = {!!}
+
+  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
+
+  powersetNFA : NFA ℓ (Σ₀ , isFinSetΣ₀)
+  fst (Q powersetNFA) = (N .Q .fst) → Bool
+  snd (Q powersetNFA) = isFinSet→ (N .Q) (Bool , isFinSetBool)
+  init powersetNFA q =
+    if Dec→Bool (NFA.decEqQ N q (N .init)) then
+      true else
+      false
+  fst (fst (isAcc powersetNFA f)) = ∃[ q ∈ N .Q .fst ] f q ≡ true
+  snd (fst (isAcc powersetNFA f)) = isPropPropTrunc
+  snd (isAcc powersetNFA f) =
+    isFinSet→Dec∥∥ (isFinSetΣ (N .Q) λ z → (f z ≡ true) ,
+      isDecProp→isFinSet (isSetBool (f z) true)
+        (isFinSet→Discrete isFinSetBool (f z) true))
+  fst (transition powersetNFA) =
+    Σ[ f ∈ (N .Q .fst → Bool) ] Σ[ g ∈ (N .Q .fst → Bool) ]
+      Σ[ c ∈ Σ₀ ]
+      ∃[ t ∈ N .transition .fst ]
+        ( f (N .src t) ≡ true ) × ( g (N .dst t) ≡ true ) × (N .label t ≡ c)
+  snd (transition powersetNFA) =
+    isFinSetΣ (powersetNFA .Q)
+      λ x → _ , isFinSetΣ (powersetNFA .Q) λ x → _ ,
+        isFinSetΣ (Σ₀ , isFinSetΣ₀) λ c → _ , isFinSet∥∥ (_ ,
+          isFinSetΣ (N .transition) (λ t → _ , isFinSetΣ (_ ,
+            isDecProp→isFinSet (isSetBool _ _) (DiscreteBool _ _)) λ _ → _ ,
+              isFinSetΣ (_ , isDecProp→isFinSet (isSetBool _ _) (DiscreteBool _ _)) λ _ → _ ,
+                isDecProp→isFinSet (isSetΣ₀ _ _) (DiscreteΣ₀ _ _)))
+      where
+      DiscreteBool : Discrete Bool
+      DiscreteBool = isFinSet→Discrete isFinSetBool
+  src powersetNFA t = t .fst
+  dst powersetNFA t = t .snd .fst
+  label powersetNFA t = t .snd .snd .fst
+  fst (ε-transition powersetNFA) = ⊥*
+  snd (ε-transition powersetNFA) = isFinSetLift isFinSetFin
+  ε-src powersetNFA x = ⊥.rec (lower x)
+  ε-dst powersetNFA x = ⊥.rec (lower x)
+
+  isDeterministic-powersetNFA : isDeterministic _ _ (powersetNFA)
+  fst isDeterministic-powersetNFA = uninhabEquiv (λ x → lower x) (λ x → x)
+  fst (fst (snd isDeterministic-powersetNFA c)) x = x .fst .snd .snd .fst
+  fst (fst (fst (equiv-proof (snd (fst (snd isDeterministic-powersetNFA f))) c))) =
+    f , ({!!} , (c , ∣ {!!} , ({!!} , ({!!} , {!!})) ∣₁))
+    where
+    the-g : N .Q .fst → Bool
+    the-g q = {!!}
+  snd (fst (fst (equiv-proof (snd (fst (snd isDeterministic-powersetNFA f))) c))) = {!!}
+  snd (fst (equiv-proof (snd (fst (snd isDeterministic-powersetNFA f))) c)) = {!!}
+  snd (equiv-proof (snd (fst (snd isDeterministic-powersetNFA f))) c) = {!!}
+  fst (snd (snd isDeterministic-powersetNFA f) c) = {!!}
+  snd (snd (snd isDeterministic-powersetNFA f) c) = {!!}
+
+
+  powersetDFA : DFA ℓ (Σ₀ , isFinSetΣ₀)
+  Q powersetDFA = {!!}
+  init powersetDFA = {!!}
+  isAcc powersetDFA = {!!}
+  δ powersetDFA = {!!}

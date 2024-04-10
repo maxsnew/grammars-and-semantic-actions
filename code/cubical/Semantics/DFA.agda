@@ -30,8 +30,8 @@ private
   variable ℓ ℓ' : Level
 
 module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
-  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀) public
-  open StringDefs ℓ (Σ₀ , isFinSetΣ₀) public
+  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
 
   record DFA : Type (ℓ-suc ℓ) where
     constructor mkDFA
@@ -162,6 +162,8 @@ module examples where
   -- examples are over alphabet drawn from Fin 2
   -- characters are fzero and (fsuc fzero)
   open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
+  open GrammarDefs ℓ-zero (Fin 2 , isFinSetFin)
+  open StringDefs ℓ-zero (Fin 2 , isFinSetFin)
 
   open DFA
 
