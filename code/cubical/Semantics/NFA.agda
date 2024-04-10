@@ -62,7 +62,7 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     data NFATrace
       (q : Q .fst)
       (q-end : Q .fst) : (w : String) → Type ℓ where
-      nil : ParseTransformer ε-grammar (NFATrace q q-end)
+      nil : (q ≡ q-end) → ParseTransformer ε-grammar (NFATrace q q-end)
       cons : ∀ {t} →
         (src t ≡ q) →
         ParseTransformer
@@ -74,7 +74,7 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
     NFAelim :
       (P : ∀ q q' w → (NFATrace q q' w) → Type ℓ) →
-      (nil-case : ∀ {q}{q'}{w}{x} → P q q' w (nil x)) →
+      (nil-case : ∀ {q}{q'}{w}{x}{p} → P q q' w (nil p x)) →
       (cons-case : ∀ {q}{q'}{w} → (t : transition .fst) →
         (p : src t ≡ q) →
         -- TODO there is something redundant here about having y and tr
@@ -92,24 +92,28 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       (q q' : Q .fst) → (w : String) →
       (tr : NFATrace q q' w) →
       P q q' w tr
-    NFAelim P nil-case cons-case ε-cons-case q q' w (nil x) = nil-case
+    NFAelim P nil-case cons-case ε-cons-case q q' w (nil p x) = nil-case
     NFAelim P nil-case cons-case ε-cons-case q q' w (cons {t} x y) =
       transport
-        (cong₂ (λ a b → P q q' a (cons x b)) the-string-path (symP (toPathP refl)))
+        (cong₂ (λ a b → P q q' a (cons x b))
+          the-string-path (symP (toPathP refl)))
         (cons-case t x the-parse (y .snd .snd)
-          (NFAelim P nil-case cons-case ε-cons-case (dst t) q' (y .fst .fst .snd) (y .snd .snd)))
+          (NFAelim P nil-case cons-case ε-cons-case (dst t) q'
+            (y .fst .fst .snd) (y .snd .snd)))
       where
       the-string-path : label t ∷ y .fst .fst .snd ≡ w
       the-string-path =
         sym (y .fst .snd ∙ cong (λ a → a ++ y .fst .fst .snd) (y .snd .fst))
 
-      the-parse : (literal (label t) ⊗ NFATrace (dst t) q') (label t ∷ y .fst .fst .snd)
+      the-parse :
+        (literal (label t) ⊗ NFATrace (dst t) q') (label t ∷ y .fst .fst .snd)
       the-parse =
         transport
         ( sym (cong (λ a → (_ ⊗ _) a) the-string-path) )
         y
     NFAelim P nil-case cons-case ε-cons-case q q' w (ε-cons {t} x tr) =
-      ε-cons-case t x tr (NFAelim P nil-case cons-case ε-cons-case (ε-dst t) q' w tr)
+      ε-cons-case t x tr
+        (NFAelim P nil-case cons-case ε-cons-case (ε-dst t) q' w tr)
 
     Parses : Grammar
     Parses =
@@ -359,12 +363,34 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
   open Iso
   module regex-isos where
-    ε-P : ∀ q q' w → NFATrace emptyNFA q q' w → Type ℓ
-    ε-P q q' w tr = {!!}
+    εNFA-P : ∀ q q' w → NFATrace emptyNFA q q' w → Type ℓ
+    εNFA-P q q' w tr = w ≡ []
+
+    εNFA-nil-case : ∀ {q}{q'}{w}{x}{p} → εNFA-P q q' w (nil p x)
+    εNFA-nil-case = {!!}
+
+    εNFA-cons-case : ∀ {q}{q'}{w} →
+      (t : emptyNFA .transition .fst) → (p : emptyNFA .src t ≡ q) →
+      (y : {!!}) → (tr : NFATrace emptyNFA (emptyNFA .dst t) q' w) →
+      {!!} → {!!}
+    εNFA-cons-case = {!!}
+
+    εNFA-ε-cons-case : ∀ {q}{q'}{w} →
+      (t : emptyNFA .ε-transition .fst) → (p : emptyNFA .ε-src t ≡ q) →
+      (tr : NFATrace emptyNFA (emptyNFA .ε-dst t) q' w) →
+      {!!} → {!!}
+    εNFA-ε-cons-case = {!!}
+
+    elim-εNFA : (q q' : emptyNFA .Q .fst) → (w : String) →
+      (tr : NFATrace emptyNFA q q' w) → εNFA-P q q' w tr
+    elim-εNFA =
+      NFAelim emptyNFA εNFA-P εNFA-nil-case εNFA-cons-case εNFA-ε-cons-case
 
     ε-regex-iso : isStronglyEquivalent ε-grammar (Parses emptyNFA)
-    fun (ε-regex-iso w) = {!!}
-    inv (ε-regex-iso w) = {!!}
+    fun (ε-regex-iso w) p = {!!}
+    inv (ε-regex-iso w) a =
+      elim-εNFA (emptyNFA .init) (lift (fsuc fzero)) w
+        (transport (cong (λ z → NFATrace _ _ z _) (a .fst .snd)) (a .snd))
     rightInv (ε-regex-iso w) = {!!}
     leftInv (ε-regex-iso w) = {!!}
 

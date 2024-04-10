@@ -51,7 +51,7 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     rej? q = DecProp-grammar (negateDecProp (isAcc q)) ⊤-grammar ⊥-grammar
 
     data DFATrace (q : Q .fst) (q-end : Q .fst) : String → Type ℓ where
-      nil : ParseTransformer ε-grammar (DFATrace q q-end)
+      nil : (q ≡ q-end) → ParseTransformer ε-grammar (DFATrace q q-end)
       cons : ∀ c →
         ParseTransformer
           (literal c ⊗ DFATrace (δ q c) q-end) (DFATrace q q-end)
@@ -61,10 +61,10 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     -- in the paper type theory via the same principle as below
     extendTrace : ∀ {q q' : Q .fst} {w} → DFATrace q q' w → (c : Σ₀) →
       DFATrace q (δ q' c) (w ++ [ c ])
-    extendTrace (nil x) c =
+    extendTrace (nil p x) c =
       cons c (((c ∷ [] , _) ,
         cong (λ a → a ++ [ c ]) x ∙ sym (cong (λ a → c ∷ a) x)) ,
-          (refl , (nil x)))
+          (refl , (nil (cong (λ a → δ a c) p) x)))
     extendTrace {q}{q'} (cons c' x) c =
       cons c' (the-split , (refl , (extendTrace (x .snd .snd) c)))
       where
@@ -92,7 +92,7 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     ¬D = negate D
 
     trace→negationTrace : ∀ {q}{q'}{w} → DFATrace D q q' w → DFATrace ¬D q q' w
-    trace→negationTrace (nil x) = nil x
+    trace→negationTrace (nil p x) = nil p x
     trace→negationTrace (cons c x) =
       cons c (x .fst , (x .snd .fst , (trace→negationTrace (x .snd .snd))))
 
@@ -116,7 +116,7 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
       mt-case : ParseTransformer ε-grammar h
       fst (mt-case p) = D .init
-      fst (snd (mt-case p)) = nil p
+      fst (snd (mt-case p)) = nil refl p
       snd (snd (mt-case p)) =
         decRec
           (λ acc → inl (DecProp-grammar-yes (D .isAcc (D .init)) _ _ acc _ _))
@@ -127,7 +127,7 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
       cons-case : ParseTransformer (h ⊗ ⊕Σ₀) h
       fst (cons-case p) = D .δ (p .snd .fst .fst) (p .snd .snd .fst)
-      fst (snd (cons-case p)) = 
+      fst (snd (cons-case p)) =
         transport
         (cong (λ a → DFATrace D _ _ a)
           (cong (λ a → p .fst .fst .fst ++ a)
@@ -196,7 +196,7 @@ module examples where
     (cons fzero (stepLiteral
       (cons (fsuc fzero) (stepLiteral
         (cons (fsuc fzero) (stepLiteral
-          (cons fzero (stepLiteral (nil refl)))))))))
+          (cons fzero (stepLiteral (nil refl refl)))))))))
 
   ex1 : decideDFA D w ≡ true
   ex1 = refl
