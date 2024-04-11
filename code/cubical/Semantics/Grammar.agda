@@ -3,6 +3,7 @@ module Semantics.Grammar where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 
 open import Cubical.Data.List
@@ -421,3 +422,36 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       Σ≡Prop (λ _ → isPropPropTrunc) refl
     leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
       Σ≡Prop (λ _ → isPropPropTrunc) refl
+
+  module _ ((g , gParsesAreSets) : hGrammar) where
+    ⊗-unit-l-PT : ParseTransformer (ε-grammar ⊗ g) g
+    ⊗-unit-l-PT p =
+      transport
+        (cong g (cong (λ a → a ++ p .fst .fst .snd)
+          (sym (p .snd .fst)) ∙ sym (p .fst .snd)))
+        ( p .snd .snd )
+
+    ⊗-unit-l-inv-PT : ParseTransformer g (ε-grammar ⊗ g)
+    ⊗-unit-l-inv-PT p = (([] , _) , refl) , (refl , p)
+
+    -- open Iso
+    -- ⊗-unit-l-isStronglyEquivalent : isStronglyEquivalent (ε-grammar ⊗ g) g
+    -- fun (⊗-unit-l-isStronglyEquivalent w) = ⊗-unit-l-PT
+    -- inv (⊗-unit-l-isStronglyEquivalent w) = ⊗-unit-l-inv-PT
+    -- rightInv (⊗-unit-l-isStronglyEquivalent w) b = {!!}
+    -- leftInv (⊗-unit-l-isStronglyEquivalent w) a =
+    --   ΣPathP ((ΣPathP (
+    --     (ΣPathP ((sym (a .snd .fst)) ,
+    --               (a .fst .snd ∙ cong (λ z → z ++ _) (a .snd .fst)))) ,
+    --     isSet→SquareP (λ i j → isSetString) _ _ _ _)) ,
+    --       ΣPathP ((isSet→SquareP (λ _ _ → isSetString) _ _ _ _) ,
+    --         toPathP {!!}))
+
+
+    -- ⊗-unit-r-PT : ParseTransformer (g ⊗ ε-grammar) g
+    -- ⊗-unit-r-PT p =
+    --   transport
+    --     (cong g ((sym (++-unit-r _) ∙
+    --       cong (λ a → p .fst .fst .fst ++ a) (sym (p .snd .snd))) ∙
+    --       sym ( p .fst .snd )))
+    --     ( p .snd .fst )

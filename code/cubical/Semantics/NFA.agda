@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification -WnoUnsupportedIndexedMatch #-}
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 module Semantics.NFA where
 
 
@@ -336,7 +336,15 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   NFAfromRegularGrammar (KL*Reg g) = KL*NFA (NFAfromRegularGrammar g)
 
   open Iso
-  module regex-isos where
+  module regex-isos
+    -- TODO need to prove these in the grammar module
+    -- but there are some cubical issues, so we'll
+    -- take them as given here
+    (⊗-unit-l-isStronglyEquivalent : (g : Grammar) →
+      isStronglyEquivalent (ε-grammar ⊗ g) g)
+    (⊗-unit-r-isStronglyEquivalent : (g : Grammar) →
+      isStronglyEquivalent (g ⊗ ε-grammar) g)
+    where
     elimEmptyNFA :
       ∀ {q}{q'} →
       ParseTransformer (NFATrace emptyNFA q q') ε-grammar
@@ -352,10 +360,27 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       the-P = ε-grammar
       the-nil-case = id-PT ε-grammar
 
+
+    isProp-emptyNFAParse' : ∀ {w} → isProp (NFATrace emptyNFA (lift fzero) (lift (fsuc fzero)) w)
+    isProp-emptyNFAParse' {w} (nil x x₁) (nil x₂ x₃) =
+      cong₂ (λ a b → nil a b) (isSetLift isSetFin _ _ x x₂) (isSetString _ _ x₁ x₃)
+    isProp-emptyNFAParse' {w} (nil x x₁) (ε-cons x₂ y) = ⊥.rec (fzero≠fone (cong lower x))
+    isProp-emptyNFAParse' {w} (ε-cons x x₁) (nil x₂ x₃) = ⊥.rec (fzero≠fone (cong lower x₂))
+    isProp-emptyNFAParse' {w} (ε-cons x x₁) (ε-cons x₂ y) =
+      cong₂ (λ a b → ε-cons a b) (isSetLift isSetFin _ _ x x₂) (a _ _)
+      where
+      a : isProp (NFATrace emptyNFA (lift (fsuc fzero)) (lift (fsuc fzero)) w)
+      a = {!!}
+    --cong₂ (λ a b → ε-cons a b) (isSetLift isSetFin _ _ x x₂) {!!}
+
     ε-regex-iso : isStronglyEquivalent ε-grammar (Parses emptyNFA)
-    fun (ε-regex-iso w) p = {!!}
+    fst (fst (fun (ε-regex-iso w) p)) = _
+    snd (fst (fun (ε-regex-iso w) p)) = refl
+    snd (fun (ε-regex-iso w) p) = ε-cons refl (nil refl p)
     inv (ε-regex-iso w) p = elimEmptyNFA (p .snd)
-    rightInv (ε-regex-iso w) = {!!}
+    rightInv (ε-regex-iso w) b =
+      ΣPathP ((ΣPathP ((sym (b .fst .snd)) ,
+       isSet→SquareP (λ _ _ → isSetLift isSetFin) _ _ _ _)) , {!b .snd!})
     leftInv (ε-regex-iso w) = {!!}
 
     literal-P : ∀ {c} → (q q' : (literalNFA c) .Q .fst) → Grammar
@@ -377,7 +402,7 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         the-ε-cons-case
         p
         where
-        the-nil-case : ∀ {q} → ParseTransformer ε-grammar (literal-P q q)
+        the-nil-case : ∀ {q} → ParseTransformer ε-grammar (literal-P {c} q q)
         the-nil-case {lift fzero} p = p
         the-nil-case {lift (fsuc fzero)} p = p
 
@@ -400,22 +425,26 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
     literal-regex-iso : ∀ {c} →
       isStronglyEquivalent (literal c) (Parses (literalNFA c))
-    fun (literal-regex-iso {c} w) p = {!!}
+    fst (fst (fun (literal-regex-iso {c} w) p)) = lift (inr (inl tt))
+    snd (fst (fun (literal-regex-iso {c} w) p)) = refl
+    snd (fun (literal-regex-iso {c} w) p) =
+      cons refl ((([ c ] , []) , p) , (refl , (nil refl refl)))
     inv (literal-regex-iso {c} w) p =
        elimLiteralNFA {q = lift fzero} {q' = lift (fsuc fzero)} {c = c}
          (transport (cong (λ a → NFATrace _ _ a _) (p .fst .snd)) (p .snd))
-    rightInv (literal-regex-iso {c} w) = {!!}
+    rightInv (literal-regex-iso {c} w) (a , nil x x₁) = {!!}
+    rightInv (literal-regex-iso {c} w) (a , cons x x₁) = {!!}
     leftInv (literal-regex-iso {c} w) = {!!}
 
-  isStronglyEquivalent-NFA-Regex : (g : RegularGrammar) →
-    isStronglyEquivalent
-      (RegularGrammar→Grammar g)
-      (Parses (NFAfromRegularGrammar g))
-  isStronglyEquivalent-NFA-Regex GrammarDefs.ε-Reg = regex-isos.ε-regex-iso
-  isStronglyEquivalent-NFA-Regex (GrammarDefs.literalReg x) w = {!!}
-  isStronglyEquivalent-NFA-Regex (g GrammarDefs.⊗Reg g₁) w = {!!}
-  isStronglyEquivalent-NFA-Regex (g GrammarDefs.⊕Reg g₁) w = {!!}
-  isStronglyEquivalent-NFA-Regex (GrammarDefs.KL*Reg g) w = {!!}
+    isStronglyEquivalent-NFA-Regex : (g : RegularGrammar) →
+      isStronglyEquivalent
+        (RegularGrammar→Grammar g)
+        (Parses (NFAfromRegularGrammar g))
+    isStronglyEquivalent-NFA-Regex GrammarDefs.ε-Reg = ε-regex-iso
+    isStronglyEquivalent-NFA-Regex (GrammarDefs.literalReg x) w = {!!}
+    isStronglyEquivalent-NFA-Regex (g GrammarDefs.⊗Reg g₁) w = {!!}
+    isStronglyEquivalent-NFA-Regex (g GrammarDefs.⊕Reg g₁) w = {!!}
+    isStronglyEquivalent-NFA-Regex (GrammarDefs.KL*Reg g) w = {!!}
 
 
 open NFADefs
