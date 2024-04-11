@@ -1,4 +1,4 @@
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --lossy-unification -WnoUnsupportedIndexedMatch #-}
 module Semantics.NFA where
 
 
@@ -357,6 +357,55 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     inv (ε-regex-iso w) p = elimEmptyNFA (p .snd)
     rightInv (ε-regex-iso w) = {!!}
     leftInv (ε-regex-iso w) = {!!}
+
+    literal-P : ∀ {c} → (q q' : (literalNFA c) .Q .fst) → Grammar
+    literal-P (lift fzero) (lift fzero) = ε-grammar
+    literal-P {c} (lift fzero) (lift (fsuc fzero)) = literal c
+    literal-P (lift (fsuc fzero)) (lift fzero) = ⊥-grammar
+    literal-P (lift (fsuc fzero)) (lift (fsuc fzero)) = ε-grammar
+
+    elimLiteralNFA :
+      ∀ {q}{q'}{c} →
+      ParseTransformer
+        (NFATrace (literalNFA c) q q') (literal-P {c} q q')
+    elimLiteralNFA {q}{q'}{c} p =
+      elimNFA
+        (literalNFA c)
+        literal-P
+        the-nil-case
+        the-cons-case
+        the-ε-cons-case
+        p
+        where
+        the-nil-case : ∀ {q} → ParseTransformer ε-grammar (literal-P q q)
+        the-nil-case {lift fzero} p = p
+        the-nil-case {lift (fsuc fzero)} p = p
+
+        the-cons-case : ∀ {q}{q'} → (lift fzero ≡ q) →
+          ParseTransformer
+            (literal c ⊗ literal-P (lift (fsuc fzero)) q') (literal-P q q')
+        the-cons-case {lift fzero} {lift (fsuc fzero)} p par =
+          (par .fst .snd ∙
+            cong (λ a → _ ++ a) (par .snd .snd) ∙
+            ++-unit-r (par .fst .fst .fst)) ∙
+            par .snd .fst
+        the-cons-case {lift (fsuc fzero)} {lift (fsuc fzero)} p par =
+          ⊥.rec (fzero≠fone (cong lower p))
+
+        the-ε-cons-case : ∀ {q}{q'}{t} → (literalNFA c) .ε-src t ≡ q →
+          ParseTransformer
+            (literal-P ((literalNFA c) .ε-dst t) q')
+            (literal-P q q')
+        the-ε-cons-case {t = t} = ⊥.rec (lower t)
+
+    literal-regex-iso : ∀ {c} →
+      isStronglyEquivalent (literal c) (Parses (literalNFA c))
+    fun (literal-regex-iso {c} w) p = {!!}
+    inv (literal-regex-iso {c} w) p =
+       elimLiteralNFA {q = lift fzero} {q' = lift (fsuc fzero)} {c = c}
+         (transport (cong (λ a → NFATrace _ _ a _) (p .fst .snd)) (p .snd))
+    rightInv (literal-regex-iso {c} w) = {!!}
+    leftInv (literal-regex-iso {c} w) = {!!}
 
   isStronglyEquivalent-NFA-Regex : (g : RegularGrammar) →
     isStronglyEquivalent
