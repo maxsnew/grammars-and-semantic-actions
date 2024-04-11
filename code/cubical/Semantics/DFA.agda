@@ -105,13 +105,12 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       ParseTransformer
         (KL* ⊕Σ₀)
         h
-    run' p =
+    run' =
       fold*l
         ⊕Σ₀
         h
         mt-case
         cons-case
-        p
       where
 
       mt-case : ParseTransformer ε-grammar h
@@ -119,7 +118,8 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       fst (snd (mt-case p)) = nil refl p
       snd (snd (mt-case p)) =
         decRec
-          (λ acc → inl (DecProp-grammar-yes (D .isAcc (D .init)) _ _ acc _ _))
+          (λ acc → inl (DecProp-grammar-yes (D .isAcc (D .init))
+            _ _ acc _ _))
           (λ ¬acc → inr (DecProp-grammar-yes
             (negateDecProp (D .isAcc (D .init)))
             _ _ ¬acc _ _))
@@ -209,3 +209,28 @@ module examples where
 
   ex4 : decideDFA D [] ≡ true
   ex4 = refl
+
+
+ {--       0
+ -- 0  --------> 1
+ --    <--------
+ --        0
+ -- and self loops for 1. state 1 is acc
+ --
+ --}
+  D' : DFA
+  Q D' = (Fin 2) , isFinSetFin
+  init D' = inl _
+  isAcc D' x =
+    ((x ≡ fsuc fzero) , isSetFin x (fsuc fzero)) ,
+    discreteFin x (fsuc fzero)
+  δ D' fzero fzero = fromℕ 1
+  δ D' fzero (fsuc fzero) = fromℕ 0
+  δ D' (fsuc fzero) fzero = fromℕ 0
+  δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
+
+  s : String
+  s = fsuc fzero ∷ fzero ∷ []
+
+  ex5 : decideDFA D' s ≡ true
+  ex5 = refl

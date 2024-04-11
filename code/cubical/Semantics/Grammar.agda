@@ -304,6 +304,7 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         (sym (cong g (x .fst .snd)))
         (x .snd .snd (x .fst .fst .fst) (x .snd .fst))
 
+
     module _
       (h : Grammar)
       where
@@ -317,6 +318,19 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         p⊗
           (((w , w') , refl) ,
            (x , (fold*r pε p⊗ g*parse)))
+
+  elimDecProp-PT :
+    (d : DecProp ℓ) → (g : Grammar) →
+    (∀ w → d .fst .fst → g w) →
+    (∀ w → ¬ d .fst .fst → g w) →
+    ParseTransformer
+      (DecProp-grammar d ⊤-grammar ⊥-grammar)
+      g
+  elimDecProp-PT d g ifyes ifno {w} p =
+    decRec
+    (ifyes w) (ifno w)
+      (d .snd)
+
   module _
     (g : Grammar)
     (h : Grammar)
