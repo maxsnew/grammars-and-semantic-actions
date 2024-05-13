@@ -12,6 +12,12 @@
 \usepackage{svg}
 \usepackage{ulem}
 \usepackage{cancel}
+\usepackage{wrapfig}
+\usepackage{fancyvrb}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{stmaryrd}
+\usepackage{amsmath}
 
 \usepackage{pifont}
 \newcommand{\cmark}{\ding{51}}
@@ -37,8 +43,17 @@
 \usepackage{mathpartir}
 \newcommand{\themename}{\textbf{\textsc{metropolis}}\xspace}
 
+\newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
+\newcommand{\cat}[1]{\mathbf{#1}}
+\newcommand{\lto}{\multimap}
+\newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
+\newcommand{\String}{\Sigma^{*}}
 \newcommand{\Set}{\mathbf{Set}}
-\newcommand{\String}{\mathbf{String}}
+\newcommand{\Gr}{\mathbf{Gr}}
+\newcommand{\Type}{\mathbf{Type}}
+\newcommand{\Prop}{\mathbf{Prop}}
+\newcommand{\Bool}{\mathbf{Bool}}
+\newcommand{\nat}{\mathbb{N}}
 \newcommand{\simulsubst}[2]{#1\{#2\}}
 \newcommand{\subst}[3]{\simulsubst {#1} {#2/#3}}
 \newcommand{\letin}[3]{\mathsf{let}\, #1 = #2 \, \mathsf{in}\, #3}
@@ -51,8 +66,8 @@
 \newcommand{\apptol}[2]{#1 \mathop{{}^{\tol}} #2}
 \newcommand{\PiTy}[3]{\Pi #1 : #2.\, #3}
 \newcommand{\SigTy}[3]{\Sigma #1 : #2.\, #3}
-\newcommand{\LinPiTy}[3]{\widebar\Pi #1 : #2.\, #3}
-\newcommand{\LinSigTy}[3]{\widebar\Sigma #1 : #2.\, #3}
+\newcommand{\LinPiTy}[3]{\overline\Pi #1 : #2.\, #3}
+\newcommand{\LinSigTy}[3]{\overline\Sigma #1 : #2.\, #3}
 \newcommand{\amp}{\mathrel{\&}}
 \newcommand{\GrTy}{\mathsf{Gr}}
 
@@ -151,194 +166,191 @@
 
 \end{frame}
 
-% \begin{frame}{Compilers: Do They Work?}
-%   \begin{center}
-%   \begin{tikzpicture}[node distance=3.7cm]
-%     \node (sourceCode) [visible on=<2->] {\includegraphics[width=2cm]{figures/srccode.png}};
-%     \node (srcLabel) [above=-0.3cm of sourceCode,visible on=<2->] {Source Code};
-%     \node (compiler) [right of=sourceCode, visible on=<1->] {\includegraphics[width=1cm]{figures/c.png}};
-%     \node (compilerLabel) [above=-0.3cm of compiler, visible on=<1->] {C Compiler};
-%     \node (outputCode) [right of=compiler, visible on=<3->] {\includegraphics[width=2.5cm]{figures/binary.png}};
-%     \node (outputLabel) [above=-0.55cm of outputCode, visible on=<3->] {Machine Code};
+\begin{frame}{Compilers: Do They Work?}
+  \begin{center}
+  \begin{tikzpicture}[node distance=3.7cm]
+    \node (sourceCode) [visible on=<2->] {\includegraphics[width=2cm]{figures/srccode.png}};
+    \node (srcLabel) [above=-0.3cm of sourceCode,visible on=<2->] {Source Code};
+    \node (compiler) [right of=sourceCode, visible on=<1->] {\includegraphics[width=1cm]{figures/c.png}};
+    \node (compilerLabel) [above=-0.3cm of compiler, visible on=<1->] {C Compiler};
+    \node (outputCode) [right of=compiler, visible on=<3->] {\includegraphics[width=2.5cm]{figures/binary.png}};
+    \node (outputLabel) [above=-0.55cm of outputCode, visible on=<3->] {Machine Code};
 
 
-%     \draw [->, thick, visible on=<2->, shorten >= 0.6cm] (sourceCode) -- (compiler);
-%     \draw [->, thick, visible on=<3->, shorten <= 0.6cm] (compiler) -- (outputCode);
-%     \node[draw,line width=2pt, rounded corners=5pt, fit=(compiler)(compilerLabel)] {};
+    \draw [->, thick, visible on=<2->, shorten >= 0.6cm] (sourceCode) -- (compiler);
+    \draw [->, thick, visible on=<3->, shorten <= 0.6cm] (compiler) -- (outputCode);
+    \node[draw,line width=2pt, rounded corners=5pt, fit=(compiler)(compilerLabel)] {};
 
-%     \node (front) [visible on=<4->, below=0.5cm of sourceCode] {\Large Front};
-%     \node (frontDesc) [visible on=<5->, below=0.2cm of front, xshift=1cm]
-%     {
-%       \begin{minipage}{5cm}
-%         \footnotesize
-%       \begin{itemize}
-%         \setlength\itemsep{-0.5em}
-%         \item Parsing
-%         \item Lexing
-%         \item Typechecking
-%       \end{itemize}
-%       \end{minipage}
-%     };
-%     \node (frontbug) [below=1.5cm of front,visible on=<8->] {\color{magenta} 0 GCC, 10 LLVM};
-%     \node (middle) [right of=front, visible on=<4->] {\Large Middle};
-%     \node (middleDesc) [visible on=<6->, below=0.2cm of middle, xshift=0.8cm]
-%     {
-%       \begin{minipage}{5cm}
-%         \footnotesize
-%       \begin{itemize}
-%         \setlength\itemsep{-0.5em}
-%         \item IR Optimizations
-%       \end{itemize}
-%       \end{minipage}
-%     };
-%     \node (middlebug) [below=1.5cm of middle,visible on=<9->] {\color{magenta} 49 GCC, 75 LLVM};
-%     \node (back) [right of=middle, visible on=<4->] {\Large Back};
-%     \node (dummy) [below=0.4 of middle]{};
-%     \node (backDesc) [visible on=<7->, below=0.2cm of back, xshift=1cm]
-%     {
-%       \begin{minipage}{5cm}
-%         \footnotesize
-%       \begin{itemize}
-%         \setlength\itemsep{-0.5em}
-%         \item Assembly Generation
-%         \item Register Allocation
-%       \end{itemize}
-%       \end{minipage}
-%     };
-%     \node (backbug) [below=1.5cm of back,visible on=<10->] {\color{magenta} 17 GCC, 74 LLVM};
+    \node (front) [visible on=<4->, below=0.5cm of sourceCode] {\Large Front};
+    \node (frontDesc) [visible on=<5->, below=0.2cm of front, xshift=1cm]
+    {
+      \begin{minipage}{5cm}
+        \footnotesize
+      \begin{itemize}
+        \setlength\itemsep{-0.5em}
+        \item Parsing
+        \item Lexing
+        \item Typechecking
+      \end{itemize}
+      \end{minipage}
+    };
+    \node (frontbug) [below=1.5cm of front,visible on=<8->] {\color{magenta} 0 GCC, 10 LLVM};
+    \node (middle) [right of=front, visible on=<4->] {\Large Middle};
+    \node (middleDesc) [visible on=<6->, below=0.2cm of middle, xshift=0.8cm]
+    {
+      \begin{minipage}{5cm}
+        \footnotesize
+      \begin{itemize}
+        \setlength\itemsep{-0.5em}
+        \item IR Optimizations
+      \end{itemize}
+      \end{minipage}
+    };
+    \node (middlebug) [below=1.5cm of middle,visible on=<9->] {\color{magenta} 49 GCC, 75 LLVM};
+    \node (back) [right of=middle, visible on=<4->] {\Large Back};
+    \node (dummy) [below=0.4 of middle]{};
+    \node (backDesc) [visible on=<7->, below=0.2cm of back, xshift=1cm]
+    {
+      \begin{minipage}{5cm}
+        \footnotesize
+      \begin{itemize}
+        \setlength\itemsep{-0.5em}
+        \item Assembly Generation
+        \item Register Allocation
+      \end{itemize}
+      \end{minipage}
+    };
+    \node (backbug) [below=1.5cm of back,visible on=<10->] {\color{magenta} 17 GCC, 74 LLVM};
 
-%     \node (citation) [below=2cm of middle, visible on=<8->] {Bug Finding \bf (Yang
-%       et al., 2011)};
+    \node (citation) [below=2cm of middle, visible on=<8->] {Bug Finding \bf (Yang
+      et al., 2011)};
 
-%     \draw [dashed, gray, visible on=<4->, shorten >= 0.3cm, shorten <= 0.7cm] (compiler) -- (front);
-%     \draw [dashed, gray, visible on=<4->, shorten >= 0.3cm, shorten <= 0.7cm] (compiler) -- (back);
+    \draw [dashed, gray, visible on=<4->, shorten >= 0.3cm, shorten <= 0.7cm] (compiler) -- (front);
+    \draw [dashed, gray, visible on=<4->, shorten >= 0.3cm, shorten <= 0.7cm] (compiler) -- (back);
 
-%     \draw [->, thick, visible on=<4->, shorten >= 0.3cm, shorten <= 0.3cm] (front) -- (middle);
-%     \draw [->, thick, visible on=<4->, shorten <= 0.3cm, shorten >= 0.3cm] (middle) -- (back);
-%     \node[draw,line width=2pt, visible on=<4->, rounded corners=2pt, fit=(front)] {};
-%     \node[draw,line width=2pt, visible on=<4->, rounded corners=2pt, fit=(middle)] {};
-%     \node[draw,line width=2pt, visible on=<4->, rounded corners=2pt, fit=(back)] {};
-%     % \node[draw,line width=2pt, visible on=<8->, rounded corners=2pt, color=red,
-%       % fit=(middle)(back)(dummy), inner xsep =0.4cm, inner ysep =0.5cm,
-%       % label={[name=l, visible on=<8->] \color{red} Verified}] {};
-%   \end{tikzpicture}
+    \draw [->, thick, visible on=<4->, shorten >= 0.3cm, shorten <= 0.3cm] (front) -- (middle);
+    \draw [->, thick, visible on=<4->, shorten <= 0.3cm, shorten >= 0.3cm] (middle) -- (back);
+    \node[draw,line width=2pt, visible on=<4->, rounded corners=2pt, fit=(front)] {};
+    \node[draw,line width=2pt, visible on=<4->, rounded corners=2pt, fit=(middle)] {};
+    \node[draw,line width=2pt, visible on=<4->, rounded corners=2pt, fit=(back)] {};
+    % \node[draw,line width=2pt, visible on=<8->, rounded corners=2pt, color=red,
+      % fit=(middle)(back)(dummy), inner xsep =0.4cm, inner ysep =0.5cm,
+      % label={[name=l, visible on=<8->] \color{red} Verified}] {};
+  \end{tikzpicture}
 
-%   \vspace{-1cm}
+  \vspace{-1cm}
 
-%   \begin{tikzpicture}[node distance=3.5cm]
-%   \end{tikzpicture}
-%   \end{center}
-% \end{frame}
+  \begin{tikzpicture}[node distance=3.5cm]
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
 
-% \begin{frame}{Verified Compilers}
-%   \begin{center}
-%   {\Large Avoid bugs through verification!}
+\begin{frame}{Verified Compilers}
+  \begin{center}
+  {\Large Avoid bugs through verification!}
 
-%   \onslide<2->{
-%   \begin{tikzpicture}
-%   \node (clogo) {\includegraphics[width=2cm]{figures/c.png}};
-%   \node[below=0cm of clogo] (c) {CompCert \textbf{(Leroy et al., 2009)}};
-%     \node (compCertDesc) [below=0cm of c]
-%     {
-%       \begin{minipage}{3cm}
-%       \begin{itemize}
-%         \setlength\itemsep{-0.5em}
-%         \item<2-> Verified in Coq
-%         \item<3-> 100,000 lines
-%       \end{itemize}
-%       \end{minipage}
-%     };
+  \onslide<2->{
+  \begin{tikzpicture}
+  \node (clogo) {\includegraphics[width=2cm]{figures/c.png}};
+  \node[below=0cm of clogo] (c) {CompCert \textbf{(Leroy et al., 2009)}};
+    \node (compCertDesc) [below=0cm of c]
+    {
+      \begin{minipage}{3cm}
+      \begin{itemize}
+        \setlength\itemsep{-0.5em}
+        \item<2-> Verified in Coq
+        \item<3-> 100,000 lines
+      \end{itemize}
+      \end{minipage}
+    };
 
-%   \node[right=4cm of clogo] (cakelogo) {\includegraphics[width=1.5cm]{figures/cakeml.png}};
-%   \node[right=1.5cm of c] (cake) {CakeML \textbf{(Kumar et al., 2014)}};
-%     \node (cakeDesc) [below=0cm of cake]
-%     {
-%       \begin{minipage}{4cm}
-%       \begin{itemize}
-%         \setlength\itemsep{-0.5em}
-%         \item<2-> Verified in HOL4
-%       \end{itemize}
-%       \end{minipage}
-%     };
+  \node[right=4cm of clogo] (cakelogo) {\includegraphics[width=1.5cm]{figures/cakeml.png}};
+  \node[right=1.5cm of c] (cake) {CakeML \textbf{(Kumar et al., 2014)}};
+    \node (cakeDesc) [below=0cm of cake]
+    {
+      \begin{minipage}{4cm}
+      \begin{itemize}
+        \setlength\itemsep{-0.5em}
+        \item<2-> Verified in HOL4
+      \end{itemize}
+      \end{minipage}
+    };
 
-%   \end{tikzpicture}}
-%   \end{center}
-
-
-%   % \vspace{0.2cm}
-
-%   % \onslide<9->{The frontend was \textbf{not} verified until Version 2.3}
-%   % \begin{itemize}
-%   %   \item<10-> Generated by Menhir \pause
-%   %   \item<10-> Validated after-the-fact \textbf{(Jourdan et al., 2012)}
-%   % \end{itemize}
-% \end{frame}
-
-% \begin{frame}{CompCert: A Case Study in Verified Compilation}
-%   \begin{center}
-%   \begin{tikzpicture}[node distance=3.7cm]
-%     \node (sourceCode) [visible on=<1->] {\includegraphics[width=2cm]{figures/srccode.png}};
-%     \node (srcLabel) [above=-0.3cm of sourceCode,visible on=<1->] {Source Code};
-%     \node (compiler) [right of=sourceCode, visible on=<1->] {\includegraphics[width=1cm]{figures/c.png}};
-%     \node (compilerLabel) [above=-0.3cm of compiler, visible on=<1->] {CompCert};
-%     \node (outputCode) [right of=compiler, visible on=<1->] {\includegraphics[width=2.5cm]{figures/binary.png}};
-%     \node (outputLabel) [above=-0.55cm of outputCode, visible on=<1->] {Machine Code};
+  \end{tikzpicture}}
+  \end{center}
 
 
-%     \draw [->, thick, visible on=<1->, shorten >= 0.6cm] (sourceCode) -- (compiler);
-%     \draw [->, thick, visible on=<1->, shorten <= 0.6cm] (compiler) -- (outputCode);
-%     \node[draw,line width=2pt, rounded corners=5pt, fit=(compiler)(compilerLabel)] {};
+  % \vspace{0.2cm}
 
-%     \node (front) [visible on=<1->, below=0.5cm of sourceCode] {\Large Front};
-%     \node (frontbug) [below=1cm of front,visible on=<2->] {\color{magenta} 0 GCC, 10 LLVM};
-%     \node (frontbugc) [below=0cm of frontbug,visible on=<5->] {\color{cyan} 6 CompCert???};
-%     \node (middle) [right of=front, visible on=<1->] {\Large Middle};
-%     \node (middlebug) [below=1cm of middle,visible on=<2->] {\color{magenta} 49 GCC, 75 LLVM};
-%     \node (middlebugc) [below=0cm of middlebug,visible on=<4->] {\color{cyan} 0 CompCert};
-%     \node (back) [right of=middle, visible on=<1->] {\Large Back};
-%     \node (dummy) [below=0.4 of middle]{};
-%     \node (backbug) [below=1cm of back,visible on=<2->] {\color{magenta} 17 GCC, 74 LLVM};
-%     \node (backbugc) [below=0cm of backbug,visible on=<3->] {\color{cyan} 0 CompCert};
+  % \onslide<9->{The frontend was \textbf{not} verified until Version 2.3}
+  % \begin{itemize}
+  %   \item<10-> Generated by Menhir \pause
+  %   \item<10-> Validated after-the-fact \textbf{(Jourdan et al., 2012)}
+  % \end{itemize}
+\end{frame}
 
-%     \node (citation) [below=2cm of middle, visible on=<2->] {\bf (Yang
-%       et al., 2011)};
+\begin{frame}{CompCert: A Case Study in Verified Compilation}
+  \begin{center}
+  \begin{tikzpicture}[node distance=3.7cm]
+    \node (sourceCode) [visible on=<1->] {\includegraphics[width=2cm]{figures/srccode.png}};
+    \node (srcLabel) [above=-0.3cm of sourceCode,visible on=<1->] {Source Code};
+    \node (compiler) [right of=sourceCode, visible on=<1->] {\includegraphics[width=1cm]{figures/c.png}};
+    \node (compilerLabel) [above=-0.3cm of compiler, visible on=<1->] {CompCert};
+    \node (outputCode) [right of=compiler, visible on=<1->] {\includegraphics[width=2.5cm]{figures/binary.png}};
+    \node (outputLabel) [above=-0.55cm of outputCode, visible on=<1->] {Machine Code};
 
-%     \draw [dashed, gray, visible on=<1->, shorten >= 0.3cm, shorten <= 0.7cm] (compiler) -- (front);
-%     \draw [dashed, gray, visible on=<1->, shorten >= 0.3cm, shorten <= 0.7cm] (compiler) -- (back);
 
-%     \draw [->, thick, visible on=<1->, shorten >= 0.3cm, shorten <= 0.3cm] (front) -- (middle);
-%     \draw [->, thick, visible on=<1->, shorten <= 0.3cm, shorten >= 0.3cm] (middle) -- (back);
-%     \node[draw,line width=2pt, visible on=<1->, rounded corners=2pt, fit=(front)] {};
-%     \node[draw,line width=2pt, visible on=<1->, rounded corners=2pt, fit=(middle)] {};
-%     \node[draw,line width=2pt, visible on=<1->, rounded corners=2pt, fit=(back)] {};
-%     \node[draw,line width=2pt, visible on=<6->, rounded corners=2pt, color=cyan,
-%       fit=(middle)(back), inner xsep =0.5cm, inner ysep =0.5cm] (verifBox) {};
-%     \node[below=0.1cm, inner sep=0pt, visible on=<6->] at (verifBox.south) {\color{cyan} Verified};
-%   \end{tikzpicture}
-%   \end{center}
+    \draw [->, thick, visible on=<1->, shorten >= 0.6cm] (sourceCode) -- (compiler);
+    \draw [->, thick, visible on=<1->, shorten <= 0.6cm] (compiler) -- (outputCode);
+    \node[draw,line width=2pt, rounded corners=5pt, fit=(compiler)(compilerLabel)] {};
 
-% \end{frame}
+    \node (front) [visible on=<1->, below=0.5cm of sourceCode] {\Large Front};
+    \node (frontbug) [below=1cm of front,visible on=<2->] {\color{magenta} 0 GCC, 10 LLVM};
+    \node (frontbugc) [below=0cm of frontbug,visible on=<5->] {\color{blue} 6 CompCert???};
+    \node (middle) [right of=front, visible on=<1->] {\Large Middle};
+    \node (middlebug) [below=1cm of middle,visible on=<2->] {\color{magenta} 49 GCC, 75 LLVM};
+    \node (middlebugc) [below=0cm of middlebug,visible on=<4->] {\color{blue} 0 CompCert};
+    \node (back) [right of=middle, visible on=<1->] {\Large Back};
+    \node (dummy) [below=0.4 of middle]{};
+    \node (backbug) [below=1cm of back,visible on=<2->] {\color{magenta} 17 GCC, 74 LLVM};
+    \node (backbugc) [below=0cm of backbug,visible on=<3->] {\color{blue} 0 CompCert};
 
-% \begin{frame}{Validation of the CompCert Parser}
-%   CompCert parser rewritten and validated \textbf{(Jourdan et al, 2012)}
-%   \begin{itemize}
-%     \item<+-> Given a grammar and an automaton, validate that they agree
-%     \item<+-> Validator proven correct in Coq
-%     \item<+-> Generate a C parser with Menhir, then check correctness
-%   \end{itemize}
+    \node (citation) [below=2cm of middle, visible on=<2->] {\bf (Yang
+      et al., 2011)};
 
-%   \onslide<+->{Post-hoc verification takes time
-%   \begin{itemize}
-%     \item<+-> Requires more user input
-%     \item<+-> Harder to generalize
-%   \end{itemize}
-%   }
-% \end{frame}
+    \draw [dashed, gray, visible on=<1->, shorten >= 0.3cm, shorten <= 0.7cm] (compiler) -- (front);
+    \draw [dashed, gray, visible on=<1->, shorten >= 0.3cm, shorten <= 0.7cm] (compiler) -- (back);
 
-% TODO
-% Parsing is ubiquitous and shows up in more than just parsers
-% Show more about the universal application of parsing to computing
-% and use CompCert as a further motivating example
+    \draw [->, thick, visible on=<1->, shorten >= 0.3cm, shorten <= 0.3cm] (front) -- (middle);
+    \draw [->, thick, visible on=<1->, shorten <= 0.3cm, shorten >= 0.3cm] (middle) -- (back);
+    \node[draw,line width=2pt, visible on=<1->, rounded corners=2pt, fit=(front)] {};
+    \node[draw,line width=2pt, visible on=<1->, rounded corners=2pt, fit=(middle)] {};
+    \node[draw,line width=2pt, visible on=<1->, rounded corners=2pt, fit=(back)] {};
+    \node[draw,line width=2pt, visible on=<6->, rounded corners=2pt, color=blue,
+      fit=(middle)(back), inner xsep =0.5cm, inner ysep =0.5cm] (verifBox) {};
+    \node[below=0.1cm, inner sep=0pt, visible on=<6->] at (verifBox.south) {\color{blue} Verified};
+  \end{tikzpicture}
+  \end{center}
+
+\end{frame}
+
+\begin{frame}{Validation of the CompCert Parser}
+  CompCert parser rewritten and validated \textbf{(Jourdan et al, 2012)}
+  \begin{itemize}
+    \item<+-> Given a grammar and an automaton, validate that they agree
+    \item<+-> Validator proven correct in Coq
+    \item<+-> Generate a C parser with Menhir, then check correctness
+  \end{itemize}
+
+  \onslide<+->{
+  Unclear what we do if the Menhir output is incorrect
+  \begin{itemize}
+    \item<+-> I want a verified parser generator
+    \item<+-> I want a more general approach too
+  \end{itemize}
+  }
+  \todoin{this slide is also shit}
+\end{frame}
 
 \begin{frame}{Contributions of This Project}
   \begin{alertblock}{Goals}
@@ -365,16 +377,23 @@
   }
 \end{frame}
 
-% \begin{frame}{Results}
-%   \begin{itemize}
-%     \item<+-> We have a parser term for DFAs formalized in Agda
-%     \item<+-> We want a parser for regular expressions
-%     \item<+-> Prove that DFAs and regular expressions are equivalent to extend the DFA parser to a regular expression parser
-%   \end{itemize}
-% \end{frame}
+\begin{frame}{Implementation and Results (WIP)}
+  Implement the type theory by shallowly embedding it in Agda
+
+  Build verified parsers as terms in the embedded language
+
+  \begin{itemize}
+    \item<+-> We have a parser term for DFAs formalized in Agda
+    \item<+-> We want a parser for regular expressions
+    \item<+-> Prove that DFAs and regular expressions are equivalent to extend the DFA parser to a regular expression parser
+        \begin{itemize}
+            \item Half of this proof is formalized as well
+        \end{itemize}
+  \end{itemize}
+  \todoin{Rephrase this slide to sound better}
+\end{frame}
 
 \section{Formal Grammars}
-
 
 \begin{frame}{Grammars as Functions}
   A \emph{grammar} $g$ is a function $g : \Sigma^{*} \to \Set$
@@ -448,6 +467,7 @@
       label={[name=l] $h(aa)$}, visible on=<6->] {};
 \end{tikzpicture}
   \end{minipage}%
+  \todoin{this right example is wrong}
 \end{frame}
 
 \begin{frame}{Formal Languages and Equivalence}
@@ -464,6 +484,7 @@
   \end{itemize}
 
   \onslide<5->{i.e. $a$ and $a \oplus a$ are weakly, but not strongly, equivalent}
+  \todoin{a + b and b + a}
 \end{frame}
 
 \begin{frame}{Grammars and Their Automata}
@@ -480,35 +501,33 @@
     \end{tabular}
   \end{center}
   \end{block}
+
+  Use regular grammars as a motivating example throughout this talk
 \end{frame}
 
-\begin{frame}{A Finite Automaton}
+\begin{frame}{A Nondeterministic Finite Automaton}
   $g = a^{*} \otimes (b \oplus c)$
 
   \only<1-21>{\alert<21>{$\alert<7>{w} = \alert<8-10>{a} \alert<11-13>{a} \alert<14-16>{b}
-    \only<18-19>{\otimes \alert{\varepsilon}}$} \quad \only<21>{ {\Large \color{cyan} \cmark}}}
-  \only<22->{\alert<30>{$ w = \alert<23-25>{a} \alert<26-28>{b} \alert<29>{b}$}
-     \quad \only<30>{ {\Large \color{magenta} \xmark}}}
+    \only<18-19>{\otimes \alert{\varepsilon}}$} \quad \only<21>{ {\Large \color{blue} \cmark}}}
 
   \onslide<3->{
   \begin{center}
   \begin{tikzpicture}[node distance = 25mm ]
     \Large
     \alert<4,8>{\node (0) {start};}
-    \alert<4,8,10-11,13-14,23,25,26>{\node[state, right of=0] (1) {$q_{1}$};}
+    \alert<4,8,10-11,13-14>{\node[state, right of=0] (1) {$q_{1}$};}
     \alert<5,20>{\node[state, right of=1, accepting] (2) {$q_{2}$};}
-    \alert<16-17,28,29>{\node[state, below of=1] (3) {$q_{3}$};}
+    \alert<16-17>{\node[state, below of=1] (3) {$q_{3}$};}
 
-    \alert<15,27>{\draw[->] (1) edge[left] node{$b$} (3);}
+    \alert<15>{\draw[->] (1) edge[left] node{$b$} (3);}
     \draw[->] (1) edge[above] node{$c$} (2);
-    \alert<9,12,24>{\draw[->] (1) edge[loop above] node{$a$} (1);}
+    \alert<9,12>{\draw[->] (1) edge[loop above] node{$a$} (1);}
     \alert<19>{\draw[->] (3) edge[below] node{$\varepsilon$} (2);}
     \alert<4,8>{\draw[->] (0) edge[above] node{} (1);}
   \end{tikzpicture}
   \end{center}}
 \end{frame}
-
-
 
 \section{Grammars as Types}
 
@@ -534,19 +553,356 @@
 \end{frame}
 
 \begin{frame}{Grammars as Types}
-  Types are \textbf{grammars}, and terms are \textbf{parse transformers}
+  (Linear) types are \textbf{grammars}, and (linear) terms are \textbf{parse transformers}
 
-  \begin{itemize}
-    \item Take inspiration from linear logic and separation logic
-    \item View the contetns of the string parsed as limited resources
-  \end{itemize}
-
-  \[
-    x : c, y : a, z : t \vdash (x, y, z) : c \otimes a \otimes t
-  \]
 \end{frame}
 
-\begin{frame}{Type Constructors}
+\begin{frame}{Separation Logic and Linear Logic Influence}
+  Separation logic
+  \begin{itemize}
+    \item<1-> Reason about disjoint heap regions (disjoint substrings)
+    \item<2-> Context extension concatentates resources
+  \end{itemize}
+  \onslide<2->{
+  \[
+    \inferrule
+    {\Delta \vdash x : g \\ \Delta' \vdash y : h}
+    {\Delta , \Delta' \vdash (x , y) : g \otimes h}
+  \]}
+
+  \onslide<3->{Ordered, linear type theory}
+  \begin{itemize}
+    \item<3-> Resource-sensitive reasoning
+    \item<3-> Using a linear resource consumes it, no duplication or discarding
+    \item<3-> i.e.\ characters appear as written, and in order
+  \end{itemize}
+  \begin{align*}
+    \onslide<4->{x : c, y : a, z : t & \vdash (x,y,z) : c \otimes a \otimes t} \\
+    \onslide<5->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (x,y,z) : a \otimes c \otimes t}} \\
+    \onslide<6->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (x,y,z) : c \otimes a \otimes t \otimes t}} \\
+    \onslide<7->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (x,y,z) : a \otimes t}} \\
+  \end{align*}
+\end{frame}
+
+\begin{frame}{Linear Type Constructors}
+  \begin{center}
+  \begin{tabular}{c c}
+    \textbf{Constructor} & \textbf{Syntax} \\
+    Empty Grammar & $\varepsilon$ \\
+    Literal & $c \in \Sigma$ \\
+    Concatenation & $g \otimes h$ \\
+    Disjunction & $g \oplus h$ \\
+    Conjunction & $g \amp h$ \\
+    Top & $\top$ \\
+    Bottom & $\bot$ \\
+    Least-fixed Point & $\mu x . g$ \\
+    Linear Functions & $g \lto h$ \\
+     & $g \tol h$ \\
+    LNL Dependent Types & $\LinPiTy {x} {X} {g}$ \\
+    & $\LinSigTy {x} {X} {g}$
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Fixed-point Operator}
+  A grammar must be recursive to describe an infinite language
+
+  \onslide<3->{
+    \[
+      \inferrule{\Delta \vdash e : A[\mu x . A / x]}{\Delta \vdash \mathsf{cons}~e : \mu x . A}
+    \]
+  }
+  \onslide<4->{
+    \[
+      g^{*} := \mu {\color{YellowOrange} x} . ({\color{blue}\varepsilon} \oplus ({\color{magenta} g} \otimes {\color{YellowOrange} x}))
+    \]
+  }
+  \onslide<5->{
+    \[
+      g^{*} \cong {\color{blue} \varepsilon} \oplus ({\color{magenta} g} \otimes {\color{YellowOrange} g^{*}})
+    \]
+  }
+  \onslide<6->{
+    Inductive data type with constructors,
+    \begin{itemize}
+      \item<6-> ${\color{blue} \bullet} \vdash \mathsf{nil} : g^{*}$
+      \item<6->
+            ${\color{magenta} x : g}, {\color{YellowOrange} y : g^{*}} \vdash \mathsf{cons}(x , y) : g^{*}$
+    \end{itemize}
+  }
+\end{frame}
+
+\begin{frame}{Kleene Star Elimination}
+  Constructors
+  \[
+    {\color{blue} \bullet \vdash \mathsf{nil} : g^{*}} \qquad {\color{magenta} x : g, y : g^{*} \vdash \mathsf{cons}(x , y) : g^{*}}
+  \]
+  \onslide<2->{
+  Eliminator
+  \[
+      \inferrule*[Right=$*$Elim]
+      {
+        {\color{blue} \bullet \vdash p_{\varepsilon} : h} \\
+        {\color{magenta} x : g, y : h \vdash p_{*} : h}
+      }
+      {p : g^{*} \vdash \mathsf{fold}(p_{\varepsilon}, p_{*})(p) : h}
+    \]
+  }
+  \onslide<3->{
+    \begin{exampleblock}{Example}
+      \[
+      \inferrule
+      {
+        \onslide<4->{        \bullet \vdash \mathsf{nil : (ab)^{*}}} \\
+        \onslide<5->{x : abab, y : (ab)^{*} \vdash p_{*} : (ab)^{*}}
+      }
+      {p : (abab)^{*} \vdash \mathsf{fold}(\mathsf{nil},p_{*})(p) : (ab)^{*}}
+      \]
+    \end{exampleblock}
+  }
+\end{frame}
+
+\section{Building a Parser Term}
+
+\begin{frame}{Defining a Parser}
+  \onslide<1->{\alert<1>{Input string $w$}} \qquad \onslide<2->{\alert<2>{Grammar $g$}}
+
+  \onslide<3->{
+  \begin{block}{\alert<3>{Parser Term}}
+    $$ \alert<4>{w : \Sigma^{*}} \vdash \alert<7>{\mathsf{parse}_{g}(w)} : \alert<5>{g} \oplus \alert<6>{\top} $$
+  \end{block}}
+
+  \onslide<8->{
+  \begin{exampleblock}{Example}
+    \begin{minipage}{.7\textwidth}
+    \onslide<8->{\alert<8>{$g = a \otimes (b \oplus c)$}}
+
+    \onslide<9->{\alert<9>{$w = ab$}}
+    \onslide<10->{$\longrightarrow \mathsf{parse}_{g}(w) = {\color{blue} \mathsf{inl}(p_{g})} : \alert<10>{g} \oplus \top$
+    \quad {\LARGE \color{blue} \cmark}}
+
+    \onslide<11->{\alert<11>{$w = ad$}}
+    \onslide<12->{$\longrightarrow \mathsf{parse}_{g}(w) = {\color{magenta} \mathsf{inr}(p_{\top})} : g \oplus \alert<12>{\top}$
+    \quad {\LARGE \color{magenta} \xmark}}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+      \begin{center}
+        \begin{tikzpicture}[%opacity=0.5,
+        treenode/.style = {shape=rectangle, rounded corners,
+          draw, align=center,
+          top color=white, bottom color=white!20},
+          line/.style={draw, -latex'},
+          edge from parent/.style={draw,-latex'},
+          level 1/.style={sibling distance=20mm, level distance=1cm},
+          level 2/.style={sibling distance=1cm, level distance=1cm},
+          scale = 0.7, visible on=<10->
+          ]
+        \node[treenode] (tree) {$\otimes$}
+          child {node[treenode] {$a$}}
+          child {node[treenode] {$\mathsf{inl}$}
+            child {node[treenode] {$b$}}}
+          ;
+
+        \node[above=0.1cm of tree, visible on=<10->] {$\color{blue} p_{g}$};
+        \end{tikzpicture}
+      \end{center}
+    \end{minipage}%
+  \end{exampleblock}}
+
+
+
+\end{frame}
+
+\begin{frame}{Automata as Grammars}
+  $g = a^{*} \otimes (b \oplus c)$
+
+  \onslide<2-21>{\alert<21>{$\alert<7>{w} = \alert<8-10>{a} \otimes  \alert<11-13>{a} \otimes \alert<14-16>{b}
+    \only<18-19>{\otimes \alert{\varepsilon}}$} \quad \only<21>{ {\Large \color{blue} \cmark}}}
+
+  \begin{center}
+  \begin{minipage}{.5\textwidth}
+  \onslide<3->{
+  \begin{tikzpicture}[node distance = 15mm, scale=0.4]
+    \alert<4,8>{\node (0) {start};}
+    \alert<4,8,10-11,13-14>{\node[state, right of=0] (1) {$q_{1}$};}
+    \alert<5,20>{\node[state, right of=1, accepting] (2) {$q_{2}$};}
+    \alert<16-17>{\node[state, below of=1] (3) {$q_{3}$};}
+
+    \alert<15>{\draw[->] (1) edge[left] node{$b$} (3);}
+    \draw[->] (1) edge[above] node{$c$} (2);
+    \alert<9,12>{\draw[->] (1) edge[loop above] node{$a$} (1);}
+    \alert<19>{\draw[->] (3) edge[below] node{$\varepsilon$} (2);}
+    \alert<4,8>{\draw[->] (0) edge[above] node{} (1);}
+  \end{tikzpicture}
+  }
+  \end{minipage}%
+  \begin{minipage}{.5\textwidth}
+    \onslide<4->{
+    Define a type of traces between two states
+
+    \onslide<4->{$$ \mathsf{Trace}(q_{1}, q_{2}) =$$
+    \begin{equation*}
+      \mu
+      \begin{pmatrix}
+        \alert<8,10,11,13,14>{g_{q_{1}}} := & \alert<9,12>{(a \otimes g_{q_{1}})} \\ & \oplus  ( c \otimes g_{q_{2}} ) \\ & \oplus \alert<15>{(b \otimes g_{q_{3}})} \\
+        \alert<20>{g_{q_{2}}} := & \alert<5,20>{\varepsilon} \\
+        \alert<16,17>{g_{q_{3}}} := & \alert<19>{g_{q_{2}}} \\
+      \end{pmatrix}. \alert<4>{\color<21>{blue} g_{q_{1}}}
+    \end{equation*}}
+    }
+  \end{minipage}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Accepting Traces of Automata}
+    \begin{minipage}{.5\textwidth}
+      \begin{tikzpicture}[node distance = 15mm, scale=0.4]
+        \node (0) {start};
+        \node[state, right of=0] (1) {$q_{1}$};
+        \node[state, right of=1, accepting] (2) {$q_{2}$};
+        \node[state, below of=1] (3) {$q_{3}$};
+
+        \draw[->] (1) edge[left] node{$b$} (3);
+        \draw[->] (1) edge[above] node{$c$} (2);
+        \draw[->] (1) edge[loop above] node{$a$} (1);
+        \draw[->] (3) edge[below] node{$\varepsilon$} (2);
+        \draw[->] (0) edge[above] node{} (1);
+      \end{tikzpicture}
+      \[ \mathsf{Trace}(\only<1>{q_{1}}\only<2->{\alert<2> {q_{2}}}, \only<1>{q_{2}}\only<2->{\alert<3>{q_{3}}}) \]
+      \begin{equation*}
+        \mu
+        \only<1>{
+        \begin{pmatrix}
+          g_{q_{1}} := & (a \otimes g_{q_{1}}) \\ & \oplus  ( c \otimes g_{q_{2}} ) \\ & \oplus (b \otimes g_{q_{3}}) \\
+          g_{q_{2}} := & \varepsilon \\
+          g_{q_{3}} := & g_{q_{2}} \\
+        \end{pmatrix}}\only<2->{
+        \begin{pmatrix}
+          g_{q_{1}} := & (a \otimes g_{q_{1}}) \\ & \oplus  ( c \otimes g_{q_{2}} ) \\ & \oplus (b \otimes g_{q_{3}}) \\
+          g_{q_{2}} := & \alert<4>{\bot} \\
+          g_{q_{3}} := & g_{q_{2}} \alert<3>{\oplus \varepsilon} \\
+        \end{pmatrix}
+        }. \only<1>{g_{q_{1}}}\only<2->{\alert<2>{g_{q_{2}}}}
+      \end{equation*}
+    \end{minipage}%
+    \begin{minipage}{.5\textwidth}
+      $Q$ a type containing the states of the automaton
+
+      \onslide<5->{
+      \[
+        \mathsf{AccTrace} := \overline{\sum_{\alert<7>{q : Q}}} (\alert<8>{\mathsf{Trace}(q_{1}, q)}~\&~\alert<9>{\mathsf{acc}(q)})
+      \]
+      }
+      \begin{itemize}
+        \item<6-> An accepting trace is a triple\dots
+        \begin{itemize}
+          \item<7-> \alert<7>{An end state}
+          \item<8-> \alert<8>{A trace starting at the initial state}
+          \item<9-> \alert<9>{A proof that the end state is accepting}
+        \end{itemize}
+      \end{itemize}
+    \end{minipage}%
+\end{frame}
+
+\begin{frame}{Determinism}
+  A \emph{deterministic} finite automaton (DFA) has no $\varepsilon$-transitions and for every state there is exactly one outgoing transition for each $c \in \Sigma$.
+
+   \begin{center}
+   \begin{tikzpicture}[node distance = 15mm, scale=0.4]
+        \node (0) {start};
+        \node[state, right of=0] (1) {$q_{1}$};
+        \node[state, right of=1, accepting] (2) {$q_{2}$};
+        \node[state, below of=1] (3) {$q_{3}$};
+
+        \draw[->] (1) edge[left] node{$b$} (3);
+        \draw[->] (1) edge[above,bend left] node{$c$} (2);
+        \draw[->] (2) edge[above,bend left] node{$b$} (1);
+        \draw[->] (2) edge[right, bend left] node{$a,c$} (3);
+        \draw[->] (1) edge[loop above] node{$a$} (1);
+        \draw[->] (3) edge[loop below] node{$a,b,c$} (3);
+        \draw[->] (0) edge[above] node{} (1);
+      \end{tikzpicture}
+    \end{center}
+
+    Determinism implies unambiguity --- only one trace per input string
+\end{frame}
+
+\begin{frame}{Defining a Parser Term for Deterministic Automata}
+  % $D$ a DFA grammar
+
+  % \[ w : \only<1>{\Sigma^{*}}\only<2->{\left( \bigoplus_{c \in \Sigma} c \right)^{*}} \vdash \mathsf{parse}_{D}(w) : \mathsf{AccTrace}_{D} \oplus \top \]
+
+  % \onslide<3->{Define with Kleene star eliminator!}
+
+  % \onslide<4->{
+  %   \[
+  %     A := \overline{\sum_{q : Q}} \mathsf{Trace}_{D}(q_{init}, q)
+  %   \]
+  % \onslide<5->{
+  % \[
+  %   \inferrule*[Right=$*$Elim]
+  %   {
+  %     \onslide<6->{\bullet \vdash p_{\varepsilon} : A} \\
+  %     \onslide<7->{x : A, y : \left( \bigoplus_{c : \Sigma} c \right) \vdash p_{*} : A}
+  %   }
+  %   {w : \left( \bigoplus_{c \in \Sigma} c \right)^{*} \vdash M : A}
+  % \]}
+  % }
+  \todoin{Graphics defining a parser for DFAs}
+\end{frame}
+
+\begin{frame}{A Regular Expression Parser}
+  Combine the following to extend the DFA parser to regular expressions
+
+  \begin{block}{Thompson's Construction (Formalized)}
+    For every regular expression $g$, we may construct an NFA $N_{g}$ that is isomorphic to $g$.
+  \end{block}
+
+  \onslide<2->{
+  \begin{block}{Determinization (WIP)}
+    For every NFA $N$, there is a DFA $D$ that recognizes the same language
+  \end{block}}
+\end{frame}
+
+\section{Future Work}
+
+\begin{frame}{More Expressive Language Classes}
+  Have so far demonstrated a correct parsing algorithm for regular expressions
+
+  \begin{itemize}
+    \item<1-> Extend to (deterministic) context free grammars (CFGs)
+        \begin{itemize}
+          \item<2-> Analogously internalize proofs of equivalence between pushdown automata (PDAs) and CFGs
+        \end{itemize}
+    \item<3-> Restricted forms of context sensitivity
+        \begin{itemize}
+          \item<4-> Such as in \textbf{(Zhang et al., 2023)}
+        \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Other Frontend Tasks}
+  In this talk, we made a syntax to reason about parsing as a function $\Sigma^{*} \to \Set$
+
+  We can instead map from tree structured data instead of $\Sigma*$
+  \begin{itemize}
+    \item Describe type systems as tree grammars
+  \end{itemize}
+
+  \todoin{elaborate}
+\end{frame}
+
+\begin{frame}{Related Work}
+  \begin{itemize}
+    \item<1-> CoStar \textbf{(Lasser et al., 2023)} gives a verified predictive
+          parser for non-left-recursive context free grammars (CFGs)
+    \item<2-> \textbf{(Danielsson, 2010)} gives a verified parser combinator library
+          in Agda
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[standout]
+  Questions?
 \end{frame}
 
 \begin{frame}{(Lack of) Structural Rules}
@@ -580,287 +936,9 @@
 
   \onslide<9->{Just like when reading a word}
 \end{frame}
-\begin{frame}{Defining a Parser}
-  \onslide<1->{\alert<1>{Input string $w$}} \qquad \onslide<2->{\alert<2>{Grammar $g$}}
 
-  \onslide<3->{
-  \begin{block}{\alert<3>{Parser Term}}
-    $$ \alert<4>{w : \Sigma^{*}} \vdash \alert<7>{\mathsf{parse}_{g}(w)} : \alert<5>{g} \oplus \alert<6>{\top} $$
-  \end{block}}
-
-  \onslide<8->{
-  \begin{exampleblock}{Example}
-    \begin{minipage}{.7\textwidth}
-    \onslide<8->{\alert<8>{$g = a \otimes (b \oplus c)$}}
-
-    \onslide<9->{\alert<9>{$w = ab$}}
-    \onslide<10->{$\longrightarrow \mathsf{parse}_{g}(w) = {\color{cyan} \mathsf{inl}(p_{g})} : \alert<10>{g} \oplus \top$
-    \quad {\LARGE \color{cyan} \cmark}}
-
-    \onslide<11->{\alert<11>{$w = ad$}}
-    \onslide<12->{$\longrightarrow \mathsf{parse}_{g}(w) = {\color{magenta} \mathsf{inr}(p_{\top})} : g \oplus \alert<12>{\top}$
-    \quad {\LARGE \color{magenta} \xmark}}
-    \end{minipage}%
-    \begin{minipage}{.3\textwidth}
-      \begin{center}
-        \begin{tikzpicture}[%opacity=0.5,
-        treenode/.style = {shape=rectangle, rounded corners,
-          draw, align=center,
-          top color=white, bottom color=white!20},
-          line/.style={draw, -latex'},
-          edge from parent/.style={draw,-latex'},
-          level 1/.style={sibling distance=20mm, level distance=1cm},
-          level 2/.style={sibling distance=1cm, level distance=1cm},
-          scale = 0.7, visible on=<10->
-          ]
-        \node[treenode] (tree) {$\otimes$}
-          child {node[treenode] {$a$}}
-          child {node[treenode] {$\mathsf{inl}$}
-            child {node[treenode] {$b$}}}
-          ;
-
-        \node[above=0.1cm of tree, visible on=<10->] {$\color{cyan} p_{g}$};
-        \end{tikzpicture}
-      \end{center}
-    \end{minipage}%
-  \end{exampleblock}}
-
-
-
-\end{frame}
-
-
-
-% \begin{frame}{Kleene Star}
-%   Take a least fixed-point operator $\mu$ as primitive
-
-%   \onslide<2->{
-%     Allows definition of recursive grammars
-%   }
-
-%   \onslide<3->{
-%     \[
-%       \inferrule{\Delta \vdash e : A[\mu x . A / x]}{\Delta \vdash \mathsf{cons}~e : \mu x . A}
-%     \]
-%   }
-%   \onslide<4->{
-%     \[
-%       g^{*} := \mu {\color{YellowOrange} x} . ({\color{cyan}\varepsilon} \oplus ({\color{magenta} g} \otimes {\color{YellowOrange} x}))
-%     \]
-%   }
-%   \onslide<5->{
-%     Inductive data type with constructors,
-%     \begin{itemize}
-%       \item<5-> ${\color{cyan} \bullet} \vdash \mathsf{nil} : g^{*}$
-%       \item<6->
-%             ${\color{magenta} x : g}, {\color{YellowOrange} y : g^{*}} \vdash \mathsf{cons}(x , y) : g^{*}$
-%     \end{itemize}
-%   }
-% \end{frame}
-
-% \begin{frame}{Kleene Star Elimination}
-%   Constructors
-%   \[
-%     {\color{cyan} \bullet \vdash \mathsf{nil} : g^{*}} \qquad {\color{magenta} x : g, y : g^{*} \vdash \mathsf{cons}(x , y) : g^{*}}
-%   \]
-%   \onslide<2->{
-%   Eliminator
-%   \[
-%       \inferrule*[Right=$*$Elim]
-%       {
-%         {\color{cyan} \bullet \vdash p_{\varepsilon} : h} \\
-%         {\color{magenta} x : g, y : h \vdash p_{*} : h}
-%       }
-%       {p : g^{*} \vdash \mathsf{fold}(p_{\varepsilon}, p_{*})(p) : h}
-%     \]
-%   }
-%   \onslide<3->{
-%     \begin{exampleblock}{Example}
-%       \[
-%       \inferrule
-%       {
-%         \onslide<4->{        \bullet \vdash \mathsf{nil : (ab)^{*}}} \\
-%         \onslide<5->{x : abab, y : (ab)^{*} \vdash p_{*} : (ab)^{*}}
-%       }
-%       {p : (abab)^{*} \vdash \mathsf{fold}(\mathsf{nil},p_{*})(p) : (ab)^{*}}
-%       \]
-%     \end{exampleblock}
-%   }
-% \end{frame}
-
-
-% \begin{frame}{Automata as Grammars}
-%   $g = a^{*} \otimes (b \oplus c)$
-
-%   \onslide<2-21>{\alert<21>{$\alert<7>{w} = \alert<8-10>{a} \otimes  \alert<11-13>{a} \otimes \alert<14-16>{b}
-%     \only<18-19>{\otimes \alert{\varepsilon}}$} \quad \only<21>{ {\Large \color{cyan} \cmark}}}
-
-%   \onslide<3->{
-%   \begin{center}
-%   \begin{minipage}{.5\textwidth}
-%   \begin{tikzpicture}[node distance = 15mm, scale=0.4]
-%     \alert<4,8>{\node (0) {start};}
-%     \alert<4,8,10-11,13-14>{\node[state, right of=0] (1) {$q_{1}$};}
-%     \alert<5,20>{\node[state, right of=1, accepting] (2) {$q_{2}$};}
-%     \alert<16-17>{\node[state, below of=1] (3) {$q_{3}$};}
-
-%     \alert<15>{\draw[->] (1) edge[left] node{$b$} (3);}
-%     \draw[->] (1) edge[above] node{$c$} (2);
-%     \alert<9,12>{\draw[->] (1) edge[loop above] node{$a$} (1);}
-%     \alert<19>{\draw[->] (3) edge[below] node{$\varepsilon$} (2);}
-%     \alert<4,8>{\draw[->] (0) edge[above] node{} (1);}
-%   \end{tikzpicture}
-%   \end{minipage}%
-%   \begin{minipage}{.5\textwidth}
-%     $$ \mathsf{Trace}(q_{1}, q_{2}) =$$
-%     \begin{equation*}
-%       \mu
-%       \begin{pmatrix}
-%         \alert<8,10,11,13,14>{g_{q_{1}}} := & \alert<9,12>{(a \otimes g_{q_{1}})} \\ & \oplus  ( c \otimes g_{q_{2}} ) \\ & \oplus \alert<15>{(b \otimes g_{q_{3}})} \\
-%         \alert<20>{g_{q_{2}}} := & \alert<5,20>{\varepsilon} \\
-%         \alert<16,17>{g_{q_{3}}} := & \alert<19>{g_{q_{2}}} \\
-%       \end{pmatrix}. \alert<4>{\color<21>{cyan} g_{q_{1}}}
-%     \end{equation*}
-%   \end{minipage}
-%   \end{center}}
-% \end{frame}
-
-% \begin{frame}{Accepting Traces of Automata}
-%     \begin{minipage}{.5\textwidth}
-%       \begin{tikzpicture}[node distance = 15mm, scale=0.4]
-%         \node (0) {start};
-%         \node[state, right of=0] (1) {$q_{1}$};
-%         \node[state, right of=1, accepting] (2) {$q_{2}$};
-%         \node[state, below of=1] (3) {$q_{3}$};
-
-%         \draw[->] (1) edge[left] node{$b$} (3);
-%         \draw[->] (1) edge[above] node{$c$} (2);
-%         \draw[->] (1) edge[loop above] node{$a$} (1);
-%         \draw[->] (3) edge[below] node{$\varepsilon$} (2);
-%         \draw[->] (0) edge[above] node{} (1);
-%       \end{tikzpicture}
-%       \[ \mathsf{Trace}(\only<1>{q_{1}}\only<2->{\alert<2> {q_{2}}}, \only<1>{q_{2}}\only<2->{\alert<3>{q_{3}}}) \]
-%       \begin{equation*}
-%         \mu
-%         \only<1>{
-%         \begin{pmatrix}
-%           g_{q_{1}} := & (a \otimes g_{q_{1}}) \\ & \oplus  ( c \otimes g_{q_{2}} ) \\ & \oplus (b \otimes g_{q_{3}}) \\
-%           g_{q_{2}} := & \varepsilon \\
-%           g_{q_{3}} := & g_{q_{2}} \\
-%         \end{pmatrix}}\only<2->{
-%         \begin{pmatrix}
-%           g_{q_{1}} := & (a \otimes g_{q_{1}}) \\ & \oplus  ( c \otimes g_{q_{2}} ) \\ & \oplus (b \otimes g_{q_{3}}) \\
-%           g_{q_{2}} := & \alert<4>{\bot} \\
-%           g_{q_{3}} := & g_{q_{2}} \alert<3>{\oplus \varepsilon} \\
-%         \end{pmatrix}
-%         }. \only<1>{g_{q_{1}}}\only<2->{\alert<2>{g_{q_{2}}}}
-%       \end{equation*}
-%     \end{minipage}%
-%     \begin{minipage}{.5\textwidth}
-%       \onslide<5->{
-%       \[
-%         \mathsf{AccTrace} := \overline{\sum_{\alert<7>{q : Q}}} (\alert<8>{\mathsf{Trace}(q_{1}, q)}~\&~\alert<9>{\mathsf{acc}(q)})
-%       \]
-%       }
-%       \begin{itemize}
-%         \item<6-> An accepting trace is a triple\dots
-%         \begin{itemize}
-%           \item<7-> \alert<7>{An end state}
-%           \item<8-> \alert<8>{A trace starting at the initial state}
-%           \item<9-> \alert<9>{A proof that the end state is accepting}
-%         \end{itemize}
-%       \end{itemize}
-%     \end{minipage}%
-% \end{frame}
-
-
-% \begin{frame}{Defining a Parser Term}
-%   $D$ a DFA grammar
-
-%   \[ w : \only<1>{\Sigma^{*}}\only<2->{\left( \bigoplus_{c \in \Sigma} c \right)^{*}} \vdash \mathsf{parse}_{D}(w) : \mathsf{AccTrace}_{D} \oplus \top \]
-
-%   \onslide<3->{Define with Kleene star eliminator!}
-
-%   \onslide<4->{
-%     \[
-%       A := \overline{\sum_{q : Q}} \mathsf{Trace}_{D}(q_{init}, q)
-%     \]
-%   \onslide<5->{
-%   \[
-%     \inferrule*[Right=$*$Elim]
-%     {
-%       \onslide<6->{\bullet \vdash p_{\varepsilon} : A} \\
-%       \onslide<7->{x : A, y : \left( \bigoplus_{c : \Sigma} c \right) \vdash p_{*} : A}
-%     }
-%     {w : \left( \bigoplus_{c \in \Sigma} c \right)^{*} \vdash M : A}
-%   \]}
-%   }
-%   \todoin{This slide is choppy and the bigoplus is confusing. Needs graphics}
-% \end{frame}
-
-% \begin{frame}{Results}
-%   \begin{itemize}
-%     \item<+-> We have a parser term for DFAs formalized in Agda
-%     \item<+-> We want a parser for regular expressions
-%     \item<+-> Prove that DFAs and regular expressions are equivalent to extend the DFA parser to a regular expression parser
-%   \end{itemize}
-% \end{frame}
-
-% \begin{frame}{Regular Expressions and Finite Automata}
-%   \begin{block}{Thompson's Construction (Formalized)}
-%     For every regular expression $g$, we may construct an NFA $N_{g}$ that is isomorphic to $g$.
-%   \end{block}
-
-%   \onslide<2->{
-%   \begin{block}{Determinization}
-%     For every NFA $N$, there is a DFA $D$ that recognizes the same language
-%   \end{block}}
-
-%   \onslide<3->{Combine the above to realize a regular expression parser}
-% \end{frame}
-
-% \begin{frame}{More Expressive Language Classes}
-%   \begin{itemize}
-%     \item Finite automata correspond to regular expressions
-%     \item<+-> Pushdown automata correspond to context free grammars
-%     \item<+-> Can apply analogous constructions to achieve a verified parser for
-%           (deterministic) context-free grammars
-%     \item<+-> Restricted forms of context sensitivity
-%   \end{itemize}
-% \end{frame}
-
-% \begin{frame}{Future Work}
-%   Grammar theory has advanced since the 60s
-%   \begin{itemize}
-%     \item<2-> Interval parsing grammars \textbf{(Zhang et al., 2023)}
-%     \item<3-> Binary data formats
-%   \end{itemize}
-
-%   \onslide<4->{There are other front end tasks}
-%   \begin{itemize}
-%     \item<5-> Semantic actions
-%     \item<6-> Typechecking
-%   \end{itemize}
-% \end{frame}
-
-% \begin{frame}{Related Work}
-%   \begin{itemize}
-%     \item<1-> CoStar \textbf{(Lasser et al., 2023)} gives a verified predictive
-%           parser for non-left-recursive context free grammars (CFGs)
-%     \item<2-> \textbf{(Danielsson, 2010)} gives a verified parser combinator library
-%           in Agda
-%       \begin{itemize}
-%         \item<3-> Verified parser for general CFGs
-%         \item<4-> \dots up to language equivalence
-%         \item<5-> Mentions ``normalization by evaluation'' and proofs as
-%               first-class objects
-%       \end{itemize}
-%   \end{itemize}
-%   \todoin{Less text, expand on Danielsson}
-% \end{frame}
-
-\begin{frame}[standout]
-  Questions?
+\begin{frame}{Backup slides for connectives}
+  Have examples for each connective
 \end{frame}
 
 \end{document}
