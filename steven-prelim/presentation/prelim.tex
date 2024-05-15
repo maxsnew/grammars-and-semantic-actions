@@ -18,6 +18,7 @@
 \usepackage{cleveref}
 \usepackage{stmaryrd}
 \usepackage{amsmath}
+\usepackage{listings}
 
 \usepackage{pifont}
 \newcommand{\cmark}{\ding{51}}
@@ -111,58 +112,14 @@
 
 \metroset{block=fill}
 
-\section{Introduction}
-
 \begin{frame}
   \setbeamertemplate{section in toc}[sections numbered]
-  \tableofcontents[currentsection]
+  \tableofcontents
 \end{frame}
 
-\begin{frame}{Parsing is Everywhere}
-  A \emph{parser} emits structured data from an input string
+\section{Introduction}
 
-  \onslide<2->{
-  \begin{center}
-  \begin{tikzpicture}[
-    treenode/.style = {shape=rectangle, rounded corners,
-    draw, align=center, font=\large,
-    top color=white, bottom color=white!20},
-    line/.style={draw, -latex'},
-    edge from parent/.style={draw,-latex'},
-    level 1/.style={sibling distance=20mm, level distance=0.5cm},
-    level 2/.style={sibling distance=1cm, level distance=1cm}]
-
-    \node (src) {\Large \texttt{"1+2*3"}};
-
-    \node[right=2cm of src, shape=rectangle, draw] (parser) {\Large Parser};
-
-    \node[right=3cm of parser, treenode] (tree) {$+$}
-    child { node[treenode] (one) {$1$} }
-    child { node[treenode] (times){$\ast$}
-        child { node[treenode] {$2$} }
-        child { node[treenode] {$3$} }
-      };
-
-
-  \draw [->, thick, shorten <= 0.3cm, shorten >= 0.3cm] (src) -- (parser);
-  \draw [->, thick, shorten <= 0.3cm, shorten >= 1cm] (parser) -- (tree);
-
-  \end{tikzpicture}
-  \end{center}
-  }
-
-  \onslide<3->{
-  Ubiquitous in computer science,
-  \begin{itemize}
-    \item<4-> Data serialization
-    \item<5-> \textbf{Programming language implementation}
-      \begin{itemize}
-        \item<6-> High-level source code must be understood by the machine
-        \item<7-> Interpreters and compilers
-      \end{itemize}
-  \end{itemize}
-  }
-\end{frame}
+% TODO slide on verification
 
 \begin{frame}{Compilers: Do They Work?}
   \begin{center}
@@ -322,59 +279,83 @@
   \end{center}
 \end{frame}
 
-% TODO illustrate parser generator might not mathc input gramar
-% \begin{frame}{Validation of the CompCert Parser}
-%   CompCert parser rewritten and validated \textbf{(Jourdan et al, 2012)}
-%   \begin{itemize}
-%     \item<2-> Given a grammar and an LR(1) parser, validate that they agree
-%     \item<3-> Validator proven correct in Coq
-%   \end{itemize}
+\begin{frame}{Parsing is Everywhere}
+  A \emph{parser} emits structured data from an input string
 
-%   Procedure is incomplete, and can be generalized
-% \end{frame}
+  \onslide<2->{
+  \begin{center}
+  \begin{tikzpicture}[
+    treenode/.style = {shape=rectangle, rounded corners,
+    draw, align=center, font=\large,
+    top color=white, bottom color=white!20},
+    line/.style={draw, -latex'},
+    edge from parent/.style={draw,-latex'},
+    level 1/.style={sibling distance=20mm, level distance=0.5cm},
+    level 2/.style={sibling distance=1cm, level distance=1cm}]
 
-% TODO diagram w inputs and outputs
-% TODO intrinsci verif
+    \node (src) {\Large \texttt{"1+2*3"}};
+
+    \node[right=2cm of src, shape=rectangle, draw] (parser) {\Large Parser};
+
+    \node[right=3cm of parser, treenode] (tree) {$+$}
+    child { node[treenode] (one) {$1$} }
+    child { node[treenode] (times){$\ast$}
+        child { node[treenode] {$2$} }
+        child { node[treenode] {$3$} }
+      };
+
+
+  \draw [->, thick, shorten <= 0.3cm, shorten >= 0.3cm] (src) -- (parser);
+  \draw [->, thick, shorten <= 0.3cm, shorten >= 1cm] (parser) -- (tree);
+
+  \end{tikzpicture}
+  \end{center}
+  }
+
+  \onslide<3->{
+  Ubiquitous in computer science,
+  \begin{itemize}
+    \item<4-> Data deserialization
+    \item<5-> \textbf{Programming language implementation}
+      \begin{itemize}
+        \item<6-> High-level source code must be understood by the machine
+        \item<7-> Interpreters and compilers
+      \end{itemize}
+  \end{itemize}
+  }
+\end{frame}
+
 \begin{frame}{Contributions of This Project}
   \begin{alertblock}{Goals}
     \begin{enumerate}
        \item<1-> Provide a unifying framework to reason about formal grammars
-       \item<2-> Instantiate this framework to build verified parsers
+       \item<2-> Implement the framework in Agda
+       \item<3-> Instantiate this framework to build verified parsers
     \end{enumerate}
   \end{alertblock}
 
-  \onslide<3->{
+  \onslide<4->{
   \begin{block}{Roadmap}
     \begin{enumerate}
-      \item<3-> Give a type theory that describes formal grammars
-      \item<3-> Express parsing algorithms as terms
-      \item<3-> Internalize proofs of parsing algorithm correctness
+      \item<4-> Give a type theory that describes formal grammars
+      \item<4-> Internalize parsing algorithms as terms
+      \item<4-> Express proofs of parsing algorithm correctness
     \end{enumerate}
   \end{block}
   }
 
-  \onslide<4>{
+  \onslide<5>{
     \begin{center}
     \textbf{Domain specific language} for building verified parsers
     \end{center}
   }
 \end{frame}
 
-\begin{frame}{Implementation}
-  Implement the type theory by shallowly embedding it in Agda
-  \begin{itemize}
-    \item Leverage Agda's type system as a host for logic
-    \item We will show how we encode parsing algorithms in our syntax, with formal artifacts
-  \end{itemize}
-  \begin{center}
-  \includegraphics[width=3cm]{figures/agda.png}
-  \end{center}
-\end{frame}
 
 \section{Formal Grammars}
 
 \begin{frame}{Formal Grammars}
-  A formal grammar is usually given as a set of production rules
+  A generative grammar is usually given as a set of production rules
   for producing parse trees
   \begin{itemize}
     \item In the style of Chomsky
@@ -419,23 +400,21 @@
     L_{g} := \{ w \in \Sigma^{*} \mid \exists \text{ parse matching } w \text{ to } g\}
   \]
 
-  \onslide<2->{\textbf{(Chomsky, 1963)} Grammars $g$ and $h$ are\dots}
-  \begin{itemize}
-    \item<3-> \emph{weakly equivalent} if they generate the same language, $L_{g} = L_{h}$
-    \item<3-> \emph{strongly equivalent} if there is a bijection between their sets of parse trees, $g \cong h$
-  \end{itemize}
-
-  \onslide<4->{
-    \begin{center}
-    $g$ and $g \oplus g$ are weakly, but not strongly, equivalent
-
-    $g \oplus h$ and $h \oplus g$ are strongly equivalent
-    \end{center}
+  \onslide<2->{
+  \[
+    L_{g} : \Sigma^{*} \to \mathbf{Bool}
+  \]
   }
+
+  \onslide<3->{\textbf{(Chomsky, 1963)} Grammars $g$ and $h$ are\dots}
+  \begin{itemize}
+    \item<4-> \emph{weakly equivalent} if they generate the same language, $L_{g} = L_{h}$
+    \item<4-> \emph{strongly equivalent} if there is a bijection between their sets of parse trees, $g \cong h$
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{Grammars as Functions}
-  A \emph{grammar} $g$ is a function $g : \Sigma^{*} \to \Set$
+  An \emph{abstract formal grammar} $g$ is a function $g : \Sigma^{*} \to \Set$
   \begin{itemize}
     \item Strings are mapped to the \textbf{set of parse trees} matching $g$
   \end{itemize}
@@ -464,9 +443,9 @@
     \node[below=2.5cm of tree] (mt) {};
     \node[below=2.5cm of a] (mta) {};
     \node[below=2.5cm of b] (mtb) {};
-    \node[below=-0.2cm of mt, visible on=<4->] (mtset) {$\emptyset$};
+    \node[below=-0.2cm of mt, visible on=<4->] (mtset) {};
       \node[draw, fit=(mt)(mtset)(mta)(mtb),
-      label={[name=l, visible on=<4->] $g(xyz)$}, visible on=<4->] {};
+      label={[name=l, visible on=<4->] $g(aa)$}, visible on=<4->] {};
 \end{tikzpicture}
   \end{minipage}%
   \begin{minipage}[t]{.6\textwidth}
@@ -512,6 +491,29 @@
   \end{minipage}%
 \end{frame}
 
+\begin{frame}[fragile]{Productions as Constructors}
+  \begin{center}
+      \begin{gather*}
+        S \to E + E \qquad E \to E * E \\
+        E \to 1 \qquad E \to 2 \qquad E \to 3
+      \end{gather*}
+
+  \end{center}
+
+  Productions can be viewed like inductive data types
+
+  \begin{center}
+      \begin{lstlisting}
+            data Expr =
+                Sum of Exp * Exp |
+                Prod of Exp * Exp |
+                One |
+                Two |
+                Three
+      \end{lstlisting}
+  \end{center}
+\end{frame}
+
 \section{Grammars as Types}
 
 \begin{frame}{Why Types?}
@@ -523,44 +525,54 @@
     \item<4-> Under Curry-Howard, expect a corresponding type system
   \end{itemize}
 
+  \todoin{Curry-Howard picture}
+
   \onslide<5->{Grammar
   $g : \Sigma^{*} \to \Set$
   can be viewed as a functor}
 
   \begin{itemize}
     \item<6-> $\Sigma^{*}$ viewed as a discrete category
-    \item<6-> Functors into $\Set$ --- presheaves --- have significant structure
-    \item<6-> Presheaves model dependent type theory
-    \item<6-> Design a type theory where grammars are the intended model
+    \item<7-> Functors into $\Set$ --- presheaves --- have significant structure
+    \item<8-> Presheaves model dependent type theory
+    \item<9-> Design a type theory where grammars are the intended model
   \end{itemize}
 \end{frame}
 
+% TODO examples w/o kleene star
+% TODO different title
 \begin{frame}{Grammars as Types}
   Types are \textbf{grammars}, and terms are
-  \only<1-4>{\textbf{parse trees}}\only<5->{\textbf{parse transformers}}
+  \only<1-5>{\textbf{parse trees}}\only<6->{\textbf{parse transformers}}
 
   \[
     w : \Sigma^{*} \vdash p : g
   \]
 
-  Think of $p$ as the data, and a proof that $w$ matches $g$
-
   \onslide<2->{
-  \[
-    x : a \otimes a \otimes a \vdash \mathsf{cons}(\mathsf{cons}(\mathsf{cons}(\mathsf{nil}))) : a^{*}
-  \]
-  }
+  Think of $p$ as a \textbf{proof}
+  \begin{itemize}
+    \item Evidence that $w$ matches $g$
+  \end{itemize}}
 
+  \vspace{-0.5cm}
   \onslide<3->{
   \[
-    \alert<5>{x : (a \otimes b) \oplus a , y : b} \vdash p : a \otimes b^{*}
+    x : a \otimes a \vdash \mathsf{let}~(a_{1},a_{2}) = x~\mathsf{in}~ \mathsf{cons}(a_{1}, \mathsf{cons}(a_{2}, \mathsf{nil})) : a^{*}
   \]
   }
-
+  \vspace{-0.5cm}
   \onslide<4->{
+  \[
+    \alert<6>{x : a , y : b^{*}} \vdash (x , y) : a \otimes b^{*}
+  \]
+  }
+  \vspace{-0.5cm}
+  \onslide<5->{
     \[
       \Delta \vdash M : g
     \]
+    $\Delta$ is an ordered list of resources that get turned into a parse $M$ of $g$
   }
 
 \end{frame}
@@ -569,7 +581,7 @@
   Separation logic
   \begin{itemize}
     \item<1-> Reason about disjoint heap regions (disjoint substrings)
-    \item<2-> Context extension concatentates resources
+    \item<2-> Context extension concatenates resources
   \end{itemize}
   \onslide<2->{
   \[
@@ -586,9 +598,9 @@
   \end{itemize}
   \begin{align*}
     \onslide<4->{x : c, y : a, z : t & \vdash (x,y,z) : c \otimes a \otimes t} \\
-    \onslide<5->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (x,y,z) : a \otimes c \otimes t}} \\
-    \onslide<6->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (x,y,z) : c \otimes a \otimes t \otimes t}} \\
-    \onslide<7->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (x,y,z) : a \otimes t}} \\
+    \onslide<5->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (y,x,z) : a \otimes c \otimes t}} \\
+    \onslide<6->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (x,y,z,z) : c \otimes a \otimes t \otimes t}} \\
+    \onslide<7->{{\color{red} x : c, y : a, z : t} & {~\color{red} \not \vdash (y,z) : a \otimes t}} \\
   \end{align*}
 \end{frame}
 
@@ -603,6 +615,8 @@
     Conjunction & $g \amp h$ \\
     Top & $\top$ \\
     Bottom & $\bot$ \\
+    Implication & $g \Rightarrow h$ \\
+    Negation & $\neg g$ \\
     Least-fixed Point & $\mu x . g$ \\
     Linear Functions & $g \lto h$ \\
      & $g \tol h$ \\
@@ -612,15 +626,10 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{Notions of Equivalence}
-  \todoin{the induced notion of isomorphism is strong equivalence}
-  \todoin{logical equivalence is weak equivalence}
-\end{frame}
-
 \begin{frame}{Non-linear Types}
   Types up until now have been \emph{linear} types
 
-  Like in \textbf{(Krishnaswami et al., 2015)}, we make use of a linear fragment and a non-linear fragment
+  As in \textbf{(Krishnaswami et al., 2015)}, we make use of a linear fragment and a non-linear fragment
   \begin{itemize}
     \item Synthesizes dependent types and linear types
   \end{itemize}
@@ -629,16 +638,25 @@
   The non-linear fragment is ordinary Martin-L\"of type theory
   \begin{itemize}
     \item Can have linear types depend on non-linear types
+    \begin{gather*}
+      \LinPiTy {x}{X}{g} \\
+      \LinSigTy {x}{X}{g}
+    \end{gather*}
     \item Used for bringing ordinary mathematical constructs into scope
     \item i.e. can define a type of non-linear stacks for PDAs
   \end{itemize}
   }
 \end{frame}
 
+\begin{frame}{Linear Function Types}
+  \todoin{Brzozowski derivatives}
+  \todoin{example of parsing $g \lto h$}
+\end{frame}
+
 \begin{frame}{Fixed-point Operator}
   Recursive grammars are ubiquitous in practice
   \begin{itemize}
-    \item Using only literals, $\varepsilon$, $\otimes$, $\oplus$, and $\amp$ we cannot describe infinite languages
+    \item Using only $c \in \Sigma$, $\varepsilon$, $\otimes$, $\oplus$, and $\amp$ we cannot describe infinite languages
   \end{itemize}
 
   \onslide<3->{
@@ -666,37 +684,130 @@
   }
 \end{frame}
 
-\begin{frame}{Kleene Star Elimination}
-  Constructors
-  \[
-    {\color{blue} \bullet \vdash \mathsf{nil} : g^{*}} \qquad {\color{magenta} x : g, y : g^{*} \vdash \mathsf{cons}(x , y) : g^{*}}
-  \]
+% \begin{frame}{Kleene Star Elimination}
+%   Constructors
+%   \[
+%     {\color{blue} \bullet \vdash \mathsf{nil} : g^{*}} \qquad {\color{magenta} x : g, y : g^{*} \vdash \mathsf{cons}(x , y) : g^{*}}
+%   \]
+%   \onslide<2->{
+%   Eliminator
+%   \[
+%       \inferrule*[Right=$*$Elim]
+%       {
+%         {\color{blue} \bullet \vdash p_{\varepsilon} : h} \\
+%         {\color{magenta} x : g, y : h \vdash p_{*} : h}
+%       }
+%       {p : g^{*} \vdash \mathsf{fold}(p_{\varepsilon}, p_{*})(p) : h}
+%     \]
+%   }
+%   \onslide<3->{
+%     \begin{exampleblock}{Example}
+%       \[
+%       \inferrule
+%       {
+%         \onslide<4->{        \bullet \vdash \mathsf{nil : a^{*}}} \\
+%         \onslide<5->{x : aa, y : (a)^{*} \vdash p_{*} : a^{*}}
+%       }
+%       {p : (aa)^{*} \vdash \mathsf{fold}(\mathsf{nil},p_{*})(p) : a^{*}}
+%       \]
+%     \end{exampleblock}
+%   }
+% \end{frame}
+
+\begin{frame}{Notions of Equivalence}
+  Logical equivalence from functional programming
+  \begin{gather*}
+    x : A \vdash p(x) : B \\
+    y : B \vdash q(y) : A
+  \end{gather*}
+
+  Captures Chomsky's weak equivalence
+
   \onslide<2->{
-  Eliminator
-  \[
-      \inferrule*[Right=$*$Elim]
-      {
-        {\color{blue} \bullet \vdash p_{\varepsilon} : h} \\
-        {\color{magenta} x : g, y : h \vdash p_{*} : h}
-      }
-      {p : g^{*} \vdash \mathsf{fold}(p_{\varepsilon}, p_{*})(p) : h}
-    \]
-  }
-  \onslide<3->{
-    \begin{exampleblock}{Example}
-      \[
-      \inferrule
-      {
-        \onslide<4->{        \bullet \vdash \mathsf{nil : (ab)^{*}}} \\
-        \onslide<5->{x : abab, y : (ab)^{*} \vdash p_{*} : (ab)^{*}}
-      }
-      {p : (abab)^{*} \vdash \mathsf{fold}(\mathsf{nil},p_{*})(p) : (ab)^{*}}
-      \]
-    \end{exampleblock}
+  Induced notion of isomorphism in our type system
+  \begin{gather*}
+    p(q(y)) = y \\
+    q(p(x)) = x
+  \end{gather*}
+  is Chomsky's strong equivalence
+  \todoin{Polish this slide}
   }
 \end{frame}
 
+\begin{frame}{Implementation}
+  Implement the type theory by shallowly embedding it in Agda
+  \begin{itemize}
+    \item Leverage Agda's type system as a host for our logic
+    \item Parsers written in our syntax are \textbf{intrinsically verified}
+       \begin{itemize}
+          \item Type system carries proofs of correctness
+       \end{itemize}
+  \end{itemize}
+  \begin{center}
+  \includegraphics[width=3cm]{figures/agda.png}
+  \end{center}
+\end{frame}
+
 \section{Building a Parser}
+
+\begin{frame}{A Sample Parsing Algorithm}
+  \begin{alertblock}{Benchmark Parser}
+  Build a verified regular expression parser
+  \end{alertblock}
+  \begin{block}{Sample Algorithm}
+    \begin{enumerate}
+      \item Prove that regular expressions are equivalent to NFAs \textbf{(Formalized)}
+      \item Prove that NFAs are equivalent to DFAs \textbf{(WIP)}
+      \item Build a parser term for DFA grammars \textbf{(Formalized)}
+    \end{enumerate}
+  \end{block}
+\end{frame}
+
+\begin{frame}{A Specification for Parsers}
+  \onslide<1->{\alert<1>{Input string $w$}} \qquad \onslide<2->{\alert<2>{Grammar $g$}}
+
+  \onslide<3->{
+  \begin{block}{\alert<3>{Parser Term}}
+    $$ \alert<4>{w : \Sigma^{*}} \vdash \alert<7>{\mathsf{parse}_{g}(w)} : \alert<5>{g} \oplus \alert<6>{\neg g} $$
+  \end{block}}
+
+  \onslide<8->{
+  \begin{exampleblock}{Example}
+    \begin{minipage}{.7\textwidth}
+    \onslide<8->{\alert<8>{$g = a \otimes (b \oplus c)$}}
+
+    \onslide<9->{\alert<9>{$w = ab$}}
+    \onslide<10->{$\longrightarrow \mathsf{parse}_{g}(w) = {\color{blue} \mathsf{inl}(p_{g})} : \alert<10>{g} \oplus \neg g$
+    \quad {\LARGE \color{blue} \cmark}}
+
+    \onslide<11->{\alert<11>{$w = ad$}}
+    \onslide<12->{$\longrightarrow \mathsf{parse}_{g}(w) = {\color{magenta} \mathsf{inr}(p_{\neg g})} : g \oplus \alert<12>{\neg g}$
+    \quad {\LARGE \color{magenta} \xmark}}
+    \end{minipage}%
+    \begin{minipage}{.3\textwidth}
+      \begin{center}
+        \begin{tikzpicture}[%opacity=0.5,
+        treenode/.style = {shape=rectangle, rounded corners,
+          draw, align=center,
+          top color=white, bottom color=white!20},
+          line/.style={draw, -latex'},
+          edge from parent/.style={draw,-latex'},
+          level 1/.style={sibling distance=20mm, level distance=1cm},
+          level 2/.style={sibling distance=1cm, level distance=1cm},
+          scale = 0.7, visible on=<10->
+          ]
+        \node[treenode] (tree) {$\otimes$}
+          child {node[treenode] {$a$}}
+          child {node[treenode] {$\mathsf{inl}$}
+            child {node[treenode] {$b$}}}
+          ;
+
+        \node[above=0.1cm of tree, visible on=<10->] {$\color{blue} p_{g}$};
+        \end{tikzpicture}
+      \end{center}
+    \end{minipage}%
+  \end{exampleblock}}
+\end{frame}
 
 \begin{frame}{Grammars and Their Automata}
   Characterize classes of grammars based on structure of their productions
@@ -716,6 +827,7 @@
   \begin{itemize}
     \item Correspondence between classes of grammars and the classes of machines that recognize them
     \item Can encode the entire hierarchy in our syntax
+    \item Describe automata as grammars in the type system
   \end{itemize}
 \end{frame}
 
@@ -783,224 +895,103 @@
   \end{center}
 \end{frame}
 
-\begin{frame}{Accepting Traces of Automata}
-    \begin{minipage}{.5\textwidth}
-      \begin{tikzpicture}[node distance = 15mm, scale=0.4]
-        \node (0) {start};
-        \node[state, right of=0] (1) {$q_{1}$};
-        \node[state, right of=1, accepting] (2) {$q_{2}$};
-        \node[state, below of=1] (3) {$q_{3}$};
+% \begin{frame}{Determinism}
+%   A \emph{deterministic} finite automaton (DFA) has no $\varepsilon$-transitions and for every state there is exactly one outgoing transition for each $c \in \Sigma$.
 
-        \draw[->] (1) edge[left] node{$b$} (3);
-        \draw[->] (1) edge[above] node{$c$} (2);
-        \draw[->] (1) edge[loop above] node{$a$} (1);
-        \draw[->] (3) edge[below] node{$\varepsilon$} (2);
-        \draw[->] (0) edge[above] node{} (1);
-      \end{tikzpicture}
-      \[ \mathsf{Trace}(\only<1>{q_{1}}\only<2->{\alert<2> {q_{2}}}, \only<1>{q_{2}}\only<2->{\alert<3>{q_{3}}}) = \]
-      \begin{equation*}
-        \mu
-        \only<1>{
-        \begin{pmatrix}
-          g_{q_{1}} := & (a \otimes g_{q_{1}}) \\ & \oplus  ( c \otimes g_{q_{2}} ) \\ & \oplus (b \otimes g_{q_{3}}) \\
-          g_{q_{2}} := & \varepsilon \\
-          g_{q_{3}} := & g_{q_{2}} \\
-        \end{pmatrix}}\only<2->{
-        \begin{pmatrix}
-          g_{q_{1}} := & (a \otimes g_{q_{1}}) \\ & \oplus  ( c \otimes g_{q_{2}} ) \\ & \oplus (b \otimes g_{q_{3}}) \\
-          g_{q_{2}} := & \alert<4>{\bot} \\
-          g_{q_{3}} := & g_{q_{2}} \alert<3>{\oplus \varepsilon} \\
-        \end{pmatrix}
-        }. \only<1>{g_{q_{1}}}\only<2->{\alert<2>{g_{q_{2}}}}
-      \end{equation*}
-    \end{minipage}%
-    \begin{minipage}{.5\textwidth}
-      $Q$ a type containing the states of the automaton
+%    \begin{center}
+%    \begin{tikzpicture}[node distance = 15mm, scale=0.4]
+%         \node (0) {start};
+%         \node[state, right of=0] (1) {$q_{1}$};
+%         \node[state, right of=1, accepting] (2) {$q_{2}$};
+%         \node[state, below of=1] (3) {$q_{3}$};
 
-      \onslide<5->{
-      \[
-        \mathsf{AccTrace} := \overline{\sum_{\alert<7>{q : Q}}} (\alert<8>{\mathsf{Trace}(q_{1}, q)}~\&~\alert<9>{\mathsf{acc}(q)})
-      \]
-      }
-      \begin{itemize}
-        \item<6-> An accepting trace is a triple\dots
-        \begin{itemize}
-          \item<7-> \alert<7>{An end state}
-          \item<8-> \alert<8>{A trace starting at the initial state}
-          \item<9-> \alert<9>{A proof that the end state is accepting}
-        \end{itemize}
-      \end{itemize}
-    \end{minipage}%
-\end{frame}
+%         \draw[->] (1) edge[left] node{$b$} (3);
+%         \draw[->] (1) edge[above,bend left] node{$c$} (2);
+%         \draw[->] (2) edge[above,bend left] node{$b$} (1);
+%         \draw[->] (2) edge[right, bend left] node{$a,c$} (3);
+%         \draw[->] (1) edge[loop above] node{$a$} (1);
+%         \draw[->] (3) edge[loop below] node{$a,b,c$} (3);
+%         \draw[->] (0) edge[above] node{} (1);
+%       \end{tikzpicture}
+%     \end{center}
 
-\begin{frame}{A Sample Parsing Algorithm}
-  \begin{alertblock}{Demonstrative Goal}
-  Build a verified regular expression parser
-  \end{alertblock}
-  \begin{block}{Sample Algorithm}
-    \begin{enumerate}
-      \item Prove that regular expressions are strongly equivalent to NFAs \textbf{(Formalized)}
-      \item Prove that NFAs are weakly equivalent to DFAs \textbf{(WIP)}
-      \item Build a parser term for DFA grammars \textbf{(Formalized)}
-    \end{enumerate}
-  \end{block}
-\end{frame}
+%     Determinism implies unambiguity --- only one trace per input string
+% \end{frame}
 
-\begin{frame}{A Specification for Parsers}
-  \onslide<1->{\alert<1>{Input string $w$}} \qquad \onslide<2->{\alert<2>{Grammar $g$}}
+% \begin{frame}{Defining a Parser Term for Deterministic Automata}
+%   $D$ a DFA grammar
 
-  \onslide<3->{
-  \begin{block}{\alert<3>{Parser Term}}
-    $$ \alert<4>{w : \Sigma^{*}} \vdash \alert<7>{\mathsf{parse}_{g}(w)} : \alert<5>{g} \oplus \alert<6>{\top} $$
-  \end{block}}
+%   \[ w : \only<1>{\Sigma^{*}}\only<2->{\left( \bigoplus_{c \in \Sigma} c \right)^{*}} \vdash \mathsf{parse}_{D}(w) : \mathsf{AccTrace}_{D} \oplus \top \]
 
-  \onslide<8->{
-  \begin{exampleblock}{Example}
-    \begin{minipage}{.7\textwidth}
-    \onslide<8->{\alert<8>{$g = a \otimes (b \oplus c)$}}
+%   \onslide<3->{Define with Kleene star eliminator!}
 
-    \onslide<9->{\alert<9>{$w = ab$}}
-    \onslide<10->{$\longrightarrow \mathsf{parse}_{g}(w) = {\color{blue} \mathsf{inl}(p_{g})} : \alert<10>{g} \oplus \top$
-    \quad {\LARGE \color{blue} \cmark}}
-
-    \onslide<11->{\alert<11>{$w = ad$}}
-    \onslide<12->{$\longrightarrow \mathsf{parse}_{g}(w) = {\color{magenta} \mathsf{inr}(p_{\top})} : g \oplus \alert<12>{\top}$
-    \quad {\LARGE \color{magenta} \xmark}}
-    \end{minipage}%
-    \begin{minipage}{.3\textwidth}
-      \begin{center}
-        \begin{tikzpicture}[%opacity=0.5,
-        treenode/.style = {shape=rectangle, rounded corners,
-          draw, align=center,
-          top color=white, bottom color=white!20},
-          line/.style={draw, -latex'},
-          edge from parent/.style={draw,-latex'},
-          level 1/.style={sibling distance=20mm, level distance=1cm},
-          level 2/.style={sibling distance=1cm, level distance=1cm},
-          scale = 0.7, visible on=<10->
-          ]
-        \node[treenode] (tree) {$\otimes$}
-          child {node[treenode] {$a$}}
-          child {node[treenode] {$\mathsf{inl}$}
-            child {node[treenode] {$b$}}}
-          ;
-
-        \node[above=0.1cm of tree, visible on=<10->] {$\color{blue} p_{g}$};
-        \end{tikzpicture}
-      \end{center}
-    \end{minipage}%
-  \end{exampleblock}}
-\end{frame}
-
-\begin{frame}{Determinism}
-  A \emph{deterministic} finite automaton (DFA) has no $\varepsilon$-transitions and for every state there is exactly one outgoing transition for each $c \in \Sigma$.
-
-   \begin{center}
-   \begin{tikzpicture}[node distance = 15mm, scale=0.4]
-        \node (0) {start};
-        \node[state, right of=0] (1) {$q_{1}$};
-        \node[state, right of=1, accepting] (2) {$q_{2}$};
-        \node[state, below of=1] (3) {$q_{3}$};
-
-        \draw[->] (1) edge[left] node{$b$} (3);
-        \draw[->] (1) edge[above,bend left] node{$c$} (2);
-        \draw[->] (2) edge[above,bend left] node{$b$} (1);
-        \draw[->] (2) edge[right, bend left] node{$a,c$} (3);
-        \draw[->] (1) edge[loop above] node{$a$} (1);
-        \draw[->] (3) edge[loop below] node{$a,b,c$} (3);
-        \draw[->] (0) edge[above] node{} (1);
-      \end{tikzpicture}
-    \end{center}
-
-    Determinism implies unambiguity --- only one trace per input string
-\end{frame}
-
-\begin{frame}{Defining a Parser Term for Deterministic Automata}
-  $D$ a DFA grammar
-
-  \[ w : \only<1>{\Sigma^{*}}\only<2->{\left( \bigoplus_{c \in \Sigma} c \right)^{*}} \vdash \mathsf{parse}_{D}(w) : \mathsf{AccTrace}_{D} \oplus \top \]
-
-  \onslide<3->{Define with Kleene star eliminator!}
-
-  \onslide<4->{
-    \[
-      A := \overline{\sum_{q : Q}} \mathsf{Trace}_{D}(q_{init}, q)
-    \]
-  \onslide<5->{
-  \[
-    \inferrule*[Right=$*$Elim]
-    {
-      \onslide<6->{\bullet \vdash p_{\varepsilon} : A} \\
-      \onslide<7->{x : A, y : \left( \bigoplus_{c : \Sigma} c \right) \vdash p_{*} : A}
-    }
-    {w : \left( \bigoplus_{c \in \Sigma} c \right)^{*} \vdash M : A}
-  \]}
-  }
-  \todoin{Graphics defining a parser for DFAs}
-\end{frame}
+%   \onslide<4->{
+%     \[
+%       A := \overline{\sum_{q : Q}} \mathsf{Trace}_{D}(q_{init}, q)
+%     \]
+%   \onslide<5->{
+%   \[
+%     \inferrule*[Right=$*$Elim]
+%     {
+%       \onslide<6->{\bullet \vdash p_{\varepsilon} : A} \\
+%       \onslide<7->{x : A, y : \left( \bigoplus_{c : \Sigma} c \right) \vdash p_{*} : A}
+%     }
+%     {w : \left( \bigoplus_{c \in \Sigma} c \right)^{*} \vdash M : A}
+%   \]}
+%   }
+%   \todoin{Graphics defining a parser for DFAs}
+% \end{frame}
 
 \section{Next Steps and Future Work}
 
-\begin{frame}{Conclude the Regular Expression Example}
-  To export a verified regular expression parser, still need to show that regular expressions are equivalent to DFAs
-
+\begin{frame}{More Expressive Grammar Classes}
   \begin{itemize}
-    \item Can use determinization from NFAs to DFAs
-      \begin{itemize}
-        \item May need to extend theory with a propositial truncation type
-      \end{itemize}
-    \item Can use Brzozowski's algorithm to directly construct a DFA from the regular expression
-      \begin{itemize}
-        \item Lives entirely in non-linear fragment
-      \end{itemize}
-  \end{itemize}
-
-\end{frame}
-
-\begin{frame}{More Expressive Language Classes}
-  \begin{itemize}
-    \item<1-> Extend to (deterministic) context free grammar parsing algorithms
+    \item<1-> Conclude the regular expression benchmark
+    \item<2-> Extend to (deterministic) context free grammar parsing algorithms
         \begin{itemize}
-          \item<2-> Emit a verified parser generator for CFGs
+          \item<3-> Emit a verified parser generator for CFGs
         \end{itemize}
-    \item<3-> Restricted forms of context sensitivity
+    \item<4-> Restricted forms of context sensitivity
         \begin{itemize}
-          \item<4-> Such as the interval parsing grammars in \textbf{(Zhang et al., 2023)}
+          \item<5-> Such as the interval parsing grammars in \textbf{(Zhang et al., 2023)}
         \end{itemize}
-  \end{itemize}
-\end{frame}
-
-\begin{frame}{Generalizations}
-  In this talk, we made a syntax to reason about parsing as a function $\Sigma^{*} \to \Set$
-
-  We can instead map from tree structured data instead of $\Sigma*$
-  \begin{itemize}
-    \item Motivates a type theory for reasoning about type checking algorithm correctness
-  \end{itemize}
-
-  Further investigation of a similar theory that uses a greatest fixed point operator
-  \begin{itemize}
-    \item Potentially infinite streams of characters
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Related Work}
-  Verified Parsers
+  \onslide<1->{Grammar Formalisms}
   \begin{itemize}
-    \item CompCert team rewrites parser and gives a validation procedure for LR(1) parsers \textbf{(Jourdan et al, 2012)}
-    \item<1-> CoStar \textbf{(Lasser et al., 2023)} gives a verified predictive
-          parser for non-left-recursive context free grammars (CFGs)
-    \item<2-> \textbf{(Danielsson, 2010)} gives a verified parser combinator library
-          in Agda
-      \begin{itemize}
-        \item<2-> \textbf{(Firsov and Uustalu, 2015)} expand on this give a veriifed parser for arbitrary context free grammars, up to weak equivalence
-      \end{itemize}
+    \item Kleene Algebra --- algebraic reasoning about regular expressions
+    \item<2-> \textbf{(Krishnaswami and Yallop, 2019)} develop LL(1) parsers for context-free expressions using typing
   \end{itemize}
 
-  \onslide<3->{Grammar Formalisms}
+  \onslide<3->{Verified Parsers}
   \begin{itemize}
-    \item<3-> \textbf{(Krishnaswami and Yallop, 2019)} develop LL(1) parsers for context-free expressions using typing
+    \item<3-> CompCert team rewrites parser and gives a validation procedure for LR(1) parsers \textbf{(Jourdan et al, 2012)}
+    \item<4-> CoStar \textbf{(Lasser et al., 2023)} gives a verified predictive
+          parser for non-left-recursive context free grammars (CFGs)
+    \item<5-> \textbf{(Danielsson, 2010)} gives a verified parser combinator library
+          in Agda for non-left recursive CFGs
+    \item<6-> \textbf{(Firsov and Uustalu, 2015)} give a verified parser for arbitrary CFGs, up to weak equivalence
   \end{itemize}
+\end{frame}
+
+\begin{frame}{Generalizations}
+  Semantics actions
+  \begin{itemize}
+    \item Perform semantic analysis of code during parsing
+    \item i.e.\ evaluate arithmetic expressions while parsing
+  \end{itemize}
+
+  \onslide<2->{
+    In this talk, we made a syntax to reason about parsing as a function $\Sigma^{*} \to \Set$
+
+    We can instead map from tree structured data instead of $\Sigma^{*}$
+    \begin{itemize}
+      \item Type theory for reasoning about typechecking algorithm correctness
+      \item Stranger type theory
+    \end{itemize}
+  }
 \end{frame}
 
 \begin{frame}[standout]
