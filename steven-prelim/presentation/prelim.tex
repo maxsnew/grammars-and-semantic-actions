@@ -122,6 +122,10 @@
 \section{Introduction}
 
 \begin{frame}{Parsing is Everywhere}
+  \talknote{This work is about a type theory directed at building parsers}
+  \talknote{parsers are used everywhere}
+  \talknote{To guarantee software correctness we also need parser correctness}
+  \talknote{in particular, compilers}
   A \emph{parser} emits structured data from an input string
 
   \onslide<2->{
@@ -189,7 +193,7 @@
         \footnotesize
       \begin{itemize}
         \setlength\itemsep{-0.5em}
-        \item Parsing
+        \item \textbf{Parsing}
         \item Lexing
         \item Typechecking
       \end{itemize}
@@ -247,7 +251,7 @@
 \end{frame}
 
 \begin{frame}{Verified Compilers}
-  \talknote{verification is an immesnse human effort. 6 person years}
+  \talknote{verification is an immense human effort. 6 person years}
   \begin{center}
   {\Large Avoid bugs through verification!}
 
@@ -283,6 +287,9 @@
 \end{frame}
 
 \begin{frame}{CompCert: A Case Study in Verified Compilation}
+  \talknote{CompCert is a verified compiler so it should have no bugs}
+  \talknote{Verifying parsers is hard and they didn't initially do so}
+  \talknote{Without a verified parser you don't reap the benefits of other verification efforts}
   \begin{center}
   \begin{tikzpicture}[node distance=3.7cm]
     \node (sourceCode) [visible on=<1->] {\includegraphics[width=2cm]{figures/srccode.png}};
@@ -327,6 +334,9 @@
 \end{frame}
 
 \begin{frame}{Contributions of This Project}
+  \talknote{We give a type theory for reasoning about grammars. Adds new mathematical formalism to reason about parsing}
+  \talknote<4>{To get there, we express existing parsing algorithms in the type theory}
+  \talknote<4>{Gives new verification tools to parser implementers}
   \begin{alertblock}{Goals}
     \begin{enumerate}
        \item<1-> Provide a unifying framework to reason about formal grammars
@@ -397,6 +407,7 @@
 \begin{frame}{Formal Languages and Equivalence}
   \talknote{A language gathers together all of the strings in a grammar}
   \talknote{Also a Chomskyan idea}
+  \talknote{Function into bool is a spec for a language recognizer. Lossy, unambiguous when compared to a grammar}
   The \emph{formal language} for a grammar $g$ is the set of strings that match $g$
 
   \[
@@ -420,7 +431,7 @@
 \begin{frame}{Grammars as Functions}
   \talknote{This is our first contribution. A generalization over the generative grammar}
   \talknote{Demonstrate how they generalize the old notion of grammar}
-  \talknote{Use regular expression syntax to compactly draw}
+  \talknote{Use regular expression syntax to compactly give grammars}
   An \emph{abstract formal grammar} $g$ is a function $g : \Sigma^{*} \to \Set$
   \begin{itemize}
     \item Strings are mapped to the \textbf{set of parse trees} matching $g$
@@ -499,7 +510,7 @@
 \end{frame}
 
 \begin{frame}[fragile]{Productions as Constructors}
-  \talknote{Read this as giving a recipe for building the set from before}
+  \talknote{Read this as giving a constructive recipe for building the set from before}
   Productions can be viewed like inductive data types
   \begin{center}
     \begin{minipage}{.5\textwidth}
@@ -702,7 +713,7 @@
 
 \begin{frame}{Non-linear Types}
   \talknote{Don't say that you're lying!}
-  \talknote{Inspired by previous work with an intened applicaiton}
+  \talknote{Inspired by previous work with an intended application}
   \talknote{choosing to not highlight the linear fragment, or its interaction with non linear, in this talk}
   Types up until now have been \emph{linear} types
 
@@ -732,8 +743,8 @@
   \talknote{Transition into finishing type theory goal}
   Logical equivalence from functional programming\quad\onslide<3->{\textbf{(weak equivalence)}}
   \begin{gather*}
-    x : A \vdash p(x) : B \\
-    y : B \vdash q(y) : A
+    x : g \vdash p(x) : h \\
+    y : h \vdash q(y) : g
   \end{gather*}
 
   \onslide<2->{
@@ -746,12 +757,14 @@
 \end{frame}
 
 \begin{frame}{Type Theory Implementation}
+  \talknote{What I've just given is just mathematics, not code}
   \talknote{Don't want to implement a language from scratch}
+  \talknote{Develop a library}
   Implement the type theory by writing an embedded DSL in Agda
 
   \begin{itemize}
-    \item Leverage Agda's type system as a host for our proof
-    \item 2500 lines of Agda code
+    \item Leverage Agda's type system as a host for our proofs
+    \item 2500 lines of Agda code\dots so far
   \end{itemize}
   \begin{center}
   \includegraphics[width=4cm]{figures/agda.png}
@@ -776,6 +789,7 @@
 \end{frame}
 
 \begin{frame}{A Specification for Parsers}
+  \talknote{Transition at the end for how we build parsers}
   \onslide<1->{\alert<1>{Input string $w$}} \qquad \onslide<2->{\alert<2>{Grammar $g$}}
 
   \onslide<3->{
@@ -823,7 +837,7 @@
 
 \begin{frame}{Grammars and Their Automata}
   \talknote{We stratify grammars based on production structure}
-  \talknote{Can encode the entire chomsky hierarchy}
+  \talknote{Can encode the entire Chomsky hierarchy}
   \talknote{Parsers are often built by running the abstract machine}
   \talknote{We encode the corresponding machines and show that they are equivalent}
   Characterize classes of grammars based on structure of their productions
@@ -958,7 +972,7 @@
     \item<4-> CoStar \textbf{(Lasser et al., 2023)} gives a verified predictive
           parser for non-left-recursive context free grammars (CFGs)
     \item<4-> \textbf{(Danielsson, 2010)} gives a verified parser combinator library
-          in Agda for non-left recursive CFGs
+          in Agda for non-left-recursive CFGs
     \item<4-> \textbf{(Firsov and Uustalu, 2015)} give a verified parser for arbitrary CFGs, up to weak equivalence
   \end{itemize}
 \end{frame}
