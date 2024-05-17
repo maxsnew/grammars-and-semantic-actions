@@ -46,6 +46,7 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
   _⊗_ : Grammar → Grammar → Grammar
   (g ⊗ g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
+  infixr 20 _⊗_
 
   ParsesAreSets-⊗ : (g g' : hGrammar) → ParsesAreSets (g .fst ⊗ g' .fst)
   ParsesAreSets-⊗ g g' _ =
@@ -64,10 +65,10 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   ParsesAreSets--⊗ g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
 
   _⊗-_ : Grammar → Grammar → Grammar
-  (g ⊗- g') w = ∀ (w' : String) → g (w ++ w') → g' w'
+  (g ⊗- g') w = ∀ (w' : String) → g' w' → g (w ++ w')
 
   ParsesAreSets-⊗- : (g g' : hGrammar) → ParsesAreSets (g .fst ⊗- g' .fst)
-  ParsesAreSets-⊗- g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
+  ParsesAreSets-⊗- g g' _ = isSetΠ λ _ → isSetΠ (λ _ → g .snd _)
 
   LinearΠ : {A : Type ℓ} → (A → Grammar) → Grammar
   LinearΠ {A} f w = ∀ (a : A) → f a w
