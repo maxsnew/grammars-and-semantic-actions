@@ -32,51 +32,51 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   Grammar : Type (ℓ-suc ℓ)
   Grammar = String → Type ℓ
 
-  ParsesAreSets : Grammar → Type ℓ
-  ParsesAreSets g = ∀ w → isSet (g w)
+  isHGrammar : Grammar → Type ℓ
+  isHGrammar g = ∀ w → isSet (g w)
 
   hGrammar : Type (ℓ-suc ℓ)
-  hGrammar = Σ[ g ∈ Grammar ] ParsesAreSets g
+  hGrammar = Σ[ g ∈ Grammar ] isHGrammar g
 
   ε-grammar : Grammar
   ε-grammar w = w ≡ []
 
-  ParsesAreSets-ε-grammar : ParsesAreSets ε-grammar
-  ParsesAreSets-ε-grammar _ = isGroupoidString _ _
+  isHGrammar-ε-grammar : isHGrammar ε-grammar
+  isHGrammar-ε-grammar _ = isGroupoidString _ _
 
   _⊗_ : Grammar → Grammar → Grammar
   (g ⊗ g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
   infixr 20 _⊗_
 
-  ParsesAreSets-⊗ : (g g' : hGrammar) → ParsesAreSets (g .fst ⊗ g' .fst)
-  ParsesAreSets-⊗ g g' _ =
+  isHGrammar-⊗ : (g g' : hGrammar) → isHGrammar (g .fst ⊗ g' .fst)
+  isHGrammar-⊗ g g' _ =
     isSetΣ (isSetSplitting _) (λ s → isSet× (g .snd _) (g' .snd _))
 
   literal : Σ₀ → Grammar
   literal c w = w ≡ [ c ]
 
-  ParsesAreSets-literal : ∀ c → ParsesAreSets (literal c)
-  ParsesAreSets-literal c w = isGroupoidString _ _
+  isHGrammar-literal : ∀ c → isHGrammar (literal c)
+  isHGrammar-literal c w = isGroupoidString _ _
 
   _-⊗_ : Grammar → Grammar → Grammar
   (g -⊗ g') w = ∀ (w' : String) → g w' → g' (w' ++ w)
 
-  ParsesAreSets--⊗ : (g g' : hGrammar) → ParsesAreSets (g .fst -⊗ g' .fst)
-  ParsesAreSets--⊗ g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
+  isHGrammar--⊗ : (g g' : hGrammar) → isHGrammar (g .fst -⊗ g' .fst)
+  isHGrammar--⊗ g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
 
   _⊗-_ : Grammar → Grammar → Grammar
   (g ⊗- g') w = ∀ (w' : String) → g' w' → g (w ++ w')
 
-  ParsesAreSets-⊗- : (g g' : hGrammar) → ParsesAreSets (g .fst ⊗- g' .fst)
-  ParsesAreSets-⊗- g g' _ = isSetΠ λ _ → isSetΠ (λ _ → g .snd _)
+  isHGrammar-⊗- : (g g' : hGrammar) → isHGrammar (g .fst ⊗- g' .fst)
+  isHGrammar-⊗- g g' _ = isSetΠ λ _ → isSetΠ (λ _ → g .snd _)
 
   LinearΠ : {A : Type ℓ} → (A → Grammar) → Grammar
   LinearΠ {A} f w = ∀ (a : A) → f a w
 
-  ParsesAreSets-LinearΠ :
+  isHGrammar-LinearΠ :
     {A : hSet ℓ} → (B : A .fst → hGrammar) →
-    ParsesAreSets (LinearΠ {A .fst} (λ a → B a .fst))
-  ParsesAreSets-LinearΠ {A} B _ = isSetΠ (λ a → B a .snd _)
+    isHGrammar (LinearΠ {A .fst} (λ a → B a .fst))
+  isHGrammar-LinearΠ {A} B _ = isSetΠ (λ a → B a .snd _)
 
   LinearΣ : {A : Type ℓ} → (A → Grammar) → Grammar
   LinearΣ {A} f w = Σ[ a ∈ A ] f a w
@@ -86,36 +86,36 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
   syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
 
-  ParsesAreSets-LinearΣ :
+  isHGrammar-LinearΣ :
     {A : hSet ℓ} → (B : A .fst → hGrammar) →
-    ParsesAreSets (LinearΣ {A .fst} (λ a → B a .fst))
-  ParsesAreSets-LinearΣ {A} B _ = isSetΣ (A .snd) (λ a → B a .snd _)
+    isHGrammar (LinearΣ {A .fst} (λ a → B a .fst))
+  isHGrammar-LinearΣ {A} B _ = isSetΣ (A .snd) (λ a → B a .snd _)
 
   ⊤-grammar : Grammar
   ⊤-grammar _ = Unit*
 
-  ParsesAreSets-⊤-grammar : ParsesAreSets ⊤-grammar
-  ParsesAreSets-⊤-grammar _ = isSetUnit*
+  isHGrammar-⊤-grammar : isHGrammar ⊤-grammar
+  isHGrammar-⊤-grammar _ = isSetUnit*
 
   _&_ : Grammar → Grammar → Grammar
   (g & g') w = g w × g' w
 
-  ParsesAreSets-& :
-    (g : hGrammar) → (g' : hGrammar) → ParsesAreSets (g .fst & g' .fst)
-  ParsesAreSets-& g g' _ = isSet× (g .snd _) (g' .snd _)
+  isHGrammar-& :
+    (g : hGrammar) → (g' : hGrammar) → isHGrammar (g .fst & g' .fst)
+  isHGrammar-& g g' _ = isSet× (g .snd _) (g' .snd _)
 
   _⊕_ : Grammar → Grammar → Grammar
   (g ⊕ g') w = g w ⊎ g' w
 
-  ParsesAreSets-⊕ :
-    (g : hGrammar) → (g' : hGrammar) → ParsesAreSets (g .fst ⊕ g' .fst)
-  ParsesAreSets-⊕ g g' _ = isSet⊎ (g .snd _) (g' .snd _)
+  isHGrammar-⊕ :
+    (g : hGrammar) → (g' : hGrammar) → isHGrammar (g .fst ⊕ g' .fst)
+  isHGrammar-⊕ g g' _ = isSet⊎ (g .snd _) (g' .snd _)
 
   ⊥-grammar : Grammar
   ⊥-grammar _ = Lift ⊥
 
-  ParsesAreSets-⊥-grammar : ParsesAreSets ⊥-grammar
-  ParsesAreSets-⊥-grammar _ = isProp→isSet isProp⊥*
+  isHGrammar-⊥-grammar : isHGrammar ⊥-grammar
+  isHGrammar-⊥-grammar _ = isProp→isSet isProp⊥*
 
   DecProp-grammar :
     DecProp ℓ → Grammar → Grammar → Grammar
@@ -167,9 +167,9 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   _⇒_ : Grammar → Grammar → Grammar
   (g ⇒ g') w = g w → g' w
 
-  ParsesAreSets-⇒ :
-    {g : Grammar} → (g' : hGrammar) → ParsesAreSets ( g ⇒ g' .fst )
-  ParsesAreSets-⇒ g' _ = isSet→ (g' .snd _)
+  isHGrammar-⇒ :
+    {g : Grammar} → (g' : hGrammar) → isHGrammar ( g ⇒ g' .fst )
+  isHGrammar-⇒ g' _ = isSet→ (g' .snd _)
 
   ParseTransformer : Grammar → Grammar → Type ℓ
   ParseTransformer g g' = ∀ {w} → g w → g' w
@@ -243,14 +243,14 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   KL* : Grammar → Grammar
   KL* g w = KL*Ty g w
 
-  ParsesAreSets-KL* : (g : hGrammar) → ParsesAreSets (KL* (g .fst))
-  ParsesAreSets-KL* g _ = isSetKL*Ty g _
+  isHGrammar-KL* : (g : hGrammar) → isHGrammar (KL* (g .fst))
+  isHGrammar-KL* g _ = isSetKL*Ty g _
 
   ⊕Σ₀ : Grammar
   ⊕Σ₀ w = Σ[ c ∈ Σ₀ ] literal c w
 
-  ParsesAreSets-⊕Σ₀ : ParsesAreSets ⊕Σ₀
-  ParsesAreSets-⊕Σ₀ _ = isSetΣ isSetΣ₀ (λ _ → ParsesAreSets-literal _ _)
+  isHGrammar-⊕Σ₀ : isHGrammar ⊕Σ₀
+  isHGrammar-⊕Σ₀ _ = isSetΣ isSetΣ₀ (λ _ → isHGrammar-literal _ _)
 
   String→KL* : (w : String) → KL* ⊕Σ₀ w
   String→KL* [] = nil
@@ -438,7 +438,7 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
       Σ≡Prop (λ _ → isPropPropTrunc) refl
 
-  module _ ((g , gParsesAreSets) : hGrammar) where
+  module _ ((g , gisHGrammar) : hGrammar) where
     ⊗-unit-l-PT : ParseTransformer (ε-grammar ⊗ g) g
     ⊗-unit-l-PT p =
       transport
@@ -449,24 +449,3 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     ⊗-unit-l-inv-PT : ParseTransformer g (ε-grammar ⊗ g)
     ⊗-unit-l-inv-PT p = (([] , _) , refl) , (refl , p)
 
-    -- open Iso
-    -- ⊗-unit-l-isStronglyEquivalent : isStronglyEquivalent (ε-grammar ⊗ g) g
-    -- fun (⊗-unit-l-isStronglyEquivalent w) = ⊗-unit-l-PT
-    -- inv (⊗-unit-l-isStronglyEquivalent w) = ⊗-unit-l-inv-PT
-    -- rightInv (⊗-unit-l-isStronglyEquivalent w) b = {!!}
-    -- leftInv (⊗-unit-l-isStronglyEquivalent w) a =
-    --   ΣPathP ((ΣPathP (
-    --     (ΣPathP ((sym (a .snd .fst)) ,
-    --               (a .fst .snd ∙ cong (λ z → z ++ _) (a .snd .fst)))) ,
-    --     isSet→SquareP (λ i j → isSetString) _ _ _ _)) ,
-    --       ΣPathP ((isSet→SquareP (λ _ _ → isSetString) _ _ _ _) ,
-    --         toPathP {!!}))
-
-
-    -- ⊗-unit-r-PT : ParseTransformer (g ⊗ ε-grammar) g
-    -- ⊗-unit-r-PT p =
-    --   transport
-    --     (cong g ((sym (++-unit-r _) ∙
-    --       cong (λ a → p .fst .fst .fst ++ a) (sym (p .snd .snd))) ∙
-    --       sym ( p .fst .snd )))
-    --     ( p .snd .fst )

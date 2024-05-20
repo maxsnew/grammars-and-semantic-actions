@@ -12,7 +12,7 @@ open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
-open import Cubical.Data.List
+open import Cubical.Data.List hiding (init)
 open import Cubical.Data.Unit
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sum
@@ -25,6 +25,7 @@ open import Cubical.Data.Sigma
 open import Semantics.Grammar
 open import Semantics.String
 open import Semantics.Helper
+open import Semantics.Term
 
 private
   variable ℓ ℓ' : Level
@@ -32,6 +33,7 @@ private
 module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
   open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open TermDefs ℓ (Σ₀ , isFinSetΣ₀)
 
   record DFA : Type (ℓ-suc ℓ) where
     constructor mkDFA
@@ -51,9 +53,9 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     rej? q = DecProp-grammar (negateDecProp (isAcc q)) ⊤-grammar ⊥-grammar
 
     data DFATrace (q : Q .fst) (q-end : Q .fst) : String → Type ℓ where
-      nil : (q ≡ q-end) → ParseTransformer ε-grammar (DFATrace q q-end)
+      nil : (q ≡ q-end) → Term ε-grammar (DFATrace q q-end)
       cons : ∀ c →
-        ParseTransformer
+        Term
           (literal c ⊗ DFATrace (δ q c) q-end) (DFATrace q q-end)
 
     -- This is the only sus helper function
@@ -86,7 +88,6 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
   open DFA
 
-
   module _ (D : DFA) where
     ¬D : DFA
     ¬D = negate D
@@ -102,7 +103,7 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
           & (acc? D q ⊕ rej? D q))
 
     run' :
-      ParseTransformer
+      Term
         (KL* ⊕Σ₀)
         h
     run' =
@@ -113,7 +114,7 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         cons-case
       where
 
-      mt-case : ParseTransformer ε-grammar h
+      mt-case : Term ε-grammar h
       fst (mt-case p) = D .init
       fst (snd (mt-case p)) = nil refl p
       snd (snd (mt-case p)) =
@@ -125,7 +126,7 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
             _ _ ¬acc _ _))
           (D .isAcc (D .init) .snd)
 
-      cons-case : ParseTransformer (h ⊗ ⊕Σ₀) h
+      cons-case : Term (h ⊗ ⊕Σ₀) h
       fst (cons-case p) = D .δ (p .snd .fst .fst) (p .snd .snd .fst)
       fst (snd (cons-case p)) =
         transport
@@ -141,14 +142,14 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
               _ _ ¬acc _ _))
           (D .isAcc (D .δ (p .snd .fst .fst) (p .snd .snd .fst)) .snd)
 
-    toParse : ParseTransformer h (Parses D ⊕ Parses ¬D)
+    toParse : Term h (Parses D ⊕ Parses ¬D)
     toParse (a , b , inl x) =
       inl ((a , elimSimpleDecProp-grammar (D .isAcc _) _ x) , b)
     toParse (a , b , inr x) =
       inr ((a , elimSimpleDecProp-grammar (negateDecProp (D .isAcc _)) _ x) ,
         trace→negationTrace b)
 
-    run : ParseTransformer (KL* ⊕Σ₀) (Parses D ⊕ Parses ¬D)
+    run : Term (KL* ⊕Σ₀) (Parses D ⊕ Parses ¬D)
     run p = toParse (run' p)
 
     decideDFA : String → Bool

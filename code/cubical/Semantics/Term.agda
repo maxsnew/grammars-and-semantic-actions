@@ -37,7 +37,7 @@ open import Semantics.Helper
  -- is given as
  -- x : ε-grammar ⊢ M : g
  --}
-module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   -- TODO replace FinSet with Type
   open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
   open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
@@ -147,18 +147,43 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         refl) ,
         ((p .snd .fst) , (p .snd .snd .snd .fst))) , (p .snd .snd .snd .snd)))
 
+  LinearΠ-intro :
+    {A : Type ℓ} → {f : A → Grammar} →
+    {g : Grammar} →
+    (∀ a → Term g (f a)) →
+    Term g (LinearΠ f)
+  LinearΠ-intro e p a = e a p
 
-  -- LinearΠ-intro : {!!}
-  -- LinearΠ-intro = {!!}
+  LinearΠ-elim :
+    {A : Type ℓ} → {f : A → Grammar} →
+    {g : Grammar} →
+    Term g (LinearΠ f) →
+    (a : A) →
+    Term g (f a)
+  LinearΠ-elim e a p = e p a
 
-  -- LinearΠ-elim : {!!}
-  -- LinearΠ-elim = {!!}
+  LinearΣ-intro :
+    {A : Type ℓ} → {f : A → Grammar} →
+    (a : A) →
+    {g : Grammar} →
+    Term g (f a) →
+    Term g (LinearΣ f)
+  LinearΣ-intro a e p = a , (e p)
 
-  -- LinearΣ-intro : {!!}
-  -- LinearΣ-intro = {!!}
-
-  -- LinearΣ-elim : {!!}
-  -- LinearΣ-elim = {!!}
+  LinearΣ-elim :
+    {A : Type ℓ} → {f : A → Grammar} →
+    {g h k l : Grammar} →
+    Term g (LinearΣ f) →
+    (∀ a → Term (h ⊗ (f a) ⊗ k) l) →
+    Term (h ⊗ g ⊗ k) l
+  LinearΣ-elim e e' p =
+    let (a , b) = e (p .snd .snd .snd .fst) in
+    e' a
+      ((((fst p .fst .fst) , fst p .fst .snd) , p .fst .snd) ,
+        (p .snd .fst , (
+         ((fst (p .snd .snd) .fst .fst , fst (p .snd .snd) .fst .snd) ,
+          p .snd .snd .fst .snd)
+         , (b , (p .snd .snd .snd .snd)))))
 
   ⊤-intro :
     {g : Grammar} →
@@ -213,6 +238,7 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       (λ ph → eh ph)
       p
 
+  -- TODO this doesn't seem right
   ⇒-intro :
     {g h : Grammar} →
     Term g h →
