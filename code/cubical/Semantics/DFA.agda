@@ -58,6 +58,29 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         Term
           (literal c ⊗ DFATrace (δ q c) q-end) (DFATrace q q-end)
 
+    TraceFrom : (Q .fst) → Grammar
+    TraceFrom q = LinΣ[ q' ∈ Q .fst ] DFATrace q q'
+
+    extendTrace' : ∀ {q : Q .fst} → (c : Σ₀) →
+      Term ((TraceFrom q) ⊗ (literal c)) (LinΣ[ q' ∈ Q .fst ] DFATrace q q')
+    extendTrace' c (s , tr , lit) .fst = δ (tr .fst) c
+    -- TODO refactor this. pattern match is maybe wrong?
+    extendTrace' {q} c (s , (q' , nil x mt) , lit) .snd =
+      cons c ((((s .fst .snd) , []) ,
+        s .snd ∙ cong (λ a → a ++ s .fst .snd) mt ∙
+          sym (++-unit-r (s .fst .snd))) ,
+        (lit , (nil (cong (λ a → δ a c) x) refl)))
+    extendTrace' c {w} (s , (q' , cons c' tr) , lit) .snd =
+      cons c' ({!!} , ({!!} , {!extendTrace' ? ? .snd!}))
+      where
+      the-split : Splitting (_ ++ [ c ])
+      the-split = ([ c' ] , tr .fst .fst .snd ++ [ c ]) ,
+        (cong (λ a → a ++ [ c ]) (tr .fst .snd) ∙
+          (cong (λ a → (a ++ (tr .fst .fst .snd)) ++ [ c ]) (tr .snd .fst)))
+          ∙ ++-assoc [ c' ] (tr .fst .fst .snd) [ c ]
+
+
+
     -- This is the only sus helper function
     -- This adds to a trace in the wrong order, however this is definable
     -- in the paper type theory via the same principle as below

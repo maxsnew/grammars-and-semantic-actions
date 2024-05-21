@@ -70,6 +70,22 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         sym (p .fst .snd)))
       (e' (p .snd .snd))
 
+  ε-contraction-l :
+    {g h k : Grammar} →
+    Term ε-grammar g →
+    Term (g ⊗ h) k →
+    Term h k
+  ε-contraction-l {g = g} {k = k} e e' p =
+    e' ((([] , _) , refl) , (e refl , p))
+
+  ε-contraction-r :
+    {g h k : Grammar} →
+    Term ε-grammar g →
+    Term (h ⊗ g) k →
+    Term h k
+  ε-contraction-r {g = g} {k = k} e e' p =
+    e' (((_ , []) , sym (++-unit-r _)) , (p , e refl))
+
   ⊗-intro :
     {g h k l : Grammar} →
     Term g h →
