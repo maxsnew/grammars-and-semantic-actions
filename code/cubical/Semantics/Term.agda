@@ -47,6 +47,13 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   id : {g : Grammar} → Term g g
   id x = x
 
+  trans :
+    {g h k : Grammar} →
+    Term g h →
+    Term h k →
+    Term g k
+  trans e e' p = e' (e p)
+
   ε-extension-r :
     {g h k : Grammar} →
     Term g ε-grammar →
@@ -93,6 +100,15 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     Term (g ⊗ k) (h ⊗ l)
   ⊗-intro e e' p =
     p .fst , (e (p .snd .fst)) , (e' (p .snd .snd))
+
+  ⊗-elim :
+    {g h k l : Grammar} →
+    Term g (h ⊗ k) →
+    Term (h ⊗ k) l →
+    Term g l
+  ⊗-elim e e' p =
+    let (s , ph , pk) = e p in
+    e' (s , (ph , pk))
 
   -⊗-intro :
     {g h k : Grammar} →
@@ -180,26 +196,21 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
   LinearΣ-intro :
     {A : Type ℓ} → {f : A → Grammar} →
-    (a : A) →
     {g : Grammar} →
+    (a : A) →
     Term g (f a) →
     Term g (LinearΣ f)
   LinearΣ-intro a e p = a , (e p)
 
   LinearΣ-elim :
     {A : Type ℓ} → {f : A → Grammar} →
-    {g h k l : Grammar} →
+    {g h : Grammar} →
     Term g (LinearΣ f) →
-    (∀ a → Term (h ⊗ (f a) ⊗ k) l) →
-    Term (h ⊗ g ⊗ k) l
+    (∀ a → Term (f a) h) →
+    Term g h
   LinearΣ-elim e e' p =
-    let (a , b) = e (p .snd .snd .snd .fst) in
-    e' a
-      ((((fst p .fst .fst) , fst p .fst .snd) , p .fst .snd) ,
-        (p .snd .fst , (
-         ((fst (p .snd .snd) .fst .fst , fst (p .snd .snd) .fst .snd) ,
-          p .snd .snd .fst .snd)
-         , (b , (p .snd .snd .snd .snd)))))
+    let (a , b) = e p in
+    e' a b
 
   ⊤-intro :
     {g : Grammar} →

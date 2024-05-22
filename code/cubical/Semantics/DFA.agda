@@ -58,26 +58,74 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         Term
           (literal c ⊗ DFATrace (δ q c) q-end) (DFATrace q q-end)
 
+    elimDFATrace :
+      (P : ∀ q q' → Grammar) →
+      (nil-case : ∀ {q} → Term ε-grammar (P q q)) →
+      (cons-case : ∀ {q}{q'}{c} → Term (literal c ⊗ P (δ q c) q') (P q q')) →
+      ∀ {q q'} → Term (DFATrace q q') (P q q')
+    elimDFATrace P nil-case cons-case {q}{q'} (nil x y) =
+      transport (cong₂ (λ a b → P q a b) x (sym y)) (nil-case refl)
+    elimDFATrace P nil-case cons-case (cons c x) =
+      cons-case
+        ((([ c ] , (x .fst .fst .snd)) ,
+        (x .fst .snd ∙ cong (λ a → a ++ x .fst .fst .snd) (x .snd .fst))) ,
+        (refl , (elimDFATrace P nil-case cons-case (x .snd .snd))))
+
     TraceFrom : (Q .fst) → Grammar
     TraceFrom q = LinΣ[ q' ∈ Q .fst ] DFATrace q q'
 
     extendTrace' : ∀ {q : Q .fst} → (c : Σ₀) →
-      Term ((TraceFrom q) ⊗ (literal c)) (LinΣ[ q' ∈ Q .fst ] DFATrace q q')
-    extendTrace' c (s , tr , lit) .fst = δ (tr .fst) c
-    -- TODO refactor this. pattern match is maybe wrong?
-    extendTrace' {q} c (s , (q' , nil x mt) , lit) .snd =
-      cons c ((((s .fst .snd) , []) ,
-        s .snd ∙ cong (λ a → a ++ s .fst .snd) mt ∙
-          sym (++-unit-r (s .fst .snd))) ,
-        (lit , (nil (cong (λ a → δ a c) x) refl)))
-    extendTrace' c {w} (s , (q' , cons c' tr) , lit) .snd =
-      cons c' ({!!} , ({!!} , {!extendTrace' ? ? .snd!}))
+      Term ((TraceFrom q) ⊗ (literal c)) (TraceFrom q)
+    extendTrace' {q} c (s , Σtr , lit) =
+      let (q' , tr) = Σtr in
+      (δ q' c) ,
+      help (s , (tr , lit))
+
       where
-      the-split : Splitting (_ ++ [ c ])
-      the-split = ([ c' ] , tr .fst .fst .snd ++ [ c ]) ,
-        (cong (λ a → a ++ [ c ]) (tr .fst .snd) ∙
-          (cong (λ a → (a ++ (tr .fst .fst .snd)) ++ [ c ]) (tr .snd .fst)))
-          ∙ ++-assoc [ c' ] (tr .fst .fst .snd) [ c ]
+      help : ∀ {q q'} → Term (DFATrace q q' ⊗ literal c) (DFATrace q (δ q' c))
+      help {q}{q'} =
+        ⊗--elim {g = DFATrace q q'} {h = literal c} {k = DFATrace q (δ q' c)} {l = literal c}
+          (elimDFATrace (λ q q' → DFATrace q (δ q' c) ⊗- literal c)
+            (λ {q'} →
+              ⊗--intro {g = ε-grammar} {h = literal c} {k = DFATrace q' (δ q' c)}
+              (ε-extension-l {g = ε-grammar} {h = literal c} {k = DFATrace q' (δ q' c)}
+                (id {ε-grammar})
+                (ε-contraction-r {g = DFATrace (δ q' c) (δ q' c)} {h = literal c} {k = DFATrace q' (δ q' c)}
+                  (nil refl)
+                  (cons c)
+                )
+              )
+            )
+            (λ {q}{q'}{c'} →
+              ⊗--intro
+                {g = literal c' ⊗ ((DFATrace (δ q c') (δ q' c)) ⊗- literal c)}
+                {h = literal c} {k = DFATrace q (δ q' c)}
+                (trans
+                  {g = (literal c' ⊗ ((DFATrace (δ q c') (δ q' c)) ⊗- literal c)) ⊗ literal c}
+                  {h = literal c' ⊗ DFATrace (δ q c') (δ q' c)}
+                  {k = DFATrace q (δ q' c)}
+                  (⊗-assoc
+                   {g = literal c'}
+                   {h = DFATrace (δ q c') (δ q' c) ⊗- literal c}
+                   {k = literal c}
+                   {l = literal c' ⊗ DFATrace (δ q c') (δ q' c)}
+                  (⊗-intro
+                    {g = literal c'} {h = literal c'}
+                    {k = (DFATrace (δ q c') (δ q' c) ⊗- literal c) ⊗ literal c}
+                    {l = DFATrace (δ q c') (δ q' c)}
+                    (id {literal c'})
+                    (⊗--elim
+                      {g = DFATrace (δ q c') (δ q' c) ⊗- literal c}
+                      {h = literal c}
+                      {k = DFATrace (δ q c') (δ q' c)}
+                      {l = literal c}
+                      (id {DFATrace (δ q c') (δ q' c) ⊗- literal c})
+                      (id {literal c})))
+                   )
+                  (cons c'))
+                )
+            {q} {q'})
+          (id {literal c})
 
 
 
