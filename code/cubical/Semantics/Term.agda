@@ -284,38 +284,24 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       (⊤-intro {g = g})
       p
 
-
-  -- TODO this doesn't seem right
   ⇒-intro :
     {g h : Grammar} →
     Term g h →
     Term ε-grammar (g ⇒ h)
   ⇒-intro e pε pg = e pg
 
+  -- TODO what should the implication elim be?
   -- ⇒-elim : {!!}
   -- ⇒-elim = {!!}
-
-  KL*-intro-nil :
-    {g : Grammar} →
-    Term ε-grammar (KL* g)
-  KL*-intro-nil p =
-    transport (cong₂ KL*Ty refl (sym p)) KL*Ty.nil
-
-  KL*-intro-cons :
-    {g : Grammar} →
-    Term (g ⊗ KL* g) (KL* g)
-  KL*-intro-cons {g = g} p =
-    transport (cong (KL*Ty g) (sym (p .fst .snd)))
-      (KL*Ty.cons (p .snd .fst) (p .snd .snd))
 
   KL*-elim :
     {g h : Grammar} →
     Term ε-grammar h →
     Term (g ⊗ h) h →
     Term (KL* g) h
-  KL*-elim pε p⊗ nil = pε refl
-  KL*-elim pε p⊗ (cons x p) =
-    p⊗ ((_ , refl) , (x , (KL*-elim pε p⊗ p)))
+  KL*-elim pε p⊗ (nil x) = pε x
+  KL*-elim {g}{h} pε p⊗ (cons x) =
+    p⊗ ((x .fst) , ((x .snd .fst) , (KL*-elim pε p⊗ (x .snd .snd))))
 
   foldKL*r = KL*-elim
 

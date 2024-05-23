@@ -127,10 +127,6 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
             {q} {q'})
           (id {literal c})
 
-    Parses : Grammar
-    Parses =
-      LinΣ[ q ∈ Σ[ q' ∈ Q .fst ] isAcc q' .fst .fst ] DFATrace init (q .fst)
-
     negate : DFA
     Q negate = Q
     init negate = init
@@ -214,15 +210,6 @@ module examples where
 
   w'' : String
   w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
-
-
-  p : Parses D w
-  p =
-    (fzero , refl) ,
-    (cons fzero (stepLiteral
-      (cons (fsuc fzero) (stepLiteral
-        (cons (fsuc fzero) (stepLiteral
-          (cons fzero (stepLiteral (nil refl refl)))))))))
 
   ex1 : decideDFA D w ≡ true
   ex1 = refl
