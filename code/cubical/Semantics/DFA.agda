@@ -181,9 +181,51 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         {h = DFATrace D (D .init) q}
         {k = acc? D q ⊕ rej? D q}
         (id {DFATrace D (D .init) q})
-        {!!}
+        (DecProp-grammar'-intro
+         (D .isAcc q)
+         {g = DFATrace D (D .init) q}
+        )
         tr
-      
+
+    run : Term (KL* ⊕Σ₀) h
+    run =
+      trans
+        {g = KL* ⊕Σ₀}
+        {h = TraceFrom D (D .init)}
+        {k = h}
+        (foldKL*l
+          {g = ⊕Σ₀}
+          {h = TraceFrom D (D .init)}
+          {!!}
+          {!LinearΣ-elim!})
+        {!!}
+      -- foldKL*l
+      --   {g = ⊕Σ₀}
+      --   {h = h}
+      --   (LinearΣ-intro
+      --     {A = D .Q .fst}
+      --     {f = λ v → DFATrace D (D .init) v & (acc? D v ⊕ rej? D v)}
+      --     {g = ε-grammar}
+      --     (D .init)
+      --     (&-intro
+      --       {g = ε-grammar}
+      --       {h = DFATrace D (D .init) (D .init)}
+      --       {k = acc? D (D .init) ⊕ rej? D (D .init)}
+      --       (nil refl)
+      --       (DecProp-grammar'-intro (D .isAcc (D .init)) {g = ε-grammar})
+      --     )
+      --   )
+      --   (λ (s , ph , c , pc) →
+      --     D .δ (ph .fst) c ,
+      --     &-intro
+      --     {g = h ⊗ ⊕Σ₀}
+      --     {h = DFATrace D (D .init) (D .δ (ph .fst) c)}
+      --     {k = acc? D (D .δ (ph .fst) c) ⊕ rej? D (D .δ (ph .fst) c)}
+      --     {!extendTrace' D {q = D .init} c!}
+      --     {!ph .snd .fst!}
+      --     (s , ph , c , pc)
+      --   )
+
 
 --     run' :
 --       Term

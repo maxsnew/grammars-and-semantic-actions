@@ -265,6 +265,28 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       (λ ph → eh ph)
       p
 
+  DecProp-grammar'-intro :
+    (d : DecProp ℓ) →
+    {g : Grammar} →
+    Term
+      g
+      (DecProp-grammar' d ⊕ DecProp-grammar' (negateDecProp d))
+  DecProp-grammar'-intro (a , yes x) {g} p =
+    ⊕-intro₁
+      {g = g}
+      {h = DecProp-grammar' ((a , yes x))}
+      {k = DecProp-grammar' (negateDecProp (a , yes x))}
+      (⊤-intro {g = g})
+      p
+  DecProp-grammar'-intro (a , no ¬x) {g} p =
+    ⊕-intro₂
+      {g = g}
+      {h = DecProp-grammar' ((a , no ¬x))}
+      {k = DecProp-grammar' (negateDecProp (a , no ¬x))}
+      (⊤-intro {g = g})
+      p
+
+
   -- TODO this doesn't seem right
   ⇒-intro :
     {g h : Grammar} →

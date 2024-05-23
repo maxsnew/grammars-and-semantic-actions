@@ -117,6 +117,11 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   isHGrammar-⊥-grammar : isHGrammar ⊥-grammar
   isHGrammar-⊥-grammar _ = isProp→isSet isProp⊥*
 
+  DecProp-grammar' :
+    DecProp ℓ → Grammar
+  DecProp-grammar' d =
+    decRec (λ _ → ⊤-grammar) (λ _ → ⊥-grammar) (d .snd)
+
   DecProp-grammar :
     DecProp ℓ → Grammar → Grammar → Grammar
   DecProp-grammar d ifyes ifno =
