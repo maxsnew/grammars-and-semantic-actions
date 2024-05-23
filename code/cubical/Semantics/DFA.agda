@@ -127,6 +127,9 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
             {q} {q'})
           (id {literal c})
 
+    Parses : Grammar
+    Parses = LinΣ[ q ∈ Q .fst ] (DFATrace init q & acc? q)
+
     negate : DFA
     Q negate = Q
     init negate = init

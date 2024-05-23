@@ -14,6 +14,7 @@ open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.SumFin hiding (fsuc)
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
+open import Cubical.HITs.PropositionalTruncation
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
@@ -211,21 +212,33 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   String→KL* (c ∷ w) =
     cons ((([ c ] , w) , refl) , ((c , refl) , (String→KL* w)))
 
-  data RegularGrammar : Type ℓ where
-    ε-Reg : RegularGrammar
-    _⊗Reg_ : RegularGrammar → RegularGrammar → RegularGrammar
-    literalReg : Σ₀ → RegularGrammar
-    _⊕Reg_ : RegularGrammar → RegularGrammar → RegularGrammar
-    KL*Reg : RegularGrammar → RegularGrammar
+  ∥_∥grammar : Grammar → Grammar
+  ∥_∥grammar g w = ∥ g w ∥₁
 
-  RegularGrammar→Grammar : RegularGrammar → Grammar
-  RegularGrammar→Grammar ε-Reg = ε-grammar
-  RegularGrammar→Grammar (g ⊗Reg g') =
-    (RegularGrammar→Grammar g) ⊗ (RegularGrammar→Grammar g')
-  RegularGrammar→Grammar (literalReg c) = literal c
-  RegularGrammar→Grammar (g ⊕Reg g') =
-    RegularGrammar→Grammar g ⊕ RegularGrammar→Grammar g'
-  RegularGrammar→Grammar (KL*Reg g) = KL* (RegularGrammar→Grammar g)
+  isPropValuedGrammar : (g : Grammar) → Type ℓ
+  isPropValuedGrammar g = ∀ {w} → isProp (g w)
+
+  isPropValuedGrammar-literal : ∀ {c} → isPropValuedGrammar (literal c)
+  isPropValuedGrammar-literal {c} = isSetString _ [ c ]
+
+  isPropValuedGrammar-ε-grammar : isPropValuedGrammar ε-grammar
+  isPropValuedGrammar-ε-grammar = isSetString _ []
+
+  data RegularExpression : Type ℓ where
+    ε-Reg : RegularExpression
+    _⊗Reg_ : RegularExpression → RegularExpression → RegularExpression
+    literalReg : Σ₀ → RegularExpression
+    _⊕Reg_ : RegularExpression → RegularExpression → RegularExpression
+    KL*Reg : RegularExpression → RegularExpression
+
+  RegularExpression→Grammar : RegularExpression → Grammar
+  RegularExpression→Grammar ε-Reg = ε-grammar
+  RegularExpression→Grammar (g ⊗Reg g') =
+    (RegularExpression→Grammar g) ⊗ (RegularExpression→Grammar g')
+  RegularExpression→Grammar (literalReg c) = literal c
+  RegularExpression→Grammar (g ⊕Reg g') =
+    RegularExpression→Grammar g ⊕ RegularExpression→Grammar g'
+  RegularExpression→Grammar (KL*Reg g) = KL* (RegularExpression→Grammar g)
 
   Language : Grammar → Type ℓ
   Language g = Σ[ w ∈ String ] ∥ g w ∥₁

@@ -10,7 +10,7 @@ open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
-open import Cubical.Data.List
+open import Cubical.Data.List hiding (init)
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.DecidablePredicate
 open import Cubical.Data.Sum as Sum
@@ -27,92 +27,143 @@ open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Grammar public
 open import Semantics.DFA
+open import Semantics.Helper
+open import Semantics.Term
 
 private
   variable ℓ ℓ' : Level
 
 module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
---   open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
---   open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open TermDefs ℓ (Σ₀ , isFinSetΣ₀)
 
---   record NFA : Type (ℓ-suc ℓ) where
---     constructor mkNFA
---     field
---       Q : FinSet ℓ
---       init : Q .fst
---       isAcc : Q .fst → DecProp ℓ
---       transition : FinSet ℓ
---       src : transition .fst → Q .fst
---       dst : transition .fst → Q .fst
---       label : transition .fst → Σ₀
---       ε-transition : FinSet ℓ
---       ε-src : ε-transition .fst → Q .fst
---       ε-dst : ε-transition .fst → Q .fst
+  record NFA : Type (ℓ-suc ℓ) where
+    constructor mkNFA
+    field
+      Q : FinSet ℓ
+      init : Q .fst
+      isAcc : Q .fst → DecProp ℓ
+      transition : FinSet ℓ
+      src : transition .fst → Q .fst
+      dst : transition .fst → Q .fst
+      label : transition .fst → Σ₀
+      ε-transition : FinSet ℓ
+      ε-src : ε-transition .fst → Q .fst
+      ε-dst : ε-transition .fst → Q .fst
 
---     decEqQ : Discrete (Q .fst)
---     decEqQ = isFinSet→Discrete (Q .snd)
+    decEqQ : Discrete (Q .fst)
+    decEqQ = isFinSet→Discrete (Q .snd)
 
---     acc? : Q .fst → Grammar
---     acc? q = DecProp-grammar (isAcc q) ⊤-grammar ⊥-grammar
+    acc? : Q .fst → Grammar
+    acc? q = DecProp-grammar' (isAcc q)
 
---     rej? : Q .fst → Grammar
---     rej? q = DecProp-grammar (negateDecProp (isAcc q)) ⊤-grammar ⊥-grammar
+    rej? : Q .fst → Grammar
+    rej? q = DecProp-grammar' (negateDecProp (isAcc q))
 
---     init? : Q .fst → Grammar
---     init? q = DecProp-grammar
---       (((init ≡ q) , (isFinSet→isSet (Q .snd) _ _)) , (decEqQ init q))
---       ⊤-grammar ⊥-grammar
+    init? : Q .fst → Grammar
+    init? q = DecProp-grammar'
+      (((init ≡ q) , (isFinSet→isSet (Q .snd) _ _)) , (decEqQ init q))
 
---     data NFATrace
---       (q : Q .fst)
---       (q-end : Q .fst) : (w : String) → Type ℓ where
---       nil : (q ≡ q-end) → ParseTransformer ε-grammar (NFATrace q q-end)
---       cons : ∀ {t} →
---         (src t ≡ q) →
---         ParseTransformer
---           (literal (label t) ⊗ NFATrace (dst t) q-end) (NFATrace q q-end)
---       ε-cons : ∀ {t} →
---         (ε-src t ≡ q) →
---         ParseTransformer
---           (NFATrace (ε-dst t) q-end) (NFATrace q q-end)
+    data NFATrace
+      (q : Q .fst)
+      (q-end : Q .fst) : (w : String) → Type ℓ where
+      nil : (q ≡ q-end) →
+        Term ε-grammar (NFATrace q q-end)
+      cons : ∀ {t} →
+        (src t ≡ q) →
+        Term
+          (literal (label t) ⊗ NFATrace (dst t) q-end) (NFATrace q q-end)
+      ε-cons : ∀ {t} →
+        (ε-src t ≡ q) →
+        Term (NFATrace (ε-dst t) q-end) (NFATrace q q-end)
 
---     concatTrace : ∀ {q}{q'}{q''} → (w w' : String) →
---       NFATrace q q' w → NFATrace q' q'' w' → NFATrace q q'' (w ++ w')
---     concatTrace w w' (nil x x₁) v =
---       transport (cong₂ (λ a b → NFATrace a _ b)
---         (sym x) (cong (λ a → a ++ w') (sym x₁))) v
---     concatTrace w w' (cons x x₁) v =
---       cons x ((((fst x₁ .fst .fst) , (_ ++ _)) ,
---         cong (λ a → a ++ w') (x₁ .fst .snd) ∙ ++-assoc _ _ _) ,
---         ((x₁ .snd .fst) ,
---         (concatTrace (fst x₁ .fst .snd) w' (x₁ .snd .snd) v)))
---     concatTrace w w' (ε-cons x u) v =
---       ε-cons x (concatTrace w w' u v)
+    elimNFATrace :
+      (P : ∀ q q' → Grammar) →
+      (nil-case : ∀ {q} → Term ε-grammar (P q q)) →
+      (cons-case : ∀ {q}{q'}{t} → (src t ≡ q) →
+        Term (literal (label t) ⊗ P (dst t) q') (P q q')) →
+      (ε-cons-case : ∀ {q}{q'}{t} → (ε-src t ≡ q) →
+        Term (P (ε-dst t) q') (P q q')) →
+      ∀ {q}{q'} →
+      Term (NFATrace q q') (P q q')
+    elimNFATrace P nil-case cons-case ε-cons-case {q}{q'} (nil x y) =
+      transport (cong (λ a → P q a _) x) (nil-case y)
+    elimNFATrace P nil-case cons-case ε-cons-case (cons x y) =
+      cons-case x ((y .fst) , ((y .snd .fst) ,
+        (elimNFATrace P nil-case cons-case ε-cons-case (y .snd .snd))))
+    elimNFATrace P nil-case cons-case ε-cons-case (ε-cons x y) =
+      ε-cons-case x (elimNFATrace P nil-case cons-case ε-cons-case y)
 
---     elimNFA :
---       (P : ∀ q q' → Grammar) →
---       (nil-case : ∀ {q} → ParseTransformer ε-grammar (P q q)) →
---       (cons-case : ∀ {q}{q'}{t} → (src t ≡ q) →
---         ParseTransformer (literal (label t) ⊗ P (dst t) q') (P q q')) →
---       (ε-cons-case : ∀ {q}{q'}{t} → (ε-src t ≡ q) →
---         ParseTransformer (P (ε-dst t) q') (P q q')) →
---       ∀ {q}{q'} →
---       ParseTransformer (NFATrace q q') (P q q')
---     elimNFA P nil-case cons-case ε-cons-case {q}{q'} (nil x y) =
---       transport (cong (λ a → P q a _) x) (nil-case y)
---     elimNFA P nil-case cons-case ε-cons-case (cons x y) =
---       cons-case x ((y .fst) , ((y .snd .fst) ,
---         (elimNFA P nil-case cons-case ε-cons-case (y .snd .snd))))
---     elimNFA P nil-case cons-case ε-cons-case (ε-cons x y) =
---       ε-cons-case x (elimNFA P nil-case cons-case ε-cons-case y)
+    concatTrace : ∀ {q}{q'}{q''} →
+      Term ((NFATrace q q') ⊗ (NFATrace q' q'')) (NFATrace q q'')
+    concatTrace {q}{q'}{q''} =
+      ⊗--elim
+        {g = NFATrace q q'} {h = NFATrace q' q''} {k = NFATrace q q''} {l = NFATrace q' q''}
+        (elimNFATrace (λ a b → NFATrace a q'' ⊗- NFATrace b q'')
+          (λ {q} →
+            ⊗--intro {g = ε-grammar} {h = NFATrace q q''} {k = NFATrace q q''}
+            (ε-extension-l {g = ε-grammar} {h = NFATrace q q''} {k = NFATrace q q''}
+              (id {ε-grammar}) (id {NFATrace q q''})))
+          (λ {q}{q'}{t} p →
+             ⊗--intro
+               {g = literal (label t) ⊗ ((NFATrace (dst t) q'') ⊗- NFATrace q' q'')}
+               {h = NFATrace q' q''}
+               {k = NFATrace q q''}
+               (trans
+                {g = ((literal (label t) ⊗ (NFATrace (dst t) q'' ⊗- NFATrace q' q'')) ⊗
+                 NFATrace q' q'')}
+                {h = literal (label t) ⊗ (NFATrace (dst t) q'')}
+                {k = NFATrace q q''}
+                (⊗-assoc
+                  {g = literal (label t)} {h = NFATrace (dst t) q'' ⊗- NFATrace q' q''}
+                  {k = NFATrace q' q''} {l = literal (label t) ⊗ NFATrace (dst t) q''}
+                  (⊗-intro
+                    {g = literal (label t)} {h = literal (label t)}
+                    {k = (NFATrace (dst t) q'' ⊗- NFATrace q' q'') ⊗ NFATrace q' q''}
+                    {l = NFATrace (dst t) q''}
+                    (id {literal (label t)})
+                    (⊗--elim
+                      {g = NFATrace (dst t) q'' ⊗- NFATrace q' q''}
+                      {h = NFATrace q' q''}
+                      {k = NFATrace (dst t) q''}
+                      {l = NFATrace q' q''}
+                      (id {NFATrace (dst t) q'' ⊗- NFATrace q' q''})
+                      (id {NFATrace q' q''}))) )
+                (cons p))
+          )
+          (λ {q}{q'}{t} p →
+            ⊗--intro {g = NFATrace (ε-dst t) q'' ⊗- NFATrace q' q''} {h = NFATrace q' q''}{k = NFATrace q q''}
+              (trans
+                {g = (NFATrace (ε-dst t) q'' ⊗- NFATrace q' q'') ⊗ NFATrace q' q''}
+                {h = NFATrace (ε-dst t) q''}
+                {k = NFATrace q q''}
+                (⊗--elim
+                  {g = (NFATrace (ε-dst t) q'' ⊗- NFATrace q' q'')}
+                  {h = NFATrace q' q''}
+                  {k = NFATrace (ε-dst t) q''}
+                  {l = NFATrace q' q''}
+                  (id {NFATrace (ε-dst t) q'' ⊗- NFATrace q' q''})
+                  (id {NFATrace q' q''}))
+                (ε-cons p))
+          )
+          {q} {q'})
+        (id {NFATrace q' q''})
+
+    Accepting : Type ℓ
+    Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
+
+    Parses : Grammar
+    Parses =
+      LinΣ[ q ∈ Accepting ] NFATrace init (q .fst)
 
 
---     Accepting : Type ℓ
---     Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
-
---     Parses : Grammar
---     Parses =
---       LinΣ[ q ∈ Accepting ] NFATrace init (q .fst)
+    -- open DFADefs ℓ (Σ₀ , isFinSetΣ₀)
+    -- Determinize :
+    --   (D : DFA) →
+    --   Term Parses (DFA.Parses D) →
+    --   Term ∥ Parses ∥grammar (DFA.Parses D)
+    -- Determinize = {!!}
 
 --     negate : NFA
 --     Q negate = Q

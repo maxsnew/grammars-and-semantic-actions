@@ -21,6 +21,8 @@ open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.SumFin
 open import Cubical.Data.Sigma
 
+open import Cubical.HITs.PropositionalTruncation
+
 open import Semantics.Grammar
 open import Semantics.String
 open import Semantics.Helper
@@ -323,3 +325,19 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         )
       pε
       ((_ , refl) , (refl , p))
+
+  ∥∥grammar-intro :
+    {g : Grammar} →
+    Term g (∥ g ∥grammar)
+  ∥∥grammar-intro {g} p = ∣ p ∣₁
+
+  ∥∥grammar-elim :
+    {g h : Grammar} →
+    isPropValuedGrammar h →
+    Term g h →
+    Term (∥ g ∥grammar) h
+  ∥∥grammar-elim isProph e p =
+    Cubical.HITs.PropositionalTruncation.elim
+    (λ _ → isProph)
+    (λ pg → e pg)
+    p
