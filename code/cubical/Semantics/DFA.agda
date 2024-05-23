@@ -47,10 +47,10 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     decEqQ = isFinSet→Discrete (Q .snd)
 
     acc? : Q .fst → Grammar
-    acc? q = DecProp-grammar (isAcc q) ⊤-grammar ⊥-grammar
+    acc? q = DecProp-grammar' (isAcc q)
 
     rej? : Q .fst → Grammar
-    rej? q = DecProp-grammar (negateDecProp (isAcc q)) ⊤-grammar ⊥-grammar
+    rej? q = DecProp-grammar' (negateDecProp (isAcc q))
 
     data DFATrace (q : Q .fst) (q-end : Q .fst) : String → Type ℓ where
       nil : (q ≡ q-end) → Term ε-grammar (DFATrace q q-end)

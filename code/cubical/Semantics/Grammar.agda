@@ -122,53 +122,6 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   DecProp-grammar' d =
     decRec (λ _ → ⊤-grammar) (λ _ → ⊥-grammar) (d .snd)
 
-  DecProp-grammar :
-    DecProp ℓ → Grammar → Grammar → Grammar
-  DecProp-grammar d ifyes ifno =
-    decRec (λ _ → ifyes) (λ _ → ifno) (d .snd)
-
-  -- TODO naming
-  DecProp-grammar-yes-path :
-    (d : DecProp ℓ) → (ifyes : Grammar) →
-    (ifno : Grammar) →
-    d .fst .fst → (w : String) →
-    DecProp-grammar d ifyes ifno w ≡ ifyes w
-  DecProp-grammar-yes-path (fst₁ , yes p) ifyes ifno x w =
-    refl
-  DecProp-grammar-yes-path (fst₁ , no ¬p) ifyes ifno x w =
-    ⊥.rec (¬p x)
-
-  DecProp-grammar-yes :
-    (d : DecProp ℓ) → (ifyes : Grammar) →
-    (ifno : Grammar) → d .fst .fst → (w : String) → ifyes w →
-    DecProp-grammar d ifyes ifno w
-  DecProp-grammar-yes d ifyes ifno y w x =
-    transport (sym (DecProp-grammar-yes-path d ifyes ifno y w)) x
-
-  DecProp-grammar-no-path :
-    (d : DecProp ℓ) → (ifyes : Grammar) →
-    (ifno : Grammar) →
-    (d .fst .fst → ⊥) → (w : String) →
-    DecProp-grammar d ifyes ifno w ≡ ifno w
-  DecProp-grammar-no-path (fst₁ , yes p) ifyes ifno x w =
-    ⊥.rec (x p)
-  DecProp-grammar-no-path (fst₁ , no ¬p) ifyes ifno x w =
-    refl
-
-  DecProp-grammar-no :
-    (d : DecProp ℓ) → (ifyes : Grammar) →
-    (ifno : Grammar) → (d .fst .fst → ⊥) → (w : String) → ifno w →
-    DecProp-grammar d ifyes ifno w
-  DecProp-grammar-no d ifyes ifno y w x =
-    transport (sym (DecProp-grammar-no-path d ifyes ifno y w)) x
-
-  elimSimpleDecProp-grammar :
-    (d : DecProp ℓ) → (w : String) →
-    (DecProp-grammar d ⊤-grammar ⊥-grammar w) →
-    d .fst .fst
-  elimSimpleDecProp-grammar (fst₁ , yes p) w x = p
-
-  -- Meant to be the exponential in the type theory
   _⇒_ : Grammar → Grammar → Grammar
   (g ⇒ g') w = g w → g' w
 
@@ -176,15 +129,12 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     {g : Grammar} → (g' : hGrammar) → isHGrammar ( g ⇒ g' .fst )
   isHGrammar-⇒ g' _ = isSet→ (g' .snd _)
 
-  ParseTransformer : Grammar → Grammar → Type ℓ
-  ParseTransformer g g' = ∀ {w} → g w → g' w
+  Term : Grammar → Grammar → Type ℓ
+  Term g g' = ∀ {w} → g w → g' w
 
-  -- TODO can I do this with parse transformers?
   data KL*Ty (g : Grammar) : (w : String) → Type ℓ where
-    nil : (KL*Ty g [])
-    cons :
-      ∀ {w w'} →
-        g w → KL*Ty g w' → KL*Ty g (w ++ w')
+    nil : Term ε-grammar (KL*Ty g)
+    cons : Term (g ⊗ KL*Ty g) (KL*Ty g)
 
   -- Use IW trees to prove that Kleene star forms a set
   -- (provided that the original grammar outputs sets)
@@ -209,27 +159,26 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     KL*Ty-inX w (inr (s , sp)) x = s .fst .snd
 
     KL*Ty→W : ∀ {w} → KL*Ty g w → IW KL*Ty-S KL*Ty-P KL*Ty-inX w
-    KL*Ty→W nil = node (inl refl) (λ ())
-    KL*Ty→W (cons {w}{w'} x p) =
-      node (inr (((w , w') , refl) , x)) λ _ → KL*Ty→W p
+    KL*Ty→W (nil x) = node (inl x) λ ()
+    KL*Ty→W (cons x) =
+      node (inr ((x .fst) , (x .snd .fst)))
+        λ _ → KL*Ty→W (x .snd .snd)
 
     W→KL*Ty : ∀ {w} → IW KL*Ty-S KL*Ty-P KL*Ty-inX w → KL*Ty g w
-    W→KL*Ty (node (inl x) subtree) =
-      transport
-        (cong (λ a → KL*Ty g a) (sym x))
-        (KL*Ty.nil {g = g})
+    W→KL*Ty (node (inl x) subtree) = nil x
     W→KL*Ty (node (inr x) subtree) =
-      transport
-      (cong (λ a → KL*Ty g a) (sym (x .fst .snd)))
-      (KL*Ty.cons {g = g} (x .snd) (W→KL*Ty (subtree _)))
+      cons ((x .fst) , ((x .snd) , (W→KL*Ty (subtree _))))
 
     KL*TyRetractofW :
       ∀ {w} (p : KL*Ty g w) →
       W→KL*Ty (KL*Ty→W p) ≡ p
-    KL*TyRetractofW nil = transportRefl (KL*Ty.nil {g = g})
-    KL*TyRetractofW (cons x p) =
-      transportRefl (cons x (W→KL*Ty (KL*Ty→W p))) ∙
-      cong (λ a → cons x a) (KL*TyRetractofW p)
+    KL*TyRetractofW (nil x) = refl
+    KL*TyRetractofW (cons x) =
+      cong cons
+        (ΣPathP (refl ,
+          (ΣPathP (refl ,
+            (KL*TyRetractofW (x .snd .snd))))))
+
 
     isSetKL*Ty-S : ∀ w → isSet (KL*Ty-S w)
     isSetKL*Ty-S w =
@@ -258,118 +207,9 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   isHGrammar-⊕Σ₀ _ = isSetΣ isSetΣ₀ (λ _ → isHGrammar-literal _ _)
 
   String→KL* : (w : String) → KL* ⊕Σ₀ w
-  String→KL* [] = nil
+  String→KL* [] = nil refl
   String→KL* (c ∷ w) =
-    cons (c , refl) (String→KL* w)
-
-  stepLiteral : ∀ {w}{g : Grammar} → {c : Σ₀ } → g w → ( literal c ⊗ g ) (c ∷ w)
-  stepLiteral {w} {c = c} p = splitChar c w , refl , p
-
-  -- TODO better name
-  literalSplit : ∀ c w g →
-    (literal c ⊗ g) w → Σ[ w' ∈ fiber (λ a → c ∷ a) w ] g (w' .fst)
-  literalSplit c [] g p =
-    ⊥.rec
-      (¬nil≡cons (p .fst .snd ∙
-        ( cong (λ a → a ++ p .fst .fst .snd) (p .snd .fst))))
-  literalSplit c (c' ∷ w) g p =
-    (w , (cong (λ z → z ∷ w) c≡c')) , transport (cong g p₁₁₂≡w) (p .snd .snd)
-    where
-    the-string-path =
-      (cong (λ z → z ++ p .fst .fst .snd) (sym (p .snd .fst)) ∙
-        (sym (p .fst .snd)))
-
-    c≡c' : c ≡ c'
-    c≡c' = cons-inj₁ the-string-path
-
-    p₁₁₂≡w : p .fst .fst .snd ≡ w
-    p₁₁₂≡w = cons-inj₂ the-string-path
-
-  -- Recall that a parse transformer is the shallow
-  -- embedding of a term from the syntax
-  --
-  -- So we can embed some inference rules where parse transformers
-  -- from g to g' correspond to judgements like
-  -- x : g ⊢ M : g'
-  module _ (g : Grammar) where
-    id-PT : ParseTransformer g g
-    id-PT x = x
-
-    -- linear identity function
-    id-⊗-PT : ParseTransformer ε-grammar (g -⊗ g)
-    id-⊗-PT {w'} pI w gw =
-      transport
-        (cong (λ a → g a)
-          (sym (++-unit-r w) ∙
-          cong (λ a → w ++ a) (sym pI) ))
-        gw
-
-    ⊗appL-PT : ParseTransformer (g ⊗ (g -⊗ g)) g
-    ⊗appL-PT x =
-      transport
-        (sym (cong g (x .fst .snd)))
-        (x .snd .snd (x .fst .fst .fst) (x .snd .fst))
-
-
-    module _
-      (h : Grammar)
-      where
-
-      fold*r :
-        ParseTransformer ε-grammar h →
-        ParseTransformer (g ⊗ h) h →
-        ParseTransformer (KL* g) h
-      fold*r pε p⊗ nil = pε refl
-      fold*r pε p⊗ (cons {w}{w'} x g*parse) =
-        p⊗
-          (((w , w') , refl) ,
-           (x , (fold*r pε p⊗ g*parse)))
-
-  elimDecProp-PT :
-    (d : DecProp ℓ) → (g : Grammar) →
-    (∀ w → d .fst .fst → g w) →
-    (∀ w → ¬ d .fst .fst → g w) →
-    ParseTransformer
-      (DecProp-grammar d ⊤-grammar ⊥-grammar)
-      g
-  elimDecProp-PT d g ifyes ifno {w} p =
-    decRec
-    (ifyes w) (ifno w)
-      (d .snd)
-
-  module _
-    (g : Grammar)
-    (h : Grammar)
-    where
-
-    fold*l :
-      ParseTransformer ε-grammar h →
-      ParseTransformer (h ⊗ g) h →
-      ParseTransformer (KL* g) h
-    fold*l pε p⊗ g*parse =
-      fold*r
-        g
-        (h -⊗ h)
-        (id-⊗-PT h)
-        the-cons-step
-        g*parse
-        []
-        (pε refl)
-      where
-      -⊗intro-and-sub-PT : ParseTransformer ((h ⊗ g) ⊗ (h -⊗ h)) h
-      -⊗intro-and-sub-PT x =
-        ⊗appL-PT h
-          ((((fst x .fst .fst) , (fst x .fst .snd)) , (x .fst .snd)) ,
-          ((p⊗ (x .snd .fst)) , (x .snd .snd)))
-      the-cons-step : ParseTransformer (g ⊗ (h -⊗ h)) (h -⊗ h)
-      the-cons-step {w'} f w hw =
-        -⊗intro-and-sub-PT
-          (((w ++ fst f .fst .fst , fst f .fst .snd) ,
-          cong (λ b → w ++ b) (f .fst .snd) ∙
-          sym (++-assoc w (f .fst .fst .fst) (fst f .fst .snd))) ,
-          ((((w , fst f .fst .fst) , refl) ,
-          hw , (f .snd .fst)) ,
-          f .snd .snd))
+    cons ((([ c ] , w) , refl) , ((c , refl) , (String→KL* w)))
 
   data RegularGrammar : Type ℓ where
     ε-Reg : RegularGrammar
@@ -394,9 +234,8 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   isSetLanguage g = isSetΣ isSetString (λ w → isProp→isSet isPropPropTrunc)
 
   module _ (g g' : Grammar) where
-
     isLogicallyEquivalent : Type ℓ
-    isLogicallyEquivalent = ParseTransformer g g' × ParseTransformer g' g
+    isLogicallyEquivalent = Term g g' × Term g' g
 
     isWeaklyEquivalent : Type ℓ
     isWeaklyEquivalent = Iso (Language g) (Language g')
@@ -442,15 +281,3 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       Σ≡Prop (λ _ → isPropPropTrunc) refl
     leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
       Σ≡Prop (λ _ → isPropPropTrunc) refl
-
-  module _ ((g , gisHGrammar) : hGrammar) where
-    ⊗-unit-l-PT : ParseTransformer (ε-grammar ⊗ g) g
-    ⊗-unit-l-PT p =
-      transport
-        (cong g (cong (λ a → a ++ p .fst .fst .snd)
-          (sym (p .snd .fst)) ∙ sym (p .fst .snd)))
-        ( p .snd .snd )
-
-    ⊗-unit-l-inv-PT : ParseTransformer g (ε-grammar ⊗ g)
-    ⊗-unit-l-inv-PT p = (([] , _) , refl) , (refl , p)
-

@@ -42,8 +42,6 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
   open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
 
-  Term = ParseTransformer
-
   id : {g : Grammar} → Term g g
   id x = x
 
