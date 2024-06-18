@@ -1,4 +1,4 @@
-module KleeneCategory where
+module KleeneCategory.KleeneCategory where
 
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor
@@ -12,13 +12,13 @@ open import Cubical.Categories.Instances.Poset
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool hiding (_⊕_ ; _≤_)
 
-open import Cubical.Relation.Binary.Poset
+open import Cubical.Relation.Binary.Order.Poset
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-open import IndexedCoproduct
-open import FunctorAlgebra
+open import KleeneCategory.IndexedCoproduct
+open import KleeneCategory.FunctorAlgebra
 
 module _ {ℓ ℓ' ℓS : Level}
   (K : MonoidalCategory ℓ ℓ')
@@ -100,7 +100,7 @@ module _ {ℓ ℓ' ℓS : Level}
   G-Functor a b = coprodWith b ∘F ─⊗─ ∘F (Id ,F Constant C C a)
 
   open FAlgebra
-  open IndexedCoproduct.IndexedCoproduct
+  open KleeneCategory.IndexedCoproduct.IndexedCoproduct
 
   record KleeneCategoryStr : Type (ℓ-max (ℓ-suc ℓS) (ℓ-max ℓ ℓ')) where
     field
@@ -278,7 +278,7 @@ module _ {ℓ ℓS : Level} where
     MonoidalCategory.C KA-MonoidalCat = KA-Cat
     MonoidalCategory.monstr KA-MonoidalCat = KA-Monoidal
 
-    open IndexedCoproduct.IndexedCoproduct
+    open KleeneCategory.IndexedCoproduct.IndexedCoproduct
 
     KA-Cat-has-IndexedCoproducts : IndexedCoproducts {ℓ}{ℓ}{ℓS} KA-Cat
     coprodOb (KA-Cat-has-IndexedCoproducts {S} IdxObjs) =

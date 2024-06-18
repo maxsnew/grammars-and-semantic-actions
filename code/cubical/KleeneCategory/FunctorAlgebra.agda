@@ -1,4 +1,4 @@
-module FunctorAlgebra where
+module KleeneCategory.FunctorAlgebra where
 
 open import Cubical.Categories.Category
 open import Cubical.Categories.Functor

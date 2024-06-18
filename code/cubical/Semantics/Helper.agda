@@ -5,6 +5,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Powerset
 open import Cubical.Foundations.Function
+open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
@@ -151,6 +152,21 @@ snd (DecPropΣ A B) =
 
 Decℙ : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
 Decℙ {ℓ} A = A → DecProp ℓ
+
+DecSubset : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
+DecSubset {ℓ} A =
+  Σ[ X ∈ Type ℓ ] Σ[ f ∈ (X ↪ A) ] Σ[ P ∈ Decℙ A ]
+    (∀ (x : X) → P (f .fst x) .fst .fst)
+
+-- List→DecSubset :
+--   ∀ {ℓ} → (A : Type ℓ) → List A → DecSubset A
+-- List→DecSubset A [] =
+--   ⊥* ,
+--   (((λ x → ⊥.rec (lower x)) ,
+--   λ w x → record { equiv-proof = λ y → ⊥.rec (lower x) }) ,
+--   (λ x → (⊥* , (λ x₁ y → ⊥.rec (lower y))) , no (λ x₁ → lower x₁)) ,
+--   (λ x → ⊥.rec (lower x)))
+-- List→DecSubset A (x ∷ L) = {!!}
 
 
 

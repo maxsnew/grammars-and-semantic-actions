@@ -1,4 +1,4 @@
-module IndexedCoproduct where
+module KleeneCategory.IndexedCoproduct where
 
 open import Cubical.Categories.Category
 open import Cubical.Categories.Limits.BinCoproduct

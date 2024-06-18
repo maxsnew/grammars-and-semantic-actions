@@ -277,3 +277,4 @@ TSWLatexianTemp*
 /notes.pdf
 
 .DS_Store
+/code/cubical/KleeneCategory/SilvaExercises.agda

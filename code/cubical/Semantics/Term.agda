@@ -265,6 +265,37 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       (λ ph → eh ph)
       p
 
+  Maybe-yes-intro :
+    {g h : Grammar} →
+    Term g h →
+    Term g (Maybe h)
+  Maybe-yes-intro {g}{h} p = ⊕-intro₁ {g = g} {h = h} {k = ⊤-grammar} p
+
+  Maybe-no-intro :
+    {g h : Grammar} →
+    Term g (Maybe h)
+  Maybe-no-intro {g}{h} = ⊕-intro₂ {g = g} {h = h} {k = ⊤-grammar} (⊤-intro {g = g})
+
+  Maybe-elim :
+    {g h : Grammar} →
+    Term g h →
+    Term ⊤-grammar h →
+    Term (Maybe g) h
+  Maybe-elim = ⊕-elim
+
+  Maybe-return :
+    {g h : Grammar} →
+    Term g h →
+    Term g (Maybe h)
+  Maybe-return = Maybe-yes-intro
+
+  Maybe-bind :
+    {g h : Grammar} →
+    Term g (Maybe h) →
+    Term (Maybe g) (Maybe h)
+  Maybe-bind {g} {h} p = Maybe-elim {g = g} {h = Maybe h} p (Maybe-no-intro {g = ⊤-grammar} {h = h})
+
+
   DecProp-grammar'-intro :
     (d : DecProp ℓ) →
     {g : Grammar} →
