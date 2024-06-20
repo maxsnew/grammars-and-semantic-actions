@@ -157,8 +157,13 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     Parses =
       LinΣ[ q ∈ Accepting ] NFATrace init (q .fst)
 
+    open DFADefs ℓ (Σ₀ , isFinSetΣ₀)
+    PowersetDFA : DFA
+    PowersetDFA = ?
 
-    -- open DFADefs ℓ (Σ₀ , isFinSetΣ₀)
+
+
+
     -- Determinize :
     --   (D : DFA) →
     --   Term Parses (DFA.Parses D) →

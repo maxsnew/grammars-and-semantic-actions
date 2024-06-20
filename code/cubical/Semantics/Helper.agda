@@ -5,6 +5,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Powerset
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Univalence
 open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
@@ -113,6 +114,9 @@ leftInv DecPropIso (A , no ¬p) =
   Σ≡Prop (λ x → isPropDec (x .snd))
     (ΣPathP (refl , (isPropIsProp _ _)))
 
+DecProp≃DecProp' : ∀ {ℓ} → DecProp ℓ ≃ DecProp' ℓ
+DecProp≃DecProp' = isoToEquiv DecPropIso
+
 DecProp⊎ :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
   (A .fst .fst → B .fst .fst → ⊥) → DecProp ℓ
@@ -147,16 +151,53 @@ snd (DecPropΣ A B) =
     (λ ¬a → no (λ x → ¬a (x .fst)))
     (A .snd)
 
+Bool-iso-DecProp' : ∀ {ℓ} → Iso (Bool) (DecProp' ℓ)
+fst (fun Bool-iso-DecProp' false) = ⊥*
+fst (fun Bool-iso-DecProp' true) = Unit*
+snd (fun Bool-iso-DecProp' false) = false , (uninhabEquiv lower (λ x → x))
+snd (fun Bool-iso-DecProp' true) = true , (isContr→Equiv isContrUnit* isContrUnit)
+inv Bool-iso-DecProp' (a , false , c) = false
+inv Bool-iso-DecProp' (a , true , c) = true
+rightInv Bool-iso-DecProp' (a , false , c) =
+  ΣPathP
+    (sym (ua (compEquiv c ⊥≃⊥*)) ,
+      (ΣPathP
+        (refl ,
+        isProp→PathP (λ i → λ x y → Σ≡Prop isPropIsEquiv (isProp→ isProp⊥ _ _)) _ _)))
+  where
+  ⊥≃⊥* : ⊥ ≃ ⊥*
+  ⊥≃⊥* = uninhabEquiv (λ x → x) lower
+rightInv Bool-iso-DecProp' (a , true , c) =
+  ΣPathP
+    ((sym (ua (compEquiv c Unit≃Unit*))) ,
+      (ΣPathP
+        (refl ,
+        isProp→PathP (λ i → λ x y → Σ≡Prop isPropIsEquiv (isProp→ isPropUnit _ _)) _ _)))
+leftInv Bool-iso-DecProp' false = refl
+leftInv Bool-iso-DecProp' true = refl
 
+Bool≃DecProp' : ∀ {ℓ} → Bool ≃ DecProp' ℓ
+Bool≃DecProp' = isoToEquiv Bool-iso-DecProp'
 
+Bool≃DecProp : ∀ {ℓ} → Bool ≃ DecProp ℓ
+Bool≃DecProp = compEquiv Bool≃DecProp' (invEquiv DecProp≃DecProp')
+
+isFinSetDecProp : ∀ {ℓ} → isFinSet (DecProp ℓ)
+fst isFinSetDecProp = 2
+snd isFinSetDecProp = ∣ the-equiv ∣₁
+  where
+  the-equiv : DecProp ℓ ≃ Fin 2
+  the-equiv = compEquiv (invEquiv Bool≃DecProp) (invEquiv SumFin2≃Bool)
 
 Decℙ : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
 Decℙ {ℓ} A = A → DecProp ℓ
 
-DecSubset : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
-DecSubset {ℓ} A =
-  Σ[ X ∈ Type ℓ ] Σ[ f ∈ (X ↪ A) ] Σ[ P ∈ Decℙ A ]
-    (∀ (x : X) → P (f .fst x) .fst .fst)
+-- DecSubset : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
+-- DecSubset {ℓ} A =
+--   Σ[ X ∈ Type ℓ ] Σ[ f ∈ (X ↪ A) ] Σ[ P ∈ Decℙ A ]
+--     (∀ (x : X) → P (f .fst x) .fst .fst)
+
+-- DecSubset-subsingleton :
 
 -- List→DecSubset :
 --   ∀ {ℓ} → (A : Type ℓ) → List A → DecSubset A
