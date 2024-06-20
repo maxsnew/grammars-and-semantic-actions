@@ -85,9 +85,12 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       help : ∀ {q q'} → Term (DFATrace q q' ⊗ literal c) (DFATrace q (δ q' c))
       help {q}{q'} =
         ⊗--elim {g = DFATrace q q'} {h = literal c} {k = DFATrace q (δ q' c)} {l = literal c}
-          (elimDFATrace (λ q q' → DFATrace q (δ q' c) ⊗- literal c)
+          (elimDFATrace
+          (λ q q' → DFATrace q (δ q' c) ⊗- literal c)
             (λ {q'} →
-              ⊗--intro {g = ε-grammar} {h = literal c} {k = DFATrace q' (δ q' c)}
+              ⊗--intro
+                {g = ε-grammar} {h = literal c}
+                {k = DFATrace q' (δ q' c)}
               (ε-extension-l {g = ε-grammar} {h = literal c} {k = DFATrace q' (δ q' c)}
                 (id {ε-grammar})
                 (ε-contraction-r {g = DFATrace (δ q' c) (δ q' c)} {h = literal c} {k = DFATrace q' (δ q' c)}

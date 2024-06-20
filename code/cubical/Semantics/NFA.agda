@@ -20,6 +20,7 @@ open import Cubical.Data.Maybe
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
+open import Cubical.Data.Nat.Order.Recursive as Ord
 open import Cubical.Data.SumFin
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
@@ -157,9 +158,110 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     Parses =
       LinΣ[ q ∈ Accepting ] NFATrace init (q .fst)
 
-    open DFADefs ℓ (Σ₀ , isFinSetΣ₀)
-    PowersetDFA : DFA
-    PowersetDFA = ?
+    prune-self-ε : NFA
+    Q prune-self-ε = Q
+    init prune-self-ε = init
+    isAcc prune-self-ε = isAcc
+    transition prune-self-ε = transition
+    src prune-self-ε = src
+    dst prune-self-ε = dst
+    label prune-self-ε = label
+    ε-transition prune-self-ε =
+      (Σ[ t ∈ ε-transition .fst ] (ε-src t ≡ ε-dst t → ⊥)) ,
+      (isFinSetΣ ε-transition
+        (λ t → (ε-src t ≡ ε-dst t → ⊥) ,
+        isDecProp→isFinSet
+          (isProp→ isProp⊥)
+          (negateDecProp (((ε-src t ≡ ε-dst t) ,
+          (isFinSet→isSet (Q .snd) _ _)) ,
+          (isFinSet→Discrete (Q .snd) _ _)) .snd)))
+    ε-src prune-self-ε tr = ε-src (tr .fst)
+    ε-dst prune-self-ε tr = ε-dst (tr .fst)
+
+    module _
+      (no-self-ε : ∀ (t : ε-transition .fst) → (ε-src t ≡ ε-dst t) → ⊥)
+      where
+      private
+        eqDecProp : ∀ (a b : Q .fst) → DecProp ℓ
+        eqDecProp a b =
+          ((a ≡ b) ,
+          isFinSet→isSet (Q .snd) a b) ,
+          isFinSet→Discrete (Q .snd) a b
+
+      ε-prune : (t : ε-transition .fst) → NFA
+      Q (ε-prune t) =
+        (Σ[ q ∈ Q .fst ] (t .ε-src ≡ q → ⊥)) ,
+        isFinSetΣ Q (λ q → (ε-src t ≡ q → ⊥) ,
+        isDecProp→isFinSet (isProp→ isProp⊥)
+          (negateDecProp (eqDecProp _ _) .snd))
+      init (ε-prune t) =
+        decRec
+          (λ pruneInit → ε-dst t , no-self-ε t)
+          (λ dontPruneInit → init , dontPruneInit)
+          (decEqQ (ε-src t) init)
+      isAcc (ε-prune t) x =
+        DecProp⊎
+          (isAcc (x .fst))
+          (DecProp× (isAcc (ε-src t))
+            (DecProp×
+              (eqDecProp (x .fst) (ε-dst t))
+              (negateDecProp (isAcc (x .fst)))))
+          (λ a b → b .snd .snd a)
+      transition (ε-prune t) = transition
+      src (ε-prune t) tr =
+        decRec
+          (λ srcispruned → (ε-dst t) , (no-self-ε t))
+          (λ srcisntpruned → (src tr) , srcisntpruned)
+          (decEqQ (ε-src t) (src tr))
+      dst (ε-prune t) tr =
+        decRec
+          (λ dstispruned → (ε-dst t) , (no-self-ε t))
+          (λ dstisntpruned → (dst tr) , dstisntpruned)
+          (decEqQ (ε-src t) (dst tr))
+      label (ε-prune t) = label
+      ε-transition (ε-prune t) .fst = (Σ[ t' ∈ ε-transition .fst ] (t' ≡ t → ⊥))
+      ε-transition (ε-prune t) .snd =
+        isFinSetΣ ε-transition (λ t' → (t' ≡ t → ⊥) ,
+        isDecProp→isFinSet (isProp→ isProp⊥) (negateDecProp (((t' ≡ t) ,
+          isFinSet→isSet (ε-transition .snd) _ _) ,
+            isFinSet→Discrete (ε-transition .snd) _ _) .snd))
+      ε-src (ε-prune t) tr =
+        decRec
+          (λ srcispruned → (ε-dst t) , (no-self-ε t))
+          (λ srcisntpruned → (ε-src (tr .fst)) , srcisntpruned)
+          (decEqQ (ε-src t) (ε-src (tr .fst)))
+      ε-dst (ε-prune t) tr =
+        decRec
+          (λ dstispruned → (ε-dst t) , (no-self-ε t))
+          (λ dstisntpruned → (ε-dst (tr .fst)) , dstisntpruned)
+          (decEqQ (ε-src t) (ε-dst (tr .fst)))
+
+  open NFA
+  ε-closure : (N : NFA) → isFinOrd (N .ε-transition .fst) → NFA
+  ε-closure N ord =
+    {!!}
+    -- let N' = prune-self-ε N in
+    -- decRec
+    --   (λ noε → N')
+    --   (λ someε → ε-prune N'
+    --     (λ t → t .snd)
+    --     ((takeFirstFinOrd (ε-transition N .fst) ord (n≠0→0<n someε)) ,
+    --      {!!}))
+    --   (discreteℕ (ord .fst) 0)
+    where
+    n≠0→0<n : ∀ {n} → ¬ (n ≡ 0) → 0 Ord.< n
+    n≠0→0<n {zero} x = ⊥.rec (x refl)
+    n≠0→0<n {suc n} = λ _ → tt
+
+
+
+
+    -- open DFADefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
+    -- PowersetDFA : DFA
+    -- DFA.Q PowersetDFA = FinSetDecℙ Q
+    -- DFA.init PowersetDFA = SingletonDecℙ init
+    -- DFA.isAcc PowersetDFA = {!!}
+    -- DFA.δ PowersetDFA = {!!}
 
 
 

@@ -17,6 +17,7 @@ open import Cubical.Data.Nat.Order.Recursive as Ord
 open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.DecidablePredicate
+open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Sum
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.Unit
@@ -78,6 +79,10 @@ snd (isFinSetLift {A = A} isFinSetA) =
   (λ [a] → isPropPropTrunc )
   (λ A≅Fin → ∣ compEquiv (invEquiv (LiftEquiv {A = A})) A≅Fin ∣₁)
   (isFinSetA .snd)
+
+takeFirstFinOrd : ∀ {ℓ} → (A : Type ℓ) → (the-ord : isFinOrd A) → 0 Ord.< the-ord .fst → A
+takeFirstFinOrd A (suc n , the-eq) x =
+  the-eq .snd .equiv-proof (Fin→SumFin (Fin.fromℕ≤ 0 n x)) .fst .fst
 
 isPropCod→isProp≃ :
   {a : Type ℓ}{b : Type ℓ'} →
@@ -151,6 +156,11 @@ snd (DecPropΣ A B) =
     (λ ¬a → no (λ x → ¬a (x .fst)))
     (A .snd)
 
+DecProp× :
+  ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
+  DecProp ℓ
+DecProp× A B = DecPropΣ A (λ _ → B)
+
 Bool-iso-DecProp' : ∀ {ℓ} → Iso (Bool) (DecProp' ℓ)
 fst (fun Bool-iso-DecProp' false) = ⊥*
 fst (fun Bool-iso-DecProp' true) = Unit*
@@ -192,128 +202,12 @@ snd isFinSetDecProp = ∣ the-equiv ∣₁
 Decℙ : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
 Decℙ {ℓ} A = A → DecProp ℓ
 
--- DecSubset : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
--- DecSubset {ℓ} A =
---   Σ[ X ∈ Type ℓ ] Σ[ f ∈ (X ↪ A) ] Σ[ P ∈ Decℙ A ]
---     (∀ (x : X) → P (f .fst x) .fst .fst)
+isFinSetDecℙ : ∀ {ℓ} → (A : FinSet ℓ) → isFinSet (Decℙ (A .fst))
+isFinSetDecℙ {ℓ} A = isFinSet→ A (DecProp ℓ , isFinSetDecProp)
 
--- DecSubset-subsingleton :
+FinSetDecℙ : ∀ {ℓ} → FinSet ℓ → FinSet (ℓ-suc ℓ)
+FinSetDecℙ {ℓ} A = (Decℙ (A .fst)) , (isFinSetDecℙ A)
 
--- List→DecSubset :
---   ∀ {ℓ} → (A : Type ℓ) → List A → DecSubset A
--- List→DecSubset A [] =
---   ⊥* ,
---   (((λ x → ⊥.rec (lower x)) ,
---   λ w x → record { equiv-proof = λ y → ⊥.rec (lower x) }) ,
---   (λ x → (⊥* , (λ x₁ y → ⊥.rec (lower y))) , no (λ x₁ → lower x₁)) ,
---   (λ x → ⊥.rec (lower x)))
--- List→DecSubset A (x ∷ L) = {!!}
-
-
-
--- TODO decidable powerset
---
--- fromℕ< : (m n : ℕ) → m Ord.< n → Fin n
--- fromℕ< zero (suc n) _ = fzero
--- fromℕ< (suc m) (suc n) p = fsuc (fromℕ< m n p )
-
--- FinSetℙ : ∀ {ℓ} → FinSet ℓ → FinSet (ℓ-suc ℓ)
--- fst (FinSetℙ A) = Decℙ (A .fst)
--- snd (FinSetℙ A) =
---   Cubical.HITs.PropositionalTruncation.rec
---     isPropIsFinSet
---     (λ A≃Fin → (2 ^ A .snd .fst) ,
---       ∣ the-equiv A≃Fin ∣₁)
---     (A .snd .snd)
---     where
-
---     -- Bitvector : (n : ℕ) → Type
---     -- Bitvector n = Fin.FinVec Bool n
-
---     -- bv-iso :
---     --   A .fst ≃ Fin (A .snd .fst) →
---     --   Iso (Decℙ (A .fst)) (Bitvector (A .snd .fst))
---     -- fun (bv-iso x) S m =
---     --   decRec
---     --     (λ _ → true)
---     --     (λ _ → false)
---     --     (S the-a .snd)
---     --   where
---     --   the-a = x .snd .equiv-proof (Fin→SumFin m) .fst .fst
---     -- inv (bv-iso x) v a =
---     --   Cubical.Data.Bool.elim
---     --     (DecPropIso .inv (Unit* ,
---     --       (true , (isContr→Equiv isContrUnit* isContrUnit))))
---     --     (DecPropIso .inv (⊥* ,
---     --       (false , uninhabEquiv (λ x → lower x) λ x → x)))
---     --     (v (SumFin→Fin (x .fst a)))
---     -- rightInv (bv-iso x) b = {!refl!}
---     -- leftInv (bv-iso x) a = {!!}
-
-
---     -- help : ∀ {m} → (n : ℕ) → n Ord.< m → (Fin m → DecProp ℓ) → ℕ
---     -- help {m = m} zero p S = decRec (λ _ → 1) (λ _ → 0) (S (fromℕ< 0 m p) .snd)
---     -- help {m = m} (suc n) p S =
---     --   decRec
---     --     (λ _ → (2 ^ (suc n)) + help n a S)
---     --     (λ _ → help n a S)
---     --     (S (fromℕ< (suc n) m p) .snd)
---     --   where
---     --   a = Ord.<-weaken {suc n}{m} p
-
---     -- the-iso :
---     --   0 Ord.< A .snd .fst →
---     --   A .fst ≃ Fin (A .snd .fst) →
---     --   Iso (Decℙ (A .fst)) (Fin (2 ^ A .snd .fst))
---     -- fun (the-iso p x) S =
---     --   fromℕ< (help {m = A .snd .fst} (predℕ (A .snd .fst)) (pred< (A .snd .fst) p)
---     --     λ a → S (x .snd .equiv-proof a .fst .fst)) (2 ^ A .snd .fst) {!!}
---     --   where
---     --   pred< : (n : ℕ) → 0 Ord.< n → predℕ n Ord.< n
---     --   pred< (suc n) x = Ord.≤-refl n
-
---     --   caseDec : ∀ {ℓ ℓ' ℓ''} {P : Type ℓ} {A : Type ℓ'}(B : A → Type ℓ'') → (ifyes : P → A) →
---     --     (ifno : ¬ P → A) →
---     --     ((p : P) → B (ifyes p)) →
---     --     ((¬p : ¬ P) → B (ifno ¬p)) →
---     --     (d : Dec P) →
---     --       B (decRec ifyes ifno d)
---     --   caseDec B ifyes ifno fy fn (yes p) = fy p
---     --   caseDec B ifyes ifno fy fn (no ¬p) = fn ¬p
-
---     --   lem : (n : ℕ) → (x : 0 Ord.< n) → (S : Fin n → DecProp ℓ) →
---     --    help (predℕ n) (pred< n x) S Ord.< (2 ^ n)
---     --   lem (suc zero) _ S =
---     --     caseDec
---     --       (λ a → a Ord.< 2)
---     --       ((λ _ → 1))
---     --       (λ _ → 0)
---     --       (λ _ → tt)
---     --       (λ _  → tt)
---     --       (S (fromℕ< 0 1 (pred< 1 _)) .snd)
---     --   lem (suc (suc n)) x S =
---     --     -- {!!}
---     --     caseDec
---     --       (λ a → a Ord.< (2 ^ n) + ((2 ^ n) + zero) + ((2 ^ n) + ((2 ^ n) + zero) + zero))
---     --       (λ _ →
---     --         (2 ^ n) + ((2 ^ n) + zero) +
---     --         help n (Ord.<-weaken n (Ord.≤-refl n) S) S)
---     --       (λ _ → help n (Ord.<-weaken n (Ord.≤-refl n) S) S)
---     --       (λ p → {!!})
---     --       (λ ¬p → {!!} )
---     --       (S (fsuc (fromℕ< n (suc n) (Ord.≤-refl n))) .snd)
-
---     -- inv (the-iso p x) = {!!}
---     -- rightInv (the-iso p x) = {!!}
---     -- leftInv (the-iso p x) = {!!}
-
---     the-equiv :
---       A .fst ≃ Fin (A .snd .fst) →
---       Decℙ (A .fst) ≃ Fin (2 ^ A .snd .fst)
---     fst (the-equiv x) f =
---       SumFinℙ≃ (A .snd .fst) .fst
---         (fst ∘ snd ∘ (DecPropIso .fun) ∘ f ∘ equivToIso x .inv)
---     fst (fst (equiv-proof (snd (the-equiv x)) y)) a =
---       {!equivToIso (SumFinℙ≃ (A .snd .fst)) .inv ?!}
---     snd (fst (equiv-proof (snd (the-equiv x)) y)) = {!!}
---     snd (equiv-proof (snd (the-equiv x)) y) fib = {!!}
+SingletonDecℙ : ∀ {ℓ} {A : FinSet ℓ} → (a : A .fst) → Decℙ (A .fst)
+SingletonDecℙ {A = A} a x =
+  ((x ≡ a) , isFinSet→isSet (A .snd) _ _) , isFinSet→Discrete (A .snd) _ _
