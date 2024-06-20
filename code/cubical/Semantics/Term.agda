@@ -265,35 +265,36 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       (λ ph → eh ph)
       p
 
-  Maybe-yes-intro :
+  MaybeGrammar-yes-intro :
     {g h : Grammar} →
     Term g h →
-    Term g (Maybe h)
-  Maybe-yes-intro {g}{h} p = ⊕-intro₁ {g = g} {h = h} {k = ⊤-grammar} p
+    Term g (MaybeGrammar h)
+  MaybeGrammar-yes-intro {g}{h} p = ⊕-intro₁ {g = g} {h = h} {k = ⊤-grammar} p
 
-  Maybe-no-intro :
+  MaybeGrammar-no-intro :
     {g h : Grammar} →
-    Term g (Maybe h)
-  Maybe-no-intro {g}{h} = ⊕-intro₂ {g = g} {h = h} {k = ⊤-grammar} (⊤-intro {g = g})
+    Term g (MaybeGrammar h)
+  MaybeGrammar-no-intro {g}{h} = ⊕-intro₂ {g = g} {h = h} {k = ⊤-grammar} (⊤-intro {g = g})
 
-  Maybe-elim :
+  MaybeGrammar-elim :
     {g h : Grammar} →
     Term g h →
     Term ⊤-grammar h →
-    Term (Maybe g) h
-  Maybe-elim = ⊕-elim
+    Term (MaybeGrammar g) h
+  MaybeGrammar-elim = ⊕-elim
 
-  Maybe-return :
+  MaybeGrammar-return :
     {g h : Grammar} →
     Term g h →
-    Term g (Maybe h)
-  Maybe-return = Maybe-yes-intro
+    Term g (MaybeGrammar h)
+  MaybeGrammar-return = MaybeGrammar-yes-intro
 
-  Maybe-bind :
+  MaybeGrammar-bind :
     {g h : Grammar} →
-    Term g (Maybe h) →
-    Term (Maybe g) (Maybe h)
-  Maybe-bind {g} {h} p = Maybe-elim {g = g} {h = Maybe h} p (Maybe-no-intro {g = ⊤-grammar} {h = h})
+    Term g (MaybeGrammar h) →
+    Term (MaybeGrammar g) (MaybeGrammar h)
+  MaybeGrammar-bind {g} {h} p =
+    MaybeGrammar-elim {g = g} {h = MaybeGrammar h} p (MaybeGrammar-no-intro {g = ⊤-grammar} {h = h})
 
 
   DecProp-grammar'-intro :

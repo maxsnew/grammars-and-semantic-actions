@@ -60,29 +60,139 @@ module _ where
   -- S → ( S + F ) | F
   -- F → a
 
-  -- TODO how do you specify the LL table in general?
   data S where
-    eff : Term ((literal a -⊗ ⊤-grammar) & F) S
+    eff : Term F S
     lparenS+Frparen :
       Term
-        ((literal lparen -⊗ ⊤-grammar) & ((literal lparen) ⊗ S ⊗ literal + ⊗ F ⊗ literal rparen))
+        ((literal lparen) ⊗ S ⊗ literal + ⊗ F ⊗ literal rparen)
         S
   data F where
-    the-a : Term ((literal a -⊗ ⊤-grammar) & literal a) F
+    the-a : Term (literal a) F
 
-  testParser : Term (KL* ⊕Σ₀) (S ⊕ ⊤-grammar)
-  -- empty
-  testParser x =
-    foldKL*l
-      {g = ⊕Σ₀}
-      {h = S ⊕ ⊤-grammar}
-      (⊕-intro₂
-        {g = ε-grammar}
-        {h = S}
-        {k = ⊤-grammar}
-        (⊤-intro {g = ε-grammar}))
-      {!!}
-      {!!}
+  S-parser : Term (KL* ⊕Σ₀) (MaybeGrammar (LinΣ[ s ∈ String ] S))
+  F-parser : Term (KL* ⊕Σ₀) (MaybeGrammar (LinΣ[ s ∈ String ] F))
+
+
+  S-parser (GrammarDefs.nil x) =
+    (MaybeGrammar-no-intro {g = ε-grammar} {h = S}) x
+  -- lparen
+  S-parser (GrammarDefs.cons (s , (fzero , lit) , kl)) =
+    MaybeGrammar-bind
+      {g =
+        ((literal lparen) ⊗ S ⊗ literal + ⊗ F ⊗ literal rparen)}
+      {h = S}
+      (MaybeGrammar-yes-intro lparenS+Frparen)
+      (trans {g = literal lparen ⊗ KL* ⊕Σ₀}
+        {h =
+         literal lparen ⊗
+         (MaybeGrammar S ⊗ (literal + ⊗ (MaybeGrammar F ⊗ literal rparen)))}
+        {k =
+         MaybeGrammar
+         (literal lparen ⊗ (S ⊗ (literal + ⊗ (F ⊗ literal rparen))))}
+        (⊗-intro {g = literal lparen} {h = literal lparen} {k = KL* ⊕Σ₀}
+          {l =
+           MaybeGrammar S ⊗ (literal + ⊗ (MaybeGrammar F ⊗ literal rparen))}
+          (id {g = literal lparen})
+          {!!})
+        {!!}
+        (s , (lit , kl)))
+  -- rparen
+  S-parser (GrammarDefs.cons (s , (fsuc fzero , lit) , kl)) =
+    MaybeGrammar-no-intro
+      {g = literal rparen ⊗ KL* ⊕Σ₀} {h = S}
+      (s , lit , kl)
+  -- a
+  S-parser (GrammarDefs.cons (s , (fsuc (fsuc fzero) , lit) , kl)) =
+    MaybeGrammar-bind
+      {g = F} {h = S}
+      (MaybeGrammar-yes-intro eff)
+      (F-parser (cons (s , (a , lit), kl)))
+  -- +
+  S-parser (GrammarDefs.cons (s , (fsuc (fsuc (fsuc fzero)) , lit) , kl)) =
+    MaybeGrammar-no-intro
+      {g = literal + ⊗ KL* ⊕Σ₀} {h = S}
+      (s , lit , kl)
+
+  F-parser (GrammarDefs.nil x) =
+    (MaybeGrammar-no-intro {g = ε-grammar} {h = F}) x
+  -- lparen
+  F-parser (GrammarDefs.cons (s , (fzero , lit) , kl)) =
+    MaybeGrammar-no-intro
+      {g = literal lparen ⊗ KL* ⊕Σ₀} {h = F}
+      (s , lit , kl)
+  -- rparen
+  F-parser (GrammarDefs.cons (s , (fsuc fzero , lit) , kl)) =
+    MaybeGrammar-no-intro
+      {g = literal rparen ⊗ KL* ⊕Σ₀} {h = F}
+      (s , lit , kl)
+  -- a
+  F-parser (GrammarDefs.cons (s , (fsuc (fsuc fzero) , lit) , kl)) =
+    MaybeGrammar-bind
+      {g = literal a}
+      {h = F}
+     (MaybeGrammar-yes-intro the-a)
+      (MaybeGrammar-bind
+        {g = literal a ⊗ KL* ⊕Σ₀}
+        {h = literal a }
+        (-⊗-elim
+          {g = literal a}
+          {h = KL* ⊕Σ₀}
+          {k = MaybeGrammar (literal a)}
+          (foldKL*r
+            {g = ⊕Σ₀}
+            {h = literal a -⊗ MaybeGrammar (literal a)}
+            (-⊗-intro
+              {g = literal a}
+              {h = ε-grammar}
+              {k = MaybeGrammar (literal a)}
+              (ε-extension-r
+                {g = ε-grammar}
+                {h = literal a}
+                {k = MaybeGrammar (literal a)}
+                (id {g = ε-grammar})
+                (MaybeGrammar-return
+                  {g = literal a} {h = literal a}
+                  (id {g = literal a}))))
+            (-⊗-intro
+              {g = literal a }
+              {h = ⊕Σ₀ ⊗ (literal a -⊗ MaybeGrammar (literal a))}
+              {k = MaybeGrammar (literal a)}
+              (MaybeGrammar-no-intro
+                {g = literal a ⊗ ⊕Σ₀ ⊗ (literal a -⊗ MaybeGrammar (literal a))}
+                {h = literal a})))
+          (id {g = literal a}))
+        (inl (s , (lit , kl)))
+        )
+
+  F-parser (GrammarDefs.cons (s , (fsuc (fsuc (fsuc fzero)) , lit) , kl)) =
+    MaybeGrammar-no-intro
+      {g = literal + ⊗ KL* ⊕Σ₀} {h = F}
+      (s , lit , kl)
+
+  -- testParser : Term (KL* ⊕Σ₀) (MaybeGrammar (S ⊗- ⊕Σ₀))
+  -- -- empty
+  -- testParser {w} x =
+  --   foldKL*l
+  --     {g = ⊕Σ₀}
+  --     {h = MaybeGrammar (S ⊗- ⊕Σ₀)}
+  --     (⊕-intro₂
+  --       {g = ε-grammar}
+  --       {h = (S ⊗- ⊕Σ₀)}
+  --       {k = ⊤-grammar}
+  --       (⊤-intro {g = ε-grammar}))
+  --     (trans
+  --       {g = MaybeGrammar (S ⊗- ⊕Σ₀) ⊗ ⊕Σ₀}
+  --       {h = MaybeGrammar ((S ⊗- ⊕Σ₀) ⊗ ⊕Σ₀)}
+  --       {k = MaybeGrammar (S ⊗- ⊕Σ₀)}
+  -- -- : Term (MaybeGrammar (S ⊗- ⊕Σ₀) ⊗ ⊕Σ₀)
+  --   -- (MaybeGrammar ((S ⊗- ⊕Σ₀) ⊗ ⊕Σ₀))
+  --       {!!}
+  -- -- : Term (MaybeGrammar ((S ⊗- ⊕Σ₀) ⊗ ⊕Σ₀)) (MaybeGrammar (S ⊗- ⊕Σ₀))
+  --       (MaybeGrammar-bind
+  --         {g = (S ⊗- ⊕Σ₀) ⊗ ⊕Σ₀}
+  --         {h = S ⊗- ⊕Σ₀}
+  --         {!!}))
+  --     (String→KL* w)
 
   -- testParser (nil x) = inr _
   -- -- lparen

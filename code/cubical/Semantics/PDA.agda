@@ -37,74 +37,177 @@ module PDADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) ((Γ₀ , isFinSetΓ�
       init : Q .fst
       isAcc : Q .fst → DecProp ℓ
       init-stack-sym : Γ₀
+      -- TODO change these to have a type of transitions with projections + determinism constraints
       δ : Q .fst → Σ₀ → Γ₀ → DM.Maybe (Q .fst × Stack)
       εδ : Q .fst → Γ₀ → DM.Maybe (Q .fst × Stack)
       isDet : ∀ q z →
         ((∀ c → fiber just (δ q c z)) → εδ q z ≡ nothing) ×
         (fiber just (εδ q z) → ∀ c → δ q c z ≡ nothing)
 
---     isDeterministic : Type ℓ
---     isDeterministic = ∀ q c z →
---       -- At most one transition per label
---       isProp (δ q c z .fst) ×
---       -- if there is an empty label, then no transitions for any characters
---       (isContr (δ q (inr _) z .fst) → ∀ (c' : Σ₀) → δ q (inl c') z .fst → ⊥)
-
     data PDATrace
       (q q' : Q .fst) :
-      (l : Stack) → (w : String) → Type ℓ where
-      nil : (q ≡ q') → (l : Stack) → Term ε-grammar (PDATrace q q' l)
-      cons : ∀ {c} {z} {l} →
+      (l l' : Stack) → (w : String) → Type ℓ where
+      nil : (q ≡ q') → (l : Stack) → Term ε-grammar (PDATrace q q' l l)
+      cons : ∀ c z {l} {l'} →
         (((nextState , push), fibs) : fiber just (δ q c z)) →
         Term
-          (literal c ⊗ PDATrace nextState q' (rev(push) ++ l) )
-          (PDATrace q q' (z ∷ l))
-      ε-cons : ∀ {z} {l} →
+          (literal c ⊗ PDATrace nextState q' (rev(push) ++ l) l')
+          (PDATrace q q' (z ∷ l) l')
+      ε-cons : ∀ z {l} {l'} →
         (((nextState , push), fibs) : fiber just (εδ q z)) →
         Term
-          (PDATrace nextState q' (rev(push) ++ l) )
-          (PDATrace q q' (z ∷ l))
-      -- cons : ∀ {c} {g} {l} → (dst : δ q (inl c) g .fst) →
-      --   Term
-      --     (PDATrace
-      --       (δ q (inl c) g .snd .fst .fst dst .fst)
-      --       q'
-      --       (rev(δ q (inl c) g .snd .fst .fst dst .snd) ++ l)
-      --     )
-      --     (PDATrace q q' (g ∷ l))
-      -- ε-cons : ∀ {g} {l} → (dst : δ q (inr _) g .fst) →
-      --   Term
-      --     (PDATrace
-      --       (δ q (inr _) g .snd .fst .fst dst .fst)
-      --       q'
-      --       (rev(δ q (inr _) g .snd .fst .fst dst .snd) ++ l)
-      --     )
-      --     (PDATrace q q' (g ∷ l))
+          (PDATrace nextState q' (rev(push) ++ l) l')
+          (PDATrace q q' (z ∷ l) l')
 
---     module _ (isDet : isDeterministic) where
---       FromInit = (LinΣ[ q ∈ Q .fst ] PDATrace init q [ init-stack-sym ])
+    elimPDATrace :
+      (P : ∀ q q' l l' → Grammar) →
+      (nil-case : ∀ q l → Term ε-grammar (P q q l l)) →
+      (cons-case : ∀ q q' c z l l' →
+        (((nextState , push), fibs) : fiber just (δ q c z)) →
+        Term
+          (literal c ⊗ P nextState q' (rev(push) ++ l) l')
+          (P q q' (z ∷ l) l')
+      ) →
+      (ε-cons-case : ∀ q q' z l l' →
+        (((nextState , push), fibs) : fiber just (εδ q z)) →
+        Term (P nextState q' (rev(push) ++ l) l') (P q q' (z ∷ l) l')
+      ) →
+      ∀ {q q' l l'} → Term (PDATrace q q' l l') (P q q' l l')
+    elimPDATrace P nil-case cons-case ε-cons-case {q}{q'}{w = w}
+      (nil pq l pw) =
+      transport (cong (λ a → P q a l l w) pq) (nil-case q l pw)
+    elimPDATrace P nil-case cons-case ε-cons-case
+      (cons c z {l} {l'} fib x) =
+      cons-case _ _ c z l l' fib
+        ((([ c ] , (x .fst .fst .snd)) ,
+        (x .fst .snd ∙ cong (_++ x .fst .fst .snd) (x .snd .fst))) ,
+        (refl ,
+          elimPDATrace P nil-case
+            cons-case ε-cons-case (x .snd .snd)))
+    elimPDATrace P nil-case cons-case ε-cons-case
+      (ε-cons z {l} {l'} fib x) =
+      ε-cons-case _ _ z l l' fib
+        (elimPDATrace P nil-case cons-case ε-cons-case x)
 
---       extendTrace' : (c : Σ₀) →
---         Term (FromInit ⊗ (literal c)) (Maybe FromInit)
---       extendTrace' c = {!!}
+    TraceFrom : (Q .fst) → Stack → Grammar
+    TraceFrom q l = (LinΣ[ (q' , l') ∈ (Q .fst × Stack) ] PDATrace q q' l' l)
 
---       run : Term (KL* ⊕Σ₀) (Maybe FromInit)
---       run =
---         foldKL*l {g = ⊕Σ₀} {h = Maybe FromInit}
---           (Maybe-yes-intro {g = ε-grammar} {h = FromInit}
---             (λ x → init , nil refl [ init-stack-sym ] x))
---           (trans {g = Maybe FromInit ⊗ ⊕Σ₀} {h = Maybe (FromInit ⊗ ⊕Σ₀)} {k = Maybe FromInit}
---             swapMaybe -- (FromInit + ⊤) ⊗ ⊕Σ₀ ⊢ ((FromInit ⊗ ⊕Σ₀) + ⊤)
---             (Maybe-bind {g = FromInit ⊗ ⊕Σ₀} {h = FromInit}
---               (λ (s , tr , c , lit) → extendTrace' c (s , tr , lit))
---             )
---           )
---           where
---           swapMaybe : Term (Maybe FromInit ⊗ ⊕Σ₀) (Maybe (FromInit ⊗ ⊕Σ₀))
---           -- Some
---           swapMaybe {w} (s , inl x , c , lit) = inl (s , x , c , lit)
---           -- None
---           swapMaybe {w} (s , inr x , c , lit) = inr _
+    FromInit = TraceFrom init [ init-stack-sym ]
+
+    extendTrace' : ∀ {q l} → (c : Σ₀) →
+      Term (TraceFrom q l ⊗ (literal c)) (MaybeGrammar (TraceFrom q l))
+    extendTrace' {q} {l} c (s , Σtr , lit) =
+      let ((q' , l') , tr) = Σtr in
+      {!!}
+      where
+      inspectStack : ∀ q' l' →
+        Term
+        (PDATrace q q' l' l ⊗ (literal c))
+        (MaybeGrammar (TraceFrom q l))
+      inspectStack q' [] =
+        MaybeGrammar-no-intro
+          {g = PDATrace q q' [] l ⊗ literal c}
+          {h = TraceFrom q l}
+      inspectStack q' (z ∷ l') =
+        DM.rec
+          -- Transition for (c , z) is not defined
+          (DM.rec
+            -- Transition for ε not defined
+            (MaybeGrammar-no-intro
+              {g = PDATrace q q' (z ∷ l') l ⊗ literal c}
+              {h = TraceFrom q l})
+            -- Transition for ε defined
+            (λ (next , push) →
+              -- TODO extend by ε then try to transition by c
+              {!!}
+            )
+            (εδ q z))
+          -- Transition for (c , z) is defined
+          (λ (next , push) →
+            MaybeGrammar-yes-intro
+              {g = PDATrace q q' (z ∷ l') l ⊗ literal c}
+              {h = TraceFrom q l}
+              (λ (s' , Σtr' , lit') →
+                (next , rev push ++ l') ,
+                literalCase
+                  c q q' l' l z
+                  ((next , push) , {!!})
+                  (s' , (Σtr' , lit'))
+              )
+          )
+          (δ q' c z)
+        where
+        -- There is a z on the head of the stack,
+        -- the character c is the beginning of the input word,
+        -- and the (c,z) transition is defined
+        literalCase :
+          (c : Σ₀) → (q q' : Q .fst) →
+          (l' l : Stack) → (z : Γ₀) →
+          (((nextState , push), fibs) : fiber just (δ q c z)) →
+          Term
+            (PDATrace q q' (z ∷ l') l  ⊗ (literal c))
+            (PDATrace q nextState (rev(push) ++ l') l)
+          -- TODO l vs l' in above line
+        literalCase c q q' l' l z ((next , push), fibs) =
+          ⊗--elim
+            {g = PDATrace q q' (z ∷ l') l}
+            {h = literal c}
+            {k = PDATrace q next (rev(push) ++ l') l}
+            {l = literal c}
+
+      -- Term (PDATrace q₂ q''' l₂ l''')
+      -- (LinearΣ-syntax
+       -- (λ x → PDATrace q₂ next (rev push ++ l''') l₂ ⊗- literal c))
+            (
+            trans
+              {g = PDATrace q q' (z ∷ l') l}
+              {h =
+                LinΣ[ x ∈ (Σ[ ((next , push), f) ∈ fiber just (δ q c z)] (q' ≡ next)) ]
+                (PDATrace q next (rev push ++ l') l ⊗- literal c)}
+              {k = PDATrace q next (rev push ++ l') l ⊗- literal c}
+              (elimPDATrace
+                the-P
+                the-nil-case
+                {!!}
+                {!!}
+                {q}{q'}{z ∷ l'}{l}
+              )
+              {!!}
+            )
+            {!!}
+            where
+            the-P : (q q' : Q .fst) → (l' l : Stack) → Grammar
+            -- This doesn't work
+            the-P q q' [] l = ⊥-grammar
+            the-P q q' (z ∷ l') l =
+              LinΣ[ x ∈ (Σ[ ((next , push), f) ∈ fiber just (δ q c z)] (q' ≡ next))]
+                (PDATrace q next (rev push ++ l') l ⊗- literal c)
+
+            the-nil-case : (q : Q .fst) → (l : Stack) → Term ε-grammar (the-P q q l l)
+            the-nil-case q [] = {!!}
+            the-nil-case q (x ∷ l) = {!!}
+
+
+    run : Term (KL* ⊕Σ₀) (MaybeGrammar FromInit)
+    run =
+      foldKL*l {g = ⊕Σ₀} {h = MaybeGrammar FromInit}
+        (MaybeGrammar-yes-intro {g = ε-grammar} {h = FromInit}
+          (λ x → (init , [ init-stack-sym ]) , nil refl [ init-stack-sym ] x))
+        (trans
+          {g = MaybeGrammar FromInit ⊗ ⊕Σ₀}
+          {h = MaybeGrammar (FromInit ⊗ ⊕Σ₀)}
+          {k = MaybeGrammar FromInit}
+          swapMaybeGrammar -- (FromInit + ⊤) ⊗ ⊕Σ₀ ⊢ ((FromInit ⊗ ⊕Σ₀) + ⊤)
+          (MaybeGrammar-bind {g = FromInit ⊗ ⊕Σ₀} {h = FromInit}
+            (λ (s , tr , c , lit) → extendTrace' c (s , tr , lit))
+          )
+        )
+        where
+        swapMaybeGrammar : Term (MaybeGrammar FromInit ⊗ ⊕Σ₀) (MaybeGrammar (FromInit ⊗ ⊕Σ₀))
+        -- Some
+        swapMaybeGrammar {w} (s , inl x , c , lit) = inl (s , x , c , lit)
+        -- None
+        swapMaybeGrammar {w} (s , inr x , c , lit) = inr _
 
 
 --   open PDA

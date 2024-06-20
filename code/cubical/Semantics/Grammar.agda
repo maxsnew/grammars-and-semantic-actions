@@ -207,8 +207,8 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   isHGrammar-⊕Σ₀ : isHGrammar ⊕Σ₀
   isHGrammar-⊕Σ₀ _ = isSetΣ isSetΣ₀ (λ _ → isHGrammar-literal _ _)
 
-  Maybe : Grammar → Grammar
-  Maybe g = g ⊕ ⊤-grammar
+  MaybeGrammar : Grammar → Grammar
+  MaybeGrammar g = g ⊕ ⊤-grammar
 
   String→KL* : (w : String) → KL* ⊕Σ₀ w
   String→KL* [] = nil refl
