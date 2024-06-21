@@ -80,6 +80,13 @@ snd (isFinSetLift {A = A} isFinSetA) =
   (λ A≅Fin → ∣ compEquiv (invEquiv (LiftEquiv {A = A})) A≅Fin ∣₁)
   (isFinSetA .snd)
 
+isFinOrdFin : ∀ {n} → isFinOrd (Fin n)
+isFinOrdFin {n} = n , (idEquiv (Fin n))
+
+isFinOrd⊥ : isFinOrd ⊥
+fst isFinOrd⊥ = 0
+snd isFinOrd⊥ = idEquiv ⊥
+
 takeFirstFinOrd : ∀ {ℓ} → (A : Type ℓ) → (the-ord : isFinOrd A) → 0 Ord.< the-ord .fst → A
 takeFirstFinOrd A (suc n , the-eq) x =
   the-eq .snd .equiv-proof (Fin→SumFin (Fin.fromℕ≤ 0 n x)) .fst .fst

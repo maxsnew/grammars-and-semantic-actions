@@ -158,6 +158,12 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     Parses =
       LinΣ[ q ∈ Accepting ] NFATrace init (q .fst)
 
+    eqDecProp : ∀ (a b : Q .fst) → DecProp ℓ
+    eqDecProp a b =
+      ((a ≡ b) ,
+      isFinSet→isSet (Q .snd) a b) ,
+      isFinSet→Discrete (Q .snd) a b
+
     prune-self-ε : NFA
     Q prune-self-ε = Q
     init prune-self-ε = init
@@ -181,12 +187,6 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     module _
       (no-self-ε : ∀ (t : ε-transition .fst) → (ε-src t ≡ ε-dst t) → ⊥)
       where
-      private
-        eqDecProp : ∀ (a b : Q .fst) → DecProp ℓ
-        eqDecProp a b =
-          ((a ≡ b) ,
-          isFinSet→isSet (Q .snd) a b) ,
-          isFinSet→Discrete (Q .snd) a b
 
       ε-prune : (t : ε-transition .fst) → NFA
       Q (ε-prune t) =
@@ -236,25 +236,166 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
           (λ dstisntpruned → (ε-dst (tr .fst)) , dstisntpruned)
           (decEqQ (ε-src t) (ε-dst (tr .fst)))
 
+
+
   open NFA
-  ε-closure : (N : NFA) → isFinOrd (N .ε-transition .fst) → NFA
-  ε-closure N ord =
-    {!!}
-    -- let N' = prune-self-ε N in
-    -- decRec
-    --   (λ noε → N')
-    --   (λ someε → ε-prune N'
-    --     (λ t → t .snd)
-    --     ((takeFirstFinOrd (ε-transition N .fst) ord (n≠0→0<n someε)) ,
-    --      {!!}))
-    --   (discreteℕ (ord .fst) 0)
+  open Iso
+
+  module _
+    (N : NFA)
+    (no-self-ε-N : ∀ (t : N .ε-transition .fst) → (N .ε-src t ≡ N .ε-dst t) → ⊥)
+    (t : N .ε-transition .fst)
     where
+    private
+      pruned = ε-prune N no-self-ε-N t
+
+    isLogicallyEquivalent-ε-prune : isLogicallyEquivalent (Parses N) (Parses pruned)
+    fst isLogicallyEquivalent-ε-prune (acc , tr) =
+      ({!!} ,
+      elimNFATrace
+        N
+        (λ q q' →
+          NFATrace
+            pruned
+            (decRec
+              (λ pruneInit → N .ε-dst t , no-self-ε-N t)
+              (λ dontPruneInit → N .init , dontPruneInit)
+              (decEqQ N (N .ε-src t) (N .init)))
+            (decRec
+              (λ issrc → {!!} , {!!})
+              (λ isntsrc → (acc .fst) , {!isntsrc!})
+              (decEqQ N (N .ε-src t) (acc .fst)))
+        )
+        {!!}
+        {!!}
+        {!!}
+        tr)
+    snd isLogicallyEquivalent-ε-prune = {!!}
+
+  ε-closure : ℕ → (N : NFA) → isFinOrd (N .ε-transition .fst) → NFA
+  ε-closure 0 N ord = N
+  ε-closure (suc fuel) N ord =
+      decRec
+      (λ noε → N)
+      (λ someε →
+        let N' = prune-self-ε N in
+        ε-closure fuel
+          (ε-prune N' (λ t → t .snd) (taken someε))
+          (ord'' someε)
+      )
+      (discreteℕ (ord' .fst) 0
+      )
+    where
+    ord' : isFinOrd (ε-transition (prune-self-ε N) .fst)
+    ord' =
+      isFinOrdΣ
+        (ε-transition N .fst) ord
+        (λ t → ε-src N t ≡ ε-dst N t → ⊥)
+        (λ t → isFinOrdΠ (ε-src N t ≡ ε-dst N t)
+          (decRec
+            (λ inhab → 1 ,
+              (isContr→Equiv
+                (inhab , (isFinSet→isSet (N .Q .snd) _ _ inhab))
+                (inl _ , Fin≤1→isProp 1 (0 , refl) fzero)
+              )
+            )
+            (λ uninhab → 0 , (uninhabEquiv uninhab (λ x → x)))
+            (decEqQ N (ε-src N t) (ε-dst N t)))
+          (λ _ → ⊥)
+          (λ _ → isFinOrd⊥))
+
     n≠0→0<n : ∀ {n} → ¬ (n ≡ 0) → 0 Ord.< n
     n≠0→0<n {zero} x = ⊥.rec (x refl)
     n≠0→0<n {suc n} = λ _ → tt
 
+    taken : (ord' .fst ≡ 0 → ⊥) → ε-transition (prune-self-ε N) .fst
+    taken someε = (takeFirstFinOrd
+             (Σ-syntax (ε-transition N .fst) (λ t → ε-src N t ≡ ε-dst N t → ⊥))
+             ord' (n≠0→0<n someε))
 
+    isFinSet-thing :
+      isFinSet
+        (Σ (ε-transition N .fst) (λ t → ε-src N t ≡ ε-dst N t → ⊥))
+    isFinSet-thing =
+      isFinSetΣ
+        (ε-transition N)
+        (λ x →
+          (ε-src N x ≡ ε-dst N x → ⊥) ,
+          isFinSetΠ
+            ((ε-src N x ≡ ε-dst N x) ,
+              decRec
+                (λ inhab →
+                  1 ,
+                  ∣ isContr→Equiv (inhab , isFinSet→isSet (N .Q .snd) (ε-src N x) (ε-dst N x) inhab)
+                    ((inl _) , Fin≤1→isProp 1 (0 , refl) fzero) ∣₁)
+                (λ uninhab → 0 , ∣ (uninhabEquiv uninhab (λ x → x)) ∣₁)
+                (isFinSet→Discrete (N .Q .snd) (ε-src N x) (ε-dst N x))
+            )
+            (λ y → ⊥ , isFinOrd→isFinSet isFinOrd⊥))
 
+    ord'' : (someε : ord' .fst ≡ 0 → ⊥) →
+      isFinOrd
+        (Σ-syntax
+         (Σ-syntax (ε-transition N .fst) (λ t → ε-src N t ≡ ε-dst N t → ⊥))
+         (λ t' → t' ≡ taken someε → ⊥))
+    ord'' someε =
+      isFinOrdΣ
+        (Σ-syntax (ε-transition N .fst) (λ t → ε-src N t ≡ ε-dst N t → ⊥))
+        ord'
+        (λ t' → t' ≡ taken someε → ⊥)
+        (λ x →
+          isFinOrdΠ
+            (x ≡ taken someε)
+            (decRec
+              (λ inhab →
+                1 ,
+                (isContr→Equiv (inhab , (isFinSet→isSet isFinSet-thing _ _ inhab))
+                (inl _ , Fin≤1→isProp 1 (0 , refl) fzero)))
+              (λ uninhab → 0 , (uninhabEquiv uninhab (λ x → x)))
+              (isFinSet→Discrete isFinSet-thing x (taken someε)))
+            (λ _ → ⊥)
+            (λ _ → isFinOrd⊥))
+
+-- module _ where
+--   open NFADefs ℓ-zero (Fin 2 , isFinSetFin)
+--   open GrammarDefs ℓ-zero (Fin 2 , isFinSetFin)
+--   open StringDefs ℓ-zero (Fin 2 , isFinSetFin)
+
+--   open NFA
+--   N : NFA
+--   Q N = (Fin 6) , isFinSetFin
+--   init N = fromℕ 0
+--   isAcc N x =
+--     ((x ≡ fromℕ 5) ,
+--      (isSetFin _ _)) ,
+--     (isFinSet→Discrete isFinSetFin _ _)
+--   transition N = Fin 4 , isFinSetFin
+--   src N fzero = fromℕ 1
+--   dst N fzero = fromℕ 2
+--   src N (fsuc fzero) = fromℕ 2
+--   dst N (fsuc fzero) = fromℕ 4
+--   src N (fsuc (fsuc fzero)) = fromℕ 1
+--   dst N (fsuc (fsuc fzero)) = fromℕ 3
+--   src N (fsuc (fsuc (fsuc fzero))) = fromℕ 4
+--   dst N (fsuc (fsuc (fsuc fzero))) = fromℕ 3
+--   label N fzero = fromℕ 0
+--   label N (fsuc fzero) = fromℕ 0
+--   label N (fsuc (fsuc fzero)) = fromℕ 1
+--   label N (fsuc (fsuc (fsuc fzero))) = fromℕ 1
+--   ε-transition N = Fin 5 , isFinSetFin
+--   ε-src N fzero = fromℕ 0
+--   ε-dst N fzero = fromℕ 1
+--   ε-src N (fsuc fzero) = fromℕ 3
+--   ε-dst N (fsuc fzero) = fromℕ 2
+--   ε-src N (fsuc (fsuc fzero)) = fromℕ 2
+--   ε-dst N (fsuc (fsuc fzero)) = fromℕ 3
+--   ε-src N (fsuc (fsuc (fsuc fzero))) = fromℕ 4
+--   ε-dst N (fsuc (fsuc (fsuc fzero))) = fromℕ 5
+--   ε-src N (fsuc (fsuc (fsuc (fsuc fzero)))) = fromℕ 5
+--   ε-dst N (fsuc (fsuc (fsuc (fsuc fzero)))) = fromℕ 6
+
+  -- N' : NFA
+  -- N' = ε-closure 5 N isFinOrdFin
 
     -- open DFADefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
     -- PowersetDFA : DFA
