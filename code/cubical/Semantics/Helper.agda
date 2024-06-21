@@ -27,7 +27,7 @@ import Cubical.Data.Fin as Fin
 import Cubical.Data.Fin.Arithmetic as Arith
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
-open import Cubical.HITs.PropositionalTruncation
+open import Cubical.HITs.PropositionalTruncation as PT
 
 private
   variable ℓ ℓ' : Level
@@ -48,6 +48,12 @@ doubleNegDecProp' :
   A .fst .fst
 doubleNegDecProp' A x = Dec→Stable (A .snd) x
 
+isPropLift :
+  {L L' : Level} →
+  {A : Type L} →
+  isProp A → isProp (Lift {L}{L'} A)
+isPropLift x a b = liftExt (x _ _)
+
 -- TODO : add to cubical?
 isSetLift :
   {L L' : Level} →
@@ -57,6 +63,13 @@ isSetLift isSetA x y a b i =
   liftExt
     (isSetA (lower x) (lower y)
     (cong lower a) (cong lower b) i)
+
+DecLift :
+  {L L' : Level} →
+  {A : Type L} →
+  Dec A → Dec (Lift {L}{L'} A)
+DecLift {L} {L'} {A} (yes p) = yes (lift p)
+DecLift {L} {L'} {A} (no ¬p) = no (λ x → ¬p (lower x))
 
 discreteLift :
   {L L' : Level} →
@@ -74,7 +87,7 @@ isFinSetLift :
   isFinSet A → isFinSet (Lift {L}{L'} A)
 fst (isFinSetLift {A = A} isFinSetA) = isFinSetA .fst
 snd (isFinSetLift {A = A} isFinSetA) =
-  Cubical.HITs.PropositionalTruncation.elim
+  PT.elim
   {P = λ _ → ∥ Lift A ≃ Fin (isFinSetA .fst) ∥₁}
   (λ [a] → isPropPropTrunc )
   (λ A≅Fin → ∣ compEquiv (invEquiv (LiftEquiv {A = A})) A≅Fin ∣₁)
@@ -128,6 +141,12 @@ leftInv DecPropIso (A , no ¬p) =
 
 DecProp≃DecProp' : ∀ {ℓ} → DecProp ℓ ≃ DecProp' ℓ
 DecProp≃DecProp' = isoToEquiv DecPropIso
+
+DecProp'→DecProp : ∀ {ℓ} → DecProp' ℓ → DecProp ℓ
+DecProp'→DecProp = DecPropIso .inv
+
+DecProp→DecProp' : ∀ {ℓ} → DecProp ℓ → DecProp' ℓ
+DecProp→DecProp' = DecPropIso .fun
 
 DecProp⊎ :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
@@ -209,12 +228,66 @@ snd isFinSetDecProp = ∣ the-equiv ∣₁
 Decℙ : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
 Decℙ {ℓ} A = A → DecProp ℓ
 
+Decℙ' : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
+Decℙ' {ℓ} A = A → DecProp' ℓ
+
+LiftDecProp :
+  ∀ {L}{L'} →
+  DecProp L →
+  DecProp (ℓ-max L L')
+LiftDecProp {L}{L'} A =
+  ((Lift {L}{L'} (A .fst .fst)) ,
+  isPropLift (A .fst .snd)) ,
+  DecLift (A .snd)
+
+LiftDecProp' :
+  ∀ {L}{L'} →
+  DecProp' L →
+  DecProp' (ℓ-max L L')
+LiftDecProp' {L}{L'} A =
+  DecPropIso .fun (LiftDecProp {L}{L'} (DecPropIso .inv A))
+
+LiftDecℙ' : ∀ {L}{L'} (A : Type L) →
+  (Decℙ' {L} A) → (Decℙ' {ℓ-max L L'} (Lift {L}{L'} A))
+LiftDecℙ' {L}{L'} A x a = LiftDecProp' {L}{L'} (x (lower a))
+
+DecℙIso : ∀ {ℓ} (A : Type ℓ) → Iso (Decℙ A) (Decℙ' A)
+fun (DecℙIso A) x a = DecPropIso .fun (x a)
+inv (DecℙIso A) x' a = DecPropIso .inv (x' a)
+rightInv (DecℙIso A) b =
+  funExt (λ x → DecPropIso .rightInv _)
+leftInv (DecℙIso A) a =
+  funExt (λ x → DecPropIso .leftInv _)
+
+inDecℙ :
+  ∀ {ℓ} → {A : Type ℓ} →
+  (a : A) → Decℙ A → Type ℓ
+inDecℙ a X = X a .fst .fst
+
 isFinSetDecℙ : ∀ {ℓ} → (A : FinSet ℓ) → isFinSet (Decℙ (A .fst))
 isFinSetDecℙ {ℓ} A = isFinSet→ A (DecProp ℓ , isFinSetDecProp)
+
+isFinSetDecℙ' : ∀ {ℓ} → (A : FinSet ℓ) → isFinSet (Decℙ' (A .fst))
+isFinSetDecℙ' A =
+  PT.rec
+    isPropIsFinSet
+    (λ the-eq →
+      (isFinSetDecℙ A .fst) ,
+      ∣ compEquiv (isoToEquiv (invIso (DecℙIso (A .fst)))) the-eq ∣₁)
+    (isFinSetDecℙ A .snd)
 
 FinSetDecℙ : ∀ {ℓ} → FinSet ℓ → FinSet (ℓ-suc ℓ)
 FinSetDecℙ {ℓ} A = (Decℙ (A .fst)) , (isFinSetDecℙ A)
 
+FinSetDecℙ' : ∀ {ℓ} → FinSet ℓ → FinSet (ℓ-suc ℓ)
+FinSetDecℙ' {ℓ} A = (Decℙ' (A .fst)) , (isFinSetDecℙ' A)
+
 SingletonDecℙ : ∀ {ℓ} {A : FinSet ℓ} → (a : A .fst) → Decℙ (A .fst)
 SingletonDecℙ {A = A} a x =
-  ((x ≡ a) , isFinSet→isSet (A .snd) _ _) , isFinSet→Discrete (A .snd) _ _
+  ((x ≡ a) ,
+  isFinSet→isSet (A .snd) _ _) ,
+  isFinSet→Discrete (A .snd) _ _
+
+SingletonDecℙ' : ∀ {ℓ} {A : FinSet ℓ} → (a : A .fst) → Decℙ' (A .fst)
+SingletonDecℙ' {A = A} a =
+  DecℙIso (A .fst) .fun (SingletonDecℙ {A = A} a)

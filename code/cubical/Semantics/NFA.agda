@@ -236,8 +236,6 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
           (λ dstisntpruned → (ε-dst (tr .fst)) , dstisntpruned)
           (decEqQ (ε-src t) (ε-dst (tr .fst)))
 
-
-
   open NFA
   open Iso
 
@@ -249,28 +247,50 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     private
       pruned = ε-prune N no-self-ε-N t
 
-    isLogicallyEquivalent-ε-prune : isLogicallyEquivalent (Parses N) (Parses pruned)
-    fst isLogicallyEquivalent-ε-prune (acc , tr) =
-      ({!!} ,
-      elimNFATrace
-        N
-        (λ q q' →
-          NFATrace
-            pruned
-            (decRec
-              (λ pruneInit → N .ε-dst t , no-self-ε-N t)
-              (λ dontPruneInit → N .init , dontPruneInit)
-              (decEqQ N (N .ε-src t) (N .init)))
-            (decRec
-              (λ issrc → {!!} , {!!})
-              (λ isntsrc → (acc .fst) , {!isntsrc!})
-              (decEqQ N (N .ε-src t) (acc .fst)))
-        )
-        {!!}
-        {!!}
-        {!!}
-        tr)
-    snd isLogicallyEquivalent-ε-prune = {!!}
+    -- isWeaklyEquivalent-ε-prune : isWeaklyEquivalent (Parses N) (Parses pruned)
+    -- fun isWeaklyEquivalent-ε-prune ([] , p) =
+    --   [] ,
+    --   ∣ PT.rec
+    --     {!!}
+    --     (λ p' →
+    --       (((p' .fst .fst) , {!!}) , {!!}) , (nil {!!} refl))
+    --     p ∣₁
+    -- fun isWeaklyEquivalent-ε-prune (x ∷ w , p) = {!!}
+    -- inv isWeaklyEquivalent-ε-prune = {!!}
+    -- rightInv isWeaklyEquivalent-ε-prune = {!!}
+    -- leftInv isWeaklyEquivalent-ε-prune = {!!}
+      -- decRec
+        -- (λ accissrc →
+        --   -- decRec
+        --   -- (λ initissrc → {!!})
+        --   -- (λ initisntsrc → {!!})
+        --   -- (decEqQ N (N .ε-src t) (N .init))
+        --   ((N .ε-dst t , no-self-ε-N t) ,
+        --     (inr ((transport (cong (λ a → isAcc N a .fst .fst) (sym accissrc)) (acc .snd)) ,
+        --     refl , {!!}))) ,
+        --     {!!}
+        --   )
+        -- (λ accisntsrc → {!!})
+        -- (decEqQ N (N .ε-src t) (acc .fst))
+      -- (({!!} , {!!}) ,
+      -- elimNFATrace
+      --   N
+      --   (λ q q' →
+      --     NFATrace
+      --       pruned
+      --       (decRec
+      --         (λ pruneInit → N .ε-dst t , no-self-ε-N t)
+      --         (λ dontPruneInit → N .init , dontPruneInit)
+      --         (decEqQ N (N .ε-src t) (N .init)))
+      --       (decRec
+      --         (λ issrc → N .ε-dst t , no-self-ε-N t)
+      --         (λ isntsrc → (acc .fst) , isntsrc)
+      --         (decEqQ N (N .ε-src t) (acc .fst)))
+      --   )
+      --   {!!}
+      --   {!!}
+      --   {!!}
+      --   tr)
 
   ε-closure : ℕ → (N : NFA) → isFinOrd (N .ε-transition .fst) → NFA
   ε-closure 0 N ord = N
@@ -356,6 +376,30 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
             (λ _ → ⊥)
             (λ _ → isFinOrd⊥))
 
+  module _
+    (N : NFA)
+    (no-ε : N .ε-transition .fst → ⊥) where
+
+    open DFADefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
+    ℙDFA : DFA
+    DFA.Q ℙDFA = FinSetDecℙ (N .Q)
+    DFA.init ℙDFA = SingletonDecℙ {A = N .Q} (N .init)
+    DFA.isAcc ℙDFA X =
+      DecProp'→DecProp
+      (_ , (isDecProp∃ (N .Q)
+      λ q →
+        LiftDecℙ' {ℓ}{ℓ-suc ℓ} (N .Q .fst)
+        (DecℙIso (N .Q .fst) .fun X) (lift q)))
+    DFA.δ ℙDFA X c q =
+      DecProp'→DecProp
+        (_ , isDecProp∃ (N .transition)
+        (λ t → DecProp→DecProp'
+          (eqDecProp N (N .dst t) q)))
+
+    -- TODO universe levels for grammars wrt alphabet
+    ℙweakEquiv : isWeaklyEquivalent (Parses N) {!DFA.Parses ℙDFA!}
+    ℙweakEquiv = {!!}
+
 -- module _ where
 --   open NFADefs ℓ-zero (Fin 2 , isFinSetFin)
 --   open GrammarDefs ℓ-zero (Fin 2 , isFinSetFin)
@@ -397,12 +441,6 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   -- N' : NFA
   -- N' = ε-closure 5 N isFinOrdFin
 
-    -- open DFADefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
-    -- PowersetDFA : DFA
-    -- DFA.Q PowersetDFA = FinSetDecℙ Q
-    -- DFA.init PowersetDFA = SingletonDecℙ init
-    -- DFA.isAcc PowersetDFA = {!!}
-    -- DFA.δ PowersetDFA = {!!}
 
 
 
