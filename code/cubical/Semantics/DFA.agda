@@ -130,6 +130,9 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
             {q} {q'})
           (id {literal c})
 
+    Accepting : Type ℓ
+    Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
+
     Parses : Grammar
     Parses = LinΣ[ q ∈ Q .fst ] (DFATrace init q & acc? q)
 

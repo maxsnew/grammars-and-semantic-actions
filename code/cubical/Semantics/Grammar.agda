@@ -42,6 +42,9 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   ε-grammar : Grammar
   ε-grammar w = w ≡ []
 
+  LiftGrammar : ∀ {L} → Grammar → String → Type (ℓ-max (ℓ-suc ℓ) L)
+  LiftGrammar {L} g w = Lift {ℓ}{ℓ-max (ℓ-suc ℓ) L} (g w)
+
   isHGrammar-ε-grammar : isHGrammar ε-grammar
   isHGrammar-ε-grammar _ = isGroupoidString _ _
 

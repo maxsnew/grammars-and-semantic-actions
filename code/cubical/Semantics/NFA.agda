@@ -376,11 +376,19 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
             (λ _ → ⊥)
             (λ _ → isFinOrd⊥))
 
+module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+  open NFADefs ℓ (Σ₀ , isFinSetΣ₀)
+  open TermDefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open DFADefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
+  open GrammarDefs
+  open NFA
+  open DFA
+  open Iso
+
   module _
     (N : NFA)
-    (no-ε : N .ε-transition .fst → ⊥) where
-
-    open DFADefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
+    (no-ε : N .NFADefs.NFA.ε-transition .fst → ⊥) where
     ℙDFA : DFA
     DFA.Q ℙDFA = FinSetDecℙ (N .Q)
     DFA.init ℙDFA = SingletonDecℙ {A = N .Q} (N .init)
@@ -396,9 +404,43 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         (λ t → DecProp→DecProp'
           (eqDecProp N (N .dst t) q)))
 
-    -- TODO universe levels for grammars wrt alphabet
-    ℙweakEquiv : isWeaklyEquivalent (Parses N) {!DFA.Parses ℙDFA!}
-    ℙweakEquiv = {!!}
+    -- TODO universe polymorphism for grammar defs
+    ℙEquiv :
+    -- TODO this is the def of weak equiv up to universe issues
+      Iso
+        (Σ[ w ∈ String ]
+          ∥ Lift {ℓ}{ℓ-suc ℓ}
+            (Σ[ q ∈ NFA.Accepting N ]
+              NFATrace N (N .init) (q .fst) w)  ∥₁)
+        (Σ[ w ∈ String ]
+          Σ[ q ∈ DFA.Accepting ℙDFA ]
+            DFATrace ℙDFA (ℙDFA .DFA.init) (q .fst) (LiftList w))
+    fun ℙEquiv ([] , ∃pN) =
+      [] ,
+      ((ℙDFA .DFA.init) ,
+        --   (_ , {!!})
+        --   ∣ {!!} , {!!} ∣₁
+        PT.rec
+          (ℙDFA .DFA.isAcc (ℙDFA .DFADefs.DFA.init) .fst .snd)
+          (λ x →
+            DecProp'Witness→DecPropWitness
+              (_ , {!!})
+              ∣ (lower x .fst .fst) ,
+                LiftDecProp'Witness
+                  {!!}
+                  {!!}
+                ∣₁
+          )
+          ∃pN
+      ) ,
+      nil refl refl
+    fun ℙEquiv (x ∷ w , ∃pN) = {!!}
+    inv ℙEquiv ([] , ∃pD) =
+      [] ,
+      {!!}
+    inv ℙEquiv (x ∷ w , ∃pD) = {!!}
+    rightInv ℙEquiv = {!!}
+    leftInv ℙEquiv = {!!}
 
 -- module _ where
 --   open NFADefs ℓ-zero (Fin 2 , isFinSetFin)

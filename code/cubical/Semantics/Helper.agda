@@ -93,6 +93,10 @@ snd (isFinSetLift {A = A} isFinSetA) =
   (λ A≅Fin → ∣ compEquiv (invEquiv (LiftEquiv {A = A})) A≅Fin ∣₁)
   (isFinSetA .snd)
 
+LiftList : ∀ {L}{L'} → {A : Type L} → List A → List (Lift {L}{L'} A)
+LiftList [] = []
+LiftList (x ∷ xs) = lift x ∷ LiftList xs
+
 isFinOrdFin : ∀ {n} → isFinOrd (Fin n)
 isFinOrdFin {n} = n , (idEquiv (Fin n))
 
@@ -147,6 +151,13 @@ DecProp'→DecProp = DecPropIso .inv
 
 DecProp→DecProp' : ∀ {ℓ} → DecProp ℓ → DecProp' ℓ
 DecProp→DecProp' = DecPropIso .fun
+
+DecProp'Witness→DecPropWitness :
+  ∀ {ℓ} → (A : DecProp' ℓ) → (a : A .fst) →
+   DecProp'→DecProp A .fst .fst 
+DecProp'Witness→DecPropWitness (u , false , r) a =
+  ⊥.rec (r .fst a)
+DecProp'Witness→DecPropWitness (u , true , r) a = a
 
 DecProp⊎ :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
@@ -246,6 +257,14 @@ LiftDecProp' :
   DecProp' (ℓ-max L L')
 LiftDecProp' {L}{L'} A =
   DecPropIso .fun (LiftDecProp {L}{L'} (DecPropIso .inv A))
+
+LiftDecProp'Witness :
+  ∀ {L}{L'} →
+  (A : DecProp' L) →
+  (a : A .fst) →
+  LiftDecProp' {L}{L'} A .fst
+LiftDecProp'Witness (u , false , v) a = lift a
+LiftDecProp'Witness (u , true , v) a = lift a
 
 LiftDecℙ' : ∀ {L}{L'} (A : Type L) →
   (Decℙ' {L} A) → (Decℙ' {ℓ-max L L'} (Lift {L}{L'} A))
