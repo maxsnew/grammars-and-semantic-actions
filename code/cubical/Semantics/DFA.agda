@@ -130,6 +130,14 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
             {q} {q'})
           (id {literal c})
 
+    StringOfTrace : ∀ q q' → Term (DFATrace q q') (KL* ⊕Σ₀)
+    StringOfTrace q q' =
+      elimDFATrace
+        (λ _ _ → KL* ⊕Σ₀)
+        nil
+        (λ {q}{q'}{c} (s , lit , p) →
+          cons (s , ((c , lit) , p)))
+
     Accepting : Type ℓ
     Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
 

@@ -151,6 +151,17 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
           {q} {q'})
         (id {NFATrace q' q''})
 
+    StringOfTrace : ∀ q q' → Term (NFATrace q q') (KL* ⊕Σ₀)
+    StringOfTrace q q' =
+      elimNFATrace
+        (λ _ _ → KL* ⊕Σ₀)
+        nil
+        (λ {q}{q'}{t} srcp
+        (s , lit , p) →
+          cons (s , (((label t) , lit) , p))
+          )
+        (λ {q}{q'}{t} srcp p → p)
+
     Accepting : Type ℓ
     Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
 
@@ -388,7 +399,9 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 
   module _
     (N : NFA)
-    (no-ε : N .NFADefs.NFA.ε-transition .fst → ⊥) where
+    (no-ε : N .NFADefs.NFA.ε-transition .fst → ⊥)
+    (isPropDFATrace : ∀ D q w →
+      isProp (Σ[ q' ∈ (D .Q .fst) ] (DFATrace D q q' w))) where
     ℙDFA : DFA
     DFA.Q ℙDFA = FinSetDecℙ (N .Q)
     DFA.init ℙDFA = SingletonDecℙ {A = N .Q} (N .init)
@@ -404,43 +417,201 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         (λ t → DecProp→DecProp'
           (eqDecProp N (N .dst t) q)))
 
-    -- TODO universe polymorphism for grammar defs
+    N→ℙDFA : ∀ w →
+      (tr : Σ[ (q , q') ∈ (N .Q .fst × N .Q .fst) ]
+         NFATrace N q q' w
+      )
+      →
+      (dfaq : Σ[ dq ∈ ℙDFA .DFA.Q .fst ]
+         dq (tr .fst .fst) .fst .fst)
+      →
+      Σ[ dq' ∈ ℙDFA .DFA.Q .fst ] DFATrace ℙDFA (dfaq .fst) dq' (LiftList w)
+    N→ℙDFA w ((q , q') , NFADefs.NFA.nil a b) (dq , q∈dq) =
+      dq , (nil refl (λ i → LiftList (b i)))
+    N→ℙDFA [] ((q , q') , NFADefs.NFA.cons {t} a (s , lit , b)) (dq , q∈dq) =
+      ⊥.rec (¬cons≡nil (sym (s .snd ∙ cong (_++ s .fst .snd) lit)))
+    N→ℙDFA (x ∷ w) ((q , q') , NFADefs.NFA.cons {t} a (s , lit , b)) (dq , q∈dq) =
+      let
+      recur =
+        -- this transport is just to convince the typechecker about termination
+        N→ℙDFA w ((dst N t , q') , transport (cong (λ a → NFATrace N (dst N t) q' a) (sym w≡s₁₂)) b)
+          (ℙDFA .δ dq (lift (N .label t)) ,
+            ∣ t , (DecPropWitness→DecPropWitness' (_ , _) refl) ∣₁
+          ) in
+      -- (recur .fst)
+      recur .fst ,
+      (cons (lift (N .label t))
+        (((LiftList (s .fst .fst) , LiftList (w)) ,
+        -- cong LiftList (s .snd) ∙ LiftListDist (fst (fst s)) (snd (fst s))
+        cong LiftList (s .snd) ∙
+        LiftListDist (s .fst .fst) (s .fst .snd) ∙
+        cong (LiftList (s .fst .fst) ++_) (cong LiftList (sym w≡s₁₂))
+        ) ,
+        ((λ i → LiftList (lit i)) ,
+        -- recur .snd
+        recur .snd
+        )))
+      where
+      w≡s₁₂ : w ≡ s .fst .snd
+      w≡s₁₂ = cons-inj₂ (s .snd ∙ cong (_++ s .fst .snd) lit)
+    N→ℙDFA w ((q , q') , NFADefs.NFA.ε-cons {t} x tr) (dq , q∈dq) =
+      ⊥.rec (no-ε t)
+
+    ∃N→ℙDFA :
+      (Σ[ w ∈ String ]
+        ∥ Lift {ℓ}{ℓ-suc ℓ}
+          (Σ[ q ∈ N .Q .fst ]
+            NFATrace N (N .init) q w)  ∥₁)
+      →
+      (Σ[ w ∈ String ]
+        Σ[ q ∈ ℙDFA .DFA.Q .fst ]
+           DFATrace ℙDFA (ℙDFA .DFA.init) q (LiftList w))
+    ∃N→ℙDFA (w , ∃pN) = {!!}
+      -- w ,
+      -- (PT.rec
+      --   (isPropDFATrace ℙDFA (ℙDFA .DFADefs.DFA.init) (LiftList w))
+      --   (λ ↑pN →
+      --     let
+      --     x =
+      --       run
+      --         ℙDFA
+      --         (liftKL* (NFA.StringOfTrace N (N .NFADefs.NFA.init) (fst (lower ↑pN)) (lower ↑pN .snd))) in
+      --     x .fst , x .snd .fst
+      --   )
+      --   ∃pN)
+      --   where
+      --   LiftListDist : ∀ w w' → LiftList (w ++ w') ≡ (LiftList w) ++ (LiftList w')
+      --   LiftListDist [] w' = refl
+      --   LiftListDist (x ∷ w) w' = cong (lift x ∷_) (LiftListDist w w')
+      --   liftKL* : ∀ {w} → KL* ℓ (Σ₀ , isFinSetΣ₀) (⊕Σ₀ ℓ (Σ₀ , isFinSetΣ₀)) w  →
+      --     KL* (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀) (⊕Σ₀ (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀))
+      --       (LiftList w)
+      --   liftKL* (nil x) = nil (λ i → LiftList (x i))
+      --   liftKL* (cons x) =
+      --     cons ((((LiftList (x .fst .fst .fst)) , (LiftList (x .fst .fst .snd))) ,
+      --       cong LiftList (x .fst .snd) ∙ LiftListDist (fst (fst (x .fst))) (snd (fst (x .fst)))) ,
+      --     ((lift (x .snd .fst .fst)) , (λ i → LiftList (x .snd .fst .snd i))) , liftKL* (x .snd .snd))
+
+    ℙDFA→∃N :
+      (Σ[ w ∈ String ]
+        Σ[ q ∈ ℙDFA .DFA.Q .fst ]
+           DFATrace ℙDFA (ℙDFA .DFA.init) q (LiftList w))
+      →
+      (Σ[ w ∈ String ]
+        ∥ Lift {ℓ}{ℓ-suc ℓ}
+          (Σ[ q ∈ N .Q .fst ]
+            NFATrace N (N .init) q w)  ∥₁)
+    ℙDFA→∃N (w , pD) = {!!}
+
     ℙEquiv :
     -- TODO this is the def of weak equiv up to universe issues
       Iso
         (Σ[ w ∈ String ]
           ∥ Lift {ℓ}{ℓ-suc ℓ}
-            (Σ[ q ∈ NFA.Accepting N ]
-              NFATrace N (N .init) (q .fst) w)  ∥₁)
+            (Σ[ q ∈ N .Q .fst ]
+              NFATrace N (N .init) q w)  ∥₁)
         (Σ[ w ∈ String ]
-          Σ[ q ∈ DFA.Accepting ℙDFA ]
-            DFATrace ℙDFA (ℙDFA .DFA.init) (q .fst) (LiftList w))
-    fun ℙEquiv ([] , ∃pN) =
-      [] ,
-      ((ℙDFA .DFA.init) ,
-        --   (_ , {!!})
-        --   ∣ {!!} , {!!} ∣₁
-        PT.rec
-          (ℙDFA .DFA.isAcc (ℙDFA .DFADefs.DFA.init) .fst .snd)
-          (λ x →
-            DecProp'Witness→DecPropWitness
-              (_ , {!!})
-              ∣ (lower x .fst .fst) ,
-                LiftDecProp'Witness
-                  {!!}
-                  {!!}
-                ∣₁
-          )
-          ∃pN
-      ) ,
-      nil refl refl
-    fun ℙEquiv (x ∷ w , ∃pN) = {!!}
-    inv ℙEquiv ([] , ∃pD) =
-      [] ,
-      {!!}
-    inv ℙEquiv (x ∷ w , ∃pD) = {!!}
+          Σ[ q ∈ ℙDFA .DFA.Q .fst ]
+            DFATrace ℙDFA (ℙDFA .DFA.init) q (LiftList w))
+    fun ℙEquiv (w , ∃pN) =
+      w ,
+      (PT.rec
+        (isPropDFATrace ℙDFA (ℙDFA .DFADefs.DFA.init) (LiftList w))
+        (λ ↑pN →
+          let
+          x =
+            run
+              ℙDFA
+              (liftKL* (NFA.StringOfTrace N (N .NFADefs.NFA.init) (fst (lower ↑pN)) (lower ↑pN .snd))) in
+          x .fst , x .snd .fst
+        )
+        ∃pN)
+        where
+        liftKL* : ∀ {w} → KL* ℓ (Σ₀ , isFinSetΣ₀) (⊕Σ₀ ℓ (Σ₀ , isFinSetΣ₀)) w  →
+          KL* (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀) (⊕Σ₀ (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀))
+            (LiftList w)
+        liftKL* (nil x) = nil (λ i → LiftList (x i))
+        liftKL* (cons x) =
+          cons ((((LiftList (x .fst .fst .fst)) , (LiftList (x .fst .fst .snd))) ,
+            cong LiftList (x .fst .snd) ∙ LiftListDist (fst (fst (x .fst))) (snd (fst (x .fst)))) ,
+          ((lift (x .snd .fst .fst)) , (λ i → LiftList (x .snd .fst .snd i))) , liftKL* (x .snd .snd))
+
+      -- w , (snocfun w (snocView w) ∃pN)
+      -- where
+      -- snocfun : (w : String) → SnocView w →
+      --   (∥ Lift {ℓ}{ℓ-suc ℓ}
+      --       (Σ[ q ∈ N .Q .fst ]
+      --         NFATrace N (N .init) q w)  ∥₁)
+      --   →
+      --   (Σ[ q ∈ ℙDFA .DFA.Q .fst ]
+      --         DFATrace ℙDFA (ℙDFA .DFA.init) q (LiftList w))
+      -- snocfun .[] nil ∃pN = (ℙDFA .DFA.init) , (nil refl refl)
+      -- snocfun .(xs ∷ʳ x) (snoc x xs sv) ∃pN =
+      --   (run ℙDFA (String→KL* (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀) (LiftList (xs ∷ʳ x))) .fst) ,
+      --   {!!}
+      --
+        -- PT.rec
+        --   {!!}
+        --   (λ pN → help pN)
+        --   ∃pN
+        -- where
+        -- help : Lift
+        --         (Σ-syntax (N .NFADefs.NFA.Q .fst)
+        --          (λ q → NFATrace N (N .NFADefs.NFA.init) q (xs ∷ʳ x))) → DFATrace ℙDFA (ℙDFA .DFADefs.DFA.init)
+        --                                                                   (run ℙDFA
+        --                                                                    (String→KL* (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
+        --                                                                     (LiftList (xs ∷ʳ x)))
+        --                                                                    .fst)
+        --                                                                   (LiftList (xs ∷ʳ x))
+        -- help (lift (q , NFADefs.NFA.nil x a)) = nil {!!} {!a!}
+        -- help (lift (q , NFADefs.NFA.cons x b)) = {!!}
+        -- help (lift (q , NFADefs.NFA.ε-cons x tr)) = {!!}
+    inv ℙEquiv (w , ∃pN) =
+      w , {!!}
+    -- fun ℙEquiv ([] , ∃pN) =
+    --   [] ,
+    --   (ℙDFA .DFA.init) , (nil refl refl)
+    -- fun ℙEquiv (x ∷ w , ∃pN) = {!!}
+    --   -- (x ∷ w) , ({!!} , {!!})
+    -- inv ℙEquiv ([] , pD) =
+    --   [] ,
+    --   ∣ lift ((N .init) , (nil refl refl)) ∣₁
+    -- inv ℙEquiv (x ∷ w , pD) = {!!}
     rightInv ℙEquiv = {!!}
     leftInv ℙEquiv = {!!}
+
+    -- TODO universe polymorphism for grammar defs
+    -- ℙEquiv :
+    -- -- TODO this is the def of weak equiv up to universe issues
+    --   Iso
+    --     (Σ[ w ∈ String ]
+    --       ∥ Lift {ℓ}{ℓ-suc ℓ}
+    --         (Σ[ q ∈ NFA.Accepting N ]
+    --           NFATrace N (N .init) (q .fst) w)  ∥₁)
+    --     (Σ[ w ∈ String ]
+    --       Σ[ q ∈ DFA.Accepting ℙDFA ]
+    --         DFATrace ℙDFA (ℙDFA .DFA.init) (q .fst) (LiftList w))
+    -- fun ℙEquiv ([] , ∃pN) =
+    --   [] ,
+    --   ((ℙDFA .DFA.init) ,
+    --     PT.rec
+    --       (ℙDFA .DFA.isAcc (ℙDFA .DFADefs.DFA.init) .fst .snd)
+    --       (λ x → ∣ N .init , LiftDecProp'Witness _ (DecPropWitness→DecPropWitness' _ refl) ∣₁)
+    --       ∃pN
+    --   )
+    --   ,
+    --   nil refl refl
+    -- fun ℙEquiv (x ∷ w , ∃pN) = (x ∷ w) , {!!}
+    -- inv ℙEquiv ([] , pD) = {!!}
+    --   -- [] ,
+    --   -- ∣ lift (((N .init) , PT.rec (N .isAcc _ .fst .snd)
+    --   --   (λ x → transport (cong (λ a → fst (N .isAcc a .fst)) {!!})
+    --   --     (DecPropWitness→DecPropWitness' _ (LowerDecProp'Witness _ (x .snd))))
+    --   --     (pD .fst .snd)) , nil refl refl) ∣₁
+    -- inv ℙEquiv (x ∷ w , pD) =
+    --   {!!} , {!!}
+    -- rightInv ℙEquiv = {!!}
+    -- leftInv ℙEquiv = {!!}
 
 -- module _ where
 --   open NFADefs ℓ-zero (Fin 2 , isFinSetFin)
@@ -448,7 +619,7 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 --   open StringDefs ℓ-zero (Fin 2 , isFinSetFin)
 
 --   open NFA
---   N : NFA
+--   N : N
 --   Q N = (Fin 6) , isFinSetFin
 --   init N = fromℕ 0
 --   isAcc N x =

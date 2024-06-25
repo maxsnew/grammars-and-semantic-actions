@@ -97,6 +97,11 @@ LiftList : ∀ {L}{L'} → {A : Type L} → List A → List (Lift {L}{L'} A)
 LiftList [] = []
 LiftList (x ∷ xs) = lift x ∷ LiftList xs
 
+LiftListDist : ∀ {L}{L'} {A : Type L} (w w' : List A) →
+  LiftList {L}{L'} (w ++ w') ≡ (LiftList {L}{L'} w) ++ (LiftList {L}{L'} w')
+LiftListDist [] w' = refl
+LiftListDist (x ∷ w) w' = cong (lift x ∷_) (LiftListDist w w')
+
 isFinOrdFin : ∀ {n} → isFinOrd (Fin n)
 isFinOrdFin {n} = n , (idEquiv (Fin n))
 
@@ -118,12 +123,10 @@ isPropCod→isProp≃ isPropB =
 
 open Iso
 DecPropIso : ∀ {ℓ} → Iso (DecProp ℓ) (DecProp' ℓ)
-fun DecPropIso x =
-  decRec
-    (λ y → x .fst .fst ,
-      (true , isContr→Equiv (y , x .fst .snd y) isContrUnit))
-    (λ ¬y → x .fst .fst , (false , uninhabEquiv ¬y (λ x → x)))
-    (x .snd)
+fun DecPropIso (a , yes p) =
+  (a .fst) ,
+  (true , (isContr→Equiv (p , λ y → a .snd _ _) isContrUnit))
+fun DecPropIso (a , no ¬p) = (a .fst) , ((false , uninhabEquiv ¬p (λ x → x)))
 fst (fst (inv DecPropIso (a , b , c))) = a
 snd (fst (inv DecPropIso (a , b , c))) = isDecProp→isProp (b , c)
 snd (inv DecPropIso (a , false , c)) =
@@ -159,6 +162,12 @@ DecProp'Witness→DecPropWitness (u , false , r) a =
   ⊥.rec (r .fst a)
 DecProp'Witness→DecPropWitness (u , true , r) a = a
 
+DecPropWitness→DecPropWitness' :
+  ∀ {ℓ} → (A : DecProp ℓ) → (a : A .fst .fst) →
+   DecProp→DecProp' A .fst
+DecPropWitness→DecPropWitness' (a , yes p) c = c
+DecPropWitness→DecPropWitness' (a , no ¬p) c = ⊥.rec (¬p c)
+
 DecProp⊎ :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
   (A .fst .fst → B .fst .fst → ⊥) → DecProp ℓ
@@ -192,6 +201,13 @@ snd (DecPropΣ A B) =
       (B a .snd))
     (λ ¬a → no (λ x → ¬a (x .fst)))
     (A .snd)
+
+-- inhabDecRec :
+--    ∀ {ℓ ℓ'} {P : Type ℓ} {A : Type ℓ'} →
+--    (ifyes : P → Type) → (ifno : ¬ P → Type) →
+--    (a : Dec P) → decRec ifyes ifno a
+-- inhabDecRec ifyes ifno (yes p) = {!!}
+-- inhabDecRec ifyes ifno (no ¬p) = {!!}
 
 DecProp× :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
@@ -246,25 +262,33 @@ LiftDecProp :
   ∀ {L}{L'} →
   DecProp L →
   DecProp (ℓ-max L L')
-LiftDecProp {L}{L'} A =
-  ((Lift {L}{L'} (A .fst .fst)) ,
-  isPropLift (A .fst .snd)) ,
-  DecLift (A .snd)
+LiftDecProp {L} {L'} (a , yes p) =
+  ((Lift {L}{L'} (a .fst)) , (isPropLift (a .snd))) , (yes (lift p))
+LiftDecProp {L} {L'} (a , no ¬p) =
+  ((Lift {L}{L'} (a .fst)) , (isPropLift (a .snd))) , (no λ x → ¬p (lower x))
 
 LiftDecProp' :
   ∀ {L}{L'} →
   DecProp' L →
   DecProp' (ℓ-max L L')
-LiftDecProp' {L}{L'} A =
-  DecPropIso .fun (LiftDecProp {L}{L'} (DecPropIso .inv A))
+LiftDecProp' {L} {L'} (a , false , c) = (Lift {L}{L'} a) , (false , (compEquiv (invEquiv LiftEquiv) c))
+LiftDecProp' {L} {L'} (a , true , c) = (Lift {L}{L'} a) , (true , (compEquiv (invEquiv LiftEquiv) c))
 
 LiftDecProp'Witness :
   ∀ {L}{L'} →
   (A : DecProp' L) →
   (a : A .fst) →
   LiftDecProp' {L}{L'} A .fst
-LiftDecProp'Witness (u , false , v) a = lift a
-LiftDecProp'Witness (u , true , v) a = lift a
+LiftDecProp'Witness {L}{L'} (u , false , v) a = lift {L}{L'} a
+LiftDecProp'Witness {L}{L'} (u , true , v) a = lift {L}{L'} a
+
+LowerDecProp'Witness :
+  ∀ {L}{L'} →
+  (A : DecProp' L) →
+  (a : LiftDecProp' {L}{L'} A .fst) →
+  A .fst
+LowerDecProp'Witness {L}{L'} (u , false , v) a = lower a
+LowerDecProp'Witness {L}{L'} (u , true , v) a = lower a
 
 LiftDecℙ' : ∀ {L}{L'} (A : Type L) →
   (Decℙ' {L} A) → (Decℙ' {ℓ-max L L'} (Lift {L}{L'} A))

@@ -218,6 +218,9 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   String→KL* (c ∷ w) =
     cons ((([ c ] , w) , refl) , ((c , refl) , (String→KL* w)))
 
+  KL*→String : ∀ {w} → KL* ⊕Σ₀ w → String
+  KL*→String {w} p = w
+
   ∥_∥grammar : Grammar → Grammar
   ∥_∥grammar g w = ∥ g w ∥₁
 
