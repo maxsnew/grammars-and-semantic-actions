@@ -138,6 +138,44 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         (λ {q}{q'}{c} (s , lit , p) →
           cons (s , ((c , lit) , p)))
 
+    data SnocDFATrace : (q q' : Q .fst) → String → Type ℓ where
+      nil : ∀ q → Term ε-grammar (SnocDFATrace q q)
+      snoc : ∀ q q' c →
+        Term
+          (SnocDFATrace q q' ⊗ literal c) (SnocDFATrace q (δ q' c))
+
+    elimSnocDFATrace :
+      (P : ∀ q q' → Grammar) →
+      (nil-case : ∀ {q} → Term ε-grammar (P q q)) →
+      (snoc-case : ∀ {q}{q'}{c} → Term (P q q' ⊗ literal c) (P q (δ q' c))) →
+      ∀ {q q'} → Term (SnocDFATrace q q') (P q q')
+    elimSnocDFATrace P nil-case snoc-case {q}{q'} (nil x y) =
+      transport (cong (P q q) (sym y)) (nil-case refl)
+    elimSnocDFATrace P nil-case snoc-case (snoc q q' c (s , x , lit)) =
+      snoc-case (s , (elimSnocDFATrace P nil-case snoc-case x , lit))
+
+    DFATrace→SnocDFATrace : ∀ q q' → Term (DFATrace q q') (SnocDFATrace q q')
+    DFATrace→SnocDFATrace q q' =
+      elimDFATrace
+        SnocDFATrace
+        (λ {q} → nil q)
+        (λ {q}{q'}{c} →
+          -⊗-elim {g = literal c} {h = SnocDFATrace (δ q c) q'}
+           {k = SnocDFATrace q q'} {l = literal c}
+           (help q c q')
+           (id {g = literal c})
+        )
+        where
+        help : ∀ q c q' →
+          Term (SnocDFATrace (δ q c) q')
+          (literal c -⊗ SnocDFATrace q q')
+        help q c .(δ q c) (nil .(δ q c) x) w' lit =
+          snoc q q c ((([] , c ∷ []) , cong₂ _++_ lit x) , ((nil q refl) , refl))
+        help q c .(δ q' c₁) (snoc .(δ q c) q' c₁ x) w' lit =
+          snoc q q' c₁ ((((w' ++ x .fst .fst .fst) , [ c₁ ]) ,
+            cong (w' ++_ ) (x .fst .snd ∙ cong (x .fst .fst .fst ++_) (x .snd .snd)) ∙ sym (++-assoc _ _ _)),
+            ((help q c q' (x .snd .fst) w' lit) , refl))
+
     Accepting : Type ℓ
     Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
 
