@@ -414,8 +414,16 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     DFA.δ ℙDFA X c q =
       DecProp'→DecProp
         (_ , isDecProp∃ (N .transition)
-        (λ t → DecProp→DecProp'
-          (eqDecProp N (N .dst t) q)))
+        (λ t →
+          DecProp→DecProp'
+          (DecProp×
+            (eqDecProp N (N .dst t) q)
+            (DecProp×
+              (X (N .src t))
+              (((N .label t ≡ lower c) ,
+              isFinSet→isSet isFinSetΣ₀ (N .NFADefs.NFA.label t) (lower c)) ,
+              isFinSet→Discrete isFinSetΣ₀ (N .NFADefs.NFA.label t) (lower c)))
+          )))
 
     N→ℙDFA : ∀ w →
       (tr : Σ[ (q , q') ∈ (N .Q .fst × N .Q .fst) ]
@@ -436,7 +444,9 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         -- this transport is just to convince the typechecker about termination
         N→ℙDFA w ((dst N t , q') , transport (cong (λ a → NFATrace N (dst N t) q' a) (sym w≡s₁₂)) b)
           (ℙDFA .δ dq (lift (N .label t)) ,
-            ∣ t , (DecPropWitness→DecPropWitness' (_ , _) refl) ∣₁
+            ∣ t ,
+             (DecPropWitness→DecPropWitness'
+              (_ , _) (refl , ((transport (cong (λ z → dq z .fst .fst) (sym a)) q∈dq) , refl ))) ∣₁
           ) in
       -- (recur .fst)
       recur .fst ,
@@ -475,87 +485,65 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       →
       ∥ (Σ[ q' ∈ N .Q .fst ]
             dq' q' .fst .fst × NFATrace N q q' w) ∥₁
-    ℙDFA→∃N' w q (dq' , pD) = {!!}
-    -- snocfun w (snocView w) q (dq' , pD)
+    ℙDFA→∃N' w q (dq' , pD) =
+      -- snocfun w (snocView w) q (dq' , DFATrace→SnocDFATrace ℙDFA (SingletonDecℙ q) dq' pD)
+      {!!}
       where
+      snocfun :
+        ∀ w → SnocView w → (q : N .Q .fst) →
+        ((dq' , pD) : Σ[ dq' ∈ ℙDFA .DFA.Q .fst ]
+              SnocDFATrace ℙDFA (SingletonDecℙ {A = N .Q} q) dq' (LiftList w))
+        →
+        -- SnocDFATrace ℙDFA (SingletonDecℙ q) dq' (LiftList w) →
+        (∀ ((q' , q'∈dq') : Σ[ q' ∈ N .Q .fst ] dq' q' .fst .fst) → ∥ NFATrace N q q' w ∥₁)
+        -- ∥ (Σ[ q' ∈ N .Q .fst ]
+              -- dq' q' .fst .fst × NFATrace N q q' w) ∥₁)
+      snocfun .[] nil q (.(SingletonDecℙ q) , DFADefs.DFA.nil .(SingletonDecℙ q) x) (q' , q'∈dq') =
+        ∣ nil (sym q'∈dq') refl ∣₁
+      snocfun .(xs ∷ʳ x₁) (snoc x₁ xs sw) q (.(SingletonDecℙ q) , DFADefs.DFA.nil .(SingletonDecℙ q) x) =
+        ⊥.rec (¬snoc≡nil (sym (LiftListDist _ _) ∙ x))
+      snocfun .[] nil q (.(DFADefs.DFA.δ ℙDFA X c) , DFADefs.DFA.snoc .(SingletonDecℙ q) X c x) =
+        ⊥.rec (¬nil≡snoc ((x .fst .snd) ∙ (cong (x .fst .fst .fst ++_) (x .snd .snd))))
+      snocfun .(xs ∷ʳ x₁) (snoc x₁ xs sw) q (.(DFADefs.DFA.δ ℙDFA X c) ,
+        DFADefs.DFA.snoc .(SingletonDecℙ q) X c (s , x , lit)) (q' , q'∈dq') =
+        let recur =  snocfun xs sw q (X , subst (SnocDFATrace ℙDFA (SingletonDecℙ q) X) s₁₁≡LLxs x) ? in
+        {!!}
+        -- PT.rec
+        --   isPropPropTrunc
+        --   (λ (qq , (inset , pN)) →
+        --   ∣ {!!} ,
+        --     ((DecProp'Witness→DecPropWitness {!!}
+        --       {!DFADefs.DFA.snoc (SingletonDecℙ q) X c (s , x , lit)!}) , {!!}) ∣₁
+        --       )
+        --   recur
+        -- decRec
+        --   (λ |xq∈X| →
+        --     PT.rec
+        --       isPropPropTrunc
+        --       (λ (xq , xq∈X) →
+        --         PT.rec
+        --           isPropPropTrunc
+        --           {!!}
+        --           recur
+        --       )
+        --       |xq∈X|
+        --   )
+        --   {!!}
+        --   (DecProp'→DecProp (_ , (isDecProp∃ (N .Q) (λ q → DecProp→DecProp' (X q)))) .snd)
+        where
 
-      data SnocDFATrace : (q q' : ℙDFA .DFA.Q .fst) → String → Type (ℓ-suc ℓ) where
-        nil : ∀ q → Term ε-grammar (DFATrace q q)
-        cons : ∀ q q' c →
-          Term
-            (DFATrace q q' ⊗ literal c) (DFATrace q ?)
-      --   nil : (the-path : q ≡ q') → (pε : LiftList w ≡ []) → SnocDFATrace q q' w (nil the-path pε)
-      --   snoc : ∀ q'' xs c (tr : DFATrace ℙDFA q q' (LiftList w)) →
-      --     (snoceq : xs ∷ʳ c ≡ w) →
-      --     (ℙDFA .δ q'' (lift c) ≡ q') →
-      --     (tr' : Σ[ x ∈ DFATrace ℙDFA q q'' (LiftList xs) ] extendTrace' ℙDFA {q} (lift c)
-      --       (((LiftList xs , lift c ∷ []) ,
-      --       sym (cong LiftList snoceq) ∙ LiftListDist _ _) ,
-      --       (q'' , x) , refl) ≡ ((q' , tr))) →
-      --     SnocDFATrace q q'' xs (tr' .fst) →
-      --     SnocDFATrace q q' w tr
 
-      -- snocDFATrace :
-      --   ∀ q q' w →
-      --   SnocView w →
-      --   (p : DFATrace ℙDFA q q' (LiftList w)) →
-      --   SnocDFATrace q q' w p
-      -- snocDFATrace q q' .[] nil (DFADefs.DFA.nil a b) = nil a b
-      -- snocDFATrace q q' .[] nil (DFADefs.DFA.cons a (s , lit , b)) =
+        s₁₁≡LLxs : s .fst .fst ≡ LiftList xs
+        s₁₁≡LLxs = snoc-inj₁ (cong (s .fst .fst ++_) (sym lit) ∙ sym (s .snd) ∙ LiftListDist _ _)
+
+      -- snocfun .[] nil q (dq' , DFADefs.DFA.nil srcp p) =
+      --   ∣ q , ((transport (cong (λ a → a q .fst .fst) srcp) refl) , (nil refl refl)) ∣₁
+      -- snocfun .[] nil q (dq' , DFADefs.DFA.cons c (s , lit , p)) =
       --   ⊥.rec (¬cons≡nil (sym (s .snd ∙ cong (_++ s .fst .snd) lit)))
-      -- snocDFATrace q q' .(xs ∷ʳ x) (snoc x xs sw) (DFADefs.DFA.nil a b) =
-      --   ⊥.rec (¬snoc≡nil (sym (LiftListDist xs [ x ]) ∙ b))
-      -- snocDFATrace q q' .(xs ∷ʳ x) (snoc x xs sw) (DFADefs.DFA.cons a (s , lit , b)) =
-      --   -- helper {!!} x {!!}
-      --   -- transport (cong₂ (λ u v → SnocDFATrace q u _ v) (cong fst (sym the-path)) (cong snd (sym the-path)))
-      --   --   (helper {tr' = DFATrace.cons a (s , lit , b)} {!!} x)
-      --   where
-      --   the-path : (q' , cons a (s , lit , b)) ≡ extendTrace' ℙDFA (lift x) ({!!} , ((_ , _) , {!!}))
-      --   the-path = isPropDFATrace ℙDFA q (LiftList (xs ∷ʳ x)) (q' , cons a (s , lit , b))
-      --     (extendTrace' ℙDFA (lift x) (_ , _ , _))
-
-      --   helper : ∀ {q q' q''} {ys} →
-      --     {tr' : DFATrace ℙDFA q q'' (LiftList ys)} →
-      --     SnocDFATrace q q'' ys tr' →
-      --     (c : Σ₀) →
-      --     (ℙDFA .δ q'' (lift c) ≡ q') →
-      --     -- SnocDFATrace q (ℙDFA .δ q'' (lift c)) (ys ∷ʳ c)
-      --     --   (extendTrace' ℙDFA (lift c) ((((LiftList ys) , [ lift c ]) ,
-      --     --     (LiftListDist _ _)) , ((q'' , tr') , refl)) .snd)
-      --     SnocDFATrace q q' {!ys ∷ʳ c!} {!!}
-      --   helper {q''} {ys} {tr'} snoctr' c = {!!}
-      -- -- snocDFATrace q q' w sw pD
-      -- -- snocDFATrace q q' w sw (DFADefs.DFA.nil a b) = nil a b
-      -- -- snocDFATrace q q' .[] nil (DFADefs.DFA.cons c (s , lit , b)) =
-      -- --   ⊥.rec (¬cons≡nil (sym (s .snd ∙ cong (_++ s .fst .snd) lit)))
-      -- -- snocDFATrace q q' .(xs ∷ʳ x) (snoc x xs sw) (DFADefs.DFA.cons c (s , lit , b)) =
-      -- --   snoc
-      -- --     {!!}
-      -- --     xs
-      -- --     x
-      -- --     (cons c (s , lit , b))
-      -- --     refl
-      -- --     {!!}
-      -- --     {!!}
-      -- --     {!!}
-
-      -- snocfun :
-      --   ∀ w → SnocView w → (q : N .Q .fst) →
-      --   ((dq' , pD) : Σ[ dq' ∈ ℙDFA .DFA.Q .fst ]
-      --         DFATrace ℙDFA (SingletonDecℙ {A = N .Q} q) dq' (LiftList w))
-      --   →
-      --   SnocDFATrace (SingletonDecℙ q) dq' w pD →
-      --   ∥ (Σ[ q' ∈ N .Q .fst ]
-      --         dq' q' .fst .fst × NFATrace N q q' w) ∥₁
-      -- snocfun = {!!}
-      -- -- snocfun .[] nil q (dq' , DFADefs.DFA.nil srcp p) =
-      -- --   ∣ q , ((transport (cong (λ a → a q .fst .fst) srcp) refl) , (nil refl refl)) ∣₁
-      -- -- snocfun .[] nil q (dq' , DFADefs.DFA.cons c (s , lit , p)) =
-      -- --   ⊥.rec (¬cons≡nil (sym (s .snd ∙ cong (_++ s .fst .snd) lit)))
-      -- -- snocfun .(xs ∷ʳ x) (snoc x xs sw) q (dq' , DFADefs.DFA.nil srcp p) =
-      -- --   ⊥.rec (¬snoc≡nil (sym (LiftListDist _ _) ∙ p))
-      -- -- snocfun .(xs ∷ʳ x) (snoc x xs sw) q (dq' , DFADefs.DFA.cons c (s , lit , p)) =
-      -- --   {!p!}
+      -- snocfun .(xs ∷ʳ x) (snoc x xs sw) q (dq' , DFADefs.DFA.nil srcp p) =
+      --   ⊥.rec (¬snoc≡nil (sym (LiftListDist _ _) ∙ p))
+      -- snocfun .(xs ∷ʳ x) (snoc x xs sw) q (dq' , DFADefs.DFA.cons c (s , lit , p)) =
+      --   {!!}
 
 
 
