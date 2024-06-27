@@ -54,6 +54,7 @@ isPropLift :
   isProp A → isProp (Lift {L}{L'} A)
 isPropLift x a b = liftExt (x _ _)
 
+
 -- TODO : add to cubical?
 isSetLift :
   {L L' : Level} →
@@ -153,6 +154,13 @@ leftInv DecPropIso (A , no ¬p) =
 DecProp≃DecProp' : ∀ {ℓ} → DecProp ℓ ≃ DecProp' ℓ
 DecProp≃DecProp' = isoToEquiv DecPropIso
 
+DecProp≡DecProp' : ∀ {ℓ} → DecProp ℓ ≡ DecProp' ℓ
+DecProp≡DecProp' = isoToPath DecPropIso
+
+DecPropFstPath : ∀ {ℓ} → (A : DecProp ℓ) → A .fst .fst ≡ (DecPropIso .fun A) .fst
+DecPropFstPath (a , yes p) = refl
+DecPropFstPath (a , no ¬p) = refl
+
 DecProp'→DecProp : ∀ {ℓ} → DecProp' ℓ → DecProp ℓ
 DecProp'→DecProp = DecPropIso .inv
 
@@ -187,6 +195,18 @@ snd (DecProp⊎ A B AB→⊥) =
         (λ ¬b → no (Cubical.Data.Sum.rec ¬a ¬b))
         (B .snd))
     (A .snd)
+
+DecProp'∃ : ∀ {L}{L'} → (X : FinSet L) (P : X .fst → DecProp' L')  → DecProp' (ℓ-max L L')
+DecProp'∃ X P = (∃[ x ∈ X .fst ] P x .fst) , (isDecProp∃  X P)
+
+DecProp∃ : ∀ {L}{L'} → (X : FinSet L) (P : X .fst → DecProp L')  → DecProp (ℓ-max L L')
+DecProp∃ X P =
+  ((∃[ x ∈ X .fst ] P x .fst .fst) , isPropPropTrunc) ,
+    DecProp'→DecProp (∥ Σ (X .fst) (λ x → P x .fst .fst) ∥₁ ,
+                     isDecProp∃ X λ x → P x .fst .fst , transport (cong isDecProp (sym (DecPropFstPath (P x))))
+                     (DecProp→DecProp' (P x) .snd)) .snd
+-- -- (∃[ x ∈ X .fst ] P x .fst) , (isDecProp∃  X P)
+-- --
 
 DecPropΣ :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : A .fst .fst → DecProp ℓ) →
