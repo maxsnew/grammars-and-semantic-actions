@@ -26,10 +26,24 @@ open import Semantics.Helper public
 open import Semantics.String public
 
 private
-  variable ℓ ℓ' : Level
+  variable ℓG ℓΣ₀ : Level
 
-module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+module GrammarDefs ℓG ((Σ₀' , isFinSetΣ₀') : FinSet ℓΣ₀) where
+  private
+    ℓ : Level
+    ℓ = ℓ-max ℓG ℓΣ₀
+
+  Σ₀rename : FinSet ℓ
+  Σ₀rename = (Lift {ℓΣ₀}{ℓ} Σ₀' , isFinSetLift isFinSetΣ₀')
+
+  Σ₀ : Type ℓ
+  Σ₀ = Σ₀rename .fst
+
+  isFinSetΣ₀ : isFinSet Σ₀
+  isFinSetΣ₀ = Σ₀rename .snd
+
   open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
+
   Grammar : Type (ℓ-suc ℓ)
   Grammar = String → Type ℓ
 

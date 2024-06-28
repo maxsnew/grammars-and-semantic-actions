@@ -27,6 +27,9 @@ open import Semantics.Grammar
 open import Semantics.String
 open import Semantics.Helper
 
+private
+  variable ℓG ℓΣ₀ : Level
+
 {-- Embed the linear typing rules
  -- These correspond to terms like x : g ⊢ M : g'
  -- with the caveat that derivations
@@ -39,7 +42,20 @@ open import Semantics.Helper
  -- is given as
  -- x : ε-grammar ⊢ M : g
  --}
-module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+module TermDefs ℓG ((Σ₀' , isFinSetΣ₀') : FinSet ℓΣ₀) where
+  private
+    ℓ : Level
+    ℓ = ℓ-max ℓG ℓΣ₀
+
+  Σ₀rename : FinSet ℓ
+  Σ₀rename = (Lift {ℓΣ₀}{ℓ} Σ₀' , isFinSetLift isFinSetΣ₀')
+
+  Σ₀ : Type ℓ
+  Σ₀ = Σ₀rename .fst
+
+  isFinSetΣ₀ : isFinSet Σ₀
+  isFinSetΣ₀ = Σ₀rename .snd
+
   open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
   open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
 
@@ -101,7 +117,6 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   ⊗-elim e e' p =
     let (s , ph , pk) = e p in
     e' (s , (ph , pk))
-
 
   -⊗-intro :
     {g h k : Grammar} →
@@ -289,7 +304,6 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   MaybeGrammar-bind {g} {h} p =
     MaybeGrammar-elim {g = g} {h = MaybeGrammar h} p (MaybeGrammar-no-intro {g = ⊤-grammar} {h = h})
 
-
   DecProp-grammar'-intro :
     (d : DecProp ℓ) →
     {g : Grammar} →
@@ -408,25 +422,23 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   --      Δ g ⊢ k
   --  However this isn't possible for arbitrary functions Δ
   --  but we can define terms like this for nice enough Δ
-  --  (i.e. contexts that have a single free variable)
+  --  (i.e. contexts that have a single free variable that occurs positively amongst a
+  --    restricted set of context constructors)
   --
   -- This isn't meant to be used everywhere, however this can eliminate redundancy in a lot of proofs
   -- because without use of it, we must manually conjugate with the introudction and elimination forms
   -- like in ⊗-trans-l below, which can become arbitrarily long
   --
   -- Instead below we do this work once. And for brevity, we are doing it "in assembly" so to speak.
-  -- i.e. for this first pass, we are breaking abstractions to avoid the conjugations of intro/elim, but
-  -- the result is equivalent in either case
+  -- i.e. are breaking abstractions
   data OneHoleContext : Type (ℓ-suc ℓ) where
     var : OneHoleContext
     ⊗l : Grammar → OneHoleContext
     ⊗r : Grammar → OneHoleContext
     ⊕l : Grammar → OneHoleContext
     ⊕r : Grammar → OneHoleContext
-    -- -⊗l : Grammar → OneHoleContext
     -⊗r : Grammar → OneHoleContext
     ⊗-l : Grammar → OneHoleContext
-    -- ⊗-r : Grammar → OneHoleContext
     includeGrammar : Grammar → OneHoleContext
     _⊗OH_ : OneHoleContext  → OneHoleContext  → OneHoleContext
     _⊕OH_ : OneHoleContext  → OneHoleContext  → OneHoleContext
@@ -447,11 +459,8 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   evalOHContext (⊗r x) g = x ⊗ g
   evalOHContext (⊕l x) g = g ⊕ x
   evalOHContext (⊕r x) g = x ⊕ g
-  -- only allow the positive occurences of g
-  -- evalOHContext (-⊗l x) g = g -⊗ x
   evalOHContext (-⊗r x) g = x -⊗ g
   evalOHContext (⊗-l x) g = g ⊗- x
-  -- evalOHContext (⊗-r x) g = x ⊗- g
   evalOHContext (includeGrammar x) g = x
   evalOHContext (x ⊗OH y) g = (evalOHContext x g) ⊗ (evalOHContext y g)
   evalOHContext (x ⊕OH y) g = (evalOHContext x g) ⊕ (evalOHContext y g)
@@ -473,10 +482,8 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   cut {g} {h} {k} (⊕l x) g⊢h Δh⊢k (inr px) = Δh⊢k (inr px)
   cut {g} {h} {k} (⊕r x) g⊢h Δh⊢k (inr pg) = Δh⊢k (inr (g⊢h pg))
   cut {g} {h} {k} (⊕r x) g⊢h Δh⊢k (inl px) = Δh⊢k (inl px)
-  -- cut {g} {h} {k} (-⊗l x) g⊢h Δh⊢k p = {!!}
   cut {g} {h} {k} (-⊗r x) g⊢h Δh⊢k p = Δh⊢k (λ w' px → g⊢h (p w' px))
   cut {g} {h} {k} (⊗-l x) g⊢h Δh⊢k p = Δh⊢k (λ w' px → g⊢h (p w' px))
-  -- cut {g} {h} {k} (⊗-r x) g⊢h Δh⊢k p = {!!}
   cut {g} {h} {k} (includeGrammar x) g⊢h Δh⊢k p = Δh⊢k p
   cut {g} {h} {k} (Δ ⊗OH Δ₁) g⊢h Δh⊢k (s , p , p') =
     Δh⊢k (s , (cut {g}{h}{Δ [ h ]eval} Δ g⊢h (id {g = Δ [ h ]eval}) p) ,
