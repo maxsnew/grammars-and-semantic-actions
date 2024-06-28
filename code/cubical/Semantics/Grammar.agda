@@ -136,6 +136,10 @@ module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   Term : Grammar → Grammar → Type ℓ
   Term g g' = ∀ {w} → g w → g' w
 
+  infix 5 Term
+  syntax Term g g' = g ⊢ g'
+
+
   data KL*Ty (g : Grammar) : (w : String) → Type ℓ where
     nil : Term ε-grammar (KL*Ty g)
     cons : Term (g ⊗ KL*Ty g) (KL*Ty g)

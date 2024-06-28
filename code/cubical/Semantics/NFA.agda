@@ -448,17 +448,14 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
              (DecPropWitness→DecPropWitness'
               (_ , _) (refl , ((transport (cong (λ z → dq z .fst .fst) (sym a)) q∈dq) , refl ))) ∣₁
           ) in
-      -- (recur .fst)
       recur .fst ,
       (cons (lift (N .label t))
         (((LiftList (s .fst .fst) , LiftList (w)) ,
-        -- cong LiftList (s .snd) ∙ LiftListDist (fst (fst s)) (snd (fst s))
         cong LiftList (s .snd) ∙
         LiftListDist (s .fst .fst) (s .fst .snd) ∙
         cong (LiftList (s .fst .fst) ++_) (cong LiftList (sym w≡s₁₂))
         ) ,
         ((λ i → LiftList (lit i)) ,
-        -- recur .snd
         recur .snd
         )))
       where
@@ -523,7 +520,6 @@ module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
           (DecProp∃ (N .transition)
             (λ tr →
               DecProp×
-                -- (ℙDFA(N .dst tr))
                 (((N .dst tr ≡ q') , (isFinSet→isSet (N .Q .snd) _ _)) , (NFA.decEqQ N _ _))
                 (DecProp×
                   (X (N .src tr))
