@@ -372,6 +372,31 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     g ⊢ k
   trans e e' p = e' (e p)
 
+  ⊗-trans-l :
+    {g h k l : Grammar} →
+    g ⊢ h  →
+    h ⊗ k ⊢ l →
+    g ⊗ k ⊢ l
+  ⊗-trans-l {g}{h}{k}{l} e e' =
+    ⊗--elim {g = g} {h = k} {k = l} {l = k}
+      (trans {g = g} {h = h} {k = l ⊗- k}
+        e
+        (⊗--intro {g = h} {h = k} {k = l} e')
+      )
+      (id {g = k})
+
+  ⊗-trans-r :
+    {g h k l : Grammar} →
+    g ⊢ h  →
+    k ⊗ h ⊢ l →
+    k ⊗ g ⊢ l
+  ⊗-trans-r {g}{h}{k}{l} e e' =
+    -⊗-elim {g = k} {h = g} {k = l} {l = k}
+      (trans {g = g} {h = h} {k = k -⊗ l}
+        e
+        (-⊗-intro {g = k} {h = h} {k = l} e'))
+      (id {g = k})
+
   -- The following type allows to induct over well-behaved contexts to build a
   -- powerful cut principle
   -- We wish to define something like:
@@ -405,8 +430,16 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     includeGrammar : Grammar → OneHoleContext
     _⊗OH_ : OneHoleContext  → OneHoleContext  → OneHoleContext
     _⊕OH_ : OneHoleContext  → OneHoleContext  → OneHoleContext
-    _-⊗OH_ : OneHoleContext  → OneHoleContext  → OneHoleContext
-    _⊗-OH_ : OneHoleContext  → OneHoleContext  → OneHoleContext
+    _-⊗OH_ : Grammar  → OneHoleContext  → OneHoleContext
+    _⊗-OH_ : OneHoleContext  → Grammar  → OneHoleContext
+
+  syntax ⊗l g = hole ⊗ g
+  syntax ⊗r g = g ⊗ hole
+  syntax ⊕l g = g ⊕ hole
+  syntax ⊕r g = hole ⊕ g
+  syntax -⊗r g = g -⊗ hole
+  syntax ⊗-l g = hole ⊗- g
+  syntax includeGrammar g = ↑ g
 
   evalOHContext : OneHoleContext → Grammar → Grammar
   evalOHContext var g = g
@@ -414,17 +447,16 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   evalOHContext (⊗r x) g = x ⊗ g
   evalOHContext (⊕l x) g = g ⊕ x
   evalOHContext (⊕r x) g = x ⊕ g
-  -- evalOHContext (-⊗l x) g = g -⊗ x
   -- only allow the positive occurences of g
+  -- evalOHContext (-⊗l x) g = g -⊗ x
   evalOHContext (-⊗r x) g = x -⊗ g
   evalOHContext (⊗-l x) g = g ⊗- x
   -- evalOHContext (⊗-r x) g = x ⊗- g
   evalOHContext (includeGrammar x) g = x
   evalOHContext (x ⊗OH y) g = (evalOHContext x g) ⊗ (evalOHContext y g)
   evalOHContext (x ⊕OH y) g = (evalOHContext x g) ⊕ (evalOHContext y g)
-  -- TODO need positivity here
-  evalOHContext (x -⊗OH y) g = (evalOHContext x g) -⊗ (evalOHContext y g)
-  evalOHContext (x ⊗-OH y) g = (evalOHContext x g) ⊗- (evalOHContext y g)
+  evalOHContext (h -⊗OH y) g = h -⊗ (evalOHContext y g)
+  evalOHContext (x ⊗-OH h) g = (evalOHContext x g) ⊗- h
 
   syntax evalOHContext Δ g = Δ [ g ]eval
 
@@ -453,31 +485,32 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     Δh⊢k (inl (cut {g}{h}{Δ [ h ]eval} Δ g⊢h (id {g = Δ [ h ]eval}) p))
   cut {g} {h} {k} (Δ ⊕OH Δ₁) g⊢h Δh⊢k (inr p) =
     Δh⊢k (inr (cut {g}{h}{Δ₁ [ h ]eval} Δ₁ g⊢h (id {g = Δ₁ [ h ]eval}) p))
-  cut {g} {h} {k} (Δ -⊗OH Δ₁) g⊢h Δh⊢k p =
-    {!!}
-  cut {g} {h} {k} (Δ ⊗-OH Δ₁) g⊢h Δh⊢k p = {!!}
+  cut {g} {h} {k} (l -⊗OH Δ) g⊢h Δh⊢k p =
+    Δh⊢k (λ w' pl → cut {g}{h}{Δ [ h ]eval} Δ g⊢h (id {g = Δ [ h ]eval}) (p w' pl))
+  cut {g} {h} {k} (Δ ⊗-OH l) g⊢h Δh⊢k p =
+    Δh⊢k (λ w' pl → cut {g}{h}{Δ [ h ]eval} Δ g⊢h (id {g = Δ [ h ]eval}) (p w' pl))
 
-  ⊗-trans-l :
+  ⊗-trans-l' :
     {g h k l : Grammar} →
     g ⊢ h  →
     h ⊗ k ⊢ l →
     g ⊗ k ⊢ l
-  ⊗-trans-l {g}{h}{k}{l} e e' =
-    ⊗--elim {g = g} {h = k} {k = l} {l = k}
-      (trans {g = g} {h = h} {k = l ⊗- k}
-        e
-        (⊗--intro {g = h} {h = k} {k = l} e')
-      )
-      (id {g = k})
+  ⊗-trans-l' {g}{h}{k}{l} e e' =
+    cut {g = g} {h = h} {k = l} (hole ⊗ k) e e'
 
-  ⊗-trans-r :
-    {g h k l : Grammar} →
-    g ⊢ h  →
-    k ⊗ h ⊢ l →
-    k ⊗ g ⊢ l
-  ⊗-trans-r {g}{h}{k}{l} e e' =
-    -⊗-elim {g = k} {h = g} {k = l} {l = k}
-      (trans {g = g} {h = h} {k = k -⊗ l}
-        e
-        (-⊗-intro {g = k} {h = h} {k = l} e'))
-      (id {g = k})
+  trans' :
+    {g h k : Grammar} →
+    g ⊢ h →
+    h ⊢ k →
+    g ⊢ k
+  trans' {g}{h}{k} e e' = cut {g = g} {h = h} {k = k} var e e'
+
+  cut-test :
+    {g h j k l m n o p q : Grammar} →
+    g ⊢ h →
+    j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ h)))) ⊢ q →
+    j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ g)))) ⊢ q
+  cut-test {g}{h}{j}{k}{l}{m}{n}{o}{p}{q} e e' =
+    cut {g = g} {h = h} {k = q}
+      (j -⊗OH (k -⊗OH ((↑ l) ⊗OH ((↑ m) ⊕OH (p -⊗ hole)))))
+      e e'
