@@ -152,10 +152,56 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
                          (id {g = literal c'}))
                        (snoc q-end' c'))
                   ))
-
               )
             )
            (id {g = literal c})
+        )
+
+    SnocDFATrace→DFATrace : ∀ q-start q-end → SnocDFA[ q-start →* q-end ] ⊢ DFA[ q-start →* q-end ]
+    SnocDFATrace→DFATrace q-start q-end =
+      elimSnocDFA q-start
+        (λ q-end → DFA[ q-start →* q-end ])
+        nil
+        (λ {q-end'} {c} →
+          ⊗--elim {g = DFA[ q-start →* q-end' ]} {h = literal c}
+            {k = DFA[ q-start →* δ q-end' c ]} {l = literal c}
+            (elimDFA q-end'
+              (λ q-start' → DFA[ q-start' →* δ q-end' c ] ⊗- literal c)
+              (⊗--intro {g = ε-grammar} {h = literal c} {k = DFA[ q-end' →* δ q-end' c ]}
+                 (ε-extension-l {g = ε-grammar} {h = literal c} {k = DFA[ q-end' →* δ q-end' c ]}
+                   (id {g = ε-grammar})
+                   (ε-contraction-r {g = DFA[ δ q-end' c →* δ q-end' c ]} {h = literal c}
+                     {k = DFA[ q-end' →* δ q-end' c ]}
+                     nil
+                     (cons q-end' c))
+                  )
+              )
+              (λ {q-start'} {c'} →
+                ⊗--intro {g = literal c' ⊗ (DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c)}
+                  {h = literal c} {k = DFA[ q-start' →* δ q-end' c ]}
+                  (⊗-elim {g = (literal c' ⊗ (DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c)) ⊗ literal c}
+                    {h = literal c'}
+                    {k = (DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c) ⊗ literal c}
+                    {l = DFA[ q-start' →* δ q-end' c ]}
+                    (⊗-assoc {g = literal c'} {h = DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c}
+                      {k = literal c}
+                      {l = (literal c' ⊗ (DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c) ⊗ literal c)}
+                      (id {g = (literal c' ⊗ (DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c) ⊗ literal c)}))
+                    (trans {g = (literal c' ⊗ (DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c) ⊗ literal c)}
+                      {h = literal c' ⊗ DFA[ δ q-start' c' →* δ q-end' c ]}
+                      {k = DFA[ q-start' →* δ q-end' c ]}
+                      (⊗-intro {g = literal c'} {h = literal c'}
+                        {k = (DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c) ⊗ literal c}
+                        {l = DFA[ δ q-start' c' →* δ q-end' c ]}
+                        (id {g = literal c'})
+                        (⊗--elim {g = DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c}
+                          {h = literal c}
+                          {k = DFA[ δ q-start' c' →* δ q-end' c ]}
+                          {l = literal c}
+                          (id {g = DFA[ δ q-start' c' →* δ q-end' c ] ⊗- literal c })
+                          (id {g = literal c})))
+                      (cons q-start' c')))))
+            (id {g = literal c})
         )
 
     -- extendTrace' : ∀ {q : Q .fst} → (c : Σ₀) →
