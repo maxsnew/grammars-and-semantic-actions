@@ -43,17 +43,8 @@ module DFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
       isAcc : Q .fst → DecProp ℓ
       δ : Q .fst → Σ₀ → Q .fst
 
-    negate : DFA
-    Q negate = Q
-    init negate = init
-    isAcc negate q = negateDecProp (isAcc q)
-    δ negate = δ
-
     decEqQ : Discrete (Q .fst)
     decEqQ = isFinSet→Discrete (Q .snd)
-
-    Accepting : Type ℓ
-    Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
 
     acc? : Q .fst → Grammar
     acc? q = DecProp-grammar' (isAcc q)
@@ -307,7 +298,6 @@ module examples where
 
   ex4 : DecideDFA D [] ≡ true
   ex4 = refl
-
 
  {--       0
  -- 0  --------> 1

@@ -102,7 +102,6 @@ module TermDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
     let (s , ph , pk) = e p in
     e' (s , (ph , pk))
 
-
   -⊗-intro :
     {g h k : Grammar} →
     g ⊗ h ⊢ k →
