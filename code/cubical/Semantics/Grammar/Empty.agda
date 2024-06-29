@@ -27,13 +27,13 @@ open import Semantics.String
 open import Semantics.Grammar.Base
 
 private
-  variable ℓG ℓΣ₀ : Level
+  variable ℓΣ₀ : Level
 
-module _ {(Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀} where
+module _ {ℓG} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
   open GrammarDefs (Σ₀ , isFinSetΣ₀)
 
-  ε-grammar : Grammar ℓΣ₀
-  ε-grammar w = w ≡ []
+  -- ε-grammar : Grammar ℓG
+  -- ε-grammar w = LiftList {ℓ-zero}{ℓG} w ≡ []
 
-  isHGrammar-ε-grammar : isHGrammar ℓΣ₀ ε-grammar
-  isHGrammar-ε-grammar w = isGroupoidString w []
+  -- isHGrammar-ε-grammar : isHGrammar ℓG ε-grammar
+  -- isHGrammar-ε-grammar w x y a b i j k = {!LiftList!}

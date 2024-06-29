@@ -29,11 +29,11 @@ open import Semantics.Grammar.Base
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {(Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀} where
+module _ {ℓG} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
   open GrammarDefs (Σ₀ , isFinSetΣ₀)
 
-  literal : Σ₀ → Grammar ℓΣ₀
-  literal c w = w ≡ [ c ]
+  literal : Σ₀ → Grammar ℓG
+  literal c w = LiftList {ℓ-zero}{ℓG} w ≡ LiftList {ℓ-zero}{ℓG} [ c ]
 
-  isHGrammar-literal : ∀ c → isHGrammar ℓΣ₀ (literal c)
-  isHGrammar-literal c w = isGroupoidString _ _
+  -- isHGrammar-literal : ∀ c → isHGrammar ℓG (literal c)
+  -- isHGrammar-literal c w = isGroupoidString _ _

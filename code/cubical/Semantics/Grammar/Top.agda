@@ -29,7 +29,7 @@ open import Semantics.Grammar.Base
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {(Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀} where
+module _ {ℓG} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
   open GrammarDefs (Σ₀ , isFinSetΣ₀)
 
   ⊤-grammar : Grammar ℓG

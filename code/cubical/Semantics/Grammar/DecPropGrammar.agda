@@ -1,4 +1,4 @@
-module Semantics.Grammar.Function where
+module Semantics.Grammar.DecPropGrammar where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -25,16 +25,19 @@ open import Cubical.HITs.PropositionalTruncation as PT
 open import Semantics.Helper
 open import Semantics.String
 open import Semantics.Grammar.Base
+open import Semantics.Grammar.Top
+open import Semantics.Grammar.Bottom
 
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {ℓG'} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
+module _ {ℓG} {ℓS} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
   open GrammarDefs (Σ₀ , isFinSetΣ₀)
 
-  _⇒_ : Grammar ℓG → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
-  (g ⇒ g') w = g w → g' w
-
-  isHGrammar-⇒ :
-    {g : Grammar ℓG} → (g' : hGrammar ℓG') → isHGrammar (ℓ-max ℓG ℓG') ( g ⇒ g' .fst )
-  isHGrammar-⇒ g' _ = isSet→ (g' .snd _)
+  DecProp-grammar' :
+    DecProp ℓS → Grammar (ℓ-max ℓS ℓG)
+  DecProp-grammar' d =
+    decRec
+      (λ _ → ⊤-grammar {ℓG = ℓ-max ℓS ℓG} {(Σ₀ , isFinSetΣ₀)})
+      (λ _ → ⊥-grammar {ℓG = ℓ-max ℓS ℓG} {(Σ₀ , isFinSetΣ₀)})
+      (d .snd)

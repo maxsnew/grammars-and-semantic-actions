@@ -26,21 +26,37 @@ open import Semantics.Helper public
 open import Semantics.String public
 
 private
-  variable ℓG ℓΣ₀ : Level
+  variable ℓG ℓG' ℓΣ₀ : Level
 
-module GrammarDefs ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
+module GrammarDefs ((Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero) where
   open StringDefs (Σ₀ , isFinSetΣ₀) public
 
   module _ ℓG where
-    private
-      ℓ : Level
-      ℓ = ℓ-max ℓG ℓΣ₀
+    Grammar : Type (ℓ-suc ℓG)
+    Grammar = String → Type ℓG
 
-    Grammar : Type (ℓ-suc ℓ)
-    Grammar = String → Type ℓ
-
-    isHGrammar : Grammar → Type ℓ
+    isHGrammar : Grammar → Type ℓG
     isHGrammar g = ∀ w → isSet (g w)
 
-    hGrammar : Type (ℓ-suc ℓ)
+    hGrammar : Type (ℓ-suc ℓG)
     hGrammar = Σ[ g ∈ Grammar ] isHGrammar g
+
+
+  module _ {ℓG} where
+    Term : Grammar ℓG → Grammar ℓG → Type ℓG
+    Term g g' = ∀ {w} → g w → g' w
+
+    infix 5 Term
+    syntax Term g g' = g ⊢ g'
+
+    ε-grammar : Grammar ℓG
+    ε-grammar w = LiftList {ℓ-zero}{ℓG} w ≡ []
+
+  -- isHGrammar-ε-grammar : isHGrammar ℓΣ₀ ε-grammar
+  -- isHGrammar-ε-grammar w = isGroupoidString w []
+
+  -- literal : Σ₀ → Grammar ℓΣ₀
+  -- literal c w = w ≡ [ c ]
+
+  -- isHGrammar-literal : ∀ c → isHGrammar ℓΣ₀ (literal c)
+  -- isHGrammar-literal c w = isGroupoidString _ _

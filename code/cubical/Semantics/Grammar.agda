@@ -32,7 +32,7 @@ private
 -- LiftGrammar {L} g w = Lift {ℓ}{ℓ-max (ℓ-suc ℓ) L} (g w)
 
 module GrammarDefs ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
-  open StringDefs ℓΣ₀ (Σ₀ , isFinSetΣ₀)
+  open StringDefs (Σ₀ , isFinSetΣ₀)
 
   module _ ℓG where
     private
@@ -48,20 +48,20 @@ module GrammarDefs ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
     hGrammar : Type (ℓ-suc ℓ)
     hGrammar = Σ[ g ∈ Grammar ] isHGrammar g
 
+  ε-grammar : Grammar ℓΣ₀
+  ε-grammar w = w ≡ []
+
+  isHGrammar-ε-grammar : isHGrammar ℓΣ₀ ε-grammar
+  isHGrammar-ε-grammar w = isGroupoidString w []
+
+  literal : Σ₀ → Grammar ℓΣ₀
+  literal c w = w ≡ [ c ]
+
+  isHGrammar-literal : ∀ c → isHGrammar ℓΣ₀ (literal c)
+  isHGrammar-literal c w = isGroupoidString _ _
+
   module _ {ℓG} where
     -- Unary Grammars
-    ε-grammar : Grammar ℓΣ₀
-    ε-grammar w = w ≡ []
-
-    isHGrammar-ε-grammar : isHGrammar ℓΣ₀ ε-grammar
-    isHGrammar-ε-grammar w = isGroupoidString w []
-
-    literal : Σ₀ → Grammar ℓΣ₀
-    literal c w = w ≡ [ c ]
-
-    isHGrammar-literal : ∀ c → isHGrammar ℓΣ₀ (literal c)
-    isHGrammar-literal c w = isGroupoidString _ _
-
     ⊤-grammar : Grammar ℓG
     ⊤-grammar _ = Unit*
 
@@ -142,22 +142,27 @@ module GrammarDefs ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
         isHGrammar (ℓ-max ℓS ℓG) (LinearΣ {A .fst} (λ a → B a .fst))
       isHGrammar-LinearΣ {A} B _ = isSetΣ (A .snd) (λ a → B a .snd _)
 
-      DecProp-grammar' :
-        DecProp ℓS → Grammar (ℓ-max ℓS ℓG)
-      DecProp-grammar' d =
-        decRec (λ _ → {!!}) {!!} (d .snd)
-        -- decRec (λ _ → ⊤-grammar ?) (λ _ → ⊥-grammar ?) (d .snd)
+  module _ {ℓG} {ℓS} where
+    DecProp-grammar' :
+      DecProp ℓS → Grammar (ℓ-max ℓS ℓG)
+    DecProp-grammar' d =
+      decRec
+      (λ _ → ⊤-grammar {ℓG = ℓ-max ℓS ℓG})
+      (λ _ → ⊥-grammar {ℓG = ℓ-max ℓS ℓG})
+      (d .snd)
 
-    -- Term : Grammar → Grammar → Type ℓ
-    -- Term g g' = ∀ {w} → g w → g' w
+  module _ {ℓG} {ℓG'} where
+    Term : Grammar ℓG → Grammar ℓG' → Type (ℓ-max ℓΣ₀ (ℓ-max ℓG ℓG'))
+    Term g g' = ∀ {w} → g w → g' w
 
-    -- infix 5 Term
-    -- syntax Term g g' = g ⊢ g'
+    infix 5 Term
+    syntax Term g g' = g ⊢ g'
 
-
-    -- data KL*Ty (g : Grammar) : (w : String) → Type ℓ where
-    --   nil : Term ε-grammar (KL*Ty g)
-    --   cons : Term (g ⊗ KL*Ty g) (KL*Ty g)
+  module _ {ℓG} where
+    data KL*Ty (g : Grammar ℓG) : Grammar (ℓ-max (ℓ-suc ℓG) ℓΣ₀) where
+      nil : Term {ℓΣ₀}{ℓ-max (ℓ-suc ℓG) ℓΣ₀} ε-grammar (KL*Ty g)
+      cons : Term {ℓ-max (ℓ-suc ℓG) ℓΣ₀}{ℓ-max (ℓ-suc ℓG) ℓΣ₀}
+        (g ⊗ KL*Ty g) (KL*Ty g)
 
     -- -- Use IW trees to prove that Kleene star forms a set
     -- -- (provided that the original grammar outputs sets)
