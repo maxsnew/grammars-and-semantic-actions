@@ -65,6 +65,15 @@ isSetLift isSetA x y a b i =
     (isSetA (lower x) (lower y)
     (cong lower a) (cong lower b) i)
 
+isGroupoidLift :
+  {L L' : Level} →
+  {A : Type L} →
+  isGroupoid A → isGroupoid (Lift {L}{L'} A)
+isGroupoidLift isGroupoidA x y a b u v i j k =
+  lift
+  ((isGroupoidA (lower x) (lower y)) (cong lower a)
+    (cong lower b) (cong (cong lower) u) (cong (cong lower) v) i j k)
+
 DecLift :
   {L L' : Level} →
   {A : Type L} →

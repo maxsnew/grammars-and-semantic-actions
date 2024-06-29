@@ -23,7 +23,7 @@ open import Semantics.Helper public
 private
   variable ℓ ℓ' : Level
 
-module StringDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+module StringDefs {ℓ} ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
   isSetΣ₀ : isSet Σ₀
   isSetΣ₀ = isFinSet→isSet isFinSetΣ₀
 
