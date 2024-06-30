@@ -29,15 +29,15 @@ open import Semantics.Grammar.LinearProduct
 open import Semantics.Grammar.Empty
 
 private
-  variable ℓG ℓΣ₀ : Level
+  variable ℓG ℓΣ₀ ℓ : Level
 
 module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
   open StringDefs {ℓΣ₀} {Σ₀}
 
-  data KL*Ty (g : Grammar ℓG {Σ₀}) : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓG)) {Σ₀}
+  data KL* (g : Grammar ℓG {Σ₀}) : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓG)) {Σ₀}
     where
-    nil : ε-grammar {ℓG = ℓ-suc ℓG} ⊢ (KL*Ty g)
-    cons : g ⊗ KL*Ty g ⊢ KL*Ty g
+    nil : ε-grammar {ℓG = ℓ-max ℓG ℓΣ₀} ⊢ (KL* g)
+    cons : g ⊗ KL* g ⊢ KL* g
 
   -- -- Use IW trees to prove that Kleene star forms a set
   -- -- (provided that the original grammar outputs sets)

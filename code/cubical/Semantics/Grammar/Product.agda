@@ -34,7 +34,3 @@ module _ {ℓG} {ℓG'} {Σ₀ : Type ℓΣ₀} where
 
   _&_ : Grammar ℓG {Σ₀} → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
   (g & g') w = g w × g' w
-
-  isHGrammar-& :
-    (g : hGrammar ℓG) → (g' : hGrammar ℓG') → isHGrammar (ℓ-max ℓG ℓG') (g .fst & g' .fst)
-  isHGrammar-& g g' _ = isSet× (g .snd _) (g' .snd _)

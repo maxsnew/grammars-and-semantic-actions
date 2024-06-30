@@ -33,13 +33,6 @@ module _ ℓG {Σ₀ : Type ℓΣ₀} where
   Grammar : Type (ℓ-max ℓΣ₀ (ℓ-suc ℓG))
   Grammar = String → Type ℓG
 
-  isHGrammar : Grammar → Type (ℓ-max ℓΣ₀ ℓG)
-  isHGrammar g = ∀ w → isSet (g w)
-
-  hGrammar : Type (ℓ-max ℓΣ₀ (ℓ-suc ℓG))
-  hGrammar = Σ[ g ∈ Grammar ] isHGrammar g
-
-
 module _ {ℓG} {ℓG'} {Σ₀ : Type ℓΣ₀} where
   Term : Grammar ℓG {Σ₀} → Grammar ℓG' → Type (ℓ-max (ℓ-max ℓG ℓG') ℓΣ₀)
   Term g g' = ∀ {w} → g w → g' w

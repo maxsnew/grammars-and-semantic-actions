@@ -29,7 +29,7 @@ open import Semantics.Grammar.Base
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {ℓG'} {Σ₀ : Type ℓΣ₀} where
+module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
   open StringDefs {ℓΣ₀} {Σ₀}
 
   literal : Σ₀ → Grammar (ℓ-max ℓΣ₀ ℓG)
