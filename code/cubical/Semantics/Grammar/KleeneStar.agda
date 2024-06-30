@@ -26,18 +26,17 @@ open import Semantics.Helper
 open import Semantics.String
 open import Semantics.Grammar.Base
 open import Semantics.Grammar.LinearProduct
--- open import Semantics.Grammar.Empty
+open import Semantics.Grammar.Empty
 
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
+module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
+  open StringDefs {ℓΣ₀} {Σ₀}
 
-  data KL*Ty (g : Grammar ℓG) : Grammar (ℓ-suc ℓG)
-    -- (w : String) → Type (ℓ-suc ℓG)
+  data KL*Ty (g : Grammar ℓG {Σ₀}) : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓG)) {Σ₀}
     where
-    nil : Term (ε-grammar {ℓ-suc ℓG}) (KL*Ty g)
+    nil : ε-grammar {ℓG = ℓ-suc ℓG} ⊢ (KL*Ty g)
     cons : g ⊗ KL*Ty g ⊢ KL*Ty g
 
   -- -- Use IW trees to prove that Kleene star forms a set

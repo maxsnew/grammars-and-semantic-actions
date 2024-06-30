@@ -29,11 +29,6 @@ open import Semantics.Grammar.Base
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
-
-  ⊤-grammar : Grammar ℓG
+module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
+  ⊤-grammar : Grammar ℓG {Σ₀}
   ⊤-grammar _ = Unit*
-
-  isHGrammar-⊤-grammar : isHGrammar ℓG ⊤-grammar
-  isHGrammar-⊤-grammar _ = isSetUnit*

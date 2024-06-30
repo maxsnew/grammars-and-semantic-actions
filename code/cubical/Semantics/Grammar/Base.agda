@@ -22,41 +22,27 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.HITs.PropositionalTruncation as PT
 
-open import Semantics.Helper public
-open import Semantics.String public
+open import Semantics.Helper
+open import Semantics.String
 
 private
   variable ℓG ℓG' ℓΣ₀ : Level
 
-module GrammarDefs ((Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero) where
-  open StringDefs (Σ₀ , isFinSetΣ₀) public
+module _ ℓG {Σ₀ : Type ℓΣ₀} where
+  open StringDefs {ℓΣ₀} {Σ₀}
+  Grammar : Type (ℓ-max ℓΣ₀ (ℓ-suc ℓG))
+  Grammar = String → Type ℓG
 
-  module _ ℓG where
-    Grammar : Type (ℓ-suc ℓG)
-    Grammar = String → Type ℓG
+  isHGrammar : Grammar → Type (ℓ-max ℓΣ₀ ℓG)
+  isHGrammar g = ∀ w → isSet (g w)
 
-    isHGrammar : Grammar → Type ℓG
-    isHGrammar g = ∀ w → isSet (g w)
-
-    hGrammar : Type (ℓ-suc ℓG)
-    hGrammar = Σ[ g ∈ Grammar ] isHGrammar g
+  hGrammar : Type (ℓ-max ℓΣ₀ (ℓ-suc ℓG))
+  hGrammar = Σ[ g ∈ Grammar ] isHGrammar g
 
 
-  module _ {ℓG} where
-    Term : Grammar ℓG → Grammar ℓG → Type ℓG
-    Term g g' = ∀ {w} → g w → g' w
+module _ {ℓG} {ℓG'} {Σ₀ : Type ℓΣ₀} where
+  Term : Grammar ℓG {Σ₀} → Grammar ℓG' → Type (ℓ-max (ℓ-max ℓG ℓG') ℓΣ₀)
+  Term g g' = ∀ {w} → g w → g' w
 
-    infix 5 Term
-    syntax Term g g' = g ⊢ g'
-
-    ε-grammar : Grammar ℓG
-    ε-grammar w = LiftList {ℓ-zero}{ℓG} w ≡ []
-
-  -- isHGrammar-ε-grammar : isHGrammar ℓΣ₀ ε-grammar
-  -- isHGrammar-ε-grammar w = isGroupoidString w []
-
-  -- literal : Σ₀ → Grammar ℓΣ₀
-  -- literal c w = w ≡ [ c ]
-
-  -- isHGrammar-literal : ∀ c → isHGrammar ℓΣ₀ (literal c)
-  -- isHGrammar-literal c w = isGroupoidString _ _
+  infix 5 Term
+  syntax Term g g' = g ⊢ g'

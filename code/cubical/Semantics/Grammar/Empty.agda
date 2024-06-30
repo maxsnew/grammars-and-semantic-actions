@@ -27,13 +27,9 @@ open import Semantics.String
 open import Semantics.Grammar.Base
 
 private
-  variable ℓΣ₀ : Level
+  variable
+    ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
-
-  -- ε-grammar : Grammar ℓG
-  -- ε-grammar w = LiftList {ℓ-zero}{ℓG} w ≡ []
-
-  -- isHGrammar-ε-grammar : isHGrammar ℓG ε-grammar
-  -- isHGrammar-ε-grammar w x y a b i j k = {!LiftList!}
+module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
+  ε-grammar : Grammar (ℓ-max ℓΣ₀ ℓG) {Σ₀}
+  ε-grammar w = Lift {ℓΣ₀}{ℓ-max ℓΣ₀ ℓG} (w ≡ [])

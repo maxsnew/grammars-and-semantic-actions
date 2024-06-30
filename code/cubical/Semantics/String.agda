@@ -21,31 +21,33 @@ open import Cubical.HITs.PropositionalTruncation
 open import Semantics.Helper public
 
 private
-  variable ℓ ℓ' : Level
+  variable ℓΣ₀ : Level
 
-module StringDefs {ℓ} ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
-  isSetΣ₀ : isSet Σ₀
-  isSetΣ₀ = isFinSet→isSet isFinSetΣ₀
+module StringDefs {Σ₀ : Type ℓΣ₀} where
 
-  DiscreteΣ₀ : Discrete Σ₀
-  DiscreteΣ₀ = isFinSet→Discrete isFinSetΣ₀
-
-  String : Type ℓ
+  String : Type ℓΣ₀
   String = List Σ₀
 
-  isSetString : isSet String
-  isSetString = isOfHLevelList 0 isSetΣ₀
-
-  isGroupoidString : isGroupoid String
-  isGroupoidString = isSet→isGroupoid isSetString
-
-  Splitting : String → Type ℓ
+  Splitting : String → Type ℓΣ₀
   Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
 
-  isSetSplitting : (w : String) → isSet (Splitting w)
-  isSetSplitting w =
-    isSetΣ (isSet× isSetString isSetString)
-      λ s → isGroupoidString w (s .fst ++ s .snd)
+  module _ (isFinSetΣ₀ : isFinSet Σ₀) where
+    isSetΣ₀ : isSet Σ₀
+    isSetΣ₀ = isFinSet→isSet isFinSetΣ₀
+
+    DiscreteΣ₀ : Discrete Σ₀
+    DiscreteΣ₀ = isFinSet→Discrete isFinSetΣ₀
+
+    isSetString : isSet String
+    isSetString = isOfHLevelList 0 isSetΣ₀
+
+    isGroupoidString : isGroupoid String
+    isGroupoidString = isSet→isGroupoid isSetString
+
+    isSetSplitting : (w : String) → isSet (Splitting w)
+    isSetSplitting w =
+      isSetΣ (isSet× isSetString isSetString)
+        λ s → isGroupoidString w (s .fst ++ s .snd)
 
   module _ (c : Σ₀) where
     splitChar : (w : String) → Splitting (c ∷ w)

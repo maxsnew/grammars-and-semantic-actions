@@ -29,15 +29,12 @@ open import Semantics.Grammar.Top
 open import Semantics.Grammar.Bottom
 
 private
-  variable ℓG ℓΣ₀ : Level
+  variable ℓG ℓS ℓΣ₀ : Level
 
-module _ {ℓG} {ℓS} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
-
+module _ {ℓG} {ℓS} {Σ₀ : Type ℓΣ₀} where
   DecProp-grammar' :
-    DecProp ℓS → Grammar (ℓ-max ℓS ℓG)
+    DecProp ℓS → Grammar (ℓ-max ℓS (ℓ-max ℓΣ₀ ℓG)) {Σ₀}
   DecProp-grammar' d =
     decRec
-      (λ _ → ⊤-grammar {ℓG = ℓ-max ℓS ℓG} {(Σ₀ , isFinSetΣ₀)})
-      (λ _ → ⊥-grammar {ℓG = ℓ-max ℓS ℓG} {(Σ₀ , isFinSetΣ₀)})
-      (d .snd)
+      (λ _ → ⊤-grammar)
+      (λ _ → ⊥-grammar {_}{ℓ-max ℓS ℓG}) (d .snd)

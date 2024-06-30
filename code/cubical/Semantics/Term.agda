@@ -23,7 +23,7 @@ open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation
 
-open import Semantics.Grammar
+open import Semantics.Grammar.Base
 open import Semantics.String
 open import Semantics.Helper
 
@@ -42,23 +42,7 @@ private
  -- is given as
  -- x : ε-grammar ⊢ M : g
  --}
-module TermDefs ℓG ((Σ₀' , isFinSetΣ₀') : FinSet ℓΣ₀) where
-  private
-    ℓ : Level
-    ℓ = ℓ-max ℓG ℓΣ₀
-
-  Σ₀rename : FinSet ℓ
-  Σ₀rename = (Lift {ℓΣ₀}{ℓ} Σ₀' , isFinSetLift isFinSetΣ₀')
-
-  Σ₀ : Type ℓ
-  Σ₀ = Σ₀rename .fst
-
-  isFinSetΣ₀ : isFinSet Σ₀
-  isFinSetΣ₀ = Σ₀rename .snd
-
-  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
-  open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
-
+module _ ℓG ((Σ₀' , isFinSetΣ₀') : FinSet ℓΣ₀) where
   id : {g : Grammar} → g ⊢ g
   id x = x
 

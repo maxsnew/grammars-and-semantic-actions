@@ -29,29 +29,16 @@ open import Semantics.Grammar.Base
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {ℓS} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
+module _ {ℓG} {ℓS} {Σ₀ : Type ℓΣ₀} where
+  open StringDefs {ℓΣ₀} {Σ₀}
 
-  LinearΠ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+  LinearΠ : {A : Type ℓS} → (A → Grammar ℓG {Σ₀}) → Grammar (ℓ-max ℓS ℓG)
   LinearΠ {A} f w = ∀ (a : A) → f a w
 
-  isHGrammar-LinearΠ :
-    {A : hSet ℓS} → (B : A .fst → hGrammar ℓG) →
-    isHGrammar (ℓ-max ℓS ℓG) (LinearΠ {A .fst} (λ a → B a .fst))
-  isHGrammar-LinearΠ {A} B _ = isSetΠ (λ a → B a .snd _)
-
-module _ {ℓG} {ℓS} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
-
-  LinearΣ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+  LinearΣ : {A : Type ℓS} → (A → Grammar ℓG {Σ₀}) → Grammar (ℓ-max ℓS ℓG)
   LinearΣ {A} f w = Σ[ a ∈ A ] f a w
 
-  LinearΣ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+  LinearΣ-syntax : {A : Type ℓS} → (A → Grammar ℓG {Σ₀}) → Grammar (ℓ-max ℓS ℓG)
   LinearΣ-syntax = LinearΣ
 
   syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
-
-  isHGrammar-LinearΣ :
-    {A : hSet ℓS} → (B : A .fst → hGrammar ℓG) →
-    isHGrammar (ℓ-max ℓS ℓG) (LinearΣ {A .fst} (λ a → B a .fst))
-  isHGrammar-LinearΣ {A} B _ = isSetΣ (A .snd) (λ a → B a .snd _)

@@ -29,12 +29,7 @@ open import Semantics.Grammar.Base
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {ℓG'} {(Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
-
-  _⇒_ : Grammar ℓG → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
+module _ {ℓG} {ℓG'} {Σ₀ : Type ℓΣ₀} where
+  _⇒_ : Grammar ℓG {Σ₀} → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
   (g ⇒ g') w = g w → g' w
 
-  isHGrammar-⇒ :
-    {g : Grammar ℓG} → (g' : hGrammar ℓG') → isHGrammar (ℓ-max ℓG ℓG') ( g ⇒ g' .fst )
-  isHGrammar-⇒ g' _ = isSet→ (g' .snd _)

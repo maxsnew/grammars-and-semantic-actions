@@ -29,22 +29,11 @@ open import Semantics.Grammar.Base
 private
   variable ℓG ℓΣ₀ : Level
 
-module _ {ℓG} {ℓG'} {(Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
+module _ {ℓG} {ℓG'} {Σ₀ : Type ℓΣ₀} where
+  open StringDefs {ℓΣ₀} {Σ₀}
 
-  _-⊗_ : Grammar ℓG → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
+  _-⊗_ : Grammar ℓG {Σ₀} → Grammar ℓG' → Grammar (ℓ-max (ℓ-max ℓΣ₀ ℓG) ℓG')
   (g -⊗ g') w = ∀ (w' : String) → g w' → g' (w' ++ w)
 
-  isHGrammar--⊗ : (g : hGrammar ℓG) → (g' : hGrammar ℓG') →
-    isHGrammar (ℓ-max ℓG ℓG') (g .fst -⊗ g' .fst)
-  isHGrammar--⊗ g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
-
-module _ {ℓG} {ℓG'} {(Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀} where
-  open GrammarDefs (Σ₀ , isFinSetΣ₀)
-
-  _⊗-_ : Grammar ℓG → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
+  _⊗-_ : Grammar ℓG {Σ₀} → Grammar ℓG' → Grammar (ℓ-max (ℓ-max ℓΣ₀ ℓG) ℓG')
   (g ⊗- g') w = ∀ (w' : String) → g' w' → g (w ++ w')
-
-  isHGrammar-⊗- : (g : hGrammar ℓG) → (g' : hGrammar ℓG') →
-    isHGrammar (ℓ-max ℓG ℓG') (g .fst ⊗- g' .fst)
-  isHGrammar-⊗- g g' _ = isSetΠ λ _ → isSetΠ (λ _ → g .snd _)
