@@ -145,30 +145,61 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
         )
         (id {g = NFA[ q-mid →* q-end ]})
 
--- module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
---   open NFADefs ℓ (Σ₀ , isFinSetΣ₀)
---   open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
---   open DFADefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
---   open GrammarDefs
---   open TermDefs
---   open NFA
---   open DFA
---   open Iso
+    -- TODO make sure I don't include traces through states that i've already seen
+    data ε-reachable (q-end : Q .fst) : Q .fst → Type ℓ where
+      ε-reach-nil : ε-reachable q-end q-end
+      ε-reach-cons : ∀ (εtr : ε-transition .fst) →
+        ε-reachable q-end (ε-dst εtr) →
+        ε-reachable q-end (ε-src εtr)
 
---   module _
---     (N : NFA)
---     (isPropDFATrace : ∀ D q w →
---       isProp (Σ[ q' ∈ (D .Q .fst) ] (DFATrace D q q' w))) where
---     ℙDFA : DFA
---     DFA.Q ℙDFA = FinSetDecℙ (N .Q)
---     DFA.init ℙDFA = SingletonDecℙ {A = N .Q} (N .init)
---     DFA.isAcc ℙDFA X =
---       DecProp'→DecProp
---       (_ , (isDecProp∃ (N .Q)
---       λ q →
---         LiftDecℙ' {ℓ}{ℓ-suc ℓ} (N .Q .fst)
---         (DecℙIso (N .Q .fst) .fun X) (lift q)))
---     DFA.δ ℙDFA X c q = {!!}
+    ε-reachDecProp :
+      ∀ q-start q-end → DecProp ℓ
+    fst (fst (ε-reachDecProp q-start q-end)) = ∥ ε-reachable q-end q-start ∥₁
+    snd (fst (ε-reachDecProp q-start q-end)) = isPropPropTrunc
+    snd (ε-reachDecProp q-start q-end) =
+      decRec
+        (λ q-start≡q-end →
+          yes ∣ transport (cong (λ a → ε-reachable q-end a) (sym (q-start≡q-end))) ε-reach-nil ∣₁)
+        (λ ¬q-start≡q-end → {!!})
+        (decEqQ q-start q-end)
+
+    -- ε-reach : Q .fst → FinSetDecℙ Q .fst
+    -- ε-reach q-start q-end =
+    --   DecProp∃ {!!} {!!}
+
+module _ ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+  open NFADefs ℓ (Σ₀ , isFinSetΣ₀)
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
+  open DFADefs (ℓ-suc ℓ) (Lift Σ₀ , isFinSetLift isFinSetΣ₀)
+  -- open GrammarDefs
+  open TermDefs
+  open NFA
+  open DFA
+  open Iso
+
+  module _
+    (N : NFA)
+    (isPropDFATrace : ∀ D q w →
+      isProp (Σ[ q' ∈ (D .Q .fst) ] (DFATrace D q q' w))) where
+
+    ℙDFA : DFA
+    DFA.Q ℙDFA = FinSetDecℙ (N .Q)
+    DFA.init ℙDFA = SingletonDecℙ {A = N .Q} (N .init)
+    DFA.isAcc ℙDFA X =
+      DecProp'→DecProp
+      (_ , (isDecProp∃ (N .Q)
+      λ q →
+        LiftDecℙ' {ℓ}{ℓ-suc ℓ} (N .Q .fst)
+        (DecℙIso (N .Q .fst) .fun X) (lift q)))
+    DFA.δ ℙDFA X c q =
+      DecProp'→DecProp (_ ,
+        (isDecProp∃ (N .transition)
+        (λ tr →
+          {!!} , (isDecProp∃ (∥ ε-grammar ⊢ {!!} ∥₁ , {!!}) {!!}))))
+      where
+      open GrammarDefs ℓ (Σ₀ , isFinSetΣ₀)
+      open TermDefs ℓ (Σ₀ , isFinSetΣ₀)
+
 --       -- DecProp'→DecProp
 --       --   (_ , isDecProp∃ (N .transition)
 --       --   (λ t →
@@ -182,7 +213,7 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 --       --         isFinSet→Discrete isFinSetΣ₀ (N .NFADefs.NFA.label t) (lower c)))
 --       --     )))
 
---     -- N→ℙDFA : ∀ w →
+    -- N→ℙDFA : ∀ w →
 --     --   (tr : Σ[ (q , q') ∈ (N .Q .fst × N .Q .fst) ]
 --     --      NFATrace N q q' w
 --     --   )
@@ -191,8 +222,12 @@ module NFADefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
 --     --      dq (tr .fst .fst) .fst .fst)
 --     --   →
 --     --   Σ[ dq' ∈ ℙDFA .DFA.Q .fst ] DFATrace ℙDFA (dfaq .fst) dq' (LiftList w)
---     N→ℙDFA : {!!}
---     N→ℙDFA = {!!}
+    -- N→ℙDFA :
+    --    LinΣ[ (q-start , q-end) ∈ (Lift (N .Q .fst) × Lift (N .Q .fst)) ]
+    --      {!LiftGrammar (NFATrace N (lower q-end) (lower q-start))!}
+    --    ⊢
+    --   {!!}
+    -- N→ℙDFA = {!!}
 -- --     N→ℙDFA w ((q , q') , NFADefs.NFA.nil a b) (dq , q∈dq) =
 -- --       dq , (nil refl (λ i → LiftList (b i)))
 -- --     N→ℙDFA [] ((q , q') , NFADefs.NFA.cons {t} a (s , lit , b)) (dq , q∈dq) =
