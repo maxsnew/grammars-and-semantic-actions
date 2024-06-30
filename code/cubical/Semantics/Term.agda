@@ -296,35 +296,21 @@ trans e e' p = e' (e p)
 -- i.e. are breaking abstractions
 data OneHoleContext (Σ₀ : Type ℓΣ₀) : (L : Level) → Typeω where
   var : OneHoleContext Σ₀ ℓ-zero
-  ⊗l : ∀ {L} → Grammar L {Σ₀} → OneHoleContext Σ₀ (ℓ-max L ℓΣ₀)
-  ⊗r : ∀ {L} → Grammar L {Σ₀} → OneHoleContext Σ₀ (ℓ-max L ℓΣ₀)
-  ⊕l : ∀ {L} → Grammar L {Σ₀} → OneHoleContext Σ₀ L
-  ⊕r : ∀ {L} → Grammar L {Σ₀} → OneHoleContext Σ₀ L
-  -⊗r : ∀ {L} → Grammar L {Σ₀} → OneHoleContext Σ₀ (ℓ-max L ℓΣ₀)
-  ⊗-l : ∀ {L} → Grammar L {Σ₀} → OneHoleContext Σ₀ (ℓ-max L ℓΣ₀)
-  includeGrammar : ∀ {L} → Grammar L {Σ₀} → OneHoleContext Σ₀ L
+  _⊗l_ : ∀ {L}{L'} → OneHoleContext Σ₀ L' → Grammar L {Σ₀} → OneHoleContext Σ₀ (ℓ-max (ℓ-max ℓΣ₀ L) L')
+  _⊗r_ : ∀ {L}{L'} → Grammar L {Σ₀} → OneHoleContext Σ₀ L' → OneHoleContext Σ₀  (ℓ-max (ℓ-max ℓΣ₀ L) L')
+  _⊕l_ : ∀ {L}{L'} → OneHoleContext Σ₀ L' → Grammar L {Σ₀} → OneHoleContext Σ₀ (ℓ-max L L')
+  _⊕r_ : ∀ {L}{L'} → Grammar L {Σ₀} → OneHoleContext Σ₀ L' → OneHoleContext Σ₀ (ℓ-max L L')
   _⊗OH_ : ∀ {L} {L'} → OneHoleContext Σ₀ L → OneHoleContext Σ₀ L' → OneHoleContext Σ₀ (ℓ-max (ℓ-max L ℓΣ₀) L')
   _⊕OH_ : ∀ {L} {L'} → OneHoleContext Σ₀ L → OneHoleContext Σ₀ L' → OneHoleContext Σ₀ (ℓ-max L L')
   _-⊗OH_ : ∀ {L} {L'} → Grammar L {Σ₀}  → OneHoleContext Σ₀ L' → OneHoleContext Σ₀ (ℓ-max (ℓ-max L ℓΣ₀) L')
   _⊗-OH_ : ∀ {L} {L'} → OneHoleContext Σ₀ L  → Grammar L' {Σ₀} → OneHoleContext Σ₀ (ℓ-max (ℓ-max L ℓΣ₀) L')
 
-syntax ⊗l g = hole ⊗ g
-syntax ⊗r g = g ⊗ hole
-syntax ⊕l g = g ⊕ hole
-syntax ⊕r g = hole ⊕ g
-syntax -⊗r g = g -⊗ hole
-syntax ⊗-l g = hole ⊗- g
-syntax includeGrammar g = ↑ g
-
 evalOHContext : ∀ {Σ₀} {L} {L'} → OneHoleContext {ℓΣ₀} Σ₀ L → Grammar L' {Σ₀} → Grammar (ℓ-max L L') {Σ₀}
 evalOHContext var g = g
-evalOHContext (⊗l x) g = g ⊗ x
-evalOHContext (⊗r x) g = x ⊗ g
-evalOHContext (⊕l x) g = g ⊕ x
-evalOHContext (⊕r x) g = x ⊕ g
-evalOHContext (-⊗r x) g = x -⊗ g
-evalOHContext (⊗-l x) g = g ⊗- x
-evalOHContext {L = L}{L' = L'}(includeGrammar x) g w = Lift {L}{L'} (x w)
+evalOHContext (x ⊗l h) g = (evalOHContext x g) ⊗ h
+evalOHContext (h ⊗r x) g = h ⊗ evalOHContext x g
+evalOHContext (x ⊕l h) g = (evalOHContext x g) ⊕ h
+evalOHContext (h ⊕r x) g = h ⊕ evalOHContext x g
 evalOHContext (x ⊗OH y) g = (evalOHContext x g) ⊗ (evalOHContext y g)
 evalOHContext (x ⊕OH y) g = (evalOHContext x g) ⊕ (evalOHContext y g)
 evalOHContext (h -⊗OH x) g = h -⊗ (evalOHContext x g)
@@ -339,161 +325,163 @@ cut :
   {k : Grammar ℓk} →
   (Δ : OneHoleContext Σ₀ ℓ) →
   g ⊢ h →
-  Δ [ h ]eval ⊢ k →
-  Δ [ g ]eval ⊢ k
-cut {g = g}{h = h}{k = k} var g⊢h Δ[h]⊢k =
-  trans {g = g}{h = h}{k = k} g⊢h Δ[h]⊢k
-cut {g = g}{h = h}{k = k} (⊗l x) g⊢h Δ[h]⊢k =
-  ⊗-trans-l {g = g} {h = h} {k = x} {l = k} g⊢h Δ[h]⊢k
-cut {g = g}{h = h}{k = k} (⊗r x) g⊢h Δ[h]⊢k =
-  ⊗-trans-r {g = g} {h = h} {k = x} {l = k} g⊢h Δ[h]⊢k
-cut {g = g}{h = h}{k = k} (⊕l x) g⊢h Δ[h]⊢k =
-  ⊕-elim {g = g} {h = k} {k = x}
-    (trans {g = g} {h = h ⊕ x} {k = k}
-      (⊕-intro₁ {g = g} {h = h} {k = x} g⊢h)
-      Δ[h]⊢k)
-    (trans {g = x} {h = h ⊕ x} {k = k}
-      (⊕-intro₂ {g = x} {h = x} {k = h} (id {g = x}))
-      Δ[h]⊢k)
-cut {g = g}{h = h}{k = k} (⊕r x) g⊢h Δ[h]⊢k =
-  ⊕-elim {g = x} {h = k} {k = g}
-    (trans {g = x} {h = x ⊕ h} {k = k}
-      (⊕-intro₁ {g = x} {h = x} {k = h} (id {g = x}))
-      Δ[h]⊢k)
-    (trans {g = g} {h = x ⊕ h} {k = k}
-      (⊕-intro₂ {g = g} {h = h} {k = x} g⊢h )
-      Δ[h]⊢k)
-cut {g = g}{h = h}{k = k} (-⊗r x) g⊢h Δ[h]⊢k = {!!}
-cut {g = g}{h = h}{k = k} (⊗-l x) g⊢h Δ[h]⊢k = {!!}
--- It would be great if this case didn't need to break the abstraction
--- It currently does because evaluation of an included grammar should be identity, but isn't due to levels issues
-cut {g = g}{h = h}{k = k} (includeGrammar x) g⊢h Δ[h]⊢k p = Δ[h]⊢k (lift (lower p))
-cut {g = g}{h = h}{k = k} (a ⊗OH a₁) g⊢h Δ[h]⊢k = {!!}
-cut {g = g}{h = h}{k = k} (a ⊕OH a₁) g⊢h Δ[h]⊢k = {!!}
-cut {g = g}{h = h}{k = k} (x -⊗OH a) g⊢h Δ[h]⊢k = {!!}
-cut {g = g}{h = h}{k = k} (a ⊗-OH x) g⊢h Δ[h]⊢k = {!!}
+  Δ [ g ]eval ⊢ Δ [ h ]eval
+cut {g = g}{h = h}{k = k} var g⊢h = g⊢h
+cut {g = g}{h = h}{k = k} (x ⊗l l) g⊢h =
+  ⊗-trans-l {g = evalOHContext x g} {h = evalOHContext x h} {k = l} {l = evalOHContext x h ⊗ l}
+  (cut {g = g}{h = h}{k = evalOHContext x h} x g⊢h)
+   (id {g = evalOHContext x h ⊗ l})
+cut {g = g}{h = h}{k = k} (l ⊗r x) g⊢h =
+  ⊗-trans-r {g = evalOHContext x g} {h = evalOHContext x h} {k = l} {l = l ⊗ evalOHContext x h }
+  (cut {g = g}{h = h}{k = evalOHContext x h} x g⊢h)
+   (id {g = l ⊗ evalOHContext x h})
+cut {g = g}{h = h}{k = k} (x ⊕l l) g⊢h =
+  ⊕-elim {g = evalOHContext x g} {h = evalOHContext x h ⊕ l} {k = l}
+   (⊕-intro₁ {g = evalOHContext x g} {h = evalOHContext x h} {k = l}
+     (cut {g = g}{h = h}{k = evalOHContext x h} x g⊢h))
+   (⊕-intro₂ {g = l} {h = l} {k = evalOHContext x h} (id {g = l}))
+cut {g = g}{h = h}{k = k} (l ⊕r x) g⊢h =
+  ⊕-elim {g = l} {h = l ⊕ evalOHContext x h} {k = evalOHContext x g}
+   (⊕-intro₁ {g = l} {h = l} {k = evalOHContext x h} (id {g = l}))
+   (⊕-intro₂ {g = evalOHContext x g} {h = evalOHContext x h} {k = l}
+     (cut {g = g}{h = h}{k = evalOHContext x h} x g⊢h))
+cut {g = g}{h = h}{k = k} (x ⊗OH y) g⊢h =
+   (⊗-intro {g = evalOHContext x g} {h = evalOHContext x h}
+     {k = evalOHContext y g} {l = evalOHContext y h}
+     (cut {g = g} {h = h} {k = evalOHContext x h} x g⊢h)
+     (cut {g = g} {h = h} {k = evalOHContext y h} y g⊢h)
+     )
+cut {g = g}{h = h}{k = k} (x ⊕OH y) g⊢h =
+   (⊕-elim {g = evalOHContext x g}
+     {h = evalOHContext x h ⊕ evalOHContext y h} {k = evalOHContext y g}
+     (⊕-intro₁ {g = evalOHContext x g} {h = evalOHContext x h}
+       {k = evalOHContext y h} (cut {g = g}{h = h}{k = evalOHContext x h} x g⊢h )
+     )
+     (⊕-intro₂ {g = evalOHContext y g} {h = evalOHContext y h}
+       {k = evalOHContext x h} (cut {g = g}{h = h}{k = evalOHContext y h} y g⊢h )
+     )
+     )
+cut {g = g}{h = h}{k = k} (l -⊗OH x) g⊢h =
+   (-⊗-intro {g = l} {h = l -⊗ evalOHContext x g}
+     {k = evalOHContext x h}
+     (trans {g = l ⊗ (l -⊗ evalOHContext x g)} {h = evalOHContext x g}
+       {k = evalOHContext x h}
+       (-⊗-elim {g = l -⊗ evalOHContext x g} {h = l}
+         {k = evalOHContext x g} {l = l}
+           (id {g = l -⊗ evalOHContext x g}) (id {g = l}))
+       (cut {g = g} {h = h} {k = x [ h ]eval} x g⊢h )))
+cut {g = g}{h = h}{k = k} (x ⊗-OH l) g⊢h =
+   (⊗--intro {g = evalOHContext x g ⊗- l} {h = l}
+     {k = evalOHContext x h}
+     (trans {g = (evalOHContext x g ⊗- l) ⊗ l} {h = evalOHContext x g}
+       {k = evalOHContext x h}
+         (⊗--elim {g = evalOHContext x g ⊗- l} {h = evalOHContext x g}
+           {k = l} {l = l}
+             (id {g = evalOHContext x g ⊗- l})
+             (id {g = l}))
+         (cut {g = g}{h = h}{k = evalOHContext x h} x g⊢h )))
 
--- cut {g} {h} {k} var g⊢h Δh⊢k = trans {g = g} {h = h} {k = k} g⊢h Δh⊢k
--- cut {g} {h} {k} (⊗l x) g⊢h Δh⊢k (s , pg , px) = Δh⊢k (s , ((g⊢h pg) , px))
--- cut {g} {h} {k} (⊗r x) g⊢h Δh⊢k (s , px , pg) = Δh⊢k (s , (px , g⊢h pg))
--- cut {g} {h} {k} (⊕l x) g⊢h Δh⊢k (inl pg) = Δh⊢k (inl (g⊢h pg))
--- cut {g} {h} {k} (⊕l x) g⊢h Δh⊢k (inr px) = Δh⊢k (inr px)
--- cut {g} {h} {k} (⊕r x) g⊢h Δh⊢k (inr pg) = Δh⊢k (inr (g⊢h pg))
--- cut {g} {h} {k} (⊕r x) g⊢h Δh⊢k (inl px) = Δh⊢k (inl px)
--- cut {g} {h} {k} (-⊗r x) g⊢h Δh⊢k p = Δh⊢k (λ w' px → g⊢h (p w' px))
--- cut {g} {h} {k} (⊗-l x) g⊢h Δh⊢k p = Δh⊢k (λ w' px → g⊢h (p w' px))
--- cut {g} {h} {k} (includeGrammar x) g⊢h Δh⊢k p = Δh⊢k p
--- cut {g} {h} {k} (Δ ⊗OH Δ₁) g⊢h Δh⊢k (s , p , p') =
---   Δh⊢k (s , (cut {g}{h}{Δ [ h ]eval} Δ g⊢h (id {g = Δ [ h ]eval}) p) ,
---             (cut {g}{h}{Δ₁ [ h ]eval} Δ₁ g⊢h (id {g = Δ₁ [ h ]eval}) p'))
--- cut {g} {h} {k} (Δ ⊕OH Δ₁) g⊢h Δh⊢k (inl p) =
---   Δh⊢k (inl (cut {g}{h}{Δ [ h ]eval} Δ g⊢h (id {g = Δ [ h ]eval}) p))
--- cut {g} {h} {k} (Δ ⊕OH Δ₁) g⊢h Δh⊢k (inr p) =
---   Δh⊢k (inr (cut {g}{h}{Δ₁ [ h ]eval} Δ₁ g⊢h (id {g = Δ₁ [ h ]eval}) p))
--- cut {g} {h} {k} (l -⊗OH Δ) g⊢h Δh⊢k p =
---   Δh⊢k (λ w' pl → cut {g}{h}{Δ [ h ]eval} Δ g⊢h (id {g = Δ [ h ]eval}) (p w' pl))
--- cut {g} {h} {k} (Δ ⊗-OH l) g⊢h Δh⊢k p =
---   Δh⊢k (λ w' pl → cut {g}{h}{Δ [ h ]eval} Δ g⊢h (id {g = Δ [ h ]eval}) (p w' pl))
-
--- ⊗-trans-l' :
---   {g h k l : Grammar} →
---   g ⊢ h  →
---   h ⊗ k ⊢ l →
---   g ⊗ k ⊢ l
--- ⊗-trans-l' {g}{h}{k}{l} e e' =
---   cut {g = g} {h = h} {k = l} (hole ⊗ k) e e'
-
--- trans' :
---   {g h k : Grammar} →
---   g ⊢ h →
---   h ⊢ k →
---   g ⊢ k
--- trans' {g}{h}{k} e e' = cut {g = g} {h = h} {k = k} var e e'
-
--- cut-test :
---   {g h j k l m n o p q : Grammar} →
---   g ⊢ h →
---   j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ h)))) ⊢ q →
---   j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ g)))) ⊢ q
--- cut-test {g}{h}{j}{k}{l}{m}{n}{o}{p}{q} e e' =
---   cut {g = g} {h = h} {k = q}
---     (j -⊗OH (k -⊗OH ((↑ l) ⊗OH ((↑ m) ⊕OH (p -⊗ hole)))))
---     e e'
-DecProp-grammar'-intro :
-  ∀ {ℓ ℓg : Level} →
-  (d : DecProp ℓ) →
+⊗-trans-l' :
   {g : Grammar ℓg {Σ₀}} →
-  g ⊢ DecProp-grammar' {ℓG = ℓg} d ⊕ DecProp-grammar' {ℓG = ℓg}(negateDecProp d)
-DecProp-grammar'-intro {ℓ}{ℓg = ℓg}(a , yes x) {g} p =
-  ⊕-intro₁
-    {g = g}
-    {h = DecProp-grammar' {ℓG = ℓg}((a , yes x))}
-    {k = DecProp-grammar' {ℓG = ℓg}(negateDecProp (a , yes x))}
-    (⊤-intro {g = g})
-    p
-DecProp-grammar'-intro {ℓ}{ℓg = ℓg}(a , no ¬x) {g} p =
-  ⊕-intro₂
-    {g = g}
-    {h = DecProp-grammar' {ℓG = ℓg} (negateDecProp (a , no ¬x))}
-    {k = DecProp-grammar' {ℓG = ℓg} ((a , no ¬x))}
-    (⊤-intro {g = g})
-    p
+  {h : Grammar ℓh {Σ₀}} →
+  {k : Grammar ℓk {Σ₀}} →
+  {l : Grammar ℓl {Σ₀}} →
+  g ⊢ h  →
+  h ⊗ k ⊢ l →
+  g ⊗ k ⊢ l
+⊗-trans-l' {g = g}{h = h}{k = k}{l = l} e e' =
+  trans {g = g ⊗ k} {h = h ⊗ k} { k = l }
+  (cut {g = g} {h = h} {k = l} (var ⊗l k) e)
+  e'
 
--- ⇒-intro :
---   {g h : Grammar} →
---   g ⊢ h →
---   ε-grammar ⊢ g ⇒ h
--- ⇒-intro e pε pg = e pg
+cut-test :
+  {g h j k l m n o p q : Grammar ℓg {Σ₀}} →
+  g ⊢ h →
+  j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ h)))) ⊢ q →
+  j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ g)))) ⊢ q
+cut-test {g = g}{h}{j}{k}{l}{m}{n}{o}{p}{q} e e' =
+  trans {g = j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ g))))}
+   {h = j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ h))))} {k = q}
+   (cut {g = g} {h = h} {k = j -⊗ (k -⊗ (l ⊗ (m ⊕ (p -⊗ h))))}
+     (j -⊗OH (k -⊗OH (l ⊗r (m ⊕r (p -⊗OH var)))))
+     e)
+   e'
 
--- -- TODO what should the implication elim be?
--- -- ⇒-elim : {!!}
--- -- ⇒-elim = {!!}
+-- DecProp-grammar'-intro :
+--   ∀ {ℓ ℓg : Level} →
+--   (d : DecProp ℓ) →
+--   {g : Grammar ℓg {Σ₀}} →
+--   g ⊢ DecProp-grammar' {ℓG = ℓg} d ⊕ DecProp-grammar' {ℓG = ℓg}(negateDecProp d)
+-- DecProp-grammar'-intro {ℓ}{ℓg = ℓg}(a , yes x) {g} p =
+--   ⊕-intro₁
+--     {g = g}
+--     {h = DecProp-grammar' {ℓG = ℓg}((a , yes x))}
+--     {k = DecProp-grammar' {ℓG = ℓg}(negateDecProp (a , yes x))}
+--     (⊤-intro {g = g})
+--     p
+-- DecProp-grammar'-intro {ℓ}{ℓg = ℓg}(a , no ¬x) {g} p =
+--   ⊕-intro₂
+--     {g = g}
+--     {h = DecProp-grammar' {ℓG = ℓg} (negateDecProp (a , no ¬x))}
+--     {k = DecProp-grammar' {ℓG = ℓg} ((a , no ¬x))}
+--     (⊤-intro {g = g})
+--     p
 
-KL*-elim :
-  {g : Grammar ℓg {Σ₀}} →
-  {h : Grammar ℓh} →
-  ε-grammar {ℓG = ℓh} ⊢ h →
-  g ⊗ h ⊢ h →
-  KL* g ⊢ h
-KL*-elim pε p⊗ (nil x) = pε (lift (lower x))
-KL*-elim {g}{h} pε p⊗ (cons x) =
-  p⊗ ((x .fst) , ((x .snd .fst) , (KL*-elim pε p⊗ (x .snd .snd))))
+-- -- ⇒-intro :
+-- --   {g h : Grammar} →
+-- --   g ⊢ h →
+-- --   ε-grammar ⊢ g ⇒ h
+-- -- ⇒-intro e pε pg = e pg
 
-foldKL*r = KL*-elim
+-- -- -- TODO what should the implication elim be?
+-- -- -- ⇒-elim : {!!}
+-- -- -- ⇒-elim = {!!}
 
-foldKL*l :
-  {g : Grammar ℓg {Σ₀}} →
-  {h : Grammar ℓh} →
-  ε-grammar {ℓG = ℓh} ⊢ h →
-  h ⊗ g ⊢ h →
-  KL* g ⊢ h
-foldKL*l {g}{h} pε p⊗ p =
-  {!!}
-  -- -⊗-elim {g = h}{h = KL* g}{k = h}
-  --   (foldKL*r {g = g} {h = h -⊗ h}
-  --     (-⊗-intro (ε-extension-r (id {g = ε-grammar}) (id {g = h})))
-  --     (-⊗-intro {g = h}{h = g ⊗ (h -⊗ h)}{k = h}
-  --       (
-  --       ⊗-assoc-inv {g = h}{h = g}{k = h -⊗ h}{l = h}
-  --         (-⊗-elim {g = h}{h = h -⊗ h}{k = h}{l = h ⊗ g}
-  --           (id {g = h -⊗ h}) p⊗)
-  --         ))
-  --     )
-  --   pε
-  --   ((_ , refl) , (refl , p))
+-- KL*-elim :
+--   {g : Grammar ℓg {Σ₀}} →
+--   {h : Grammar ℓh} →
+--   ε-grammar {ℓG = ℓh} ⊢ h →
+--   g ⊗ h ⊢ h →
+--   KL* g ⊢ h
+-- KL*-elim pε p⊗ (nil x) = pε (lift (lower x))
+-- KL*-elim {g}{h} pε p⊗ (cons x) =
+--   p⊗ ((x .fst) , ((x .snd .fst) , (KL*-elim pε p⊗ (x .snd .snd))))
 
--- ∥∥grammar-intro :
---   {g : Grammar} →
---   g ⊢ ∥ g ∥grammar
--- ∥∥grammar-intro {g} p = ∣ p ∣₁
+-- foldKL*r = KL*-elim
 
--- ∥∥grammar-elim :
---   {g h : Grammar} →
---   isPropValuedGrammar h →
---   g ⊢ h →
---   ∥ g ∥grammar ⊢ h
--- ∥∥grammar-elim isProph e p =
---   Cubical.HITs.PropositionalTruncation.elim
---   (λ _ → isProph)
---   (λ pg → e pg)
---   p
+-- foldKL*l :
+--   {g : Grammar ℓg {Σ₀}} →
+--   {h : Grammar ℓh} →
+--   ε-grammar {ℓG = ℓh} ⊢ h →
+--   h ⊗ g ⊢ h →
+--   KL* g ⊢ h
+-- foldKL*l {g}{h} pε p⊗ p =
+--   {!!}
+--   -- -⊗-elim {g = h}{h = KL* g}{k = h}
+--   --   (foldKL*r {g = g} {h = h -⊗ h}
+--   --     (-⊗-intro (ε-extension-r (id {g = ε-grammar}) (id {g = h})))
+--   --     (-⊗-intro {g = h}{h = g ⊗ (h -⊗ h)}{k = h}
+--   --       (
+--   --       ⊗-assoc-inv {g = h}{h = g}{k = h -⊗ h}{l = h}
+--   --         (-⊗-elim {g = h}{h = h -⊗ h}{k = h}{l = h ⊗ g}
+--   --           (id {g = h -⊗ h}) p⊗)
+--   --         ))
+--   --     )
+--   --   pε
+--   --   ((_ , refl) , (refl , p))
+
+-- -- ∥∥grammar-intro :
+-- --   {g : Grammar} →
+-- --   g ⊢ ∥ g ∥grammar
+-- -- ∥∥grammar-intro {g} p = ∣ p ∣₁
+
+-- -- ∥∥grammar-elim :
+-- --   {g h : Grammar} →
+-- --   isPropValuedGrammar h →
+-- --   g ⊢ h →
+-- --   ∥ g ∥grammar ⊢ h
+-- -- ∥∥grammar-elim isProph e p =
+-- --   Cubical.HITs.PropositionalTruncation.elim
+-- --   (λ _ → isProph)
+-- --   (λ pg → e pg)
+-- --   p
