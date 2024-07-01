@@ -25,6 +25,7 @@ open import Cubical.HITs.PropositionalTruncation as PT
 open import Semantics.Helper
 open import Semantics.String
 open import Semantics.Grammar.Base
+open import Semantics.Grammar.Literal
 
 private
   variable ℓG ℓΣ₀ : Level
@@ -42,3 +43,7 @@ module _ {ℓG} {ℓS} {Σ₀ : Type ℓΣ₀} where
   LinearΣ-syntax = LinearΣ
 
   syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
+
+module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
+  ⊕Σ₀ : Grammar (ℓ-max ℓΣ₀ ℓG) {Σ₀}
+  ⊕Σ₀ = LinearΣ λ (c : Σ₀) → literal {ℓG = ℓG} c
