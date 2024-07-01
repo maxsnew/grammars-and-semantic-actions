@@ -29,7 +29,7 @@ open import Semantics.Grammar.Top
 open import Semantics.Grammar.Bottom
 
 private
-  variable ℓG ℓS ℓΣ₀ : Level
+  variable ℓG ℓS ℓS' ℓΣ₀ : Level
 
 module _ {ℓG} {ℓS} {Σ₀ : Type ℓΣ₀} where
   DecProp-grammar' :
@@ -38,3 +38,4 @@ module _ {ℓG} {ℓS} {Σ₀ : Type ℓΣ₀} where
     decRec
       (λ _ → ⊤-grammar)
       (λ _ → ⊥-grammar {_}{ℓ-max ℓS ℓG}) (d .snd)
+

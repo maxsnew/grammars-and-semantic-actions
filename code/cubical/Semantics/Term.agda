@@ -104,6 +104,8 @@ id x = x
 ⊗-intro e e' p =
   p .fst , (e (p .snd .fst)) , (e' (p .snd .snd))
 
+syntax ⊗-intro e e' = [ e , e' ]
+
 ⊗-elim :
   g ⊢ h ⊗ k →
   h ⊗ k ⊢ l →
@@ -112,11 +114,15 @@ id x = x
   let (s , ph , pk) = e p in
   e' (s , (ph , pk))
 
+syntax ⊗-elim {h = h}{k = k} e e' = let[ h , k ]=[ e ]in[ e' ]
+
 -⊗-intro :
   g ⊗ h ⊢ k →
   h ⊢ g -⊗ k
 -⊗-intro e p w' q =
   e ((_ , refl) , (q , p))
+
+syntax -⊗-intro {g = g} e = λ-⊗[ x ∈ g ][ e ]
 
 -⊗-elim :
   g ⊢ h -⊗ k →
@@ -125,6 +131,8 @@ id x = x
 -⊗-elim {k = k} e e' p =
   transport (sym (cong k (p .fst .snd)))
     (e (p .snd .snd) (fst p .fst .fst) (e' (p .snd .fst)))
+
+syntax -⊗-elim {h = h}{k = k} e e' = e' -⊗app[ h -⊗ k ] e
 
 ⊗--intro :
   g ⊗ h ⊢  k →
@@ -475,7 +483,6 @@ foldKL*l {ℓg = ℓg}{ℓh = ℓh}{g = g}{h = h} pε p⊗ =
         )
       (-⊗-intro {g = h} {h = g ⊗ (h -⊗ h)} {k = h}
         (trans {g = h ⊗ g ⊗ (h -⊗ h)} {h = (h ⊗ g) ⊗ (h -⊗ h)} {k = h}
-          -- (⊗-assoc-inv {g = h} {h = g} {k = h -⊗ h}{l = h} {!!})
           (⊗-assoc-inv {g = h} {h = g} {k = h -⊗ h} {l = (h ⊗ g) ⊗ (h -⊗ h)}
             (id {g = (h ⊗ g) ⊗ (h -⊗ h)}))
           (-⊗-elim {g = h -⊗ h} {h = h} {k = h} {l = h ⊗ g} (id {g = h -⊗ h}) p⊗))

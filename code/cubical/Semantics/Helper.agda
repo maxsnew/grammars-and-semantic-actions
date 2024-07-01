@@ -315,6 +315,14 @@ LiftDecProp'Witness :
 LiftDecProp'Witness {L}{L'} (u , false , v) a = lift {L}{L'} a
 LiftDecProp'Witness {L}{L'} (u , true , v) a = lift {L}{L'} a
 
+LiftDecPropWitness :
+  ∀ {L}{L'} →
+  (A : DecProp L) →
+  (a : A .fst .fst) →
+  LiftDecProp {L}{L'} A .fst .fst
+LiftDecPropWitness {L} {L'} (u , yes p) a = lift a
+LiftDecPropWitness {L} {L'} (u , no ¬p) a = lift a
+
 LowerDecProp'Witness :
   ∀ {L}{L'} →
   (A : DecProp' L) →

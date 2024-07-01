@@ -25,7 +25,6 @@ open import Cubical.HITs.PropositionalTruncation as PT
 open import Semantics.Helper
 open import Semantics.String
 open import Semantics.Grammar.Base
-open import Semantics.Grammar.Literal
 
 private
   variable ℓG ℓΣ₀ : Level
