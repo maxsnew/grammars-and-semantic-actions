@@ -52,11 +52,11 @@ module DFADefs ℓD ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
     Accepting : Type ℓD
     Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
 
-    acc? : Q .fst → Grammar (ℓ-max ℓD ℓΣ₀) {Σ₀}
-    acc? q = DecProp-grammar' {ℓG = ℓD}{ℓD}(isAcc q)
+    acc? : Q .fst → Grammar (ℓ-max (ℓ-suc ℓD) ℓΣ₀) {Σ₀}
+    acc? q = DecProp-grammar' {ℓG = ℓ-suc ℓD}{ℓD}(isAcc q)
 
-    rej? : Q .fst → Grammar (ℓ-max ℓD ℓΣ₀) {Σ₀}
-    rej? q = DecProp-grammar' {ℓG = ℓD}{ℓD} (negateDecProp (isAcc q))
+    rej? : Q .fst → Grammar (ℓ-max (ℓ-suc ℓD) ℓΣ₀) {Σ₀}
+    rej? q = DecProp-grammar' {ℓG = ℓ-suc ℓD}{ℓD} (negateDecProp (isAcc q))
 
     module _ (q-end : Q .fst) where
       data DFATrace : Q .fst → Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓD)) {Σ₀} where
@@ -248,88 +248,86 @@ module DFADefs ℓD ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
         q-end ,
         &-intro {g = DFA[ q-start →* q-end ]} {h = DFA[ q-start →* q-end ]} {k = acc? q-end ⊕ rej? q-end}
           (id {g = DFA[ q-start →* q-end ]})
-          {!DecProp-grammar'-intro (isAcc q-end)
-            {g = DFA[ q-start →* q-end ] }!}
-          -- (DecProp-grammar'-intro (isAcc q-end) {g = DFA[ q-start →* q-end ]})
+          (DecProp-grammar'-intro (isAcc q-end)
+            {g = DFA[ q-start →* q-end ] })
           trace
 
---       RunFromStateWithAcceptance : KL* ⊕Σ₀ ⊢ TraceWithAcceptanceFrom
---       RunFromStateWithAcceptance =
---         trans {g = KL* ⊕Σ₀} {h = TraceFrom} {k = TraceWithAcceptanceFrom}
---           RunFromState checkAccept
+      RunFromStateWithAcceptance : KL* (⊕Σ₀ {ℓG = ℓ}) ⊢ TraceWithAcceptanceFrom
+      RunFromStateWithAcceptance =
+        trans {g = KL* ⊕Σ₀} {h = TraceFrom} {k = TraceWithAcceptanceFrom}
+          RunFromState checkAccept
 
---       DecideFromState : String → Bool
---       DecideFromState w =
---         let the-trace = RunFromStateWithAcceptance (String→KL* w) in
---         Sum.rec (λ _ → true) (λ _ → false) (the-trace .snd .snd)
+      DecideFromState : ∀ {ℓ} → String → Bool
+      DecideFromState {ℓ} w =
+        let the-trace = RunFromStateWithAcceptance {ℓ} (String→KL* w) in
+        Sum.rec (λ _ → true) (λ _ → false) (the-trace .snd .snd)
 
---     DecideDFA : String → Bool
---     DecideDFA = DecideFromState init
+    DecideDFA : ∀ {ℓ} → String → Bool
+    DecideDFA {ℓ} = DecideFromState init {ℓ}
 
--- module examples where
---   -- examples are over alphabet drawn from Fin 2
---   -- characters are fzero and (fsuc fzero)
---   open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
---   open GrammarDefs ℓ-zero (Fin 2 , isFinSetFin)
---   open StringDefs ℓ-zero (Fin 2 , isFinSetFin)
+module examples where
+  -- examples are over alphabet drawn from Fin 2
+  -- characters are fzero and (fsuc fzero)
+  open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
+  open StringDefs {ℓ-zero} {Fin 2}
 
---   open DFA
+  open DFA
 
---   D : DFA
---   Q D = (Fin 3) , isFinSetFin
---   init D = inl _
---   isAcc D x =
---     ((x ≡ fzero) , isSetFin x fzero) ,
---     discreteFin x fzero
---   δ D fzero fzero = fromℕ 0
---   δ D fzero (fsuc fzero) = fromℕ 1
---   δ D (fsuc fzero) fzero = fromℕ 2
---   δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
---   δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
---   δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
+  D : DFA
+  Q D = (Fin 3) , isFinSetFin
+  init D = inl _
+  isAcc D x =
+    ((x ≡ fzero) , isSetFin x fzero) ,
+    discreteFin x fzero
+  δ D fzero fzero = fromℕ 0
+  δ D fzero (fsuc fzero) = fromℕ 1
+  δ D (fsuc fzero) fzero = fromℕ 2
+  δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
+  δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
+  δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
 
---   w : String
---   w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
+  w : String
+  w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
 
---   w' : String
---   w' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
+  w' : String
+  w' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
 
---   w'' : String
---   w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
+  w'' : String
+  w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
 
---   ex1 : DecideDFA D w ≡ true
---   ex1 = refl
+  ex1 : DecideDFA D {ℓ-zero} w ≡ true
+  ex1 = refl
 
---   ex2 : DecideDFA D w' ≡ true
---   ex2 = refl
+  ex2 : DecideDFA D {ℓ-zero} w' ≡ true
+  ex2 = refl
 
---   ex3 : DecideDFA D w'' ≡ false
---   ex3 = refl
+  ex3 : DecideDFA D {ℓ-zero} w'' ≡ false
+  ex3 = refl
 
---   ex4 : DecideDFA D [] ≡ true
---   ex4 = refl
+  ex4 : DecideDFA D {ℓ-zero} [] ≡ true
+  ex4 = refl
 
 
---  {--       0
---  -- 0  --------> 1
---  --    <--------
---  --        0
---  -- and self loops for 1. state 1 is acc
---  --
---  --}
---   D' : DFA
---   Q D' = (Fin 2) , isFinSetFin
---   init D' = inl _
---   isAcc D' x =
---     ((x ≡ fsuc fzero) , isSetFin x (fsuc fzero)) ,
---     discreteFin x (fsuc fzero)
---   δ D' fzero fzero = fromℕ 1
---   δ D' fzero (fsuc fzero) = fromℕ 0
---   δ D' (fsuc fzero) fzero = fromℕ 0
---   δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
+ {--       0
+ -- 0  --------> 1
+ --    <--------
+ --        0
+ -- and self loops for 1. state 1 is acc
+ --
+ --}
+  D' : DFA
+  Q D' = (Fin 2) , isFinSetFin
+  init D' = inl _
+  isAcc D' x =
+    ((x ≡ fsuc fzero) , isSetFin x (fsuc fzero)) ,
+    discreteFin x (fsuc fzero)
+  δ D' fzero fzero = fromℕ 1
+  δ D' fzero (fsuc fzero) = fromℕ 0
+  δ D' (fsuc fzero) fzero = fromℕ 0
+  δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
 
---   s : String
---   s = fsuc fzero ∷ fzero ∷ []
+  s : String
+  s = fsuc fzero ∷ fzero ∷ []
 
---   ex5 : DecideDFA D' s ≡ true
---   ex5 = refl
+  ex5 : DecideDFA D' {ℓ-zero} s ≡ true
+  ex5 = refl

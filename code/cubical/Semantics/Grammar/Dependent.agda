@@ -26,6 +26,7 @@ open import Semantics.Helper
 open import Semantics.String
 open import Semantics.Grammar.Base
 open import Semantics.Grammar.Literal
+open import Semantics.Grammar.KleeneStar
 
 private
   variable ℓG ℓΣ₀ : Level
@@ -45,5 +46,10 @@ module _ {ℓG} {ℓS} {Σ₀ : Type ℓΣ₀} where
   syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
 
 module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
+  open StringDefs {ℓΣ₀} {Σ₀}
   ⊕Σ₀ : Grammar (ℓ-max ℓΣ₀ ℓG) {Σ₀}
   ⊕Σ₀ = LinearΣ λ (c : Σ₀) → literal {ℓG = ℓG} c
+
+  String→KL* : (w : String) → KL* ⊕Σ₀ w
+  String→KL* [] = nil (lift refl)
+  String→KL* (x ∷ w) = cons ((([ x ] , w) , refl) , (((x , lift refl)) , (String→KL* w)))
