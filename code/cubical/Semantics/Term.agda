@@ -493,3 +493,15 @@ foldKL*l {ℓg = ℓg}{ℓh = ℓh}{g = g}{h = h} pε p⊗ =
     (-⊗-elim {g = h -⊗ h} {h = h} {k = h} {l = ε-grammar {ℓG = ℓh}}
       (id {g = h -⊗ h})
       pε))
+
+LowerGrammarTerm :
+  ∀ {ℓ} →
+  {g : Grammar ℓg {Σ₀}} →
+  LiftGrammar {ℓG = ℓg}{ℓ} g ⊢ g
+LowerGrammarTerm {ℓ = ℓ} {g = g} x = lower x
+
+LiftGrammarTerm :
+  ∀ {ℓ} →
+  {g : Grammar ℓg {Σ₀}} →
+  g ⊢ LiftGrammar {ℓG = ℓg}{ℓ} g
+LiftGrammarTerm {ℓ = ℓ} {g = g} x = lift x

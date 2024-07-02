@@ -21,7 +21,7 @@ open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order.Recursive as Ord
-open import Cubical.Data.SumFin hiding (fsuc)
+open import Cubical.Data.SumFin
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -119,11 +119,20 @@ module NFADefs ℓN (Σ₀ : Type ℓΣ₀) where
       TraceFrom : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) {Σ₀}
       TraceFrom = LinearΣ (λ (q-end : Q .fst) → NFA[ q-start →* q-end ])
 
+      SnocTraceFrom : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) {Σ₀}
+      SnocTraceFrom = LinearΣ (λ (q-end : Q .fst) → SnocNFA[ q-start →* q-end ])
+
       AcceptingFrom : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) {Σ₀}
       AcceptingFrom =
         LinearΣ
           (λ ((q-end , isAcc-q-end ): Σ[ q ∈ Q .fst ] isAcc q .fst .fst) →
              NFA[ q-start →* q-end ])
+
+      SnocAcceptingFrom : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) {Σ₀}
+      SnocAcceptingFrom =
+        LinearΣ
+          (λ ((q-end , isAcc-q-end ): Σ[ q ∈ Q .fst ] isAcc q .fst .fst) →
+             SnocNFA[ q-start →* q-end ])
 
     module _ (q-start q-end : Q .fst) where
       NFATrace→SnocNFATrace : NFA[ q-start →* q-end ] ⊢ SnocNFA[ q-start →* q-end ]
@@ -206,6 +215,84 @@ module NFADefs ℓN (Σ₀ : Type ℓΣ₀) where
               (λ {εtr} → ε-snoc εtr)
           )
 
+      SnocNFATrace→NFATrace : SnocNFA[ q-start →* q-end ] ⊢ NFA[ q-start →* q-end ]
+      SnocNFATrace→NFATrace =
+        elimSnocNFA q-start
+          (λ q-end' → NFA[ q-start →* q-end' ])
+          nil
+          (λ {tr} →
+            ⊗--elim {g = NFA[ q-start →* src tr ]} {h = NFA[ q-start →* dst tr ]}
+               {k = literal (label tr)} {l = literal (label tr)}
+               (elimNFA (src tr)
+                 (λ q-start' → NFA[ q-start' →* dst tr ] ⊗- literal (label tr))
+                 (⊗--intro {g = ε-grammar} {h = literal (label tr)} {k = NFA[ src tr →* dst tr ]}
+                    (ε-extension-l {g = ε-grammar} {h = literal (label tr)}
+                      {k = NFA[ src tr →* dst tr ]}
+                      (id {g = ε-grammar})
+                      (ε-contraction-r {g = NFA[ dst tr →* dst tr ]} {h = literal (label tr)}
+                        {k = NFA[ src tr →* dst tr ]}
+                        nil
+                        (cons tr))))
+                 (λ {tr'} →
+                   ⊗--intro
+                     {g = (literal (label tr') ⊗
+                       (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr)))}
+                    {h = literal (label tr)}
+                    {k = NFA[ src tr' →* dst tr ]}
+                    (trans
+                      {g = ((literal (label tr') ⊗
+                        (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr)))
+                        ⊗ literal (label tr)) }
+                      {h = literal (label tr') ⊗ (
+                        (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr))
+                        ⊗ literal (label tr)) }
+                      {k = NFA[ src tr' →* dst tr ]}
+                      (⊗-assoc {g = literal (label tr')}
+                        {h = (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr)) }
+                        {k = literal (label tr)}
+                        {l = (literal (label tr') ⊗
+                          (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr)) ⊗
+                          literal (label tr))}
+                        (id {g = (literal (label tr') ⊗
+                          (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr)) ⊗
+                          literal (label tr))}))
+                      (trans
+                        {g = (literal (label tr') ⊗
+                          (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr)) ⊗
+                          literal (label tr))}
+                        {h = (literal (label tr') ⊗
+                          NFATrace-syntax (dst tr) (dst tr'))}
+                        {k = (NFATrace-syntax (dst tr) (src tr'))}
+                        (cut
+                          {g =
+                           (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr)) ⊗
+                           literal (label tr)}
+                          {h = NFATrace-syntax (dst tr) (dst tr')}
+                          (literal (label tr') ⊗r var)
+                          (⊗--elim
+                            {g = NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr)}
+                            {h = NFATrace-syntax (dst tr) (dst tr')} {k = literal (label tr)}
+                            {l = literal (label tr)}
+                            (id {g = (NFATrace-syntax (dst tr) (dst tr') ⊗- literal (label tr))})
+                            (id {g = literal (label tr)})))
+                        (cons tr'))))
+                 (λ {εtr} →
+                   cut {g = NFATrace-syntax (dst tr) (ε-dst εtr)}
+                    {h = NFATrace-syntax (dst tr) (ε-src εtr)}
+                    (var ⊗-OH literal (label tr))
+                    (ε-cons εtr)))
+               (id {g = literal (label tr)}))
+          (λ {εtr} →
+            elimNFA (ε-src εtr)
+              (λ q-start' → NFA[ q-start' →* ε-dst εtr ])
+              (trans {g = ε-grammar}
+                {h = NFATrace-syntax (ε-dst εtr) (ε-dst εtr)}
+                {k = NFATrace-syntax (ε-dst εtr) (ε-src εtr)}
+                nil
+                (ε-cons εtr))
+              (λ {tr} → cons tr)
+              λ {εtr} → ε-cons εtr)
+
     Parses : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) {Σ₀}
     Parses = AcceptingFrom init
 
@@ -265,6 +352,105 @@ module NFATraceSyntax (Σ₀ : Type ℓΣ₀) where
   NFATrace-syntax-rebind N = NFATrace N
   syntax NFATrace-syntax-rebind N q-end q-start = ⟨ N ⟩[ q-start →* q-end ]
 
+  SnocNFATrace-syntax-rebind : ∀ {ℓN} → (N : NFA ℓN Σ₀) →
+    (q-end : Q N .fst) → Q N .fst → StringDefs.String → Type (ℓ-max ℓΣ₀ (ℓ-suc ℓN))
+  SnocNFATrace-syntax-rebind N = SnocNFATrace N
+  syntax SnocNFATrace-syntax-rebind N q-start q-end = ⟨ N ⟩Snoc[ q-start →* q-end ]
+
+
+-- NFA Combinators
+-- Empty
+module _ {ℓN} {Σ₀ : Type ℓΣ₀} where
+  open NFATraceSyntax Σ₀
+
+  emptyNFA : NFA ℓN Σ₀
+  Q emptyNFA = Lift (Fin 2) , isFinSetLift isFinSetFin
+  init emptyNFA = lift fzero
+  isAcc emptyNFA x =
+    ((x ≡ lift (fsuc fzero)) , isSetLift isSetFin _ _) ,
+    discreteLift discreteFin x (lift (fsuc fzero))
+  transition emptyNFA = Lift ⊥ , isFinSetLift isFinSetFin
+  src emptyNFA (lift x) = ⊥.rec x
+  dst emptyNFA (lift x) = ⊥.rec x
+  label emptyNFA (lift x) = ⊥.rec x
+  ε-transition emptyNFA = Lift Unit , isFinSetLift isFinSetUnit
+  ε-src emptyNFA _ = emptyNFA .init
+  ε-dst emptyNFA _ = lift (fsuc fzero)
+
+  ε-grammar→snocEmptyNFA :
+    ε-grammar
+    ⊢
+    ⟨ emptyNFA ⟩Snoc[ emptyNFA .init →* (lift (fsuc fzero)) ]
+  ε-grammar→snocEmptyNFA =
+    trans {g = ε-grammar}
+     {h =
+      SnocNFATrace-syntax-rebind emptyNFA (emptyNFA .init)
+      (emptyNFA .init)}
+     {k =
+      SnocNFATrace-syntax-rebind emptyNFA (emptyNFA .init)
+      (lift (fsuc fzero))}
+     nil
+     (ε-snoc tt*)
+
+  ε-grammar→traceFromEmptyNFA :
+    ε-grammar
+    ⊢
+    TraceFrom emptyNFA (emptyNFA .init)
+  ε-grammar→traceFromEmptyNFA pε =
+    (lift (fsuc fzero)) ,
+    (trans {g = ε-grammar}
+      {h =
+       SnocNFATrace-syntax-rebind emptyNFA (emptyNFA .init)
+       (lift (fsuc fzero))}
+      {k =
+       NFATrace-syntax-rebind emptyNFA (lift (fsuc fzero))
+       (emptyNFA .init)}
+      ε-grammar→snocEmptyNFA
+      (SnocNFATrace→NFATrace emptyNFA (lift fzero) (lift (fsuc fzero)))
+      pε)
+
+  private
+    the-P : emptyNFA .Q .fst → Grammar (ℓ-max ℓΣ₀ ℓN) {Σ₀}
+    the-P q-end = ε-grammar {ℓG = ℓN}
+
+  traceEmptyNFA→ε-grammar : ∀ q-end →
+    ⟨ emptyNFA ⟩[ emptyNFA .init →* q-end ]
+    ⊢
+    ε-grammar
+  traceEmptyNFA→ε-grammar q-end =
+    elimNFA emptyNFA q-end
+      the-P
+      (id {g = ε-grammar})
+      (λ {tr} → ⊥.rec (lower tr))
+      (λ {εtr} → (id {g = ε-grammar}))
+
+  ε-grammar→parseEmptyNFA :
+    ε-grammar
+    ⊢
+    Parses emptyNFA
+  ε-grammar→parseEmptyNFA pε =
+    (lift (inr (inl tt)) , refl) ,
+    (ε-grammar→traceFromEmptyNFA pε .snd)
+
+  parseEmptyNFA→ε-grammar :
+    Parses emptyNFA
+    ⊢
+    ε-grammar
+  parseEmptyNFA→ε-grammar ((q-end , isAcc-q-end) , trace) =
+    traceEmptyNFA→ε-grammar q-end trace
+
+  parseEmptyNFA≡ε-grammar :
+    isStronglyEquivalent
+      (Parses emptyNFA)
+      ε-grammar
+  Iso.fun (parseEmptyNFA≡ε-grammar w) = parseEmptyNFA→ε-grammar
+  Iso.inv (parseEmptyNFA≡ε-grammar w) = ε-grammar→parseEmptyNFA
+  Iso.rightInv (parseEmptyNFA≡ε-grammar w) b = refl
+  Iso.leftInv (parseEmptyNFA≡ε-grammar w) a = {!!}
+
+-- Literal
+
+-- Disjunction
 module _ {ℓN} {ℓN'} {Σ₀ : Type ℓΣ₀}
   (N : NFA ℓN Σ₀)
   (N' : NFA ℓN' Σ₀) where
@@ -345,28 +531,196 @@ module _ {ℓN} {ℓN'} {Σ₀ : Type ℓΣ₀}
         LiftDecPropWitness (N' .isAcc q-end) isAcc-q-end) ,
         ε-cons (inl (inr (inl _))) (traceN'→trace⊕NFA (N' .init) q-end traceN'))
 
-  the-P : ⊕NFA .Q .fst → Grammar ((ℓ-max (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) (ℓ-suc ℓN'))) {Σ₀}
-  the-P (inl x) = TraceFrom N (N .init) ⊕ TraceFrom N' (N' .init)
-  the-P (inr (inl x)) =
-    LiftGrammar {ℓG = ℓ-max ℓΣ₀ (ℓ-suc ℓN)}{(ℓ-max (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) (ℓ-suc ℓN'))}
-    (TraceFrom N x)
-  the-P (inr (inr x)) =
-    LiftGrammar {ℓG = ℓ-max ℓΣ₀ (ℓ-suc ℓN')}{(ℓ-max (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) (ℓ-suc ℓN'))}
-    (TraceFrom N' x)
+  private
+  -- TODO there shouldn't need to be lifts here
+    the-P : ⊕NFA .Q .fst → Grammar (ℓ-max ℓΣ₀ (ℓ-max (ℓ-suc ℓN) (ℓ-suc ℓN'))) {Σ₀}
+    the-P (inl x) =
+      ε-grammar {ℓG = ℓ-max (ℓ-max ℓΣ₀ (ℓ-suc ℓN)) (ℓ-suc ℓN')}
+    the-P (inr (inl x)) =
+      LiftGrammar {ℓG = ℓ-max ℓΣ₀ (ℓ-suc ℓN)}{ℓ-max ℓΣ₀ (ℓ-max (ℓ-suc ℓN) (ℓ-suc ℓN'))}
+      ⟨ N ⟩Snoc[ N .init →* x ]
+    the-P (inr (inr x)) =
+      LiftGrammar {ℓG = ℓ-max ℓΣ₀ (ℓ-suc ℓN')}{ℓ-max ℓΣ₀ (ℓ-max (ℓ-suc ℓN) (ℓ-suc ℓN'))}
+      ⟨ N' ⟩Snoc[ N' .init →* x ]
+
+    the-cons-case : (tr : ⊕NFA .transition .fst) →
+      the-P (src ⊕NFA tr) ⊗ literal {ℓG = ℓ-max ℓN (ℓ-max ℓN' ℓΣ₀)} (label ⊕NFA tr)
+      ⊢
+      the-P (dst ⊕NFA tr)
+    the-cons-case (inl x) =
+      trans
+       {g =
+        LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) (N .src x)) ⊗
+        literal (N .label x)}
+       {h =
+        SnocNFATrace-syntax-rebind N (N .init) (N .src x) ⊗ literal {ℓG = ℓ-max ℓN (ℓ-max ℓN' ℓΣ₀)} (N .label x)}
+       {k =
+        LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) (N .dst x))}
+       (cut
+         {g =
+          LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) (N .src x))}
+         {h = SnocNFATrace-syntax-rebind N (N .init) (N .src x)}
+         (var ⊗l literal (N .label x))
+         (LowerGrammarTerm {g = (SnocNFATrace-syntax-rebind N (N .init) (N .src x))}))
+       (trans
+         {g =
+          SnocNFATrace-syntax-rebind N (N .init) (N .src x) ⊗
+          literal {ℓG = ℓ-max ℓN (ℓ-max ℓN' ℓΣ₀)} (N .label x)}
+         {h = (SnocNFATrace-syntax-rebind N (N .init) (N .dst x))}
+         {k =
+          LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) (N .dst x))}
+         (λ p → snoc x ((p .fst) , ((p .snd .fst) , (lift (lower (p .snd .snd))))))
+         (LiftGrammarTerm {g = (SnocNFATrace-syntax-rebind N (N .init) (N .dst x))}))
+    the-cons-case (inr x) =
+      trans
+       {g =
+        LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) (N' .src x)) ⊗
+        literal (N' .label x)}
+       {h =
+        SnocNFATrace-syntax-rebind N' (N' .init) (N' .src x) ⊗ literal {ℓG = ℓ-max ℓN (ℓ-max ℓN' ℓΣ₀)} (N' .label x)}
+       {k =
+        LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) (N' .dst x))}
+       (cut
+         {g =
+          LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) (N' .src x))}
+         {h = SnocNFATrace-syntax-rebind N' (N' .init) (N' .src x)}
+         (var ⊗l literal (N' .label x))
+         (LowerGrammarTerm {g = (SnocNFATrace-syntax-rebind N' (N' .init) (N' .src x))}))
+       (trans
+         {g =
+          SnocNFATrace-syntax-rebind N' (N' .init) (N' .src x) ⊗
+          literal {ℓG = ℓ-max ℓN (ℓ-max ℓN' ℓΣ₀)} (N' .label x)}
+         {h = (SnocNFATrace-syntax-rebind N' (N' .init) (N' .dst x))}
+         {k =
+          LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) (N' .dst x))}
+         (λ p → snoc x ((p .fst) , ((p .snd .fst) , (lift (lower (p .snd .snd))))))
+         (LiftGrammarTerm {g = (SnocNFATrace-syntax-rebind N' (N' .init) (N' .dst x))}))
+
+    the-ε-cons-case : (εtr : ⊕NFA .ε-transition .fst) →
+      the-P (ε-src ⊕NFA εtr)
+      ⊢
+      the-P (ε-dst ⊕NFA εtr)
+    the-ε-cons-case (inl fzero) =
+      trans {g = ε-grammar}
+       {h = SnocNFATrace-syntax-rebind N (N .init) (N .init)}
+       {k =
+        LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) (N .init))}
+       (λ p → nil (lift (lower p)))
+       (LiftGrammarTerm {g = (SnocNFATrace-syntax-rebind N (N .init) (N .init))})
+    the-ε-cons-case (inl (inr fzero)) =
+      trans {g = ε-grammar}
+       {h = SnocNFATrace-syntax-rebind N' (N' .init) (N' .init)}
+       {k =
+        LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) (N' .init))}
+       (λ p → nil (lift (lower p)))
+       (LiftGrammarTerm {g = (SnocNFATrace-syntax-rebind N' (N' .init) (N' .init))})
+    the-ε-cons-case (inr (inl x)) =
+      trans
+      {g = LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) (N .ε-src x))}
+      {h = (SnocNFATrace-syntax-rebind N (N .init) (N .ε-src x))}
+      {k = LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) (N .ε-dst x))}
+      (LowerGrammarTerm {g = (SnocNFATrace-syntax-rebind N (N .init) (N .ε-src x))})
+      (trans {g = SnocNFATrace-syntax-rebind N (N .init) (N .ε-src x)}
+        {h = SnocNFATrace-syntax-rebind N (N .init) (N .ε-dst x)}
+        {k =
+         LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) (N .ε-dst x))}
+        (ε-snoc x)
+        (LiftGrammarTerm {g = (SnocNFATrace-syntax-rebind N (N .init) (N .ε-dst x))}))
+    the-ε-cons-case (inr (inr x)) =
+      trans
+      {g = LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) (N' .ε-src x))}
+      {h = (SnocNFATrace-syntax-rebind N' (N' .init) (N' .ε-src x))}
+      {k = LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) (N' .ε-dst x))}
+      (LowerGrammarTerm {g = (SnocNFATrace-syntax-rebind N' (N' .init) (N' .ε-src x))})
+      (trans {g = SnocNFATrace-syntax-rebind N' (N' .init) (N' .ε-src x)}
+        {h = SnocNFATrace-syntax-rebind N' (N' .init) (N' .ε-dst x)}
+        {k =
+         LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) (N' .ε-dst x))}
+        (ε-snoc x)
+        (LiftGrammarTerm {g = (SnocNFATrace-syntax-rebind N' (N' .init) (N' .ε-dst x))}))
+
+  the-P→snoctraceN⊕snoctraceN' : ∀ q-end →
+    the-P q-end
+    ⊢
+    (SnocTraceFrom N (N .init) ⊕ SnocTraceFrom N' (N' .init))
+  the-P→snoctraceN⊕snoctraceN' (inl x) =
+    ⊕-intro₁
+      {g = ε-grammar}
+      {h = SnocTraceFrom N (N .init)}
+      {k = SnocTraceFrom N' (N' .init)}
+      (λ pε → (N .init) , (nil (lift (lower pε))))
+  the-P→snoctraceN⊕snoctraceN' (inr (inl x)) =
+    ⊕-intro₁
+      {g = LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) x)}
+      {h = SnocTraceFrom N (N .init)}
+      {k = SnocTraceFrom N' (N' .init)}
+      (trans {g = (LiftGrammar (SnocNFATrace-syntax-rebind N (N .init) x))}
+      {h = (SnocNFATrace-syntax-rebind N (N .init) x)}
+      {k = (SnocTraceFrom N (N .init))}
+      (LowerGrammarTerm {g = (SnocNFATrace-syntax-rebind N (N .init) x)})
+      (λ trace → x , trace))
+  the-P→snoctraceN⊕snoctraceN' (inr (inr x)) =
+    ⊕-intro₂
+      {g = LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) x)}
+      {h = SnocTraceFrom N' (N' .init)}
+      {k = SnocTraceFrom N (N .init)}
+      (trans {g = (LiftGrammar (SnocNFATrace-syntax-rebind N' (N' .init) x))}
+      {h = (SnocNFATrace-syntax-rebind N' (N' .init) x)}
+      {k = (SnocTraceFrom N' (N' .init))}
+      (LowerGrammarTerm {g = (SnocNFATrace-syntax-rebind N' (N' .init) x)})
+      (λ trace → x , trace))
+
+  snoctrace⊕NFA→snoctraceN⊕snoctraceN' : ∀ q-end →
+    ⟨ ⊕NFA ⟩Snoc[ ⊕NFA .init →* q-end ]
+    ⊢
+    (SnocTraceFrom N (N .init) ⊕ SnocTraceFrom N' (N' .init))
+  snoctrace⊕NFA→snoctraceN⊕snoctraceN' q-end =
+    trans {g = ⟨ ⊕NFA ⟩Snoc[ ⊕NFA .init →* q-end ]} {h = the-P q-end}
+      {k = (SnocTraceFrom N (N .init) ⊕ SnocTraceFrom N' (N' .init))}
+      (elimSnocNFA ⊕NFA (⊕NFA .init) the-P
+        (λ pε → lift (lower pε))
+        (λ {tr} → the-cons-case tr)
+        (λ {εtr} → the-ε-cons-case εtr))
+      (the-P→snoctraceN⊕snoctraceN' q-end )
 
   trace⊕NFA→traceN⊕traceN' : ∀ q-end →
     ⟨ ⊕NFA ⟩[ ⊕NFA .init →* q-end ]
     ⊢
     (TraceFrom N (N .init) ⊕ TraceFrom N' (N' .init))
   trace⊕NFA→traceN⊕traceN' q-end =
-    {!!}
+    trans {g = NFATrace-syntax-rebind ⊕NFA q-end (⊕NFA .init)}
+     {h = SnocNFATrace-syntax-rebind ⊕NFA (⊕NFA .init) q-end}
+     {k = TraceFrom N (N .init) ⊕ TraceFrom N' (N' .init)}
+     (NFATrace→SnocNFATrace ⊕NFA (⊕NFA .init) q-end)
+     (trans {g = SnocNFATrace-syntax-rebind ⊕NFA (⊕NFA .init) q-end}
+       {h = SnocTraceFrom N (N .init) ⊕ SnocTraceFrom N' (N' .init)}
+       {k = TraceFrom N (N .init) ⊕ TraceFrom N' (N' .init)}
+       (snoctrace⊕NFA→snoctraceN⊕snoctraceN' q-end )
+       (⊕-elim {g = SnocTraceFrom N (N .init)}
+         {h = TraceFrom N (N .init) ⊕ TraceFrom N' (N' .init)}
+         {k = SnocTraceFrom N' (N' .init)}
+         (λ (q-end' , snocTrace) →
+           ⊕-intro₁ {g = ⟨ N ⟩Snoc[ N .init →* q-end' ]}
+             {h = TraceFrom N (N .init)}
+             {k = TraceFrom N' (N' .init)}
+             (λ snocTrace' → q-end' , (SnocNFATrace→NFATrace N (N .init) q-end' snocTrace'))
+             snocTrace
+             )
+         (λ (q-end' , snocTrace) →
+           ⊕-intro₂ {g = ⟨ N' ⟩Snoc[ N' .init →* q-end' ]}
+             {h = TraceFrom N' (N' .init)}
+             {k = TraceFrom N (N .init)}
+             (λ snocTrace' → q-end' , (SnocNFATrace→NFATrace N' (N' .init) q-end' snocTrace'))
+             snocTrace
+             )
+         ))
 
   traceFrom⊕NFA→traceFromN⊕traceFromN' :
     TraceFrom ⊕NFA (⊕NFA .init)
     ⊢
     (TraceFrom N (N .init) ⊕ TraceFrom N' (N' .init))
   traceFrom⊕NFA→traceFromN⊕traceFromN' (q-end , trace) =
-    {!!}
+    trace⊕NFA→traceN⊕traceN' q-end trace
 
 --     -- TODO make sure I don't include traces through states that i've already seen
 --     data ε-reachable (q-end : Q .fst) : Q .fst → Type ℓ where
