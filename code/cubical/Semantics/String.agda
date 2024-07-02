@@ -21,10 +21,11 @@ open import Cubical.HITs.PropositionalTruncation
 open import Semantics.Helper public
 
 private
-  variable ℓΣ₀ : Level
+  variable
+    ℓΣ₀ : Level
+    Σ₀ : Type ℓΣ₀
 
-module StringDefs {Σ₀ : Type ℓΣ₀} where
-
+module _ {Σ₀ : Type ℓΣ₀} where
   String : Type ℓΣ₀
   String = List Σ₀
 

@@ -29,27 +29,25 @@ open import Semantics.Grammar.Literal
 open import Semantics.Grammar.KleeneStar
 
 private
-  variable ℓG ℓΣ₀ : Level
+  variable
+    ℓG ℓS : Level
+    Σ₀ : Type ℓ-zero
 
-module _ {ℓG} {ℓS} {Σ₀ : Type ℓΣ₀} where
-  open StringDefs {ℓΣ₀} {Σ₀}
+LinearΠ : {A : Type ℓS} → (A → Grammar {Σ₀} ℓG) → Grammar (ℓ-max ℓS ℓG)
+LinearΠ {A = A} f w = ∀ (a : A) → f a w
 
-  LinearΠ : {A : Type ℓS} → (A → Grammar ℓG {Σ₀}) → Grammar (ℓ-max ℓS ℓG)
-  LinearΠ {A} f w = ∀ (a : A) → f a w
+LinearΣ : {A : Type ℓS} → (A → Grammar {Σ₀} ℓG) → Grammar (ℓ-max ℓS ℓG)
+LinearΣ {A = A} f w = Σ[ a ∈ A ] f a w
 
-  LinearΣ : {A : Type ℓS} → (A → Grammar ℓG {Σ₀}) → Grammar (ℓ-max ℓS ℓG)
-  LinearΣ {A} f w = Σ[ a ∈ A ] f a w
+LinearΣ-syntax : {A : Type ℓS} → (A → Grammar {Σ₀} ℓG) → Grammar (ℓ-max ℓS ℓG)
+LinearΣ-syntax = LinearΣ
 
-  LinearΣ-syntax : {A : Type ℓS} → (A → Grammar ℓG {Σ₀}) → Grammar (ℓ-max ℓS ℓG)
-  LinearΣ-syntax = LinearΣ
+syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
 
-  syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
-
-module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
-  open StringDefs {ℓΣ₀} {Σ₀}
-  ⊕Σ₀ : Grammar (ℓ-max ℓΣ₀ ℓG) {Σ₀}
-  ⊕Σ₀ = LinearΣ λ (c : Σ₀) → literal {ℓG = ℓG} c
+module _ {Σ₀ : Type ℓ-zero} where
+  ⊕Σ₀ : Grammar {Σ₀} ℓ-zero
+  ⊕Σ₀ = LinearΣ λ (c : Σ₀) → literal c
 
   String→KL* : (w : String) → KL* ⊕Σ₀ w
-  String→KL* [] = nil (lift refl)
-  String→KL* (x ∷ w) = cons ((([ x ] , w) , refl) , (((x , lift refl)) , (String→KL* w)))
+  String→KL* [] = nil refl
+  String→KL* (x ∷ w) = cons ((([ x ] , w) , refl) , (((x , refl)) , (String→KL* w)))

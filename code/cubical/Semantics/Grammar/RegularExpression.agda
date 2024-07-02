@@ -30,22 +30,22 @@ private
   variable ℓG ℓG' ℓΣ₀ : Level
 
 
-module _ {Σ₀ : Type ℓΣ₀} where
-  open StringDefs {ℓΣ₀} {Σ₀}
+module _ {Σ₀ : Type ℓ-zero} where
+  open StringDefs {ℓ-zero} {Σ₀}
 
-  data RegularExpression  : (L : Level) → Typeω where
-    ε-Reg : ∀ {L} → RegularExpression (ℓ-max L ℓΣ₀)
-    _⊗Reg_ : ∀ {L} {L'} → RegularExpression L →
-      RegularExpression L' → RegularExpression (ℓ-max L (ℓ-max ℓΣ₀ L'))
-    literalReg : ∀ {L} → Σ₀ → RegularExpression (ℓ-max L ℓΣ₀)
-    _⊕Reg_ : ∀ {L} {L'} → RegularExpression L → RegularExpression L' → RegularExpression (ℓ-max L L')
-    KL*Reg : ∀ {L} → RegularExpression L → RegularExpression (ℓ-max ℓΣ₀ (ℓ-suc L))
+  data RegularExpression  : Type ℓ-zero where
+    ε-Reg : RegularExpression
+    _⊗Reg_ : RegularExpression →
+      RegularExpression → RegularExpression
+    literalReg : Σ₀ → RegularExpression
+    _⊕Reg_ : RegularExpression → RegularExpression → RegularExpression
+    KL*Reg : RegularExpression → RegularExpression
 
-  RegularExpression→Grammar : ∀ {L} → RegularExpression L → Grammar L {Σ₀}
-  RegularExpression→Grammar {L} ε-Reg = ε-grammar {ℓG = L}
+  RegularExpression→Grammar : RegularExpression → Grammar ℓ-zero {Σ₀}
+  RegularExpression→Grammar  ε-Reg = ε-grammar
   RegularExpression→Grammar (g ⊗Reg g') =
     (RegularExpression→Grammar g) ⊗ (RegularExpression→Grammar g')
-  RegularExpression→Grammar {L} (literalReg c) = literal {ℓG = L} c
+  RegularExpression→Grammar (literalReg c) = literal c
   RegularExpression→Grammar (g ⊕Reg g') =
     RegularExpression→Grammar g ⊕ RegularExpression→Grammar g'
   RegularExpression→Grammar (KL*Reg g) = KL* (RegularExpression→Grammar g)

@@ -29,13 +29,13 @@ open import Semantics.Grammar.Top
 open import Semantics.Grammar.Bottom
 
 private
-  variable ℓG ℓS ℓS' ℓΣ₀ : Level
+  variable
+    ℓG ℓS  ℓΣ₀ : Level
+    Σ₀ : Type ℓ-zero
 
-module _ {ℓG} {ℓS} {Σ₀ : Type ℓΣ₀} where
-  DecProp-grammar' :
-    DecProp ℓS → Grammar (ℓ-max ℓS (ℓ-max ℓΣ₀ ℓG)) {Σ₀}
-  DecProp-grammar' d =
-    decRec
-      (λ _ → ⊤-grammar)
-      (λ _ → ⊥-grammar {_}{ℓ-max ℓS ℓG}) (d .snd)
-
+DecProp-grammar' :
+  DecProp ℓS → Grammar {Σ₀} (ℓ-max ℓS ℓG)
+DecProp-grammar' d =
+  decRec
+    (λ _ → ⊤-grammar)
+    (λ _ → ⊥-grammar) (d .snd)

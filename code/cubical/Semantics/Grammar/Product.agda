@@ -27,10 +27,9 @@ open import Semantics.String
 open import Semantics.Grammar.Base
 
 private
-  variable ℓG ℓΣ₀ : Level
+  variable
+    ℓG ℓG' : Level
+    Σ₀ : Type ℓ-zero
 
-module _ {ℓG} {ℓG'} {Σ₀ : Type ℓΣ₀} where
-  open StringDefs {ℓΣ₀} {Σ₀}
-
-  _&_ : Grammar ℓG {Σ₀} → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
-  (g & g') w = g w × g' w
+_&_ : Grammar {Σ₀} ℓG → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
+(g & g') w = g w × g' w

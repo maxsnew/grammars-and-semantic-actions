@@ -30,10 +30,10 @@ open import Semantics.Term
 private
   variable ℓΣ₀ ℓD ℓP ℓ : Level
 
-module DFADefs ℓD ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
-  open StringDefs {ℓΣ₀} {Σ₀}
+module DFADefs ℓD ((Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero) where
+  open StringDefs {ℓ-zero} {Σ₀}
 
-  record DFA : Type (ℓ-suc (ℓ-max ℓΣ₀ ℓD)) where
+  record DFA : Type (ℓ-suc ℓD) where
     field
       Q : FinSet ℓD
       init : Q .fst
@@ -52,51 +52,51 @@ module DFADefs ℓD ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
     Accepting : Type ℓD
     Accepting = Σ[ q ∈ Q .fst ] isAcc q .fst .fst
 
-    acc? : Q .fst → Grammar (ℓ-max (ℓ-suc ℓD) ℓΣ₀) {Σ₀}
-    acc? q = DecProp-grammar' {ℓG = ℓ-suc ℓD}{ℓD}(isAcc q)
+    acc? : Q .fst → Grammar ℓD {Σ₀}
+    acc? q = DecProp-grammar' {ℓG = ℓD} (isAcc q)
 
-    rej? : Q .fst → Grammar (ℓ-max (ℓ-suc ℓD) ℓΣ₀) {Σ₀}
-    rej? q = DecProp-grammar' {ℓG = ℓ-suc ℓD}{ℓD} (negateDecProp (isAcc q))
+    rej? : Q .fst → Grammar ℓD {Σ₀}
+    rej? q = DecProp-grammar' {ℓG = ℓD} (negateDecProp (isAcc q))
 
     module _ (q-end : Q .fst) where
-      data DFATrace : Q .fst → Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓD)) {Σ₀} where
-        nil : ε-grammar {ℓG = ℓ-max ℓD ℓΣ₀} ⊢ DFATrace q-end
+      data DFATrace : Q .fst → Grammar ℓD {Σ₀} where
+        nil : ε-grammar {ℓG = ℓD} ⊢ DFATrace q-end
         cons : ∀ q-start c →
-             literal {ℓG = ℓ-max ℓD ℓΣ₀} c ⊗ DFATrace (δ q-start c) ⊢ DFATrace q-start
+             literal c ⊗ DFATrace (δ q-start c) ⊢ DFATrace q-start
 
       elimDFA :
-        (P : ∀ q-start → Grammar ℓP {Σ₀}) →
-        (nil-case : ε-grammar {ℓG = ℓ-max ℓD ℓΣ₀} ⊢ P q-end) →
+        (P : ∀ q-start → Grammar ℓD {Σ₀}) →
+        (nil-case : ε-grammar ⊢ P q-end) →
         (cons-case : ∀ {q-start}{c} →
-          literal {ℓG = ℓ-max ℓD ℓΣ₀} c ⊗ P (δ q-start c) ⊢ (P q-start)) →
+          literal c ⊗ P (δ q-start c) ⊢ (P q-start)) →
         ∀ {q-start} →
           DFATrace q-start ⊢ P q-start
       elimDFA P nil-case cons-case (nil x) = nil-case x
       elimDFA P nil-case cons-case (cons q-start c x) =
         cons-case (x .fst , x .snd .fst , (elimDFA P nil-case cons-case (x .snd .snd)))
 
-    DFATrace-syntax : Q .fst → Q .fst → Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓD)) {Σ₀}
+    DFATrace-syntax : Q .fst → Q .fst → Grammar ℓD {Σ₀}
     DFATrace-syntax q-end q-start = DFATrace q-end q-start
     syntax DFATrace-syntax q-end q-start = DFA[ q-start →* q-end ]
 
     module _ (q-start : Q .fst) where
-      data SnocDFATrace : (q-end : Q .fst) → Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓD)) {Σ₀} where
-        nil : ε-grammar {ℓG = ℓ-max ℓD ℓΣ₀} ⊢ SnocDFATrace q-start
+      data SnocDFATrace : (q-end : Q .fst) → Grammar ℓD {Σ₀} where
+        nil : ε-grammar ⊢ SnocDFATrace q-start
         snoc : ∀ q-end c →
-          SnocDFATrace q-end ⊗ literal {ℓG = ℓ-max ℓD ℓΣ₀} c ⊢ SnocDFATrace (δ q-end c)
+          SnocDFATrace q-end ⊗ literal c ⊢ SnocDFATrace (δ q-end c)
 
       elimSnocDFA :
-        (P : ∀ q-end → Grammar ℓP {Σ₀}) →
-        (nil-case : ε-grammar {ℓG = ℓ-max ℓD ℓΣ₀} ⊢ P q-start) →
+        (P : ∀ q-end → Grammar ℓD {Σ₀}) →
+        (nil-case : ε-grammar  ⊢ P q-start) →
         (snoc-case : ∀ {q-end}{c} →
-          P q-end ⊗ literal {ℓG = ℓ-max ℓD ℓΣ₀} c ⊢ P (δ q-end c)) →
+          P q-end ⊗ literal c ⊢ P (δ q-end c)) →
         ∀ {q-end} →
           SnocDFATrace q-end ⊢ P q-end
       elimSnocDFA P nil-case snoc-case (nil x) = nil-case x
       elimSnocDFA P nil-case snoc-case (snoc q-end c x) =
         snoc-case ((x .fst) , ((elimSnocDFA P nil-case snoc-case (x .snd .fst)) , (x .snd .snd)))
 
-    SnocDFATrace-syntax : Q .fst → Q .fst → Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓD)) {Σ₀}
+    SnocDFATrace-syntax : Q .fst → Q .fst → Grammar ℓD {Σ₀}
     SnocDFATrace-syntax q-start q-end = SnocDFATrace q-start q-end
     syntax SnocDFATrace-syntax q-start q-end = SnocDFA[ q-start →* q-end ]
 
@@ -218,7 +218,7 @@ module DFADefs ℓD ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
           (SnocDFATrace→DFATrace q-start (δ q-end c))
 
     module _ (q-start : Q .fst) where
-      TraceFrom : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓD)) {Σ₀}
+      TraceFrom : Grammar ℓD {Σ₀}
       TraceFrom = LinearΣ (λ (q-end : Q .fst) → DFA[ q-start →* q-end ])
 
       ExtendTraceFromByLiteral : ∀ (c : Σ₀) →
@@ -228,106 +228,107 @@ module DFADefs ℓD ((Σ₀ , isFinSetΣ₀) : FinSet ℓΣ₀) where
         (δ q-end c) ,
         DFATraceAppendLiteral q-start q-end (s , (tr , lit))
 
-      RunFromState : KL* (⊕Σ₀ {ℓG = ℓ}) ⊢ TraceFrom
+      RunFromState : KL* ⊕Σ₀ ⊢ TraceFrom
       RunFromState =
-        foldKL*l {g = ⊕Σ₀} {h = TraceFrom}
-          (λ pε → q-start , (nil (lift (lower pε))))
-          (λ (s , (q-end , trace) , c , lit) →
-            δ q-end c ,
-            DFATraceAppendLiteral q-start q-end
-              (s , (trace , lift (lower lit))))
+        foldKL*l {g = ⊕Σ₀} {h = TraceFrom} {!!} {!!} {!!}
+        -- foldKL*l {g = ⊕Σ₀} {h = TraceFrom}
+        --   (λ pε → q-start , (nil (lift (lower pε))))
+        --   (λ (s , (q-end , trace) , c , lit) →
+        --     δ q-end c ,
+        --     DFATraceAppendLiteral q-start q-end
+        --       (s , (trace , lift (lower lit))))
 
-      TraceWithAcceptanceFrom : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓD)) {Σ₀}
-      TraceWithAcceptanceFrom =
-        LinearΣ
-          (λ (q-end : Q .fst) →
-             (DFA[ q-start →* q-end ] & (acc? q-end ⊕ rej? q-end)))
+--       TraceWithAcceptanceFrom : Grammar (ℓ-max ℓΣ₀ (ℓ-suc ℓD)) {Σ₀}
+--       TraceWithAcceptanceFrom =
+--         LinearΣ
+--           (λ (q-end : Q .fst) →
+--              (DFA[ q-start →* q-end ] & (acc? q-end ⊕ rej? q-end)))
 
-      checkAccept : TraceFrom ⊢ TraceWithAcceptanceFrom
-      checkAccept (q-end , trace) =
-        q-end ,
-        &-intro {g = DFA[ q-start →* q-end ]} {h = DFA[ q-start →* q-end ]} {k = acc? q-end ⊕ rej? q-end}
-          (id {g = DFA[ q-start →* q-end ]})
-          (DecProp-grammar'-intro (isAcc q-end)
-            {g = DFA[ q-start →* q-end ] })
-          trace
+--       checkAccept : TraceFrom ⊢ TraceWithAcceptanceFrom
+--       checkAccept (q-end , trace) =
+--         q-end ,
+--         &-intro {g = DFA[ q-start →* q-end ]} {h = DFA[ q-start →* q-end ]} {k = acc? q-end ⊕ rej? q-end}
+--           (id {g = DFA[ q-start →* q-end ]})
+--           (DecProp-grammar'-intro (isAcc q-end)
+--             {g = DFA[ q-start →* q-end ] })
+--           trace
 
-      RunFromStateWithAcceptance : KL* (⊕Σ₀ {ℓG = ℓ}) ⊢ TraceWithAcceptanceFrom
-      RunFromStateWithAcceptance =
-        trans {g = KL* ⊕Σ₀} {h = TraceFrom} {k = TraceWithAcceptanceFrom}
-          RunFromState checkAccept
+--       RunFromStateWithAcceptance : KL* (⊕Σ₀ {ℓG = ℓ}) ⊢ TraceWithAcceptanceFrom
+--       RunFromStateWithAcceptance =
+--         trans {g = KL* ⊕Σ₀} {h = TraceFrom} {k = TraceWithAcceptanceFrom}
+--           RunFromState checkAccept
 
-      DecideFromState : ∀ {ℓ} → String → Bool
-      DecideFromState {ℓ} w =
-        let the-trace = RunFromStateWithAcceptance {ℓ} (String→KL* w) in
-        Sum.rec (λ _ → true) (λ _ → false) (the-trace .snd .snd)
+--       DecideFromState : ∀ {ℓ} → String → Bool
+--       DecideFromState {ℓ} w =
+--         let the-trace = RunFromStateWithAcceptance {ℓ} (String→KL* w) in
+--         Sum.rec (λ _ → true) (λ _ → false) (the-trace .snd .snd)
 
-    DecideDFA : ∀ {ℓ} → String → Bool
-    DecideDFA {ℓ} = DecideFromState init {ℓ}
+--     DecideDFA : ∀ {ℓ} → String → Bool
+--     DecideDFA {ℓ} = DecideFromState init {ℓ}
 
-module examples where
-  -- examples are over alphabet drawn from Fin 2
-  -- characters are fzero and (fsuc fzero)
-  open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
-  open StringDefs {ℓ-zero} {Fin 2}
+-- module examples where
+--   -- examples are over alphabet drawn from Fin 2
+--   -- characters are fzero and (fsuc fzero)
+--   open DFADefs ℓ-zero (Fin 2 , isFinSetFin)
+--   open StringDefs {ℓ-zero} {Fin 2}
 
-  open DFA
+--   open DFA
 
-  D : DFA
-  Q D = (Fin 3) , isFinSetFin
-  init D = inl _
-  isAcc D x =
-    ((x ≡ fzero) , isSetFin x fzero) ,
-    discreteFin x fzero
-  δ D fzero fzero = fromℕ 0
-  δ D fzero (fsuc fzero) = fromℕ 1
-  δ D (fsuc fzero) fzero = fromℕ 2
-  δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
-  δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
-  δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
+--   D : DFA
+--   Q D = (Fin 3) , isFinSetFin
+--   init D = inl _
+--   isAcc D x =
+--     ((x ≡ fzero) , isSetFin x fzero) ,
+--     discreteFin x fzero
+--   δ D fzero fzero = fromℕ 0
+--   δ D fzero (fsuc fzero) = fromℕ 1
+--   δ D (fsuc fzero) fzero = fromℕ 2
+--   δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
+--   δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
+--   δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
 
-  w : String
-  w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
+--   w : String
+--   w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
 
-  w' : String
-  w' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
+--   w' : String
+--   w' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
 
-  w'' : String
-  w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
+--   w'' : String
+--   w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
 
-  ex1 : DecideDFA D {ℓ-zero} w ≡ true
-  ex1 = refl
+--   ex1 : DecideDFA D {ℓ-zero} w ≡ true
+--   ex1 = refl
 
-  ex2 : DecideDFA D {ℓ-zero} w' ≡ true
-  ex2 = refl
+--   ex2 : DecideDFA D {ℓ-zero} w' ≡ true
+--   ex2 = refl
 
-  ex3 : DecideDFA D {ℓ-zero} w'' ≡ false
-  ex3 = refl
+--   ex3 : DecideDFA D {ℓ-zero} w'' ≡ false
+--   ex3 = refl
 
-  ex4 : DecideDFA D {ℓ-zero} [] ≡ true
-  ex4 = refl
+--   ex4 : DecideDFA D {ℓ-zero} [] ≡ true
+--   ex4 = refl
 
 
- {--       0
- -- 0  --------> 1
- --    <--------
- --        0
- -- and self loops for 1. state 1 is acc
- --
- --}
-  D' : DFA
-  Q D' = (Fin 2) , isFinSetFin
-  init D' = inl _
-  isAcc D' x =
-    ((x ≡ fsuc fzero) , isSetFin x (fsuc fzero)) ,
-    discreteFin x (fsuc fzero)
-  δ D' fzero fzero = fromℕ 1
-  δ D' fzero (fsuc fzero) = fromℕ 0
-  δ D' (fsuc fzero) fzero = fromℕ 0
-  δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
+--  {--       0
+--  -- 0  --------> 1
+--  --    <--------
+--  --        0
+--  -- and self loops for 1. state 1 is acc
+--  --
+--  --}
+--   D' : DFA
+--   Q D' = (Fin 2) , isFinSetFin
+--   init D' = inl _
+--   isAcc D' x =
+--     ((x ≡ fsuc fzero) , isSetFin x (fsuc fzero)) ,
+--     discreteFin x (fsuc fzero)
+--   δ D' fzero fzero = fromℕ 1
+--   δ D' fzero (fsuc fzero) = fromℕ 0
+--   δ D' (fsuc fzero) fzero = fromℕ 0
+--   δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
 
-  s : String
-  s = fsuc fzero ∷ fzero ∷ []
+--   s : String
+--   s = fsuc fzero ∷ fzero ∷ []
 
-  ex5 : DecideDFA D' {ℓ-zero} s ≡ true
-  ex5 = refl
+--   ex5 : DecideDFA D' {ℓ-zero} s ≡ true
+--   ex5 = refl

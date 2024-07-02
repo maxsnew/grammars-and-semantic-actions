@@ -27,8 +27,9 @@ open import Semantics.String
 open import Semantics.Grammar.Base
 
 private
-  variable ℓG ℓΣ₀ : Level
+  variable
+    ℓG ℓΣ₀ : Level
+    Σ₀ : Type ℓ-zero
 
-module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
-  ⊥-grammar : Grammar (ℓ-max ℓΣ₀ ℓG) {Σ₀}
-  ⊥-grammar _ = Lift {ℓ-zero}{ℓ-max ℓΣ₀ ℓG} ⊥
+⊥-grammar : Grammar {Σ₀} ℓG
+⊥-grammar _ = Lift {ℓ-zero} ⊥

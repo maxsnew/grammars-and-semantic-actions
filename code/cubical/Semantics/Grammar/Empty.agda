@@ -28,8 +28,8 @@ open import Semantics.Grammar.Base
 
 private
   variable
-    ℓG ℓΣ₀ : Level
+    ℓG : Level
+    Σ₀ : Type ℓ-zero
 
-module _ {ℓG} {Σ₀ : Type ℓΣ₀} where
-  ε-grammar : Grammar (ℓ-max ℓΣ₀ ℓG) {Σ₀}
-  ε-grammar w = Lift {ℓΣ₀}{ℓ-max ℓΣ₀ ℓG} (w ≡ [])
+ε-grammar : Grammar {Σ₀} ℓ-zero
+ε-grammar w = w ≡ []
