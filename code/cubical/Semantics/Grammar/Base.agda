@@ -57,7 +57,7 @@ module _ {Σ₀ : Type ℓ-zero} where
     where
 
     Term≡ : Type (ℓ-max ℓG ℓH)
-    Term≡ = ∀ {w : String} {p : g w} → e p ≡ e' p
+    Term≡ = ∀ {w : String} (p : g w) → e p ≡ e' p
 
   module _ {ℓG}
     (g : Grammar ℓG)
