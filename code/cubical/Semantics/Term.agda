@@ -494,3 +494,15 @@ LiftGrammarTerm :
   {g : Grammar {Σ₀} ℓg} →
   g ⊢ LiftGrammar {ℓG = ℓg}{ℓ} g
 LiftGrammarTerm {ℓ = ℓ} {g = g} x = lift x
+
+-- curry⊗- :
+--   {g : Grammar {Σ₀} ℓg} →
+--   {h : Grammar {Σ₀} ℓh} →
+--   {k : Grammar {Σ₀} ℓk} →
+--   g ⊗- (h ⊗- k) ⊢ (g ⊗- h) ⊗- k
+-- curry⊗- {g = g}{h = h}{k = k} =
+--   ⊗--intro {g = g ⊗- (h ⊗- k)} {h = k} {k = g ⊗- h}
+--     {!!}
+--   --   (⊗--intro {g = (g ⊗- (h ⊗- k)) ⊗ k} {h = h} {k = g}
+--   --     (⊗-assoc {g = g ⊗- (h ⊗- k)} {h = k} {k = h} {l = g}
+--   --       {!cut {g = k ⊗ h} {h = h ⊗- k}!}))
