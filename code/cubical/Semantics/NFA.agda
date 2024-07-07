@@ -185,59 +185,59 @@ module NFADefs ℓN (Σ₀ : Type ℓ-zero) where
     Trace-syntax q-start q-end = Trace q-start q-end
     syntax Trace-syntax q-start q-end = [ q-start →* q-end ]
 
-    -- module _ (q-start q-mid : Q .fst) where
-    --   open Algebra
-    --   the-concat-alg : Algebra q-mid
-    --   the-ℓs the-concat-alg _ = ℓN
-    --   P the-concat-alg q-end = [ q-start →* q-mid ] -⊗ [ q-start →* q-end ]
-    --   nil-case the-concat-alg =
-    --     -⊗-intro {g = [ q-start →* q-mid ]} {h = ε-grammar}
-    --       {k = [ q-start →* q-mid ]}
-    --       (ε-extension-r {g = ε-grammar} {h = [ q-start →* q-mid ]}
-    --         {k = [ q-start →* q-mid ]}
-    --         (id {g = ε-grammar})
-    --         (id {g = [ q-start →* q-mid ]}))
-    --   cons-case the-concat-alg tr =
-    --     -⊗-intro {g = [ q-start →* q-mid ]}
-    --       {h = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ]) ⊗ literal (label tr)}
-    --       {k = [ q-start →* dst tr ]}
-    --       (⊗-assoc-inv {g = [ q-start →* q-mid ]}
-    --         {h = [ q-start →* q-mid ] -⊗ [ q-start →* src tr ]}
-    --         {k = literal (label tr)}
-    --         {l = [ q-start →* dst tr ]}
-    --         (trans
-    --           {g = ([ q-start →* q-mid ] ⊗
-    --             ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ]))
-    --             ⊗ literal (label tr)}
-    --           {h = [ q-start →* src tr ] ⊗ literal (label tr)}
-    --           {k = [ q-start →* dst tr ]}
-    --           (cut
-    --             {g = [ q-start →* q-mid ] ⊗
-    --               ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])}
-    --             {h = [ q-start →* src tr ]}
-    --             (var ⊗l literal (label tr))
-    --             (-⊗-elim {g = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])}
-    --               {h = [ q-start →* q-mid ]} {k = [ q-start →* src tr ]}
-    --               {l = [ q-start →* q-mid ]}
-    --               (id {g = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])} )
-    --               (id {g = [ q-start →* q-mid ]})))
-    --           (cons tr)))
-    --   ε-cons-case the-concat-alg εtr =
-    --     cut {g = [ q-start →* ε-src εtr ]}
-    --       {h = [ q-start →* ε-dst εtr ]}
-    --       ([ q-start →* q-mid ] -⊗OH var)
-    --       (ε-cons εtr)
+    module _ (q-start q-mid : Q .fst) where
+      open Algebra
+      the-concat-alg : Algebra q-mid
+      the-ℓs the-concat-alg _ = ℓN
+      P the-concat-alg q-end = [ q-start →* q-mid ] -⊗ [ q-start →* q-end ]
+      nil-case the-concat-alg =
+        -⊗-intro {g = [ q-start →* q-mid ]} {h = ε-grammar}
+          {k = [ q-start →* q-mid ]}
+          (ε-extension-r {g = ε-grammar} {h = [ q-start →* q-mid ]}
+            {k = [ q-start →* q-mid ]}
+            (id {g = ε-grammar})
+            (id {g = [ q-start →* q-mid ]}))
+      cons-case the-concat-alg tr =
+        -⊗-intro {g = [ q-start →* q-mid ]}
+          {h = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ]) ⊗ literal (label tr)}
+          {k = [ q-start →* dst tr ]}
+          (⊗-assoc-inv {g = [ q-start →* q-mid ]}
+            {h = [ q-start →* q-mid ] -⊗ [ q-start →* src tr ]}
+            {k = literal (label tr)}
+            {l = [ q-start →* dst tr ]}
+            (trans
+              {g = ([ q-start →* q-mid ] ⊗
+                ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ]))
+                ⊗ literal (label tr)}
+              {h = [ q-start →* src tr ] ⊗ literal (label tr)}
+              {k = [ q-start →* dst tr ]}
+              (cut
+                {g = [ q-start →* q-mid ] ⊗
+                  ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])}
+                {h = [ q-start →* src tr ]}
+                (var ⊗l literal (label tr))
+                (-⊗-elim {g = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])}
+                  {h = [ q-start →* q-mid ]} {k = [ q-start →* src tr ]}
+                  {l = [ q-start →* q-mid ]}
+                  (id {g = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])} )
+                  (id {g = [ q-start →* q-mid ]})))
+              (cons tr)))
+      ε-cons-case the-concat-alg εtr =
+        cut {g = [ q-start →* ε-src εtr ]}
+          {h = [ q-start →* ε-dst εtr ]}
+          ([ q-start →* q-mid ] -⊗OH var)
+          (ε-cons εtr)
 
-    -- open AlgebraHom
-    -- concatTrace : ∀ {q-start}{q-mid}{q-end} →
-    --   [ q-start →* q-mid ] ⊗ [ q-mid →* q-end ] ⊢ [ q-start →* q-end ]
-    -- concatTrace {q-start}{q-mid}{q-end} =
-    --   -⊗-elim
-    --    {g = [ q-mid →* q-end ]}
-    --    {h = [ q-start →* q-mid ]} {k = [ q-start →* q-end ]}
-    --    {l = [ q-start →* q-mid ]}
-    --    (∃AlgebraHom q-mid (the-concat-alg q-start q-mid) .f q-end)
-    --    (id {g = [ q-start →* q-mid ]})
+    open AlgebraHom
+    concatTrace : ∀ {q-start}{q-mid}{q-end} →
+      [ q-start →* q-mid ] ⊗ [ q-mid →* q-end ] ⊢ [ q-start →* q-end ]
+    concatTrace {q-start}{q-mid}{q-end} =
+      -⊗-elim
+       {g = [ q-mid →* q-end ]}
+       {h = [ q-start →* q-mid ]} {k = [ q-start →* q-end ]}
+       {l = [ q-start →* q-mid ]}
+       (∃AlgebraHom q-mid (the-concat-alg q-start q-mid) .f q-end)
+       (id {g = [ q-start →* q-mid ]})
 
     module _ (q-start : Q .fst) where
       TraceFrom : Grammar ℓN
@@ -839,21 +839,6 @@ module _ {ℓN} {Σ₀ : Type ℓ-zero}
         (the-N-alg)
     initialN→the-N-alg = ∃AlgebraHom N (N .init) the-N-alg
 
-    the-N'-alg : Algebra N' (N' .init)
-    the-ℓs the-N'-alg _ = ℓN
-    P the-N'-alg q-end =
-      ⟨ ⊗NFA ⟩[ inr (N' .init) →* inr q-end ]
-    nil-case the-N'-alg = nil
-    cons-case the-N'-alg tr = cons (inr tr)
-    ε-cons-case the-N'-alg εtr = ε-cons (inr (inr εtr))
-
-    initialN'→the-N'-alg :
-      AlgebraHom
-        N'
-        (N' .init)
-        (initial N' (N' .init))
-        (the-N'-alg)
-    initialN'→the-N'-alg = ∃AlgebraHom N' (N' .init) the-N'-alg
 
     the-⊗NFA-alg : ∀ q-start → Algebra ⊗NFA q-start
     the-ℓs (the-⊗NFA-alg (inl q-start)) _ = ℓN
@@ -924,17 +909,93 @@ module _ {ℓN} {Σ₀ : Type ℓ-zero}
     on-cons the-N-alg→initialN _ _ = refl
     on-ε-cons the-N-alg→initialN _ _ = refl
 
-    the-N'-alg→initialN' :
+    the-N'-alg : Algebra N' (N' .init)
+    the-ℓs the-N'-alg _ = ℓN
+    P the-N'-alg q-end =
+      Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr q-end ]
+    nil-case the-N'-alg =
+      -⊗-intro
+        {g = Parses N} {h = ε-grammar}
+        {k = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .init) ]}
+        (ε-extension-r
+          {g = ε-grammar}
+          {h = Parses N}
+          {k = ⟨ ⊗NFA ⟩[ inl (N .init) →* inr (N' .init) ]}
+          (id {g = ε-grammar})
+          (λ (acceptN , traceN) →
+            ε-cons (inl acceptN)
+              (initialN→the-N-alg .f (acceptN .fst) traceN)))
+    cons-case the-N'-alg tr =
+      -⊗-intro
+        {g = Parses N}
+        {h = (Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ])
+          ⊗ literal (N' .label tr)}
+        {k = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .dst tr) ]}
+        (⊗-assoc-inv
+          {g = Parses N}
+        {h = Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ]}
+        {k = literal (N' .label tr)}
+        {l = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .dst tr) ]}
+        (trans
+          {g = (Parses N ⊗
+            (Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ]))
+            ⊗ literal (N' .label tr)}
+          {h = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ]
+            ⊗ literal (N' .label tr)}
+          {k = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .dst tr) ]}
+            (cut
+            {g = Parses N ⊗
+              (Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ])}
+            {h = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ]}
+            (var ⊗l literal (N' .label tr))
+            (-⊗-elim
+              {g = Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ]}
+              {h = Parses N}
+              {k = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ]}
+              {l = Parses N}
+              (id {g = Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr (N' .src tr) ]})
+              (id {g = Parses N})))
+            (cons (inr tr))))
+    ε-cons-case the-N'-alg εtr =
+      cut
+        {g = ⟨ ⊗NFA ⟩[ inl (N .init) →* inr (N' .ε-src εtr) ]}
+        {h = ⟨ ⊗NFA ⟩[ inl (N .init) →* inr (N' .ε-dst εtr) ]}
+        (Parses N -⊗OH var)
+        (ε-cons (inr (inr εtr)))
+
+    initialN'→the-N'-alg :
       AlgebraHom
         N'
         (N' .init)
-        (the-N'-alg)
         (initial N' (N' .init))
-    f the-N'-alg→initialN' q-end =
-      initial⊗NFA→the-⊗NFA-alg (inr (N' .init)) .f (inr q-end)
-    on-nil the-N'-alg→initialN' _ = refl
-    on-cons the-N'-alg→initialN' _ _ = refl
-    on-ε-cons the-N'-alg→initialN' _ _ = refl
+        (the-N'-alg)
+    initialN'→the-N'-alg = ∃AlgebraHom N' (N' .init) the-N'-alg
+
+  --   the-N'-alg→initialN' :
+  --     AlgebraHom
+  --       N'
+  --       (N' .init)
+  --       (the-N'-alg)
+  --       (initial N' (N' .init))
+  --   f the-N'-alg→initialN' q-end =
+  --     initial⊗NFA→the-⊗NFA-alg (inr (N' .init)) .f (inr q-end)
+  --   on-nil the-N'-alg→initialN' _ = refl
+  --   on-cons the-N'-alg→initialN' _ _ = refl
+  --   on-ε-cons the-N'-alg→initialN' _ _ = refl
+
+  --   pls :
+  --     AlgebraHom
+  --       ⊗NFA
+  --       (inr (N' .init))
+  --       (the-⊗NFA-alg (inr (N' .init)))
+  --       (initial ⊗NFA (inr (N' .init)))
+  --   f pls (inr q-end) = initialN'→the-N'-alg .f q-end
+  --   on-nil pls _ = refl
+  --   on-cons pls (inl tr) ()
+  --   on-cons pls (inr tr) p = refl
+  --   on-ε-cons pls (inl _) ()
+  --   on-ε-cons pls (inr (inl ε-tr)) ()
+  --   on-ε-cons pls (inr (inr ε-tr)) _ = refl
 
     the-⊗NFA-alg→initial⊗NFA :
       AlgebraHom
@@ -944,8 +1005,67 @@ module _ {ℓN} {Σ₀ : Type ℓ-zero}
         (initial ⊗NFA (⊗NFA .init))
     f the-⊗NFA-alg→initial⊗NFA (inl q-end) =
       initialN→the-N-alg .f q-end
-    f the-⊗NFA-alg→initial⊗NFA (inr q-end) = {!initialN'→the-N'-alg .f q-end!}
-      -- initialN'→the-N'-alg .f q-end
-    on-nil the-⊗NFA-alg→initial⊗NFA = {!!}
-    on-cons the-⊗NFA-alg→initial⊗NFA = {!!}
-    on-ε-cons the-⊗NFA-alg→initial⊗NFA = {!!}
+    f the-⊗NFA-alg→initial⊗NFA (inr q-end) =
+      trans
+        {g = Parses N ⊗ ⟨ N' ⟩[ N' .init →* q-end ]}
+        {h = Parses N ⊗ (Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr q-end ])}
+        {k = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr q-end ]}
+        (cut
+          {g = ⟨ N' ⟩[ N' .init →* q-end ]}
+          {h = (Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr q-end ])}
+          (Parses N ⊗r var)
+          (initialN'→the-N'-alg .f q-end))
+        (-⊗-elim
+          {g = (Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr q-end ])}
+          {h = Parses N}
+          {k = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr q-end ]}
+          {l = Parses N}
+          (id {g = (Parses N -⊗ ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr q-end ])})
+          (id {g = Parses N})
+        )
+    on-nil the-⊗NFA-alg→initial⊗NFA _ = refl
+    on-cons the-⊗NFA-alg→initial⊗NFA (inl tr) p = refl
+    on-cons the-⊗NFA-alg→initial⊗NFA (inr tr) p = {!!}
+    on-ε-cons the-⊗NFA-alg→initial⊗NFA
+      (inl (q-endN , isAccq-endN)) p = {!!}
+    on-ε-cons the-⊗NFA-alg→initial⊗NFA (inr (inl εtr)) p = refl
+    on-ε-cons the-⊗NFA-alg→initial⊗NFA (inr (inr εtr)) p = {!!}
+
+    parse⊗NFA→parseN⊗parseN' :
+      (Parses ⊗NFA)
+      ⊢
+      (Parses N ⊗ Parses N')
+    parse⊗NFA→parseN⊗parseN' ((inr q-end , q-endIsAcc) , trace) =
+      trans
+        {g = ⟨ ⊗NFA ⟩[ ⊗NFA .init →* inr q-end ]}
+        {h = the-⊗NFA-alg (⊗NFA .init) .P (inr q-end)}
+        {k = Parses N ⊗ Parses N'}
+        (initial⊗NFA→the-⊗NFA-alg (⊗NFA .init) .f (inr q-end))
+        (λ (s , parseN , traceN') →
+          s ,
+          (parseN ,
+          ((q-end , q-endIsAcc) , traceN')))
+        trace
+
+    parseN⊗parseN'→parse⊗NFA :
+      (Parses N ⊗ Parses N')
+      ⊢
+      (Parses ⊗NFA)
+    parseN⊗parseN'→parse⊗NFA
+      (s , (acceptN , traceN) , (acceptN' , traceN')) =
+      ((inr (acceptN' .fst)) , (acceptN' .snd)) ,
+      the-⊗NFA-alg→initial⊗NFA .f (inr (acceptN' .fst))
+        (s , ((acceptN , traceN) , traceN'))
+
+  open Iso
+  parse⊗NFA≡parseN⊗parseN' :
+    isStronglyEquivalent
+      (Parses ⊗NFA)
+      (Parses N ⊗ Parses N')
+  fun (parse⊗NFA≡parseN⊗parseN' w) = parse⊗NFA→parseN⊗parseN'
+  inv (parse⊗NFA≡parseN⊗parseN' w) = parseN⊗parseN'→parse⊗NFA
+  rightInv (parse⊗NFA≡parseN⊗parseN' w)
+    (s , parseN , parseN') = {!initial→initial≡id ? ? ? ? ?!}
+  leftInv (parse⊗NFA≡parseN⊗parseN' w)
+    (accept⊗NFA , trace⊗NFA) =
+    {!!}
