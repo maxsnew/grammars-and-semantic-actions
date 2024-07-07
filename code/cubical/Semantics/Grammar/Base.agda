@@ -26,7 +26,7 @@ open import Semantics.Helper
 open import Semantics.String
 
 private
-  variable ℓG ℓG' ℓH ℓK : Level
+  variable ℓG ℓG' ℓH ℓK ℓL : Level
 
 module _ {Σ₀ : Type ℓ-zero} where
   module _ ℓG where
@@ -58,6 +58,23 @@ module _ {Σ₀ : Type ℓ-zero} where
 
     Term≡ : Type (ℓ-max ℓG ℓH)
     Term≡ = ∀ {w : String} (p : g w) → e p ≡ e' p
+
+  module _ {ℓG} {ℓH}
+    {g : Grammar ℓG}
+    {h : Grammar ℓH}
+    {k : Grammar ℓK}
+    {l : Grammar ℓL}
+    {e e' : g ⊢ h}
+    (the-eq : Term≡ e e')
+    (ϕ : k ⊢ g)
+    (ψ : h ⊢ l)
+    where
+    Term≡-cong :
+      Term≡ {g = k}{h = l}
+        (λ p → ψ (e (ϕ p)))
+        (λ p → ψ (e' (ϕ p)))
+    Term≡-cong {w} p =
+      cong ψ (the-eq {w} (ϕ p))
 
   module _ {ℓG}
     (g : Grammar ℓG)
