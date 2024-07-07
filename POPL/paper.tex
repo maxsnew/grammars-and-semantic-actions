@@ -212,9 +212,8 @@ Our contributions are then:
   \item A language implemented shallowly in Agda
 \end{itemize}
 
-\section{Kleene Category}
-\steven{No changes pasted from LICS draft}
-\steven{Are these now ``Chomsky categories''? or is that disinct?}
+\section{Categorification of Formal Grammars}
+\steven{Idk if this section has the right title, but I wanted to change it if we are adding ``chomsky categories''}
 
 Kleene algebras are an important tool in the theory of regular
 languages. More broadly, they serve as a theoretical substrate to
@@ -416,7 +415,7 @@ leads us to the abstract notion of model we are interested in
 capturing with our type theory.
 
 \begin{definition}
-  A model is a locally Cartesian category with two hierarchies of
+  A \emph{Chomsky Category} is a locally Cartesian category with two hierarchies of
   universes $\{L_i\}_{i\in \nat}$ and $\{U_i\}_{i\in \nat}$ such that
   every $L_i$ and $U_i$ are $U_{i+1}$-small. Furthermore, we require
   $U_i$ to be closed under dependent products and sum,
@@ -431,6 +430,8 @@ capturing with our type theory.
 \end{theorem}
 
 \section{Related work}
+
+\steven{TODO: move to related work section at the end}
 
 \paragraph{Kleene Algebra}
 
@@ -459,33 +460,25 @@ parsing as well.
 %% That paper with Fritz Henglein about regexes as types
 
 %% Vaughan Pratt on the residual operator
+%%
 
-\section{Rest of paper}
-\steven{Everything below still needs to be edited from my prelim paper}
-\steven{Need to grab the canonicity proof from the LICS draft}
+\section{Non-commutative Linear-non-linear Type Theory as a Syntax for Formal Grammars}
+\label{sec:tt}
 
-Substructural logics, like linear and separation logic, offer precise control
+In 1995, Benton et al.
+\cite{bentonMixedLinearNonlinear1995} first gave categorical models of a logic
+that synthesized linear and non-linear logic. Substructural logics, like linear and separation logic, offer precise control
 over how values from a type may be used, in particular how many times a value
 may be used in a derivation. This control enables \emph{resource-sensitive}
 reasoning, where we may treat a resource as \emph{consumed} after usage. In the
 context of parsing, we may treat the characters composing a string as finite resources
 that are consumed at parse-time.
 
-Dependent type theory extends the simply-typed $\lambda$-calculus by allowing type
-definitions to contain the occurrence of a term. In lieu of set-based
-foundations, this extension can then be taken as a foundation for mathematics.
-The expressive power unlocked by this insight has enabled the development of
-dependently-typed proof assistants
-such as Coq or Agda. Within each of these languages, systems may be given very
-precise functional specifications of their behavior.
-
-In 1995, Benton et al.
-\cite{bentonMixedLinearNonlinear1995} first gave categorical models of a logic
-that synthesized linear and non-linear logic. Later, Krishnaswami et al.
-\cite{krishnaswami_integrating_2015} built upon this work to develop a type
+Building off of Benton et al., Krishnaswami et al.
+\cite{krishnaswami_integrating_2015} developed a type
 system that unifies both linear and
 dependent types --- referred to as a \emph{linear-non-linear} (LNL) type theory. In
-such settings, we have two sub-theories --- one linear and one non-linear. The
+such settings, there are two sub-theories --- one linear and one non-linear. The
 linear sub-theory embeds ordinary linear types without dependence, while the
 non-linear sub-theory embeds standard Martin-L\"of type theory. The interplay of
 linear types with dependence lives at the boundary between these two fragments.
@@ -493,203 +486,17 @@ Benton et al.\ gives an accounting of how we may jump between these
 fragments via a monoidal adjunction $F \dashv G$ between linear terms and
 non-linear terms.
 
-To the end of defining real verified
-parsers, in our LNL theory we define a parser as a term,
+\steven{Next paragraph is paper scaffolding for what I want to say and is total word salad rn}
+In this paper, we instantiate an LNL theory to axiomatize the notion of a Chomsky category, and because $\Set^{\String}$ forms a Chomsky category, using the type theory corresponds to interesting formal grammar proofs. Internalization of previous results + use to build correct-by-construction parsers.
 
-\crefname{equation}{}{}
-\begin{equation}
-  \label{eq:parser}
-  w : \String \vdash \mathsf{parse}_{g}(w) : g \oplus \top
-\end{equation}
+\steven{Expand here on how linearity has an intuitive parsing intrerpration, however working only in a simply typed system is not sufficient. i.e. dependence offers the right view on indexed grammars. }
 
-We will investigate the precise meaning of judgments like \cref{eq:parser} in
-\cref{sec:tt}, but first let's get an intuitive feel for the meaning behind such a
-term. On the left of the turnstile occurs a single string $w$, we may think of
-this describing what resources are linearly available to us. Using each piece of
-our the context on the left of the turnstile, we build a term
-$\mathsf{parse}_{g}(w)$ of type $g \oplus \top$. Notably, the type being
-instantiated is a sum type, and the data of which side we inject into denotes
-whether the string is accepted or rejected by the parser. That is all to say, a
-parser takes in an input string and either matches it to the desired grammar or
-rejects the string.
-
-Practical parsers are often implemented via an abstract automaton. For instance,
-a parser may translate a grammar into a state machine recognizes the
-same language as the original grammar, as the automata
-point-of-view lends itself to straightforward execution. The
-strength of our syntax is that it allows us to describe
-these automata as grammars themselves. Moreover, the
-equivalence between the grammar and automata presentations
-is derivable as a proof term within the theory. This allows
-us access to simultaneously internalization of the equivalence
-between grammars and automata as well as the ability to
-export to automaton implementations of a parser that are executable.
-
-To realize an executable implementation of our type theory,
-we shallowly embed it in Agda. Because our implementation is
-defined as a function in Agda, we can leverage the Agda
-ecosystem for code generation. Further, in lieu of
-implementing a complete language from scratch, we make use of the
-Agda proof system as a setting to guarantee correctness of
-our generate parsers.
-
-Within this paper, we give our progress in defining a verified
-parser for regular expressions. The construction of such a parser entails
-the definition of a parser for deterministic finite automata (DFA) grammars,
-and an equivalence proof between DFAs and regular expressions. We have thus far
-completed the construction of a parser for DFAs $D$,
-
-\[
-  w : \String \vdash \mathsf{parse}_{D}(w) : D \oplus \top
-\]
-
-and half of the equivalence proof between DFAs and regular expressions, both
-formalized in Agda. Upon completion of the second half of this proof, we would
-have a system where a user could simply give a regular grammar and then extract
-an intrinsically verified parser for it. In future work, we
-hope to show an analogous construction involving pushdown
-automata (PDAs) and context-free grammars.
-
-
-\section{A Syntax-Independent Notion of Syntax}
-\label{sec:synindsyn}
-
-% \max{this section doesn't flow naturally from the intro, which is all about the
-%   type theory and parsing. This is where you want to outline in the intro and
-%   possibly say here that we want to revisit ``formal grammar theory'' and then
-%   we will make a type theory that has formal grammar theory as its semantics.}
-
-In this section we will revisit some foundational ideas in formal
-grammar theory, before giving a type
-theory for which formal grammars serves as its semantics.
-
-Formal languages and grammars are among some of the oldest and most studied areas in
-theoretical computer science. The developments of the 1950s and 1960s gave rise
-to expressive formalism for reasoning about grammars, and further practical
-algorithms for constructing parsers for regular and context-free grammars.
-
-A grammar $G$ is often described generatively as a set of production rules for
-generating strings. Often this is presented as a finite set of nonterminal
-symbols $N$, a finite set of terminal symbols $\Sigma$, and a finite set of rewriting
-rules for substitution of nonterminals. In this setting, we continually apply
-rewrite rules until we are left only with a string of terminals
-$w \in \String$. We will give a more precise notion of
-grammar in a moment, but for now let us take this intuitive view of grammars as
-string generators.
-
-One of the primary objects of study is that of a \emph{formal language} over
-a fixed alphabet $\Sigma$. A language $L$ is a \emph{subset} of strings
-$L \subseteq \String$. This notion of formal language gives an intuitive
-set-based semantics for grammars. That is, we may interpret a grammar $G$ as the
-language $L(G)$ that is generated by it. We are yet to give any precise
-definition of what we mean by ``grammar'', although we note that any suitable
-notion of grammar can be given a language semantics as above.
-
-Formal languages serve as a basis for mathematically specifying a
-\emph{recognizer} --- a
-function $r : \String \to \Bool$ that determines if a string belongs to a
-given language. However, they are insufficient for specifying a \emph{parser}
---- a function that decomposes a string into semantic components that adhere to
-the structure of a formal grammar. In practice, parsers don't just tell you
-if a string is valid or invalid. Instead, they emit structured data such as
-abstract syntax trees (ASTs).
-
-This motivates our first conceptual contribution, a simple and
-syntax-independent notion of formal grammar:
-
-\begin{definition}
-  \label{def:grammar}
-  A \emph{formal grammar} $G$ over a fixed alphabet $\Sigma$ is a function
-  $G : \String \to \Set$.
-\end{definition}
-
-We say that a grammar $G$ associates to every string $w$ the set\footnote{We
-  make little comment as to which foundations we use to encode sets. We argue\max{drop ``We argue''}
-  that our construction is agnostic to the particular foundation, and so without
-  loss of generality\max{incorrect use of ``without loss of generality''} we may take a class of small sets, a Grothendieck universe,
-  a type theoretic universe, or any similar foundation. Here we choose a type
-  theoretic universe.} $G w$ of parse
-trees showing that $w$ matches $G$.
-
-The simplest class of formal grammar on the Chomsky\max{first mention of Chomsky hierarchy, why not bring it up earlier when you are describing what a grammar is? Also cite}
-hierarchy are the \emph{regular expressions}
-
-\max{inaccurate reflection of common terminology. These are regular expressions,
-  regular grammars usually means a CFG with a restriction on recursion that
-  ensures you only allow Kleene star.}.
-
-\begin{gather*}
-  \mathsf{Char} \in \Sigma \\
-  \mathsf{Reg} ::= \mathsf{Char}~|~I~|~\mathsf{Reg} \otimes \mathsf{Reg}~|~\mathsf{Reg} \oplus \mathsf{Reg}~|~\mathsf{Reg}^{*}
-\end{gather*}
-
-Here, we use a non-standard syntax inspired by linear logic. Disjunction of
-regular expressions is written $\oplus$, and concatenation of regular
-expressions is written like the linear tensor product $\otimes$. The
-empty grammar is sometimes written in the same manner as the empty string,
-$\varepsilon$, but we instead choose to represent the empty grammar by $I$. This
-is also linear logic syntax to represent the unit $I$ of the operation $\otimes$.
-
-To see an illustration of the notion of grammar given in \cref{def:grammar}, consider the regular expression
-$G = (a \otimes b)^{*} \otimes a$ --- a sequence of 0 or more $ab$'s followed by
-an $a$. We may think of $G$ as a function that takes in strings and outputs all
-of the parse trees of that string. Passing the input string $baa$ through $G$
-would output the empty set, because there are no $G$-parses of $baa$. However,
-passing $aba$ through $G$ would output a singleton set, as there is only a
-single $G$-parse of $aba$. Namely, the one that breaks up $aba$ as $(ab)a$.
-
-Observe that for any input string $w$ for the above grammar $G$, $G(w)$ is
-either empty or a singleton set. Either the string isn't parsed by $G$,
-or it is parsed by $G$ for exactly one reason. That is, $G$ is
-\emph{unambiguous}. If we instead consider the grammar
-$H = (a \otimes b)^{*} \oplus (b \otimes a)^{*}$ there are now ambiguities. For
-instance, what is the action of $H$ on the empty string $\varepsilon$?
-The empty string $\varepsilon$ matches both $(a \otimes b)^{*}$ and $(b \otimes a)^{*}$, so
-$\varepsilon$ can match either the left or the right pattern
-of $H$. As a result, $H(\varepsilon)$ is a two-element set.
-
-
-\[
-  L_{G} = \{ w \in \String : G w \text{ is inhabited} \}
-\]
-
-As they are just sets, formal languages naturally are
-endowed with a partial
-order via the subset inclusion ordering. Similarly, formal grammars are
-naturally endowed with the structure of a \emph{category} where a morphism
-$f : G \to H$ is given by a \emph{family} of functions:
-
-
-\[
-  f^{w} : Gw \to Hw, w \in \String
-\]
-
-Intuitively, we read a morphism of grammars as a \emph{parse transformer}: $f$
-translates a
-$G$-parse of $w$ into an $H$-parse of $w$. The notion of isomorphism induced by
-this categorical structure encodes that two grammars are equivalent if there is
-a bijective translation of parses. Isomorphisms in the category of
-grammars are precisely Chomsky's notion of \emph{strong equivalence} of
-grammars \cite{chom1963}.
-
-The category of grammars is quite rich in structure. It can
-equivalently be described as the functor category $\Set^{\String}$, where
-$\String$ is a discrete category. That is, the objects in $\String$ are strings
-and the only morphisms are identity morphisms. Such functor categories into
-$\Set$ --- often called presheaf categories --- carry a remarkable amount of
-structure. In fact, any presheaf category naturally models dependent type
-theory, which we exploit to motivate the design of the formalism
-presented in \cref{sec:tt}.
-
-
-\section{A Type Theory to Reason About Formal Grammars}
-\label{sec:tt}
 
 \subsection{Syntax}
 \label{subsec:syntax}
 
 In this section we will walk through most of the syntax of our type theory. We
-include the full syntax in \cref{sec:infer}.
+include the full syntax in \cref{sec:infer}. \steven{full syntax in appendix}
 
 The linear typing judgment in our syntax takes on the following schematic form,
 \[
@@ -1406,6 +1213,7 @@ original grammar. Witnessing this construction in our syntax has two benefits
   For $g$ a regular grammar $g$, there is an NFA $N$ that recognizes the same
   language as $g$.
 \end{theorem}
+\steven{In Agda as a weak equivalence right now}
 
 We make a pretty straightforward adaptation of Thompson's theorem to our setting,
 
