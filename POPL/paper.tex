@@ -119,8 +119,9 @@
 
 \maketitle
 
-\section{A Syntax-Independent Notion of Syntax}
+\section{Introduction}
 \label{sec:intro}
+
 The theory of formal languages and parsing is one of the oldest and
 most thoroughly developed areas of theoretical computer science. A
 prominent topic in the 1950, 60s, and 70s led to a series of remarkable
@@ -128,6 +129,22 @@ developments: Chomsky's hierarchy of grammar formalisms \cite{chomThreeModels195
 algorithms for parsing of regular and context-free grammars and
 variants \cite{KNUTH1965607,Earley1970}, as well as implementations of practical tools for the
 generation of efficient parsers \cite{Johnsonyacc}.
+
+\paragraph{Contributions.} This paper begins in \cref{sec:categorify} by giving a categorical interpretation of Kleene algebra. However, Kleene algebras are primarily concerned with the regular languages. With this in mind, we further abstract our categorical model from the connectives of regular grammars to those of context-free grammars and beyond. From there, in \cref{sec:tt} we provide a type theory to construct and reason about such formal grammars. In \cref{sec:semantics} we give interpretations of the syntax as grammars and as languages, and prove a canonicity theorem for the type theory. Finally, in \cref{sec:automata} we give a presentation of automata as grammars. With this view in mind, we may encode parsing algorithms and execute them entirely internal to our formalism. Our contributions are then:
+
+\pedro{Something good is coming up with a name to the type theory... This makes it easier to
+refer to it throughout the paper. Spitballing some suggestions GTT (grammar type theory --- conflicts with Max's Gradual Type Theory), KTT (Kleene type theory)...}
+
+\begin{itemize}
+  \item A universal semantic notion of formal grammar given by the category $\Set^{\String}$
+  \item Categorical structures that capture the concepts integral to formal grammar theory, and that are notably modeled by $\Set^{\String}$
+  \item A dependent
+    linear/non-linear (LNL) type theory to syntactically capture the above categorical structures
+  \item An implementation of the language, which is embedded shallowly in Agda
+\end{itemize}
+
+
+\section{A Syntax-Independent Notion of Syntax}
 
 The notion of formal language is central to the theory of parsing. A
 \emph{formal language} $L$ over an alphabet $\Sigma$ is classically defined as a
@@ -179,11 +196,16 @@ grammars is given by a family of functions
 \[ f^{w} : G w \to H w \]
 
 for every string $w \in \String$. Intuitively, we read a morphism of grammars as
-a \emph{parse transformer} : $f$ translates a $G$-parse of $w$ into an $H$-parse
+a \emph{parse transformer}: $f$ translates a $G$-parse of $w$ into an $H$-parse
 of $w$. The notion of isomorphism induced by
 this categorical structure encodes that two grammars are equivalent if there is
 a bijective translation of parses --- precisely Chomsky's notion of \emph{strong equivalence} of
 grammars \cite{chom1963}.
+
+\pedro{Written like this, it seems like this correspondence iso-strong
+  equivalence is a well-known fact, but this is not an obvious
+  observation.}
+
 
 The above category of grammars can equivalently be described as the functor
 category $\Set^{\String}$ --- where the set $\String$ is viewed as a discrete
@@ -199,30 +221,31 @@ parsing. Each of these is an instance of a general \emph{notion of formal
   grammar} --- a category paired with a functor into
 $\Set^{\String}$. That is, they may all be interpreted in our category of grammars. In this sense, $\Set^{\String}$ provides a universal setting to reason about parsing.
 The slice 2-category over $\Set^{\String}$ then provides the appropriate expressivity to prove equivalences between grammar formalism, such as the equivalence between semi-Thue systems and Chomsky's unrestricted grammars.
+\pedro{why?}
 
 \steven{Check details for 2-cat of grammar formalisms}
 
-This paper begins in \cref{sec:categorify} by giving a categorical interpretation of Kleene algebra. However, Kleene algebras are primarily concerned with the regular languages. With this in mind, we further abstract our categorical model from the connectives of regular grammars to those of context-free grammars and beyond. From there, in \cref{sec:tt} we provide a type theory to construct and reason about such formal grammars. In \cref{sec:semantics} we give interpretations of the syntax as grammars and as languages, and prove a canonicity theorem for the type theory. Finally, in \cref{sec:automata} we give a presentation of automata as grammars. With this view in mind, we may encode parsing algorithms and execute them entirely internal to our formalism. Our contributions are then:
-
-\begin{itemize}
-  \item A universal semantic notion of formal grammar given by the category $\Set^{\String}$
-  \item Categorical structures that capture the concepts integral to formal grammar theory, and that are notably modeled by $\Set^{\String}$
-  \item A dependent
-    linear/non-linear (LNL) type theory to syntactically capture the above categorical structures
-  \item An implementation of the language, which is embedded shallowly in Agda
-\end{itemize}
-
-\section{Categorification of Formal Grammars}
+\section{Categorifying Formal Grammars}
 \label{sec:categorify}
 \steven{Idk if this section has the right title, but I wanted to change it if we are adding ``Chomsky categories''}
 
 Kleene algebras are an important tool in the theory of regular
-languages. More broadly, they serve as a theoretical substrate to
-studying various kinds of formal languages. Formally, they are a tuple
-$(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is a set, $+$ and $\cdot$
-are binary operations over $A$, $(-)^*$ is a function over $A$, and
-$1$ and $0$ are constants. These structures satisfy the axioms depicted
-in Figure~\ref{fig:axioms}.
+languages. More broadly, through various extensions, they serve as a
+theoretical substrate to studying different kinds of formal languages.
+
+We posit that by seeing Kleene algebra through the lens of category
+theory, we gain some insight into the type-theoretic essence of formal
+grammars. We begin this section by providing a ``simply-typed''
+version of a categorification of Kleene algebra, which we call Kleene
+category, and then show define a more expressive class of categories,
+which we call Chomsky category, that will serve as the categorical
+semantics to our type theory.
+
+\subsection{Kleene categories}
+A Kleene algebra is a tuple $(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is
+a set, $+$ and $\cdot$ are binary operations over $A$, $(-)^*$ is a
+function over $A$, and $1$ and $0$ are constants. These structures
+satisfy the axioms depicted in Figure~\ref{fig:axioms}.
 
 \begin{figure}
   \begin{align*}
@@ -326,14 +349,15 @@ more structure, then these isomorphisms hold ``for free''.
   argument for $G_{A,B}$ also holds.
 \end{proof}
 
-This result feels similar in spirit to the definition of action
-algebras, which are algebras where the product also has adjoint
-operations which results in the Kleene star being more easily
-axiomatized \cite{KOZEN1994366}.
+Something surprising about this lemma is that it provides an alternative
+perspective on the observation that if a Kleene algebra has an
+residuation operation, also called action algebra \cite{kozen1994action},
+then the Kleene star admits a simpler axiomatization.
 
-We are now ready to prove that our concept of formal grammars fits
-nicely within our categorical framework. We start by presenting a
-well-known construction from presheaf categories.
+Since we want Kleene categories to generalize our notion of formal
+grammars as presheaves $\String \to \Set$, we prove that they do
+indeed form a Kleene category. We start by presenting a well-known
+construction from presheaf categories.
 
 \begin{definition}
   Let $\cat{C}$ be a locally small monoidal category and $F$, $G$ be
@@ -392,29 +416,32 @@ Much like in the posetal case, the abstract structure of a Kleene
 category is expressive enough to synthetically reason about formal
 languages. A significant difference between them is that while Kleene
 algebras can reason about language containment, Kleene categories can
-reason about parsing as well.
+reason about parsing as well, as illustrated by the presheaf model
+above.
 
 For the rest of the paper we will use the presheaf category
 $\Set^{\cat{\Sigma^*}}$ as a concrete model that will serve as our
 guide when expanding abstract formalism presented in this section so
 that it can handle more classes of languages beyond regular ones.
 
-\paragraph{Beyond Simple Types}
+\subsection{Beyond Simple Types}
 
 Though Kleene categories are expressive enough to reason about
 concepts that are outside of reach of Kleene algebras, their
-simply-typed nature makes them not so expressive from a type theory
-point of view. This is limiting because type theories are tested
-syntactic frameworks for manipulating complicated categories
+simply-typed nature makes them not so expressive from a type theoretic
+point of view. This is limiting because type theories are sucessful
+syntactic frameworks for manipulating complicated categorical
 structures while avoiding some issues common in category theory, such
 as coherence issues.
 
-With this in mind, we want to design a dependent type theory that
-builds on top of Kleene categories with the goal of internalizing
-various reasoning principles for languages and their parsers. This
-leads us to the abstract notion of model we are interested in
-capturing with our type theory: a \emph{Chomsky category}.
+With this in mind, we want to design a categorical semantics that
+builds on top of Kleene categories with the goal of extending them
+with dependent types and making them capable reasoning about languages
+and their parsers. This leads us to the abstract notion of model we
+are interested in capturing with our type theory: a \emph{Chomsky
+category}.
 
+\pa{We should probably define some of the words in this definition}
 \begin{definition}
   A Chomsky category is a locally Cartesian category with two hierarchies of
   universes $\{L_i\}_{i\in \nat}$ and $\{U_i\}_{i\in \nat}$ such that
@@ -433,6 +460,8 @@ capturing with our type theory: a \emph{Chomsky category}.
 
 Further, the syntactic category of the theory in \cref{sec:tt} is manifestly a Chomsky category.
 \steven{This is true, right? That's like the entire point of having the syntax}
+\pedro{This is likely true, but if we explicitly say so, this warants a proof. I think that
+if we don't say anything about the syntactic category, reviewers won't mind.}
 
 \section{Non-commutative Linear-non-linear Type Theory as a Syntax for Formal Grammars}
 \label{sec:tt}
@@ -440,25 +469,27 @@ Further, the syntactic category of the theory in \cref{sec:tt} is manifestly a C
 Omission of the structural rules of a deductive system, such as in
 linear logic \cite{GIRARD19871}, offers precise control over how a value is used
 in a derivation. Namely, linear logic omits the weakening and contraction rules
-to ensure that every value in context exactly once. This control enables
+to ensure that every value in context is used exactly once. This control enables
 \emph{resource-sensitive} reasoning, where we may treat a resource as
 \emph{consumed} after usage. This viewpoint is amenable to parsing applications,
-as we may treat characters of a string finite resources that are consumed at
+as we may treat characters of a string as finite resources that are consumed at
 parse-time. That is, once a particular substring has been parsed, a parser need not go
 over it again. One may then envision a linear type system where the types comprise
 formal grammars generated over some alphabet $\Sigma$, and the type constructors
 correspond precisely to inductive constructions on grammars --- such as
 conjunction, disjunction, concatenation, etc.
 
-Unfortunately, programming in a linear term language is often cumbersome and
-unintuitive for users. Code in such a language can become unnecessarily verbose
-when using Girard encodings to translate high-level reasoning into low-level
-linear terms. To alleviate this concern, in 1995 Benton et al.\ gave categorical
-models of a logic that synthesized linear and non-linear logic
-\cite{bentonMixedLinearNonlinear1995} --- appropriately referred to as a
-\emph{linear-non-linear} (LNL) system. This work is simply typed, so the
-boundary between linear and non-linear subtheories is entirely characterized via
-a monoidal adjunction $F \dashv G$ between linear terms and non-linear terms.
+Unfortunately, programming in a linear term language is often
+cumbersome and unintuitive for users. Code in such a language can
+become unnecessarily verbose when using Girard encodings to translate
+high-level reasoning into low-level linear terms. To alleviate this
+concern, in 1995 Benton et al.\ proposed an alternative categorical
+semantics of linear logic based on adjoint interactions between linear
+and non-linear logics \cite{bentonMixedLinearNonlinear1995} ---
+appropriately referred to as a \emph{linear-non-linear} (LNL)
+system. This work is simply typed, so the boundary between linear and
+non-linear subtheories is entirely characterized via a monoidal
+adjunction $F \dashv G$ between linear terms and non-linear terms.
 
 \steven{Maybe there is more to say here, or perhaps later, that the only thing
   to gain parsing-wise from a non-dependent non-linear fragment are the things that are
@@ -473,12 +504,14 @@ otherwise intuitionistic system. However, if we are wishing to treat parsers as
 linear terms over input strings, the non-linear fragment of an LNL theory does
 not really assist in the development of parsers. It is instead the case that
 parsers may benefit from a \emph{dependence} on non-linear terms.
+\pedro{This last sentence could use an example. Is there a bite-sized, well-known
+example we could mention here?}
 
 \steven{Mention separation logic at some point. In particular the separating conjunction and magic wand}
 
 Krishnaswami et al.\ equipped LNL systems with a restricted sense of dependent
 types \cite{krishnaswami_integrating_2015}. When defining dependent types in
-this setting dependence on linear terms is disallowed, but either linear or
+this setting, dependence on linear terms is disallowed, but either linear or
 non-linear terms are allowed to depend on non-linear terms.
 
 The non-linear
@@ -490,6 +523,13 @@ is all to say, the LNL dependent types in the style of Krishnaswami et al.\
 allows us to recover the definition of Aho's indexed grammars \cite{AhoIndexed} internal to our
 type theory.
 \steven{The above paragraph should maybe be put later. Also flows weirdly}
+
+\pedro{I would argue that both paragraphs above should either be put
+  somewhere else or deleted. I think that we should definitely mention
+  Neel's LNL system, but as it stands, it feels disconnected from what
+  came before and what comes next. A suggestion: the mention of Aho's
+  indexed grammars could be the example we use illustrating the
+  benefits of dependent grammars.}
 
 \subsection{Syntax}
 \label{subsec:syntax}
@@ -1160,9 +1200,28 @@ free \cite{leiss}.
 
 \steven{Every after here has not been touched}
 
-\section{Canonicity}
+\pedro{After reading this section after the Kleene category one, I
+  think that it makes much more sense to switch their order. It's
+  going to be easier to justify providing a categorical semantics once
+  we have a ``target'' of what we want to interpret.}
 
-Let $\cdot \vdash A$ be a closed linear type. Then there are
+\section{Canonicity}
+\pedro{It could be cool to come up with a catchy title to this section.
+Something like ``Parse Canonicity''}
+
+\pedro{Added the ``initial context'' paragraph below}
+
+Canonicity is an important metatheoretic theorem in the type theory
+literature.  It provides insight on the normal forms of terms and,
+therefore, on its computational aspects. Frequently, proving
+canonicity for boolean types, i.e. every closed term of type bool
+reduces to either true or false, is enough to justifying that the type
+theory being studied is well-behaved. In our case, however, since we
+want to connect our type theory to parsers, we must provide a more
+detailed account of canonicity.
+
+
+If $\cdot \vdash A$ is a closed linear type then there are
 two obvious notions of what constitutes a ``parse'' of a string w
 according to the grammar $A$:
 \begin{enumerate}
@@ -1280,6 +1339,12 @@ To this end we define
 
 \section{Automata as Grammars}
 \label{sec:automata}
+\pedro{The switch from the canonicity proof to this section feels a bit ``bumpy''.
+  Since they are at least technically related, it might be a good idea to say something
+  like ``The canonicity theorem from the previous section gives a tight connection
+  between terms in our type theory and the theory of formal languages. In this section
+we further explore these connections by using the fact that, clasically ...''}
+
 Classically, formal language theory is closely related to the study of automata.
 In the Chomsky hierarchy, each language class is associated to a class of
 automata that serve as recognizers. Internal to the type theory of \cref{sec:tt},
@@ -1295,12 +1360,15 @@ regular expression parser.
 
 As we will see in \cref{subsubsec:tm}, we may very quickly encode arbitrary
 recursively enumerable languages --- since we can simulate the
-tape of Turing machine in the dependent fragment of the language. We reflect
+tape of Turing machine in the dependent fragment of the language.We reflect
 here on this expressive power to motivate why we put stringent syntactic
 restrictions on particular classes of automata. The type theory we present truly
 is general enough to easily capture all of the Chomsky hierarchy.
 To begin, let's focus on the simplest languages and their corresponding
 automata --- regular expressions and finite automata.
+\pedro{The connection dependent types-Turing machines seems too important to only
+  be mentioned here. It should at least indirectly motivate the type theory being
+dependently typed.}
 
 \subsection{Non-deterministic Finite Automata}
 \label{subsec:finiteaut}
@@ -1990,6 +2058,9 @@ Due to computability limitations, we are not able to extract
 a verified parser for all recursively enumerable languages.
 Yet we should still reflect on the generality of our syntax,
 as it allows a natural encoding of Turing machines.
+
+\pedro{I like the overall structure of this section! Showing how the type theory
+can encode and reason about different kinds of languages is very instructive!}
 
 \section{Related work}
 \label{sec:related}
