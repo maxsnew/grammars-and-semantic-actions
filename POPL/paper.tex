@@ -437,16 +437,18 @@ Further, the syntactic category of the theory in \cref{sec:tt} is manifestly a C
 \section{Non-commutative Linear-non-linear Type Theory as a Syntax for Formal Grammars}
 \label{sec:tt}
 
-Omission of the structural inference rules of a deductive system, such as in
-linear logic \cite{GIRARD19871}, offers precise control over the number of times
-a value may be used in a derivation. This control enables
+Omission of the structural rules of a deductive system, such as in
+linear logic \cite{GIRARD19871}, offers precise control over how a value is used
+in a derivation. Namely, linear logic omits the weakening and contraction rules
+to ensure that every value in context exactly once. This control enables
 \emph{resource-sensitive} reasoning, where we may treat a resource as
 \emph{consumed} after usage. This viewpoint is amenable to parsing applications,
 as we may treat characters of a string finite resources that are consumed at
-parse-time. One may then envision a linear type system where the types comprise
+parse-time. That is, once a particular substring has been parsed, a parser need not go
+over it again. One may then envision a linear type system where the types comprise
 formal grammars generated over some alphabet $\Sigma$, and the type constructors
 correspond precisely to inductive constructions on grammars --- such as
-conjunction, disjunction, and concatenation.
+conjunction, disjunction, concatenation, etc.
 
 Unfortunately, programming in a linear term language is often cumbersome and
 unintuitive for users. Code in such a language can become unnecessarily verbose
@@ -459,7 +461,7 @@ boundary between linear and non-linear subtheories is entirely characterized via
 a monoidal adjunction $F \dashv G$ between linear terms and non-linear terms.
 
 \steven{Maybe there is more to say here, or perhaps later, that the only thing
-  to gain from a non-dependent non-linear fragment are the things that are
+  to gain parsing-wise from a non-dependent non-linear fragment are the things that are
   definiable via $G$. Except that these are not interesting, as they are
   necessarily empty}
 
@@ -489,37 +491,16 @@ allows us to recover the defintion of Aho's indexed grammars \cite{AhoIndexed} i
 type theory.
 \steven{The above paragraph should maybe be put later. Also flows weirdly}
 
-In this paper, we instantiate an LNL theory with dependent types as a deductive
-setting to conduct parsing and formal grammar theory. In this system, linear
-types encode formal grammars built over an alphabet/(set of base types)
-$\Sigma$. The non-linear types are just MLTT/math defs. The syntax is in the
-following subsections
-
-\steven{Rephrase the above paragraph to summarize the intro of this section, as
-  well as preview the syntax that's to come in the following subsections.}
-
-\steven{Everything below here hasn't really been touched}
-
 \subsection{Syntax}
+\label{subsec:syntax}
 
-\steven{Next paragraph is paper scaffolding for what I want to say and is total
-  word salad rn} In this paper, we instantiate an LNL theory to axiomatize the
-notion of a Chomsky category, and because $\Set^{\String}$ forms a Chomsky
-category, using the type theory corresponds to interesting formal grammar
-proofs. Internalization of previous results + use to build
-correct-by-construction parsers.
-
-\steven{Expand here on how linearity has an intuitive parsing intrerpration, however working only in a simply typed system is not sufficient. i.e. dependence offers the right view on indexed grammars. }
+We instantiate an LNL theory with dependent types as a deductive
+setting to axiomatize the structure of a Chomsky category.
 
 The structrual judgements are shown in \cref{fig:structjdg}, the typing
 well-formedness in \cref{fig:typewf}, and the intuitionistic typing rules in
-\cref{fig:inttyping}. There are all just as they appear in
+\cref{fig:inttyping}. These are all just as they appear in
 \cite{krishnaswami_integrating_2015}.
-
-Our contribution is the addition of base types drawn from the alphabet $\Sigma$
-along with the omission of the exchange rule for linear typing judgements.
-
-\steven{TODO need to update syntax in these rules}
 
 \begin{figure}
   \begin{mathpar}
@@ -857,166 +838,206 @@ along with the omission of the exchange rule for linear typing judgements.
   \caption{Judgmental equality}
   \label{fig:jdgeq}
 \end{figure}
-\subsection{Syntax}
-\label{subsec:syntax}
 
-\paragraph{Non-linear Types}
+\subsection{Formal Grammars as Linear Types}
+The linear typing judgment in our syntax takes on the following schematic form
+$\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
+our syntax. The intended semantics of these linear types are formal grammars.
+That is, the linear typing system is designed to syntactically reflect the
+behavior of formal grammars. For this reason, we may often interchangeably use
+the terms ``linear type'' and ``grammar''.
 
-The non-linear fragment of the theory
-corresponds to usual Martin-L\"of type theory. That is, the non-linear
-contexts obey all of the usual structural rules --- contraction, weakening, and
-exchange --- so we may use their contents as many times as we'd like. For the application of parsing, we think of these as primarily as indicies terms for indexed grammars. That is, they are as useful for their dependence. We may think of them as brining into scope definitions from ordinary mathematics to be used for indexing
-
-\paragraph{Linear Types}
-
-The linear typing judgment in our syntax takes on the following schematic form $\Gamma ; \Delta \vdash a : A$. First, $A$ represents
-a \emph{linear type} in our syntax. The intended semantics of these linear types
-are formal grammars. That is, the linear typing system is designed to syntactically
-reflect the behavior of formal grammars. For this reason, we may often
-interchangeably use the terms ``linear type'' and ``grammar''.
-
-The term $a$ is an inhabitant of type $A$, which we want to think of as a parse tree of
+The term $a$ is an inhabitant of type $A$, which is thought of as a parse tree of
 the grammar $A$. The core idea of this entire paper follows precisely from this
 single correspondence: grammars are types, and the inhabitants of these types
 are parse trees for the grammars.
 
-$\Gamma$ reprsents a non-linear context, while $\Delta$ represents a \emph{linear context}. These linear
-contexts
-behave substructurally --- in particular they have no contraction, weakening, or exchange
-rule. This means that everything within $\Delta$ must be used \emph{exactly
-  once} and \emph{in order of occurrence}. Thus, we can think of the linear
-contexts as an ordered list of limited
-resources. Once a resource is consumed, we cannot make reference to it again.
-We may then
-think of the variables in a linear context akin to building blocks for
-constructing patterns over strings.
+$\Gamma$ reprsents a non-linear context, while $\Delta$ represents a
+\emph{linear context} dependent on $\Gamma$. These linear contexts behave
+substructurally. As stated earlier, they do are linear --- they do not obey
+weakening or contraction --- because a character is exhausted once read by a
+parsing procedure. Moreover, the characters in strings appear in the order in
+which we read them. We do not have the freedom to freely permute characters,
+therefore any type theory that is used to reason about formal grammars ought to
+omit the structural rule of exchange as well. This means that every variable
+within $\Delta$ must be used \emph{exactly once} and \emph{in order of
+  occurrence}. Thus, we can think of the linear contexts as an ordered list of
+limited resources. Once a resource is consumed, we cannot make reference to it
+again. Variables in a linear context then act like building
+blocks for constructing patterns over strings.
 
-In the realm of parsing, our substructural
-restrictions make it so that the linear contexts behave quite similarly to
-formal grammars. For instance, linear context extension mirrors concatenation of
-grammars which may be seen via the introduction rule for $\otimes$,
+We give the base types and type constructors for linear terms. As the
+interpretation of types as grammars in $\Set^{\String}$ serves as our intended
+semantics, we simultaneously give the interpreation $\sem \cdot$ of the
+semantics as grammars.
 
-\[
-  \inferrule{\Gamma ; \Delta \vdash e : A \\ \Gamma ; \Delta' \vdash e' : B}{\Gamma ; \Delta , \Delta' \vdash e \otimes e' : A \otimes B}
-\]
+Most of the non-linear semantics is standard, so let us investigate in more
+depth the linear semantics. The interpretation of each
+connective is exactly what is suggested by the syntax, in
+large part to the inspiration taken from this interpretation
+when designing the type theory.
 
-Just as two grammars may be concatenated, if we can build an $A$ with the
-contents of $\Delta$, and a $B$ with the contents of $\Delta'$, then we we may
-concatenate $\Delta$ and $\Delta'$ to build an inhabitant $A \otimes B$.
+\begin{enumerate}
+  \item A non-linear context $\Gamma$ denotes a set $\sem \Gamma$
+  \item A non-linear type $\Gamma \vdash X : U_{i}$ denotes a family of sets
+        $\sem X : \sem \Gamma \to \Set_{i}$
+  \item A non-linear term $\Gamma \vdash e : X$ denotes a section
+        $\sem e : \Pi(\gamma : \sem \Gamma)\sem{X} \gamma$
+  \item Linear contexts $\Gamma \vdash \Delta$ and types
+        $\Gamma \vdash A : L_{i}$ both denote families of grammars
+        $\sem \Gamma \to \Gr_{i}$
+  \item A linear term $\Gamma ; \Delta \vdash M : A$ denotes a family of parse
+        transformers
+        $\sem M : \Pi(\gamma : \sem \Gamma)\Pi(w : \String) \sem \Delta \gamma w \Rightarrow \sem M \gamma w$
+\end{enumerate}
 
-This is perhaps better illustrated through a concrete example. Consider the
-regular expression $A = (a \oplus b) \otimes (b \oplus c)^{*}$ and the string
-$w = abc$. We then have the following derivation that $w$ matches $A$,
+\paragraph{Linear Unit}
+First, the linear unit $I$ may be built in the empty linear
+context\footnote{When appropriate, statements like ``the empty linear context''
+  may be taken polymorphically over all non-linear contexts that they might
+  depend on.} $\cdot \dashv I$. $I$ serves as the unit for the operation
+$\otimes$ described below.
 
-\begin{equation}
-  \label{eq:samplederiv}
-  \inferrule
-  {
-    w_{1} : a \vdash \mathsf{inl}(w_{1}) : a \oplus b \\
-    \inferrule
-    {
-      w_{2} : b \vdash \mathsf{inl}(w_{2}) : b \oplus c \\
-      w_{3} : c \vdash \mathsf{inr}(w_{3}) : b \oplus c
-    }
-    {
-      w_{2} : b, w_{3} :c \vdash \mathsf{cons}(w_{2},w_{3}) : (b \oplus c)^{*}
-    }
-  }
-  {w_{1} : a, w_{2} : b, w_{3} : c \vdash \mathsf{inl}(w_{1}) \otimes \mathsf{cons}(w_{2}, w_{3}) : (a \oplus b) \otimes (b \oplus c)^{*} }
-\end{equation}
-
-When parsing $w$ into $A$ by hand, we perform the same process as reflected in
-the derivation \cref{eq:samplederiv}. That is, we split the string $w$ up into pieces, one of which matches
-$a \oplus b$, and and another that matches $(b \oplus c)^{*}$. When further
-parsing this Kleene star bit, we break it up into smaller pieces each of which
-matches the patterns $b \oplus c$ and then we combine them all into one parse of
-the Kleene star $(b \oplus c)^{*}$. Note that this exact process is echoed in
-the above proof tree.
-
-\subsubsection{Dependence of the Linear on the Non-Linear}
-
-We may now however ask, ``what are the $\Gamma$'s doing in the $\otimes$ introduction rule?''
-Each linear context $\Delta$ is dependent on a non-linear context $\Gamma$, so
-we may use variables drawn from $\Gamma$ when defining the types in $\Delta$.
-
-In the grammar setting, this dependence lets
-us use variables from regular dependent type theory to
-keep track of data without \emph{consuming any resources}, so to speak. That is,
-using a piece of a linear context consumes it, so we cannot linearly encode anything that
-needs to be referenced more than once.
-
-We will see a concrete instance of this dependence in \cref{subsubsec:pda}. In
-that case, we encode the traces of a pushdown automaton as a grammar. When doing so,
-we make use of our non-linear types to define a type of stacks. The fact that
-our encoding of stacks is non-linear reflects
-that a pushdown automaton may consume a character from the input string without
-affecting the state of the stack.
-
-\subsubsection{Other Type Constructors}
-\label{subsubsec:other}
-
-\paragraph{Brzozowksi Derivative}
-In the 1950s Janusz Brzozowksi developed a notion of derivative for formal
-languages \cite{brzozowskiDerivativesRegularExpressions1964}. The derivative of language $L$ by string $w$ is given as,
+As a grammar,
 
 \[
-  w^{-1}L = \{ w' \in \String : w \otimes w' \in L \}
+  \sem {I} \gamma w = \{ () ~|~ w = \varepsilon \}
 \]
 
-That is, the derivative of $L$ with respect to $w$ are precisely the strings
-that complete to an $L$-parse when prefixed by a $w$.
+That is, $I$ maps strings to the proposition that they are the empty string. $I$
+is clearly only inhabited by the empty string $\varepsilon$, for which the
+outputted set contains a single parse tree.
 
-Brzozowski initially gave an accounting of this operation for
-generalized regular expressions, but later work demonstrates that the same
-construction can be generalized to context free grammars \cite{mightParsingDerivativesFunctional2011}.
 
-The ``magic wand'' from linear logic takes on the role of Brzozowski's
-derivative in our syntax.
+\paragraph{Base Types}
+For each character $c$ in the alphabet $\Sigma$, we include a base type at the
+lowest universe level $c : L_{0}$.
 
-\begin{equation}
-  \label{eq:linfun}
-\inferrule{\Gamma ; a : A, \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lamblto a e : A \lto B}
-\end{equation}
+The grammar interpretation for characters is quite similar to that of $I$.
+\[
+  \sem {c} \gamma w = \{ () ~|~ w = c \}
+\]
 
-We read this as saying that $\Delta$ constructs a $A \lto B$-parse when
-prepending $\Delta$ with an $A$-parse completes to a $B$ parse. In this sense,
-the type $A \lto B$ behaves like a linear function type. The only distinction
-between $A \lto B$ and an intuitionistic function type is that linear functions
-consume their input.
+The grammar for the character $c$ likewise maps strings $w$ to the proposition that
+they are equal to $c$.
 
-Note that the introduction rule presented in \cref{eq:linfun} does indeed
-generalize Brzozowski's initial presentation of the derivative. First, to match
-his initial presentation
-let $A$ be the grammar accepting a single string $w$, which we may write as the
-discrete grammar $\lceil w \rceil$.
-Additionally, our construction lifts from a language-theoretic construction
-to a grammar point-of-view.
-In this sense, we carry around not just the data of what strings belong to
-$\lceil w \rceil \lto B$ but also are endowed the data of a function that
-constructs parse trees of $B$ from pairs of $\lceil w \rceil$-parses and
-$(\lceil w \rceil \lto B)$-parses.
+\paragraph{Tensor Product}
+The tensor product of two linear types is the first place where the ordering on
+contexts really takes effect. That is, the tensor product of two types is
+non-commutative.
+When context $\Delta$ forms a linear term of
+type $A$, and $\Delta'$ forms a linear term of type $B$, then the context
+extension $\Delta, \Delta'$ forms a linear term of type $A \otimes B$.
 
-\paragraph{Top and Bottom}
-We include linear versions of the unit and empty types. The
-grammar $\top$ matches every input string, while the grammar
-$\bot$ represents falsity and matches no strings. These two
-are often used together to give syntactic shorthand to
-grammars that encode propositions.
+As stated above, the type $I$ serves as the unit for $\otimes$. That is, for all
+linear types $A$, the following equalities hold:
 
-For instance, we may encode the proposition
-$\mathsf{isVowel}$ as,
+\[ I \otimes A \equiv A \otimes I \equiv A \]
+
+In the grammar semantics,
 
 \[
-  \mathsf{isVowel}(w) :=
-    \begin{cases}
-      \top, \quad w \in \{a, e, i, o, u\} \\
-      \bot, \quad \text{otherwise}
-    \end{cases}
+  \sem {A \otimes B} = \Sigma_{w_{1}, w_{2} : \String} (w_{1}w_{2} = w) \land \left(  \sem {A} \gamma w_{1} \times \sem {B} \gamma w_{2} \right)
 \]
 
-\paragraph{Fixed Point Operator}
-We include a least fixed point operator on types, $\mu$, which is the means by
-which we define recursive grammars.
+The string $w$ matches $A \otimes B$
+precisely when it may be split into two
+pieces such that the left one matches $A$
+and the right one matches $B$.
+
+\paragraph{Linear Function Types}
+The monoidal structure provided by $\otimes$ is both left and right closed and
+this is denoted by the left and right linear function types.
+
+\steven{Say more about the adjunctions}
+
+Further, for linear types $A$ and $B$ the left linear function type $A \lto B$
+enjoys an elimination principle similar to function application/modus ponens.
+
+\[
+\inferrule{\Delta \vdash A \otimes A \lto B}{\Delta \vdash B}
+\]
+
+The interpretation of linear function types at a string $w$ is a linear function
+that takes in parses of $A$ on a string $w_{a}$ and outputs parses of $B$ on the
+string $w_{a} w$.
+
+\[
+  \sem{A \lto B} \gamma w = \Pi(w_a:\String) \left( A \gamma w_a \Rightarrow B\gamma (w_a w) \right)
+\]
+
+That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
+complete to parses of $B$. In this manner, the linear function types generalize
+Brzozowksi's notion of derivative
+\cite{brzozowskiDerivativesRegularExpressions1964}.
+Brzozowski initially only gave an accounting of this operation for
+generalized regular expressions, but later work from Might et al.\ demonstrates that the same
+construction can be generalized to context free grammars
+\cite{mightParsingDerivativesFunctional2011}. Here, via the linear function
+types the same notion of derivative extends to the grammars of our type theory.
+
+Of course, all the above statements for the left function type also have
+corresponding analogues for the
+right-handed counterpart.
+
+\paragraph{LNL Dependent Types}
+Given a non-linear type $X$, we may form both the dependent product type
+$\LinPiTy x X A$ and the dependent pair type $\LinSigTy x X A$ as linear types
+where $x$ is free in $A$.
+
+$\sem{\LinPiTy x X A} \gamma w = \Pi(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
+
+The grammar semantics of the linear product type is
+indeed a dependent function out of the
+semantics of $X$.
+
+$\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
+
+Likewise, the grammar semantics of the linear dependent pair type is a dependent
+pair in $\Set$.
+
+\steven{TODO example of sum as an admissible usage of $\LinSigTy b \Bool A$}
+
+\paragraph{Universal Type}
+The universal type $\top$ may be formed in any context.
+
+\[ \sem{\top} \gamma w = \{ \ast \}\]
+
+Its grammar semantics in set outputs the unit type in $\Set$ for all input strings in all contexts.
+
+\paragraph{Empty Type}
+The empty type $\bot$ has no inhabitants.
+
+\[ \sem {\bot} \gamma w = \emptyset \]
+\steven{TODO need to include a case for $\bot$ in the inference rules}
+
+\paragraph{Pair Type}
+Given a term of type $A$ in context $\Delta$ and a term of type $B$ \emph{also
+  in context} $\Delta$, we may form a pair in context $\Delta$ of type
+$A \ampersand B$.
+
+\[ \sem{A \amp B }\gamma w = \sem{A} \gamma w \times \sem {B} \gamma w \]
+
+The grammar semantics of $A \amp B$ denotes a pair of a parse of $A$ and a
+parse of $B$ \emph{of the same string}. In this sense, $\amp$ acts a
+conjunction between grammars --- meaning a string only matches $A \amp B$
+if it simlutaneously matches each of $A$ and $B$.
+
+\paragraph{The $G^{-1}$ Modality}
+Turn nonlinear into linear
+
+\steven{Call this $F$ or $G^{-1}$?}
+
+\steven{Why can't these map any nonlinear type into linear ones? instead of just
+those that are already linear types lifted by $G$?}
+
+\steven{TODO G inverse}
+  % \item $\sem{G A} \gamma = \sem{A} \gamma \varepsilon$
+
+\paragraph{Recursive Types}
+isorecursive types
+\steven{TODO recursive types}
+  % \item $\sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x)$
 
 Observe that we need not take the Kleene star as a primitive
 grammar constructor, as it is definable as a fixed point.
@@ -1124,82 +1145,22 @@ The most prevalent application of these multi-fixed points
 is for defining the traces through automata, as we will see
 later in \cref{eq:nfatrace}.
 
-% \todoin{with citation, talk somewhere about how CFGs are just regular + fixed points}
-\max{this is a good point to give an overview of how regular expressions and context-free grammars/expressions are essentially sub-languages of our type system.}
+\subsection{Subtheories}
+\paragraph{Regular Expressions} Restricting to regular expressions with the
+obvious connectives forms a subtheory of our type theory. Perhaps there is
+something to say here about how this reduces to Kleene algebra performed inside
+of a Kleene cat?
 
-\section{Semantics}
-\label{sec:semantics}
-\subsection{Semantics in Grammars}
-\label{subsec:seming}
-As mentioned earlier, the interpretation of grammars as functions from
-$\String$ to $\Set$ serves as our intended semantics. When designing the syntax of this formalism, we were often
-informed by this model. That is, there is an interpretation
-$\llbracket \cdot \rrbracket$ of our syntax that provides grammar-based
-semantics.
+\steven{TODO regular expressions}
 
-\begin{enumerate}
-  \item A non-linear context $\Gamma$ denotes a set $\sem \Gamma$
-  \item A non-linear type $\Gamma \vdash X : U_{i}$ denotes a family of sets
-        $\sem X : \sem \Gamma \to \Set_{i}$
-  \item A non-linear term $\Gamma \vdash e : X$ denotes a section
-        $\sem e : \Pi(\gamma : \sem \Gamma)\sem{X} \gamma$
-  \item Linear contexts $\Gamma \vdash \Delta$ and types
-        $\Gamma \vdash A : L_{i}$ both denote families of grammars
-        $\sem \Gamma \to \Gr_{i}$
-  \item A linear term $\Gamma ; \Delta \vdash M : A$ denotes a family of parse
-        transformers
-        $\sem M : \Pi(\gamma : \sem \Gamma)\Pi(w : \String) \sem \Delta \gamma w \Rightarrow \sem M \gamma w$
-\end{enumerate}
+\paragraph{$\mu$-Regular Expressions} Regex + fixed point equivalent to context
+free \cite{leiss}.
 
-Most of the non-linear semantics is standard, so let us investigate in more
-depth the linear semantics. The interpretation of each
-connective is exactly what is suggested by the syntax, in
-large part to the inspiration taken from this interpretation
-when designing the type theory.
+\steven{TODO $\mu$ regular expressions}
 
-\begin{enumerate}
-  % \item $\sem{G A} \gamma = \sem{A} \gamma \varepsilon$
-  \item $\sem{\LinPiTy x X A} \gamma w = \Pi(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
-        \begin{itemize}
-          \item The semantics of the linear $\Pi$-type is
-                indeed a dependent function out of the
-                semantics of $X$.
-        \end{itemize}
-  \item $\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
-        \begin{itemize}
-          \item The semantics of the linear $\Sigma$-type is
-                a dependent pair.
-        \end{itemize}
-  \item $\sem{I} \gamma w = \{ () \pipe w = \epsilon \}$
-        \begin{itemize}
-          \item The only string accepted by $I$ is the empty string.
-        \end{itemize}
-  \item
-        $\sem{A \otimes B} \gamma w = \Sigma(w1,w2:\Sigma^*) \left( (w_{1}w_{2} = w) \wedge \sem{A} \gamma w_1 \times \sem{B} \gamma w_2 \right)$
-        \begin{itemize}
-          \item The string $w$ matches $A \otimes B$
-                precisely when it may be split into two
-                pieces such that the left one matches $A$
-                and the right one matches $B$.
-        \end{itemize}
-  \item
-        $\sem{A \lto B} \gamma w = \Pi(w_a:\Sigma^*) \left( A \gamma w_a \Rightarrow B\gamma (w_aw) \right)$
-        \begin{itemize}
-          \item The semantics of the linear function type is
-                a dependent function that turns $A$-parses
-                of a substring into $B$-parses of an
-                extended string.
-        \end{itemize}
-  \item
-        $\sem{B \tol A} \gamma w = \Pi(w_a:\Sigma^*) \left( A \gamma w_a \Rightarrow B\gamma (ww_a) \right)$
-  \item $\sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x)$
-        \begin{itemize}
-          \item The semantics of the least fixed point
-                operator is indeed the least fixed point of sets.
-        \end{itemize}
-\end{enumerate}
+\steven{Every after here has not been touched}
 
-\subsection{Canonicity}
+\section{Canonicity}
 
 Let $\cdot \vdash A$ be a closed linear type. Then there are
 two obvious notions of what constitutes a ``parse'' of a string w
@@ -1316,27 +1277,6 @@ To this end we define
   \[ (S \multimap T)(w,p) = w' \to q \to S\,w'\,q \to T (ww') (p\,q) \]
 \item $\mu X. ??$ ??
 \end{enumerate}
-
-
-\subsection{Semantics in Languages}
-% Recall from \cref{sec:synindsyn} that every formal grammar induces a formal language. This corresponds to another
-interpretation $L(\cdot)$ of our syntax. In particular, the semantics of a
-linear type $A : L_{i}$
-from \cref{subsec:seming} are augmented such that
-
-\[
-  L(A) = \{ w \in \String : \sem A w \text{ is nonempty} \}
-\]
-
-\subsubsection{Weak Equivalence}
-Recall that an isomorphism of grammars defined a strong equivalence. We may
-additionally define a \emph{weak equivalence} of grammars when two grammars
-define the same language.
-
-That is, $A$ and $B$ are weakly equivalent when $L(A) = L(B)$. Note that this is
-a semantic notion, but this just as well captured syntactically by the existence
-of two judgments $\Gamma ; x : A \vdash M : B$ and
-$\Gamma ; x : B \vdash N : B$, which are not necessarily mutually inverse.
 
 \section{Automata as Grammars}
 \label{sec:automata}
