@@ -114,7 +114,7 @@
   canonicity theorem showing that every term in a context corresponding to a
   fixed string is equal to a term in a canonical form encoding a parse tree of
   that string. Finally, we discuss the application to the design and
-  implementation of correct-by-contruction parsers.
+  implementation of correct-by-construction parsers.
 \end{abstract}
 
 \maketitle
@@ -158,7 +158,7 @@ formal grammar:
 
 We say that a grammar $G$ associates to every string $w$ the set\footnote{We
   make little comment as to which foundations are used to encode $\Set$. Our
-  construction is polymorphic in choicce of a proper class of small sets, a
+  construction is polymorphic in choice of a proper class of small sets, a
   Grothendieck universe, a type theoretic universe, or any similar foundation.} $G w$ of parse
 trees showing that $w$ matches $G$. This definition of formal grammar serves as
 a mathematical specification for a parser --- taking on the same role as
@@ -198,7 +198,7 @@ presentations of the same underlying idea of an abstract specification for
 parsing. Each of these is an instance of a general \emph{notion of formal
   grammar} --- a category paired with a functor into
 $\Set^{\String}$. That is, they may all be interpreted in our category of grammars. In this sense, $\Set^{\String}$ provides a universal setting to reason about parsing.
-The slice 2-category over $\Set^{\String}$ then provides the appropriate expressivity to prove equivalences between grammar formalism, such as the equivalence between semi-Thue systems and Chomsky's unresticted grammars.
+The slice 2-category over $\Set^{\String}$ then provides the appropriate expressivity to prove equivalences between grammar formalism, such as the equivalence between semi-Thue systems and Chomsky's unrestricted grammars.
 
 \steven{Check details for 2-cat of grammar formalisms}
 
@@ -209,19 +209,19 @@ This paper begins in \cref{sec:categorify} by giving a categorical interpretatio
   \item Categorical structures that capture the concepts integral to formal grammar theory, and that are notably modeled by $\Set^{\String}$
   \item A dependent
     linear/non-linear (LNL) type theory to syntactically capture the above categorical structures
-  \item An implementation of the language, which is emedded shallowly in Agda
+  \item An implementation of the language, which is embedded shallowly in Agda
 \end{itemize}
 
 \section{Categorification of Formal Grammars}
 \label{sec:categorify}
-\steven{Idk if this section has the right title, but I wanted to change it if we are adding ``chomsky categories''}
+\steven{Idk if this section has the right title, but I wanted to change it if we are adding ``Chomsky categories''}
 
 Kleene algebras are an important tool in the theory of regular
 languages. More broadly, they serve as a theoretical substrate to
 studying various kinds of formal languages. Formally, they are a tuple
 $(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is a set, $+$ and $\cdot$
 are binary operations over $A$, $(-)^*$ is a function over $A$, and
-$1$ and $0$ are constants. These structures satisfy the axoims depicted
+$1$ and $0$ are constants. These structures satisfy the axioms depicted
 in Figure~\ref{fig:axioms}.
 
 \begin{figure}
@@ -250,7 +250,7 @@ theory of parsing.  We start by defining \emph{Kleene categories}.
   such that for every objects $A$ and $B$, the endofunctors $F_{A, B}
   = B + A \otimes X$ and $G_{A, B} = B + X \otimes A$ have initial
   algebras (denoted $\mu X.\, F_{A, B}(X)$) such that $B \otimes (\mu
-  X.\, F_{A, 1}) \cong \mu X.\, F_{A, B}(X)$ and the analogue isomorphism
+  X.\, F_{A, 1}) \cong \mu X.\, F_{A, B}(X)$ and the analogous isomorphism
   for $G_{A,B}$ also holds.
 \end{definition}
 
@@ -462,7 +462,7 @@ a monoidal adjunction $F \dashv G$ between linear terms and non-linear terms.
 
 \steven{Maybe there is more to say here, or perhaps later, that the only thing
   to gain parsing-wise from a non-dependent non-linear fragment are the things that are
-  definiable via $G$. Except that these are not interesting, as they are
+  definable via $G$. Except that these are not interesting, as they are
   necessarily empty}
 
 \steven{Are these paragraphs recounting too much history?}
@@ -474,7 +474,7 @@ linear terms over input strings, the non-linear fragment of an LNL theory does
 not really assist in the development of parsers. It is instead the case that
 parsers may benefit from a \emph{dependence} on non-linear terms.
 
-\steven{Mention sepration logic at some point. In particular the separating conjunction and magic wand}
+\steven{Mention separation logic at some point. In particular the separating conjunction and magic wand}
 
 Krishnaswami et al.\ equipped LNL systems with a restricted sense of dependent
 types \cite{krishnaswami_integrating_2015}. When defining dependent types in
@@ -485,9 +485,9 @@ The non-linear
 subtheory corresponds to Martin-L\"of type theory (MLTT), which can be taken
 as a foundation for mathematics. Dependence of linear terms on non-linear terms
 of this form effectively allows us to bring any ordinary definitions from math
-into scope as indicies and then define grammars relative to those indices. That
+into scope as indices and then define grammars relative to those indices. That
 is all to say, the LNL dependent types in the style of Krishnaswami et al.\
-allows us to recover the defintion of Aho's indexed grammars \cite{AhoIndexed} internal to our
+allows us to recover the definition of Aho's indexed grammars \cite{AhoIndexed} internal to our
 type theory.
 \steven{The above paragraph should maybe be put later. Also flows weirdly}
 
@@ -497,7 +497,7 @@ type theory.
 We instantiate an LNL theory with dependent types as a deductive
 setting to axiomatize the structure of a Chomsky category.
 
-The structrual judgements are shown in \cref{fig:structjdg}, the typing
+The structural judgments are shown in \cref{fig:structjdg}, the typing
 well-formedness in \cref{fig:typewf}, and the intuitionistic typing rules in
 \cref{fig:inttyping}. These are all just as they appear in
 \cite{krishnaswami_integrating_2015}.
@@ -852,7 +852,7 @@ the grammar $A$. The core idea of this entire paper follows precisely from this
 single correspondence: grammars are types, and the inhabitants of these types
 are parse trees for the grammars.
 
-$\Gamma$ reprsents a non-linear context, while $\Delta$ represents a
+$\Gamma$ represents a non-linear context, while $\Delta$ represents a
 \emph{linear context} dependent on $\Gamma$. These linear contexts behave
 substructurally. As stated earlier, they do are linear --- they do not obey
 weakening or contraction --- because a character is exhausted once read by a
@@ -868,7 +868,7 @@ blocks for constructing patterns over strings.
 
 We give the base types and type constructors for linear terms. As the
 interpretation of types as grammars in $\Set^{\String}$ serves as our intended
-semantics, we simultaneously give the interpreation $\sem \cdot$ of the
+semantics, we simultaneously give the interpretation $\sem \cdot$ of the
 semantics as grammars.
 
 Most of the non-linear semantics is standard, so let us investigate in more
@@ -1021,7 +1021,7 @@ $A \ampersand B$.
 The grammar semantics of $A \amp B$ denotes a pair of a parse of $A$ and a
 parse of $B$ \emph{of the same string}. In this sense, $\amp$ acts a
 conjunction between grammars --- meaning a string only matches $A \amp B$
-if it simlutaneously matches each of $A$ and $B$.
+if it simultaneously matches each of $A$ and $B$.
 
 \paragraph{The $G^{-1}$ Modality}
 Turn nonlinear into linear
