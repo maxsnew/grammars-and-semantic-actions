@@ -32,8 +32,8 @@
 \newcommand{\true}{\mathbf{true}}
 \newcommand{\false}{\mathbf{false}}
 \newcommand{\nat}{\mathbb{N}}
-\newcommand{\theoryname}{Grammar Theoretic Type Theory\xspace}
-\newcommand{\theoryabbv}{GTTT\xspace}
+\newcommand{\theoryname}{Grammar Type Theory\xspace}
+\newcommand{\theoryabbv}{GramTT\xspace}
 
 \newcommand{\gluedNL}{{\mathcal G}_S}
 \newcommand{\gluedNLUniv}{{\mathcal G}_{S,i}}
@@ -107,25 +107,38 @@
 \makeatother
 
 \begin{abstract}
-  In this paper we propose \theoryname~(\theoryabbv), a new syntactic formalism for formal grammars: a
-  dependent linear/non-linear type theory in which the tensor product is
-  non-commutative. The linear types in this calculus may be interpreted as
-  grammars, and linear terms as parse transformers. This provides a logical
-  characterization of grammar classes based on a substructural logic rather than
-  ordinary first-order logic.
+  We propose \theoryname~(\theoryabbv) a new type-theoretic calculus
+  for the specification of formal grammars and intrinsic verification
+  of parsers. \theoryabbv is a dependent non-commutative
+  linear/non-linear type theory where the linear types can be viewed
+  as formal grammars, and linear terms can be viewed as parse
+  transformers, of which parsers are a special case. We formalize this
+  interpretation by giving a denotational semantics of the theory in a
+  novel categorical semantics of formal grammars in a category of
+  families indexed by strings.
 
-  Internal to \theoryname, we carry out many classical constructions from
-  the theory of formal grammars. Inspired by the common
-  structure underlying various ideas in formal language
-  theory, our type theory makes these relationships explicit
-  and provides a unifying syntax to reason about formal
-  grammars.
+  To demonstrate the usefulness of the calculus for formal grammar
+  theory, we show that different grammar formalisms \max{which ones do
+    we actually show?} can be expressed as linear types in
+  \theoryabbv. We give simple characterizations of the regular and
+  context-free grammars as expressible by restricting which
+  connectives of \theoryabbv are allowed, a form of type theoretic
+  characterization of these grammar classes. Further, we demonstrate
+  some central proofs of formal grammar theory can be intrinsically
+  verified: \emph{strong} equivalence between regular expressions and
+  NFAs is expressed by a syntactic \emph{isomorphism} definable in
+  \theoryabbv.
 
-  We give a semantics in the category of grammars and prove a
-  canonicity theorem showing that every term in a context corresponding to a
-  fixed string is equal to a term in a canonical form encoding a parse tree of
-  that string. Finally, we discuss the application to the design and
-  implementation of correct-by-construction parsers.
+  Finally, since \theoryabbv is a syntactic calculus, in addition to
+  the ``standard'' semantics of linear types as grammars, we
+  demonstrate two non-standard semantic interpretations. One is a
+  semantics where linear types are instead interpreted as
+  \emph{semantic actions}, rather than grammars, which are more common
+  in application than formal grammars proper. Lastly we use a
+  non-standard semantics to prove a \emph{canonicity} metatheorem that
+  shows that the interpretation of types as grammars is canonical: the
+  type-theoretic notion of a parse agrees with the expected semantic
+  notion.
 \end{abstract}
 
 \maketitle
