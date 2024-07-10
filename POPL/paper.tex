@@ -11,6 +11,7 @@
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{stmaryrd}
+\usepackage{scalerel}
 \usepackage{tikz}
 \usetikzlibrary{automata, positioning, arrows, fit}
 
@@ -28,6 +29,8 @@
 \newcommand{\Type}{\mathbf{Type}}
 \newcommand{\Prop}{\mathbf{Prop}}
 \newcommand{\Bool}{\mathbf{Bool}}
+\newcommand{\true}{\mathbf{true}}
+\newcommand{\false}{\mathbf{false}}
 \newcommand{\nat}{\mathbb{N}}
 \newcommand{\theoryname}{Grammar Type Theory\xspace}
 \newcommand{\theoryabbv}{GTT\xspace}
@@ -35,6 +38,10 @@
 \newcommand{\gluedNL}{{\mathcal G}_S}
 \newcommand{\gluedNLUniv}{{\mathcal G}_{S,i}}
 \newcommand{\gluedL}{{\mathcal G}_L}
+
+\newcommand{\amp}{\mathrel{\&}}
+\newcommand{\pair}{\amp}
+\DeclareMathOperator*{\bigamp}{\scalerel*{\&}{\bigoplus}}
 
 \newcommand{\simulsubst}[2]{#1\{#2\}}
 \newcommand{\subst}[3]{\simulsubst {#1} {#2/#3}}
@@ -46,11 +53,10 @@
 \newcommand{\app}[2]{#1 \, #2}
 \newcommand{\applto}[2]{#1 \mathop{{}^{\lto}} #2}
 \newcommand{\apptol}[2]{#1 \mathop{{}^{\tol}} #2}
-\newcommand{\PiTy}[3]{\Pi #1 : #2.\, #3}
-\newcommand{\SigTy}[3]{\Sigma #1 : #2.\, #3}
-\newcommand{\LinPiTy}[3]{\widebar\Pi #1 : #2.\, #3}
-\newcommand{\LinSigTy}[3]{\widebar\Sigma #1 : #2.\, #3}
-\newcommand{\amp}{\mathrel{\&}}
+\newcommand{\PiTy}[3]{\textstyle\prod (#1 : #2). #3}
+\newcommand{\SigTy}[3]{\textstyle\sum (#1 : #2). #3}
+\newcommand{\LinPiTy}[3]{\textstyle\bigamp (#1 : #2). #3}
+\newcommand{\LinSigTy}[3]{\textstyle\bigoplus (#1 : #2). #3}
 \newcommand{\GrTy}{\mathsf{Gr}}
 
 \newcommand{\ctxwff}[1]{#1 \,\, \mathsf{ok}}
@@ -71,7 +77,7 @@
 
 \pagebreak
 
-\title{Formal Grammars as Types in Non-commutative Linear-Non-Linear Type Theory}
+\title{Formal Grammars as Types in Non-Commutative Linear-Non-Linear Type Theory}
 
 \author{Steven Schaefer}
 \affiliation{\department{Electrical Engineering and Computer Science}
@@ -135,7 +141,15 @@ algorithms for parsing of regular and context-free grammars and
 variants \cite{KNUTH1965607,Earley1970}, as well as implementations of practical tools for the
 generation of efficient parsers \cite{Johnsonyacc}.
 
-\paragraph{Contributions.} This paper begins in \cref{sec:synindnotion} by
+In this paper, we propose an intuitive and structured generalization of the
+theoretical machinery used for parsing. In conjunction with an updated
+point-of-view on formal grammars, we provide a domain-specific
+language to build and verify parsers.
+
+\steven{The above paragraph maybe isn't the right thing to say, but I want
+  something that ties the first paragraph to the contributions that follow}
+
+\paragraph{Contributions} This paper begins in \cref{sec:synindnotion} by
 giving a universal semantic characterization of formal grammar.
 From there, in \cref{sec:tt} we provide the syntax of \theoryname, a type thoery
 that axiomatizes the underlying structures needed to conduct formal grammar
@@ -321,8 +335,6 @@ pretty standard, so below we focus on the linear syntax.
 
     \inferrule{\Gamma \vdash X : U_i}{\ctxwffjdg \Gamma X}
 
-    \\
-
     \boxed{\linctxwffjdg \Gamma A}
 
     \inferrule{\Gamma \vdash A : L_i}{\linctxwffjdg \Gamma A}
@@ -332,8 +344,6 @@ pretty standard, so below we focus on the linear syntax.
     \boxed{\ctxwffjdg \Gamma {X \equiv Y}}
 
     \inferrule{\Gamma \vdash X \equiv Y : U_i}{\ctxwffjdg \Gamma {X\equiv Y}}
-
-    \\
 
     \boxed{\linctxwffjdg \Gamma {A \equiv B}}
 
@@ -347,6 +357,8 @@ pretty standard, so below we focus on the linear syntax.
 \begin{figure}
   \begin{mathpar}
     \boxed{\Gamma \vdash X : U_{i}}
+
+    \boxed{\Gamma \vdash A : L_{i}}
 
     \inferrule{~}{\Gamma \vdash U_i : U_{i+1}}
  %
@@ -369,8 +381,8 @@ pretty standard, so below we focus on the linear syntax.
     \and
 %
     \inferrule{\Gamma \vdash A : L_i}{\Gamma \vdash G A : U_i}
-%
-    \\
+
+    \and
 %
     \inferrule{~}{\Gamma \vdash I : L_i}
  %
@@ -378,7 +390,7 @@ pretty standard, so below we focus on the linear syntax.
 %
     \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash A \otimes B : L_i}
 %
-    \and
+    \\
 %
     \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash A \lto B : L_i}
 %
@@ -403,11 +415,10 @@ pretty standard, so below we focus on the linear syntax.
     \inferrule{~}{\Gamma \vdash \top : L_i}
 %
     \and
-%
-    \inferrule{\Gamma \vdash A : L_i \quad \Gamma \vdash B : L_i}{\Gamma \vdash A \amp B : L_i}
-%
+
+    \inferrule{~}{\Gamma \vdash \bot : L_i}
+
     \\
-    %
     \inferrule{c \in \Sigma}{\Gamma \vdash c : L_0}
     %
     \and
@@ -509,14 +520,13 @@ pretty standard, so below we focus on the linear syntax.
     \\
     %
     \inferrule{~}{\Gamma ; \Delta \vdash () : \top}
-    %
-    \\
-    %
-    \inferrule{\Gamma ; \Delta \vdash e_1 : A_1 \quad \Gamma ; \Delta \vdash e_2 : A_2}{\Gamma ; \Delta \vdash (e_1, e_2) : A_1 \amp A_2}
+
     \and
-    \inferrule{\Gamma ; \Delta \vdash e : A_1 \amp A_2 }{\Gamma ; \Delta \vdash \pi_i \, e : A_i}
+
+    \inferrule{~}{\Gamma ; x : \bot \vdash \mathsf{absurd}_A : A}
     %
-    \\
+    \and
+    %
     %
     \inferrule{\Gamma \vdash e : \mathsf{G} A}{\Gamma ; \cdot \vdash \mathsf{G}^{-1}\, e : A}
     %
@@ -784,16 +794,24 @@ where $x$ is free in $A$.
 
 $\sem{\LinPiTy x X A} \gamma w = \Pi(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
 
-The grammar semantics of the linear product type is
-indeed a dependent function out of the
-semantics of $X$.
-
 $\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
 
-Likewise, the grammar semantics of the linear dependent pair type is a dependent
+The grammar semantics of the linear product type is
+indeed a dependent function out of the
+semantics of $X$. Likewise, the grammar semantics of the linear dependent pair type is a dependent
 pair in $\Set$.
 
-\steven{TODO example of sum as an admissible usage of $\LinSigTy b \Bool A$}
+Note that even though we do not take the binary additive conjunction and
+disjunction as primitive, we may define them via these LNL dependent types. In
+particular, via a dependence on $\Bool$.
+
+\[
+  A \amp B := \LinPiTy b \Bool {C(b)}
+\]
+\[
+  A \oplus B := \LinSigTy b \Bool {C(b)},
+\]
+where $C(\true) = A, C(\false) = B$.
 
 \paragraph{Universal Type}
 The universal type $\top$ may be formed in any context.
@@ -803,22 +821,11 @@ The universal type $\top$ may be formed in any context.
 Its grammar semantics in set outputs the unit type in $\Set$ for all input strings in all contexts.
 
 \paragraph{Empty Type}
-The empty type $\bot$ has no inhabitants.
+The empty type $\bot$ has no inhabitants. The elimination for the empty type
+witnesses the principle of explosion --- i.e. from a term of type $\bot$ we may
+introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
 
 \[ \sem {\bot} \gamma w = \emptyset \]
-\steven{TODO need to include a case for $\bot$ in the inference rules}
-
-\paragraph{Pair Type}
-Given a term of type $A$ in context $\Delta$ and a term of type $B$ \emph{also
-  in context} $\Delta$, we may form a pair in context $\Delta$ of type
-$A \ampersand B$.
-
-\[ \sem{A \amp B }\gamma w = \sem{A} \gamma w \times \sem {B} \gamma w \]
-
-The grammar semantics of $A \amp B$ denotes a pair of a parse of $A$ and a
-parse of $B$ \emph{of the same string}. In this sense, $\amp$ acts a
-conjunction between grammars --- meaning a string only matches $A \amp B$
-if it simultaneously matches each of $A$ and $B$.
 
 \paragraph{The $G^{-1}$ Modality}
 Turn nonlinear into linear
@@ -1219,7 +1226,7 @@ category}.
 }
 
 \begin{theorem}
-  The presheaf category $\Set^{\cat{\Sigma^*}}$ is a Chomsky category.
+  The presheaf category $\Grammar = \Set^{\cat{\Sigma^*}}$ is a Chomsky category.
 \end{theorem}
 
 
@@ -1507,7 +1514,7 @@ over each state of the NFA.\ That is, for each $q \in Q$ we define a term
 In this example, $\mathsf{acc}(q_{1}) = \top$ and
 $\mathsf{acc}(q_{2}) = \mathsf{acc}(q_{3}) = \bot$. An accepting trace of the NFA $N$ is then given by the following dependent grammar,
 \[
- \mathsf{AccTrace}_{N} := \LinSigTy q Q {\left( \mathsf{Trace}_{N}(q_{0} , q) \amp \mathsf{acc}(q) \right)}
+ \mathsf{AccTrace}_{N} := \LinSigTy q Q {\left( \mathsf{Trace}_{N}(q_{0} , q) \pair \mathsf{acc}(q) \right)}
 \]
 
 where $q_{0}$ is the initial state. That is, a trace is accepted by the NFA if
@@ -1798,7 +1805,7 @@ We make a pretty straightforward adaptation of Thompson's theorem to our setting
   as,
 
   \[
-    \mathsf{AccTrace}_{NFA(I)} = \LinSigTy q {\{1 , 2\}} {\left( \mathsf{Trace}_{NFA(I)}(q_{1} , q) \amp \mathsf{acc}(q) \right)}
+    \mathsf{AccTrace}_{NFA(I)} = \LinSigTy q {\{1 , 2\}} {\left( \mathsf{Trace}_{NFA(I)}(q_{1} , q) \pair \mathsf{acc}(q) \right)}
   \]
 
   A quick inspection of \cref{fig:emptyNFA} reveals that the
@@ -1807,8 +1814,8 @@ We make a pretty straightforward adaptation of Thompson's theorem to our setting
 
   \begin{align*}
     \mathsf{AccTrace}_{NFA(I)}
-    & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \amp \mathsf{acc}(q_{2}) \\
-    & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \amp \top \\
+    & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \pair \mathsf{acc}(q_{2}) \\
+    & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2}) \pair \top \\
     & \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})
   \end{align*}
 
