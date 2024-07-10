@@ -158,6 +158,34 @@ regular and context-free grammars and variants
 practical tools for the generation of efficient parsers
 \cite{Johnsonyacc}.
 %
+The final frontier for parsing research is the development of
+\emph{formally verified} parser implementations, which due to the
+pervasive nature of parsing would be a useful component of many
+formally verified software systems: compilers and servers most
+especially.
+%
+
+In this work we aim to refine formal language theory into a
+mathematical theory of formal grammars that can be used to develop
+\emph{correct-by-construction} parsers. Our approach can be summarized
+in the Curry-Howard-style slogan ``grammars as types'', and the
+addendum ``parsers as terms'' where since the types of the terms are
+grammars, this means not just parsers but intrinsically verified
+parsers as terms. That is, we develop a type theory with a novel
+denotational semantics in a category with abstract formal grammars as
+objects and \emph{parse transformers} as morphisms. We say these are
+\emph{abstract} formal grammars because they are not tied to any
+particular syntactic formalism such as Chomskyian grammars, regular
+expressions, Lambek calculus etc. The category we choose is a rich
+category: it is a topos as well as being monoidal closed, and these
+universal properties serve as the inspiration for our type theory.
+
+The type theory itself is a form of dependent linear-non-linear type
+theory: the linear types can be interpreted as grammars, whereas the
+non-linear types can be interpreted as ordinary sets. As in prior work
+on dependent linear-non-linear types, the linear types are allowed to
+depend on the non-linear types but not vice-versa \cite{dep-lnl}.\max{had to stop here to take care of baby}
+
 
 
 %% The theory of formal languages and parsing is one of the oldest and
