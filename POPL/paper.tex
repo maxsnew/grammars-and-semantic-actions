@@ -32,8 +32,8 @@
 \newcommand{\true}{\mathbf{true}}
 \newcommand{\false}{\mathbf{false}}
 \newcommand{\nat}{\mathbb{N}}
-\newcommand{\theoryname}{Grammar Type Theory\xspace}
-\newcommand{\theoryabbv}{GTT\xspace}
+\newcommand{\theoryname}{Grammar Theoretic Type Theory\xspace}
+\newcommand{\theoryabbv}{GTTT\xspace}
 
 \newcommand{\gluedNL}{{\mathcal G}_S}
 \newcommand{\gluedNLUniv}{{\mathcal G}_{S,i}}
@@ -136,10 +136,13 @@
 The theory of formal languages and parsing is one of the oldest and
 most thoroughly developed areas of theoretical computer science. A
 prominent topic in the 1950, 60s, and 70s led to a series of remarkable
-developments: Chomsky's hierarchy of grammar formalisms \cite{chomThreeModels1956}, practical
+developments: Chomsky's hierarchy of grammars \cite{chomThreeModels1956}, practical
 algorithms for parsing of regular and context-free grammars and
 variants \cite{KNUTH1965607,Earley1970}, as well as implementations of practical tools for the
 generation of efficient parsers \cite{Johnsonyacc}.
+
+\steven{I don't like the name \theoryname (\theoryabbv). Feel free to play with it though, as
+  its set up as a pair of macros}
 
 In this paper, we propose an intuitive and structured generalization of the
 theoretical machinery used for parsing. In conjunction with an updated
@@ -253,6 +256,10 @@ parsing. Each of these is an instance of a general \emph{notion of formal
   grammar} --- a category paired with a functor into
 $\Grammar$. That is, they may all be interpreted in our category of grammars. In this sense, $\Grammar$ provides a universal setting to reason about parsing.
 
+\steven{I initially wanted to say ``universal semantic domain to reason about
+  parsing'', but these words have specific domain theory usage that aren't
+  appropriate here, right?}
+
 \steven{Check details for 2-cat of grammar formalisms}
 
 
@@ -290,13 +297,16 @@ otherwise intuitionistic system. However, if we are wishing to treat parsers as
 linear terms over input strings, the non-linear fragment of an LNL theory does
 not really assist in the development of parsers. It is instead the case that
 parsers may benefit from a \emph{dependence} on non-linear terms.
-Through the approach described by Krishaswami et al.\ in
+Through the approach described by Krishnaswami et al.\ in
 \cite{krishnaswami_integrating_2015},
 we may define a restricted form of dependent types. In particular, dependence
 on linear terms
 is disallowed; however, through dependence of a linear term on a non-linear
 index, we recover the definition of Aho's indexed grammars \cite{AhoIndexed}
 internal to \theoryabbv.
+
+\steven{The above is meant to walk the reader into accepting LNL as a natural
+  choice, but it doesn't really flow well to the beginning of the next subsection }
 
 
 \subsection{Syntax}
@@ -754,12 +764,9 @@ and the right one matches $B$.
 
 \paragraph{Linear Function Types}
 The monoidal structure provided by $\otimes$ is both left and right closed and
-this is denoted by the left and right linear function types.
-
-\steven{Say more about the adjunctions}
-
-Further, for linear types $A$ and $B$ the left linear function type $A \lto B$
-enjoys an elimination principle similar to function application/modus ponens.
+this is denoted by the left and right linear function types. Further,
+for linear types $A$ and $B$ the left linear function type $A \lto B$
+enjoys an elimination principle similar to function application or modus ponens.
 
 \[
 \inferrule{\Delta \vdash A \otimes A \lto B}{\Delta \vdash B}
@@ -781,11 +788,27 @@ Brzozowski initially only gave an accounting of this operation for
 generalized regular expressions, but later work from Might et al.\ demonstrates that the same
 construction can be generalized to context free grammars
 \cite{mightParsingDerivativesFunctional2011}. Here, via the linear function
-types the same notion of derivative extends to the grammars of \theoryabbv.
+types, the same notion of derivative extends to the grammars of \theoryabbv.
+Note, to ensure that the linear function types do indeed generalize Brzozowski
+derivative, we must include the equalities in \cref{fig:brzozowskideriv} as axioms.
 
 Of course, all the above statements for the left function type also have
 corresponding analogues for the
 right-handed counterpart.
+
+\begin{figure}
+\begin{align*}
+  c\lto c &\equiv I\\
+  c\lto d &\equiv \bot\\
+  c\lto I &\equiv \bot\\
+  c\lto 0 &\equiv \bot\\
+  c\lto (A \otimes B) & \equiv (c\lto A) \otimes B + (A \amp I) \otimes (c\lto B)\\
+  c\lto A^* &\equiv (A \amp I)^{*} \otimes (c \lto A) \otimes A^* \\
+  c\lto (A + B) &\equiv (c\lto A) + (c\lto B)
+\end{align*}
+\caption{Equality for Brzozowski Derivatives}
+\label{fig:brzozowskideriv}
+\end{figure}
 
 \paragraph{LNL Dependent Types}
 Given a non-linear type $X$, we may form both the dependent product type
@@ -822,21 +845,29 @@ Its grammar semantics in set outputs the unit type in $\Set$ for all input strin
 
 \paragraph{Empty Type}
 The empty type $\bot$ has no inhabitants. The elimination for the empty type
-witnesses the principle of explosion --- i.e. from a term of type $\bot$ we may
+witnesses the principle of explosion --- i.e.\ from a term of type $\bot$ we may
 introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
 
 \[ \sem {\bot} \gamma w = \emptyset \]
 
-\paragraph{The $G^{-1}$ Modality}
-Turn nonlinear into linear
+\paragraph{The $G$ Modality}
+The $G$ modality provides the embedding of linear types in the empty context
+into non-linear types. The introduction and elimination forms for $G A$ obey the
+same rules as given in \cite{bentonMixedLinearNonlinear1995} and \cite{krishnaswami_integrating_2015}.
 
-\steven{Call this $F$ or $G^{-1}$?}
+The left adjoint $F$ from non-linear types back to linear types may be defined
+as,
 
-\steven{Why can't these map any nonlinear type into linear ones? instead of just
-those that are already linear types lifted by $G$?}
+\[
+  F X := \LinSigTy a A I
+\]
 
-\steven{TODO G inverse}
-  % \item $\sem{G A} \gamma = \sem{A} \gamma \varepsilon$
+\steven{Elaborate on $G$ more}
+
+The semantics of $G A$ are exactly the semantics of $A$ at the empty word $\varepsilon$.
+
+\[ \sem{G A} \gamma = \sem{A} \gamma \varepsilon \]
+
 
 \paragraph{Recursive Types}
 isorecursive types
@@ -950,6 +981,11 @@ is for defining the traces through automata, as we will see
 later in \cref{eq:nfatrace}.
 
 \subsection{Subtheories}
+Each choice of connective has direct implications on the expressivity of
+\theoryabbv. In particular, the set of connectives used will determine where the
+grammar semantics is placed in
+the Chomsky hierarchy.
+
 \paragraph{Regular Expressions} We may realize regular expression as a subtheory
 of our language by restricting the type constructors to the
 linear unit, characters, $\otimes$, $\oplus$, and Kleene star. Classically, the
@@ -957,12 +993,11 @@ languages recognized by these are exactly the regular languages --- the lowest
 on the Chomksy hierarchy.
 
 \paragraph{$\mu$-Regular Expressions} Similarly, we may restrict the connectives
-to be linear unit, characters, $\otimes$, $\oplus$, and arbitrary recursion.
+to be linear unit, characters, $\otimes$, $\oplus$, and arbitrary recursion via
+left-fixed point rather than only Kleene star.
 Instead of regular expressions these correspond to Lei{\ss}'s $\mu$-regular
 expressions, which are known to be equivalent to context-free grammars
-\cite{leiss}.
-
-\steven{Give this subtheory a name }
+\cite{leiss,krishnaswami_typed_2019}.
 
 \paragraph{Beyond Context-Free Grammars} The previous two subtheories induce as semantics
 regular grammars and context-free grammars, respectively; however, by including
@@ -972,8 +1007,6 @@ grammars, which are known to be properly between context-free and
 context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
 will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
 calculus, which of course induces a semantics of unrestricted grammars.
-
-\steven{TODO $\mu$ regular expressions}
 
 \section{Categorifying Formal Grammars}
 \label{sec:categorify}
@@ -1241,8 +1274,13 @@ if we don't say anything about the syntactic category, reviewers won't mind.}
   isn't true. By restating our definition of Chomksy category, this should be
   obvious or a quick proof}
 
-\section{Nonstandard Models}
-\label{sec:nonstandard}
+\section{Other Models}
+\label{sec:othermodels}
+\subsection{Language Semantics}
+Every grammar induces a language semantics. Also languages can be taken as a
+propositionally truncated view of the syntax. Logical equivalence should induce
+weak equivalence, and thus even give a syntactic way to reason about language equivalence.
+\steven{TODO language semantics}
 
 \subsection{Semantic Actions}
 Returning to the problem of parsing, the output of a parse usually isn't the
@@ -1279,7 +1317,8 @@ canonicity for boolean types, i.e. every closed term of type bool
 reduces to either true or false, is enough to justify that the type
 theory being studied is well-behaved. In our case, however, since we
 want to connect \theoryabbv to parsers, we must provide a more
-detailed account of canonicity.
+detailed account of canonicity. In particular, we give a nonstandard semantics
+of \typeabbv that carries a proof of canonicity along with it.
 
 If $\cdot \vdash A$ is a closed linear type then there are
 two obvious notions of what constitutes a ``parse'' of a string w
@@ -1402,36 +1441,16 @@ theorem. Could also be done before stating the theorem.}
 
 \section{Automata as Grammars}
 \label{sec:automata}
-\pedro{The switch from the canonicity proof to this section feels a bit ``bumpy''.
-  Since they are at least technically related, it might be a good idea to say something
-  like ``The canonicity theorem from the previous section gives a tight connection
-  between terms in our type theory and the theory of formal languages. In this section
-we further explore these connections by using the fact that, clasically ...''}
 
-Classically, formal language theory is closely related to the study of automata.
+The canonicity theorem from the previous section gives a tight connection
+between terms in our type theory and the theory of formal languages. In this section
+we further explore these connections by using the fact that, clasically
+formal language theory is closely related to the study of automata.
 In the Chomsky hierarchy, each language class is associated to a class of
 automata that serve as recognizers. Internal to \theoryabbv,
 we can characterize these language classes syntactically; moreover, we
 demonstrate the equivalence of these language classes to its associated automata class as a
 proof term within our logic.
-
-Internalizing these equivalences is particularly useful for building a regular
-expression parser. That is, it is relatively easy for use to write down a parser
-for deterministic finite automata (DFAs). Then we may compose this parser with
-a proof equivalence between DFAs and regular expressions to extract a verified
-regular expression parser.
-
-As we will see in \cref{subsubsec:tm}, we may very quickly encode arbitrary
-recursively enumerable languages --- since we can simulate the
-tape of Turing machine in the dependent fragment of the language.We reflect
-here on this expressive power to motivate why we put stringent syntactic
-restrictions on particular classes of automata. The type theory we present truly
-is general enough to easily capture all of the Chomsky hierarchy.
-To begin, let's focus on the simplest languages and their corresponding
-automata --- regular expressions and finite automata.
-\pedro{The connection dependent types-Turing machines seems too important to only
-  be mentioned here. It should at least indirectly motivate the type theory being
-dependently typed.}
 
 \subsection{Non-deterministic Finite Automata}
 \label{subsec:finiteaut}
@@ -1580,6 +1599,7 @@ traces,
   \caption{Admissible Trace Constructors}
 \end{figure}
 
+
 That is, we may use $\mathsf{nil}$ to terminate a trace that
 begins and ends at state $q$. The rules $\mathsf{cons}$ and
 $\mathsf{\varepsilon cons}$ are then used to inductively
@@ -1615,7 +1635,6 @@ similar, trace construction.
 
 With this setting for finite automata, we can now internalize some classical theorems inside of our formal system.
 
-
 \subsection{A DFA Parser}
 \label{subsec:regexparser}
 
@@ -1634,7 +1653,11 @@ obey
  \mathsf{Trans}(q) ::= \bigoplus_{c \in \Sigma} (c \otimes \mathsf{State})
 \end{gather*}
 
-Meaning, each state has a transition for every character.
+Meaning, each state has a transition for every character. \emph{Note:} the above use
+  of a disjunction over $\Sigma$ is a bit of abuse of notation.
+  As $\Sigma$ is a finite alphabet, we wish to think of this as an iterated
+  binary sum, or perhaps as a finitely indexed sum defined via linear dependent
+  sums in the same manner by which we defined binary sums.
 
 We now wish to define a parser term for DFA grammars. In
 particular, for a DFA $D$ we want to build a term,
@@ -1661,24 +1684,36 @@ ends at the accepting state. In the recursive case, we
 effectively add to our trace by transitioning one character
 at a time, as we read them moving across $w$.
 
-% \todoin{Derivation tree for this construction}
-
 Perhaps this derivation is not too surprising. All it says
 is that a DFA may be ran by transitioning a single character
 at a time, and then accepting or rejecting based on the
 final state. This is exactly what DFAs did initially, so
 what did we gain? Well, this has the benefit of our type
 system to ensure its correctness. Moreover, this construction exports to an
-intrinsically verified and executable DFA via Agda.
+intrinsically verified and executable decision procedure for DFAs in \thoeryabbv
+embedded in Agda.
 
+We should note that the
+construction of a DFA parser requires the addition of an additional but seemingly innocuous
+axiom.
 
-\subsection{Regular Grammars and DFAs}
+\[
+  \top \cong \left( \bigoplus_{c : \Sigma} c \right)^{*}
+\]
+
+That is, the characters in the alphabet $\Sigma$ really are all of the
+characters. The necessity of this axiom arises when we go to take a transition,
+as we must ensure that the nexts character read has a corresponding transition
+--- which would be guaranteed by determinism provided there are no surprise characters.
+\steven{The above paragraph sounds weird}
+
+\subsection{Regular Expressions and DFAs}
 \label{subsec:deriv}
 
 In order to extend the DFA
 parser from \cref{subsec:regexparser} to the construction of
 a verified parser
-generator for regular grammars we need to perform some
+generator for regular expression we need to perform some
 plumbing establishing an equivalence between regular
 expressions and DFAs.
 
@@ -1757,8 +1792,6 @@ original grammar. Witnessing this construction in our syntax has two benefits
   For $g$ a regular grammar $g$, there is an NFA $N$ that recognizes the same
   language as $g$.
 \end{theorem}
-\steven{In Agda as a weak equivalence right now}
-
 We make a pretty straightforward adaptation of Thompson's theorem to our setting,
 
 \begin{theorem}[Typed Thompson]
@@ -1768,9 +1801,6 @@ We make a pretty straightforward adaptation of Thompson's theorem to our setting
 \end{theorem}
 
 \begin{proof}[Proof Sketch]
-  The following proof is currently formalized in Agda. Below
-  we give a walk through the structure of the proof.
-
   Recall that regular grammars are inductively defined via
   disjunction, concatenation, and Kleene star over literals
   and the empty grammar. By induction over regular grammars,
@@ -1823,9 +1853,7 @@ We make a pretty straightforward adaptation of Thompson's theorem to our setting
   $I \cong \mathsf{AccTrace}_{NFA(I)}$ it suffices to show
   $I \cong \mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})$. Below we
   give two parse transformers, one from $I$ to
-  $\mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})$ and vice versa. The formalized
-  artifact provides the low-level details that these are
-  indeed mutually inverse.
+  $\mathsf{Trace}_{NFA(I)}(q_{1} , q_{2})$ and vice versa.
 
   \[
     \inferrule
@@ -1953,7 +1981,7 @@ We make a pretty straightforward adaptation of Thompson's theorem to our setting
   \label{fig:disjunctionNFA}
   \end{figure}
 
-  \cref{fig:disjunctionNFA} shows the process of
+  \Cref{fig:disjunctionNFA} shows the process of
   disjunctively combining NFAs. Precisely, we add a single
   new state and we included copies of the states from each of $N$
   and $M$. The new state acts as the initial state and has
@@ -2048,8 +2076,17 @@ We make a pretty straightforward adaptation of Thompson's theorem to our setting
      N : \mathsf{AccTrace}_{NFA(g)} \oplus \mathsf{AccTrace}_{NFA(g')} \vdash \mathsf{case}~N~\{\mathsf{inl}(n) \mapsto \phi^{-1}(n), \mathsf{inr}(n') \mapsto \psi^{-1}(n')\} : g \oplus g'
   \]
 
-  As discussed above, the other cases and low-level details
-  of isomorphism are reserved for the formalization. This
+  When you wish to show that these actually maps invert each other to form an isomorphism, we invoke the
+  universal properties of the $\mathsf{Trace}$ types. That is,
+  $\mathsf{Trace}_{\oplus NFA}$, $\mathsf{Trace}_{N}$, and $\mathsf{Trace}_{M}$
+  are \emph{initial} algebras to the the functors that define them. Thus, the
+  embedding of traces through $N$ into $\oplus NFA$ and then mapped back down to $N$
+  compose to a map from $\mathsf{Trace}_{N}$ to itself. Such a map is unique and
+  thus must be the identity. The same reasoning shows that the desired
+  composite do indeed invert each other to form an isomorphism.
+
+  As discussed above, the other cases and
+  follow through a similar argument. This
   concludes the proof of our variant of Thompson's construction.
 \end{proof}
 
@@ -2075,10 +2112,11 @@ formally as a 7-tuple $(Q, \Sigma, \Gamma, \delta, q_{0}, Z, F)$,
 \end{itemize}
 
 We encode the traces of a pushdown automaton very similarly to those of an NFA,
-except the transitions of a PDA are instead encoded via the linear-non-linear
-$\Pi$-type. This is because of simply transitioning via character, a PDA must
+except the transitions of a PDA are instead encoded via the LNL product type
+$\bigamp$. This is because when simply transitioning via character, a PDA must
 also pop and push characters onto a stack, which is used as the argument to
-these dependent functions.
+these dependent functions. Thus, the appropriate formation of traces through a
+PDA is dependent on a stack.
 
 Let $S$ be a non-linear type encoding the stack
 alphabet, and build lists over $S$ as the (non-linear) least fixed-point
@@ -2107,20 +2145,15 @@ called on argument $w + \mathsf{tail}(L)$.
 \subsubsection{Turing Machines}
 \label{subsubsec:tm}
 
-In
-\cref{subsubsec:pda}, we gave a grammar presentation of
+Above we gave a grammar presentation of
 traces through a PDA by using a non-linear type $S$
 to encode the stack. We may similarly use pairs $S \times S$
 to encode the tape of a Turing machine. With two stacks we can simulate the behavior of the
 infinite tape of a Turing machine. The intuition behind this correspondence is
 that the left half of the tape is on one stack, the right
 half of the tape the other, and we treat the tops of stacks
-like the head of the tape.
-
-Due to computability limitations, we are not able to extract
-a verified parser for all recursively enumerable languages.
-Yet we should still reflect on the generality of our syntax,
-as it allows a natural encoding of Turing machines.
+like the head of the tape. We should reflect on the generality of our syntax, as
+it allows a natural encoding of Turing machines.
 
 \pedro{I like the overall structure of this section! Showing how the type theory
 can encode and reason about different kinds of languages is very instructive!}
