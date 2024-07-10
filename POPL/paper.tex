@@ -153,7 +153,7 @@ in all of computing. Accordingly, this is a quite well-studied problem
 spanning theoretical computer science and linguistics with such
 milestones as Chomsky's hierarchy of grammars
 \cite{chomThreeModels1956}, practical algorithms for parsing of
-regular and context-free grammars and variants
+regular and context-free grammars, and variants
 \cite{KNUTH1965607,Earley1970}, as well as implementations of
 practical tools for the generation of efficient parsers
 \cite{Johnsonyacc}.
@@ -184,8 +184,12 @@ The type theory itself is a form of dependent linear-non-linear type
 theory: the linear types can be interpreted as grammars, whereas the
 non-linear types can be interpreted as ordinary sets. As in prior work
 on dependent linear-non-linear types, the linear types are allowed to
-depend on the non-linear types but not vice-versa \cite{dep-lnl}.\max{had to stop here to take care of baby}
+depend on the non-linear types but not vice-versa \cite{dep-lnl}.
 
+The substructural nature of \theoryabbv is well-aligned with the
+requirements intrinsic to parsing and to the theory of formal
+languages, where strings constitute a very clear notion of resource
+that cannot be duplicated, reordered or dropped.
 
 
 %% The theory of formal languages and parsing is one of the oldest and
@@ -199,6 +203,10 @@ language to build and verify parsers.
 
 \steven{The above paragraph maybe isn't the right thing to say, but I want
   something that ties the first paragraph to the contributions that follow}
+\pedro{As a rule of thumb, I think that it's good to avoid subjective and
+  pointed adjectives such as ``intuitive'', espcially if we don't have evidence
+  that corroborates our claim. This is the perfect excuse for
+an annoying reviewer to complain about our work.}
 
 \paragraph{Contributions} This paper begins in \cref{sec:synindnotion} by
 giving a universal semantic characterization of formal grammar.
@@ -206,7 +214,7 @@ From there, in \cref{sec:tt} we provide the syntax of \theoryname, a type thoery
 that axiomatizes the underlying structures needed to conduct formal grammar
 theory. Then in \cref{sec:categorify}, we characterize the abstract categorical
 models of our syntax. Afterwards, we demonstrate several models of \theoryabbv,
-include one to prove a metatheoretic canonicity theorem. Finally, in
+including one to prove a metatheoretic canonicity theorem. Finally, in
 \cref{sec:automata} we give a presentation of automata as grammars. With this
 view in mind, we may encode parsing algorithms and execute them entirely
 internal to our formalism. Our contributions are then:
@@ -307,7 +315,7 @@ $\Grammar$. That is, they may all be interpreted in our category of grammars. In
 \steven{I initially wanted to say ``universal semantic domain to reason about
   parsing'', but these words have specific domain theory usage that aren't
   appropriate here, right?}
-
+\pedro{If you want to keep ``semantic domain'', we could go for ``all-encompassing semantic domain''}
 \steven{Check details for 2-cat of grammar formalisms}
 
 
@@ -330,7 +338,9 @@ conjunction, disjunction, concatenation, etc.
 Unfortunately, programming in a linear term language is often
 cumbersome and unintuitive for users. Code in such a language can
 become unnecessarily verbose when using Girard encodings to translate
-high-level reasoning into low-level linear terms. To alleviate this
+high-level reasoning into low-level linear terms.\pedro{What encodings are these?
+We should add a citation here}
+To alleviate this
 concern, in 1995 Benton et al.\ proposed an alternative categorical
 semantics of linear logic based on adjoint interactions between linear
 and non-linear logics \cite{bentonMixedLinearNonlinear1995} ---
@@ -357,19 +367,34 @@ internal to \theoryabbv.
   choice, but it doesn't really flow well to the beginning of the next subsection }
 
 
+In this section we go through a tour of \theoryabbv. We start by presenting its syntax.
+In order to avoid a notion of raw-term, we present it in an intrinsically-typed fashion,
+where only well-typed terms are meaningful. Next, we show how it admits a model in $\Set^{\String}$
+where the linear types have natural interpretation in terms of formal languages --- for instance,
+the tensor corresponds to grammar concatenation. We conclude the section by showing how
+classes of grammars correspond to certain subtype-theories inside \theoryabbv.
+
+\pedro{Hopefully this serves as a segue between this and the syntax subsection}
 \subsection{Syntax}
 \label{subsec:syntax}
 
 Below we describe \theoryname~(\theoryabbv), an instance of an LNL theory with dependent types
 to serve as a deductive
-setting for formal grammar theory. \theoryabbv axiomatizes the necessary structure underlying $\Set^{\String}$ to
+setting for formal grammar theory. \theoryabbv axiomatizes the necessary structure underlying $\Set^{\String}$ \pedro{We should probably stick to either $\Set^{\String}$ or $\mathbf{Gr}$ from now on}to
 specify and construct parsers.
 
 The structural judgments are shown in \cref{fig:structjdg}, the typing
-well-formedness in \cref{fig:typewf}, and the intuitionistic typing rules in
-\cref{fig:inttyping}. These are all just as they appear in
-\cite{krishnaswami_integrating_2015}. The treatment of the non-linear types is
-pretty standard, so below we focus on the linear syntax.
+well-formedness in \cref{fig:typewf}, and the intuitionistic typing
+rules in \cref{fig:inttyping}. These are mostly just as they appear in
+\cite{krishnaswami_integrating_2015}. It has two main differences. The
+first one it the presence of two-distinct arrow types, one for adding
+variables to the beginning of contexts and another one for adding
+variables to the end of contexts. This is an adequate change in the
+context of grammars, which are inherently non-symmetric. The second
+change is the introduction of inductive types, which also have a
+natural grammar counterpart, which usually allows kinds of recursive
+behavior such as the Kleene star. The treatment of the non-linear
+types is pretty standard, so below we focus on the linear syntax.
 
 \begin{figure}
   \begin{mathpar}
@@ -705,6 +730,8 @@ pretty standard, so below we focus on the linear syntax.
 \end{figure}
 
 \subsection{Formal Grammars as Linear Types}
+\label{sec:formaltype}
+
 The linear typing judgment in our syntax takes on the following schematic form
 $\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
 our syntax. The intended semantics of these linear types are formal grammars.
@@ -719,7 +746,7 @@ are parse trees for the grammars.
 
 $\Gamma$ represents a non-linear context, while $\Delta$ represents a
 \emph{linear context} dependent on $\Gamma$. These linear contexts behave
-substructurally. As stated earlier, they do are linear --- they do not obey
+substructurally. As stated earlier, they are linear --- they do not obey
 weakening or contraction --- because a character is exhausted once read by a
 parsing procedure. Moreover, the characters in strings appear in the order in
 which we read them. We do not have the freedom to freely permute characters,
@@ -736,18 +763,22 @@ interpretation of types as grammars in $\Set^{\String}$ serves as our intended
 semantics, we simultaneously give the interpretation $\sem \cdot$ of the
 semantics as grammars.
 
-Most of the non-linear semantics is standard, so let us investigate in more
-depth the linear semantics. The interpretation of each
-connective is exactly what is suggested by the syntax, ude in
-large part to the inspiration taken from the grammar interpretation
-when designing \theoryabbv.
+\pedro{The paragraphs above are a bit circular, what about the following alternative?}
+
+Now that we have specified the syntactic aspect of \theoryabbv, we must justify
+its connections to formal grammars in order to show that it is a sound methodology
+for reasoning about parsers. We do this by showing that $\mathbf{Gr}$ is a model
+to our type theory.
+
+Most of the non-linear semantics is standard \pedro{We should either cite something or add the non-linear semantics in the appendix}, so let us investigate in more
+depth the linear semantics.
 
 \begin{enumerate}
   \item A non-linear context $\Gamma$ denotes a set $\sem \Gamma$
   \item A non-linear type $\Gamma \vdash X : U_{i}$ denotes a family of sets
         $\sem X : \sem \Gamma \to \Set_{i}$
   \item A non-linear term $\Gamma \vdash e : X$ denotes a section
-        $\sem e : \Pi(\gamma : \sem \Gamma)\sem{X} \gamma$
+        $\sem e : \Pi(\gamma : \sem \Gamma)\sem{X} \gamma$ \pedro{we have not defined what sections are}
   \item Linear contexts $\Gamma \vdash \Delta$ and types
         $\Gamma \vdash A : L_{i}$ both denote families of grammars
         $\sem \Gamma \to \Gr_{i}$
@@ -764,11 +795,11 @@ context\footnote{When appropriate, statements like ``the empty linear context''
 $\otimes$ described below.
 
 As a grammar,
-
+%
 \[
   \sem {I} \gamma w = \{ () ~|~ w = \varepsilon \}
 \]
-
+%
 That is, $I$ maps strings to the proposition that they are the empty string. $I$
 is clearly only inhabited by the empty string $\varepsilon$, for which the
 outputted set contains a single parse tree.
@@ -779,10 +810,11 @@ For each character $c$ in the alphabet $\Sigma$, we include a base type at the
 lowest universe level $c : L_{0}$.
 
 The grammar interpretation for characters is quite similar to that of $I$.
+%
 \[
   \sem {c} \gamma w = \{ () ~|~ w = c \}
 \]
-
+%
 The grammar for the character $c$ likewise maps strings $w$ to the proposition that
 they are equal to $c$.
 
@@ -796,15 +828,15 @@ extension $\Delta, \Delta'$ forms a linear term of type $A \otimes B$.
 
 As stated above, the type $I$ serves as the unit for $\otimes$. That is, for all
 linear types $A$, the following equalities hold:
-
+%
 \[ I \otimes A \equiv A \otimes I \equiv A \]
-
+%
 In the grammar semantics,
-
+%
 \[
   \sem {A \otimes B} = \Sigma_{w_{1}, w_{2} : \String} (w_{1}w_{2} = w) \land \left(  \sem {A} \gamma w_{1} \times \sem {B} \gamma w_{2} \right)
 \]
-
+%
 The string $w$ matches $A \otimes B$
 precisely when it may be split into two
 pieces such that the left one matches $A$
@@ -815,19 +847,19 @@ The monoidal structure provided by $\otimes$ is both left and right closed and
 this is denoted by the left and right linear function types. Further,
 for linear types $A$ and $B$ the left linear function type $A \lto B$
 enjoys an elimination principle similar to function application or modus ponens.
-
+%
 \[
 \inferrule{\Delta \vdash A \otimes A \lto B}{\Delta \vdash B}
 \]
-
+%
 The interpretation of linear function types at a string $w$ is a linear function
 that takes in parses of $A$ on a string $w_{a}$ and outputs parses of $B$ on the
 string $w_{a} w$.
-
+%
 \[
   \sem{A \lto B} \gamma w = \Pi(w_a:\String) \left( A \gamma w_a \Rightarrow B\gamma (w_a w) \right)
 \]
-
+%
 That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
 complete to parses of $B$. In this manner, the linear function types generalize
 Brzozowksi's notion of derivative
@@ -839,6 +871,8 @@ construction can be generalized to context free grammars
 types, the same notion of derivative extends to the grammars of \theoryabbv.
 Note, to ensure that the linear function types do indeed generalize Brzozowski
 derivative, we must include the equalities in \cref{fig:brzozowskideriv} as axioms.
+\pedro{We should further explain why these equations are required, or at the very
+least give some intuition}
 
 Of course, all the above statements for the left function type also have
 corresponding analogues for the
@@ -870,12 +904,13 @@ $\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
 The grammar semantics of the linear product type is
 indeed a dependent function out of the
 semantics of $X$. Likewise, the grammar semantics of the linear dependent pair type is a dependent
-pair in $\Set$.
+pair in $\Set$.\pedro{The connection to grammar semantics needs to be better explained. For instance,
+we should explain that disjunction corresponds to ``or'' of grammars}
 
 Note that even though we do not take the binary additive conjunction and
 disjunction as primitive, we may define them via these LNL dependent types. In
 particular, via a dependence on $\Bool$.
-
+%
 \[
   A \amp B := \LinPiTy b \Bool {C(b)}
 \]
@@ -886,18 +921,18 @@ where $C(\true) = A, C(\false) = B$.
 
 \paragraph{Universal Type}
 The universal type $\top$ may be formed in any context.
-
+%
 \[ \sem{\top} \gamma w = \{ \ast \}\]
-
+%
 Its grammar semantics in set outputs the unit type in $\Set$ for all input strings in all contexts.
 
 \paragraph{Empty Type}
 The empty type $\bot$ has no inhabitants. The elimination for the empty type
 witnesses the principle of explosion --- i.e.\ from a term of type $\bot$ we may
 introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
-
+%
 \[ \sem {\bot} \gamma w = \emptyset \]
-
+%
 \paragraph{The $G$ Modality}
 The $G$ modality provides the embedding of linear types in the empty context
 into non-linear types. The introduction and elimination forms for $G A$ obey the
@@ -905,24 +940,30 @@ same rules as given in \cite{bentonMixedLinearNonlinear1995} and \cite{krishnasw
 
 The left adjoint $F$ from non-linear types back to linear types may be defined
 as,
-
+%
 \[
   F X := \LinSigTy a A I
 \]
-
+%
 \steven{Elaborate on $G$ more}
 
+\pedro{Agreed :) maybe mention connections to persistent propositions from the
+separation logic literature}
+
 The semantics of $G A$ are exactly the semantics of $A$ at the empty word $\varepsilon$.
-
+%
 \[ \sem{G A} \gamma = \sem{A} \gamma \varepsilon \]
-
-
+%
+%
 \paragraph{Recursive Types}
 Recursive linear types may be defined via the least-fixed point operator $\mu$.
 The grammar semantics of which are the fixed-point of sets induced by the
 grammar semantics of $A$.
-
+%
 \[ \sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x) \]
+%
+\pedro{We should justify, even if briefly, the existence of this
+  fixed-point}
 
 Observe that we need not take the Kleene star as a primitive
 grammar constructor, as it is definable as a fixed point.
@@ -968,6 +1009,13 @@ $I \oplus (X \otimes g)$. In fact, the definitions are
 equivalent, as the existence of the $\mathsf{foldl}$ term below
 shows that $g^{*}$ is also a fixed point of
 $I \oplus (X \otimes g)$.
+
+\pedro{This is an extremely important point! We should definitely make
+  a reference to the Kleene algebra world, where these things do not
+  hold. I think that it might even be a good idea to add the
+  ``underlying trick'' to the main body of text. It's important to
+  connect our work to existing ideas and concerns from the theory of
+  formal languages.}
 
 \begin{equation}
   \label{eq:foldl}
@@ -1054,21 +1102,17 @@ calculus, which of course induces a semantics of unrestricted grammars.
 \section{Categorifying Formal Grammars}
 \label{sec:categorify}
 
-Under the Curry-Howard-Lambek correspondence, the programs of the simply-typed
-$\lambda$-calculus may be viewed under any one of the three equivalent views: as
-terms in a simple functional language, as proofs in an intuitionisitc
-propositional logic, or as morphisms in a Cartesian closed category. In the
-same vein, with the syntax provided, we aim to give a
-categorical accounting of the semantics of \theoryabbv. Let us begin by paring back
-the connectives in the language and only considering the subtheory induced by
-regular expressions.
 
-\steven{Added the above transition paragraph to handle putting the categorical semantics after
-  the syntax. I think it sounds weird though}
+An important part in the study of type theories is characterizing what
+categorical structures they are modeling. In the case of \theoryabbv,
+due to its intended connection to formal language theory, we use
+Kleene algebras as a starting point in its categorical
+semantics. Being posets, there is an immediate way of categorifying
+them.
 
-By giving algebraic laws of manipulation and equivalence to regular expressions,
-Kleene algebras are an important tool in the theory of regular
-languages. More broadly, through various extensions, they serve as a
+Kleene algebras are an important tool in the theory of regular languages
+due to them being a bridge between algebraic reasoning and equivalence
+of regular expressions. More broadly, through various extensions, they serve as a
 theoretical substrate to studying different kinds of formal languages.
 
 We posit that by seeing Kleene algebra through the lens of category
@@ -1102,9 +1146,9 @@ satisfy the axioms depicted in Figure~\ref{fig:axioms}.
 The addition operation can be used to define the partial order
 structure $a \leq b$ if, and only if, $a + b = b$. In the theory of
 formal languages, this order structure can be used to model language
-containment. In this section, we want to categorify the concept of
-Kleene algebra and build on top of it in order to define an abstract
-theory of parsing.  We start by defining \emph{Kleene categories}.
+containment. In this section, we categorify the concept of Kleene
+algebra and build on top of it in order to define an abstract theory
+of parsing. We start by defining \emph{Kleene categories}.
 
 \begin{definition}
   A Kleene category is a distributive monoidal category $\cat{K}$
@@ -1120,15 +1164,21 @@ Kleene categories.
 
 \begin{example}
   Every Kleene algebra, seen a posetal category, is a Kleene category.
+  The product $\cdot$ is a monoidal product and the addition is a
+  least-upper bound, which corresponds to a coproduct. Lastly, the
+  axioms of the Kleene star have a direct correspondence to the
+  coherence conditions postulated by the initial algebras of Kleene
+  categories.
 \end{example}
 
-This example illustrates how restricted Kleene algebras are in terms
-of reasoning about languages. By only having at most one morphism
-between objects, there is not a lot of information they can convey. In
-this case, the only information you get is language containment. We
-will see throughout this paper how the extra degrees of freedom
-granted by having more morphisms give you more algebraic structure for
-reasoning about languages.
+This example provides a neat categorical justification to how
+restrictive Kleene algebras are in terms of reasoning about
+languages. By only having at most one morphism between objects, there
+is not a lot of information they can convey. In this case, the only
+information you get is language containment. As demonstrated by
+$\mathbf{Gr}$, the extra degrees of freedom granted by having more
+morphisms gives you more algebraic structure for reasoning about
+languages.
 
 For the next example, we see an unexpected connection with the theory
 of substructural logics.
@@ -1140,8 +1190,8 @@ of substructural logics.
   be discarded or duplicated.
 \end{example}
 
-The proposed axioms are a direct translation of the Kleene algebra
-axioms to a categorical setting. Its most unusual aspect is the
+As we have seen, the proposed axioms are a direct translation of the
+Kleene algebra axioms to a categorical setting. Its most unusual aspect is the
 axiomatization of the Kleene star as a family of initial algebras
 satisfying certain isomorphisms. If the Kleene category $\cat{K}$ has
 more structure, then these isomorphisms hold ``for free''.
@@ -1153,25 +1203,25 @@ more structure, then these isomorphisms hold ``for free''.
 \end{theorem}
 \begin{proof}
   We prove this by the unicity (up-to isomorphism) of initial
-  algebras. Let $[hd, tl]: 1 + (\mu X.\, F_{A, 1}(X)) \otimes A \to
-  (\mu X.\, F_{A, 1}(X))$ be the initial algebra structure of $(\mu
-  X.\, F_{A, 1}(X))$ and consider the map $[hd, tl] : B + B \otimes
-  (\mu X.\, F_{A, 1}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
-    1}(X))$.
+  algebras. Let $[hd, tl]: I + (\mu X.\, F_{A, I}(X)) \otimes A \to
+  (\mu X.\, F_{A, I}(X))$ be the initial algebra structure of $(\mu
+  X.\, F_{A, I}(X))$ and consider the map $[hd, tl] : B + B \otimes
+  (\mu X.\, F_{A, I}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
+    I}(X))$.
 
   Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
-  we want to show that there is a unique algebra morphism $h : \mu X.\, F_{A,1} \to B \lto Y$. We can show existence and
+  we want to show that there is a unique algebra morphism $h : \mu X.\, F_{A,I} \to B \lto Y$. We can show existence and
   uniqueness by showing that the diagram on top commutes if, and
   only if, the diagram on the bottom commutes:
 
 % https://q.uiver.app/#q=WzAsOCxbMCwwLCJCICsgQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFsyLDAsIkIgKyBZIFxcb3RpbWVzIEEiXSxbMiwyLCJZIl0sWzAsMiwiQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDMsIjEgKyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDUsIlxcbXUgWC5cXCwgMSArIFggXFxvdGltZXMgQSJdLFsyLDMsIjEgKyAoIEIgXFxsdG8gWSkgXFxvdGltZXMgQSJdLFsyLDUsIkIgXFxsdG8gWSJdLFswLDEsImlkICsgKGlkIFxcb3RpbWVzIGg7IGV2KSBcXG90aW1lcyBpZF9BIl0sWzEsMiwiW2YsZ10iXSxbMywyLCJpZCBcXG90aW1lcyBoOyBldiIsMl0sWzAsMywiW2lkIFxcb3RpbWVzIGgsIGlkIFxcb3RpbWVzIHRsXSIsMl0sWzQsNiwiaWQgKyAoaCBcXG90aW1lcyBYKVxcb3RpbWVzIGlkIl0sWzUsNywiaCIsMl0sWzYsNywiW2YnLCBnJ10iXSxbNCw1LCJbaGQsIHRsXSIsMl1d
 \[\begin{tikzcd}
-	{B + B \otimes (\mu X.\, 1 + X \otimes A)} && {B + Y \otimes A} \\
+	{B + B \otimes (\mu X.\, I + X \otimes A)} && {B + Y \otimes A} \\
 	\\
-	{B \otimes (\mu X.\, 1 + X \otimes A)} && Y \\
-	{1 + (\mu X.\, 1 + X \otimes A)} && {1 + ( B \lto Y) \otimes A} \\
+	{B \otimes (\mu X.\, I + X \otimes A)} && Y \\
+	{I + (\mu X.\, I + X \otimes A)} && {I + ( B \lto Y) \otimes A} \\
 	\\
-	{\mu X.\, 1 + X \otimes A} && {B \lto Y}
+	{\mu X.\, I + X \otimes A} && {B \lto Y}
 	\arrow["{id + (id \otimes h; ev) \otimes id_A}", from=1-1, to=1-3]
 	\arrow["{[f,g]}", from=1-3, to=3-3]
 	\arrow["{id \otimes h; ev}"', from=3-1, to=3-3]
@@ -1184,7 +1234,9 @@ more structure, then these isomorphisms hold ``for free''.
 
   This equivalence follows by using the adjunction structure given
   by the monoidal closed structure of $\cat{K}$. A completely analogous
-  argument for $G_{A,B}$ also holds.
+  argument for $G_{A,B}$ also holds. Furthermore, by generalizing the
+  construction of \Cref{sec:formaltype}, we can also show that from
+  the monoidal closed assumption it follows that $\mu X.\, F_{A, I}(X) \cong \mu X.\, G_{A, I}(X)$
 \end{proof}
 
 Something surprising about this lemma is that it provides an alternative
@@ -1257,11 +1309,6 @@ algebras can reason about language containment, Kleene categories can
 reason about parsing as well, as illustrated by the presheaf model
 above.
 
-For the rest of the paper we will use the presheaf category
-$\Set^{\cat{\Sigma^*}}$ as a concrete model that will serve as our
-guide when expanding abstract formalism presented in this section so
-that it can handle more classes of languages beyond regular ones.
-
 \subsection{Beyond Simple Types}
 
 Though Kleene categories are expressive enough to reason about
@@ -1317,8 +1364,21 @@ if we don't say anything about the syntactic category, reviewers won't mind.}
   isn't true. By restating our definition of Chomksy category, this should be
   obvious or a quick proof}
 
+\pedro{I agree, then we should add the quick proof :) }
+
 \section{Other Models}
 \label{sec:othermodels}
+
+One of the powers of type theories is that it can be profitable to interpret them
+in various models. In this section, by using our just-defined Chomsky categories,
+we show how other useful concepts from formal language theory can also be organized
+as models of \theoryabbv. We illustrate this point by providing two examples that
+are closely related to the theory of formal languages: language equivalence and
+semantic actions. Furthermore, in order to justify how $\mathbf{Gr}$ relates to
+more traditional notions of parsing, we define a glued model that proves a
+canonicity property of grammar terms.
+
+
 \subsection{Language Semantics}
 Every grammar induces a language semantics. Also languages can be taken as a
 propositionally truncated view of the syntax. Logical equivalence should induce
@@ -1326,7 +1386,7 @@ weak equivalence, and thus even give a syntactic way to reason about language eq
 \steven{TODO language semantics}
 
 \subsection{Semantic Actions}
-Returning to the problem of parsing, the output of a parse usually isn't the
+Returning to the problem of parsing, the output of a parse usually is not the
 literal parse tree. Rather, the output is the result of some \emph{semantic
   actions} ran on the parse tree, which usually serve to remove some syntactic
 details that are unnecessary for later processing.
@@ -1351,6 +1411,10 @@ probably warrants a proof}
 
 \steven{TODO semantic actions}
 
+\pedro{This is a very nice opportunity of showing off the supremacy of denotational
+  reasoning ;) We should probably prove the gluing lemma in the previous section
+  and apply it here and in the canonicity section. The actual proof might have to be
+  moved to the appendix, though}
 
 \subsection{Parse Canonicity}
 Canonicity is an important metatheoretic theorem in the type theory
