@@ -1236,7 +1236,7 @@ and their parsers. This leads us to the abstract notion of model we
 are interested in capturing with \theoryabbv: a \emph{Chomsky
 category}.
 
-\pa{We should probably define some of the words in this definition}
+\pedro{We should probably define some of the words in this definition}
 \begin{definition}
   A Chomsky category is a locally Cartesian category with two hierarchies of
   universes $\{L_i\}_{i\in \nat}$ and $\{U_i\}_{i\in \nat}$ such that
@@ -1318,7 +1318,7 @@ reduces to either true or false, is enough to justify that the type
 theory being studied is well-behaved. In our case, however, since we
 want to connect \theoryabbv to parsers, we must provide a more
 detailed account of canonicity. In particular, we give a nonstandard semantics
-of \typeabbv that carries a proof of canonicity along with it.
+of \theoryabbv that carries a proof of canonicity along with it.
 
 If $\cdot \vdash A$ is a closed linear type then there are
 two obvious notions of what constitutes a ``parse'' of a string w
@@ -1367,8 +1367,13 @@ forms as well. To show that this is indeed the case we give a
   We outline the proof here, more details are in the appendix. The
   proof proceeds first by a standard logical families construction
   that combines canonicity arguments for dependent type theory
-  \cite{coquand,etc} with logical relations constructions for linear
-  types \cite{hylandschalk}. It is easy to see by induction that the
+  TODO cite coquand
+  % \cite{coquand,etc}
+  with logical relations constructions for linear
+  types
+  TODO cite hylandschalk
+  % \cite{hylandschalk}
+  . It is easy to see by induction that the
   logical family for $A$, $\hat A$ is isomorphic to $\llbracket A
   \rrbracket$ and the fundamental lemma proves that the projection
   morphism $p : \hat A \to N(A)$ has a section, the canonicalization
@@ -1621,7 +1626,7 @@ other terms in a context containing values of type
 $\mathsf{Trace}_{N}(q , q')$. For this purpose, we make use
 of the elimination principle for multiple-fixed points ---
 which we write as $\mathsf{mfold}$ --- given
-in \cref{subsubsec:other}.
+in \cref{fig:multifix}.
 
 Note that this general construction will readily generalize to other types of
 automata. If we wanted to define say deterministic finite automata\footnote{DFAs
@@ -1690,7 +1695,7 @@ at a time, and then accepting or rejecting based on the
 final state. This is exactly what DFAs did initially, so
 what did we gain? Well, this has the benefit of our type
 system to ensure its correctness. Moreover, this construction exports to an
-intrinsically verified and executable decision procedure for DFAs in \thoeryabbv
+intrinsically verified and executable decision procedure for DFAs in \theoryabbv
 embedded in Agda.
 
 We should note that the
