@@ -119,7 +119,9 @@
 
   To demonstrate the usefulness of the calculus for formal grammar
   theory, we show that different grammar formalisms \max{which ones do
-    we actually show?} can be expressed as linear types in
+    we actually show?} \steven{regular expressions, $\mu$-regular expressions
+    (or context free expressions), and different automata classes (finite,
+    pushdown, turing)} can be expressed as linear types in
   \theoryabbv. We give simple characterizations of the regular and
   context-free grammars as expressible by restricting which
   connectives of \theoryabbv are allowed, a form of type theoretic
@@ -888,9 +890,11 @@ The semantics of $G A$ are exactly the semantics of $A$ at the empty word $\vare
 
 
 \paragraph{Recursive Types}
-isorecursive types
-\steven{TODO recursive types}
-  % \item $\sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x)$
+Recursive linear types may be defined via the least-fixed point operator $\mu$.
+The grammar semantics of which are the fixed-point of sets induced by the
+grammar semantics of $A$.
+
+\[ \sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x) \]
 
 Observe that we need not take the Kleene star as a primitive
 grammar constructor, as it is definable as a fixed point.
@@ -964,39 +968,32 @@ primitive operation in the type theory, but we may apply
 Beki\`c's theorem \cite{Bekić1984} to define an admissible
 notion of multivariate fixed point. This is particularly
 useful for defining grammars that encode the states of an
-automaton. In \cref{fig:multifix} we provide the
+automaton, as we will see in \cref{sec:automata}. In \cref{fig:multifix} we provide the
 introduction and elimination principles for such a fixed
 point, where $\sigma$ is the substitution that unrolls the
 mutually recursive definitions one level. That is,
 
 \begin{align*}
-  \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \\
-  & \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{n} / X_{n} \}
+  \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{n} / X_{n} \}
 \end{align*}
 
-\begin{figure}[h!]
+\begin{figure}
 \begin{mathpar}
   \inferrule
   {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
   {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
 
-  \\
+  \and
 
   \inferrule
   {\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k} \\
-             \Gamma ; x_{1} : \simulsubst {A_{1}}{\gamma} \vdash e_{1} : B_{1} \\
-             \dots \\
-             \Gamma ; x_{n} : \simulsubst {A_{n}}{\gamma} \vdash e_{n} : B_{n}
+             \Gamma ; x_{j} : \simulsubst {A_{j}}{\sigma} \vdash e_{j} : B_{j}\quad \forall j
   }
   {\Gamma; \Delta \vdash \mathsf{mfold}(x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{k}}
 \end{mathpar}
 \caption{Multi-fixed Points}
 \label{fig:multifix}
 \end{figure}
-
-The most prevalent application of these multi-fixed points
-is for defining the traces through automata, as we will see
-later in \cref{eq:nfatrace}.
 
 \subsection{Subtheories}
 Each choice of connective has direct implications on the expressivity of
@@ -1038,7 +1035,7 @@ categorical accounting of the semantics of \theoryabbv. Let us begin by paring b
 the connectives in the language and only considering the subtheory induced by
 regular expressions.
 
-\steven{Added this transition to handle putting the categorical semantics after
+\steven{Added the above transition paragraph to handle putting the categorical semantics after
   the syntax. I think it sounds weird though}
 
 By giving algebraic laws of manipulation and equivalence to regular expressions,
@@ -1725,7 +1722,8 @@ axiom.
 \]
 
 That is, the characters in the alphabet $\Sigma$ really are all of the
-characters. The necessity of this axiom arises when we go to take a transition,
+characters. The necessity of this axiom arises when we go to take a transition
+within the DFA,
 as we must ensure that the nexts character read has a corresponding transition
 --- which would be guaranteed by determinism provided there are no surprise characters.
 \steven{The above paragraph sounds weird}
@@ -1793,7 +1791,7 @@ satisfactory internalization of the equivalence between
 regular grammars and DFAs, and thus would bridge the gap
 between our DFA parser and a full regular expression parser.
 
-\subsection{Equivalence Between Regular Grammars and Finite Automata}
+\subsection{Equivalence Between Regular Expressions and Finite Automata}
 \label{subsec:eqproofs}
 In this section, we describe a version of Thompson's
 construction \cite{thompsonProgrammingTechniquesRegular1968}
@@ -1819,14 +1817,14 @@ We make a pretty straightforward adaptation of Thompson's theorem to our setting
 
 \begin{theorem}[Typed Thompson]
   \label{thm:typthompson}
-  For $g$ a regular grammar $g$, there is an NFA $N$ such that $g$ is isomorphic
+  For $g$ a regular expression $g$, there is an NFA $N$ such that $g$ is isomorphic
   to $\mathsf{AccTrace}_{N}$.
 \end{theorem}
 
 \begin{proof}[Proof Sketch]
-  Recall that regular grammars are inductively defined via
+  Recall that regular expressions are inductively defined via
   disjunction, concatenation, and Kleene star over literals
-  and the empty grammar. By induction over regular grammars,
+  and the empty grammar. By induction over regular expressions,
   we will construct an NFA that is equivalent to $g$.
 
   First, define the recognizing NFA for the empty grammar
@@ -2175,8 +2173,7 @@ to encode the tape of a Turing machine. With two stacks we can simulate the beha
 infinite tape of a Turing machine. The intuition behind this correspondence is
 that the left half of the tape is on one stack, the right
 half of the tape the other, and we treat the tops of stacks
-like the head of the tape. We should reflect on the generality of our syntax, as
-it allows a natural encoding of Turing machines.
+like the head of the tape.
 
 \pedro{I like the overall structure of this section! Showing how the type theory
 can encode and reason about different kinds of languages is very instructive!}
