@@ -7,6 +7,7 @@
 \usepackage{enumitem}
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
+\usepackage{xspace}
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{stmaryrd}
@@ -21,11 +22,15 @@
 \newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
 \newcommand{\String}{\Sigma^{*}}
 \newcommand{\Set}{\mathbf{Set}}
+\newcommand{\SemAct}{\mathbf{SemAct}}
 \newcommand{\Gr}{\mathbf{Gr}}
+\newcommand{\Grammar}{\mathbf{Gr}}
 \newcommand{\Type}{\mathbf{Type}}
 \newcommand{\Prop}{\mathbf{Prop}}
 \newcommand{\Bool}{\mathbf{Bool}}
 \newcommand{\nat}{\mathbb{N}}
+\newcommand{\theoryname}{Grammar Type Theory\xspace}
+\newcommand{\theoryabbv}{GTT\xspace}
 
 \newcommand{\gluedNL}{{\mathcal G}_S}
 \newcommand{\gluedNLUniv}{{\mathcal G}_{S,i}}
@@ -96,21 +101,21 @@
 \makeatother
 
 \begin{abstract}
-  In this paper, we propose a new syntactic formalism for formal grammars: a
+  In this paper we propose \theoryname~(\theoryabbv), a new syntactic formalism for formal grammars: a
   dependent linear/non-linear type theory in which the tensor product is
   non-commutative. The linear types in this calculus may be interpreted as
   grammars, and linear terms as parse transformers. This provides a logical
   characterization of grammar classes based on a substructural logic rather than
   ordinary first-order logic.
 
-  Internally to our calculus, we carry out many classical constructions from
+  Internal to \theoryname, we carry out many classical constructions from
   the theory of formal grammars. Inspired by the common
   structure underlying various ideas in formal language
   theory, our type theory makes these relationships explicit
   and provides a unifying syntax to reason about formal
   grammars.
 
-  We give this type theory a semantics in the category of grammars and prove a
+  We give a semantics in the category of grammars and prove a
   canonicity theorem showing that every term in a context corresponding to a
   fixed string is equal to a term in a canonical form encoding a parse tree of
   that string. Finally, we discuss the application to the design and
@@ -130,21 +135,29 @@ algorithms for parsing of regular and context-free grammars and
 variants \cite{KNUTH1965607,Earley1970}, as well as implementations of practical tools for the
 generation of efficient parsers \cite{Johnsonyacc}.
 
-\paragraph{Contributions.} This paper begins in \cref{sec:categorify} by giving a categorical interpretation of Kleene algebra. However, Kleene algebras are primarily concerned with the regular languages. With this in mind, we further abstract our categorical model from the connectives of regular grammars to those of context-free grammars and beyond. From there, in \cref{sec:tt} we provide a type theory to construct and reason about such formal grammars. In \cref{sec:semantics} we give interpretations of the syntax as grammars and as languages, and prove a canonicity theorem for the type theory. Finally, in \cref{sec:automata} we give a presentation of automata as grammars. With this view in mind, we may encode parsing algorithms and execute them entirely internal to our formalism. Our contributions are then:
-
-\pedro{Something good is coming up with a name to the type theory... This makes it easier to
-refer to it throughout the paper. Spitballing some suggestions GTT (grammar type theory --- conflicts with Max's Gradual Type Theory), KTT (Kleene type theory)...}
+\paragraph{Contributions.} This paper begins in \cref{sec:synindnotion} by
+giving a universal semantic characterization of formal grammar.
+From there, in \cref{sec:tt} we provide the syntax of \theoryname, a type thoery
+that axiomatizes the underlying structures needed to conduct formal grammar
+theory. Then in \cref{sec:categorify}, we characterize the abstract categorical
+models of our syntax. Afterwards, we demonstrate several models of \theoryabbv,
+include one to prove a metatheoretic canonicity theorem. Finally, in
+\cref{sec:automata} we give a presentation of automata as grammars. With this
+view in mind, we may encode parsing algorithms and execute them entirely
+internal to our formalism. Our contributions are then:
 
 \begin{itemize}
-  \item A universal semantic notion of formal grammar given by the category $\Set^{\String}$
-  \item Categorical structures that capture the concepts integral to formal grammar theory, and that are notably modeled by $\Set^{\String}$
-  \item A dependent
-    linear/non-linear (LNL) type theory to syntactically capture the above categorical structures
+  \item A syntax-independent notion of grammar given by the category $\Grammar$
+  \item \theoryname: A dependent
+    linear-non-linear type theory meant to syntactically capture the latent structures
+    in $\Grammar$ that enable parsing
+  \item Categorical structures that capture the concepts integral to formal grammar theory, and that are notably modeled by $\Grammar$
   \item An implementation of the language, which is embedded shallowly in Agda
 \end{itemize}
 
 
 \section{A Syntax-Independent Notion of Syntax}
+\label{sec:synindnotion}
 
 The notion of formal language is central to the theory of parsing. A
 \emph{formal language} $L$ over an alphabet $\Sigma$ is classically defined as a
@@ -189,28 +202,33 @@ For each formal grammar $G$, define the language of accepted strings $L_{G}$ as,
 \[ L_{G} = \{ w \in \String ~|~ G w~\text{is inhabited} \} \]
 
 As they are simply sets, formal languages are naturally endowed with a partial
-order via subset inclusion. Similarly, formal grammars are naturally endowed
-with the structure of a \emph{category}. A morphism $f : G \to H$ between two
-grammars is given by a family of functions
+order via subset inclusion. Similarly, formal grammars naturally coalesce into a
+\emph{category}. Define $\Grammar$ to be the category of formal grammars. Whose
+objects are grammars, and whose morphisms are functions $f : G \to H$ between two
+grammars presented by a family of functions
 
 \[ f^{w} : G w \to H w \]
 
 for every string $w \in \String$. Intuitively, we read a morphism of grammars as
-a \emph{parse transformer}: $f$ translates a $G$-parse of $w$ into an $H$-parse
-of $w$. The notion of isomorphism induced by
-this categorical structure encodes that two grammars are equivalent if there is
-a bijective translation of parses --- precisely Chomsky's notion of \emph{strong equivalence} of
-grammars \cite{chom1963}.
+a \emph{parse transformer} --- i.e. $f$ translates a $G$-parse of $w$ into an $H$-parse
+of $w$. The induced notion of isomorphism in $\Grammar$ encodes that two grammars are equivalent if there is
+a bijective translation of parses. In other words, two grammars are isomorhpic
+if they capture the same structural descriptions of strings, which is
+precisely Chomsky's notion of \emph{strong equivalence} of
+grammars \cite{chom1963}. In works like
+\cite{yoshinaga2002formal}, this notion of strong equivalence is often treated
+like the appropriate choice of ``sameness'' for two grammars. When abstracting over the latent
+structure of formal grammars and describing it in the the language of
+categories, it is encouraging to see the same definition of equivalence arise
+naturally.
 
-\pedro{Written like this, it seems like this correspondence iso-strong
-  equivalence is a well-known fact, but this is not an obvious
-  observation.}
 
-
-The above category of grammars can equivalently be described as the functor
-category $\Set^{\String}$ --- where the set $\String$ is viewed as a discrete
-category. That is, the objects in $\String$ are strings and the only morphisms
-are identity morphisms. Such functor categories into $\Set$ --- often called
+Upon inspection of the above definition, $\Grammar$ may equivalently be described as the functor
+category $\Set^{\String}$ --- where the set $\String$ is viewed as a
+discrete\footnote{Objects in $\String$ comprise the set of all strings, and the
+  only morphisms are the identity morphisms.}
+category. In fact, in this paper we will take $\Grammar$ to be defined as the
+functor category $\Set^{\String}$. Such functor categories into $\Set$ --- often called
 presheaf categories --- carry a remarkable amount of structure.
 
 The category-theoretic framework can be further used to describe and compare
@@ -219,251 +237,12 @@ grammars, semi-Thue systems, Montague grammars, and so on are all distinct synta
 presentations of the same underlying idea of an abstract specification for
 parsing. Each of these is an instance of a general \emph{notion of formal
   grammar} --- a category paired with a functor into
-$\Set^{\String}$. That is, they may all be interpreted in our category of grammars. In this sense, $\Set^{\String}$ provides a universal setting to reason about parsing.
-The slice 2-category over $\Set^{\String}$ then provides the appropriate expressivity to prove equivalences between grammar formalism, such as the equivalence between semi-Thue systems and Chomsky's unrestricted grammars.
-\pedro{why?}
+$\Grammar$. That is, they may all be interpreted in our category of grammars. In this sense, $\Grammar$ provides a universal setting to reason about parsing.
 
 \steven{Check details for 2-cat of grammar formalisms}
 
-\section{Categorifying Formal Grammars}
-\label{sec:categorify}
-\steven{Idk if this section has the right title, but I wanted to change it if we are adding ``Chomsky categories''}
 
-Kleene algebras are an important tool in the theory of regular
-languages. More broadly, through various extensions, they serve as a
-theoretical substrate to studying different kinds of formal languages.
-
-We posit that by seeing Kleene algebra through the lens of category
-theory, we gain some insight into the type-theoretic essence of formal
-grammars. We begin this section by providing a ``simply-typed''
-version of a categorification of Kleene algebra, which we call Kleene
-category, and then show define a more expressive class of categories,
-which we call Chomsky category, that will serve as the categorical
-semantics to our type theory.
-
-\subsection{Kleene categories}
-A Kleene algebra is a tuple $(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is
-a set, $+$ and $\cdot$ are binary operations over $A$, $(-)^*$ is a
-function over $A$, and $1$ and $0$ are constants. These structures
-satisfy the axioms depicted in Figure~\ref{fig:axioms}.
-
-\begin{figure}
-  \begin{align*}
-    x + (y + z) &= (x + y) + z & x + y &= y + x\\
-    x + 0 &= x & x + x &= x\\
-    x(yz) &= (xy)z & x1 &= 1x = x\\
-    x(y + z) &= xy + xz & (x + y)z &= xz + yz\\
-    x0 &= 0x = x & & \\
-    1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
-     b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
-  \end{align*}
-  \caption{Kleene algebra axioms}
-  \label{fig:axioms}
-\end{figure}
-
-The addition operation can be used to define the partial order
-structure $a \leq b$ if, and only if, $a + b = b$. In the theory of
-formal languages, this order structure can be used to model language
-containment. In this section, we want to categorify the concept of
-Kleene algebra and build on top of it in order to define an abstract
-theory of parsing.  We start by defining \emph{Kleene categories}.
-
-\begin{definition}
-  A Kleene category is a distributive monoidal category $\cat{K}$
-  such that for every objects $A$ and $B$, the endofunctors $F_{A, B}
-  = B + A \otimes X$ and $G_{A, B} = B + X \otimes A$ have initial
-  algebras (denoted $\mu X.\, F_{A, B}(X)$) such that $B \otimes (\mu
-  X.\, F_{A, 1}) \cong \mu X.\, F_{A, B}(X)$ and the analogous isomorphism
-  for $G_{A,B}$ also holds.
-\end{definition}
-
-As a sanity check, note that Kleene algebras are indeed examples of
-Kleene categories.
-
-\begin{example}
-  Every Kleene algebra, seen a posetal category, is a Kleene category.
-\end{example}
-
-This example illustrates how restricted Kleene algebras are in terms
-of reasoning about languages. By only having at most one morphism
-between objects, there is not a lot of information they can convey. In
-this case, the only information you get is language containment. We
-will see throughout this paper how the extra degrees of freedom
-granted by having more morphisms give you more algebraic structure for
-reasoning about languages.
-
-For the next example, we see an unexpected connection with the theory
-of substructural logics.
-
-\begin{example}
-  The opposite category of every Kleene category is a model of a variant of
-  conjunctive ordered logic, where the Kleene star plays the role of the ``of
-  course'' modality from substructural logics which allows hypotheses to
-  be discarded or duplicated.
-\end{example}
-
-The proposed axioms are a direct translation of the Kleene algebra
-axioms to a categorical setting. Its most unusual aspect is the
-axiomatization of the Kleene star as a family of initial algebras
-satisfying certain isomorphisms. If the Kleene category $\cat{K}$ has
-more structure, then these isomorphisms hold ``for free''.
-
-\begin{theorem}
-  \label{th:kleeneclosed}
-  Let $\cat{K}$ be a Kleene category such that it is also monoidal
-  closed.  Then, the initial algebras isomorphisms hold automatically.
-\end{theorem}
-\begin{proof}
-  We prove this by the unicity (up-to isomorphism) of initial
-  algebras. Let $[hd, tl]: 1 + (\mu X.\, F_{A, 1}(X)) \otimes A \to
-  (\mu X.\, F_{A, 1}(X))$ be the initial algebra structure of $(\mu
-  X.\, F_{A, 1}(X))$ and consider the map $[hd, tl] : B + B \otimes
-  (\mu X.\, F_{A, 1}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
-    1}(X))$.
-
-  Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
-  we want to show that there is a unique algebra morphism $h : \mu X.\, F_{A,1} \to B \lto Y$. We can show existence and
-  uniqueness by showing that the diagram on top commutes if, and
-  only if, the diagram on the bottom commutes:
-
-% https://q.uiver.app/#q=WzAsOCxbMCwwLCJCICsgQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFsyLDAsIkIgKyBZIFxcb3RpbWVzIEEiXSxbMiwyLCJZIl0sWzAsMiwiQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDMsIjEgKyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDUsIlxcbXUgWC5cXCwgMSArIFggXFxvdGltZXMgQSJdLFsyLDMsIjEgKyAoIEIgXFxsdG8gWSkgXFxvdGltZXMgQSJdLFsyLDUsIkIgXFxsdG8gWSJdLFswLDEsImlkICsgKGlkIFxcb3RpbWVzIGg7IGV2KSBcXG90aW1lcyBpZF9BIl0sWzEsMiwiW2YsZ10iXSxbMywyLCJpZCBcXG90aW1lcyBoOyBldiIsMl0sWzAsMywiW2lkIFxcb3RpbWVzIGgsIGlkIFxcb3RpbWVzIHRsXSIsMl0sWzQsNiwiaWQgKyAoaCBcXG90aW1lcyBYKVxcb3RpbWVzIGlkIl0sWzUsNywiaCIsMl0sWzYsNywiW2YnLCBnJ10iXSxbNCw1LCJbaGQsIHRsXSIsMl1d
-\[\begin{tikzcd}
-	{B + B \otimes (\mu X.\, 1 + X \otimes A)} && {B + Y \otimes A} \\
-	\\
-	{B \otimes (\mu X.\, 1 + X \otimes A)} && Y \\
-	{1 + (\mu X.\, 1 + X \otimes A)} && {1 + ( B \lto Y) \otimes A} \\
-	\\
-	{\mu X.\, 1 + X \otimes A} && {B \lto Y}
-	\arrow["{id + (id \otimes h; ev) \otimes id_A}", from=1-1, to=1-3]
-	\arrow["{[f,g]}", from=1-3, to=3-3]
-	\arrow["{id \otimes h; ev}"', from=3-1, to=3-3]
-	\arrow["{[id \otimes h, id \otimes tl]}"', from=1-1, to=3-1]
-	\arrow["{id + (h \otimes X)\otimes id}", from=4-1, to=4-3]
-	\arrow["h"', from=6-1, to=6-3]
-	\arrow["{[f', g']}", from=4-3, to=6-3]
-	\arrow["{[hd, tl]}"', from=4-1, to=6-1]
-\end{tikzcd}\]
-
-  This equivalence follows by using the adjunction structure given
-  by the monoidal closed structure of $\cat{K}$. A completely analogous
-  argument for $G_{A,B}$ also holds.
-\end{proof}
-
-Something surprising about this lemma is that it provides an alternative
-perspective on the observation that if a Kleene algebra has an
-residuation operation, also called action algebra \cite{kozen1994action},
-then the Kleene star admits a simpler axiomatization.
-
-Since we want Kleene categories to generalize our notion of formal
-grammars as presheaves $\String \to \Set$, we prove that they do
-indeed form a Kleene category. We start by presenting a well-known
-construction from presheaf categories.
-
-\begin{definition}
-  Let $\cat{C}$ be a locally small monoidal category and $F$, $G$ be
-  two functors $\cat{C} \to \Set$. Their Day convolution tensor
-  product is defined as the following coend formula:
-  \[
-  (F \otimes_{Day} G)(x) = \int^{(y,z) \in \cat{C}\times\cat{C}}\cat{C}(y\otimes z, x) \times F(y) \times G(z)
-  \]
-  Dually, its internal hom is given by the following end formula:
-  \[
-  (F \lto_{Day} G)(x) = \int_{y} \Set(F(y), G(x \otimes y))
-  \]
-\end{definition}
-
-\begin{lemma}[\cite{day1970construction}]
-  Under the assumptions above, the presheaf category $\Set^{\cat{C}}$ is
-  monoidal closed.
-\end{lemma}
-
-%% \begin{theorem}
-%%   Let $\cat{K}$ be a Kleene category and $A$ a discrete category.
-%%   The functor category $[A, \cat{K}]$.
-%%   (HOW GENERAL SHOULD THIS THEOREM BE? BY ASSUMING ENOUGH STRUCTURE,
-%%   E.G. K = Set, THIS THEOREM BECOMES SIMPLE TO PROVE)
-%% \end{theorem}
-\begin{theorem}
-  If $\cat{C}$ is a locally small monoidal category, then
-  $\Set^{\cat{C}}$ is a Kleene category.
-\end{theorem}
-\begin{proof}
-
-  By the lemma above, $\Set^{\cat{C}}$ is monoidal closed, and since it
-  is a presheaf category, it has coproducts. Furthermore, the tensor
-  is a left adjoint, i.e. it preserves colimits and, therefore, it is
-  a distributive category.
-
-  As for the Kleene star, since presheaf categories admit small colimits,
-  the initial algebra of the functors $F_{A,B}$ and $G_{A,B}$ can be
-  defined as the filtered colimit of the diagrams:
-
-  From Theorem~\ref{th:kleeneclosed} it follows that these initial
-  algebras satisfy the required isomorphisms and this concludes the
-  proof.
-\end{proof}
-
-\begin{corollary}
-  For every alphabet $\Sigma$, the presheaf category $\Set^{\cat{\Sigma^*}}$
-  is a Kleene category.
-\end{corollary}
-\begin{proof}
-  Note that string concatenation and the empty string make the
-  discrete category $\Sigma^*$ a strict monoidal category.
-\end{proof}
-
-Much like in the posetal case, the abstract structure of a Kleene
-category is expressive enough to synthetically reason about formal
-languages. A significant difference between them is that while Kleene
-algebras can reason about language containment, Kleene categories can
-reason about parsing as well, as illustrated by the presheaf model
-above.
-
-For the rest of the paper we will use the presheaf category
-$\Set^{\cat{\Sigma^*}}$ as a concrete model that will serve as our
-guide when expanding abstract formalism presented in this section so
-that it can handle more classes of languages beyond regular ones.
-
-\subsection{Beyond Simple Types}
-
-Though Kleene categories are expressive enough to reason about
-concepts that are outside of reach of Kleene algebras, their
-simply-typed nature makes them not so expressive from a type theoretic
-point of view. This is limiting because type theories are sucessful
-syntactic frameworks for manipulating complicated categorical
-structures while avoiding some issues common in category theory, such
-as coherence issues.
-
-With this in mind, we want to design a categorical semantics that
-builds on top of Kleene categories with the goal of extending them
-with dependent types and making them capable reasoning about languages
-and their parsers. This leads us to the abstract notion of model we
-are interested in capturing with our type theory: a \emph{Chomsky
-category}.
-
-\pa{We should probably define some of the words in this definition}
-\begin{definition}
-  A Chomsky category is a locally Cartesian category with two hierarchies of
-  universes $\{L_i\}_{i\in \nat}$ and $\{U_i\}_{i\in \nat}$ such that
-  every $L_i$ and $U_i$ are $U_{i+1}$-small. Furthermore, we require
-  $U_i$ to be closed under dependent products and sum,
-  $L_i$ to be closed under the Kleene category connectives,
-  dependent products, left and right closed structures, with
-  a type constructor $G : L_i \to U_i$ and a linear dependent sum
-  going the other direction.
-\end{definition}
-
-\begin{theorem}
-  The presheaf category $\Set^{\cat{\Sigma^*}}$ is a Chomsky category.
-\end{theorem}
-
-
-Further, the syntactic category of the theory in \cref{sec:tt} is manifestly a Chomsky category.
-\steven{This is true, right? That's like the entire point of having the syntax}
-\pedro{This is likely true, but if we explicitly say so, this warants a proof. I think that
-if we don't say anything about the syntactic category, reviewers won't mind.}
-
-\section{Non-commutative Linear-non-linear Type Theory as a Syntax for Formal Grammars}
+\section{\theoryname as a Syntax for Formal Grammars}
 \label{sec:tt}
 
 Omission of the structural rules of a deductive system, such as in
@@ -491,56 +270,34 @@ system. This work is simply typed, so the boundary between linear and
 non-linear subtheories is entirely characterized via a monoidal
 adjunction $F \dashv G$ between linear terms and non-linear terms.
 
-\steven{Maybe there is more to say here, or perhaps later, that the only thing
-  to gain parsing-wise from a non-dependent non-linear fragment are the things that are
-  definable via $G$. Except that these are not interesting, as they are
-  necessarily empty}
-
-\steven{Are these paragraphs recounting too much history?}
-
 Inside of an LNL system, linearity may be thought of as an option that users can
 choose to deliberately invoke at deliberate points in their developments in an
 otherwise intuitionistic system. However, if we are wishing to treat parsers as
 linear terms over input strings, the non-linear fragment of an LNL theory does
 not really assist in the development of parsers. It is instead the case that
 parsers may benefit from a \emph{dependence} on non-linear terms.
-\pedro{This last sentence could use an example. Is there a bite-sized, well-known
-example we could mention here?}
+Through the approach described by Krishaswami et al.\ in
+\cite{krishnaswami_integrating_2015},
+we may define a restricted form of dependent types. In particular, dependence
+on linear terms
+is disallowed; however, through dependence of a linear term on a non-linear
+index, we recover the definition of Aho's indexed grammars \cite{AhoIndexed}
+internal to \theoryabbv.
 
-\steven{Mention separation logic at some point. In particular the separating conjunction and magic wand}
-
-Krishnaswami et al.\ equipped LNL systems with a restricted sense of dependent
-types \cite{krishnaswami_integrating_2015}. When defining dependent types in
-this setting, dependence on linear terms is disallowed, but either linear or
-non-linear terms are allowed to depend on non-linear terms.
-
-The non-linear
-subtheory corresponds to Martin-L\"of type theory (MLTT), which can be taken
-as a foundation for mathematics. Dependence of linear terms on non-linear terms
-of this form effectively allows us to bring any ordinary definitions from math
-into scope as indices and then define grammars relative to those indices. That
-is all to say, the LNL dependent types in the style of Krishnaswami et al.\
-allows us to recover the definition of Aho's indexed grammars \cite{AhoIndexed} internal to our
-type theory.
-\steven{The above paragraph should maybe be put later. Also flows weirdly}
-
-\pedro{I would argue that both paragraphs above should either be put
-  somewhere else or deleted. I think that we should definitely mention
-  Neel's LNL system, but as it stands, it feels disconnected from what
-  came before and what comes next. A suggestion: the mention of Aho's
-  indexed grammars could be the example we use illustrating the
-  benefits of dependent grammars.}
 
 \subsection{Syntax}
 \label{subsec:syntax}
 
-We instantiate an LNL theory with dependent types as a deductive
-setting to axiomatize the structure of a Chomsky category.
+Below we describe \theoryname~(\theoryabbv), an instance of an LNL theory with dependent types
+to serve as a deductive
+setting for formal grammar theory. \theoryabbv axiomatizes the necessary structure underlying $\Set^{\String}$ to
+specify and construct parsers.
 
 The structural judgments are shown in \cref{fig:structjdg}, the typing
 well-formedness in \cref{fig:typewf}, and the intuitionistic typing rules in
 \cref{fig:inttyping}. These are all just as they appear in
-\cite{krishnaswami_integrating_2015}.
+\cite{krishnaswami_integrating_2015}. The treatment of the non-linear types is
+pretty standard, so below we focus on the linear syntax.
 
 \begin{figure}
   \begin{mathpar}
@@ -913,9 +670,9 @@ semantics as grammars.
 
 Most of the non-linear semantics is standard, so let us investigate in more
 depth the linear semantics. The interpretation of each
-connective is exactly what is suggested by the syntax, in
-large part to the inspiration taken from this interpretation
-when designing the type theory.
+connective is exactly what is suggested by the syntax, ude in
+large part to the inspiration taken from the grammar interpretation
+when designing \theoryabbv.
 
 \begin{enumerate}
   \item A non-linear context $\Gamma$ denotes a set $\sem \Gamma$
@@ -1014,7 +771,7 @@ Brzozowski initially only gave an accounting of this operation for
 generalized regular expressions, but later work from Might et al.\ demonstrates that the same
 construction can be generalized to context free grammars
 \cite{mightParsingDerivativesFunctional2011}. Here, via the linear function
-types the same notion of derivative extends to the grammars of our type theory.
+types the same notion of derivative extends to the grammars of \theoryabbv.
 
 Of course, all the above statements for the left function type also have
 corresponding analogues for the
@@ -1186,40 +943,336 @@ is for defining the traces through automata, as we will see
 later in \cref{eq:nfatrace}.
 
 \subsection{Subtheories}
-\paragraph{Regular Expressions} Restricting to regular expressions with the
-obvious connectives forms a subtheory of our type theory. Perhaps there is
-something to say here about how this reduces to Kleene algebra performed inside
-of a Kleene cat?
+\paragraph{Regular Expressions} We may realize regular expression as a subtheory
+of our language by restricting the type constructors to the
+linear unit, characters, $\otimes$, $\oplus$, and Kleene star. Classically, the
+languages recognized by these are exactly the regular languages --- the lowest
+on the Chomksy hierarchy.
 
-\steven{TODO regular expressions}
+\paragraph{$\mu$-Regular Expressions} Similarly, we may restrict the connectives
+to be linear unit, characters, $\otimes$, $\oplus$, and arbitrary recursion.
+Instead of regular expressions these correspond to Lei{\ss}'s $\mu$-regular
+expressions, which are known to be equivalent to context-free grammars
+\cite{leiss}.
 
-\paragraph{$\mu$-Regular Expressions} Regex + fixed point equivalent to context
-free \cite{leiss}.
+\steven{Give this subtheory a name }
+
+\paragraph{Beyond Context-Free Grammars} The previous two subtheories induce as semantics
+regular grammars and context-free grammars, respectively; however, by including
+the LNL dependent types we may actually express the entirety of the Chomsky
+hierarchy. Through use of the LNL dependent types, we may encode indexed
+grammars, which are known to be properly between context-free and
+context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
+will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
+calculus, which of course induces a semantics of unrestricted grammars.
 
 \steven{TODO $\mu$ regular expressions}
 
-\steven{Every after here has not been touched}
+\section{Categorifying Formal Grammars}
+\label{sec:categorify}
 
-\pedro{After reading this section after the Kleene category one, I
-  think that it makes much more sense to switch their order. It's
-  going to be easier to justify providing a categorical semantics once
-  we have a ``target'' of what we want to interpret.}
+Under the Curry-Howard-Lambek correspondence, the programs of the simply-typed
+$\lambda$-calculus may be viewed under any one of the three equivalent views: as
+terms in a simple functional language, as proofs in an intuitionisitc
+propositional logic, or as morphisms in a Cartesian closed category. In the
+same vein, with the syntax provided, we aim to give a
+categorical accounting of the semantics of \theoryabbv. Let us begin by paring back
+the connectives in the language and only considering the subtheory induced by
+regular expressions.
 
-\section{Canonicity}
-\pedro{It could be cool to come up with a catchy title to this section.
-Something like ``Parse Canonicity''}
+\steven{Added this transition to handle putting the categorical semantics after
+  the syntax. I think it sounds weird though}
 
-\pedro{Added the ``initial context'' paragraph below}
+By giving algebraic laws of manipulation and equivalence to regular expressions,
+Kleene algebras are an important tool in the theory of regular
+languages. More broadly, through various extensions, they serve as a
+theoretical substrate to studying different kinds of formal languages.
 
+We posit that by seeing Kleene algebra through the lens of category
+theory, we gain some insight into the type-theoretic essence of formal
+grammars. We begin this section by providing a ``simply-typed''
+version of a categorification of Kleene algebra, which we call Kleene
+category, and then show define a more expressive class of categories,
+which we call Chomsky category, that will serve as the categorical
+semantics to \theoryabbv.
+
+\subsection{Kleene Categories}
+A Kleene algebra is a tuple $(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is
+a set, $+$ and $\cdot$ are binary operations over $A$, $(-)^*$ is a
+function over $A$, and $1$ and $0$ are constants. These structures
+satisfy the axioms depicted in Figure~\ref{fig:axioms}.
+
+\begin{figure}
+  \begin{align*}
+    x + (y + z) &= (x + y) + z & x + y &= y + x\\
+    x + 0 &= x & x + x &= x\\
+    x(yz) &= (xy)z & x1 &= 1x = x\\
+    x(y + z) &= xy + xz & (x + y)z &= xz + yz\\
+    x0 &= 0x = x & & \\
+    1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
+     b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
+  \end{align*}
+  \caption{Kleene algebra axioms}
+  \label{fig:axioms}
+\end{figure}
+
+The addition operation can be used to define the partial order
+structure $a \leq b$ if, and only if, $a + b = b$. In the theory of
+formal languages, this order structure can be used to model language
+containment. In this section, we want to categorify the concept of
+Kleene algebra and build on top of it in order to define an abstract
+theory of parsing.  We start by defining \emph{Kleene categories}.
+
+\begin{definition}
+  A Kleene category is a distributive monoidal category $\cat{K}$
+  such that for every objects $A$ and $B$, the endofunctors $F_{A, B}
+  = B + A \otimes X$ and $G_{A, B} = B + X \otimes A$ have initial
+  algebras (denoted $\mu X.\, F_{A, B}(X)$) such that $B \otimes (\mu
+  X.\, F_{A, 1}) \cong \mu X.\, F_{A, B}(X)$ and the analogous isomorphism
+  for $G_{A,B}$ also holds.
+\end{definition}
+
+As a sanity check, note that Kleene algebras are indeed examples of
+Kleene categories.
+
+\begin{example}
+  Every Kleene algebra, seen a posetal category, is a Kleene category.
+\end{example}
+
+This example illustrates how restricted Kleene algebras are in terms
+of reasoning about languages. By only having at most one morphism
+between objects, there is not a lot of information they can convey. In
+this case, the only information you get is language containment. We
+will see throughout this paper how the extra degrees of freedom
+granted by having more morphisms give you more algebraic structure for
+reasoning about languages.
+
+For the next example, we see an unexpected connection with the theory
+of substructural logics.
+
+\begin{example}
+  The opposite category of every Kleene category is a model of a variant of
+  conjunctive ordered logic, where the Kleene star plays the role of the ``of
+  course'' modality from substructural logics which allows hypotheses to
+  be discarded or duplicated.
+\end{example}
+
+The proposed axioms are a direct translation of the Kleene algebra
+axioms to a categorical setting. Its most unusual aspect is the
+axiomatization of the Kleene star as a family of initial algebras
+satisfying certain isomorphisms. If the Kleene category $\cat{K}$ has
+more structure, then these isomorphisms hold ``for free''.
+
+\begin{theorem}
+  \label{th:kleeneclosed}
+  Let $\cat{K}$ be a Kleene category such that it is also monoidal
+  closed.  Then, the initial algebras isomorphisms hold automatically.
+\end{theorem}
+\begin{proof}
+  We prove this by the unicity (up-to isomorphism) of initial
+  algebras. Let $[hd, tl]: 1 + (\mu X.\, F_{A, 1}(X)) \otimes A \to
+  (\mu X.\, F_{A, 1}(X))$ be the initial algebra structure of $(\mu
+  X.\, F_{A, 1}(X))$ and consider the map $[hd, tl] : B + B \otimes
+  (\mu X.\, F_{A, 1}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
+    1}(X))$.
+
+  Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
+  we want to show that there is a unique algebra morphism $h : \mu X.\, F_{A,1} \to B \lto Y$. We can show existence and
+  uniqueness by showing that the diagram on top commutes if, and
+  only if, the diagram on the bottom commutes:
+
+% https://q.uiver.app/#q=WzAsOCxbMCwwLCJCICsgQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFsyLDAsIkIgKyBZIFxcb3RpbWVzIEEiXSxbMiwyLCJZIl0sWzAsMiwiQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDMsIjEgKyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDUsIlxcbXUgWC5cXCwgMSArIFggXFxvdGltZXMgQSJdLFsyLDMsIjEgKyAoIEIgXFxsdG8gWSkgXFxvdGltZXMgQSJdLFsyLDUsIkIgXFxsdG8gWSJdLFswLDEsImlkICsgKGlkIFxcb3RpbWVzIGg7IGV2KSBcXG90aW1lcyBpZF9BIl0sWzEsMiwiW2YsZ10iXSxbMywyLCJpZCBcXG90aW1lcyBoOyBldiIsMl0sWzAsMywiW2lkIFxcb3RpbWVzIGgsIGlkIFxcb3RpbWVzIHRsXSIsMl0sWzQsNiwiaWQgKyAoaCBcXG90aW1lcyBYKVxcb3RpbWVzIGlkIl0sWzUsNywiaCIsMl0sWzYsNywiW2YnLCBnJ10iXSxbNCw1LCJbaGQsIHRsXSIsMl1d
+\[\begin{tikzcd}
+	{B + B \otimes (\mu X.\, 1 + X \otimes A)} && {B + Y \otimes A} \\
+	\\
+	{B \otimes (\mu X.\, 1 + X \otimes A)} && Y \\
+	{1 + (\mu X.\, 1 + X \otimes A)} && {1 + ( B \lto Y) \otimes A} \\
+	\\
+	{\mu X.\, 1 + X \otimes A} && {B \lto Y}
+	\arrow["{id + (id \otimes h; ev) \otimes id_A}", from=1-1, to=1-3]
+	\arrow["{[f,g]}", from=1-3, to=3-3]
+	\arrow["{id \otimes h; ev}"', from=3-1, to=3-3]
+	\arrow["{[id \otimes h, id \otimes tl]}"', from=1-1, to=3-1]
+	\arrow["{id + (h \otimes X)\otimes id}", from=4-1, to=4-3]
+	\arrow["h"', from=6-1, to=6-3]
+	\arrow["{[f', g']}", from=4-3, to=6-3]
+	\arrow["{[hd, tl]}"', from=4-1, to=6-1]
+\end{tikzcd}\]
+
+  This equivalence follows by using the adjunction structure given
+  by the monoidal closed structure of $\cat{K}$. A completely analogous
+  argument for $G_{A,B}$ also holds.
+\end{proof}
+
+Something surprising about this lemma is that it provides an alternative
+perspective on the observation that if a Kleene algebra has an
+residuation operation, also called action algebra \cite{kozen1994action},
+then the Kleene star admits a simpler axiomatization.
+
+Since we want Kleene categories to generalize our notion of formal
+grammars as presheaves $\String \to \Set$, we prove that they do
+indeed form a Kleene category. We start by presenting a well-known
+construction from presheaf categories.
+
+\begin{definition}
+  Let $\cat{C}$ be a locally small monoidal category and $F$, $G$ be
+  two functors $\cat{C} \to \Set$. Their Day convolution tensor
+  product is defined as the following coend formula:
+  \[
+  (F \otimes_{Day} G)(x) = \int^{(y,z) \in \cat{C}\times\cat{C}}\cat{C}(y\otimes z, x) \times F(y) \times G(z)
+  \]
+  Dually, its internal hom is given by the following end formula:
+  \[
+  (F \lto_{Day} G)(x) = \int_{y} \Set(F(y), G(x \otimes y))
+  \]
+\end{definition}
+
+\begin{lemma}[Day \cite{day1970construction}]
+  Under the assumptions above, the presheaf category $\Set^{\cat{C}}$ is
+  monoidal closed.
+\end{lemma}
+
+%% \begin{theorem}
+%%   Let $\cat{K}$ be a Kleene category and $A$ a discrete category.
+%%   The functor category $[A, \cat{K}]$.
+%%   (HOW GENERAL SHOULD THIS THEOREM BE? BY ASSUMING ENOUGH STRUCTURE,
+%%   E.G. K = Set, THIS THEOREM BECOMES SIMPLE TO PROVE)
+%% \end{theorem}
+\begin{theorem}
+  If $\cat{C}$ is a locally small monoidal category, then
+  $\Set^{\cat{C}}$ is a Kleene category.
+\end{theorem}
+\begin{proof}
+
+  By the lemma above, $\Set^{\cat{C}}$ is monoidal closed, and since it
+  is a presheaf category, it has coproducts. Furthermore, the tensor
+  is a left adjoint, i.e. it preserves colimits and, therefore, it is
+  a distributive category.
+
+  As for the Kleene star, since presheaf categories admit small colimits,
+  the initial algebra of the functors $F_{A,B}$ and $G_{A,B}$ can be
+  defined as the filtered colimit of the diagrams:
+
+  From Theorem~\ref{th:kleeneclosed} it follows that these initial
+  algebras satisfy the required isomorphisms and this concludes the
+  proof.
+\end{proof}
+
+\begin{corollary}
+  For every alphabet $\Sigma$, the presheaf category $\Set^{\cat{\Sigma^*}}$
+  is a Kleene category.
+\end{corollary}
+\begin{proof}
+  Note that string concatenation and the empty string make the
+  discrete category $\Sigma^*$ a strict monoidal category.
+\end{proof}
+
+Much like in the posetal case, the abstract structure of a Kleene
+category is expressive enough to synthetically reason about formal
+languages. A significant difference between them is that while Kleene
+algebras can reason about language containment, Kleene categories can
+reason about parsing as well, as illustrated by the presheaf model
+above.
+
+For the rest of the paper we will use the presheaf category
+$\Set^{\cat{\Sigma^*}}$ as a concrete model that will serve as our
+guide when expanding abstract formalism presented in this section so
+that it can handle more classes of languages beyond regular ones.
+
+\subsection{Beyond Simple Types}
+
+Though Kleene categories are expressive enough to reason about
+concepts that are outside of reach of Kleene algebras, their
+simply-typed nature makes them not so expressive from a type theoretic
+point of view. This is limiting because type theories are sucessful
+syntactic frameworks for manipulating complicated categorical
+structures while avoiding some issues common in category theory, such
+as coherence issues.
+
+With this in mind, we want to design a categorical semantics that
+builds on top of Kleene categories with the goal of extending them
+with dependent types and making them capable reasoning about languages
+and their parsers. This leads us to the abstract notion of model we
+are interested in capturing with \theoryabbv: a \emph{Chomsky
+category}.
+
+\pa{We should probably define some of the words in this definition}
+\begin{definition}
+  A Chomsky category is a locally Cartesian category with two hierarchies of
+  universes $\{L_i\}_{i\in \nat}$ and $\{U_i\}_{i\in \nat}$ such that
+  every $L_i$ and $U_i$ are $U_{i+1}$-small. Furthermore, we require
+  $U_i$ to be closed under dependent products and sum,
+  $L_i$ to be closed under the Kleene category connectives,
+  dependent products, left and right closed structures, with
+  a type constructor $G : L_i \to U_i$ and a linear dependent sum
+  going the other direction.
+\end{definition}
+
+\steven{Max suggests augmenting the definition of a chomsky category to
+  something like two categories $L$ and $U$, and $U$ is cartesian closed I don't
+  fully recall the rest.
+
+
+  My best guess is that you take $L$ a Kleene category with a hierarchy of universes
+  two, and you further require that $L$ is $Psh(U)$-enriched, except he
+  suggested a further adjective on these presheaves. Perhaps representability?
+}
+
+\begin{theorem}
+  The presheaf category $\Set^{\cat{\Sigma^*}}$ is a Chomsky category.
+\end{theorem}
+
+
+Further, the syntactic category of \theoryname is manifestly a Chomsky category.
+
+\pedro{This is likely true, but if we explicitly say so, this warants a proof. I think that
+if we don't say anything about the syntactic category, reviewers won't mind.}
+
+\steven{I agree that we don't want to say anything that opens unnecessary
+  questions for proofs we haven't written. However, it seems hard to make the
+  case that we have the right categorical model of the syntax if this statement
+  isn't true. By restating our definition of Chomksy category, this should be
+  obvious or a quick proof}
+
+\section{Nonstandard Models}
+\label{sec:nonstandard}
+
+\subsection{Semantic Actions}
+Returning to the problem of parsing, the output of a parse usually isn't the
+literal parse tree. Rather, the output is the result of some \emph{semantic
+  actions} ran on the parse tree, which usually serve to remove some syntactic
+details that are unnecessary for later processing.
+
+Given a grammar $G : \String \to \Set$, we define a semantic action to be a set
+$X$ with a function $f$ that produces a semantic element from any parse of $G$.
+
+\[
+  f : \PiTy w \String {G w \to X}
+\]
+
+Further, semantic actions can be arranged into a structured category.
+Define $\SemAct$ as the comma
+category $\Grammar / \Delta$, where $\Delta : \Set \to \Grammar$ defines a
+discrete presheaf. That is, for a set $X$, $\Delta (X)(w) = X$ for all
+$w \in \String$. As $\SemAct$ is defined as a comma category, it has a forgetul
+functor into $\Grammar$. That is, $\SemAct$ serves as a notion of formal
+grammar. Moreover, $\SemAct$ is a model of \theoryabbv.
+
+\steven{It being a notion of formal grammar is distinct from being a model. This
+probably warrants a proof}
+
+\steven{TODO semantic actions}
+
+
+\subsection{Parse Canonicity}
 Canonicity is an important metatheoretic theorem in the type theory
 literature.  It provides insight on the normal forms of terms and,
 therefore, on its computational aspects. Frequently, proving
 canonicity for boolean types, i.e. every closed term of type bool
-reduces to either true or false, is enough to justifying that the type
+reduces to either true or false, is enough to justify that the type
 theory being studied is well-behaved. In our case, however, since we
-want to connect our type theory to parsers, we must provide a more
+want to connect \theoryabbv to parsers, we must provide a more
 detailed account of canonicity.
-
 
 If $\cdot \vdash A$ is a closed linear type then there are
 two obvious notions of what constitutes a ``parse'' of a string w
@@ -1350,7 +1403,7 @@ we further explore these connections by using the fact that, clasically ...''}
 
 Classically, formal language theory is closely related to the study of automata.
 In the Chomsky hierarchy, each language class is associated to a class of
-automata that serve as recognizers. Internal to the type theory of \cref{sec:tt},
+automata that serve as recognizers. Internal to \theoryabbv,
 we can characterize these language classes syntactically; moreover, we
 demonstrate the equivalence of these language classes to its associated automata class as a
 proof term within our logic.
