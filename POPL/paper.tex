@@ -118,10 +118,11 @@
   families indexed by strings.
 
   To demonstrate the usefulness of the calculus for formal grammar
-  theory, we show that different grammar formalisms \max{which ones do
+  theory, we show that existing grammar formalisms --- e.g.\ regular
+  expressions, context free expressions, and their associated automata \max{which ones do
     we actually show?} \steven{regular expressions, $\mu$-regular expressions
     (or context free expressions), and different automata classes (finite,
-    pushdown, turing)} can be expressed as linear types in
+    pushdown, turing)} --- can be expressed as linear types in
   \theoryabbv. We give simple characterizations of the regular and
   context-free grammars as expressible by restricting which
   connectives of \theoryabbv are allowed, a form of type theoretic
@@ -164,6 +165,10 @@ pervasive nature of parsing would be a useful component of many
 formally verified software systems: compilers and servers most
 especially.
 %
+\steven{Some ideas on what the unifying message throughout the paper should be:
+
+
+}
 
 In this work we aim to refine formal language theory into a
 mathematical theory of formal grammars that can be used to develop
@@ -184,7 +189,7 @@ The type theory itself is a form of dependent linear-non-linear type
 theory: the linear types can be interpreted as grammars, whereas the
 non-linear types can be interpreted as ordinary sets. As in prior work
 on dependent linear-non-linear types, the linear types are allowed to
-depend on the non-linear types but not vice-versa \cite{dep-lnl}.
+depend on the non-linear types but not vice-versa \cite{krishnaswami_integrating_2015}.
 
 The substructural nature of \theoryabbv is well-aligned with the
 requirements intrinsic to parsing and to the theory of formal
@@ -196,18 +201,13 @@ that cannot be duplicated, reordered or dropped.
 %% most thoroughly developed areas of theoretical computer science. A
 %% prominent topic in the 1950, 60s, and 70s led to a series of remarkable
 %% developments: 
-In this paper, we propose an intuitive and structured generalization of the
+In this paper, we propose a structured generalization of the
 theoretical machinery used for parsing. In conjunction with an updated
 point-of-view on formal grammars, we provide a domain-specific
 language to build and verify parsers.
 
 \steven{The above paragraph maybe isn't the right thing to say, but I want
   something that ties the first paragraph to the contributions that follow}
-\pedro{As a rule of thumb, I think that it's good to avoid subjective and
-  pointed adjectives such as ``intuitive'', espcially if we don't have evidence
-  that corroborates our claim. This is the perfect excuse for
-an annoying reviewer to complain about our work.}
-\max{I agree about ``intuitive'', try to stick to objective claims}
 
 \paragraph{Contributions} This paper begins in \cref{sec:synindnotion} by
 giving a universal semantic characterization of formal grammar.
@@ -314,13 +314,10 @@ grammars, semi-Thue systems, Montague grammars, and so on are all distinct synta
 presentations of the same underlying idea of an abstract specification for
 parsing. Each of these is an instance of a general \emph{notion of formal
   grammar} --- a category paired with a functor into
-$\Grammar$. That is, they may all be interpreted in our category of grammars. In this sense, $\Grammar$ provides a universal setting to reason about parsing.
+$\Grammar$. That is, they may all be interpreted in our category of grammars. In
+this sense, $\Grammar$ provides an
+all-encompassing semantic domain for parsing.
 
-\steven{I initially wanted to say ``universal semantic domain to reason about
-  parsing'', but these words have specific domain theory usage that aren't
-  appropriate here, right?}
-\pedro{If you want to keep ``semantic domain'', we could go for ``all-encompassing semantic domain''}
-\steven{Check details for 2-cat of grammar formalisms}
 \max{this section kind of trails off at the end with a very vague aside about a $2$-category of grammar formalisms. Maybe this should go in future work/discussion? What is the message of this section? How does it tie in with the message of the paper? What even is the message of this paper?}
 
 \section{\theoryname as a Syntax for Formal Grammars}
@@ -328,20 +325,25 @@ $\Grammar$. That is, they may all be interpreted in our category of grammars. In
 
 Omission of the structural rules of a deductive system, such as in
 linear logic \cite{GIRARD19871}, offers precise control over how a value is used
-in a derivation. Namely\max{namely?}, linear logic omits the weakening and contraction rules
+in a derivation. Linear logic omits the weakening and contraction rules
 to ensure that every value in context is used exactly once. This control enables
 \emph{resource-sensitive} reasoning, where we may treat a resource as
 \emph{consumed} after usage. This viewpoint is amenable to parsing applications,
 as we may treat characters of a string as finite resources that are consumed at
-parse-time. That is, once a particular substring has been parsed, a parser need not go
-over it again\max{what about a backtracking parser?}. One may then envision a linear type system where the types comprise
+parse-time. That is, when reading a string, the occurrence of any character is read once. Freely duplicating or dropping characters from a string changes the meaning of that string. \max{what about a backtracking parser?} \steven{Does the sentence sound better now? I've tried to avoid suggesting any particular parser design. Also, I think backtracking is a very interesting question to talk about in future work}. One may then envision a linear type system where the types comprise
 formal grammars generated over some alphabet $\Sigma$, and the type constructors
 correspond precisely to inductive constructions on grammars --- such as
 conjunction, disjunction, concatenation, etc.
 
 Unfortunately, programming in a linear term language is often
-cumbersome and unintuitive for users.\max{You are arguing against our own type theory here...} Code in such a language can
-become unnecessarily verbose when using Girard encodings to translate
+cumbersome and unintuitive for users who are unacustomed to the usage
+restrictions.\max{You are arguing against our own type theory here...} \steven{I
+  want to argue against a \emph{purely linear} calculus to motivate the
+  convience of LNL, but perhaps this isn't appropriate here, and I don't want to
+  make our own type theory sound bad.Should probably just cut the beginning of
+  this paragraph and jump into LNL, but then there's not an immediate reason for
+why one might want/need it over a pure linear system} Code in such a language can
+become unnecessarily verbose when ensuring every function written is indeed linear. It would be more ergonomic to allow users using Girard encodings to translate
 high-level reasoning into low-level linear terms.\pedro{What encodings are these?
 We should add a citation here}
 To alleviate this
@@ -384,7 +386,8 @@ classes of grammars correspond to certain subtype-theories inside \theoryabbv.
 
 Below we describe \theoryname~(\theoryabbv), an instance of an LNL theory with dependent types
 to serve as a deductive
-setting for formal grammar theory. \theoryabbv axiomatizes the necessary structure underlying $\Set^{\String}$ \pedro{We should probably stick to either $\Set^{\String}$ or $\mathbf{Gr}$ from now on}to
+setting for formal grammar theory. \theoryabbv axiomatizes the necessary
+structure underlying $\Grammar$ to
 specify and construct parsers.
 
 The structural judgments are shown in \cref{fig:structjdg}, the typing
@@ -395,10 +398,9 @@ first one it the presence of two-distinct arrow types, one for adding
 variables to the beginning of contexts and another one for adding
 variables to the end of contexts. This is an adequate change in the
 context of grammars, which are inherently non-symmetric. The second
-change is the introduction of inductive types, which also have a
-natural grammar counterpart\max{what is it then?}, which usually allows kinds of recursive
-behavior such as the Kleene star. The treatment of the non-linear
-types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
+change is the introduction of inductive types, which allows for the definition
+of recursive grammars. The treatment of the non-linear
+types is standard, so below we focus on the linear syntax.
 
 \begin{figure}
   \begin{mathpar}
@@ -453,7 +455,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
 %
     \inferrule{~}{\Gamma \vdash L_i : U_{i+1}}
 %
-    \\
+    \and
 %
     \inferrule{\Gamma \vdash X : U_i \\ \hspace{-0.1cm} \Gamma, x : X \vdash Y : U_i}{\Gamma \vdash \PiTy x X Y : U_i }%
 %
@@ -461,7 +463,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
 %
     \inferrule{\Gamma\vdash X : U_i \\ \hspace{-0.1cm} \Gamma, x : X \vdash Y : U_i}{\Gamma \vdash \SigTy x X Y : U_i}
 %
-    \\
+    \and
 %
     \inferrule{~}{\Gamma \vdash 1 : U_i}
 %
@@ -477,7 +479,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
 %
     \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash A \otimes B : L_i}
 %
-    \\
+    \and
 %
     \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash A \lto B : L_i}
 %
@@ -485,7 +487,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
 %
     \inferrule{\Gamma \vdash A : L_i \\ \hspace{-0.1cm}\Gamma \vdash B : L_i}{\Gamma \vdash B \tol A : L_i}
 %
-    \\
+    \and
 %
     \inferrule{\Gamma \vdash X : U_i \\ \Gamma, x : X \vdash A : L_i}{\Gamma \vdash \LinPiTy x X A : L_i}
 %
@@ -493,7 +495,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
 %
     \inferrule{\Gamma \vdash X : U_i \\ \Gamma, x : X \vdash A : L_i}{\Gamma \vdash \LinSigTy x X A : L_i}
 %
-    \\
+    \and
 %
     \inferrule{\Gamma \vdash X : U_i \quad \{\Gamma \vdash e_i : X\}_i}{\Gamma \vdash e_1 =_X e_2 : U_i}
     %
@@ -505,7 +507,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
 
     \inferrule{~}{\Gamma \vdash \bot : L_i}
 
-    \\
+    \and
     \inferrule{c \in \Sigma}{\Gamma \vdash c : L_0}
     %
     \and
@@ -526,7 +528,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
   %
   \inferrule{\Gamma \vdash e : Y \quad \ctxwffjdg \Gamma {X \equiv Y}}{\Gamma \vdash e : X}
   %
-  \\\
+  \and
   %
   \inferrule{~}{\Gamma \vdash () : 1}
   %
@@ -534,7 +536,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
   %
   \inferrule{\Gamma \vdash e : X \\ \Gamma \vdash e : \subst Y e x}{\Gamma \vdash (e, e') : \SigTy x X Y}
   %
-  \\
+  \and
 %
   \inferrule{\Gamma \vdash e : \SigTy x X Y}{\Gamma \vdash \pi_1\, e : X}
   %
@@ -548,7 +550,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
   %
   \inferrule{\Gamma \vdash e : \PiTy x X Y \\ \Gamma \vdash e' : X}{\Gamma \vdash \app e {e'} : \subst Y {e'} x}
   %
-  \\
+  \and
   %
   \inferrule{\Gamma \vdash e \equiv e' : X}{\Gamma \vdash \mathsf{refl} : e =_X e'}
   \and
@@ -576,7 +578,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
     %
     \inferrule{\Gamma ; \Delta \vdash e : A \\ \Gamma ; \Delta' \vdash e' : B}{\Gamma ; \Delta, \Delta' \vdash e \otimes e' : A \otimes B}
     %
-    \\
+    \and
     %
     \inferrule{\Gamma ; \Delta \vdash e : A \otimes B \\ \Gamma ; \Delta'_1, a : A, b : B, \Delta'_2 \vdash e'}{\Gamma ;  \Delta_1', \Delta, \Delta'_2 \vdash \letin {a \otimes b} e {e'}}
     \\
@@ -600,7 +602,7 @@ types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
     %
     \inferrule{\Gamma \vdash e : X \quad \Gamma ; \Delta \vdash e' : \subst A e x}{\Gamma ; \Delta \vdash (e, e') : \LinSigTy x X A}
     %
-    \\
+    \and
     %
     \inferrule{\Gamma ; \Delta \vdash e : \LinSigTy x X A \quad \Gamma, x : X ; \Delta'_1, a : A, \Delta'_2 \vdash e' : C}{\Gamma; \Delta'_1, \Delta, \Delta'_2 \vdash \letin {(x, a)} e {e'}: C}
     %
@@ -763,11 +765,14 @@ again. Variables in a linear context then act like building
 blocks for constructing patterns over strings.
 
 We give the base types and type constructors for linear terms. As the
-interpretation of types as grammars in $\Set^{\String}$ serves as our intended
+interpretation of types as grammars in $\Grammar$ serves as our intended
 semantics, we simultaneously give the interpretation $\sem \cdot$ of the
 semantics as grammars.
 
 \pedro{The paragraphs above are a bit circular, what about the following alternative?}
+\steven{I am in favor of cutting what's above, but we haven't introduced the
+  sytnax in the main body of the paper yet, even if the figures appeared
+  earlier. So what you write needs to take that into account}
 
 Now that we have specified the syntactic aspect of \theoryabbv, we must justify
 its connections to formal grammars in order to show that it is a sound methodology
@@ -990,7 +995,7 @@ The Kleene star of a grammar $g$ is given as,
   : g^{*}}
   {\Gamma ; \Delta \vdash \mathsf{cons}(p , q) : g^{*}}
 
-  \and
+  \\
 
   \inferrule
   {
@@ -1013,13 +1018,9 @@ $I \oplus (X \otimes g)$. In fact, the definitions are
 equivalent, as the existence of the $\mathsf{foldl}$ term below
 shows that $g^{*}$ is also a fixed point of
 $I \oplus (X \otimes g)$.
-
-\pedro{This is an extremely important point! We should definitely make
-  a reference to the Kleene algebra world, where these things do not
-  hold. I think that it might even be a good idea to add the
-  ``underlying trick'' to the main body of text. It's important to
-  connect our work to existing ideas and concerns from the theory of
-  formal languages.}
+This is a marked point of difference from Kleene
+algebra with recursion, where the fixed points for the left and right variants
+of Kleene star need not agree \cite{leiss}.
 
 \begin{equation}
   \label{eq:foldl}
@@ -1035,13 +1036,13 @@ $I \oplus (X \otimes g)$.
 In fact, the $\mathsf{foldl}$ term is defined using
 $\mathsf{foldr}$ --- much in the same way one
 may define a left fold over lists in terms of a right fold
-in a functional programming language\footnote{The
-  underlying trick is to fold over a list of functions
-  instead of the original string. We curry each character $c$
-  of the string into a function that concatenates $c$, and
-  right fold over this list of linear functions. Because function
-  application is left-associative, this results in a left
-  fold over the original string. }.
+in a functional programming language.
+The underlying trick is to fold over a list of linear functions
+instead of the original string. We curry each character $c$
+of the string into a function that concatenates $c$, and
+right fold over this list of linear functions. Because function
+application is left-associative, this results in a left
+fold over the original string.
 
 We only take fixed points of a single variable as a
 primitive operation in the type theory, but we may apply
@@ -1818,11 +1819,11 @@ axiom.
 \]
 
 That is, the characters in the alphabet $\Sigma$ really are all of the
-characters. The necessity of this axiom arises when we go to take a transition
+characters. The need for this axiom arises when we go to take a transition
 within the DFA,
-as we must ensure that the nexts character read has a corresponding transition
+as we must ensure that the next character of the string has a corresponding
+transition from the current state
 --- which would be guaranteed by determinism provided there are no surprise characters.
-\steven{The above paragraph sounds weird}
 
 \subsection{Regular Expressions and DFAs}
 \label{subsec:deriv}
@@ -2243,7 +2244,7 @@ and then makes a case distinction between possible transitions based on what was
 will then determine which character to transition by and what word $w$ should be
 pushed onto the stack. The word that is added to the top of the stack is
 appended to $\mathsf{tail}(L)$ and then we recursively step into another state
-called on argument $w + \mathsf{tail}(L)$.
+called on argument $w \cdot \mathsf{tail}(L)$.
 
 % \begin{gather*}
 %   \mathsf{State} \in {g _{q} : q \in Q} \\
@@ -2274,11 +2275,56 @@ like the head of the tape.
 \pedro{I like the overall structure of this section! Showing how the type theory
 can encode and reason about different kinds of languages is very instructive!}
 
-\section{Related work}
-\label{sec:related}
+\section{Discussion and Future Work}
+\label{sec:discussion}
+
+The core objects of study in the theory of formal grammars have stood stalwart
+for decades. Study of interesting extensions or restrictions of particular
+grammar formalisms has remained consistent line of research over the years.
+Occasionally, researchers will either explicitly create a type system for their
+formalism, or researchers will leverage the same underlying structure of their
+systems. In this paper, we have not
+done much \emph{per se}, other than gather these ideas, abstract over their
+commonalities, and give the common language between formalisms.
+
+\paragraph{Typed Approaches to Grammars}
+The usage of a simple type system to reason about regular expressions was
+introduced by Frisch and Cardelli in 2004 \cite{frischCardelli}, and later expanded
+by Hengelin and Nielsen in 2011 \cite{henglein_regular_2011} to handle proofs of regular expression
+containment.
+
+In 1992, while investigating the addition of arbitrary recursion to Kleene
+algebra \cite{leiss},
+Lei{\ss} used a least fixed-point operator instead of the Kleene star. Although
+he did not explicitly make use of a type system, or have access to the view of Frisch and
+Cardelli, Leiss had added the full power of inductive types to a type system of regular expressions.
+
+Pratt's work on the residuation of action algebras in \cite{prattActionLogicPure1991} closely mirrors
+our observation that Brzozowski derivatives mirror linear function types.
+Moreover, he shows that his residuals form a Galois connection with sequential
+composition. This is precisely a posetal --- or \emph{thin} --- version of the
+adjunction between
+linear function types and tensor product in \theoryabbv.
+
+In \cite{firsovCertifiedNormalizationContextFree2015}, Firsov and Uustalu
+constructed a verified normalization procedure to turn a
+context-free grammar into an equivalent grammar in Chomsky normal form.
+Combining their work with a CYK parser, they have built a verified context-free
+grammar parser, \emph{up to weak equivalence}. To upgrade from a weak
+equivalence to a strong equivalence, they suggest updating their grammar
+formalism to treat parse trees as first-class proofs of language membership.
+That is, without explicitly stating so, they suggest that they next natural step
+is to reason about grammars in a system where parse trees are terms, as we have
+given in this paper.
+
+\steven{Make the above paragraph shorter. Also idk if its worth including, but I
+like that they practically ask for a type theory}
+
+\steven{Mention Neel's typed algebraic approch paper here. Say it is similar at
+  first glance, as its parsing with types, but that he actually is representing
+  something quite different. Or is it so different that its not worth mentioning?}
 
 \paragraph{Kleene Algebra}
-
 Since the early works in the theory of formal languages, Kleene
 algebras have played an important role in its development. They
 generalize the operations known from regular languages by introducing
@@ -2299,37 +2345,35 @@ theory. By adopting a category-theoretic treatment and allowing the
 inequalities, we were able to extend Kleene algebra to reason about
 parsing as well.
 
-\paragraph{TODO: more stuff}
+\steven{Can we sketch here what an apt categorification of KATs might be? As a
+  poor first pass: perhaps a Kleene category with a full involutive
+  subcategory that corresponds to the Boolean aglebra?.}
+\steven{What can we say about internalizing Kleene algebra proofs or extensions?}
+\steven{any KA citations needed above?}
 
-\steven{Comments from Max or Pedro to mention these:
+\paragraph{Linearity with Dependent Types}
+\steven{I don't know if it worth discussing the different influences of
+  categorical model here? We take Neel's model and add to it as necessary}
 
-That paper with Fritz Henglein about regexes as types
+Vakar might be worth citing to discuss different characterizations of the
+notion of model \cite{vakarSyntaxSemanticsLinear2015}
 
-Vaughan Pratt on the residual operator
+\cite{fu2023twolevellineardependenttype} give a compiler for a two-level
+linear dependent type theory. This could serve as a template for a
+compiler implementation of \theoryname that is not just inference rules
+embedded in agda.
 
-}
+\paragraph{Implementations in Parsing}
+Talk about how we have a DFA parser in agda and want to to get out a regex
+parser. Then context free, etc
 
-\steven{Mention Vakar's ``Syntax and Semantics of Linear Dependent Types'' as
-  related work?}
+future work related to building a usable correct-by-construction parser
+combinator/semantic action combinator library in this language.
 
-\section{Future Work}
-\label{sec:future}
+Contrast this
+potential library with existing verified parsers. Citations for some in prelim presentation
 
-\steven{Rework future work}
-\steven{Mention the two-level linear,dependent compiler. ``A two level linear
-  dependent type theory''. it could be a good place to build off for a language
-  implementation that isn't just inference rules}
-
-\subsection{Implementation for Context-Free Grammars}
-As suggested throughout the paper and briefly explored in
-\cref{subsubsec:pda}, the first extension to the work in
-this paper will be to bring analogous constructions to
-context-free grammars and their accompanying pushdown automata.
-
-
-\subsection{Beyond Strings}
-\label{subsec:beyond}
-
+\paragraph{Applications to Type Checking}
 While parsing typically refers to the generation of semantic
 objects from string input, many tasks in programming can be
 viewed as parsing of objects with more structure, such as
@@ -2342,19 +2386,17 @@ particular, \emph{type checking}
 producing a semantic object subject to some analysis. Just
 as our string grammars were given as functors from $\String$
 to $\Set$, we envision adapting the same philosophy
-to functors from $\String$ to \emph{trees} to craft a syntax
+to functors from $\String$ to some \emph{category of trees} to craft a syntax
 that natively captures typed elaboration. This suggests an
 unusual sort of bunched type theory, where context extension
 no longer resembles concatenation of strings but instead
 takes on the form of tree constructors.
 
-Thus far, our theory has proved useful for internalizing long-standing
-grammar-theoretic constructions, but there has been decades of research
-conducted since. A fruitful avenue for future work includes
-testing if our formalism can also internalize more recently proposed grammar
-mechanisms, such as the interval parsing grammars given by Zhang et al. \cite{zhangIntervalParsingGrammars2023}.
+\steven{condense the future work section?}
+\steven{Put the 2 category stuff here?}
 
-\newpage
+\paragraph{Other Future Work}
+Backtracking parsing via delimited continuations?
 
 \bibliographystyle{plain}
 \bibliography{refs.bib}
