@@ -232,7 +232,7 @@ including one to prove a metatheoretic canonicity theorem. Finally, in
 \cref{sec:automata} we give a presentation of automata as grammars. With this
 view in mind, we may encode parsing algorithms and execute them entirely
 internal to our formalism. Our contributions are then:
-
+%
 \begin{itemize}
   \item A syntax-independent notion of grammar given by the category $\Grammar$
   \item \theoryname: A dependent
@@ -241,7 +241,6 @@ internal to our formalism. Our contributions are then:
   \item Categorical structures that capture the concepts integral to formal grammar theory, and that are notably modeled by $\Grammar$
   \item An implementation of the language, which is embedded shallowly in Agda
 \end{itemize}
-
 
 \section{A Syntax-Independent Notion of Syntax}
 \label{sec:synindnotion}
@@ -253,8 +252,13 @@ especially useful as it gives a semantics to formal grammars that is completely
 independent of any particular syntactic grammar formalism. Any new
 notion of grammar can be given a language semantics and it provides a precise
 mathematical specification for implementing a \emph{recognizer} of a language.
+In this section we propose a \emph{proof-relevant} generalization of formal
+languages that can accommodate richer aspects of formal language theory such as
+parsing. We begin by proposing a presheaf approach to grammars that encompasses
+other classes of grammars in a syntax-independent way.
 
-That is, a recognizer should be extensionally equivalent to the indicator function
+\paragraph{From Formal Languages to Formal Grammars}
+A recognizer should be extensionally equivalent to the indicator function
 $\chi_{L} : \String \to \Prop$ mapping each string $w$ to the the proposition
 that it is in the language $w \in L$. However, language recognition is
 insufficient for specifying a parser --- a function that decomposes a string
@@ -314,13 +318,12 @@ be described as the functor category $\Set^{\String}$ --- where the
 set $\String$ is viewed as a discrete\footnote{Objects in $\String$
 comprise the set of all strings, and the only morphisms are the
 identity morphisms.}  category. In fact, in this paper we will take
-$\Grammar$ to be defined as the functor category
-$\Set^{\String}$. Such functor categories into $\Set$ --- often called
-presheaf categories --- carry a remarkable amount of structure, and we
-will demonstrate that these well-known constructions on presheaf
-categories provide us with familiar compositional constructions on
-grammars\max{where do we talk about the properties of this presheaf cat?}.
+$\Grammar$ to be defined as the functor category $\Set^{\String}$ ---
+also called presheaf category. Such presheaf categories carry a
+remarkable amount of structure.  Indeed they are a monoidal topos and,
+as such, are a model to a substructural dependently typed theory.
 
+\paragraph{From Grammars to Formal Grammars}
 The category-theoretic framework can be further used to describe and compare
 different notions of formal grammar. For instance, Chomskyan generative
 grammars, semi-Thue systems, Montague grammars, and so on are all distinct syntactic
@@ -332,6 +335,10 @@ this sense, $\Grammar$ provides an
 all-encompassing semantic domain for parsing.
 
 \max{this section kind of trails off at the end with a very vague aside about a $2$-category of grammar formalisms. Maybe this should go in future work/discussion? What is the message of this section? How does it tie in with the message of the paper? What even is the message of this paper?}
+
+\pedro{Would building on this proposed structure make the message of the section clearer? In this case
+  we would have to be a bit clearer in terms of how familiar notions of grammar can be seen as categories with functor into $\Grammar$.}
+
 
 \section{\theoryname as a Syntax for Formal Grammars}
 \label{sec:tt}
@@ -355,7 +362,10 @@ restrictions.\max{You are arguing against our own type theory here...} \steven{I
   convenience of LNL, but perhaps this isn't appropriate here, and I don't want to
   make our own type theory sound bad.Should probably just cut the beginning of
   this paragraph and jump into LNL, but then there's not an immediate reason for
-why one might want/need it over a pure linear system} Code in such a language can
+  why one might want/need it over a pure linear system}
+\pedro{I think that it's reasonable to simply say something like ``programming in a purely linear term language
+is limiting due to variable usage restrictions''. In this case we're not throwing our own TT under the bus}
+Code in such a language can
 become unnecessarily verbose when ensuring every function written is indeed linear. It would be more ergonomic to allow users using Girard encodings to translate
 high-level reasoning into low-level linear terms.\pedro{What encodings are these?
 We should add a citation here}
@@ -386,12 +396,12 @@ internal to \theoryabbv.
   choice, but it doesn't really flow well to the beginning of the next subsection }
 
 
-In this section we go through a tour of \theoryabbv. We start by presenting its syntax.
+In this section we go on a tour of \theoryabbv. We start by presenting its syntax.
 In order to avoid a notion of raw-term, we present it in an intrinsically-typed fashion,
 where only well-typed terms are meaningful. Next, we show how it admits a model in $\Set^{\String}$
 where the linear types have natural interpretation in terms of formal languages --- for instance,
 the tensor corresponds to grammar concatenation. We conclude the section by showing how
-classes of grammars correspond to certain subtype-theories inside \theoryabbv.
+classes of grammars correspond to certain sub-type-theories inside \theoryabbv.
 
 \pedro{Hopefully this serves as a segue between this and the syntax subsection}
 \subsection{Syntax}
@@ -786,6 +796,8 @@ semantics as grammars.
 \steven{I am in favor of cutting what's above, but we haven't introduced the
   syntax in the main body of the paper yet, even if the figures appeared
   earlier. So what you write needs to take that into account}
+\pedro{In which case we should introduce it in the previous section. I suggest
+  adding this right after ``and the intuitionistic typing rules in fig 3''}
 
 Now that we have specified the syntactic aspect of \theoryabbv, we must justify
 its connections to formal grammars in order to show that it is a sound methodology
@@ -1117,7 +1129,7 @@ context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
 will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
 calculus, which of course induces a semantics of unrestricted grammars.
 
-\section{Categorifying Formal Grammars}
+\section{Abstracting Formal Grammars}
 \label{sec:categorify}
 
 
