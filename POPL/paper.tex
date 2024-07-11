@@ -207,6 +207,7 @@ language to build and verify parsers.
   pointed adjectives such as ``intuitive'', espcially if we don't have evidence
   that corroborates our claim. This is the perfect excuse for
 an annoying reviewer to complain about our work.}
+\max{I agree about ``intuitive'', try to stick to objective claims}
 
 \paragraph{Contributions} This paper begins in \cref{sec:synindnotion} by
 giving a universal semantic characterization of formal grammar.
@@ -285,7 +286,7 @@ grammars presented by a family of functions
 for every string $w \in \String$. Intuitively, we read a morphism of grammars as
 a \emph{parse transformer} --- i.e. $f$ translates a $G$-parse of $w$ into an $H$-parse
 of $w$. The induced notion of isomorphism in $\Grammar$ encodes that two grammars are equivalent if there is
-a bijective translation of parses. In other words, two grammars are isomorhpic
+a bijective translation of parses. In other words, two grammars are isomorphic
 if they capture the same structural descriptions of strings, which is
 precisely Chomsky's notion of \emph{strong equivalence} of
 grammars \cite{chom1963}. In works like
@@ -295,14 +296,17 @@ structure of formal grammars and describing it in the the language of
 categories, it is encouraging to see the same definition of equivalence arise
 naturally.
 
-
-Upon inspection of the above definition, $\Grammar$ may equivalently be described as the functor
-category $\Set^{\String}$ --- where the set $\String$ is viewed as a
-discrete\footnote{Objects in $\String$ comprise the set of all strings, and the
-  only morphisms are the identity morphisms.}
-category. In fact, in this paper we will take $\Grammar$ to be defined as the
-functor category $\Set^{\String}$. Such functor categories into $\Set$ --- often called
-presheaf categories --- carry a remarkable amount of structure.
+Upon inspection of the above definition, $\Grammar$ may equivalently
+be described as the functor category $\Set^{\String}$ --- where the
+set $\String$ is viewed as a discrete\footnote{Objects in $\String$
+comprise the set of all strings, and the only morphisms are the
+identity morphisms.}  category. In fact, in this paper we will take
+$\Grammar$ to be defined as the functor category
+$\Set^{\String}$. Such functor categories into $\Set$ --- often called
+presheaf categories --- carry a remarkable amount of structure, and we
+will demonstrate that these well-known constructions on presheaf
+categories provide us with familiar compositional constructions on
+grammars\max{where do we talk about the properties of this presheaf cat?}.
 
 The category-theoretic framework can be further used to describe and compare
 different notions of formal grammar. For instance, Chomskyan generative
@@ -317,26 +321,26 @@ $\Grammar$. That is, they may all be interpreted in our category of grammars. In
   appropriate here, right?}
 \pedro{If you want to keep ``semantic domain'', we could go for ``all-encompassing semantic domain''}
 \steven{Check details for 2-cat of grammar formalisms}
-
+\max{this section kind of trails off at the end with a very vague aside about a $2$-category of grammar formalisms. Maybe this should go in future work/discussion? What is the message of this section? How does it tie in with the message of the paper? What even is the message of this paper?}
 
 \section{\theoryname as a Syntax for Formal Grammars}
 \label{sec:tt}
 
 Omission of the structural rules of a deductive system, such as in
 linear logic \cite{GIRARD19871}, offers precise control over how a value is used
-in a derivation. Namely, linear logic omits the weakening and contraction rules
+in a derivation. Namely\max{namely?}, linear logic omits the weakening and contraction rules
 to ensure that every value in context is used exactly once. This control enables
 \emph{resource-sensitive} reasoning, where we may treat a resource as
 \emph{consumed} after usage. This viewpoint is amenable to parsing applications,
 as we may treat characters of a string as finite resources that are consumed at
 parse-time. That is, once a particular substring has been parsed, a parser need not go
-over it again. One may then envision a linear type system where the types comprise
+over it again\max{what about a backtracking parser?}. One may then envision a linear type system where the types comprise
 formal grammars generated over some alphabet $\Sigma$, and the type constructors
 correspond precisely to inductive constructions on grammars --- such as
 conjunction, disjunction, concatenation, etc.
 
 Unfortunately, programming in a linear term language is often
-cumbersome and unintuitive for users. Code in such a language can
+cumbersome and unintuitive for users.\max{You are arguing against our own type theory here...} Code in such a language can
 become unnecessarily verbose when using Girard encodings to translate
 high-level reasoning into low-level linear terms.\pedro{What encodings are these?
 We should add a citation here}
@@ -392,9 +396,9 @@ variables to the beginning of contexts and another one for adding
 variables to the end of contexts. This is an adequate change in the
 context of grammars, which are inherently non-symmetric. The second
 change is the introduction of inductive types, which also have a
-natural grammar counterpart, which usually allows kinds of recursive
+natural grammar counterpart\max{what is it then?}, which usually allows kinds of recursive
 behavior such as the Kleene star. The treatment of the non-linear
-types is pretty standard, so below we focus on the linear syntax.
+types is pretty\max{pretty?} standard, so below we focus on the linear syntax.
 
 \begin{figure}
   \begin{mathpar}
@@ -870,7 +874,7 @@ construction can be generalized to context free grammars
 \cite{mightParsingDerivativesFunctional2011}. Here, via the linear function
 types, the same notion of derivative extends to the grammars of \theoryabbv.
 Note, to ensure that the linear function types do indeed generalize Brzozowski
-derivative, we must include the equalities in \cref{fig:brzozowskideriv} as axioms.
+derivative, we must include the equalities in \cref{fig:brzozowskideriv} as axioms\max{we must? why must we}.
 \pedro{We should further explain why these equations are required, or at the very
 least give some intuition}
 
