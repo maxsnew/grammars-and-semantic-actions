@@ -1749,7 +1749,7 @@ We make a pretty straightforward adaptation of Thompson's theorem to our setting
      N : \mathsf{AccTrace}_{NFA(g)} \oplus \mathsf{AccTrace}_{NFA(g')} \vdash \mathsf{case}~N~\{\mathsf{inl}(n) \mapsto \phi^{-1}(n), \mathsf{inr}(n') \mapsto \psi^{-1}(n')\} : g \oplus g'
   \]
 
-  When you wish to show that these actually maps invert each other to form an isomorphism, we invoke the
+  When you wish to show that these actually maps invert each other to form an isomorphism\max{jumbled sentence}, we invoke the
   universal properties of the $\mathsf{Trace}$ types. That is,
   $\mathsf{Trace}_{\oplus NFA}$, $\mathsf{Trace}_{N}$, and $\mathsf{Trace}_{M}$
   are \emph{initial} algebras to the the functors that define them. Thus, the
@@ -1831,31 +1831,50 @@ like the head of the tape.
 can encode and reason about different kinds of languages is very instructive!}
 
 
-\section{Abstracting Formal Grammars}
+\section{Categorical Semantics of \theoryabbv}
 \label{sec:categorify}
 
+As described in previous sections, \theoryabbv has a ``standard''
+interpretation where non-linear types denote sets, linear types denote
+formal grammars, non-linear terms denote functions and linear terms
+denote parse transformers.
+%
+Further, as is typical for type theory, every type constructor in the
+calculus is interpreted by using a \emph{universal construction} in
+either the category of sets or the category of grammars\footnote{the
+only exception is that the axioms for Brzozowski derivatives we
+considered do not follow solely from universal properties. In this
+section we focus on models that do not necessarily satisfy these
+axioms.}.
+%
+This leads to an immediate opportunity for generalization: the type
+theory has in addition to the standard grammar-theoretic
+interpretation, an interpretation in any categorical structure that
+exhibits the same universal constructions.
+%
+On the one hand this gives us a structured way to formalize the
+standard semantics precisely, but additionally it enables us to
+consider \emph{non-standard} models in the next section that point to
+further applications as well as meta-theoretic results.
 
-An important part in the study of type theories is characterizing what
-categorical structures they are modeling. In the case of \theoryabbv,
-due to its intended connection to formal language theory, we use
-Kleene algebras as a starting point in its categorical
-semantics. Being posets, there is an immediate way of categorifying
-them.
+In developing this categorical semantics, we will start with the
+closest analogue from formal language theory: Kleene algebra.  Kleene
+algebras are an important tool in the theory of regular languages
+serving as a bridge between algebraic reasoning and equivalence of
+regular expressions. More broadly, through various extensions, they
+serve as a theoretical substrate to studying different kinds of formal
+languages.
+%
+We can then see that the ``regular fragment'' of our type theory
+(i.e., just characters, $\otimes$, $\oplus$, $0,1$ and a Kleene star)
+has models in what we call a \emph{Kleene category} a categorification
+of Kleene algebra from posets to categories.
+%
+We then further develop this into our final notion of model, which we
+call a \emph{Chomsky category} as it can model not just regular
+languages, but the full Chomsky hierarchy.
 
-Kleene algebras are an important tool in the theory of regular languages
-due to them being a bridge between algebraic reasoning and equivalence
-of regular expressions. More broadly, through various extensions, they serve as a
-theoretical substrate to studying different kinds of formal languages.
-
-We posit that by seeing Kleene algebra through the lens of category
-theory, we gain some insight into the type-theoretic essence of formal
-grammars. We begin this section by providing a ``simply-typed''
-version of a categorification of Kleene algebra, which we call Kleene
-category, and then show define a more expressive class of categories,
-which we call Chomsky category, that will serve as the categorical
-semantics to \theoryabbv.
-
-\subsection{Kleene Categories}
+\subsection{Kleene Algebra and Kleene Categories}
 A Kleene algebra is a tuple $(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is
 a set, $+$ and $\cdot$ are binary operations over $A$, $(-)^*$ is a
 function over $A$, and $1$ and $0$ are constants. These structures
@@ -1963,7 +1982,6 @@ more structure, then these isomorphisms hold ``for free''.
 	\arrow["{[f', g']}", from=4-3, to=6-3]
 	\arrow["{[hd, tl]}"', from=4-1, to=6-1]
 \end{tikzcd}\]
-
   This equivalence follows by using the adjunction structure given
   by the monoidal closed structure of $\cat{K}$. A completely analogous
   argument for $G_{A,B}$ also holds. Furthermore, by generalizing the
@@ -2035,13 +2053,12 @@ construction from presheaf categories.
 \end{proof}
 
 Much like in the posetal case, the abstract structure of a Kleene
-category is expressive enough to synthetically reason about formal
+category is expressive enough to synthetically reason about regular
 languages. A significant difference between them is that while Kleene
 algebras can reason about language containment, Kleene categories can
-reason about parsing as well, as illustrated by the presheaf model
-above.
+reason about \emph{ambiguity}, \emph{strong equivalence} of grammars.
 
-\subsection{Beyond Simple Types}
+\subsection{Chomsky Categories}
 
 Though Kleene categories are expressive enough to reason about
 concepts that are outside of reach of Kleene algebras, their
@@ -2098,7 +2115,7 @@ if we don't say anything about the syntactic category, reviewers won't mind.}
 
 \pedro{I agree, then we should add the quick proof :) }
 
-\section{Other Models}
+\section{Concrete Models of \theoryabbv}
 \label{sec:othermodels}
 
 One of the powers of type theories is that it can be profitable to interpret them
