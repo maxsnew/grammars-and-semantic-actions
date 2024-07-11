@@ -122,7 +122,7 @@
   expressions, context free expressions, and their associated automata \max{which ones do
     we actually show?} \steven{regular expressions, $\mu$-regular expressions
     (or context free expressions), and different automata classes (finite,
-    pushdown, turing)} --- can be expressed as linear types in
+    pushdown, Turing)} --- can be expressed as linear types in
   \theoryabbv. We give simple characterizations of the regular and
   context-free grammars as expressible by restricting which
   connectives of \theoryabbv are allowed, a form of type theoretic
@@ -166,8 +166,21 @@ formally verified software systems: compilers and servers most
 especially.
 %
 \steven{Some ideas on what the unifying message throughout the paper should be:
+we offer an abstraction over the formalisms used ad-hoc when doing formal
+language/grammar theory. Whether a user of these constructs recognizes it or not, there is some
+universality between all of their systems. We don't necessarily do much, per se, other
+than abstract over the commonalities and provide a common language.
 
+However, just because there isn't a ton of clever work in designing this syntax, as
+a lot of it does flow very naturally from the literature, that doesn't diminish
+the value of the syntax. In fact, it emboldens the syntax because we want to
+appeal to the idea that ``there couldn't have been any other choice for
+universal grammar''.
 
+That is all to say, our appeal is generalization. I think does appear
+throughout the paper, but is maybe too aimless of a message to be satisfying.
+Perhaps, we should also lean on applications more. Idk I'm gonna sleep now, and
+we'll talk in the morning
 }
 
 In this work we aim to refine formal language theory into a
@@ -180,7 +193,7 @@ parsers as terms. That is, we develop a type theory with a novel
 denotational semantics in a category with abstract formal grammars as
 objects and \emph{parse transformers} as morphisms. We say these are
 \emph{abstract} formal grammars because they are not tied to any
-particular syntactic formalism such as Chomskyian grammars, regular
+particular syntactic formalism such as Chomskyan grammars, regular
 expressions, Lambek calculus etc. The category we choose is a rich
 category: it is a topos as well as being monoidal closed, and these
 universal properties serve as the inspiration for our type theory.
@@ -211,7 +224,7 @@ language to build and verify parsers.
 
 \paragraph{Contributions} This paper begins in \cref{sec:synindnotion} by
 giving a universal semantic characterization of formal grammar.
-From there, in \cref{sec:tt} we provide the syntax of \theoryname, a type thoery
+From there, in \cref{sec:tt} we provide the syntax of \theoryname, a type theory
 that axiomatizes the underlying structures needed to conduct formal grammar
 theory. Then in \cref{sec:categorify}, we characterize the abstract categorical
 models of our syntax. Afterwards, we demonstrate several models of \theoryabbv,
@@ -336,10 +349,10 @@ correspond precisely to inductive constructions on grammars --- such as
 conjunction, disjunction, concatenation, etc.
 
 Unfortunately, programming in a linear term language is often
-cumbersome and unintuitive for users who are unacustomed to the usage
+cumbersome and unintuitive for users who are unaccustomed to the usage
 restrictions.\max{You are arguing against our own type theory here...} \steven{I
   want to argue against a \emph{purely linear} calculus to motivate the
-  convience of LNL, but perhaps this isn't appropriate here, and I don't want to
+  convenience of LNL, but perhaps this isn't appropriate here, and I don't want to
   make our own type theory sound bad.Should probably just cut the beginning of
   this paragraph and jump into LNL, but then there's not an immediate reason for
 why one might want/need it over a pure linear system} Code in such a language can
@@ -771,7 +784,7 @@ semantics as grammars.
 
 \pedro{The paragraphs above are a bit circular, what about the following alternative?}
 \steven{I am in favor of cutting what's above, but we haven't introduced the
-  sytnax in the main body of the paper yet, even if the figures appeared
+  syntax in the main body of the paper yet, even if the figures appeared
   earlier. So what you write needs to take that into account}
 
 Now that we have specified the syntactic aspect of \theoryabbv, we must justify
@@ -1086,7 +1099,7 @@ the Chomsky hierarchy.
 of our language by restricting the type constructors to the
 linear unit, characters, $\otimes$, $\oplus$, and Kleene star. Classically, the
 languages recognized by these are exactly the regular languages --- the lowest
-on the Chomksy hierarchy.
+on the Chomsky hierarchy.
 
 \paragraph{$\mu$-Regular Expressions} Similarly, we may restrict the connectives
 to be linear unit, characters, $\otimes$, $\oplus$, and arbitrary recursion via
@@ -1319,7 +1332,7 @@ above.
 Though Kleene categories are expressive enough to reason about
 concepts that are outside of reach of Kleene algebras, their
 simply-typed nature makes them not so expressive from a type theoretic
-point of view. This is limiting because type theories are sucessful
+point of view. This is limiting because type theories are successful
 syntactic frameworks for manipulating complicated categorical
 structures while avoiding some issues common in category theory, such
 as coherence issues.
@@ -1343,8 +1356,8 @@ category}.
   going the other direction.
 \end{definition}
 
-\steven{Max suggests augmenting the definition of a chomsky category to
-  something like two categories $L$ and $U$, and $U$ is cartesian closed I don't
+\steven{Max suggests augmenting the definition of a Chomsky category to
+  something like two categories $L$ and $U$, and $U$ is Cartesian closed I don't
   fully recall the rest.
 
 
@@ -1360,13 +1373,13 @@ category}.
 
 Further, the syntactic category of \theoryname is manifestly a Chomsky category.
 
-\pedro{This is likely true, but if we explicitly say so, this warants a proof. I think that
+\pedro{This is likely true, but if we explicitly say so, this warrants a proof. I think that
 if we don't say anything about the syntactic category, reviewers won't mind.}
 
 \steven{I agree that we don't want to say anything that opens unnecessary
   questions for proofs we haven't written. However, it seems hard to make the
   case that we have the right categorical model of the syntax if this statement
-  isn't true. By restating our definition of Chomksy category, this should be
+  isn't true. By restating our definition of Chomsky category, this should be
   obvious or a quick proof}
 
 \pedro{I agree, then we should add the quick proof :) }
@@ -1407,7 +1420,7 @@ Further, semantic actions can be arranged into a structured category.
 Define $\SemAct$ as the comma
 category $\Grammar / \Delta$, where $\Delta : \Set \to \Grammar$ defines a
 discrete presheaf. That is, for a set $X$, $\Delta (X)(w) = X$ for all
-$w \in \String$. As $\SemAct$ is defined as a comma category, it has a forgetul
+$w \in \String$. As $\SemAct$ is defined as a comma category, it has a forgetful
 functor into $\Grammar$. That is, $\SemAct$ serves as a notion of formal
 grammar. Moreover, $\SemAct$ is a model of \theoryabbv.
 
@@ -1561,7 +1574,7 @@ theorem. Could also be done before stating the theorem.}
 
 The canonicity theorem from the previous section gives a tight connection
 between terms in our type theory and the theory of formal languages. In this section
-we further explore these connections by using the fact that, clasically
+we further explore these connections by using the fact that, classically
 formal language theory is closely related to the study of automata.
 In the Chomsky hierarchy, each language class is associated to a class of
 automata that serve as recognizers. Internal to \theoryabbv,
@@ -2297,7 +2310,7 @@ In 1992, while investigating the addition of arbitrary recursion to Kleene
 algebra \cite{leiss},
 Lei{\ss} used a least fixed-point operator instead of the Kleene star. Although
 he did not explicitly make use of a type system, or have access to the view of Frisch and
-Cardelli, Leiss had added the full power of inductive types to a type system of regular expressions.
+Cardelli, Lei{\ss} had added the full power of inductive types to a type system of regular expressions.
 
 Pratt's work on the residuation of action algebras in \cite{prattActionLogicPure1991} closely mirrors
 our observation that Brzozowski derivatives mirror linear function types.
@@ -2320,7 +2333,7 @@ given in this paper.
 \steven{Make the above paragraph shorter. Also idk if its worth including, but I
 like that they practically ask for a type theory}
 
-\steven{Mention Neel's typed algebraic approch paper here. Say it is similar at
+\steven{Mention Neel's typed algebraic approach paper here. Say it is similar at
   first glance, as its parsing with types, but that he actually is representing
   something quite different. Or is it so different that its not worth mentioning?}
 
@@ -2347,7 +2360,7 @@ parsing as well.
 
 \steven{Can we sketch here what an apt categorification of KATs might be? As a
   poor first pass: perhaps a Kleene category with a full involutive
-  subcategory that corresponds to the Boolean aglebra?.}
+  subcategory that corresponds to the Boolean algebra?.}
 \steven{What can we say about internalizing Kleene algebra proofs or extensions?}
 \steven{any KA citations needed above?}
 
@@ -2361,10 +2374,10 @@ notion of model \cite{vakarSyntaxSemanticsLinear2015}
 \cite{fu2023twolevellineardependenttype} give a compiler for a two-level
 linear dependent type theory. This could serve as a template for a
 compiler implementation of \theoryname that is not just inference rules
-embedded in agda.
+embedded in Agda.
 
 \paragraph{Implementations in Parsing}
-Talk about how we have a DFA parser in agda and want to to get out a regex
+Talk about how we have a DFA parser in Agda and want to to get out a regex
 parser. Then context free, etc
 
 future work related to building a usable correct-by-construction parser
@@ -2396,7 +2409,7 @@ takes on the form of tree constructors.
 \steven{Put the 2 category stuff here?}
 
 \paragraph{Other Future Work}
-Backtracking parsing via delimited continuations?
+Backtracking parsing: via (delimited) continuations? effect handlers?
 
 \bibliographystyle{plain}
 \bibliography{refs.bib}
