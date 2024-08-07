@@ -33,33 +33,42 @@ open import Semantics.NFA.Base
 open import Semantics.Helper
 open import Semantics.Term
 open import Semantics.String
+open import Graph.Reachability
 
 private
   variable ℓΣ₀ ℓN ℓN' ℓP ℓ : Level
 
 open NFADefs
 
-module _ {ℓN} {Σ₀ : Type ℓ-zero}
+module _ {ℓN}
+  ((Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero)
   (N : NFA ℓN Σ₀) where
-  open NFA N
-  -- TODO make sure I don't include traces through states that i've already seen
---   data ε-reachable (q-end : Q .fst) : Q .fst → Type ℓ where
---     ε-reach-nil : ε-reachable q-end q-end
---     ε-reach-cons : ∀ (εtr : ε-transition .fst) →
---       ε-reachable q-end (ε-dst εtr) →
---       ε-reachable q-end (ε-src εtr)
+  open NFA
 
---   ε-reachDecProp :
---     ∀ q-start q-end → DecProp ℓ
---   fst (fst (ε-reachDecProp q-start q-end)) = ∥ ε-reachable q-end q-start ∥₁
---   snd (fst (ε-reachDecProp q-start q-end)) = isPropPropTrunc
---   snd (ε-reachDecProp q-start q-end) =
---     decRec
---       (λ q-start≡q-end →
---         yes ∣ transport (cong (λ a → ε-reachable q-end a) (sym (q-start≡q-end))) ε-reach-nil ∣₁)
---       (λ ¬q-start≡q-end → {!!})
---       (decEqQ q-start q-end)
+  -- The NFA without labelled transitions, viewed as a directed graph
+  open directedGraph
+  ε-graph : directedGraph
+  states ε-graph = N .Q
+  directed-edges ε-graph = N .ε-transition
+  src ε-graph = N .ε-src
+  dst ε-graph = N .ε-dst
 
--- -- ε-reach : Q .fst → FinSetDecℙ Q .fst
--- -- ε-reach q-start q-end =
--- --   DecProp∃ {!!} {!!}
+  -- The decidable finite set of states reachable from q-start
+  ε-reach : N .Q .fst → FinSetDecℙ (N .Q) .fst
+  fst (fst (ε-reach q-start q-end)) = _
+  snd (fst (ε-reach q-start q-end)) = isPropPropTrunc
+  snd (ε-reach q-start q-end) = DecReachable ε-graph q-start q-end
+
+  open DFADefs
+  open DFA
+  open Iso
+  ℙDFA : DFA (ℓ-suc ℓN) (Σ₀ , isFinSetΣ₀)
+  Q ℙDFA = FinSetDecℙ (N .Q)
+  init ℙDFA = ε-reach (N .init)
+  isAcc ℙDFA X =
+    DecProp∃
+      -- Quantifying over states in X : Σ[ q ∈ N .Q .fst ] X q .fst
+      (Decℙ→FinSet (N .Q) X)
+      -- Is any state in X accepting?
+      (λ x → LiftDecProp (N .isAcc (x .fst)))
+  δ ℙDFA X c q = DecProp∃ (Decℙ→FinSet (N .Q) X) (λ x → {!!})

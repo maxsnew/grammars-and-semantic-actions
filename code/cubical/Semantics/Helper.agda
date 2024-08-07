@@ -375,3 +375,10 @@ SingletonDecℙ {A = A} a x =
 SingletonDecℙ' : ∀ {ℓ} {A : FinSet ℓ} → (a : A .fst) → Decℙ' (A .fst)
 SingletonDecℙ' {A = A} a =
   DecℙIso (A .fst) .fun (SingletonDecℙ {A = A} a)
+
+Decℙ'→FinSet : ∀ {ℓ} (A : FinSet ℓ) → Decℙ' (A .fst) → FinSet ℓ
+fst (Decℙ'→FinSet A X) = Σ[ a ∈ A .fst ] X a .fst
+snd (Decℙ'→FinSet A X) = isFinSetSub A X
+
+Decℙ→FinSet : ∀ {ℓ} (A : FinSet ℓ) → Decℙ (A .fst) → FinSet ℓ
+Decℙ→FinSet A X = Decℙ'→FinSet A (DecℙIso (A .fst) .fun X )
