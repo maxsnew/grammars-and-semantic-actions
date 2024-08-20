@@ -75,9 +75,6 @@ module Syntax (Σ₀ : Type) where
     mt : Ctx
     _,_ : Ctx → Grammar → Ctx
 
-
-
-
 --   data OneHoleContext : Type (ℓ-suc ℓ-zero) where
 --     var : OneHoleContext
 --     _⊗l_ : OneHoleContext → Grammar → OneHoleContext
@@ -245,11 +242,17 @@ module Syntax (Σ₀ : Type) where
       Δ ⊢ μ g →
       [ eval-spg g h ] ⊢ h →
       Δ ⊢ h
-    μ-β :
-      ∀ {Δ} {g h} →
-      (e : Δ ⊢ eval-spg g (μ g)) →
-      (e' : [ eval-spg g h ] ⊢ h) →
-      μ-E (μ-I e) e' ≡ {!!}
+    -- μ-β :
+    --   ∀ {Δ} {g h} →
+    --   (e : Δ ⊢ eval-spg g (μ g)) →
+    --   (e' : [ eval-spg g h ] ⊢ h) →
+    --   μ-E (μ-I e) e' ≡ {!!}
+    -- μ-η :
+    --   ∀ {Δ} {g h} →
+    --   (e : Δ ⊢ μ g) →
+    --   (e' : [ eval-spg g h ] ⊢ h) →
+    --   μ-I (μ-E e {!e'!}) ≡ e
+
 
 
 
@@ -267,7 +270,7 @@ module _ where
   g : Grammar
   g = KL* (literal a ⊗ literal b) ⊗ literal a
 
-  test :  map literal (a ∷ b ∷ a ∷ b ∷ a ∷ []) ⊢ g
+  test : map literal (a ∷ b ∷ a ∷ b ∷ a ∷ []) ⊢ g
   test =
     ⊗-I
       {Δ₁ = literal a ∷ literal b ∷ literal a ∷ literal b ∷ []}

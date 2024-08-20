@@ -802,7 +802,8 @@ module _ {ℓN} {Σ₀ : Type ℓ-zero}
         )
     on-nil the-⊗NFA-alg→initial⊗NFA _ = refl
     on-cons the-⊗NFA-alg→initial⊗NFA (inl tr) p = refl
-    on-cons the-⊗NFA-alg→initial⊗NFA (inr tr) = {!!}
+    on-cons the-⊗NFA-alg→initial⊗NFA (inr tr) =
+      funExt⁻ {!refl!}
       -- Term≡-cong (initialN'→the-N'-alg .on-cons tr)
       --   {!!}
       --   {!!}

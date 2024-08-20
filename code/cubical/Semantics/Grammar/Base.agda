@@ -40,7 +40,7 @@ module _ {Σ₀ : Type ℓ-zero} where
     LiftGrammar : Grammar (ℓ-max ℓG ℓG')
     LiftGrammar w = Lift {ℓG}{ℓG'} (g w)
 
-  module _ {ℓG} {ℓG'}
+  module _
     (g : Grammar ℓG)
     (g' : Grammar ℓG')
     where
@@ -50,7 +50,7 @@ module _ {Σ₀ : Type ℓ-zero} where
     infix 5 Term
     syntax Term g g' = g ⊢ g'
 
-  module _ {ℓG} {ℓH}
+  module _
     {g : Grammar ℓG}
     {h : Grammar ℓH}
     (e e' : g ⊢ h)
@@ -59,7 +59,8 @@ module _ {Σ₀ : Type ℓ-zero} where
     Term≡ : Type (ℓ-max ℓG ℓH)
     Term≡ = ∀ {w : String} (p : g w) → e p ≡ e' p
 
-  module _ {ℓG} {ℓH}
+
+  module _ 
     {g : Grammar ℓG}
     {h : Grammar ℓH}
     {k : Grammar ℓK}
@@ -75,6 +76,21 @@ module _ {Σ₀ : Type ℓ-zero} where
         (λ p → ψ (e' (ϕ p)))
     Term≡-cong {w} p =
       cong ψ (the-eq {w} (ϕ p))
+
+  module _ {ℓG} {ℓH}
+    {g : Grammar ℓG}
+    {h : Grammar ℓH}
+    {l : Grammar ℓL}
+    {e e' : g ⊢ h}
+    (the-eq : Term≡ e e')
+    (ψ : h ⊢ l)
+    where
+    Term≡-cong' :
+      Term≡ {g = g}{h = l}
+        (λ p → ψ (e p))
+        (λ p → ψ (e' p))
+    Term≡-cong' {w} p =
+      cong ψ (the-eq {w} (p))
 
   module _ {ℓG}
     (g : Grammar ℓG)

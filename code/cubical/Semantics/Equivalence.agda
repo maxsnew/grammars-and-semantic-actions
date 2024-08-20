@@ -2,6 +2,7 @@ module Semantics.Equivalence where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 
@@ -30,32 +31,26 @@ open import Semantics.Term
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' ℓΣ₀ : Level
-    Σ₀ : Type ℓΣ₀
-    g : Grammar ℓg {Σ₀}
-    h : Grammar ℓh {Σ₀}
-    k : Grammar ℓk {Σ₀}
-    l : Grammar ℓl {Σ₀}
+    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
+    Σ₀ : Type ℓ-zero
+    g : Grammar {Σ₀} ℓg
+    h : Grammar {Σ₀} ℓh
+    k : Grammar {Σ₀} ℓk
+    l : Grammar {Σ₀} ℓl
 
 -⊗η :
-  ∀ {ℓg}{ℓh} →
-  {g : Grammar ℓg {Σ₀}} →
-  {h : Grammar ℓh {Σ₀}} →
-  {k : Grammar ℓk {Σ₀}} →
+  ∀ {g : Grammar {Σ₀} ℓg} →
   (e : g ⊢ h -⊗ k) →
   Term≡ {g = g} {h = h -⊗ k}
     e
     (λ-⊗[ x ∈ h ][ id {g = h} -⊗app[ h -⊗ k ] e ])
--⊗η {g = g}{h = h}{k = k} e {w} {p} =
-  funExt (λ w' → funExt (λ ph →
-    sym (transportRefl (e p w' (id {g = h} ph)))))
+-⊗η e {w} p =
+  funExt (λ w' → funExt (λ ph → sym (transportRefl (e p w' ph))))
 
 -⊗β :
-  ∀ {ℓg}{ℓh} →
-  {g : Grammar ℓg {Σ₀}} →
-  {h : Grammar ℓh {Σ₀}} →
-  {k : Grammar ℓk {Σ₀}} →
-  {l : Grammar ℓl {Σ₀}} →
+  ∀ {g : Grammar {Σ₀} ℓg} →
+  {h : Grammar {Σ₀} ℓh} →
+  {k : Grammar {Σ₀} ℓk} →
   (e : g ⊗ h ⊢ k) →
   (e' : l ⊢ g) →
   Term≡ {g = l ⊗ h} {h = k}
@@ -63,4 +58,13 @@ private
     (trans {g = l ⊗ h} {h = g ⊗ h} {k = k}
       (cut {g = l} {h = g} (var ⊗l h) e')
       e)
--⊗β {g = g}{h = h}{k = k}{l = l} e e' {w} {p} = {!!}
+-⊗β {g = g}{h = h}{k = k} e e' p =
+  {!!} ∙
+  transportRefl (e (p .fst , e' (p .snd .fst) , p .snd .snd))
+-- Goal: transp (λ i → k (p .fst .snd (~ i))) i0
+--       (e
+--        (((fst p .fst .fst , fst p .fst .snd) ,
+--          (λ _ → fst p .fst .fst ++ fst p .fst .snd))
+--         , e' (p .snd .fst) , p .snd .snd))
+--       ≡
+--       transp (λ i → k w) i0 (e (p .fst , e' (p .snd .fst) , p .snd .snd))

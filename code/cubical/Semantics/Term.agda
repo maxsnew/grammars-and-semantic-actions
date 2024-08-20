@@ -31,10 +31,10 @@ private
   variable
     ℓg ℓh ℓk ℓl ℓ ℓ' ℓΣ₀ : Level
     Σ₀ : Type ℓ-zero
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    g : Grammar {Σ₀} ℓg
+    h : Grammar {Σ₀} ℓh
+    k : Grammar {Σ₀} ℓk
+    l : Grammar {Σ₀} ℓl
 
 {-- Embed the linear typing rules
  -- These correspond to terms like x : g ⊢ M : g'
@@ -133,6 +133,15 @@ syntax -⊗-intro {g = g} e = λ-⊗[ x ∈ g ][ e ]
     (e (p .snd .snd) (fst p .fst .fst) (e' (p .snd .fst)))
 
 syntax -⊗-elim {h = h}{k = k} e e' = e' -⊗app[ h -⊗ k ] e
+
+-- -⊗-β :
+--   (e : g ⊗ h ⊢ k) →
+--   (e' : l ⊢ g) →
+--   Term≡ {Σ₀}
+--     (e' -⊗app[ g -⊗ k ] λ-⊗[ x ∈ g ][ e ])
+--     (λ x → e (x .fst , ((e' (x .snd .fst)) , (x .snd .snd))))
+-- -⊗-β e e' p = {!!}
+
 
 ⊗--intro :
   g ⊗ h ⊢  k →
