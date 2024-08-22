@@ -1,7 +1,8 @@
-module Semantics.Grammar.LinearProduct where
-
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+
+module Semantics.Grammar.LinearProduct ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
+
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
@@ -23,14 +24,12 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Helper
-open import Semantics.String
-open import Semantics.Grammar.Base
+open import Semantics.Grammar.Base (Σ₀ , isSetΣ₀)
 
 private
   variable
     ℓG ℓG' : Level
-    Σ₀ : Type ℓ-zero
 
-_⊗_ : Grammar {Σ₀} ℓG → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
+_⊗_ : Grammar ℓG → Grammar ℓG' → Grammar (ℓ-max ℓG ℓG')
 (g ⊗ g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
 infixr 20 _⊗_

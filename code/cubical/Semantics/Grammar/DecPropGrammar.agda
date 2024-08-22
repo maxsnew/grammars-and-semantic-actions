@@ -1,7 +1,8 @@
-module Semantics.Grammar.DecPropGrammar where
-
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+
+module Semantics.Grammar.DecPropGrammar ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
+
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
@@ -23,18 +24,16 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Helper
-open import Semantics.String
-open import Semantics.Grammar.Base
-open import Semantics.Grammar.Top
-open import Semantics.Grammar.Bottom
+open import Semantics.Grammar.Base (Σ₀ , isSetΣ₀)
+open import Semantics.Grammar.Top (Σ₀ , isSetΣ₀)
+open import Semantics.Grammar.Bottom (Σ₀ , isSetΣ₀)
 
 private
   variable
-    ℓG ℓS  ℓΣ₀ : Level
-    Σ₀ : Type ℓ-zero
+    ℓG ℓS : Level
 
 DecProp-grammar' :
-  DecProp ℓS → Grammar {Σ₀} (ℓ-max ℓS ℓG)
+  DecProp ℓS → Grammar (ℓ-max ℓS ℓG)
 DecProp-grammar' d =
   decRec
     (λ _ → ⊤-grammar)

@@ -327,6 +327,9 @@ module DFADefs ℓD ((Σ₀ , isFinSetΣ₀) : FinSet ℓ-zero) where
     DecideDFA : String → Bool
     DecideDFA = DecideFromState init
 
+    Parses : Grammar ℓD
+    Parses = TraceWithAcceptanceFrom init
+
 module examples where
   -- examples are over alphabet drawn from Fin 2
   -- characters are fzero and (fsuc fzero)

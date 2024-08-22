@@ -1,7 +1,8 @@
-module Semantics.Grammar.Dependent where
-
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+
+module Semantics.Grammar.Dependent ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
+
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
@@ -23,31 +24,29 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Helper
-open import Semantics.String
-open import Semantics.Grammar.Base
-open import Semantics.Grammar.Literal
-open import Semantics.Grammar.KleeneStar
+open import Semantics.Grammar.Base (Σ₀ , isSetΣ₀)
+open import Semantics.Grammar.Literal (Σ₀ , isSetΣ₀)
+open import Semantics.Grammar.KleeneStar (Σ₀ , isSetΣ₀)
 
 private
   variable
     ℓG ℓS : Level
-    Σ₀ : Type ℓ-zero
 
-LinearΠ : {A : Type ℓS} → (A → Grammar {Σ₀} ℓG) → Grammar (ℓ-max ℓS ℓG)
+LinearΠ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΠ {A = A} f w = ∀ (a : A) → f a w
 
-LinearΣ : {A : Type ℓS} → (A → Grammar {Σ₀} ℓG) → Grammar (ℓ-max ℓS ℓG)
+LinearΣ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΣ {A = A} f w = Σ[ a ∈ A ] f a w
 
-LinearΣ-syntax : {A : Type ℓS} → (A → Grammar {Σ₀} ℓG) → Grammar (ℓ-max ℓS ℓG)
+LinearΣ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΣ-syntax = LinearΣ
 
 syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
 
-module _ {Σ₀ : Type ℓ-zero} where
-  ⊕Σ₀ : Grammar {Σ₀} ℓ-zero
-  ⊕Σ₀ = LinearΣ λ (c : Σ₀) → literal c
+⊕Σ₀ : Grammar ℓ-zero
+⊕Σ₀ = LinearΣ λ (c : Σ₀) → literal c
 
-  String→KL* : (w : String) → KL* ⊕Σ₀ w
-  String→KL* [] = nil refl
-  String→KL* (x ∷ w) = cons ((([ x ] , w) , refl) , (((x , refl)) , (String→KL* w)))
+String→KL* : (w : String) → KL* ⊕Σ₀ w
+String→KL* [] = nil refl
+String→KL* (x ∷ w) =
+  cons ((([ x ] , w) , refl) , (((x , refl)) , (String→KL* w)))

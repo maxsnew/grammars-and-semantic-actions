@@ -1,7 +1,8 @@
-module Semantics.Grammar.Literal where
-
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+
+module Semantics.Grammar.Literal ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
+
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
@@ -23,13 +24,11 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Helper
-open import Semantics.String
-open import Semantics.Grammar.Base
+open import Semantics.Grammar.Base (Σ₀ , isSetΣ₀)
 
 private
   variable
     ℓG : Level
-    Σ₀ : Type ℓ-zero
 
-literal : Σ₀ → Grammar {Σ₀} ℓ-zero
+literal : Σ₀ → Grammar ℓ-zero
 literal c w = w ≡ [ c ]
