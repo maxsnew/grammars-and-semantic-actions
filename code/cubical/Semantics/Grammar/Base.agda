@@ -41,113 +41,61 @@ module _ where
     LiftGrammar : Grammar (ℓ-max ℓG ℓG')
     LiftGrammar w = Lift {ℓG}{ℓG'} (g w)
 
-  module _
-    (g : Grammar ℓG)
-    (g' : Grammar ℓG')
-    where
-    Term : Type (ℓ-max ℓG ℓG')
-    Term = ∀ {w} → g w → g' w
+  -- module _ {ℓG}
+  --   (g : Grammar ℓG)
+  --   where
+  --   Language : Type ℓG
+  --   Language = Σ[ w ∈ String ] ∥ g w ∥₁
 
-    infix 5 Term
-    syntax Term g g' = g ⊢ g'
+  -- module _ {ℓG} {ℓG'}
+  --   (g : Grammar ℓG)
+  --   (g' : Grammar ℓG')
+  --   where
 
-  module _
-    {g : Grammar ℓG}
-    {h : Grammar ℓH}
-    (e e' : g ⊢ h)
-    where
+  --   isLogicallyEquivalent : Type (ℓ-max ℓG ℓG')
+  --   isLogicallyEquivalent = (g ⊢ g') × (g' ⊢ g)
 
-    Term≡ : Type (ℓ-max ℓG ℓH)
-    Term≡ = ∀ {w : String} (p : g w) → e p ≡ e' p
+  --   isWeaklyEquivalent : Type (ℓ-max ℓG ℓG')
+  --   isWeaklyEquivalent = Iso (Language g) (Language g')
 
+  --   open Iso
+  --   isLogicalEquivalence→WeakEquivalence :
+  --     isLogicallyEquivalent → isWeaklyEquivalent
+  --   fst (fun (isLogicalEquivalence→WeakEquivalence logEq) x) = x .fst
+  --   snd (fun (isLogicalEquivalence→WeakEquivalence logEq) x) =
+  --     PT.rec
+  --       isPropPropTrunc
+  --       (λ p → ∣ logEq .fst p ∣₁)
+  --       (x .snd)
+  --   fst (inv (isLogicalEquivalence→WeakEquivalence logEq) x) = x .fst
+  --   snd (inv (isLogicalEquivalence→WeakEquivalence logEq) x) =
+  --     PT.rec
+  --       isPropPropTrunc
+  --       (λ p → ∣ logEq .snd p ∣₁)
+  --       (x .snd)
+  --   rightInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
+  --     Σ≡Prop (λ _ → isPropPropTrunc) refl
+  --   leftInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
+  --     Σ≡Prop (λ _ → isPropPropTrunc) refl
 
-  module _ 
-    {g : Grammar ℓG}
-    {h : Grammar ℓH}
-    {k : Grammar ℓK}
-    {l : Grammar ℓL}
-    {e e' : g ⊢ h}
-    (the-eq : Term≡ e e')
-    (ϕ : k ⊢ g)
-    (ψ : h ⊢ l)
-    where
-    Term≡-cong :
-      Term≡ {g = k}{h = l}
-        (λ p → ψ (e (ϕ p)))
-        (λ p → ψ (e' (ϕ p)))
-    Term≡-cong {w} p =
-      cong ψ (the-eq {w} (ϕ p))
+  --   isStronglyEquivalent : Type (ℓ-max ℓG ℓG')
+  --   isStronglyEquivalent = ∀ w → Iso (g w) (g' w)
 
-  module _ {ℓG} {ℓH}
-    {g : Grammar ℓG}
-    {h : Grammar ℓH}
-    {l : Grammar ℓL}
-    {e e' : g ⊢ h}
-    (the-eq : Term≡ e e')
-    (ψ : h ⊢ l)
-    where
-    Term≡-cong' :
-      Term≡ {g = g}{h = l}
-        (λ p → ψ (e p))
-        (λ p → ψ (e' p))
-    Term≡-cong' {w} p =
-      cong ψ (the-eq {w} (p))
-
-  module _ {ℓG}
-    (g : Grammar ℓG)
-    where
-    Language : Type ℓG
-    Language = Σ[ w ∈ String ] ∥ g w ∥₁
-
-  module _ {ℓG} {ℓG'}
-    (g : Grammar ℓG)
-    (g' : Grammar ℓG')
-    where
-
-    isLogicallyEquivalent : Type (ℓ-max ℓG ℓG')
-    isLogicallyEquivalent = (g ⊢ g') × (g' ⊢ g)
-
-    isWeaklyEquivalent : Type (ℓ-max ℓG ℓG')
-    isWeaklyEquivalent = Iso (Language g) (Language g')
-
-    open Iso
-    isLogicalEquivalence→WeakEquivalence :
-      isLogicallyEquivalent → isWeaklyEquivalent
-    fst (fun (isLogicalEquivalence→WeakEquivalence logEq) x) = x .fst
-    snd (fun (isLogicalEquivalence→WeakEquivalence logEq) x) =
-      PT.rec
-        isPropPropTrunc
-        (λ p → ∣ logEq .fst p ∣₁)
-        (x .snd)
-    fst (inv (isLogicalEquivalence→WeakEquivalence logEq) x) = x .fst
-    snd (inv (isLogicalEquivalence→WeakEquivalence logEq) x) =
-      PT.rec
-        isPropPropTrunc
-        (λ p → ∣ logEq .snd p ∣₁)
-        (x .snd)
-    rightInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
-      Σ≡Prop (λ _ → isPropPropTrunc) refl
-    leftInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
-      Σ≡Prop (λ _ → isPropPropTrunc) refl
-
-    isStronglyEquivalent : Type (ℓ-max ℓG ℓG')
-    isStronglyEquivalent = ∀ w → Iso (g w) (g' w)
-
-    isStronglyEquivalent→isWeaklyEquivalent :
-      isStronglyEquivalent → isWeaklyEquivalent
-    fst (fun (isStronglyEquivalent→isWeaklyEquivalent strEq) x) = x .fst
-    snd (fun (isStronglyEquivalent→isWeaklyEquivalent strEq) x) =
-      PT.rec
-        isPropPropTrunc
-        (λ p → ∣ strEq (x .fst) .fun p ∣₁)
-        (x .snd)
-    fst (inv (isStronglyEquivalent→isWeaklyEquivalent strEq) x) = x .fst
-    snd (inv (isStronglyEquivalent→isWeaklyEquivalent strEq) x) =
-      PT.rec
-        isPropPropTrunc
-        (λ p → ∣ strEq (x .fst) .inv p ∣₁)
-        (x .snd)
-    rightInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
-      Σ≡Prop (λ _ → isPropPropTrunc) refl
-    leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
-      Σ≡Prop (λ _ → isPropPropTrunc) refl
+  --   isStronglyEquivalent→isWeaklyEquivalent :
+  --     isStronglyEquivalent → isWeaklyEquivalent
+  --   fst (fun (isStronglyEquivalent→isWeaklyEquivalent strEq) x) = x .fst
+  --   snd (fun (isStronglyEquivalent→isWeaklyEquivalent strEq) x) =
+  --     PT.rec
+  --       isPropPropTrunc
+  --       (λ p → ∣ strEq (x .fst) .fun p ∣₁)
+  --       (x .snd)
+  --   fst (inv (isStronglyEquivalent→isWeaklyEquivalent strEq) x) = x .fst
+  --   snd (inv (isStronglyEquivalent→isWeaklyEquivalent strEq) x) =
+  --     PT.rec
+  --       isPropPropTrunc
+  --       (λ p → ∣ strEq (x .fst) .inv p ∣₁)
+  --       (x .snd)
+  --   rightInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
+  --     Σ≡Prop (λ _ → isPropPropTrunc) refl
+  --   leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
+  --     Σ≡Prop (λ _ → isPropPropTrunc) refl

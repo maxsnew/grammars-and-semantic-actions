@@ -27,6 +27,7 @@ open import Semantics.Helper
 open import Semantics.Grammar.Base (Σ₀ , isSetΣ₀)
 open import Semantics.Grammar.LinearProduct (Σ₀ , isSetΣ₀)
 open import Semantics.Grammar.Empty (Σ₀ , isSetΣ₀)
+open import Semantics.Term.Base (Σ₀ , isSetΣ₀)
 
 private
   variable
