@@ -27,17 +27,26 @@ String = List Σ₀
 Splitting : String → Type ℓ-zero
 Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
 
-module _ (isSetΣ₀ : isSet Σ₀) where
-  isSetString : isSet String
-  isSetString = isOfHLevelList 0 isSetΣ₀
+isSetString : isSet String
+isSetString = isOfHLevelList 0 isSetΣ₀
 
-  isGroupoidString : isGroupoid String
-  isGroupoidString = isSet→isGroupoid isSetString
+isGroupoidString : isGroupoid String
+isGroupoidString = isSet→isGroupoid isSetString
 
-  isSetSplitting : (w : String) → isSet (Splitting w)
-  isSetSplitting w =
-    isSetΣ (isSet× isSetString isSetString)
-      λ s → isGroupoidString w (s .fst ++ s .snd)
+isSetSplitting : (w : String) → isSet (Splitting w)
+isSetSplitting w =
+  isSetΣ (isSet× isSetString isSetString)
+    λ s → isGroupoidString w (s .fst ++ s .snd)
+
+SplittingPathP : ∀ {w : I → String}{s0 : Splitting (w i0)}{s1 : Splitting (w i1)}
+  → s0 .fst ≡ s1 .fst
+  → PathP (λ i → Splitting (w i)) s0 s1
+SplittingPathP s≡ = ΣPathPProp (λ _ → isSetString _ _) s≡
+
+Splitting≡ : ∀ {w} → {s s' : Splitting w}
+  → s .fst ≡ s' .fst
+  → s ≡ s'
+Splitting≡ = SplittingPathP
 
 module _ (isFinSetΣ₀ : isFinSet Σ₀) where
   DiscreteΣ₀ : Discrete Σ₀

@@ -1,4 +1,5 @@
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Path
 open import Cubical.Foundations.HLevels
 
 module Semantics.Term ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
@@ -130,6 +131,10 @@ seq e e' p = e' (e p)
 
 syntax -⊗-intro {g = g} e = λ-⊗[ x ∈ g ][ e ]
 
+-⊗-app : h ⊗ (h -⊗ k) ⊢ k
+-⊗-app {k = k} {w = w} p =
+  subst k (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
+
 -⊗-elim :
   g ⊗ (g -⊗ h) ⊢ h
 -⊗-elim {h = h} p =
@@ -137,16 +142,30 @@ syntax -⊗-intro {g = g} e = λ-⊗[ x ∈ g ][ e ]
     (cong h (sym (p .fst .snd)))
     (p .snd .snd (fst p .fst .fst) (p .snd .fst))
 
+-⊗-intro⁻ :
+  h ⊢ g -⊗ k → 
+  g ⊗ h ⊢ k
+-⊗-intro⁻ {g = g}{k = k} f =
+  seq {h = g ⊗ (g -⊗ k)}
+    (⊗-intro (id {g = g}) f)
+    -⊗-elim
+
 syntax -⊗-elim {g = g}{h = h} = app[ g -⊗ h ]
 
--- -⊗-β :
---   (e : g ⊗ h ⊢ k) →
---   (e' : l ⊢ g) →
---   Term≡ {Σ₀}
---     (e' -⊗app[ g -⊗ k ] λ-⊗[ x ∈ g ][ e ])
---     (λ x → e (x .fst , ((e' (x .snd .fst)) , (x .snd .snd))))
--- -⊗-β e e' p = {!!}
+-⊗β : ∀ (m : (g ⊗ h) ⊢ k) →
+    Path ((g ⊗ h) ⊢ k)
+      (-⊗-intro⁻ {h = h}{g = g}{k = k} (-⊗-intro {g = g}{h = h}{k = k} m))
+      m
+-⊗β {k = k} m = implicitFunExt (funExt (λ p⊗ →
+  fromPathP {A = λ i → k (p⊗ .fst .snd (~ i))}
+    (congP (λ _ → m) (⊗PathP refl refl))))
 
+-⊗η : ∀ (f : h ⊢ g -⊗ k)
+  → Path (h ⊢ g -⊗ k)
+      f
+      (-⊗-intro {g = g}{h = h}{k = k} (-⊗-intro⁻ {h = h}{g = g}{k = k} f))
+-⊗η f = implicitFunExt (funExt (λ p⊗ →
+  funExt (λ w' → funExt λ q⊗ → {!!} )))
 
 ⊗--intro :
   g ⊗ h ⊢  k →

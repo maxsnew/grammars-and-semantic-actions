@@ -44,8 +44,8 @@ private
   Term≡ {g = g} {h = h -⊗ k}
     e
     (λ-⊗[ x ∈ h ][ id {g = h} -⊗app[ h -⊗ k ] e ])
--⊗η e {w} p =
-  funExt (λ w' → funExt (λ ph → sym (transportRefl (e p w' ph))))
+-⊗η e {w} p = {!!}
+  -- funExt (λ w' → funExt (λ ph → sym (transportRefl (e p w' ph))))
 
 -⊗β :
   ∀ {g : Grammar {Σ₀} ℓg} →
