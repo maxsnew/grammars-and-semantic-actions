@@ -82,52 +82,38 @@ record NFA : Type (ℓ-suc ℓN) where
       field
         f : (q-end : Q .fst) → alg .P q-end ⊢ alg' .P q-end
         on-nil :
-          Path (ε-grammar ⊢ alg' .P q-start)
-            (seq {h = alg .P q-start}
-              (alg .nil-case)
-              (f q-start))
+          (alg .nil-case ⋆ f q-start) ≡
             (alg' .nil-case)
         on-cons : (tr : transition .fst) →
-          Path (alg .P (src tr) ⊗ literal (label tr) ⊢ alg' .P (dst tr))
-            (seq {h = alg .P (dst tr)}
-              (alg .cons-case tr)
-              (f (dst tr)))
-            (seq {h = alg' .P (src tr) ⊗ literal (label tr)}
-              (⊗-intro
-                {g = alg .P (src tr)}{h = alg' .P (src tr)}
-                {k = literal (label tr)}{l = literal (label tr)}
-                (f (src tr))
-                (id {g = literal (label tr)}))
-              (alg' .cons-case tr))
+          (alg .cons-case tr ⋆ f (dst tr)) ≡
+            (⊗-intro (f (src tr)) (id) ⋆ alg' .cons-case tr)
         on-ε-cons : (εtr : ε-transition .fst) →
-          Path (alg .P (ε-src εtr) ⊢ alg' .P (ε-dst εtr))
-            ((alg .ε-cons-case εtr) ⋆ (f (ε-dst εtr)))
-            (f (ε-src εtr) ⋆ alg' .ε-cons-case εtr)
+          (alg .ε-cons-case εtr) ⋆ (f (ε-dst εtr)) ≡
+            f (ε-src εtr) ⋆ alg' .ε-cons-case εtr
 
--- --       open AlgebraHom
+    open AlgebraHom
 
--- --       idAlgebraHom : (alg : Algebra) →
--- --         AlgebraHom alg alg
--- --       f (idAlgebraHom alg) q-start =
--- --         id {g = alg .P q-start}
--- --       on-nil (idAlgebraHom alg) _ = refl
--- --       on-cons (idAlgebraHom alg) _ _ = refl
--- --       on-ε-cons (idAlgebraHom alg) _ _ = refl
+    idAlgebraHom : (alg : Algebra) →
+      AlgebraHom alg alg
+    f (idAlgebraHom alg) q-start = id
+    on-nil (idAlgebraHom alg) = refl
+    on-cons (idAlgebraHom alg) _ = refl
+    on-ε-cons (idAlgebraHom alg) _ = refl
 
--- --       AlgebraHom-seq : {alg alg' alg'' : Algebra} →
--- --         AlgebraHom alg alg' → AlgebraHom alg' alg'' →
--- --         AlgebraHom alg alg''
--- --       f (AlgebraHom-seq ϕ ψ) q-end x =
--- --         ψ .f q-end (ϕ .f q-end x)
--- --       on-nil (AlgebraHom-seq ϕ ψ) p =
--- --         cong (ψ .f q-start) (ϕ .on-nil p) ∙
--- --         (ψ .on-nil p)
--- --       on-cons (AlgebraHom-seq ϕ ψ) tr (s , p , lit) =
--- --         cong (ψ .f (dst tr)) (ϕ .on-cons tr (s , p , lit)) ∙
--- --         (ψ .on-cons tr (s , (ϕ .f (src tr) p) , lit))
--- --       on-ε-cons (AlgebraHom-seq ϕ ψ) εtr p =
--- --         cong (ψ .f (ε-dst εtr)) (ϕ .on-ε-cons εtr p) ∙
--- --         ψ .on-ε-cons εtr (ϕ .f (ε-src εtr) p)
+    AlgebraHom-seq : {alg alg' alg'' : Algebra} →
+      AlgebraHom alg alg' → AlgebraHom alg' alg'' →
+      AlgebraHom alg alg''
+    f (AlgebraHom-seq ϕ ψ) q-end _ x =
+      ψ .f q-end _ (ϕ .f q-end _ x)
+    on-nil (AlgebraHom-seq ϕ ψ) =
+      cong (λ t → t ⋆ ψ .f q-start) (ϕ .on-nil) ∙
+      ψ .on-nil
+    on-cons (AlgebraHom-seq ϕ ψ) tr =
+      cong (λ t → t ⋆ ψ .f (dst tr)) (ϕ .on-cons tr) ∙
+      cong (λ t → ⊗-intro (ϕ .f (src tr)) id ⋆ t) (ψ .on-cons tr)
+    on-ε-cons (AlgebraHom-seq ϕ ψ) εtr =
+      cong (λ t → t ⋆ ψ .f (ε-dst εtr)) (ϕ .on-ε-cons εtr) ∙
+      cong (λ t → ϕ .f (ε-src εtr) ⋆ t) (ψ .on-ε-cons εtr)
 
 -- --       initial : Algebra
 -- --       the-ℓs initial _ = ℓN
