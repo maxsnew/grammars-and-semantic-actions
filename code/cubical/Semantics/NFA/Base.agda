@@ -1,37 +1,14 @@
--- {-# OPTIONS -WnoUnsupportedIndexedMatch --lossy-unification #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
 module Semantics.NFA.Base ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
 
-open import Cubical.Reflection.RecordEquiv
-open import Cubical.Foundations.Function
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.Powerset
-open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
-open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
-open import Cubical.Data.List hiding (init)
 open import Cubical.Data.FinSet
-open import Cubical.Data.FinSet.DecidablePredicate
-open import Cubical.Data.Sum as Sum
-open import Cubical.Data.Bool hiding (_⊕_)
-open import Cubical.Data.W.Indexed
-open import Cubical.Data.Maybe
-open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.Nat
-open import Cubical.Data.Nat.Order.Recursive as Ord
-open import Cubical.Data.SumFin
-open import Cubical.Foundations.Equiv
-open import Cubical.Data.Sigma
-open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Semantics.Grammar (Σ₀ , isSetΣ₀)
 open import Semantics.Term (Σ₀ , isSetΣ₀)
-open import Semantics.DFA
-open import Semantics.Helper
 
 private
   variable ℓΣ₀ ℓN ℓN' ℓP ℓ : Level
