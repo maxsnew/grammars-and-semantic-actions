@@ -87,82 +87,87 @@ record NFA : Type (ℓ-suc ℓN) where
         (alg .ε-cons-case εtr) ⋆ (f (ε-src εtr)) ≡
           f (ε-dst εtr) ⋆ alg' .ε-cons-case εtr
 
---     open AlgebraHom
+  open AlgebraHom
 
---     idAlgebraHom : (alg : Algebra) →
---       AlgebraHom alg alg
---     f (idAlgebraHom alg) q-start = id
---     on-nil (idAlgebraHom alg) = refl
---     on-cons (idAlgebraHom alg) _ = refl
---     on-ε-cons (idAlgebraHom alg) _ = refl
+  idAlgebraHom : (alg : Algebra) →
+    AlgebraHom alg alg
+  f (idAlgebraHom alg) q-start = id
+  on-nil (idAlgebraHom alg) _ = refl
+  on-cons (idAlgebraHom alg) _ = refl
+  on-ε-cons (idAlgebraHom alg) _ = refl
 
---     AlgebraHom-seq : {alg alg' alg'' : Algebra} →
---       AlgebraHom alg alg' → AlgebraHom alg' alg'' →
---       AlgebraHom alg alg''
---     f (AlgebraHom-seq ϕ ψ) q-end _ x =
---       ψ .f q-end _ (ϕ .f q-end _ x)
---     on-nil (AlgebraHom-seq ϕ ψ) =
---       cong (λ t → t ⋆ ψ .f q-start) (ϕ .on-nil) ∙
---       ψ .on-nil
---     on-cons (AlgebraHom-seq ϕ ψ) tr =
---       cong (λ t → t ⋆ ψ .f (dst tr)) (ϕ .on-cons tr) ∙
---       cong (λ t → ⊗-intro (ϕ .f (src tr)) id ⋆ t) (ψ .on-cons tr)
---     on-ε-cons (AlgebraHom-seq ϕ ψ) εtr =
---       cong (λ t → t ⋆ ψ .f (ε-dst εtr)) (ϕ .on-ε-cons εtr) ∙
---       cong (λ t → ϕ .f (ε-src εtr) ⋆ t) (ψ .on-ε-cons εtr)
+  AlgebraHom-seq : {alg alg' alg'' : Algebra} →
+    AlgebraHom alg alg' → AlgebraHom alg' alg'' →
+    AlgebraHom alg alg''
+  f (AlgebraHom-seq ϕ ψ) q-end _ x =
+    ψ .f q-end _ (ϕ .f q-end _ x)
+  on-nil (AlgebraHom-seq ϕ ψ) qAcc =
+    cong (λ t → t ⋆ ψ .f _) (ϕ .on-nil qAcc) ∙
+    ψ .on-nil qAcc
+  on-cons (AlgebraHom-seq ϕ ψ) tr =
+    cong (λ t → t ⋆ ψ .f (src tr)) (ϕ .on-cons tr) ∙
+    cong (λ t → ⊗-intro id (ϕ .f (dst tr)) ⋆ t) (ψ .on-cons tr)
+  on-ε-cons (AlgebraHom-seq ϕ ψ) εtr =
+    cong (λ t → t ⋆ ψ .f (ε-src εtr)) (ϕ .on-ε-cons εtr) ∙
+    cong (λ t → ϕ .f (ε-dst εtr)⋆ t) (ψ .on-ε-cons εtr)
 
---     initial : Algebra
---     the-ℓs initial _ = ℓN
---     P initial = Trace
---     nil-case initial = nil
---     cons-case initial = cons
---     ε-cons-case initial = ε-cons
+  initial : Algebra
+  the-ℓs initial _ = ℓN
+  G initial = Parse
+  nil-case initial = nil
+  cons-case initial = cons
+  ε-cons-case initial = ε-cons
 
---     module _
---       (the-alg : Algebra)
---       where
---       recTrace : ∀ {q-end} → Trace q-end ⊢ the-alg .P q-end
---       recTrace _ (nil _ x) = the-alg .nil-case _ x
---       recTrace _ (cons tr _ x) =
---         the-alg .cons-case tr _ (x .fst , ((recTrace _ (x .snd .fst)) , x .snd .snd))
---       recTrace _ (ε-cons εtr _ x) =
---         the-alg .ε-cons-case εtr _ (recTrace _ x)
+  module _
+    (the-alg : Algebra)
+    where
+    recTrace : ∀ {q} → Parse q ⊢ the-alg .G q
+    recTrace _ (nil qAcc _ pε) = the-alg .nil-case qAcc _ pε
+    recTrace _ (cons tr _ p⊗) =
+      the-alg .cons-case tr _
+        ((p⊗ .fst) , ((p⊗ .snd .fst) , (recTrace _ (p⊗ .snd .snd))))
+    recTrace _ (ε-cons εtr _ p) =
+      the-alg .ε-cons-case εtr _ (recTrace _ p)
 
---       ∃AlgebraHom : AlgebraHom initial the-alg
---       f ∃AlgebraHom q-end = recTrace {q-end}
---       on-nil ∃AlgebraHom = refl
---       on-cons ∃AlgebraHom tr = refl
---       on-ε-cons ∃AlgebraHom εtr = refl
+    ∃AlgebraHom : AlgebraHom initial the-alg
+    f ∃AlgebraHom q-end = recTrace {q-end}
+    on-nil ∃AlgebraHom _ = refl
+    on-cons ∃AlgebraHom _ = refl
+    on-ε-cons ∃AlgebraHom _ = refl
 
---       !AlgebraHom-help :
---         (e : AlgebraHom initial the-alg) →
---         (q-end : Q .fst) →
---         (∀ w p → e .f q-end w p ≡ recTrace w p)
---       !AlgebraHom-help e q-end w (nil .w x) =
---         cong (λ a → a w x) (e .on-nil)
---       !AlgebraHom-help e .(dst tr) w (cons tr .w x) =
---         cong (λ a → a w x) (e .on-cons tr) ∙
---         cong (λ a → the-alg .cons-case tr _ (x .fst , a , x .snd .snd))
---           (!AlgebraHom-help e (src tr) (x .fst .fst .fst) (x .snd .fst))
---       !AlgebraHom-help e .(ε-dst εtr) w (ε-cons εtr .w p) =
---         cong (λ a → a w p) (e .on-ε-cons εtr) ∙
---         cong (the-alg .ε-cons-case εtr w) (!AlgebraHom-help e (ε-src εtr) w p)
+    !AlgebraHom-help :
+      (e : AlgebraHom initial the-alg) →
+      (q : Q .fst) →
+      (∀ w p → e .f q w p ≡ recTrace w p)
+    !AlgebraHom-help e q w (nil qAcc .w pε) =
+      cong (λ a → a w pε) (e .on-nil qAcc)
+    !AlgebraHom-help e .(src tr) w (cons tr .w p⊗) =
+      cong (λ a → a w p⊗) (e .on-cons tr) ∙
+      cong (λ a → the-alg .cons-case tr _
+        ((p⊗ .fst) , ((p⊗ .snd .fst) , a)))
+        (!AlgebraHom-help e (dst tr) _
+          (p⊗ .snd .snd))
+    !AlgebraHom-help e .(ε-src εtr) w (ε-cons εtr .w p) =
+      cong (λ a → a w p) (e .on-ε-cons εtr) ∙
+      cong (the-alg .ε-cons-case εtr w)
+        (!AlgebraHom-help e (ε-dst εtr) _ p)
 
---       !AlgebraHom :
---         (e : AlgebraHom initial the-alg) →
---         (q-end : Q .fst) →
---         e .f q-end ≡ recTrace
---       !AlgebraHom e q-end = funExt (λ w → funExt (λ p → !AlgebraHom-help e q-end w p))
+    !AlgebraHom :
+      (e : AlgebraHom initial the-alg) →
+      (q : Q .fst) →
+      e .f q ≡ recTrace {q}
+    !AlgebraHom e q-end =
+      funExt (λ w → funExt (λ p → !AlgebraHom-help e q-end w p))
 
---     initial→initial≡id :
---       (e : AlgebraHom initial initial) →
---       (q-end : Q .fst) →
---       (e .f q-end)
---          ≡
---       (idAlgebraHom initial .f q-end)
---     initial→initial≡id e q-end =
---       !AlgebraHom initial e q-end ∙
---       sym (!AlgebraHom initial (idAlgebraHom initial) q-end)
+  initial→initial≡id :
+    (e : AlgebraHom initial initial) →
+    (q-end : Q .fst) →
+    (e .f q-end)
+       ≡
+    (idAlgebraHom initial .f q-end)
+  initial→initial≡id e q-end =
+    !AlgebraHom initial e q-end ∙
+    sym (!AlgebraHom initial (idAlgebraHom initial) q-end)
 
 -- -- --     Trace-syntax : Q .fst → Q .fst → Grammar ℓN
 -- -- --     Trace-syntax q-start q-end = Trace q-start q-end
