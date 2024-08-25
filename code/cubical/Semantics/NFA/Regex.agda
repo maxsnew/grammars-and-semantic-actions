@@ -23,7 +23,6 @@ open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order.Recursive as Ord
 open import Cubical.Data.SumFin
-open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation as PT
 
@@ -63,9 +62,6 @@ module _ where
   ε-src emptyNFA ()
   ε-dst emptyNFA ()
 
-  -- ε→parse : ε-grammar ⊢ Parse emptyNFA fzero
-  -- ε→parse _ pε = nil refl _ pε
-
   open Algebra
   open AlgebraHom
   private
@@ -90,174 +86,103 @@ module _ where
 
   open Iso
 
-  emptyNFAParse-≅-ε-grammar :
+  emptyNFA-strong-equiv :
     isStronglyEquivalent
       (Parse emptyNFA (emptyNFA .init))
       ε-grammar
-  fun (emptyNFAParse-≅-ε-grammar w) = initial→the-alg .f fzero w
-  inv (emptyNFAParse-≅-ε-grammar w) = the-alg→initial .f fzero w
-  rightInv (emptyNFAParse-≅-ε-grammar w) _ = refl
-  leftInv (emptyNFAParse-≅-ε-grammar w) p =
+  fun (emptyNFA-strong-equiv w) = initial→the-alg .f fzero w
+  inv (emptyNFA-strong-equiv w) = the-alg→initial .f fzero w
+  rightInv (emptyNFA-strong-equiv w) _ = refl
+  leftInv (emptyNFA-strong-equiv w) p =
     cong (λ a → a w p)
     (initial→initial≡id emptyNFA
       (AlgebraHom-seq emptyNFA initial→the-alg the-alg→initial)
       fzero)
 
--- -- Literal
--- module _ {Σ₀ : Type ℓ-zero}
---   (c : Σ₀)
---   (isSetΣ₀ : isSet Σ₀) where
---   open TraceSyntax Σ₀
+-- Literal
+module _ (c : Σ₀) where
+  -- an NFA with two states, one transition between them labelled
+  -- with the character c, the source of the transition is
+  -- the initial state, and the target of this transition is
+  -- accepting
 
---   literalNFA : NFA ℓ-zero Σ₀
---   Q literalNFA = Fin 2 , isFinSetFin
---   init literalNFA = fzero
---   isAcc literalNFA x = ((x ≡ fsuc fzero) , (isSetFin _ _)) , (discreteFin _ _)
---   transition literalNFA = Fin 1 , isFinSetFin
---   src literalNFA _ = fromℕ 0
---   dst literalNFA _ = fromℕ 1
---   label literalNFA _ = c
---   ε-transition literalNFA = ⊥ , isFinSetFin
---   ε-src literalNFA ()
---   ε-dst literalNFA ()
+  literalNFA : NFA {ℓ-zero}
+  Q literalNFA = Fin 2 , isFinSetFin
+  init literalNFA = fzero
+  isAcc literalNFA x =
+    ((x ≡ fsuc fzero) , (isSetFin _ _)) , (discreteFin _ _)
+  transition literalNFA = Fin 1 , isFinSetFin
+  src literalNFA _ = fromℕ 0
+  dst literalNFA _ = fromℕ 1
+  label literalNFA _ = c
+  ε-transition literalNFA = ⊥ , isFinSetFin
+  ε-src literalNFA ()
+  ε-dst literalNFA ()
 
---   open Algebra
---   open AlgebraHom
---   private
---     the-alg : (q-start : literalNFA .Q .fst) →
---       Algebra literalNFA q-start
---     the-ℓs (the-alg fzero) _ = ℓ-zero
---     the-ℓs (the-alg (fsuc fzero)) _ = ℓ-zero
---     P (the-alg fzero) fzero = ε-grammar
---     P (the-alg fzero) (fsuc fzero) = literal c
---     P (the-alg (fsuc fzero)) fzero = ⊥-grammar
---     P (the-alg (fsuc fzero)) (fsuc fzero) = ε-grammar
---     nil-case (the-alg fzero) = id {g = ε-grammar}
---     nil-case (the-alg (fsuc fzero)) = id {g = ε-grammar}
---     cons-case (the-alg fzero) fzero =
---       ε-extension-l {g = ε-grammar} {h = literal c} {k = literal c}
---         (id {g = ε-grammar})
---         (id {g = literal c})
---     cons-case (the-alg (fsuc fzero)) _ ()
---     ε-cons-case (the-alg fzero) ()
---     ε-cons-case (the-alg (fsuc fzero)) ()
+  open Algebra
+  open AlgebraHom
+  private
+    the-alg : Algebra literalNFA
+    the-ℓs the-alg fzero = ℓ-zero
+    the-ℓs the-alg (fsuc fzero) = ℓ-zero
+    G the-alg fzero = literal c
+    G the-alg (fsuc fzero) = ε-grammar
+    nil-case the-alg {fzero} qAcc = ⊥.rec (fzero≠fone qAcc)
+    nil-case the-alg {fsuc fzero} qAcc = id
+    cons-case the-alg fzero = ⊗-unit-r
+    ε-cons-case the-alg ()
 
---   c→trace :
---     literal c
---     ⊢
---     ⟨ literalNFA ⟩[ fromℕ 0 →* fromℕ 1 ]
---   c→trace =
---     ε-contraction-l
---       {g = ⟨ literalNFA ⟩[ fromℕ 0 →* fromℕ 0 ]}
---       {h = literal c}
---       {k = ⟨ literalNFA ⟩[ fromℕ 0 →* fromℕ 1 ]}
---       nil
---       (cons fzero)
+    initial→the-alg :
+      AlgebraHom literalNFA (initial literalNFA) the-alg
+    initial→the-alg = ∃AlgebraHom literalNFA the-alg
 
---   c→parse :
---     literal c
---     ⊢
---     Parses literalNFA
---   c→parse pc = (_ , refl) , (c→trace pc)
+    the-alg→initial :
+      AlgebraHom literalNFA the-alg (initial literalNFA)
+    f the-alg→initial fzero =
+      ⊗-unit-r⁻ ⋆
+      (⊗-intro id (nil refl) ⋆
+      cons fzero)
+    f the-alg→initial (fsuc fzero) = nil refl
+    on-nil the-alg→initial {fzero} qAcc =
+      ⊥.rec (fzero≠fone qAcc)
+    on-nil the-alg→initial {fsuc fzero} qAcc =
+      congS nil (isFinSet→isSet isFinSetFin _ _ refl qAcc)
+    on-cons the-alg→initial fzero =
+      funExt (λ w → funExt (λ p⊗ →
+        cong (cons fzero w)
+          (⊗PathP
+            (≡-×
+              (p⊗ .fst .snd ∙
+                  cong (p⊗ .fst .fst .fst ++_) (p⊗ .snd .snd) ∙
+                  ++-unit-r (p⊗ .fst .fst .fst))
+              (sym (p⊗ .snd .snd)))
+            (ΣPathP
+              (isProp→PathP (λ i → isSetString _ _) _ _ ,
+              congP
+                (λ i z →
+                  nil {_}{literalNFA} (λ _ → fsuc fzero)
+                  (p⊗ .snd .snd (~ i)) z)
+                (isProp→PathP (λ i → isSetString _ _)
+                  refl (p⊗ .snd .snd)))))))
+    on-ε-cons the-alg→initial ()
 
---   c→trace-AlgebraHom : ∀ q-start →
---     AlgebraHom
---       literalNFA
---       q-start
---       (the-alg q-start)
---       (initial literalNFA q-start)
---   f (c→trace-AlgebraHom fzero) fzero = nil
---   f (c→trace-AlgebraHom fzero) (fsuc fzero) =
---     ε-contraction-l
---       {g = ⟨ literalNFA ⟩[ fromℕ 0 →* fromℕ 0 ]}
---       {h = literal c}
---       {k = ⟨ literalNFA ⟩[ fromℕ 0 →* fromℕ 1 ]}
---       nil
---       (cons fzero)
---   f (c→trace-AlgebraHom (fsuc fzero)) fzero ()
---   f (c→trace-AlgebraHom (fsuc fzero)) (fsuc fzero) = nil
---   on-nil (c→trace-AlgebraHom fzero) _ = refl
---   on-nil (c→trace-AlgebraHom (fsuc fzero)) _ = refl
---   on-cons (c→trace-AlgebraHom fzero) fzero {w} (s , pε , lit) =
---     cong (Trace.cons fzero)
---       (ΣPathP ((Σ≡Prop (λ _ → isSetString isSetΣ₀ _ _)
---         (≡-×
---           (sym pε)
---           w≡s₁₂)) ,
---         ΣPathPProp
---           (λ trace → isSetString isSetΣ₀ _ _)
---           -- There's gotta be a better way to show this
---           (congP (λ i z → NFA.Trace.nil {_}{_}{literalNFA}{fzero}{pε (~ i)} z)
---             (isProp→PathP (λ i → isSetString isSetΣ₀ _ _) refl pε))))
---       where
---       w≡s₁₂ : w ≡ s .fst .snd
---       w≡s₁₂ = s .snd ∙ cong (_++ s. fst .snd) pε
---   on-cons (c→trace-AlgebraHom (fsuc fzero)) fzero ()
---   on-ε-cons (c→trace-AlgebraHom fzero) ()
---   on-ε-cons (c→trace-AlgebraHom (fsuc fzero)) ()
-
---   trace→c-AlgebraHom : ∀ q-start →
---     AlgebraHom
---       literalNFA
---       q-start
---       (initial literalNFA q-start)
---       (the-alg q-start)
---   trace→c-AlgebraHom q-start = ∃AlgebraHom literalNFA q-start (the-alg q-start)
-
---   parse→c :
---     Parses literalNFA
---     ⊢
---     literal c
---   parse→c ((fzero , q-endIsAcc) , trace) =
---     ⊥.rec (fzero≠fone q-endIsAcc)
---   parse→c ((fsuc fzero , q-endIsAcc) , trace) =
---     trace→c-AlgebraHom fzero .f (fsuc fzero) trace
-
---   c→trace∘trace→c :
---     ⟨ literalNFA ⟩[ fzero →* fsuc fzero ]
---     ⊢
---     ⟨ literalNFA ⟩[ fzero →* fsuc fzero ]
---   c→trace∘trace→c =
---     (trans
---       {g = ⟨ literalNFA ⟩[ fzero →* fsuc fzero ]}
---       {h = literal c}
---       {k = ⟨ literalNFA ⟩[ fzero →* fsuc fzero ]}
---       (trace→c-AlgebraHom fzero .f (fsuc fzero))
---       c→trace
---     )
-
---   c→trace∘trace→c-AlgebraHom :
---     AlgebraHom literalNFA fzero
---       (initial literalNFA fzero)
---       (initial literalNFA fzero)
---   c→trace∘trace→c-AlgebraHom =
---     AlgebraHom-seq literalNFA
---       fzero
---       (trace→c-AlgebraHom fzero)
---       (c→trace-AlgebraHom fzero)
-
---   c→trace∘trace→c≡id :
---     Term≡ {g = ⟨ literalNFA ⟩[ fzero →* fsuc fzero ]}
---       c→trace∘trace→c
---       (id {g = ⟨ literalNFA ⟩[ fzero →* fsuc fzero ]})
---   c→trace∘trace→c≡id p =
---     initial→initial≡id literalNFA fzero
---       c→trace∘trace→c-AlgebraHom (fsuc fzero) p
-
---   open Iso
-
---   parse≡c :
---     isStronglyEquivalent
---       (Parses literalNFA)
---       (literal c)
---   fun (parse≡c w) = parse→c
---   inv (parse≡c w) = c→parse
---   rightInv (parse≡c w) b = isSetString isSetΣ₀ _ _ _ _
---   leftInv (parse≡c w) ((fzero , q-endIsAcc) , trace) =
---     ⊥.rec (fzero≠fone q-endIsAcc)
---   leftInv (parse≡c w) ((fsuc fzero , q-endIsAcc) , trace) =
---     ΣPathP ((Σ≡Prop (λ x → isSetFin _ _) refl) ,
---       c→trace∘trace→c≡id trace)
+  open Iso
+  literalNFA-strong-equiv :
+    isStronglyEquivalent
+      (Parse literalNFA (literalNFA .init))
+      (literal c)
+  fun (literalNFA-strong-equiv w) =
+    initial→the-alg .f (literalNFA .init) w
+  inv (literalNFA-strong-equiv w) =
+    the-alg→initial .f (literalNFA .init) w
+  rightInv (literalNFA-strong-equiv w) _ =
+    isSetString _ _ _ _
+  leftInv (literalNFA-strong-equiv w) p =
+    cong (λ a → a w p)
+      (initial→initial≡id literalNFA
+        (AlgebraHom-seq literalNFA
+          initial→the-alg the-alg→initial)
+        (literalNFA .init))
 
 -- -- Disjunction
 -- module _ {ℓN} {Σ₀ : Type ℓ-zero}
