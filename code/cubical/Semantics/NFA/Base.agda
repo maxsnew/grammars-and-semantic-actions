@@ -39,6 +39,9 @@ record NFA : Type (ℓ-suc ℓN) where
     ε-cons : ∀ εtr →
       Parse (ε-dst εtr) ⊢ Parse (ε-src εtr)
 
+  InitParse : Grammar ℓN
+  InitParse = Parse init
+
   record Algebra : Typeω where
     field
       the-ℓs : Q .fst → Level
@@ -63,7 +66,7 @@ record NFA : Type (ℓ-suc ℓN) where
       on-ε-cons : (εtr : ε-transition .fst) →
         (alg .ε-cons-case εtr) ⋆ (f (ε-src εtr)) ≡
           f (ε-dst εtr) ⋆ alg' .ε-cons-case εtr
-
+    fInit = f init
   open AlgebraHom
 
   idAlgebraHom : (alg : Algebra) →
@@ -106,6 +109,9 @@ record NFA : Type (ℓ-suc ℓN) where
     recTrace _ (ε-cons εtr _ p) =
       the-alg .ε-cons-case εtr _ (recTrace _ p)
 
+    recInit : Parse init ⊢ the-alg .G init
+    recInit = recTrace
+
     ∃AlgebraHom : AlgebraHom initial the-alg
     f ∃AlgebraHom q = recTrace {q}
     on-nil ∃AlgebraHom _ = refl
@@ -141,7 +147,12 @@ record NFA : Type (ℓ-suc ℓN) where
     (q : Q .fst) →
     (e .f q)
        ≡
-    (idAlgebraHom initial .f q)
+    id
   initial→initial≡id e q =
     !AlgebraHom initial e q ∙
     sym (!AlgebraHom initial (idAlgebraHom initial) q)
+
+  algebra-η :
+    (e : AlgebraHom initial initial) →
+    fInit e ≡ id
+  algebra-η e = initial→initial≡id e _

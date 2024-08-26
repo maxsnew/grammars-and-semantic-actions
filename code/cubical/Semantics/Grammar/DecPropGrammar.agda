@@ -20,4 +20,4 @@ DecProp-grammar' :
 DecProp-grammar' d =
   decRec
     (λ _ → ⊤-grammar)
-    (λ _ → ⊥-grammar) (d .snd)
+    (λ _ → ⊥*-grammar) (d .snd)

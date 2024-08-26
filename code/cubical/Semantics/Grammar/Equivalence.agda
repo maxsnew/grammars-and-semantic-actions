@@ -10,7 +10,7 @@ open import Cubical.Data.Sigma
 
 open import Semantics.Grammar.Base (Σ₀ , isSetΣ₀)
 open import Semantics.Term (Σ₀ , isSetΣ₀)
-
+-- open import Semantics.Term.Rules (Σ₀ , isSetΣ₀)
 module _ {ℓG}
   (g : Grammar ℓG)
   where
@@ -63,3 +63,12 @@ module _ {ℓG} {ℓG'}
     Σ≡Prop (λ _ → isPropPropTrunc) refl
   leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
     Σ≡Prop (λ _ → isPropPropTrunc) refl
+
+  record StrongEquivalence : Type (ℓ-max ℓG ℓG') where
+    no-eta-equality
+    constructor mkStrEq
+    field
+      fun : g ⊢ g'
+      inv : g' ⊢ g
+      sec : inv ⋆ fun ≡ id
+      ret : fun ⋆ inv ≡ id

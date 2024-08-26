@@ -194,8 +194,12 @@ syntax seq e e' = e ⋆ e'
 ⊤-intro _ _ = tt*
 
 ⊥-elim :
-  ⊥-grammar {ℓG = ℓ} ⊢ g
-⊥-elim _ x = ⊥.elim (lower x)
+  ⊥-grammar ⊢ g
+⊥-elim _ = ⊥.elim
+
+⊥-η : ∀ (f f' : ⊥-grammar ⊢ g)
+  → f ≡ f'
+⊥-η _ _ = funExt λ _ → funExt ⊥.elim
 
 &-intro :
   g ⊢ h →

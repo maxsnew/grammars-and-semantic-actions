@@ -14,6 +14,7 @@ open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List hiding (init)
 open import Cubical.Data.FinSet
+open import Cubical.Data.FinSet.More
 open import Cubical.Data.FinSet.DecidablePredicate
 open import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool hiding (_⊕_)
@@ -26,6 +27,7 @@ open import Cubical.Data.Nat.Order.Recursive as Ord
 open import Cubical.Data.SumFin
 open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.Data.Unit
 
 open import Semantics.Grammar (Σ₀ , isSetΣ₀)
 open import Semantics.Grammar.Equivalence (Σ₀ , isSetΣ₀)
@@ -46,41 +48,41 @@ open NFA
 -- a corresponding NFA. And then we inductively combine smaller
 -- NFAs into one machine that is equivalent to the regex
 
--- Empty
+-- Epsilon
 -- Accepts only the empty string
 module _ where
   -- an NFA with one state,
   -- no transitions,
   -- and the single state is both initial and accepting
-  emptyNFA : NFA {ℓ-zero}
-  Q emptyNFA = Fin 1 , isFinSetFin
-  init emptyNFA = fzero
-  isAcc emptyNFA x =
+  epsilonNFA : NFA {ℓ-zero}
+  Q epsilonNFA = Fin 1 , isFinSetFin
+  init epsilonNFA = fzero
+  isAcc epsilonNFA x =
     ((x ≡ fzero) , (isSetFin _ _)) , (discreteFin _ _)
-  transition emptyNFA = ⊥ , isFinSetFin
-  src emptyNFA ()
-  dst emptyNFA ()
-  label emptyNFA ()
-  ε-transition emptyNFA = ⊥ , isFinSetFin
-  ε-src emptyNFA ()
-  ε-dst emptyNFA ()
+  transition epsilonNFA = ⊥ , isFinSetFin
+  src epsilonNFA ()
+  dst epsilonNFA ()
+  label epsilonNFA ()
+  ε-transition epsilonNFA = ⊥ , isFinSetFin
+  ε-src epsilonNFA ()
+  ε-dst epsilonNFA ()
 
   open Algebra
   open AlgebraHom
   private
-    the-alg : Algebra emptyNFA
-    the-ℓs the-alg fzero = ℓ-zero
+    the-alg : Algebra epsilonNFA
+    the-ℓs the-alg fzero = _
     G the-alg fzero = ε-grammar
     nil-case the-alg {fzero} qAcc = id
     cons-case the-alg ()
     ε-cons-case the-alg ()
 
     initial→the-alg :
-      AlgebraHom emptyNFA (initial emptyNFA) the-alg
-    initial→the-alg = ∃AlgebraHom emptyNFA the-alg
+      AlgebraHom epsilonNFA (initial epsilonNFA) the-alg
+    initial→the-alg = ∃AlgebraHom epsilonNFA the-alg
 
     the-alg→initial :
-      AlgebraHom emptyNFA the-alg (initial emptyNFA)
+      AlgebraHom epsilonNFA the-alg (initial epsilonNFA)
     f the-alg→initial fzero = nil refl
     on-nil the-alg→initial {fzero} qAcc =
       congS nil (isFinSet→isSet isFinSetFin fzero fzero refl qAcc)
@@ -89,17 +91,17 @@ module _ where
 
   open Iso
 
-  emptyNFA-strong-equiv :
+  epsilonNFA-strong-equiv :
     isStronglyEquivalent
-      (Parse emptyNFA (emptyNFA .init))
+      (Parse epsilonNFA (epsilonNFA .init))
       ε-grammar
-  fun (emptyNFA-strong-equiv w) = initial→the-alg .f fzero w
-  inv (emptyNFA-strong-equiv w) = the-alg→initial .f fzero w
-  rightInv (emptyNFA-strong-equiv w) _ = refl
-  leftInv (emptyNFA-strong-equiv w) p =
+  fun (epsilonNFA-strong-equiv w) = initial→the-alg .f fzero w
+  inv (epsilonNFA-strong-equiv w) = the-alg→initial .f fzero w
+  rightInv (epsilonNFA-strong-equiv w) _ = refl
+  leftInv (epsilonNFA-strong-equiv w) p =
     cong (λ a → a w p)
-    (initial→initial≡id emptyNFA
-      (AlgebraHom-seq emptyNFA initial→the-alg the-alg→initial)
+    (initial→initial≡id epsilonNFA
+      (AlgebraHom-seq epsilonNFA initial→the-alg the-alg→initial)
       fzero)
 
 -- Literal
@@ -153,13 +155,13 @@ module _ (c : Σ₀) where
     on-cons the-alg→initial fzero =
       funExt (λ w → funExt (λ p⊗ →
         cong (cons fzero w)
-          (⊗PathP
+          (⊗≡ _ _
             (≡-×
               (p⊗ .fst .snd ∙
                   cong (p⊗ .fst .fst .fst ++_) (p⊗ .snd .snd) ∙
                   ++-unit-r (p⊗ .fst .fst .fst))
               (sym (p⊗ .snd .snd)))
-            (ΣPathP
+          (ΣPathP
               (isProp→PathP (λ i → isSetString _ _) _ _ ,
               congP
                 (λ i z →
@@ -172,7 +174,7 @@ module _ (c : Σ₀) where
   open Iso
   literalNFA-strong-equiv :
     isStronglyEquivalent
-      (Parse literalNFA (literalNFA .init))
+      (InitParse literalNFA)
       (literal c)
   fun (literalNFA-strong-equiv w) =
     initial→the-alg .f (literalNFA .init) w
@@ -187,7 +189,41 @@ module _ (c : Σ₀) where
           initial→the-alg the-alg→initial)
         (literalNFA .init))
 
--- Disjunction
+-- Nullary Disjunction
+module _ where
+  emptyNFA : NFA {ℓ-zero}
+  emptyNFA .Q = Unit , isFinSetUnit
+  emptyNFA .init = tt
+  emptyNFA .isAcc _ = (⊥ , isProp⊥) , no (λ z → z) -- todo: upstream this def
+  emptyNFA .transition = ⊥ , isFinSet⊥
+  emptyNFA .src = ⊥.elim
+  emptyNFA .dst = ⊥.elim
+  emptyNFA .label = ⊥.elim
+  emptyNFA .ε-transition = ⊥ , isFinSet⊥
+  emptyNFA .ε-src = ⊥.rec
+  emptyNFA .ε-dst = ⊥.rec
+
+  emptyNFA-strong-equiv :
+    StrongEquivalence (InitParse emptyNFA) ⊥-grammar
+  emptyNFA-strong-equiv = mkStrEq
+    (recInit _ ⊥Alg)
+    ⊥-elim
+    (⊥-η _ _)
+    (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ ⊥Alg)
+      (record { f = λ _ → ⊥-elim
+              ; on-nil = ⊥.elim
+              ; on-cons = ⊥.elim
+              ; on-ε-cons = ⊥.elim })))
+    where
+      open Algebra
+      ⊥Alg : Algebra emptyNFA
+      ⊥Alg .the-ℓs = _
+      ⊥Alg .G _ = ⊥-grammar
+      ⊥Alg .nil-case = ⊥.elim
+      ⊥Alg .cons-case = ⊥.elim
+      ⊥Alg .ε-cons-case = ⊥.elim
+
+-- Binary Disjunction
 -- Given two NFAs N and N', accepts a string if and only if
 -- the string is accept by N or by N'
 module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where

@@ -11,5 +11,8 @@ private
   variable
     ℓG : Level
 
-⊥-grammar : Grammar ℓG
-⊥-grammar _ = Lift {ℓ-zero} ⊥
+⊥-grammar : Grammar ℓ-zero
+⊥-grammar _ = ⊥
+
+⊥*-grammar : Grammar ℓG
+⊥*-grammar _ = ⊥*
