@@ -76,8 +76,8 @@ record NFA : Type (ℓ-suc ℓN) where
   AlgebraHom-seq : {alg alg' alg'' : Algebra} →
     AlgebraHom alg alg' → AlgebraHom alg' alg'' →
     AlgebraHom alg alg''
-  f (AlgebraHom-seq ϕ ψ) q-end _ x =
-    ψ .f q-end _ (ϕ .f q-end _ x)
+  f (AlgebraHom-seq ϕ ψ) q _ x =
+    ψ .f q _ (ϕ .f q _ x)
   on-nil (AlgebraHom-seq ϕ ψ) qAcc =
     cong (λ t → t ⋆ ψ .f _) (ϕ .on-nil qAcc) ∙
     ψ .on-nil qAcc
@@ -107,7 +107,7 @@ record NFA : Type (ℓ-suc ℓN) where
       the-alg .ε-cons-case εtr _ (recTrace _ p)
 
     ∃AlgebraHom : AlgebraHom initial the-alg
-    f ∃AlgebraHom q-end = recTrace {q-end}
+    f ∃AlgebraHom q = recTrace {q}
     on-nil ∃AlgebraHom _ = refl
     on-cons ∃AlgebraHom _ = refl
     on-ε-cons ∃AlgebraHom _ = refl
@@ -133,97 +133,15 @@ record NFA : Type (ℓ-suc ℓN) where
       (e : AlgebraHom initial the-alg) →
       (q : Q .fst) →
       e .f q ≡ recTrace {q}
-    !AlgebraHom e q-end =
-      funExt (λ w → funExt (λ p → !AlgebraHom-help e q-end w p))
+    !AlgebraHom e q =
+      funExt (λ w → funExt (λ p → !AlgebraHom-help e q w p))
 
   initial→initial≡id :
     (e : AlgebraHom initial initial) →
-    (q-end : Q .fst) →
-    (e .f q-end)
+    (q : Q .fst) →
+    (e .f q)
        ≡
-    (idAlgebraHom initial .f q-end)
-  initial→initial≡id e q-end =
-    !AlgebraHom initial e q-end ∙
-    sym (!AlgebraHom initial (idAlgebraHom initial) q-end)
-
--- -- --     Trace-syntax : Q .fst → Q .fst → Grammar ℓN
--- -- --     Trace-syntax q-start q-end = Trace q-start q-end
--- -- --     syntax Trace-syntax q-start q-end = [ q-start →* q-end ]
-
--- -- --     module _ (q-start q-mid : Q .fst) where
--- -- --       open Algebra
--- -- --       the-concat-alg : Algebra q-mid
--- -- --       the-ℓs the-concat-alg _ = ℓN
--- -- --       P the-concat-alg q-end = [ q-start →* q-mid ] -⊗ [ q-start →* q-end ]
--- -- --       nil-case the-concat-alg =
--- -- --         -⊗-intro {g = [ q-start →* q-mid ]} {h = ε-grammar}
--- -- --           {k = [ q-start →* q-mid ]}
--- -- --           (ε-extension-r {g = ε-grammar} {h = [ q-start →* q-mid ]}
--- -- --             {k = [ q-start →* q-mid ]}
--- -- --             (id {g = ε-grammar})
--- -- --             (id {g = [ q-start →* q-mid ]}))
--- -- --       cons-case the-concat-alg tr =
--- -- --         -⊗-intro {g = [ q-start →* q-mid ]}
--- -- --           {h = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ]) ⊗ literal (label tr)}
--- -- --           {k = [ q-start →* dst tr ]}
--- -- --           (⊗-assoc-inv {g = [ q-start →* q-mid ]}
--- -- --             {h = [ q-start →* q-mid ] -⊗ [ q-start →* src tr ]}
--- -- --             {k = literal (label tr)}
--- -- --             {l = [ q-start →* dst tr ]}
--- -- --             (trans
--- -- --               {g = ([ q-start →* q-mid ] ⊗
--- -- --                 ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ]))
--- -- --                 ⊗ literal (label tr)}
--- -- --               {h = [ q-start →* src tr ] ⊗ literal (label tr)}
--- -- --               {k = [ q-start →* dst tr ]}
--- -- --               (cut
--- -- --                 {g = [ q-start →* q-mid ] ⊗
--- -- --                   ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])}
--- -- --                 {h = [ q-start →* src tr ]}
--- -- --                 (var ⊗l literal (label tr))
--- -- --                 (-⊗-elim {g = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])}
--- -- --                   {h = [ q-start →* q-mid ]} {k = [ q-start →* src tr ]}
--- -- --                   {l = [ q-start →* q-mid ]}
--- -- --                   (id {g = ([ q-start →* q-mid ] -⊗ [ q-start →* src tr ])} )
--- -- --                   (id {g = [ q-start →* q-mid ]})))
--- -- --               (cons tr)))
--- -- --       ε-cons-case the-concat-alg εtr =
--- -- --         cut {g = [ q-start →* ε-src εtr ]}
--- -- --           {h = [ q-start →* ε-dst εtr ]}
--- -- --           ([ q-start →* q-mid ] -⊗OH var)
--- -- --           (ε-cons εtr)
-
--- -- --     open AlgebraHom
--- -- --     concatTrace : ∀ {q-start}{q-mid}{q-end} →
--- -- --       [ q-start →* q-mid ] ⊗ [ q-mid →* q-end ] ⊢ [ q-start →* q-end ]
--- -- --     concatTrace {q-start}{q-mid}{q-end} =
--- -- --       -⊗-elim
--- -- --        {g = [ q-mid →* q-end ]}
--- -- --        {h = [ q-start →* q-mid ]} {k = [ q-start →* q-end ]}
--- -- --        {l = [ q-start →* q-mid ]}
--- -- --        (∃AlgebraHom q-mid (the-concat-alg q-start q-mid) .f q-end)
--- -- --        (id {g = [ q-start →* q-mid ]})
-
--- -- --     module _ (q-start : Q .fst) where
--- -- --       TraceFrom : Grammar ℓN
--- -- --       TraceFrom = LinearΣ (λ (q-end : Q .fst) → [ q-start →* q-end ])
-
--- -- --       AcceptingFrom : Grammar ℓN
--- -- --       AcceptingFrom =
--- -- --         LinearΣ
--- -- --           (λ ((q-end , isAcc-q-end ): Σ[ q ∈ Q .fst ] isAcc q .fst .fst) →
--- -- --              [ q-start →* q-end ])
-
--- -- --     Parses : Grammar ℓN
--- -- --     Parses = AcceptingFrom init
-
--- -- -- open NFADefs
--- -- -- open NFA
-
--- -- -- module TraceSyntax (Σ₀ : Type ℓ-zero) where
-
--- -- --   Trace-syntax' : ∀ {ℓN} →
--- -- --     (N : NFA ℓN Σ₀) →
--- -- --     Q N .fst → Q N .fst → Grammar ℓN
--- -- --   Trace-syntax' N = Trace N
--- -- --   syntax Trace-syntax' N q-start q-end = ⟨ N ⟩[ q-start →* q-end ]
+    (idAlgebraHom initial .f q)
+  initial→initial≡id e q =
+    !AlgebraHom initial e q ∙
+    sym (!AlgebraHom initial (idAlgebraHom initial) q)

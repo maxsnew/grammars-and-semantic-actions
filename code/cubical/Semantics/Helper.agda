@@ -331,6 +331,30 @@ LowerDecProp'Witness :
 LowerDecProp'Witness {L}{L'} (u , false , v) a = lower a
 LowerDecProp'Witness {L}{L'} (u , true , v) a = lower a
 
+LowerDecPropWitness :
+  ∀ {L}{L'} →
+  (A : DecProp L) →
+  (a : LiftDecProp {L}{L'} A .fst .fst) →
+  A .fst .fst
+LowerDecPropWitness {L} {L'} ((u , isProp-u) , yes p) a = lower a
+LowerDecPropWitness {L} {L'} ((u , isProp-u) , no ¬p) a = lower a
+
+LowerLiftWitness :
+  ∀ {L}{L'} →
+  (A : DecProp L) →
+  (a : A .fst .fst) →
+  LowerDecPropWitness {L}{L'} A (LiftDecPropWitness A a) ≡ a
+LowerLiftWitness (_ , yes p) a = refl
+LowerLiftWitness (_ , no p) a = refl
+
+LiftLowerWitness :
+  ∀ {L}{L'} →
+  (A : DecProp L) →
+  (a : LiftDecProp {L}{L'} A .fst .fst) →
+  LiftDecPropWitness {L}{L'} A (LowerDecPropWitness {L}{L'} A a) ≡ a
+LiftLowerWitness (_ , yes p) a = refl
+LiftLowerWitness (_ , no p) a = refl
+
 LiftDecℙ' : ∀ {L}{L'} (A : Type L) →
   (Decℙ' {L} A) → (Decℙ' {ℓ-max L L'} (Lift {L}{L'} A))
 LiftDecℙ' {L}{L'} A x a = LiftDecProp' {L}{L'} (x (lower a))
