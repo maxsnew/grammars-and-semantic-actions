@@ -114,6 +114,13 @@ syntax seq e e' = e ⋆ e'
 -⊗-intro⁻ {h = h}{k = k} f =
   (⊗-intro (id {g = h}) f) ⋆ -⊗-app
 
+-- TODO : this needs a better name
+-⊗-assoc :
+  (g -⊗ h) ⊗ k ⊢ g -⊗ (h ⊗ k)
+-⊗-assoc {g = g}{h = h}{k = k} =
+  -⊗-intro {g = g}{h = (g -⊗ h) ⊗ k}{k = h ⊗ k}
+    (⊗-assoc ⋆ ⊗-intro -⊗-app id)
+
 -⊗-β :
   (m : (g ⊗ h) ⊢ k) →
   (-⊗-intro⁻ {g = h}{h = g}{k = k} (-⊗-intro {g = g}{h = h}{k = k} m))
@@ -130,6 +137,7 @@ syntax seq e e' = e ⋆ e'
   (-⊗-intro {g = h}{h = g}{k = k} (-⊗-intro⁻ {g = g}{h = h}{k = k} f))
 -⊗-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
   (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
+
 
 ⊗--intro :
   g ⊗ h ⊢  k →
@@ -150,6 +158,17 @@ syntax seq e e' = e ⋆ e'
 ⊗--intro⁻ {h = h}{k = k} f =
   ⊗-intro f (id {g = k}) ⋆ ⊗--app
 
+-- TODO : this needs a better name
+⊗--assoc :
+  g ⊗ (h ⊗- k) ⊢ (g ⊗ h) ⊗- k
+⊗--assoc {g = g}{h = h}{k = k} =
+  ⊗--intro (⊗-assoc⁻ ⋆ ⊗-intro id ⊗--app)
+
+-- ⊗--assoc⁻ :
+--   (g ⊗ h) ⊗- k ⊢ g ⊗ (h ⊗- k)
+-- ⊗--assoc⁻ {g = g}{h = h}{k = k} =
+--   {!!}
+
 ⊗--β :
   (m : g ⊗ h ⊢ k) →
   (⊗--intro⁻ {g = g}{h = k}{k = h} (⊗--intro {g = g}{h = h}{k = k} m))
@@ -168,6 +187,7 @@ syntax seq e e' = e ⋆ e'
 ⊗--η f =
   funExt (λ w → (funExt (λ p⊗ →
     funExt (λ w' → funExt λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
+
 
 ⊤-intro :
   g ⊢ ⊤-grammar {ℓG = ℓ}
