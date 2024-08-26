@@ -7,6 +7,7 @@ open import Cubical.Data.List
 open import Cubical.Data.Unit
 open import Cubical.Data.Sum as Sum
 open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Sigma
 
 open import Semantics.Grammar (Σ₀ , isSetΣ₀)
 open import Semantics.Term.Base (Σ₀ , isSetΣ₀)
@@ -30,6 +31,13 @@ seq :
 seq e e' _ p = e' _ (e _ p)
 -- e' (e p)
 
+_∘g_ :
+  h ⊢ k →
+  g ⊢ h →
+  g ⊢ k
+_∘g_ e e' = seq e' e
+
+infixr 9 _∘g_
 syntax seq e e' = e ⋆ e'
 
 ⊗-intro :
@@ -53,6 +61,20 @@ syntax seq e e' = e ⋆ e'
   g ⊢ g ⊗ ε-grammar
 ⊗-unit-r⁻ _ p =
   ((_ , []) , (sym (++-unit-r _))) , (p , refl)
+
+⊗-unit-rr⁻ :
+  ∀ {g}
+  → ⊗-unit-r⁻ {g = g} ∘g ⊗-unit-r ≡ id
+⊗-unit-rr⁻ = funExt λ w → funExt λ p⊗ →
+  ⊗≡ _ _
+    (≡-×
+      (p⊗ .fst .snd
+        ∙ cong (p⊗ .fst .fst .fst ++_) (p⊗ .snd .snd)
+        ∙ ++-unit-r (p⊗ .fst .fst .fst))
+      (sym (p⊗ .snd .snd)))
+    (ΣPathP
+      ( {!!}
+      , {!!}))
 
 ⊗-unit-l :
   ε-grammar ⊗ g ⊢ g

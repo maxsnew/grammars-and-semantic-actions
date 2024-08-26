@@ -4,7 +4,6 @@ open import Cubical.Foundations.HLevels
 module Semantics.NFA.Regex ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
 
 open import Cubical.Reflection.RecordEquiv
-open import Cubical.Foundations.Function
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Powerset
 open import Cubical.Foundations.Equiv
@@ -12,6 +11,7 @@ open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
+import      Cubical.Data.Equality as Eq
 open import Cubical.Data.List hiding (init)
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.More
@@ -55,83 +55,138 @@ module _ (c : Σ₀) where
   -- one transition between them labeled with the character c,
   -- the source of the transition is the initial state,
   -- and the target of this transition is accepting
-  literalNFA : NFA {ℓ-zero}
-  Q literalNFA = Fin 2 , isFinSetFin
-  init literalNFA = fzero
-  isAcc literalNFA x =
-    ((x ≡ fsuc fzero) , (isSetFin _ _)) , (discreteFin _ _)
-  transition literalNFA = Fin 1 , isFinSetFin
-  src literalNFA _ = fromℕ 0
-  dst literalNFA _ = fromℕ 1
-  label literalNFA _ = c
-  ε-transition literalNFA = ⊥ , isFinSetFin
-  ε-src literalNFA ()
-  ε-dst literalNFA ()
-
-  open Algebra
-  open AlgebraHom
-  private
-    the-alg : Algebra literalNFA
-    the-ℓs the-alg fzero = ℓ-zero
-    the-ℓs the-alg (fsuc fzero) = ℓ-zero
-    G the-alg fzero = literal c
-    G the-alg (fsuc fzero) = ε-grammar
-    nil-case the-alg {fzero} qAcc = ⊥.rec (fzero≠fone qAcc)
-    nil-case the-alg {fsuc fzero} qAcc = id
-    cons-case the-alg fzero = ⊗-unit-r
-    ε-cons-case the-alg ()
-
-    initial→the-alg :
-      AlgebraHom literalNFA (initial literalNFA) the-alg
-    initial→the-alg = ∃AlgebraHom literalNFA the-alg
-
-    the-alg→initial :
-      AlgebraHom literalNFA the-alg (initial literalNFA)
-    f the-alg→initial fzero =
-      ⊗-unit-r⁻ ⋆
-      (⊗-intro id (nil refl) ⋆
-      cons fzero)
-    f the-alg→initial (fsuc fzero) = nil refl
-    on-nil the-alg→initial {fzero} qAcc =
-      ⊥.rec (fzero≠fone qAcc)
-    on-nil the-alg→initial {fsuc fzero} qAcc =
-      congS nil (isFinSet→isSet isFinSetFin _ _ refl qAcc)
-    on-cons the-alg→initial fzero =
-      funExt (λ w → funExt (λ p⊗ →
-        cong (cons fzero w)
-          (⊗≡ _ _
-            (≡-×
-              (p⊗ .fst .snd ∙
-                  cong (p⊗ .fst .fst .fst ++_) (p⊗ .snd .snd) ∙
-                  ++-unit-r (p⊗ .fst .fst .fst))
-              (sym (p⊗ .snd .snd)))
-          (ΣPathP
-              (isProp→PathP (λ i → isSetString _ _) _ _ ,
-              congP
-                (λ i z →
-                  nil {_}{literalNFA} (λ _ → fsuc fzero)
-                  (p⊗ .snd .snd (~ i)) z)
-                (isProp→PathP (λ i → isSetString _ _)
-                  refl (p⊗ .snd .snd)))))))
-    on-ε-cons the-alg→initial ()
-
+  data STATE : Type ℓ-zero where
+    c-st ε-st : STATE
   open Iso
-  literalNFA-strong-equiv :
-    isStronglyEquivalent
-      (InitParse literalNFA)
-      (literal c)
-  fun (literalNFA-strong-equiv w) =
-    initial→the-alg .f (literalNFA .init) w
-  inv (literalNFA-strong-equiv w) =
-    the-alg→initial .f (literalNFA .init) w
-  rightInv (literalNFA-strong-equiv w) _ =
-    isSetString _ _ _ _
-  leftInv (literalNFA-strong-equiv w) p =
-    cong (λ a → a w p)
-      (initial→initial≡id literalNFA
-        (AlgebraHom-seq literalNFA
-          initial→the-alg the-alg→initial)
-        (literalNFA .init))
+  STATE≅Fin2 : Iso STATE (Fin 2)
+  STATE≅Fin2 .Iso.fun c-st = fzero
+  STATE≅Fin2 .Iso.fun ε-st = fsuc fzero
+  STATE≅Fin2 .Iso.inv fzero = c-st
+  STATE≅Fin2 .Iso.inv (fsuc x) = ε-st
+  STATE≅Fin2 .Iso.rightInv fzero = refl
+  STATE≅Fin2 .Iso.rightInv (fsuc fzero) = refl
+  STATE≅Fin2 .Iso.leftInv c-st = refl
+  STATE≅Fin2 .Iso.leftInv ε-st = refl
+
+  isSetSTATE : isSet STATE
+  isSetSTATE = isSetRetract (STATE≅Fin2 .fun) (STATE≅Fin2 .inv)
+    (STATE≅Fin2 .leftInv)
+    isSetFin
+
+  isDiscSTATE : Discrete STATE
+  isDiscSTATE = isoPresDiscrete (invIso STATE≅Fin2) discreteFin
+
+  literalNFA : NFA {ℓ-zero}
+  literalNFA .Q = STATE , 2 , ∣ isoToEquiv STATE≅Fin2 ∣₁
+  literalNFA .init = c-st
+  literalNFA .isAcc q =
+    ( (q Eq.≡ ε-st)
+    , isOfHLevelRetractFromIso 1 (invIso Eq.PathIsoEq) (isSetSTATE _ _))
+    , EquivPresDec (isoToEquiv Eq.PathIsoEq) (isDiscSTATE _ _)
+  literalNFA .transition = Unit , isFinSetUnit
+  literalNFA .src _ = c-st
+  literalNFA .dst _ = ε-st
+  literalNFA .label _ = c
+  literalNFA .ε-transition = ⊥ , isFinSet⊥
+  literalNFA .ε-src = ⊥.rec
+  literalNFA .ε-dst = ⊥.rec
+
+  litNFA-strong-equiv : StrongEquivalence (InitParse literalNFA) (literal c)
+  litNFA-strong-equiv = mkStrEq
+    (recInit _ litAlg)
+    (cons _
+    ∘g ⊗-intro id (nil Eq.refl)
+    ∘g ⊗-unit-r⁻) 
+    {!!}
+    {!!}
+    where
+      open Algebra
+      litAlg : Algebra literalNFA
+      litAlg .the-ℓs _ = ℓ-zero
+      litAlg .G c-st = literal c
+      litAlg .G ε-st = ε-grammar
+      litAlg .nil-case Eq.refl = id
+      litAlg .cons-case _ = ⊗-unit-r
+      litAlg .ε-cons-case = ⊥.elim
+
+      
+
+  -- Q literalNFA = Fin 2 , isFinSetFin
+  -- init literalNFA = fzero
+  -- isAcc literalNFA x =
+  --   ((x ≡ fsuc fzero) , (isSetFin _ _)) , (discreteFin _ _)
+  -- transition literalNFA = Fin 1 , isFinSetFin
+  -- src literalNFA _ = fromℕ 0
+  -- dst literalNFA _ = fromℕ 1
+  -- label literalNFA _ = c
+  -- ε-transition literalNFA = ⊥ , isFinSetFin
+  -- ε-src literalNFA ()
+  -- ε-dst literalNFA ()
+
+  -- open Algebra
+  -- open AlgebraHom
+  -- private
+  --   the-alg : Algebra literalNFA
+  --   the-ℓs the-alg fzero = ℓ-zero
+  --   the-ℓs the-alg (fsuc fzero) = ℓ-zero
+  --   G the-alg fzero = literal c
+  --   G the-alg (fsuc fzero) = ε-grammar
+  --   nil-case the-alg {fzero} qAcc = ⊥.rec (fzero≠fone qAcc)
+  --   nil-case the-alg {fsuc fzero} qAcc = id
+  --   cons-case the-alg fzero = ⊗-unit-r
+  --   ε-cons-case the-alg ()
+
+  --   initial→the-alg :
+  --     AlgebraHom literalNFA (initial literalNFA) the-alg
+  --   initial→the-alg = ∃AlgebraHom literalNFA the-alg
+
+  --   the-alg→initial :
+  --     AlgebraHom literalNFA the-alg (initial literalNFA)
+  --   f the-alg→initial fzero =
+  --     ⊗-unit-r⁻ ⋆
+  --     (⊗-intro id (nil refl) ⋆
+  --     cons fzero)
+  --   f the-alg→initial (fsuc fzero) = nil refl
+  --   on-nil the-alg→initial {fzero} qAcc =
+  --     ⊥.rec (fzero≠fone qAcc)
+  --   on-nil the-alg→initial {fsuc fzero} qAcc =
+  --     congS nil (isFinSet→isSet isFinSetFin _ _ refl qAcc)
+  --   on-cons the-alg→initial fzero =
+  --     funExt (λ w → funExt (λ p⊗ →
+  --       cong (cons fzero w)
+  --         (⊗≡ _ _
+  --           (≡-×
+  --             (p⊗ .fst .snd ∙
+  --                 cong (p⊗ .fst .fst .fst ++_) (p⊗ .snd .snd) ∙
+  --                 ++-unit-r (p⊗ .fst .fst .fst))
+  --             (sym (p⊗ .snd .snd)))
+  --         (ΣPathP
+  --             (isProp→PathP (λ i → isSetString _ _) _ _ ,
+  --             congP
+  --               (λ i z →
+  --                 nil {_}{literalNFA} (λ _ → fsuc fzero)
+  --                 (p⊗ .snd .snd (~ i)) z)
+  --               (isProp→PathP (λ i → isSetString _ _)
+  --                 refl (p⊗ .snd .snd)))))))
+  --   on-ε-cons the-alg→initial ()
+
+  -- open Iso
+  -- literalNFA-strong-equiv :
+  --   isStronglyEquivalent
+  --     (InitParse literalNFA)
+  --     (literal c)
+  -- fun (literalNFA-strong-equiv w) =
+  --   initial→the-alg .f (literalNFA .init) w
+  -- inv (literalNFA-strong-equiv w) =
+  --   the-alg→initial .f (literalNFA .init) w
+  -- rightInv (literalNFA-strong-equiv w) _ =
+  --   isSetString _ _ _ _
+  -- leftInv (literalNFA-strong-equiv w) p =
+  --   cong (λ a → a w p)
+  --     (initial→initial≡id literalNFA
+  --       (AlgebraHom-seq literalNFA
+  --         initial→the-alg the-alg→initial)
+  --       (literalNFA .init))
 
 -- Nullary Disjunction
 module _ where
