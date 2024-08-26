@@ -48,62 +48,6 @@ open NFA
 -- a corresponding NFA. And then we inductively combine smaller
 -- NFAs into one machine that is equivalent to the regex
 
--- Epsilon
--- Accepts only the empty string
-module _ where
-  -- an NFA with one state,
-  -- no transitions,
-  -- and the single state is both initial and accepting
-  epsilonNFA : NFA {ℓ-zero}
-  Q epsilonNFA = Fin 1 , isFinSetFin
-  init epsilonNFA = fzero
-  isAcc epsilonNFA x =
-    ((x ≡ fzero) , (isSetFin _ _)) , (discreteFin _ _)
-  transition epsilonNFA = ⊥ , isFinSetFin
-  src epsilonNFA ()
-  dst epsilonNFA ()
-  label epsilonNFA ()
-  ε-transition epsilonNFA = ⊥ , isFinSetFin
-  ε-src epsilonNFA ()
-  ε-dst epsilonNFA ()
-
-  open Algebra
-  open AlgebraHom
-  private
-    the-alg : Algebra epsilonNFA
-    the-ℓs the-alg fzero = _
-    G the-alg fzero = ε-grammar
-    nil-case the-alg {fzero} qAcc = id
-    cons-case the-alg ()
-    ε-cons-case the-alg ()
-
-    initial→the-alg :
-      AlgebraHom epsilonNFA (initial epsilonNFA) the-alg
-    initial→the-alg = ∃AlgebraHom epsilonNFA the-alg
-
-    the-alg→initial :
-      AlgebraHom epsilonNFA the-alg (initial epsilonNFA)
-    f the-alg→initial fzero = nil refl
-    on-nil the-alg→initial {fzero} qAcc =
-      congS nil (isFinSet→isSet isFinSetFin fzero fzero refl qAcc)
-    on-cons the-alg→initial ()
-    on-ε-cons the-alg→initial ()
-
-  open Iso
-
-  epsilonNFA-strong-equiv :
-    isStronglyEquivalent
-      (Parse epsilonNFA (epsilonNFA .init))
-      ε-grammar
-  fun (epsilonNFA-strong-equiv w) = initial→the-alg .f fzero w
-  inv (epsilonNFA-strong-equiv w) = the-alg→initial .f fzero w
-  rightInv (epsilonNFA-strong-equiv w) _ = refl
-  leftInv (epsilonNFA-strong-equiv w) p =
-    cong (λ a → a w p)
-    (initial→initial≡id epsilonNFA
-      (AlgebraHom-seq epsilonNFA initial→the-alg the-alg→initial)
-      fzero)
-
 -- Literal
 -- Accepts only a single character c, drawn from alphabet Σ₀
 module _ (c : Σ₀) where
@@ -375,6 +319,43 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
           initial⊕NFA→the-⊕NFA-alg
           the-⊕NFA-alg→initial⊕NFA)
         (⊕NFA .init))
+
+-- Epsilon, the nullary sequencing
+module _ where
+  -- an NFA with one state,
+  -- no transitions,
+  -- and the single state is both initial and accepting
+  εNFA : NFA {ℓ-zero}
+  εNFA .Q = Unit , isFinSetUnit
+  εNFA .init = tt
+  εNFA .isAcc = λ x → (Unit , isPropUnit) , (yes _)
+  εNFA .transition = ⊥ , isFinSet⊥
+  εNFA .src = ⊥.rec
+  εNFA .dst = ⊥.rec
+  εNFA .label = ⊥.rec
+  εNFA .ε-transition = ⊥ , isFinSet⊥
+  εNFA .ε-src = ⊥.rec
+  εNFA .ε-dst = ⊥.rec
+
+  εNFA-strong-equiv :
+    StrongEquivalence (InitParse εNFA) ε-grammar
+  εNFA-strong-equiv = mkStrEq
+    (recInit _ εAlg)
+    (nil _)
+    refl
+    (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ εAlg) (record
+      { f = λ _ → nil _
+      ; on-nil = λ _ → refl
+      ; on-cons = ⊥.elim
+      ; on-ε-cons = ⊥.elim })))
+    where
+      open Algebra
+      εAlg : Algebra εNFA
+      εAlg .the-ℓs = _
+      εAlg .G = λ _ → ε-grammar
+      εAlg .nil-case = λ _ → id
+      εAlg .cons-case = ⊥.elim
+      εAlg .ε-cons-case = ⊥.elim
 
 -- Concatenation
 -- Given two NFAs N and N', accepts a string w if and only if
