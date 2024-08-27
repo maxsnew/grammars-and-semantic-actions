@@ -291,6 +291,15 @@ Decℙ {ℓ} A = A → DecProp ℓ
 Decℙ' : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
 Decℙ' {ℓ} A = A → DecProp' ℓ
 
+LiftDecProp'' :
+  ∀ {L}{L'} →
+  DecProp L →
+  DecProp (ℓ-max L L')
+LiftDecProp'' {L} {L'} (p , _) .fst .fst = Lift {L}{L'} (p .fst)
+LiftDecProp'' {L} {L'} (p , _) .fst .snd = isPropLift (p .snd)
+LiftDecProp'' (p , yes yep) .snd = yes (lift yep)
+LiftDecProp'' (p , no nope) .snd = no (λ lyep → nope (lyep .lower))
+
 LiftDecProp :
   ∀ {L}{L'} →
   DecProp L →

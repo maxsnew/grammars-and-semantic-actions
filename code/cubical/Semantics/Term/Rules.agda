@@ -310,6 +310,15 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
     (λ ph → eh _ ph)
     p
 
+⊕≡ :
+  (f f' : g ⊕ k ⊢ h)
+  → (f ∘g ⊕-inl ≡ f' ∘g ⊕-inl)
+  → (f ∘g ⊕-inr ≡ f' ∘g ⊕-inr)
+  → f ≡ f'
+⊕≡ f f' f≡f'inl f≡f'inr = funExt λ w → funExt λ
+  { (inl x) → funExt⁻ (funExt⁻ f≡f'inl _) x
+  ; (inr x) → funExt⁻ (funExt⁻ f≡f'inr _) x }
+
 ⊕-βl :
   (e₁ : g ⊢ g ⊕ h) →
   (e₂ : h ⊢ g ⊕ h) →
