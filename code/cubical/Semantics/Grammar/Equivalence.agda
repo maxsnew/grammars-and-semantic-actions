@@ -70,5 +70,5 @@ module _ {ℓG} {ℓG'}
     field
       fun : g ⊢ g'
       inv : g' ⊢ g
-      sec : inv ⋆ fun ≡ id
-      ret : fun ⋆ inv ≡ id
+      sec : fun ∘g inv ≡ id
+      ret : inv ∘g fun ≡ id

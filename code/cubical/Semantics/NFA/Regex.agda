@@ -402,15 +402,37 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
   ⊗-strong-equivalence = mkStrEq
     (recInit _ ⊗Alg)
-    (⊗--intro⁻ (recInit _ NAlg))
+    (⟜-app ∘g ⊗-intro (recInit _ NAlg) id)
     {!!}
     (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) (record
-    { f = λ { (inl q) → ⊗--intro⁻ (recTrace _ NAlg)
+    { f = λ { (inl q) → ⟜-app ∘g ⊗-intro (recTrace _ NAlg) id
             ; (inr q') → recTrace _ N'Alg }
     ; on-nil = λ { {inl q} → ⊥.elim*
                  ; {inr q'} → λ _ → refl }
-    ; on-cons = λ { (inl t) → {!!}
-                 ; (inr t') → refl }
+      -- cons
+
+-- (λ i → ⟜-β {!cons (inl t) ∘g ⟜-app!} i ∘g ⊗-assoc) ∙ {!!}
+
+    ; on-cons = λ { (inl t ) →
+      (⟜-app
+      ∘g ⊗-intro ((recTrace N NAlg) ∘g cons t) id
+      ∘g ⊗-assoc)
+         ≡⟨ refl ⟩
+      (⟜-app
+      ∘g ⊗-intro (⟜-intro {k = Parse _ _} (cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) id
+      ∘g ⊗-intro (⊗-intro id (recTrace N NAlg)) id
+      ∘g ⊗-assoc)
+         ≡⟨ (λ i → ⟜-β ((cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) i ∘g ⊗-intro (⊗-intro id (recTrace N NAlg)) id ∘g ⊗-assoc) ⟩
+      (cons (inl t)
+      ∘g ⊗-intro id ⟜-app
+      ∘g ⊗-assoc⁻
+      ∘g ⊗-intro (⊗-intro id (recTrace N NAlg)) id
+      ∘g ⊗-assoc)
+         ≡⟨ {!!} ⟩
+      (cons (inl t)
+      ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (recTrace N NAlg) id))
+      ∎
+                  ; (inr t') → refl }
     ; on-ε-cons = λ { (N-acc q acc) → {!!}
                     ; (N-ε-trans t) → {!!}
                     ; (N'-ε-trans t') → refl } })))
@@ -444,16 +466,14 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       NAlg .the-ℓs = _
       NAlg .G q = Parse ⊗NFA (inl q) ⊗- InitParse N'
       NAlg .nil-case acc =
-        ⊗--intro (ε-cons (N-acc _ acc)
+        ⟜-intro (ε-cons (N-acc _ acc)
           ∘g recInit _ N'Alg
           ∘g ⊗-unit-l)
       NAlg .cons-case t =
-        ⊗--intro {k = Parse ⊗NFA (inl (N .src t))}
-          (cons (inl t) ∘g ⊗--app) ∘g
-        ⊗--curry {h = Parse ⊗NFA (inl (N .dst t))}
+        ⟜-intro {k = Parse _ _} (cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
       NAlg .ε-cons-case t =
-        ⊗--intro {k = Parse ⊗NFA (inl (N .ε-src t))}
-          (ε-cons (N-ε-trans t) ∘g ⊗--app)
+        ⟜-intro {k = Parse _ _}
+          (ε-cons (N-ε-trans t) ∘g ⟜-app)
 
 -- -- Kleene Star
 -- module _ (N : NFA {ℓN}) where

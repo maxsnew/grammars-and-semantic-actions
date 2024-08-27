@@ -102,9 +102,9 @@ functoriality {g = g}{h = h} (l -⊗func x) g⊢h =
        -⊗-app
        (functoriality {g = g} {h = h} x g⊢h))
 functoriality {g = g}{h = h} (x ⊗-func l) g⊢h =
-  ⊗--intro {g = (x [ g ]fEval) ⊗- l}{h = l}{k = x [ h ]fEval}
+  ⟜-intro {g = (x [ g ]fEval) ⊗- l}{h = l}{k = x [ h ]fEval}
      (seq {g = ((x [ g ]fEval) ⊗- l) ⊗ l} {h = x [ g ]fEval} {k = x [ h ]fEval}
-       ⊗--app
+       ⟜-app
        (functoriality {g = g} {h = h} x g⊢h))
 
 ⊗-seq-l' :

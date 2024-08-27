@@ -224,67 +224,40 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
 
 
-⊗--intro :
+⟜-intro :
   g ⊗ h ⊢  k →
   g ⊢ k ⊗- h
-⊗--intro e _ p w' q =
+⟜-intro e _ p w' q =
   e _ ((_ , refl) , p , q)
 
-⊗--app :
+⟜-app :
   (g ⊗- h) ⊗ h ⊢ g
-⊗--app {g = g} _ p =
-  transport
-    (cong g (sym (p .fst .snd)))
-    (p .snd .fst (fst p .fst .snd) (p .snd .snd))
+⟜-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
+  subst g (sym w≡w'++w'') (f _ inp)
 
-⊗--intro⁻ :
+⟜-intro⁻ :
   g ⊢ h ⊗- k →
   g ⊗ k ⊢ h
-⊗--intro⁻ {h = h}{k = k} f =
-  ⊗-intro f (id {g = k}) ⋆ ⊗--app
+⟜-intro⁻ {h = h}{k = k} f =
+  ⟜-app ∘g ⊗-intro f (id {g = k})
 
-⊗--intro∘⊗--intro⁻≡id :
+⟜-η :
   (e : g ⊢ h ⊗- k) →
-  ⊗--intro {g = g}{h = k}{k = h}(⊗--intro⁻ e) ≡ e
-⊗--intro∘⊗--intro⁻≡id e = funExt λ w → funExt λ pg →
+  ⟜-intro {g = g}{h = k}{k = h}(⟜-intro⁻ e) ≡ e
+⟜-η e = funExt λ w → funExt λ pg →
   funExt λ w' → funExt λ pk → transportRefl _
 
-⊗--intro⁻∘⊗--intro≡id :
+⟜-β :
   (e : g ⊗ h ⊢ k) →
-  ⊗--intro⁻ {g = g}{h = k}{k = h}(⊗--intro e) ≡ e
-⊗--intro⁻∘⊗--intro≡id e = funExt λ w → funExt λ p⊗ →
+  ⟜-intro⁻ {g = g}{h = k}{k = h}(⟜-intro e) ≡ e
+⟜-β e = funExt λ w → funExt λ p⊗ →
   fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-    (⊗PathP (≡-× refl refl) (≡-× refl refl)))
+    (⊗PathP refl refl))
 
-⊗--curry :
+⟜-curry :
   g ⊗ (h ⊗- k) ⊢ (g ⊗ h) ⊗- k
-⊗--curry {g = g}{h = h}{k = k} =
-  ⊗--intro (⊗-assoc⁻ ⋆ ⊗-intro id ⊗--app)
-
--- ⊗--assoc⁻ :
---   (g ⊗ h) ⊗- k ⊢ g ⊗ (h ⊗- k)
--- ⊗--assoc⁻ {g = g}{h = h}{k = k} =
---   {!!}
-
-⊗--β :
-  (m : g ⊗ h ⊢ k) →
-  (⊗--intro⁻ {g = g}{h = k}{k = h} (⊗--intro {g = g}{h = h}{k = k} m))
-    ≡
-  m
-⊗--β {k = k} m =
-  funExt (λ w → (funExt (λ p⊗ →
-    fromPathP {A = λ i → k (p⊗ .fst .snd (~ i))}
-      (congP (λ _ → m _) (⊗PathP refl refl)))))
-
-⊗--η :
-  (f : g ⊢ h ⊗- k) →
-  f
-    ≡
-  (⊗--intro {g = g}{h = k}{k = h} (⊗--intro⁻ {g = g}{h = h}{k = k} f))
-⊗--η f =
-  funExt (λ w → (funExt (λ p⊗ →
-    funExt (λ w' → funExt λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
-
+⟜-curry {g = g}{h = h}{k = k} =
+  ⟜-intro (⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
 
 ⊤-intro :
   g ⊢ ⊤-grammar {ℓG = ℓ}

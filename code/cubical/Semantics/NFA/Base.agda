@@ -59,13 +59,13 @@ record NFA : Type (ℓ-suc ℓN) where
     field
       f : (q : Q .fst) → alg .G q ⊢ alg' .G q
       on-nil : ∀ {q} → (qAcc : isAcc q .fst .fst) →
-        alg .nil-case qAcc ⋆ f q ≡ alg' .nil-case qAcc
+        f q ∘g alg .nil-case qAcc ≡ alg' .nil-case qAcc
       on-cons : (tr : transition .fst) →
-        alg .cons-case tr ⋆ f (src tr) ≡
-          (⊗-intro id (f (dst tr))) ⋆ alg' .cons-case tr
+        f (src tr) ∘g alg .cons-case tr ≡
+          alg' .cons-case tr ∘g (⊗-intro id (f (dst tr)))
       on-ε-cons : (εtr : ε-transition .fst) →
-        (alg .ε-cons-case εtr) ⋆ (f (ε-src εtr)) ≡
-          f (ε-dst εtr) ⋆ alg' .ε-cons-case εtr
+        (f (ε-src εtr)) ∘g (alg .ε-cons-case εtr) ≡
+          alg' .ε-cons-case εtr ∘g f (ε-dst εtr)
     fInit = f init
   open AlgebraHom
 
