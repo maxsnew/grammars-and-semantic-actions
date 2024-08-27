@@ -352,7 +352,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
   ⊗Trans .snd = isFinSet⊎ (N .transition) (N' .transition)
 
   data ⊗εTrans : Type (ℓ-max ℓN ℓN') where
-    N-acc : Σ[ q ∈ ⟨ N .Q ⟩ ] (N .isAcc q .fst .fst) → ⊗εTrans
+    N-acc : ∀ q → (N .isAcc q .fst .fst) → ⊗εTrans
     N-ε-trans  : ⟨ N .ε-transition ⟩ → ⊗εTrans
     N'-ε-trans  : ⟨ N' .ε-transition ⟩ → ⊗εTrans
 
@@ -361,13 +361,13 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       (⟨ N .ε-transition ⟩ ⊎ ⟨ N' .ε-transition ⟩)
       ≃ ⊗εTrans
   ⊗εTrans-rep = isoToEquiv (iso
-    (λ { (inl (acc)) → N-acc acc
+    (λ { (inl (acc)) → N-acc _ (acc .snd)
        ; (inr (inl t)) → N-ε-trans t
        ; (inr (inr t')) → N'-ε-trans t'})
-    (λ { (N-acc acc) → inl acc
+    (λ { (N-acc q acc) → inl (q , acc)
        ; (N-ε-trans t) → inr (inl t)
        ; (N'-ε-trans t') → inr (inr t') })
-    (λ { (N-acc _) → refl
+    (λ { (N-acc _ _) → refl
        ; (N-ε-trans _) → refl
        ; (N'-ε-trans _) → refl})
     (λ { (inl _) → refl
@@ -391,10 +391,10 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
           (λ q → _ ,
             isDecProp→isFinSet (N .isAcc q .fst .snd) (N .isAcc q .snd)))
         (_ , isFinSet⊎ (N .ε-transition) (N' .ε-transition)))
-  ⊗NFA .ε-src = λ { (N-acc (q , qAcc)) → inl q
+  ⊗NFA .ε-src = λ { (N-acc q qAcc) → inl q
                   ; (N-ε-trans t) → inl (N .ε-src t)
                   ; (N'-ε-trans t') → inr (N' .ε-src t') }
-  ⊗NFA .ε-dst = λ { (N-acc (q , qAcc)) → inr (N' .init)
+  ⊗NFA .ε-dst = λ { (N-acc q qAcc) → inr (N' .init)
                   ; (N-ε-trans t) → inl (N .ε-dst t)
                   ; (N'-ε-trans t') → inr (N' .ε-dst t') }
 
@@ -402,7 +402,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
   ⊗-strong-equivalence = mkStrEq
     (recInit _ ⊗Alg)
-    {!!}
+    (⊗--intro⁻ (recInit _ NAlg))
     {!!}
     {!!}
     where
@@ -412,19 +412,16 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       ⊗Alg .the-ℓs (inr q') = _
       ⊗Alg .G (inl q) = Parse N q ⊗ InitParse N'
       ⊗Alg .G (inr q') = Parse N' q'
-      ⊗Alg .nil-case {inl q} acc = ⊥.elim* acc
       ⊗Alg .nil-case {inr q'} acc = nil (lower acc)
       ⊗Alg .cons-case (inl t) =
-        ⊗-assoc ⋆
-        functoriality (var ⊗l InitParse N')
-          (cons t)
+        ⊗-intro (cons t) id
+        ∘g ⊗-assoc
       ⊗Alg .cons-case (inr t') = cons t'
-      ⊗Alg .ε-cons-case (N-acc (q , acc)) =
-        ⊗-unit-l⁻ ⋆
+      ⊗Alg .ε-cons-case (N-acc q acc) =
         ⊗-intro (nil acc) id
+        ∘g ⊗-unit-l⁻
       ⊗Alg .ε-cons-case (N-ε-trans t) =
-        functoriality (var ⊗l InitParse N')
-          (ε-cons t)
+        ⊗-intro (ε-cons t) id
       ⊗Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
 
       N'Alg : Algebra N'
@@ -438,8 +435,9 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       NAlg .the-ℓs = _
       NAlg .G q = Parse ⊗NFA (inl q) ⊗- InitParse N'
       NAlg .nil-case acc =
-        ⊗--intro
-          (⊗-unit-l ⋆ ({!!} ⋆ {!!}))
+        ⊗--intro (ε-cons (N-acc _ acc)
+          ∘g recInit _ N'Alg
+          ∘g ⊗-unit-l)
       NAlg .cons-case = {!!}
       NAlg .ε-cons-case = {!!}
 
