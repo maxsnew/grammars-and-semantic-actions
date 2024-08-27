@@ -1,4 +1,5 @@
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Transport
 open import Cubical.Foundations.HLevels
 
 module Semantics.Term.Rules ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
@@ -49,32 +50,60 @@ syntax seq e e' = e ⋆ e'
 
 ⊗-unit-r :
   g ⊗ ε-grammar ⊢ g
-⊗-unit-r {g = g} _ p =
-  transport
-    (cong g
-      (sym (++-unit-r (fst p .fst .fst)) ∙
-      cong (p .fst .fst .fst ++_) (sym (p .snd .snd)) ∙
-      sym (p .fst .snd)))
-    (p .snd .fst)
+⊗-unit-r {g = g} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
+  subst g (sym (++-unit-r _)
+          ∙ cong (w' ++_) (sym []'≡[])
+          ∙ sym w≡w'++[]')
+    p⟨w'⟩
 
 ⊗-unit-r⁻ :
   g ⊢ g ⊗ ε-grammar
 ⊗-unit-r⁻ _ p =
   ((_ , []) , (sym (++-unit-r _))) , (p , refl)
 
+isPropε : ∀ w → isProp (ε-grammar w)
+isPropε w = isSetString _ _
+
+rectify :
+  ∀ {w w'}{g : Grammar ℓg}
+  → {p : g w}{q : g w'}
+  → {w≡ w≡' : w ≡ w'}
+  → PathP (λ i → g (w≡  i)) p q
+  → PathP (λ i → g (w≡' i)) p q
+rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → PathP (λ i → g (w≡ i)) p q)
+  (isSetString _ _ _ _)
+
 ⊗-unit-rr⁻ :
-  ∀ {g}
+  ∀ {g : Grammar ℓg}
   → ⊗-unit-r⁻ {g = g} ∘g ⊗-unit-r ≡ id
-⊗-unit-rr⁻ = funExt λ w → funExt λ p⊗ →
+⊗-unit-rr⁻ {g = g} = funExt λ w → funExt λ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) →
+  let w≡w' = (sym (sym (++-unit-r _)
+          ∙ cong (w' ++_) (sym []'≡[])
+          ∙ sym w≡w'++[]'))
+  in
   ⊗≡ _ _
-    (≡-×
-      (p⊗ .fst .snd
-        ∙ cong (p⊗ .fst .fst .fst ++_) (p⊗ .snd .snd)
-        ∙ ++-unit-r (p⊗ .fst .fst .fst))
-      (sym (p⊗ .snd .snd)))
+    (≡-× w≡w'
+      (sym []'≡[]))
     (ΣPathP
-      ( {!!}
-      , {!!}))
+      ( symP (subst-filler g (sym w≡w') p⟨w'⟩)
+      , isProp→PathP (λ _ → isPropε _) refl []'≡[]))
+
+⊗-unit-r⁻r : ∀ {g : Grammar ℓg}
+  → ⊗-unit-r {g = g} ∘g ⊗-unit-r⁻ ≡ id
+⊗-unit-r⁻r {g = g} = funExt λ w → funExt λ p →
+  let
+    w≡w : w ≡ w
+    w≡w =       (λ i →
+         (hcomp
+          (doubleComp-faces (λ _ → w)
+           (λ i₁ →
+              hcomp (doubleComp-faces (λ _ → w ++ []) (λ i₂ → ++-unit-r w i₂) i₁)
+              (w ++ []))
+           i)
+          (++-unit-r w (~ i))))
+  in
+  subst (λ w≡w → subst g w≡w p ≡ p) (isSetString _ _ refl w≡w)
+    (substRefl {B = g} p)
 
 ⊗-unit-l :
   ε-grammar ⊗ g ⊢ g
