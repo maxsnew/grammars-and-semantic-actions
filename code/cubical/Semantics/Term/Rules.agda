@@ -149,6 +149,27 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
     (p .snd .fst .snd .snd ,
     p .snd .snd)))
 
+⊗-assoc∘⊗-assoc⁻≡id :
+ ⊗-assoc {g = g}{h = h}{k = k} ∘g ⊗-assoc⁻ ≡ id
+⊗-assoc∘⊗-assoc⁻≡id = funExt λ w → funExt λ p →
+  ⊗≡ _ _
+    (≡-× (λ i → p .snd .fst .fst .snd (~ i)) refl)
+    (ΣPathP (
+      (⊗PathP
+        (≡-× refl refl)
+        (≡-× refl refl)) ,
+      refl))
+
+⊗-assoc⁻∘⊗-assoc≡id :
+ ⊗-assoc⁻ {g = g}{h = h}{k = k} ∘g ⊗-assoc ≡ id
+⊗-assoc⁻∘⊗-assoc≡id = funExt λ w → funExt λ p →
+  ⊗≡ _ _
+    (≡-× refl (sym (p .snd .snd .fst .snd)))
+    (ΣPathP (
+      refl ,
+      (⊗PathP (≡-× refl refl)
+        (ΣPathP (refl , refl)))))
+
 -⊗-intro :
   g ⊗ h ⊢ k →
   h ⊢ g -⊗ k
@@ -164,6 +185,19 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   h ⊗ g ⊢ k
 -⊗-intro⁻ {h = h}{k = k} f =
   (⊗-intro (id {g = h}) f) ⋆ -⊗-app
+
+-⊗-intro∘-⊗-intro⁻≡id :
+  (e : g ⊢ h -⊗ k) →
+  -⊗-intro {g = h}{h = g}{k = k}(-⊗-intro⁻ e) ≡ e
+-⊗-intro∘-⊗-intro⁻≡id e = funExt λ w → funExt λ pg →
+  funExt λ w' → funExt λ ph → transportRefl _
+
+-⊗-intro⁻∘-⊗-intro≡id :
+  (e : g ⊗ h ⊢ k) →
+  -⊗-intro⁻ {g = h}{h = g}{k = k}(-⊗-intro e) ≡ e
+-⊗-intro⁻∘-⊗-intro≡id {k = k} e = funExt λ w → funExt λ p⊗ →
+  fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
+    (⊗PathP (≡-× refl refl) (≡-× refl refl)))
 
 -- TODO : this needs a better name
 -⊗-assoc :
@@ -208,6 +242,19 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   g ⊗ k ⊢ h
 ⊗--intro⁻ {h = h}{k = k} f =
   ⊗-intro f (id {g = k}) ⋆ ⊗--app
+
+⊗--intro∘⊗--intro⁻≡id :
+  (e : g ⊢ h ⊗- k) →
+  ⊗--intro {g = g}{h = k}{k = h}(⊗--intro⁻ e) ≡ e
+⊗--intro∘⊗--intro⁻≡id e = funExt λ w → funExt λ pg →
+  funExt λ w' → funExt λ pk → transportRefl _
+
+⊗--intro⁻∘⊗--intro≡id :
+  (e : g ⊗ h ⊢ k) →
+  ⊗--intro⁻ {g = g}{h = k}{k = h}(⊗--intro e) ≡ e
+⊗--intro⁻∘⊗--intro≡id e = funExt λ w → funExt λ p⊗ →
+  fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
+    (⊗PathP (≡-× refl refl) (≡-× refl refl)))
 
 -- TODO : this needs a better name
 ⊗--assoc :
