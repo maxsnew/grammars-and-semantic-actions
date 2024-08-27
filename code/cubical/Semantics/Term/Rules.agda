@@ -200,9 +200,9 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
     (⊗PathP (≡-× refl refl) (≡-× refl refl)))
 
 -- TODO : this needs a better name
--⊗-assoc :
+-⊗-curry :
   (g -⊗ h) ⊗ k ⊢ g -⊗ (h ⊗ k)
--⊗-assoc {g = g}{h = h}{k = k} =
+-⊗-curry {g = g}{h = h}{k = k} =
   -⊗-intro {g = g}{h = (g -⊗ h) ⊗ k}{k = h ⊗ k}
     (⊗-assoc ⋆ ⊗-intro -⊗-app id)
 
@@ -256,10 +256,9 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
     (⊗PathP (≡-× refl refl) (≡-× refl refl)))
 
--- TODO : this needs a better name
-⊗--assoc :
+⊗--curry :
   g ⊗ (h ⊗- k) ⊢ (g ⊗ h) ⊗- k
-⊗--assoc {g = g}{h = h}{k = k} =
+⊗--curry {g = g}{h = h}{k = k} =
   ⊗--intro (⊗-assoc⁻ ⋆ ⊗-intro id ⊗--app)
 
 -- ⊗--assoc⁻ :
@@ -431,81 +430,3 @@ foldKL*l {g = g}{h = h} pε p⊗ =
         (⊗-unit-l⁻ {g = g -⊗ g})
         (⊗-intro {g = ε-grammar}{h = g}{k = g -⊗ g}{l = g -⊗ g} pε (id {g = g -⊗ g})))
       -⊗-app)
-
--- -- These linear dependent terms should probably not be used.
--- -- It's preferable to have them be managed at the
--- -- boundary between the embedded language and Agda
--- LinearΠ-intro :
---   {A : Type ℓ} → {f : A → Grammar ℓ} →
---   (∀ a → g ⊢ f a) →
---   g ⊢ (LinearΠ f)
--- LinearΠ-intro e p a = e a p
-
--- LinearΠ-elim :
---   {A : Type ℓ} → {f : A → Grammar ℓ} →
---   g ⊢ LinearΠ f →
---   (a : A) →
---   g ⊢ f a
--- LinearΠ-elim e a p = e p a
-
--- LinearΣ-intro :
---   {A : Type ℓ} → {f : A → Grammar ℓ} →
---   (a : A) →
---   g ⊢ f a →
---   g ⊢ LinearΣ f
--- LinearΣ-intro a e p = a , (e p)
-
--- LinearΣ-elim :
---   {A : Type ℓ} → {f : A → Grammar ℓ} →
---   g ⊢ LinearΣ f →
---   (∀ a → f a ⊢ h) →
---   g ⊢ h
--- LinearΣ-elim e e' p =
---   let (a , b) = e p in
---   e' a b
-
-
--- -- DecProp-grammar'-intro :
--- --   ∀ {ℓ ℓg : Level} →
--- --   (d : DecProp ℓ) →
--- --   {g : Grammar ℓg} →
--- --   g ⊢ DecProp-grammar' {ℓG = ℓg} d ⊕ DecProp-grammar' {ℓG = ℓg}(negateDecProp d)
--- -- DecProp-grammar'-intro {ℓ}{ℓg = ℓg}(a , yes x) {g} p =
--- --   ⊕-intro₁
--- --     {g = g}
--- --     {h = DecProp-grammar' {ℓG = ℓg}((a , yes x))}
--- --     {k = DecProp-grammar' {ℓG = ℓg}(negateDecProp (a , yes x))}
--- --     (⊤-intro {g = g})
--- --     p
--- -- DecProp-grammar'-intro {ℓ}{ℓg = ℓg}(a , no ¬x) {g} p =
--- --   ⊕-intro₂
--- --     {g = g}
--- --     {h = DecProp-grammar' {ℓG = ℓg} (negateDecProp (a , no ¬x))}
--- --     {k = DecProp-grammar' {ℓG = ℓg} ((a , no ¬x))}
--- --     (⊤-intro {g = g})
--- --     p
-
-
--- -- LowerGrammarTerm :
--- --   ∀ {ℓ} →
--- --   {g : Grammar ℓg} →
--- --   LiftGrammar {ℓG = ℓg}{ℓ} g ⊢ g
--- -- LowerGrammarTerm {ℓ = ℓ} {g = g} x = lower x
-
--- -- LiftGrammarTerm :
--- --   ∀ {ℓ} →
--- --   {g : Grammar ℓg} →
--- --   g ⊢ LiftGrammar {ℓG = ℓg}{ℓ} g
--- -- LiftGrammarTerm {ℓ = ℓ} {g = g} x = lift x
-
--- -- -- curry⊗- :
--- -- --   {g : Grammar {Σ₀} ℓg} →
--- -- --   {h : Grammar {Σ₀} ℓh} →
--- -- --   {k : Grammar {Σ₀} ℓk} →
--- -- --   g ⊗- (h ⊗- k) ⊢ (g ⊗- h) ⊗- k
--- -- -- curry⊗- {g = g}{h = h}{k = k} =
--- -- --   ⊗--intro {g = g ⊗- (h ⊗- k)} {h = k} {k = g ⊗- h}
--- -- --     {!!}
--- -- --   --   (⊗--intro {g = (g ⊗- (h ⊗- k)) ⊗ k} {h = h} {k = g}
--- -- --   --     (⊗-assoc {g = g ⊗- (h ⊗- k)} {h = k} {k = h} {l = g}
--- -- --   --       {!functoriality {g = k ⊗ h} {h = h ⊗- k}!}))

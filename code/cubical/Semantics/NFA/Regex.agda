@@ -404,7 +404,16 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     (recInit _ ⊗Alg)
     (⊗--intro⁻ (recInit _ NAlg))
     {!!}
-    {!!}
+    (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) (record
+    { f = λ { (inl q) → ⊗--intro⁻ (recTrace _ NAlg)
+            ; (inr q') → recTrace _ N'Alg }
+    ; on-nil = λ { {inl q} → ⊥.elim*
+                 ; {inr q'} → λ _ → refl }
+    ; on-cons = λ { (inl t) → {!!}
+                 ; (inr t') → refl }
+    ; on-ε-cons = λ { (N-acc q acc) → {!!}
+                    ; (N-ε-trans t) → {!!}
+                    ; (N'-ε-trans t') → refl } })))
     where
       open Algebra
       ⊗Alg : Algebra ⊗NFA
@@ -438,121 +447,13 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
         ⊗--intro (ε-cons (N-acc _ acc)
           ∘g recInit _ N'Alg
           ∘g ⊗-unit-l)
-      NAlg .cons-case = {!!}
-      NAlg .ε-cons-case = {!!}
-
---   private
---     the-N'-alg : Algebra N'
---     the-ℓs the-N'-alg _ = ℓ-max ℓN ℓN'
---     G the-N'-alg q = Parse ⊗NFA (inr q)
---     nil-case the-N'-alg qAcc =
---       nil (LiftDecPropWitness (N' .isAcc _) qAcc)
---     cons-case the-N'-alg tr = cons (inr tr)
---     ε-cons-case the-N'-alg εtr = ε-cons (inr (inr εtr))
-
---     initialN'→the-N'-alg : AlgebraHom N' (initial N') the-N'-alg
---     initialN'→the-N'-alg = ∃AlgebraHom N' the-N'-alg
-
---     the-N-alg : Algebra N
---     the-ℓs the-N-alg _ = ℓ-max ℓN ℓN'
---     G the-N-alg q = Parse ⊗NFA (inl q) ⊗- Parse N' (N' .init)
---     nil-case the-N-alg {q} qAcc =
---       ⊗--intro
---         (⊗-unit-l ⋆
---         (initialN'→the-N'-alg .f (N' .init) ⋆
---         ε-cons (inl (q , qAcc))))
---     cons-case the-N-alg tr =
---       ⊗--assoc {h = Parse ⊗NFA (inl (N .dst tr))} ⋆
---       (functoriality
---         {g = literal (N .label tr) ⊗ Parse ⊗NFA (inl (N .dst tr))}
---         {h = Parse ⊗NFA (inl (N .src tr))}
---         (var ⊗-func Parse N' (N' .init))
---         (cons (inl tr)))
---     ε-cons-case the-N-alg εtr =
---       (functoriality
---         {g = Parse ⊗NFA (inl (N .ε-dst εtr))}
---         {h = Parse ⊗NFA (inl (N .ε-src εtr))}
---         (var ⊗-func Parse N' (N' .init))
---         (ε-cons (inr (inl εtr))))
-
---     initialN→the-N-alg : AlgebraHom N (initial N) the-N-alg
---     initialN→the-N-alg = ∃AlgebraHom N the-N-alg
-
-
---     the-N-alg→initialN : AlgebraHom N the-N-alg (initial N)
---     f the-N-alg→initialN q =
---       -- {!!}
---       -- functoriality (var ⊗-func Parse N' (N' .init))
---       --   (initial⊗NFA→the-⊗NFA-alg .f (inl q)) ⋆
---       -- {!!}
---       {!initial⊗NFA→the-⊗NFA-alg .f (inl q)!}
---     on-nil the-N-alg→initialN = {!!}
---     on-cons the-N-alg→initialN = {!!}
---     on-ε-cons the-N-alg→initialN = {!!}
-
---     the-⊗NFA-alg→initial⊗NFA :
---       AlgebraHom ⊗NFA the-⊗NFA-alg (initial ⊗NFA)
---     f the-⊗NFA-alg→initial⊗NFA (inl q) =
---       ⊗-intro
---         (initialN→the-N-alg .f q) id ⋆
---       ⊗--app
---     f the-⊗NFA-alg→initial⊗NFA (inr q) = initialN'→the-N'-alg .f q
---     on-nil the-⊗NFA-alg→initial⊗NFA {inr q} qAcc =
---       cong nil (LiftLowerWitness (N' .isAcc q) qAcc)
--- -- Goal: seq
--- --       (the-⊗NFA-alg .Semantics.NFA.Base.NFA.Algebra.cons-case (inl tr))
--- --       (Semantics.NFA.Base.NFA.AlgebraHom.f the-⊗NFA-alg→initial⊗NFA
--- --        (Semantics.NFA.Base.NFA.src ⊗NFA (inl tr)))
--- --       ≡
--- --       seq
--- --       (⊗-intro id
--- --        (Semantics.NFA.Base.NFA.AlgebraHom.f the-⊗NFA-alg→initial⊗NFA
--- --         (Semantics.NFA.Base.NFA.dst ⊗NFA (inl tr))))
--- --       (initial ⊗NFA .Semantics.NFA.Base.NFA.Algebra.cons-case (inl tr))
---     on-cons the-⊗NFA-alg→initial⊗NFA (inl tr) = {!!}
---     on-cons the-⊗NFA-alg→initial⊗NFA (inr tr) = refl
--- -- Goal: seq
--- --       (the-⊗NFA-alg .Semantics.NFA.Base.NFA.Algebra.ε-cons-case
--- --        (inl N-acc))
--- --       (Semantics.NFA.Base.NFA.AlgebraHom.f the-⊗NFA-alg→initial⊗NFA
--- --        (Semantics.NFA.Base.NFA.ε-src ⊗NFA (inl N-acc)))
--- --       ≡
--- --       seq
--- --       (Semantics.NFA.Base.NFA.AlgebraHom.f the-⊗NFA-alg→initial⊗NFA
--- --        (Semantics.NFA.Base.NFA.ε-dst ⊗NFA (inl N-acc)))
--- --       (initial ⊗NFA .Semantics.NFA.Base.NFA.Algebra.ε-cons-case
--- --        (inl N-acc))
---     on-ε-cons the-⊗NFA-alg→initial⊗NFA (inl N-acc) = {!!}
--- -- Goal: seq
--- --       (the-⊗NFA-alg .Semantics.NFA.Base.NFA.Algebra.ε-cons-case
--- --        (inr (inl εtr)))
--- --       (Semantics.NFA.Base.NFA.AlgebraHom.f the-⊗NFA-alg→initial⊗NFA
--- --        (Semantics.NFA.Base.NFA.ε-src ⊗NFA (inr (inl εtr))))
--- --       ≡
--- --       seq
--- --       (Semantics.NFA.Base.NFA.AlgebraHom.f the-⊗NFA-alg→initial⊗NFA
--- --        (Semantics.NFA.Base.NFA.ε-dst ⊗NFA (inr (inl εtr))))
--- --       (initial ⊗NFA .Semantics.NFA.Base.NFA.Algebra.ε-cons-case
--- --        (inr (inl εtr)))
---     on-ε-cons the-⊗NFA-alg→initial⊗NFA (inr (inl εtr)) = {!!}
---     on-ε-cons the-⊗NFA-alg→initial⊗NFA (inr (inr εtr)) = refl
-
---   open Iso
---   ⊗NFA-strong-equiv :
---     isStronglyEquivalent
---       (Parse ⊗NFA (⊗NFA .init))
---       ((Parse N (N .init)) ⊗ (Parse N' (N' .init)))
---   fun (⊗NFA-strong-equiv w) = initial⊗NFA→the-⊗NFA-alg .f (⊗NFA .init) w
---   inv (⊗NFA-strong-equiv w) = the-⊗NFA-alg→initial⊗NFA .f (inl (N .init)) w
---   rightInv (⊗NFA-strong-equiv w) p⊗ =
---     {!!}
---   leftInv (⊗NFA-strong-equiv w) p =
---     cong (λ a → a w p)
---       (initial→initial≡id ⊗NFA
---         (AlgebraHom-seq ⊗NFA
---           initial⊗NFA→the-⊗NFA-alg
---           the-⊗NFA-alg→initial⊗NFA)
---         (inl (N .init)))
+      NAlg .cons-case t =
+        ⊗--intro {k = Parse ⊗NFA (inl (N .src t))}
+          (cons (inl t) ∘g ⊗--app) ∘g
+        ⊗--curry {h = Parse ⊗NFA (inl (N .dst t))}
+      NAlg .ε-cons-case t =
+        ⊗--intro {k = Parse ⊗NFA (inl (N .ε-src t))}
+          (ε-cons (N-ε-trans t) ∘g ⊗--app)
 
 -- -- Kleene Star
 -- module _ (N : NFA {ℓN}) where
