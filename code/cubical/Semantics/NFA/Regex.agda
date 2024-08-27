@@ -3,6 +3,7 @@ open import Cubical.Foundations.HLevels
 
 module Semantics.NFA.Regex ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
 
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Structure
 open import Cubical.Reflection.RecordEquiv
 open import Cubical.Foundations.Isomorphism
@@ -164,6 +165,13 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     inl   : N .Q .fst  → ⊕State
     inr   : N' .Q .fst → ⊕State
 
+  ⊕State-rep : ⊕State ≃ (Unit ⊎ (⟨ N .Q ⟩ ⊎ ⟨ N' .Q ⟩))
+  ⊕State-rep = isoToEquiv (iso
+    (λ { start → inl tt ; (inl x) → inr (inl x) ; (inr x) → inr (inr x) })
+    (λ { (inl x) → start ; (inr (inl x)) → inl x ; (inr (inr x)) → inr x })
+    (λ { (inl x) → refl ; (inr (inl x)) → refl ; (inr (inr x)) → refl })
+    λ { start → refl ; (inl x) → refl ; (inr x) → refl })
+
   ⊕Trans = ⟨ N .transition ⟩ ⊎ ⟨ N' .transition ⟩
   data ⊕εTrans : Type (ℓ-max ℓN ℓN') where
     pick-inl : ⊕εTrans
@@ -171,11 +179,16 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     N-ε-trans  : ⟨ N .ε-transition ⟩ → ⊕εTrans
     N'-ε-trans  : ⟨ N' .ε-transition ⟩ → ⊕εTrans
 
-  isSet⊕State : isSet ⊕State
-  isSet⊕State = {!!}
+  ⊕εTrans-rep : (Unit ⊎ (Unit ⊎ (⟨ N .ε-transition ⟩ ⊎ ⟨ N' .ε-transition ⟩ ))) ≃ ⊕εTrans
+  ⊕εTrans-rep = isoToEquiv (iso
+    (λ { (inl x) → pick-inl ; (fsuc (inl x)) → pick-inr ; (fsuc (fsuc (inl x))) → N-ε-trans x ; (fsuc (fsuc (fsuc x))) → N'-ε-trans x })
+    (λ { pick-inl → inl _ ; pick-inr → inr (inl _) ; (N-ε-trans x) → inr (inr (inl x)) ; (N'-ε-trans x) → inr (inr (inr x)) })
+    (λ { pick-inl → refl ; pick-inr → refl ; (N-ε-trans x) → refl ; (N'-ε-trans x) → refl })
+    (λ { (inl x) → refl ; (fsuc (inl x)) → refl ; (fsuc (fsuc (inl x))) → refl ; (fsuc (fsuc (fsuc x))) → refl }))
 
   ⊕NFA' : NFA
-  ⊕NFA' .Q = ⊕State , {!!}
+  ⊕NFA' .Q = ⊕State , EquivPresIsFinSet (invEquiv ⊕State-rep)
+    (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSet⊎ (N .Q) (N' .Q)))
   ⊕NFA' .init = start
   ⊕NFA' .isAcc = λ { start → (⊥* , isProp⊥*) , (no lower)
     ; (inl x) → LiftDecProp'' {ℓN} {ℓN'} (N .isAcc x)
@@ -184,7 +197,8 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
   ⊕NFA' .src = λ { (inl t) → inl (N .src t) ; (inr t') → inr (N' .src t') }
   ⊕NFA' .dst = λ { (inl t) → inl (N .dst t) ; (inr t') → inr (N' .dst t') }
   ⊕NFA' .label = λ { (inl t) → N .label t ; (inr t') → N' .label t' }
-  ⊕NFA' .ε-transition = ⊕εTrans , {!!}
+  ⊕NFA' .ε-transition = ⊕εTrans , EquivPresIsFinSet ⊕εTrans-rep (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSet⊎ (_ , isFinSetUnit)
+    (_ , isFinSet⊎ (N .ε-transition) (N' .ε-transition))))
   ⊕NFA' .ε-src = λ
     { pick-inl → start ; pick-inr → start
     ; (N-ε-trans t) → inl (N .ε-src t)
