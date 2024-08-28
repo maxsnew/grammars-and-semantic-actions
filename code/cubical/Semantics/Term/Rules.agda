@@ -1,4 +1,5 @@
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Transport
 open import Cubical.Foundations.HLevels
 
@@ -234,6 +235,7 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
     (⊗PathP (≡-× refl refl) (≡-× refl refl)))
 
+
 -- TODO : this needs a better name
 -⊗-curry :
   (g -⊗ h) ⊗ k ⊢ g -⊗ (h ⊗ k)
@@ -293,6 +295,10 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   g ⊗ (h ⊗- k) ⊢ (g ⊗ h) ⊗- k
 ⟜-curry {g = g}{h = h}{k = k} =
   ⟜-intro (⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+
+⟜UMP : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
+  → Iso (g ⊗ h ⊢ k) (g ⊢ k ⊗- h)
+⟜UMP {k = k} = iso ⟜-intro ⟜-intro⁻ (⟜-η {h = k}) ⟜-β
 
 ⊤-intro :
   g ⊢ ⊤-grammar {ℓG = ℓ}

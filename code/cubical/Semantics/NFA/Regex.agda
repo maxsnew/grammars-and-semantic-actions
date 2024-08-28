@@ -42,6 +42,8 @@ private
   variable ℓΣ₀ ℓN ℓN' ℓP ℓ : Level
 
 open NFA
+open Algebra
+open AlgebraHom
 
 -- This file constructs NFAs that are strongly equivalent to
 -- regular expressions.
@@ -113,7 +115,6 @@ module _ (c : Σ₀) where
         ∘g ⊗-intro id (nil Eq.refl)
         ∘g ⊗-unit-r⁻
 
-      open Algebra
       litAlg : Algebra literalNFA
       litAlg .the-ℓs _ = ℓ-zero
       litAlg .G c-st = literal c
@@ -148,7 +149,6 @@ module _ where
               ; on-cons = ⊥.elim
               ; on-ε-cons = ⊥.elim })))
     where
-      open Algebra
       ⊥Alg : Algebra emptyNFA
       ⊥Alg .the-ℓs = _
       ⊥Alg .G _ = ⊥-grammar
@@ -251,7 +251,6 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
         ; (N'-ε-trans x) → refl
         } })))
     where
-      open Algebra
       ⊕Alg : Algebra ⊕NFA
       ⊕Alg .the-ℓs start = (ℓ-max ℓN ℓN')
       ⊕Alg .the-ℓs (inl _) = ℓN
@@ -331,7 +330,6 @@ module _ where
       ; on-cons = ⊥.elim
       ; on-ε-cons = ⊥.elim })))
     where
-      open Algebra
       εAlg : Algebra εNFA
       εAlg .the-ℓs = _
       εAlg .G = λ _ → ε-grammar
@@ -403,7 +401,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
   ⊗-strong-equivalence = mkStrEq
     (recInit _ ⊗Alg)
     (⟜-app ∘g ⊗-intro (recInit _ NAlg) id)
-    {!!}
+    (isoFunInjective ⟜UMP _ _ (!AlgebraHom' N NAlg' λrec λid (N .init)))
     (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) (record
     { f = λ { (inl q) → ⟜-app ∘g ⊗-intro (recTrace _ NAlg) id
             ; (inr q') → recTrace _ N'Alg }
@@ -428,12 +426,11 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
                   ; (inr t') → refl }
     ; on-ε-cons = λ { (N-acc q acc) →
       (λ i → ⟜-β (ε-cons (N-acc _ acc) ∘g recInit _ N'Alg ∘g ⊗-unit-l) i ∘g ⊗-unit-l⁻)
-      ∙ λ i → ε-cons (N-acc _ acc) ∘g recInit _ N'Alg ∘g {!unit-ll⁻ i!} -- TODO: implement unit-ll⁻
+      ∙ λ i → ε-cons (N-acc _ acc) ∘g recInit _ N'Alg ∘g ⊗-unit-l⁻l i
                     ; (N-ε-trans t) →
         λ i → ⟜-β (ε-cons (N-ε-trans t) ∘g ⟜-app) i ∘g ⊗-intro (recTrace N NAlg) id
                     ; (N'-ε-trans t') → refl } })))
     where
-      open Algebra
       ⊗Alg : Algebra ⊗NFA
       ⊗Alg .the-ℓs (inl q) = _
       ⊗Alg .the-ℓs (inr q') = _
@@ -469,6 +466,31 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
         ⟜-intro {k = Parse _ _} (cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
       NAlg .ε-cons-case t =
         ⟜-intro {k = Parse _ _} (ε-cons (N-ε-trans t) ∘g ⟜-app)
+
+      NAlg' : Algebra N
+      NAlg' .the-ℓs = _
+      NAlg' .G q = (Parse N q ⊗ InitParse N') ⊗- InitParse N'
+      NAlg' .nil-case acc = ⟜-intro (⊗-intro (nil acc) id) -- this id may need to be eta expanded
+      NAlg' .cons-case t   =
+        ⟜-intro {k = _ ⊗ _}
+        (⊗-intro (cons t) id ∘g ⊗-assoc ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+      NAlg' .ε-cons-case t = ⟜-intro {k = _ ⊗ _}
+        (⊗-intro (ε-cons t) id ∘g ⟜-app)
+
+      λid : AlgebraHom N (initial N) NAlg'
+      λid .f q = ⟜-intro id
+      λid .on-nil acc = refl
+      -- the following two are true just messy
+      λid .on-cons t = {!!}
+      λid .on-ε-cons t = {!!}
+
+      λrec : AlgebraHom N (initial N) NAlg'
+      λrec .f q = ⟜-intro {k = _ ⊗ _}
+        (recTrace _ ⊗Alg ∘g ⟜-app ∘g ⊗-intro (recTrace _ NAlg) id)
+      -- first is true up to transport, the other two might need recursion or something
+      λrec .on-nil acc = {!!}
+      λrec .on-cons t = {!!}
+      λrec .on-ε-cons t = {!!}
 
 -- -- Kleene Star
 -- module _ (N : NFA {ℓN}) where
@@ -511,8 +533,6 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
 --   ε-src KL*NFA (inr (inr x)) = inl (x .fst)
 --   ε-dst KL*NFA (inr (inr x)) = inr _
 
---   open Algebra
---   open AlgebraHom
 
 --   private
 --     the-N-alg : Algebra N
