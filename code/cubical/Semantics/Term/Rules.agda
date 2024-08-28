@@ -118,6 +118,35 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
 ⊗-unit-l⁻ _ p =
   (([] , _) , refl) , (refl , p)
 
+⊗-unit-ll⁻ :
+  ⊗-unit-l⁻ {g = g} ∘g ⊗-unit-l ≡ id
+⊗-unit-ll⁻ {g = g} = funExt λ w → funExt λ p⊗ →
+  let
+    w'≡w : p⊗ .fst .fst .snd ≡ w
+    w'≡w =
+      (λ i →
+          (hcomp
+           (doubleComp-faces (λ _ → p⊗ .fst .fst .snd)
+            (λ i₁ → p⊗ .fst .snd (~ i₁)) i)
+           (p⊗ .snd .fst (~ i) ++ p⊗ .fst .fst .snd)))
+    in
+   ⊗≡ _ _
+     (≡-× (sym (p⊗ .snd .fst)) (sym w'≡w))
+     (ΣPathP ((isProp→PathP (λ i → isSetString _ _) _ _) ,
+     symP (subst-filler g w'≡w (p⊗ .snd .snd))))
+
+⊗-unit-l⁻l :
+  ⊗-unit-l {g = g} ∘g ⊗-unit-l⁻ ≡ id
+⊗-unit-l⁻l {g = g} = funExt λ w → funExt λ p →
+  let w≡w = λ i →
+               ((λ i₁ →
+                   ⊗-unit-l⁻ {g = g} w p .snd .fst (~ i₁) ++
+                     ⊗-unit-l⁻ {g = g} w p .fst .fst .snd)
+                ∙ (λ i₁ → ⊗-unit-l⁻ {g = g} w p .fst .snd (~ i₁)))
+               i
+  in
+  subst (λ w≡w → subst g w≡w p ≡ p) (isSetString _ _ refl w≡w) (substRefl {B = g} p)
+
 ⊗-assoc :
   g ⊗ (h ⊗ k) ⊢ (g ⊗ h) ⊗ k
 ⊗-assoc _ p =
