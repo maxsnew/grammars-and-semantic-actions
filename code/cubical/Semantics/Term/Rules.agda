@@ -17,8 +17,8 @@ open import Semantics.Helper
 private
   variable
     ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
+    g g' g'' : Grammar ℓg
+    h h' h'' : Grammar ℓh
     k : Grammar ℓk
     l : Grammar ℓl
 
@@ -169,6 +169,12 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
       refl ,
       (⊗PathP (≡-× refl refl)
         (ΣPathP (refl , refl)))))
+
+⊗-assoc⁻⊗-intro :
+  ∀ {f : g ⊢ h}{f' : g' ⊢ h'}{f'' : g'' ⊢ h''}
+  → ⊗-assoc⁻ ∘g (⊗-intro (⊗-intro f f') f'')
+  ≡ ⊗-intro f (⊗-intro f' f'') ∘g ⊗-assoc⁻
+⊗-assoc⁻⊗-intro = refl
 
 -⊗-intro :
   g ⊗ h ⊢ k →

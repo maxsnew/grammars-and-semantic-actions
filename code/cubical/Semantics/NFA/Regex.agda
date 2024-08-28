@@ -410,14 +410,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     ; on-nil = λ { {inl q} → ⊥.elim*
                  ; {inr q'} → λ _ → refl }
       -- cons
-
--- (λ i → ⟜-β {!cons (inl t) ∘g ⟜-app!} i ∘g ⊗-assoc) ∙ {!!}
-
     ; on-cons = λ { (inl t ) →
-      (⟜-app
-      ∘g ⊗-intro ((recTrace N NAlg) ∘g cons t) id
-      ∘g ⊗-assoc)
-         ≡⟨ refl ⟩
       (⟜-app
       ∘g ⊗-intro (⟜-intro {k = Parse _ _} (cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) id
       ∘g ⊗-intro (⊗-intro id (recTrace N NAlg)) id
@@ -425,10 +418,10 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
          ≡⟨ (λ i → ⟜-β ((cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) i ∘g ⊗-intro (⊗-intro id (recTrace N NAlg)) id ∘g ⊗-assoc) ⟩
       (cons (inl t)
       ∘g ⊗-intro id ⟜-app
+      ∘g ⊗-intro id (⊗-intro (recTrace N NAlg) id)
       ∘g ⊗-assoc⁻
-      ∘g ⊗-intro (⊗-intro id (recTrace N NAlg)) id
       ∘g ⊗-assoc)
-         ≡⟨ {!!} ⟩
+         ≡⟨ (λ i → cons (inl t) ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (recTrace N NAlg) id) ∘g ⊗-assoc⁻∘⊗-assoc≡id i) ⟩
       (cons (inl t)
       ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (recTrace N NAlg) id))
       ∎
