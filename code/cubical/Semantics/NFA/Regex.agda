@@ -1,4 +1,5 @@
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 
 module Semantics.NFA.Regex ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
@@ -493,11 +494,67 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       λrec .on-ε-cons t = {!!}
 
 -- -- Kleene Star
--- module _ (N : NFA {ℓN}) where
---   KL*NFA : NFA {ℓN}
+module _ (N : NFA {ℓN}) where
+  data *εTrans : Type ℓN where
+    inr : *εTrans
+    cons⟨N⟩ : ∀ {q} → ⟨ N .isAcc q .fst ⟩ → *εTrans
+    N-internal : ⟨ N .ε-transition ⟩ → *εTrans
+
+  *εTrans-rep : (Unit ⊎ ((Σ[ q ∈ _ ] ⟨ N .isAcc q .fst ⟩) ⊎ ⟨ N .ε-transition ⟩)) ≃ *εTrans
+  *εTrans-rep = {!!}
+
+  *NFA : NFA {ℓN}
+  *NFA .Q = Unit ⊎ N .Q .fst , isFinSet⊎ (_ , isFinSetUnit) (N .Q)
+  *NFA .init = inl _
+  *NFA .isAcc (inl _) = (Unit* , isPropUnit*) , (yes _)
+  *NFA .isAcc (inr q) = (⊥* , isProp⊥*) , no lower
+  *NFA .transition = N .transition
+  *NFA .src = inr ∘ N .src
+  *NFA .dst = inr ∘ N .dst
+  *NFA .label = N .label
+  *NFA .ε-transition = *εTrans , EquivPresIsFinSet *εTrans-rep
+    (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSet⊎ (_ , isFinSetΣ (N .Q) (λ q → _ , isDecProp→isFinSet (N .isAcc q .fst .snd) (N .isAcc q .snd))) (N .ε-transition)))
+  *NFA .ε-src inr = inl _
+  *NFA .ε-dst inr = inr (N .init)
+  *NFA .ε-src (cons⟨N⟩ {q} _) = inr q
+  *NFA .ε-dst (cons⟨N⟩ {q} _) = inl _
+  *NFA .ε-src (N-internal t) = inr (N .ε-src t)
+  *NFA .ε-dst (N-internal t) = inr (N .ε-dst t)
+
+  *-strong-equivalence :
+    StrongEquivalence (InitParse *NFA) (KL* (InitParse N))
+  *-strong-equivalence = mkStrEq
+    (recInit *NFA *Alg)
+    (foldKL*r (nil _) (ε-cons inr ∘g ⟜-app ∘g ⊗-intro (recInit _ NAlg) id))
+    {!!}
+    {!!}
+    where
+      *Alg : Algebra *NFA
+      *Alg .the-ℓs (inl _) = _
+      *Alg .the-ℓs (inr q) = _
+      *Alg .G (inl _) = KL* (InitParse N)
+      *Alg .G (inr q) = Parse N q ⊗ KL* (InitParse N)
+      *Alg .nil-case {q = inl x} _ = KL*.nil
+      *Alg .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
+      *Alg .ε-cons-case inr = KL*.cons
+      *Alg .ε-cons-case (cons⟨N⟩ acc) = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
+      *Alg .ε-cons-case (N-internal t) = ⊗-intro (ε-cons t) id
+
+      -- given a parse starting at q in N and a *NFA parse, make a
+      -- *NFA parse starting at q.
+      NAlg : Algebra N
+      NAlg .the-ℓs = _
+      NAlg .G q = Parse *NFA (inr q) ⊗- InitParse *NFA
+      NAlg .nil-case isAcc = ⟜-intro {k = Parse _ _}
+        (ε-cons (cons⟨N⟩ isAcc) ∘g ⊗-unit-l)
+      NAlg .cons-case t = ⟜-intro {k = Parse _ _}
+        (cons t ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+      NAlg .ε-cons-case t = ⟜-intro {k = Parse _ _}
+        (ε-cons (N-internal t) ∘g ⟜-app {h = Parse _ _})
+
 --   Q KL*NFA .fst = N .Q .fst ⊎ ⊤
 --   Q KL*NFA .snd = isFinSet⊎ (N .Q) (_ , isFinSetUnit)
---   init KL*NFA = inl (N .init)
+--   init KL*NFA = inl (N .init) -- this is Kleene plus not star
 --   isAcc KL*NFA (inl x) =
 --     DecPropIso .Iso.inv (⊥* , (false , invEquiv LiftEquiv))
 --   isAcc KL*NFA (inr x) =
