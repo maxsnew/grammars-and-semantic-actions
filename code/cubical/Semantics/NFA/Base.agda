@@ -142,6 +142,15 @@ record NFA : Type (ℓ-suc ℓN) where
     !AlgebraHom e q =
       funExt (λ w → funExt (λ p → !AlgebraHom-help e q w p))
 
+    -- TODO rename
+    !AlgebraHom' :
+      (e e' : AlgebraHom initial the-alg) →
+      (q : Q .fst) →
+      e .f q ≡ e' .f q
+    !AlgebraHom' e e' q =
+      !AlgebraHom e q ∙
+      sym (!AlgebraHom e' q)
+
   initial→initial≡id :
     (e : AlgebraHom initial initial) →
     (q : Q .fst) →
