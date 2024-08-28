@@ -426,8 +426,11 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (recTrace N NAlg) id))
       ∎
                   ; (inr t') → refl }
-    ; on-ε-cons = λ { (N-acc q acc) → {!!}
-                    ; (N-ε-trans t) → {!!}
+    ; on-ε-cons = λ { (N-acc q acc) →
+      (λ i → ⟜-β (ε-cons (N-acc _ acc) ∘g recInit _ N'Alg ∘g ⊗-unit-l) i ∘g ⊗-unit-l⁻)
+      ∙ λ i → ε-cons (N-acc _ acc) ∘g recInit _ N'Alg ∘g {!unit-ll⁻ i!} -- TODO: implement unit-ll⁻
+                    ; (N-ε-trans t) →
+        λ i → ⟜-β (ε-cons (N-ε-trans t) ∘g ⟜-app) i ∘g ⊗-intro (recTrace N NAlg) id
                     ; (N'-ε-trans t') → refl } })))
     where
       open Algebra
@@ -465,8 +468,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       NAlg .cons-case t =
         ⟜-intro {k = Parse _ _} (cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
       NAlg .ε-cons-case t =
-        ⟜-intro {k = Parse _ _}
-          (ε-cons (N-ε-trans t) ∘g ⟜-app)
+        ⟜-intro {k = Parse _ _} (ε-cons (N-ε-trans t) ∘g ⟜-app)
 
 -- -- Kleene Star
 -- module _ (N : NFA {ℓN}) where
