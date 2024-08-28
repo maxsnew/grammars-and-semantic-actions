@@ -478,6 +478,13 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       NAlg' .ε-cons-case t = ⟜-intro {k = _ ⊗ _}
         (⊗-intro (ε-cons t) id ∘g ⟜-app)
 
+      N'≅⊗NFA⟨inr⟩ : recTrace _ ⊗Alg ∘g recInit _ N'Alg ≡ id
+      N'≅⊗NFA⟨inr⟩ = algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
+        { f = λ q → recTrace _ ⊗Alg
+        ; on-nil = λ _ → refl
+        ; on-cons = λ _ → refl
+        ; on-ε-cons = λ _ → refl }))
+
       λid : AlgebraHom N (initial N) NAlg'
       λid .f q = ⟜-intro id
       λid .on-nil acc = refl
@@ -488,7 +495,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       λrec : AlgebraHom N (initial N) NAlg'
       λrec .f q = ⟜-intro {k = _ ⊗ _}
         (recTrace _ ⊗Alg ∘g ⟜-app ∘g ⊗-intro (recTrace _ NAlg) id)
-      -- first is true up to transport, the other two might need recursion or something
+      -- the following should hold by some β/η and N'≅⊗NFA⟨inr⟩
       λrec .on-nil acc = {!!}
       λrec .on-cons t = {!!}
       λrec .on-ε-cons t = {!!}
