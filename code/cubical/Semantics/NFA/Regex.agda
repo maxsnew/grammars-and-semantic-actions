@@ -468,10 +468,17 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       NAlg .ε-cons-case t =
         ⟜-intro {k = Parse _ _} (ε-cons (N-ε-trans t) ∘g ⟜-app)
 
+      -- NPalg : PAlgebra N (InitParse N')
+      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.the-ℓs = ?
+      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.G = ?
+      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.nil-case = ?
+      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.cons-case = ?
+      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.ε-cons-case = ?
+
       NAlg' : Algebra N
       NAlg' .the-ℓs = _
       NAlg' .G q = (Parse N q ⊗ InitParse N') ⊗- InitParse N'
-      NAlg' .nil-case acc = ⟜-intro (⊗-intro (nil acc) id) -- this id may need to be eta expanded
+      NAlg' .nil-case acc = ⟜-intro {!!} -- this id may need to be eta expanded
       NAlg' .cons-case t   =
         ⟜-intro {k = _ ⊗ _}
         (⊗-intro (cons t) id ∘g ⊗-assoc ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
@@ -496,7 +503,12 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       λrec .f q = ⟜-intro {k = _ ⊗ _}
         (recTrace _ ⊗Alg ∘g ⟜-app ∘g ⊗-intro (recTrace _ NAlg) id)
       -- the following should hold by some β/η and N'≅⊗NFA⟨inr⟩
-      λrec .on-nil acc = {!!}
+      λrec .on-nil acc = isoFunInjective (invIso ⟜UMP) _ _
+        ( (λ i → ⟜-β (recTrace ⊗NFA ⊗Alg ∘g ⟜-app ∘g ⊗-intro (recTrace N NAlg) id) i ∘g ⊗-intro (nil acc) id)
+        ∙ ( λ i → recTrace ⊗NFA ⊗Alg ∘g ⟜-β ((ε-cons (N-acc _ acc) ∘g recInit _ N'Alg ∘g ⊗-unit-l)) i)
+        ∙ (λ i → ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻ ∘g N'≅⊗NFA⟨inr⟩ i ∘g ⊗-unit-l)
+        ∙ λ i → ⟜-β ((⊗-intro (nil acc) id)) (~ i) ∘g ⊗-unit-ll⁻ i
+        )
       λrec .on-cons t = {!!}
       λrec .on-ε-cons t = {!!}
 

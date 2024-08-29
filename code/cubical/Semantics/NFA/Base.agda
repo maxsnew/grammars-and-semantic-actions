@@ -54,7 +54,6 @@ record NFA : Type (ℓ-suc ℓN) where
         G (ε-dst εtr) ⊢ G (ε-src εtr)
 
   open Algebra
-
   record AlgebraHom (alg alg' : Algebra) : Typeω where
     field
       f : (q : Q .fst) → alg .G q ⊢ alg' .G q
@@ -165,3 +164,39 @@ record NFA : Type (ℓ-suc ℓN) where
     (e : AlgebraHom initial initial) →
     fInit e ≡ id
   algebra-η e = initial→initial≡id e _
+
+  -- Often it is convenient to do a recursion on something with other
+  -- variables in scope. For this we develop the notion of a
+  -- *parameterized* algebra, where we have an additional parameter
+  -- that has to be consumed in the base case. In general we could
+  -- have two parameters: a left and right parameter, but this is the
+  -- only one we need so far.
+  module _ {ℓp} (P : Grammar ℓp) where
+    record PAlgebra : Typeω where
+      field
+        the-ℓs : Q .fst → Level
+        G : (q : Q .fst) → Grammar (the-ℓs q)
+        nil-case : ∀ {q} → isAcc q .fst .fst →
+          P ⊢ G q
+        cons-case : ∀ tr →
+          (literal (label tr) ⊗ G (dst tr)) ⊢ G (src tr)
+        ε-cons-case : ∀ εtr →
+          G (ε-dst εtr) ⊢ G (ε-src εtr)
+    open PAlgebra
+    record PAlgebraHom (alg alg' : PAlgebra) : Typeω where
+      field
+        f : (q : Q .fst) → alg .G q ⊢ alg' .G q
+        on-nil : ∀ {q} → (qAcc : isAcc q .fst .fst) →
+          f q ∘g alg .nil-case qAcc ≡ alg' .nil-case qAcc
+        on-cons : (tr : transition .fst) →
+          f (src tr) ∘g alg .cons-case tr ≡
+            alg' .cons-case tr ∘g (⊗-intro id (f (dst tr)))
+        on-ε-cons : (εtr : ε-transition .fst) →
+          (f (ε-src εtr)) ∘g (alg .ε-cons-case εtr) ≡
+            alg' .ε-cons-case εtr ∘g f (ε-dst εtr)
+    P-initial : PAlgebra
+    P-initial .the-ℓs = _
+    P-initial .G q = Parse q ⊗ P
+    P-initial .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
+    P-initial .cons-case tr = ⊗-intro (cons tr) id ∘g ⊗-assoc
+    P-initial .ε-cons-case tr = ⊗-intro (ε-cons tr) id
