@@ -3,6 +3,8 @@ open import Cubical.Foundations.HLevels
 
 module Semantics.NFA.Base ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
 
+open import Cubical.Foundations.Isomorphism
+
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
@@ -54,6 +56,14 @@ record NFA : Type (ℓ-suc ℓN) where
         G (ε-dst εtr) ⊢ G (ε-src εtr)
 
   open Algebra
+
+  initial : Algebra
+  the-ℓs initial _ = ℓN
+  G initial = Parse
+  nil-case initial = nil
+  cons-case initial = cons
+  ε-cons-case initial = ε-cons
+
   record AlgebraHom (alg alg' : Algebra) : Typeω where
     field
       f : (q : Q .fst) → alg .G q ⊢ alg' .G q
@@ -66,6 +76,7 @@ record NFA : Type (ℓ-suc ℓN) where
         (f (ε-src εtr)) ∘g (alg .ε-cons-case εtr) ≡
           alg' .ε-cons-case εtr ∘g f (ε-dst εtr)
     fInit = f init
+
   open AlgebraHom
 
   idAlgebraHom : (alg : Algebra) →
@@ -89,13 +100,6 @@ record NFA : Type (ℓ-suc ℓN) where
   on-ε-cons (AlgebraHom-seq ϕ ψ) εtr =
     cong (λ t → t ⋆ ψ .f (ε-src εtr)) (ϕ .on-ε-cons εtr) ∙
     cong (λ t → ϕ .f (ε-dst εtr)⋆ t) (ψ .on-ε-cons εtr)
-
-  initial : Algebra
-  the-ℓs initial _ = ℓN
-  G initial = Parse
-  nil-case initial = nil
-  cons-case initial = cons
-  ε-cons-case initial = ε-cons
 
   module _
     (the-alg : Algebra)
@@ -182,7 +186,16 @@ record NFA : Type (ℓ-suc ℓN) where
           (literal (label tr) ⊗ G (dst tr)) ⊢ G (src tr)
         ε-cons-case : ∀ εtr →
           G (ε-dst εtr) ⊢ G (ε-src εtr)
+
     open PAlgebra
+
+    P-initial : PAlgebra
+    P-initial .the-ℓs = _
+    P-initial .G q = Parse q ⊗ P
+    P-initial .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
+    P-initial .cons-case tr = ⊗-intro (cons tr) id ∘g ⊗-assoc
+    P-initial .ε-cons-case tr = ⊗-intro (ε-cons tr) id
+
     record PAlgebraHom (alg alg' : PAlgebra) : Typeω where
       field
         f : (q : Q .fst) → alg .G q ⊢ alg' .G q
@@ -194,9 +207,56 @@ record NFA : Type (ℓ-suc ℓN) where
         on-ε-cons : (εtr : ε-transition .fst) →
           (f (ε-src εtr)) ∘g (alg .ε-cons-case εtr) ≡
             alg' .ε-cons-case εtr ∘g f (ε-dst εtr)
-    P-initial : PAlgebra
-    P-initial .the-ℓs = _
-    P-initial .G q = Parse q ⊗ P
-    P-initial .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
-    P-initial .cons-case tr = ⊗-intro (cons tr) id ∘g ⊗-assoc
-    P-initial .ε-cons-case tr = ⊗-intro (ε-cons tr) id
+
+    open PAlgebraHom
+
+    P-idAlgebraHom : (alg : PAlgebra) → PAlgebraHom alg alg
+    P-idAlgebraHom alg .f _ = id
+    P-idAlgebraHom alg .on-nil _ = refl
+    P-idAlgebraHom alg .on-cons _ = refl
+    P-idAlgebraHom alg .on-ε-cons _ = refl
+
+    PAlgebraHom-seq : {alg alg' alg'' : PAlgebra} →
+      PAlgebraHom alg alg' → PAlgebraHom alg' alg'' →
+      PAlgebraHom alg alg''
+    PAlgebraHom-seq ϕ ψ .f q = ψ .f q ∘g ϕ .f q
+    PAlgebraHom-seq ϕ ψ .on-nil qAcc =
+      cong (ψ .f _ ∘g_) (ϕ .on-nil qAcc) ∙
+      ψ .on-nil qAcc
+    PAlgebraHom-seq ϕ ψ .on-cons t =
+      cong (ψ .f (src t) ∘g_) (ϕ .on-cons t) ∙
+      cong (_∘g ⊗-intro id (ϕ .f (dst t))) (ψ .on-cons t)
+    PAlgebraHom-seq ϕ ψ .on-ε-cons t =
+      cong (ψ .f (ε-src t) ∘g_) (ϕ .on-ε-cons t) ∙
+      cong (_∘g ϕ .f (ε-dst t)) (ψ .on-ε-cons t)
+
+    module _ (the-p-alg : PAlgebra) where
+      the-alg : Algebra
+      the-alg .the-ℓs = _
+      the-alg .G q = (the-p-alg .G q) ⊗- P
+      the-alg .nil-case qAcc =
+        ⟜-intro ((the-p-alg .nil-case qAcc) ∘g ⊗-unit-l)
+      the-alg .cons-case t =
+         ⟜-intro ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+      the-alg .ε-cons-case t =
+         ⟜-intro ((the-p-alg .ε-cons-case t) ∘g ⟜-app)
+
+      P-recTrace : ∀ {q} → Parse q ⊗ P ⊢ the-p-alg .G q
+      P-recTrace = ⟜-app ∘g ⊗-intro (recTrace the-alg) id
+
+      P-recInit : InitParse ⊗ P ⊢ the-p-alg .G init
+      P-recInit = P-recTrace
+
+      ∃PAlgebraHom : PAlgebraHom P-initial the-p-alg
+      ∃PAlgebraHom .f q = P-recTrace
+      ∃PAlgebraHom .on-nil qAcc =
+        (λ i → ⟜-app ∘g ⊗-intro (∃AlgebraHom the-alg .on-nil qAcc i) id
+          ∘g ⊗-unit-l⁻) ∙
+        (λ i → ⟜-β (the-p-alg .nil-case qAcc ∘g ⊗-unit-l) i ∘g ⊗-unit-l⁻) ∙
+        (λ i → the-p-alg .nil-case qAcc ∘g ⊗-unit-l⁻l i)
+      ∃PAlgebraHom .on-cons t =
+        {!!}
+      ∃PAlgebraHom .on-ε-cons t =
+        (λ i → (⟜-β (the-p-alg .ε-cons-case t ∘g ⟜-app)) i ∘g
+          {!!}) ∙
+        {!!}
