@@ -467,13 +467,20 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
         ⟜-intro {k = Parse _ _} (cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
       NAlg .ε-cons-case t =
         ⟜-intro {k = Parse _ _} (ε-cons (N-ε-trans t) ∘g ⟜-app)
+      open PAlgebra
+      NPalg : PAlgebra N (InitParse N')
+      NPalg .the-ℓs = _
+      NPalg .G q = Parse ⊗NFA (inl q)
+      NPalg .nil-case acc = ε-cons (N-acc _ acc) ∘g recInit _ N'Alg
+      NPalg .cons-case t = cons (inl t)
+      NPalg .ε-cons-case t = ε-cons (N-ε-trans t)
 
-      -- NPalg : PAlgebra N (InitParse N')
-      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.the-ℓs = ?
-      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.G = ?
-      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.nil-case = ?
-      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.cons-case = ?
-      -- NPalg .Semantics.NFA.Base.NFA.PAlgebra.ε-cons-case = ?
+      NPAlg' : PAlgebra N (InitParse N')
+      NPAlg' .the-ℓs = _
+      NPAlg' .G q = Parse N q ⊗ InitParse N'
+      NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
+      NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
+      NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
 
       NAlg' : Algebra N
       NAlg' .the-ℓs = _
