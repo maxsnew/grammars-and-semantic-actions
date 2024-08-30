@@ -35,6 +35,7 @@ open import Cubical.Data.Unit
 open import Semantics.Grammar (Σ₀ , isSetΣ₀)
 open import Semantics.Grammar.Equivalence (Σ₀ , isSetΣ₀)
 open import Semantics.Grammar.KleeneStar (Σ₀ , isSetΣ₀)
+open import Semantics.Grammar.RegularExpression (Σ₀ , isSetΣ₀)
 open import Semantics.DFA
 open import Semantics.NFA.Base (Σ₀ , isSetΣ₀)
 open import Semantics.Helper
@@ -603,3 +604,24 @@ module _ (N : NFA {ℓN}) where
       -- NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
       -- NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
       -- NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
+
+open RegularExpression
+regex→NFA : RegularExpression → NFA
+regex→NFA ε-Reg = εNFA
+regex→NFA ⊥-Reg = emptyNFA
+regex→NFA (r ⊗Reg r') = ⊗NFA (regex→NFA r) (regex→NFA r')
+regex→NFA (literalReg c) = literalNFA c
+regex→NFA (r ⊕Reg r') = ⊕NFA (regex→NFA r) (regex→NFA r')
+regex→NFA (KL*Reg r) = *NFA (regex→NFA r)
+
+regex≅NFA : (r : RegularExpression) →
+  StrongEquivalence
+    (InitParse (regex→NFA r))
+    (RegularExpression→Grammar r)
+regex≅NFA ε-Reg = εNFA-strong-equiv
+regex≅NFA ⊥-Reg = emptyNFA-strong-equiv
+regex≅NFA (r ⊗Reg r') =
+  mkStrEq {!!} {!!} {!!} {!!}
+regex≅NFA (literalReg c) = litNFA-strong-equiv c
+regex≅NFA (r ⊕Reg r') = {!⊕-strong-equivalence!}
+regex≅NFA (KL*Reg r) = {!!}

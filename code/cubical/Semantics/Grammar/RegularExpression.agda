@@ -5,6 +5,7 @@ module Semantics.Grammar.RegularExpression ((Σ₀ , isSetΣ₀) : hSet ℓ-zero
 
 open import Semantics.Helper
 open import Semantics.Grammar (Σ₀ , isSetΣ₀)
+open import Semantics.Grammar.KleeneStar (Σ₀ , isSetΣ₀)
 
 private
   variable ℓG ℓG' : Level
