@@ -231,18 +231,18 @@ record NFA : Type (ℓ-suc ℓN) where
       cong (_∘g ϕ .f (ε-dst t)) (ψ .on-ε-cons t)
 
     module _ (the-p-alg : PAlgebra) where
-      the-alg : Algebra
-      the-alg .the-ℓs = _
-      the-alg .G q = (the-p-alg .G q) ⊗- P
-      the-alg .nil-case qAcc =
+      underlyingAlg : Algebra
+      underlyingAlg .the-ℓs = _
+      underlyingAlg .G q = (the-p-alg .G q) ⊗- P
+      underlyingAlg .nil-case qAcc =
         ⟜-intro ((the-p-alg .nil-case qAcc) ∘g ⊗-unit-l)
-      the-alg .cons-case t =
+      underlyingAlg .cons-case t =
          ⟜-intro ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
-      the-alg .ε-cons-case t =
+      underlyingAlg .ε-cons-case t =
          ⟜-intro ((the-p-alg .ε-cons-case t) ∘g ⟜-app)
 
       P-recTrace : ∀ {q} → Parse q ⊗ P ⊢ the-p-alg .G q
-      P-recTrace = ⟜-app ∘g ⊗-intro (recTrace the-alg) id
+      P-recTrace = ⟜-app ∘g ⊗-intro (recTrace underlyingAlg) id
 
       P-recInit : InitParse ⊗ P ⊢ the-p-alg .G init
       P-recInit = P-recTrace
@@ -250,25 +250,21 @@ record NFA : Type (ℓ-suc ℓN) where
       ∃PAlgebraHom : PAlgebraHom P-initial the-p-alg
       ∃PAlgebraHom .f q = P-recTrace
       ∃PAlgebraHom .on-nil qAcc =
-        (λ i → ⟜-app ∘g ⊗-intro (∃AlgebraHom the-alg .on-nil qAcc i) id
+        (λ i → ⟜-app ∘g ⊗-intro (∃AlgebraHom underlyingAlg .on-nil qAcc i) id
           ∘g ⊗-unit-l⁻) ∙
         (λ i → ⟜-β (the-p-alg .nil-case qAcc ∘g ⊗-unit-l) i ∘g ⊗-unit-l⁻) ∙
         (λ i → the-p-alg .nil-case qAcc ∘g ⊗-unit-l⁻l i)
       ∃PAlgebraHom .on-cons t =
-        ⟜-app ∘g ⊗-intro (recTrace the-alg ∘g cons t) id ∘g ⊗-assoc
-          ≡⟨ refl ⟩
-        ⟜-app ∘g ⊗-intro (the-alg .cons-case t ∘g ⊗-intro id (recTrace the-alg)) id ∘g ⊗-assoc
-          ≡⟨ refl ⟩
-        ⟜-app ∘g ⊗-intro (⟜-intro ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) id ∘g ⊗-intro (⊗-intro id (recTrace the-alg)) id ∘g ⊗-assoc
-          ≡⟨ (λ i → ⟜-β ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) i ∘g ⊗-intro (⊗-intro id (recTrace the-alg)) id ∘g ⊗-assoc) ⟩
-        ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) ∘g ⊗-intro (⊗-intro id (recTrace the-alg)) id ∘g ⊗-assoc
+        ⟜-app ∘g ⊗-intro (⟜-intro ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) id ∘g ⊗-intro (⊗-intro id (recTrace underlyingAlg)) id ∘g ⊗-assoc
+          ≡⟨ (λ i → ⟜-β ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) i ∘g ⊗-intro (⊗-intro id (recTrace underlyingAlg)) id ∘g ⊗-assoc) ⟩
+        ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) ∘g ⊗-intro (⊗-intro id (recTrace underlyingAlg)) id ∘g ⊗-assoc
           ≡⟨ (λ i → the-p-alg .cons-case t ∘g ⊗-intro id P-recTrace ∘g ⊗-assoc⁻∘⊗-assoc≡id i) ⟩
         the-p-alg .cons-case t ∘g ⊗-intro id P-recTrace
           ∎
       ∃PAlgebraHom .on-ε-cons t =
-        (λ i → ⟜-β ((the-p-alg .ε-cons-case t) ∘g ⟜-app) i ∘g ⊗-intro (recTrace the-alg) id)
+        (λ i → ⟜-β ((the-p-alg .ε-cons-case t) ∘g ⟜-app) i ∘g ⊗-intro (recTrace underlyingAlg) id)
 
-      curryPAlg : PAlgebraHom P-initial the-p-alg → AlgebraHom initial the-alg
+      curryPAlg : PAlgebraHom P-initial the-p-alg → AlgebraHom initial underlyingAlg
       curryPAlg e .f q = ⟜-intro (e .f q)
       curryPAlg e .on-nil acc =
         isoFunInjective (invIso ⟜UMP) _ _
@@ -293,7 +289,7 @@ record NFA : Type (ℓ-suc ℓN) where
         (e e' : PAlgebraHom P-initial the-p-alg) →
         (q : Q .fst) →
         e .f q ≡ e' .f q
-      !PAlgebraHom' e e' q = isoFunInjective ⟜UMP _ _ (!AlgebraHom' the-alg
+      !PAlgebraHom' e e' q = isoFunInjective ⟜UMP _ _ (!AlgebraHom' underlyingAlg
         (curryPAlg e)
         (curryPAlg e')
         q)
