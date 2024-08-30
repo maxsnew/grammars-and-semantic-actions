@@ -47,6 +47,8 @@ private
 open NFA
 open Algebra
 open AlgebraHom
+open PAlgebra
+open PAlgebraHom
 
 -- This file constructs NFAs that are strongly equivalent to
 -- regular expressions.
@@ -431,7 +433,6 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       N'Alg .cons-case t' = cons (inr t')
       N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
 
-      open PAlgebra
       NPAlg : PAlgebra N (InitParse N')
       NPAlg .the-ℓs = _
       NPAlg .G q = Parse ⊗NFA (inl q)
@@ -478,7 +479,6 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
            ⊗-intro (recTrace _ (underlyingAlg _ _ NPAlg)) id)
       ⊗Alg→initial .on-ε-cons (N'-ε-trans t') = refl
 
-      open PAlgebraHom
       Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
       Prec .f q =
         recTrace ⊗NFA ⊗Alg ∘g
@@ -497,6 +497,77 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
         (λ i → recTrace _ ⊗Alg ∘g
           ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
 
+  ⊗-strong-equivalence' :
+    StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
+  ⊗-strong-equivalence' = mkStrEq
+    (recInit _ ⊗Alg)
+    (P-recInit' _ _ NPAlg)
+    (!PAlgebraHom' _ _ NPAlg' Prec (P-idAlgebraHom _ _ _) _)
+    (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) ⊗Alg→initial))
+    where
+      ⊗Alg : Algebra ⊗NFA
+      ⊗Alg .the-ℓs (inl q) = _
+      ⊗Alg .the-ℓs (inr q') = _
+      ⊗Alg .G (inl q) = Parse N q ⊗ InitParse N'
+      ⊗Alg .G (inr q') = Parse N' q'
+      ⊗Alg .nil-case {inr q'} acc = nil (lower acc)
+      ⊗Alg .cons-case (inl t) =
+        ⊗-intro (cons t) id
+        ∘g ⊗-assoc
+      ⊗Alg .cons-case (inr t') = cons t'
+      ⊗Alg .ε-cons-case (N-acc q acc) =
+        ⊗-intro (nil acc) id
+        ∘g ⊗-unit-l⁻
+      ⊗Alg .ε-cons-case (N-ε-trans t) =
+        ⊗-intro (ε-cons t) id
+      ⊗Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
+
+      N'Alg : Algebra N'
+      N'Alg .the-ℓs = _
+      N'Alg .G q' = Parse ⊗NFA (inr q')
+      N'Alg .nil-case acc' = nil (lift acc')
+      N'Alg .cons-case t' = cons (inr t')
+      N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
+
+      NPAlg : PAlgebra N (InitParse N')
+      NPAlg .the-ℓs = _
+      NPAlg .G q = Parse ⊗NFA (inl q)
+      NPAlg .nil-case acc = ε-cons (N-acc _ acc) ∘g recInit _ N'Alg
+      NPAlg .cons-case t = cons (inl t)
+      NPAlg .ε-cons-case t = ε-cons (N-ε-trans t)
+
+      NPAlg' : PAlgebra N (InitParse N')
+      NPAlg' .the-ℓs = _
+      NPAlg' .G q = Parse N q ⊗ InitParse N'
+      NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
+      NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
+      NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
+      N'≅⊗NFA⟨inr⟩ : recTrace _ ⊗Alg ∘g recInit _ N'Alg ≡ id
+      N'≅⊗NFA⟨inr⟩ =
+        algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
+          { f = λ q → recTrace _ ⊗Alg
+          ; on-nil = λ _ → refl
+          ; on-cons = λ _ → refl
+          ; on-ε-cons = λ _ → refl }))
+      ⊗Alg→initial : AlgebraHom ⊗NFA ⊗Alg (initial ⊗NFA)
+      ⊗Alg→initial .f (inl q) = P-recTrace' _ _ NPAlg
+      ⊗Alg→initial .f (inr q') = recTrace _ N'Alg
+      ⊗Alg→initial .on-nil {inr q'} _ = refl
+      ⊗Alg→initial .on-cons (inl t) =
+        λ i → cons (inl t) ∘g ⊗-intro id (P-recTrace' _ _ NPAlg) ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+      ⊗Alg→initial .on-cons (inr t) = refl
+      ⊗Alg→initial .on-ε-cons (N-acc q x) = λ i → ε-cons (N-acc q x) ∘g recTrace _ N'Alg ∘g ⊗-unit-l⁻l i
+      ⊗Alg→initial .on-ε-cons (N-ε-trans x) = refl
+      ⊗Alg→initial .on-ε-cons (N'-ε-trans x) = refl
+
+      Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
+      Prec .f q = recTrace _ ⊗Alg ∘g P-recTrace' _ _ NPAlg
+      Prec .on-nil qAcc =
+        (λ i → recTrace _ ⊗Alg ∘g
+          ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg ∘g ⊗-unit-l⁻l i) ∙
+        (λ i → ⊗-intro (nil qAcc) id ∘g ⊗-unit-l⁻ ∘g N'≅⊗NFA⟨inr⟩ i)
+      Prec .on-cons t = (λ i → recTrace _ ⊗Alg ∘g ⊗Alg→initial .on-cons (inl t) i)
+      Prec .on-ε-cons t = (λ i → recTrace _ ⊗Alg ∘g ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
 -- Kleene Star
 module _ (N : NFA {ℓN}) where
   data *εTrans : Type ℓN where
@@ -537,26 +608,22 @@ module _ (N : NFA {ℓN}) where
     (!*r-AlgebraHom' (InitParse N) (*r-initial (InitParse N))
       (record { f = recInit *NFA *Alg ∘g foldKL*r (InitParse N) the-KL*-alg
               ; on-nil = refl
-              ; on-cons =
-                {!!}
-                -- (λ i → cons ∘g
-                --   {!!} i ∘g
-                --   ⊗-intro
-                --     id
-                --     (foldKL*r (InitParse N) (*r-initial (InitParse N))))
+              ; on-cons = (λ i → KL*.cons ∘g nested-induction-lemma i ∘g ⊗-intro id (foldKL*r _ the-KL*-alg) )
       })
       (id*r-AlgebraHom _ _))
     (algebra-η *NFA (AlgebraHom-seq _ (∃AlgebraHom _ *Alg)
       (record { f = λ {
                   (inl _) → foldKL*r _ the-KL*-alg
-                ; (inr q) → P-recTrace _ _ NPAlg ∘g
-                            ⊗-intro id (foldKL*r _ the-KL*-alg) }
+                ; (inr q) → P-recTrace' _ _ NPAlg ∘g ⊗-intro id (foldKL*r _ the-KL*-alg) }
               ; on-nil = λ { {inl _} acc → refl }
-              ; on-cons = λ { t → {!!} }
+              ; on-cons = λ { t → λ i → cons t ∘g ⊗-intro id
+             (P-recTrace' N (InitParse *NFA) NPAlg ∘g ⊗-intro id (foldKL*r (InitParse N) the-KL*-alg))
+               ∘g ⊗-assoc⁻∘⊗-assoc≡id i }
               ; on-ε-cons = λ {
                   inr → refl
-                ; (cons⟨N⟩ x) → {!!}
-                ; (N-internal x) → {!!} } })))
+                ; (cons⟨N⟩ x) →
+                  λ i → ε-cons (cons⟨N⟩ x) ∘g ⊗-unit-l⁻l i ∘g foldKL*r (InitParse N) the-KL*-alg
+                ; (N-internal x) → refl } })))
     where
       *Alg : Algebra *NFA
       *Alg .the-ℓs (inl _) = _
@@ -571,17 +638,6 @@ module _ (N : NFA {ℓN}) where
 
       -- given a parse starting at q in N and a *NFA parse, make a
       -- *NFA parse starting at q.
-      NAlg : Algebra N
-      NAlg .the-ℓs = _
-      NAlg .G q = Parse *NFA (inr q) ⊗- InitParse *NFA
-      NAlg .nil-case isAcc = ⟜-intro {k = Parse _ _}
-        (ε-cons (cons⟨N⟩ isAcc) ∘g ⊗-unit-l)
-      NAlg .cons-case t = ⟜-intro {k = Parse _ _}
-        (cons t ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
-      NAlg .ε-cons-case t = ⟜-intro {k = Parse _ _}
-        (ε-cons (N-internal t) ∘g ⟜-app {h = Parse _ _})
-
-      open PAlgebra
       NPAlg : PAlgebra N (InitParse *NFA)
       NPAlg .the-ℓs = _
       NPAlg .G q = Parse *NFA (inr q)
@@ -596,23 +652,50 @@ module _ (N : NFA {ℓN}) where
       the-KL*-alg .the-ℓ = _
       the-KL*-alg .G = InitParse *NFA
       the-KL*-alg .nil-case = nil _
-      the-KL*-alg .cons-case = ε-cons inr ∘g P-recInit _ _ NPAlg
+      the-KL*-alg .cons-case = ε-cons inr ∘g P-recInit' _ _ NPAlg
 
-      -- NPAlg' : PAlgebra N (InitParse N)
-      -- NPAlg' .the-ℓs = _
-      -- NPAlg' .G q = Parse N q ⊗ InitParse N
-      -- NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
-      -- NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-      -- NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
+      NPAlg' : PAlgebra N (InitParse *NFA)
+      NPAlg' .the-ℓs = _
+      NPAlg' .G q = Parse N q ⊗ KL* (InitParse N)
+      NPAlg' .nil-case acc = ⊗-intro (nil acc) (recInit _ *Alg) ∘g ⊗-unit-l⁻
+      NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
+      NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
 
--- open RegularExpression
--- regex→NFA : RegularExpression → NFA
--- regex→NFA ε-Reg = εNFA
--- regex→NFA ⊥-Reg = emptyNFA
--- regex→NFA (r ⊗Reg r') = ⊗NFA (regex→NFA r) (regex→NFA r')
--- regex→NFA (literalReg c) = literalNFA c
--- regex→NFA (r ⊕Reg r') = ⊕NFA (regex→NFA r) (regex→NFA r')
--- regex→NFA (KL*Reg r) = *NFA (regex→NFA r)
+      nested-induction-lemma :
+        Path (InitParse N ⊗ InitParse *NFA ⊢ InitParse N ⊗ KL* (InitParse N))
+          (recTrace *NFA *Alg ∘g P-recInit' _ _ NPAlg)
+          (⊗-intro id (recInit *NFA *Alg))
+      nested-induction-lemma =
+        !PAlgebraHom' _ _ NPAlg'
+          rec*Alg∘recInitNPAlgHom
+          recInit*AlgHom
+          _
+        where
+          rec*Alg∘recInitNPAlgHom : PAlgebraHom N (InitParse *NFA)
+            (P-initial N (InitParse *NFA))
+            NPAlg'
+          rec*Alg∘recInitNPAlgHom .f q = recTrace *NFA *Alg ∘g P-recTrace' _ _ NPAlg
+          rec*Alg∘recInitNPAlgHom .on-nil acc =
+            λ i → ⊗-intro (nil acc) (recInit *NFA *Alg) ∘g ⊗-unit-ll⁻ i ∘g ⊗-unit-l⁻
+          rec*Alg∘recInitNPAlgHom .on-cons t =
+            λ i → (⊗-intro (cons t) id ∘g ⊗-assoc) ∘g ⊗-intro id (recTrace *NFA *Alg ∘g P-recTrace' N (InitParse *NFA) NPAlg) ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+          rec*Alg∘recInitNPAlgHom .on-ε-cons t = refl
+
+          recInit*AlgHom : PAlgebraHom N (InitParse *NFA) (P-initial N (InitParse *NFA)) NPAlg'
+          recInit*AlgHom .f q = ⊗-intro id (recTrace _ *Alg)
+          recInit*AlgHom .on-nil acc = refl
+          recInit*AlgHom .on-cons t = refl
+          recInit*AlgHom .on-ε-cons t = refl
+
+-- put me in another module plz
+open RegularExpression
+regex→NFA : RegularExpression → NFA
+regex→NFA ε-Reg = εNFA
+regex→NFA ⊥-Reg = emptyNFA
+regex→NFA (r ⊗Reg r') = ⊗NFA (regex→NFA r) (regex→NFA r')
+regex→NFA (literalReg c) = literalNFA c
+regex→NFA (r ⊕Reg r') = ⊕NFA (regex→NFA r) (regex→NFA r')
+regex→NFA (KL*Reg r) = *NFA (regex→NFA r)
 
 -- open StrongEquivalence
 -- regex≅NFA : (r : RegularExpression) →

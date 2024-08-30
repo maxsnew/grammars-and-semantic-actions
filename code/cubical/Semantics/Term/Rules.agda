@@ -205,6 +205,12 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   ≡ ⊗-intro f (⊗-intro f' f'') ∘g ⊗-assoc⁻
 ⊗-assoc⁻⊗-intro = refl
 
+⊗-unit-l⁻⊗-intro :
+  ∀ {f : g ⊢ h}
+  → ⊗-unit-l⁻ ∘g f
+  ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
+⊗-unit-l⁻⊗-intro = refl
+
 -⊗-intro :
   g ⊗ h ⊢ k →
   h ⊢ g -⊗ k
