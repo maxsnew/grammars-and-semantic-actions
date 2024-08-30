@@ -605,23 +605,73 @@ module _ (N : NFA {ℓN}) where
       -- NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
       -- NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
 
-open RegularExpression
-regex→NFA : RegularExpression → NFA
-regex→NFA ε-Reg = εNFA
-regex→NFA ⊥-Reg = emptyNFA
-regex→NFA (r ⊗Reg r') = ⊗NFA (regex→NFA r) (regex→NFA r')
-regex→NFA (literalReg c) = literalNFA c
-regex→NFA (r ⊕Reg r') = ⊕NFA (regex→NFA r) (regex→NFA r')
-regex→NFA (KL*Reg r) = *NFA (regex→NFA r)
+-- open RegularExpression
+-- regex→NFA : RegularExpression → NFA
+-- regex→NFA ε-Reg = εNFA
+-- regex→NFA ⊥-Reg = emptyNFA
+-- regex→NFA (r ⊗Reg r') = ⊗NFA (regex→NFA r) (regex→NFA r')
+-- regex→NFA (literalReg c) = literalNFA c
+-- regex→NFA (r ⊕Reg r') = ⊕NFA (regex→NFA r) (regex→NFA r')
+-- regex→NFA (KL*Reg r) = *NFA (regex→NFA r)
 
-regex≅NFA : (r : RegularExpression) →
-  StrongEquivalence
-    (InitParse (regex→NFA r))
-    (RegularExpression→Grammar r)
-regex≅NFA ε-Reg = εNFA-strong-equiv
-regex≅NFA ⊥-Reg = emptyNFA-strong-equiv
-regex≅NFA (r ⊗Reg r') =
-  mkStrEq {!!} {!!} {!!} {!!}
-regex≅NFA (literalReg c) = litNFA-strong-equiv c
-regex≅NFA (r ⊕Reg r') = {!⊕-strong-equivalence!}
-regex≅NFA (KL*Reg r) = {!!}
+-- open StrongEquivalence
+-- regex≅NFA : (r : RegularExpression) →
+--   StrongEquivalence
+--     (InitParse (regex→NFA r))
+--     (RegularExpression→Grammar r)
+-- regex≅NFA ε-Reg = εNFA-strong-equiv
+-- regex≅NFA ⊥-Reg = emptyNFA-strong-equiv
+-- regex≅NFA (r ⊗Reg r') =
+--   mkStrEq
+--     (⊗-intro (r≅ .fun) (r'≅ .fun) ∘g ⊗≅ .fun)
+--     (⊗≅ .inv ∘g ⊗-intro (r≅ .inv) (r'≅ .inv))
+--     ((λ i → ⊗-intro (r≅ .fun) (r'≅ .fun) ∘g ⊗≅ .sec i ∘g
+--         ⊗-intro (r≅ .inv) (r'≅ .inv)) ∙
+--       (λ i → ⊗-intro (r≅ .sec i) (r'≅ .sec i)))
+--     ((λ i → ⊗≅ .inv ∘g ⊗-intro (r≅ .ret i) (r'≅ .ret i) ∘g ⊗≅ .fun) ∙
+--       ⊗≅ .ret)
+--   where
+--     r≅ : StrongEquivalence (InitParse (regex→NFA r))
+--           (RegularExpression→Grammar r)
+--     r≅ = regex≅NFA r
+
+--     r'≅ : StrongEquivalence (InitParse (regex→NFA r'))
+--            (RegularExpression→Grammar r')
+--     r'≅ = regex≅NFA r'
+
+--     ⊗≅ : StrongEquivalence (InitParse (⊗NFA (regex→NFA r) (regex→NFA r')))
+--           (InitParse (regex→NFA r) ⊗ InitParse (regex→NFA r'))
+--     ⊗≅ = ⊗-strong-equivalence (regex→NFA r) (regex→NFA r')
+-- regex≅NFA (literalReg c) = litNFA-strong-equiv c
+-- regex≅NFA (r ⊕Reg r') =
+--   mkStrEq
+--     (⊕-elim (⊕-inl ∘g r≅ .fun) (⊕-inr ∘g r'≅ .fun) ∘g ⊕≅ .fun)
+--     (⊕≅ .inv ∘g ⊕-elim (⊕-inl ∘g r≅ .inv) (⊕-inr ∘g r'≅ .inv))
+--     ((λ i →
+--          ⊕-elim (⊕-inl ∘g r≅ .fun) (⊕-inr ∘g r'≅ .fun) ∘g
+--          ⊕≅ .sec i ∘g ⊕-elim (⊕-inl ∘g r≅ .inv) (⊕-inr ∘g r'≅ .inv)) ∙
+--       {!!} ∙
+--       ?)
+--     {!!}
+--   where
+--     r≅ : StrongEquivalence (InitParse (regex→NFA r))
+--           (RegularExpression→Grammar r)
+--     r≅ = regex≅NFA r
+
+--     r'≅ : StrongEquivalence (InitParse (regex→NFA r'))
+--            (RegularExpression→Grammar r')
+--     r'≅ = regex≅NFA r'
+
+--     ⊕≅ : StrongEquivalence (InitParse (⊕NFA (regex→NFA r) (regex→NFA r')))
+--           (InitParse (regex→NFA r) ⊕ InitParse (regex→NFA r'))
+--     ⊕≅ = ⊕-strong-equivalence (regex→NFA r) (regex→NFA r')
+-- regex≅NFA (KL*Reg r) =
+--   mkStrEq
+--     {!!}
+--     {!!}
+--     {!!}
+--     {!!}
+--   where
+--     r≅ : StrongEquivalence (InitParse (regex→NFA r))
+--           (RegularExpression→Grammar r)
+--     r≅ = regex≅NFA r
