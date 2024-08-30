@@ -174,8 +174,7 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
       (p .snd .fst .fst .fst .snd)
       (p .fst .fst .snd))) ,
     (p .snd .fst .snd .fst ,
-    (((fst (p .snd .fst) .fst .snd , fst p .fst .snd) ,
-      refl) ,
+    ((_ , refl) ,
     (p .snd .fst .snd .snd ,
     p .snd .snd)))
 

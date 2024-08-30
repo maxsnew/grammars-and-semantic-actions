@@ -1,4 +1,5 @@
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
 
 module Semantics.NFA.Base ((Σ₀ , isSetΣ₀) : hSet ℓ-zero) where
@@ -8,6 +9,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
+open import Cubical.Data.List hiding (init)
 
 open import Semantics.Grammar (Σ₀ , isSetΣ₀)
 open import Semantics.Term (Σ₀ , isSetΣ₀)
@@ -293,3 +295,76 @@ record NFA : Type (ℓ-suc ℓN) where
         (curryPAlg e)
         (curryPAlg e')
         q)
+
+      -- Need to contort things a bit to convince Agda we're terminating
+      PrT-helper : ∀ {q}{wl} → Parse q wl → ∀ {w}{wr} → (w ≡ wl ++ wr) → P wr → the-p-alg .G q w
+      PrT-helper (nil acc _ wl≡[]) splits p =
+        (the-p-alg .nil-case acc ∘g ⊗-unit-l) _ ((_ , splits) , (wl≡[] , p))
+      PrT-helper {wl = wl}(cons tr _ (split' , lit , parse)) {w = w}{wr = wr} splits p =
+        the-p-alg .cons-case tr _          ((_ , pf) , (lit , (PrT-helper parse refl p)))
+        where
+          pf = splits ∙ cong (_++ wr) (split' .snd) ∙ ++-assoc (split' .fst .fst) _ wr
+      PrT-helper (ε-cons εtr _ parse) splits p =
+        the-p-alg .ε-cons-case εtr _ (PrT-helper parse splits p)
+
+      -- A direct definition that doesn't use function types
+
+      -- defining equations (all hold by refl)
+      P-recTrace' : ∀ {q} → Parse q ⊗ P ⊢ the-p-alg .G q
+      P-recTrace' w (splitting , parse , p) =
+        PrT-helper parse (splitting .snd) p
+
+      P-recTrace'-nil-test :
+        ∀ {q}{acc : ⟨ isAcc q .fst ⟩ } → 
+        P-recTrace' ∘g ⊗-intro (nil acc) id
+        ≡ the-p-alg .nil-case acc ∘g ⊗-unit-l
+      P-recTrace'-nil-test = refl
+
+      P-recTrace'-cons-test :
+        ∀ {tr : ⟨ transition ⟩ } →
+        P-recTrace' ∘g ⊗-intro (cons tr) id
+        ≡ the-p-alg .cons-case tr ∘g ⊗-intro id P-recTrace' ∘g ⊗-assoc⁻
+      P-recTrace'-cons-test = refl
+
+      P-recTrace'-ε-cons-test :
+        ∀ {εtr : ⟨ ε-transition ⟩} →
+        P-recTrace' ∘g (⊗-intro (ε-cons εtr) id)
+        ≡ the-p-alg .ε-cons-case εtr ∘g P-recTrace'
+      P-recTrace'-ε-cons-test = refl
+
+      -- Agda can't figure out this definition is terminating unfortunately
+      -- P-recTrace' w ((([]' , w'), splits) , nil acc ._ []'≡[] , p) =
+      --   (the-p-alg .nil-case acc ∘g ⊗-unit-l) w ((_ , splits) , ([]'≡[] , p))
+      -- -- 
+      -- P-recTrace' w (split , cons tr _ (split' , lit , parse) , p) =
+      --   the-p-alg .cons-case tr _ ((_ , split .snd ∙ cong (_++ split .fst .snd) (split' .snd) ∙ ++-assoc (split' .fst .fst) (split' .fst .snd) (split .fst .snd)) , (lit ,
+      --     (P-recTrace' _ ((_ , refl) , (parse , p))))) --
+      --   -- (⊗-intro id P-recTrace' _ {!!})
+      --     -- (⊗-assoc⁻ _ ((split , ((split' , (lit , parse)) , p)))))
+      --   -- (the-p-alg .cons-case tr ∘g ⊗-intro id P-recTrace' ∘g ⊗-assoc⁻)
+      --   --   w 
+      --   -- the-p-alg .cons-case tr _ {!P-recTrace' _ (? , parse , p)!}
+      --   -- where
+          
+      -- -- definitional equation 2:
+      -- -- P-recTrace' ∘g ε-cons εtr ≡ the-p-alg .ε-cons-case εtr ∘g P-recTrace'
+      --   -- (the-p-alg .ε-cons-case εtr ∘g P-recTrace') w (split , (parse , p))
+      -- P-recTrace' w (split , ε-cons εtr _ parse , p) =
+      --   the-p-alg .ε-cons-case εtr _ (P-recTrace' _ (split , parse , p))
+
+      P-recInit' : InitParse ⊗ P ⊢ the-p-alg .G init
+      P-recInit' = P-recTrace'
+
+      ∃PAlgebraHom' : PAlgebraHom P-initial the-p-alg
+      ∃PAlgebraHom' .f = λ q → P-recTrace'
+      -- would be refl with an equiv defn of PAlgebraHom
+      ∃PAlgebraHom' .on-nil qAcc =
+        λ i → the-p-alg .nil-case qAcc ∘g (⊗-unit-l⁻l i)
+      -- these would be refl if we changed the definition of PAlgebraHom to pu
+      ∃PAlgebraHom' .on-cons tr =
+        λ i → the-p-alg .cons-case tr ∘g ⊗-intro id P-recTrace' ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+      ∃PAlgebraHom' .on-ε-cons εtrans = refl
+
+      -- This justifies that adding P-recTrace' is a conservative extension of our type theory
+      P-recTrace'-conservative-extension : ∀ {q} → P-recTrace {q = q} ≡ P-recTrace' {q = q}
+      P-recTrace'-conservative-extension = !PAlgebraHom' ∃PAlgebraHom ∃PAlgebraHom' _
