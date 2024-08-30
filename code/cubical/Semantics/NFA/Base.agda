@@ -257,16 +257,17 @@ record NFA : Type (ℓ-suc ℓN) where
         (λ i → ⟜-β (the-p-alg .nil-case qAcc ∘g ⊗-unit-l) i ∘g ⊗-unit-l⁻) ∙
         (λ i → the-p-alg .nil-case qAcc ∘g ⊗-unit-l⁻l i)
       ∃PAlgebraHom .on-cons t =
-        ⟜-app ∘g ⊗-intro (⟜-intro ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) id ∘g ⊗-intro (⊗-intro id (recTrace underlyingAlg)) id ∘g ⊗-assoc
-          ≡⟨ (λ i → ⟜-β ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) i ∘g ⊗-intro (⊗-intro id (recTrace underlyingAlg)) id ∘g ⊗-assoc) ⟩
-        ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) ∘g ⊗-intro (⊗-intro id (recTrace underlyingAlg)) id ∘g ⊗-assoc
-          ≡⟨ (λ i → the-p-alg .cons-case t ∘g ⊗-intro id P-recTrace ∘g ⊗-assoc⁻∘⊗-assoc≡id i) ⟩
-        the-p-alg .cons-case t ∘g ⊗-intro id P-recTrace
-          ∎
+          (λ i → ⟜-β ((the-p-alg .cons-case t) ∘g
+            ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) i ∘g
+            ⊗-intro (⊗-intro id (recTrace underlyingAlg)) id ∘g ⊗-assoc) ∙
+          (λ i → the-p-alg .cons-case t ∘g ⊗-intro id P-recTrace ∘g
+            ⊗-assoc⁻∘⊗-assoc≡id i)
       ∃PAlgebraHom .on-ε-cons t =
-        (λ i → ⟜-β ((the-p-alg .ε-cons-case t) ∘g ⟜-app) i ∘g ⊗-intro (recTrace underlyingAlg) id)
+        (λ i → ⟜-β ((the-p-alg .ε-cons-case t) ∘g ⟜-app) i ∘g
+          ⊗-intro (recTrace underlyingAlg) id)
 
-      curryPAlg : PAlgebraHom P-initial the-p-alg → AlgebraHom initial underlyingAlg
+      curryPAlg :
+        PAlgebraHom P-initial the-p-alg → AlgebraHom initial underlyingAlg
       curryPAlg e .f q = ⟜-intro (e .f q)
       curryPAlg e .on-nil acc =
         isoFunInjective (invIso ⟜UMP) _ _
@@ -277,33 +278,46 @@ record NFA : Type (ℓ-suc ℓN) where
           )
       curryPAlg e .on-cons t = isoFunInjective (invIso ⟜UMP) _ _
         ( ((λ i → ⟜-β (e .f _) i ∘g ⊗-intro (cons t) id))
-        ∙ (λ i → e .f (src t) ∘g ⊗-intro (cons t) id ∘g ⊗-assoc∘⊗-assoc⁻≡id (~ i))
+        ∙ (λ i → e .f (src t) ∘g
+             ⊗-intro (cons t) id ∘g ⊗-assoc∘⊗-assoc⁻≡id (~ i))
         ∙ (λ i → e .on-cons t i ∘g ⊗-assoc⁻)
-        ∙ (λ i → the-p-alg .cons-case t ∘g ⊗-intro id (⟜-β (e .f (dst t)) (~ i)) ∘g ⊗-assoc⁻)
-        ∙ (λ i → ⟜-β (the-p-alg .cons-case t ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) (~ i) ∘g ⊗-intro (⊗-intro id (⟜-intro (e .f (dst t)))) id))
+        ∙ (λ i → the-p-alg .cons-case t ∘g
+             ⊗-intro id (⟜-β (e .f (dst t)) (~ i)) ∘g ⊗-assoc⁻)
+        ∙ (λ i → ⟜-β (the-p-alg .cons-case t ∘g
+                        ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) (~ i) ∘g
+                  ⊗-intro (⊗-intro id (⟜-intro (e .f (dst t)))) id))
       curryPAlg e .on-ε-cons t = isoFunInjective (invIso ⟜UMP) _ _
         ((((λ i → ⟜-β (e .f _) i ∘g ⊗-intro (ε-cons t) id)))
         ∙ e .on-ε-cons t
         ∙ (λ i → the-p-alg .ε-cons-case t ∘g ⟜-β (e .f (ε-dst t)) (~ i))
-        ∙ (λ i → ⟜-β (the-p-alg .ε-cons-case t ∘g ⟜-app) (~ i) ∘g ⊗-intro (⟜-intro (e .f (ε-dst t))) id))
+        ∙ (λ i → ⟜-β (the-p-alg .ε-cons-case t ∘g ⟜-app) (~ i) ∘g
+                        ⊗-intro (⟜-intro (e .f (ε-dst t))) id))
 
       !PAlgebraHom' :
         (e e' : PAlgebraHom P-initial the-p-alg) →
         (q : Q .fst) →
         e .f q ≡ e' .f q
-      !PAlgebraHom' e e' q = isoFunInjective ⟜UMP _ _ (!AlgebraHom' underlyingAlg
-        (curryPAlg e)
-        (curryPAlg e')
-        q)
+      !PAlgebraHom' e e' q =
+        isoFunInjective ⟜UMP _ _ (!AlgebraHom' underlyingAlg
+          (curryPAlg e)
+          (curryPAlg e')
+          q)
 
       -- Need to contort things a bit to convince Agda we're terminating
-      PrT-helper : ∀ {q}{wl} → Parse q wl → ∀ {w}{wr} → (w ≡ wl ++ wr) → P wr → the-p-alg .G q w
+      PrT-helper :
+        ∀ {q}{wl} →
+        Parse q wl →
+        ∀ {w}{wr} → (w ≡ wl ++ wr) → P wr → the-p-alg .G q w
       PrT-helper (nil acc _ wl≡[]) splits p =
-        (the-p-alg .nil-case acc ∘g ⊗-unit-l) _ ((_ , splits) , (wl≡[] , p))
-      PrT-helper {wl = wl}(cons tr _ (split' , lit , parse)) {w = w}{wr = wr} splits p =
-        the-p-alg .cons-case tr _          ((_ , pf) , (lit , (PrT-helper parse refl p)))
+        (the-p-alg .nil-case acc ∘g ⊗-unit-l)
+          _ ((_ , splits) , (wl≡[] , p))
+      PrT-helper {wl = wl}
+        (cons tr _ (split' , lit , parse)) {w = w}{wr = wr} splits p =
+        the-p-alg .cons-case tr _ ((_ , pf) ,
+          (lit , (PrT-helper parse refl p)))
         where
-          pf = splits ∙ cong (_++ wr) (split' .snd) ∙ ++-assoc (split' .fst .fst) _ wr
+          pf = splits ∙ cong (_++ wr) (split' .snd) ∙
+            ++-assoc (split' .fst .fst) _ wr
       PrT-helper (ε-cons εtr _ parse) splits p =
         the-p-alg .ε-cons-case εtr _ (PrT-helper parse splits p)
 
@@ -337,7 +351,10 @@ record NFA : Type (ℓ-suc ℓN) where
       --   (the-p-alg .nil-case acc ∘g ⊗-unit-l) w ((_ , splits) , ([]'≡[] , p))
       -- -- 
       -- P-recTrace' w (split , cons tr _ (split' , lit , parse) , p) =
-      --   the-p-alg .cons-case tr _ ((_ , split .snd ∙ cong (_++ split .fst .snd) (split' .snd) ∙ ++-assoc (split' .fst .fst) (split' .fst .snd) (split .fst .snd)) , (lit ,
+      --   the-p-alg .cons-case tr _
+        --   ((_ , split .snd ∙ cong (_++ split .fst .snd) (split' .snd) ∙
+        --     ++-assoc (split' .fst .fst)
+        --       (split' .fst .snd) (split .fst .snd)) , (lit ,
       --     (P-recTrace' _ ((_ , refl) , (parse , p))))) --
       --   -- (⊗-intro id P-recTrace' _ {!!})
       --     -- (⊗-assoc⁻ _ ((split , ((split' , (lit , parse)) , p)))))
@@ -346,9 +363,9 @@ record NFA : Type (ℓ-suc ℓN) where
       --   -- the-p-alg .cons-case tr _ {!P-recTrace' _ (? , parse , p)!}
       --   -- where
           
-      -- -- definitional equation 2:
-      -- -- P-recTrace' ∘g ε-cons εtr ≡ the-p-alg .ε-cons-case εtr ∘g P-recTrace'
-      --   -- (the-p-alg .ε-cons-case εtr ∘g P-recTrace') w (split , (parse , p))
+      -- definitional equation 2:
+      -- P-recTrace' ∘g ε-cons εtr ≡ the-p-alg .ε-cons-case εtr ∘g P-recTrace'
+      --  (the-p-alg .ε-cons-case εtr ∘g P-recTrace') w (split , (parse , p))
       -- P-recTrace' w (split , ε-cons εtr _ parse , p) =
       --   the-p-alg .ε-cons-case εtr _ (P-recTrace' _ (split , parse , p))
 
@@ -362,9 +379,13 @@ record NFA : Type (ℓ-suc ℓN) where
         λ i → the-p-alg .nil-case qAcc ∘g (⊗-unit-l⁻l i)
       -- these would be refl if we changed the definition of PAlgebraHom to pu
       ∃PAlgebraHom' .on-cons tr =
-        λ i → the-p-alg .cons-case tr ∘g ⊗-intro id P-recTrace' ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+        λ i → the-p-alg .cons-case tr ∘g
+          ⊗-intro id P-recTrace' ∘g ⊗-assoc⁻∘⊗-assoc≡id i
       ∃PAlgebraHom' .on-ε-cons εtrans = refl
 
-      -- This justifies that adding P-recTrace' is a conservative extension of our type theory
-      P-recTrace'-conservative-extension : ∀ {q} → P-recTrace {q = q} ≡ P-recTrace' {q = q}
-      P-recTrace'-conservative-extension = !PAlgebraHom' ∃PAlgebraHom ∃PAlgebraHom' _
+      -- This justifies that adding P-recTrace' is a
+      -- conservative extension of our type theory
+      P-recTrace'-conservative-extension :
+        ∀ {q} → P-recTrace {q = q} ≡ P-recTrace' {q = q}
+      P-recTrace'-conservative-extension =
+        !PAlgebraHom' ∃PAlgebraHom ∃PAlgebraHom' _
