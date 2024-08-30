@@ -415,32 +415,3 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   g & (g ⇒ h) ⊢ h
 ⇒-app _ (pg , f) = f pg
 
-KL*-elim :
-  ε-grammar ⊢ g →
-  h ⊗ g ⊢ g →
-  KL* h ⊢ g
-KL*-elim pε p⊗ _ (nil _ x) = pε _ x
-KL*-elim {g}{h} pε p⊗ _ (cons _ x) =
-  p⊗ _ ((x .fst) , ((x .snd .fst) , (KL*-elim pε p⊗ _ (x .snd .snd))))
-
-foldKL*r = KL*-elim
-
-foldKL*l :
-  ε-grammar ⊢ g →
-  g ⊗ h ⊢ g →
-  KL* h ⊢ g
-foldKL*l {g = g}{h = h} pε p⊗ =
-  seq {g = KL* h}{h = g -⊗ g}{k = g}
-    (foldKL*r {g = g -⊗ g}{h = h}
-      (-⊗-intro {g = g}{h = ε-grammar}{k = g} ⊗-unit-r)
-      (-⊗-intro {g = g}{h = h ⊗ (g -⊗ g)}{k = g}
-        (seq {h = (g ⊗ h) ⊗ (g -⊗ g)}
-          (⊗-assoc {g = g}{h = h}{k = g -⊗ g})
-          (seq {h = g ⊗ (g -⊗ g)}
-            (⊗-intro {g = g ⊗ h}{h = g}{k = g -⊗ g}{l = g -⊗ g} p⊗ (id {g = g -⊗ g}))
-            -⊗-app))))
-    (seq {g = g -⊗ g}{h = g ⊗ (g -⊗ g)}{k = g}
-      (seq {h = ε-grammar ⊗ (g -⊗ g)}
-        (⊗-unit-l⁻ {g = g -⊗ g})
-        (⊗-intro {g = ε-grammar}{h = g}{k = g -⊗ g}{l = g -⊗ g} pε (id {g = g -⊗ g})))
-      -⊗-app)

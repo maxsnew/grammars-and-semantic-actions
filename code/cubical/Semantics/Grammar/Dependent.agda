@@ -7,7 +7,7 @@ open import Cubical.Data.List
 
 open import Semantics.Grammar.Base (Σ₀ , isSetΣ₀)
 open import Semantics.Grammar.Literal (Σ₀ , isSetΣ₀)
-open import Semantics.Grammar.KleeneStar (Σ₀ , isSetΣ₀)
+-- open import Semantics.Grammar.KleeneStar (Σ₀ , isSetΣ₀)
 
 private
   variable
@@ -27,7 +27,7 @@ syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
 ⊕Σ₀ : Grammar ℓ-zero
 ⊕Σ₀ = LinearΣ λ (c : Σ₀) → literal c
 
-String→KL* : (w : String) → KL* ⊕Σ₀ w
-String→KL* [] = nil _ refl
-String→KL* (x ∷ w) =
-  cons _ ((([ x ] , w) , refl) , (((x , refl)) , (String→KL* w)))
+-- String→KL* : (w : String) → KL* ⊕Σ₀ w
+-- String→KL* [] = nil _ refl
+-- String→KL* (x ∷ w) =
+--   cons _ ((([ x ] , w) , refl) , (((x , refl)) , (String→KL* w)))

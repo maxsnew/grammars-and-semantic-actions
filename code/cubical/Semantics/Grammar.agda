@@ -9,7 +9,6 @@ open import Semantics.Grammar.DecPropGrammar (Σ₀ , isSetΣ₀) public
 open import Semantics.Grammar.Dependent (Σ₀ , isSetΣ₀) public
 open import Semantics.Grammar.Empty (Σ₀ , isSetΣ₀) public
 open import Semantics.Grammar.Function (Σ₀ , isSetΣ₀) public
-open import Semantics.Grammar.KleeneStar (Σ₀ , isSetΣ₀) public
 open import Semantics.Grammar.LinearFunction (Σ₀ , isSetΣ₀) public
 open import Semantics.Grammar.LinearProduct (Σ₀ , isSetΣ₀) public
 open import Semantics.Grammar.Literal (Σ₀ , isSetΣ₀) public

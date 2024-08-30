@@ -34,6 +34,7 @@ open import Cubical.Data.Unit
 
 open import Semantics.Grammar (Σ₀ , isSetΣ₀)
 open import Semantics.Grammar.Equivalence (Σ₀ , isSetΣ₀)
+open import Semantics.Grammar.KleeneStar (Σ₀ , isSetΣ₀)
 open import Semantics.DFA
 open import Semantics.NFA.Base (Σ₀ , isSetΣ₀)
 open import Semantics.Helper
@@ -478,7 +479,6 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
 
       open PAlgebraHom
       Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
-      -- Prec = {!∃PAlgebraHom N (InitParse N') NPAlg'!} ?
       Prec .f q =
         recTrace ⊗NFA ⊗Alg ∘g
         P-recTrace _ _ NPAlg
@@ -496,7 +496,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
         (λ i → recTrace _ ⊗Alg ∘g
           ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
 
--- -- Kleene Star
+-- Kleene Star
 module _ (N : NFA {ℓN}) where
   data *εTrans : Type ℓN where
     inr : *εTrans
@@ -532,11 +532,30 @@ module _ (N : NFA {ℓN}) where
     StrongEquivalence (InitParse *NFA) (KL* (InitParse N))
   *-strong-equivalence = mkStrEq
     (recInit *NFA *Alg)
-    -- (foldKL*r (nil _) (ε-cons inr ∘g ⟜-app ∘g ⊗-intro (recInit _ NAlg) id))
-    (foldKL*r (nil _) (P-recInit _ _ NPAlg))
-    {!!}
-    {!!}
-    -- (algebra-η *NFA (AlgebraHom-seq _ (∃AlgebraHom _ *Alg) {!!}))
+    (foldKL*r (InitParse N) the-KL*-alg)
+    (!*r-AlgebraHom' (InitParse N) (*r-initial (InitParse N))
+      (record { f = recInit *NFA *Alg ∘g foldKL*r (InitParse N) the-KL*-alg
+              ; on-nil = refl
+              ; on-cons =
+                {!!}
+                -- (λ i → cons ∘g
+                --   {!!} i ∘g
+                --   ⊗-intro
+                --     id
+                --     (foldKL*r (InitParse N) (*r-initial (InitParse N))))
+      })
+      (id*r-AlgebraHom _ _))
+    (algebra-η *NFA (AlgebraHom-seq _ (∃AlgebraHom _ *Alg)
+      (record { f = λ {
+                  (inl _) → foldKL*r _ the-KL*-alg
+                ; (inr q) → P-recTrace _ _ NPAlg ∘g
+                            ⊗-intro id (foldKL*r _ the-KL*-alg) }
+              ; on-nil = λ { {inl _} acc → refl }
+              ; on-cons = λ { t → {!!} }
+              ; on-ε-cons = λ {
+                  inr → refl
+                ; (cons⟨N⟩ x) → {!!}
+                ; (N-internal x) → {!!} } })))
     where
       *Alg : Algebra *NFA
       *Alg .the-ℓs (inl _) = _
@@ -564,11 +583,19 @@ module _ (N : NFA {ℓN}) where
       open PAlgebra
       NPAlg : PAlgebra N (InitParse *NFA)
       NPAlg .the-ℓs = _
-      NPAlg .G q = {!!}
-      NPAlg .nil-case acc = {!!}
-      NPAlg .cons-case t = {!!}
-      NPAlg .ε-cons-case t = {!!}
+      NPAlg .G q = Parse *NFA (inr q)
+      NPAlg .nil-case acc = ε-cons (cons⟨N⟩ acc)
+      NPAlg .cons-case t = cons t
+      NPAlg .ε-cons-case t = ε-cons (N-internal t)
 
+      open *r-Algebra
+      -- NOTE : this is not an algebra for NFAs, rather for Kleene star
+      -- and is used to prove the uniqueness of the foldKL*r term
+      the-KL*-alg : *r-Algebra (InitParse N)
+      the-KL*-alg .the-ℓ = _
+      the-KL*-alg .G = InitParse *NFA
+      the-KL*-alg .nil-case = nil _
+      the-KL*-alg .cons-case = ε-cons inr ∘g P-recInit _ _ NPAlg
 
       -- NPAlg' : PAlgebra N (InitParse N)
       -- NPAlg' .the-ℓs = _
