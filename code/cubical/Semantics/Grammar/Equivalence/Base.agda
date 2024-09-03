@@ -22,8 +22,21 @@ module _ {ℓG} {ℓG'}
   (g' : Grammar ℓG')
   where
 
+  record LogicalEquivalence : Type (ℓ-max ℓG ℓG') where
+    no-eta-equality
+    constructor mkLogEq
+    field
+      fun : g ⊢ g'
+      inv : g' ⊢ g
+
   isLogicallyEquivalent : Type (ℓ-max ℓG ℓG')
   isLogicallyEquivalent = (g ⊢ g') × (g' ⊢ g)
+
+  open LogicalEquivalence
+  LogicalEquivalence→isLogicallyEquivalent :
+    LogicalEquivalence → isLogicallyEquivalent
+  LogicalEquivalence→isLogicallyEquivalent LogEq .fst = LogEq .fun
+  LogicalEquivalence→isLogicallyEquivalent LogEq .snd = LogEq .inv
 
   isWeaklyEquivalent : Type (ℓ-max ℓG ℓG')
   isWeaklyEquivalent = Iso (Language g) (Language g')
