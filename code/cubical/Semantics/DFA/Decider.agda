@@ -43,6 +43,15 @@ module _ (D : DFA {ℓD}) where
     TraceFrom : Grammar ℓD
     TraceFrom = LinΣ[ q-end ∈ ⟨ Q ⟩ ] Trace q-end q-start
 
+    -- The decider leverages the function TraceAppendLiteral
+    -- which turns the Trace into a SnocTrace, snoc's it, and
+    -- then turns the resulting SnocTrace back into a trace.
+    --
+    -- This feels like an unsatisfactory definition but there does not
+    -- seem to be a nicer way to do this, other than taking SnocTrace as the
+    -- primitive notion of trace. However, this would sacrifice nice
+    -- definitional harmony with existing Brzozowski derivative
+    -- actions on DFAs, AND would lose harmony with the NFA definitions
     ExtendTraceFrom : (c : Σ₀) →
       TraceFrom ⊗ (literal c) ⊢ TraceFrom
     ExtendTraceFrom c _ (s , (q , trace), lit) =
