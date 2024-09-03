@@ -148,6 +148,46 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   in
   subst (λ w≡w → subst g w≡w p ≡ p) (isSetString _ _ refl w≡w) (substRefl {B = g} p)
 
+cong-∘g⊗-unit-l⁻ :
+  (e e' : ε-grammar ⊗ g ⊢ h) →
+  (e ∘g ⊗-unit-l⁻ ≡ e' ∘g ⊗-unit-l⁻) →
+  e ≡ e'
+cong-∘g⊗-unit-l⁻ f g ∘g≡ =
+  cong (f ∘g_) (sym ⊗-unit-ll⁻) ∙
+  cong (_∘g ⊗-unit-l) ∘g≡ ∙
+  cong (g ∘g_) (⊗-unit-ll⁻)
+
+cong-∘g⊗-unit-r⁻ :
+  (e e' : g ⊗ ε-grammar ⊢ h) →
+  (e ∘g ⊗-unit-r⁻ ≡ e' ∘g ⊗-unit-r⁻) →
+  e ≡ e'
+cong-∘g⊗-unit-r⁻ f g ∘g≡ =
+  cong (f ∘g_) (sym ⊗-unit-rr⁻) ∙
+  cong (_∘g ⊗-unit-r) ∘g≡ ∙
+  cong (g ∘g_) (⊗-unit-rr⁻)
+
+-- TODO this proof seems overly complicated
+⊗-unit-r⊗-intro :
+  (f : g ⊢ h) →
+  ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
+⊗-unit-r⊗-intro f =
+  cong-∘g⊗-unit-r⁻ (⊗-unit-r ∘g ⊗-intro f id) (f ∘g ⊗-unit-r)
+    ((⊗-unit-r ∘g ⊗-intro f id) ∘g ⊗-unit-r⁻
+      ≡⟨ refl ⟩
+      ⊗-unit-r ∘g ⊗-unit-r⁻ ∘g f
+      ≡⟨ ((λ i → ⊗-unit-r⁻r i ∘g f ∘g ⊗-unit-r⁻r (~ i))) ⟩
+    (f ∘g ⊗-unit-r) ∘g ⊗-unit-r⁻
+    ∎)
+    -- (cong (_∘g f) {!sym ⊗-unit-rr⁻!})
+  -- ⊗-unit-r ∘g ⊗-intro f id
+  --   ≡⟨ {!cong-∘g⊗-unit-r!} ⟩
+  -- f ∘g ⊗-unit-r
+  -- ∎
+
+⊗-unit-rl⁻ : ⊗-unit-r ∘g ⊗-unit-l⁻ ≡ id
+⊗-unit-rl⁻ = funExt λ w → funExt λ p →
+  isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {g = ε-grammar} w p)
+
 ⊗-assoc :
   g ⊗ (h ⊗ k) ⊢ (g ⊗ h) ⊗ k
 ⊗-assoc _ p =
@@ -211,6 +251,12 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
 ⊗-unit-l⁻⊗-intro = refl
 
+⊗-unit-r⁻⊗-intro :
+  ∀ {f : g ⊢ h}
+  → ⊗-unit-r⁻ ∘g f
+  ≡ (⊗-intro f id) ∘g ⊗-unit-r⁻
+⊗-unit-r⁻⊗-intro = refl
+
 -⊗-intro :
   g ⊗ h ⊢ k →
   h ⊢ g -⊗ k
@@ -225,7 +271,7 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
   g ⊢ h -⊗ k →
   h ⊗ g ⊢ k
 -⊗-intro⁻ {h = h}{k = k} f =
-  (⊗-intro (id {g = h}) f) ⋆ -⊗-app
+  -⊗-app ∘g (⊗-intro (id {g = h}) f)
 
 -⊗-intro∘-⊗-intro⁻≡id :
   (e : g ⊢ h -⊗ k) →
@@ -410,6 +456,14 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
     e
 ⊕-η e i _ (inl x) = e _ (inl x)
 ⊕-η e i _ (inr x) = e _ (inr x)
+
+⊗-dist-over-⊕ :
+  g ⊗ (h ⊕ k) ⊢ (g ⊗ h) ⊕ (g ⊗ k)
+⊗-dist-over-⊕ {g = g}{h = h}{k = k} =
+  -⊗-intro⁻ {g = h ⊕ k}{h = g}{k = (g ⊗ h) ⊕ (g ⊗ k)}
+    (⊕-elim {g = h}{h = g -⊗ ((g ⊗ h) ⊕ (g ⊗ k))}{k = k}
+      (-⊗-intro {g = g}{h = h}{k = (g ⊗ h) ⊕ (g ⊗ k)} ⊕-inl)
+      (-⊗-intro {g = g}{h = k}{k = (g ⊗ h) ⊕ (g ⊗ k)} ⊕-inr))
 
 ⇒-intro :
   g & h ⊢ k →

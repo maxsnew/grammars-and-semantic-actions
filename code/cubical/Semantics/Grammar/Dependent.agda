@@ -22,7 +22,7 @@ LinearΣ {A = A} f w = Σ[ a ∈ A ] f a w
 LinearΣ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΣ-syntax = LinearΣ
 
-syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
+syntax LinearΣ-syntax {A = A} (λ x → B) = LinΣ[ x ∈ A ] B
 
 ⊕Σ₀ : Grammar ℓ-zero
 ⊕Σ₀ = LinearΣ λ (c : Σ₀) → literal c

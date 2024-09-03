@@ -30,9 +30,6 @@ record NFA : Type (ℓ-suc ℓN) where
     ε-src : ε-transition .fst → Q .fst
     ε-dst : ε-transition .fst → Q .fst
 
-  decEqQ : Discrete (Q .fst)
-  decEqQ = isFinSet→Discrete (Q .snd)
-
   -- The grammar "Parse q" denotes the type of traces in the NFA
   -- from state q to an accepting state
   data Parse : (q : Q .fst) → Grammar ℓN where
@@ -83,7 +80,7 @@ record NFA : Type (ℓ-suc ℓN) where
 
   idAlgebraHom : (alg : Algebra) →
     AlgebraHom alg alg
-  f (idAlgebraHom alg) q-start = id
+  f (idAlgebraHom alg) q = id
   on-nil (idAlgebraHom alg) _ = refl
   on-cons (idAlgebraHom alg) _ = refl
   on-ε-cons (idAlgebraHom alg) _ = refl

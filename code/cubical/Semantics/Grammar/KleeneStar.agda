@@ -25,14 +25,6 @@ module _ (g : Grammar ℓG) where
       nil-case : ε-grammar ⊢ G
       cons-case : g ⊗ G ⊢ G
 
-  record *l-Algebra : Typeω where
-    field
-      the-ℓ : Level
-      G : Grammar the-ℓ
-      nil-case : ε-grammar ⊢ G
-      cons-case : G ⊗ g ⊢ G
-
-  open *l-Algebra
   open *r-Algebra
 
   *r-initial : *r-Algebra
@@ -41,11 +33,6 @@ module _ (g : Grammar ℓG) where
   *r-initial .nil-case = nil
   *r-initial .cons-case = cons
 
-  -- *l-initial : *l-Algebra
-  -- *l-initial .the-ℓ = _
-  -- *l-initial .G = KL*
-  -- *l-initial .nil-case = nil
-  -- *l-initial .cons-case = {!!}
 
   record *r-AlgebraHom (alg alg' : *r-Algebra) : Typeω where
     field
@@ -61,23 +48,23 @@ module _ (g : Grammar ℓG) where
     id*r-AlgebraHom .on-nil = refl
     id*r-AlgebraHom .on-cons = refl
 
-    KL*-elim : KL* ⊢ the-alg .G
-    KL*-elim _ (nil _ x) = the-alg .nil-case _ x
-    KL*-elim _ (cons _ x) =
+    KL*r-elim : KL* ⊢ the-alg .G
+    KL*r-elim _ (nil _ x) = the-alg .nil-case _ x
+    KL*r-elim _ (cons _ x) =
       the-alg .cons-case _
-        ((x .fst) , ((x .snd .fst) , (KL*-elim _ (x .snd .snd))))
+        ((x .fst) , ((x .snd .fst) , (KL*r-elim _ (x .snd .snd))))
 
-    foldKL*r = KL*-elim
+    foldKL*r = KL*r-elim
 
     ∃*r-AlgebraHom : *r-AlgebraHom *r-initial the-alg
-    ∃*r-AlgebraHom .f = KL*-elim
+    ∃*r-AlgebraHom .f = KL*r-elim
     ∃*r-AlgebraHom .on-nil = refl
     ∃*r-AlgebraHom .on-cons = refl
 
     !*r-AlgebraHom :
       (e : *r-AlgebraHom *r-initial the-alg) →
       ∀ w p →
-      e .f w p ≡ KL*-elim w p
+      e .f w p ≡ KL*r-elim w p
     !*r-AlgebraHom e _ (nil _ x) = funExt⁻ (funExt⁻ (e .on-nil) _) x
     !*r-AlgebraHom e _ (cons _ x) =
       funExt⁻ (funExt⁻ (e .on-cons) _) x ∙
@@ -90,90 +77,85 @@ module _ (g : Grammar ℓG) where
     !*r-AlgebraHom' e e' = funExt λ w → funExt λ p →
       !*r-AlgebraHom e w p ∙ sym (!*r-AlgebraHom e' w p)
 
+  record *l-Algebra : Typeω where
+    field
+      the-ℓ : Level
+      G : Grammar the-ℓ
+      nil-case : ε-grammar ⊢ G
+      snoc-case : G ⊗ g ⊢ G
+
+  open *l-Algebra
 
 
--- foldKL*l :
---   ε-grammar ⊢ g →
---   g ⊗ h ⊢ g →
---   KL* h ⊢ g
--- foldKL*l {g = g}{h = h} pε p⊗ =
---   seq {g = KL* h}{h = g -⊗ g}{k = g}
---     (foldKL*r {g = g -⊗ g}{h = h}
---       (-⊗-intro {g = g}{h = ε-grammar}{k = g} ⊗-unit-r)
---       (-⊗-intro {g = g}{h = h ⊗ (g -⊗ g)}{k = g}
---         (seq {h = (g ⊗ h) ⊗ (g -⊗ g)}
---           (⊗-assoc {g = g}{h = h}{k = g -⊗ g})
---           (seq {h = g ⊗ (g -⊗ g)}
---             (⊗-intro {g = g ⊗ h}{h = g}{k = g -⊗ g}{l = g -⊗ g} p⊗ (id {g = g -⊗ g}))
---             -⊗-app))))
---     (seq {g = g -⊗ g}{h = g ⊗ (g -⊗ g)}{k = g}
---       (seq {h = ε-grammar ⊗ (g -⊗ g)}
---         (⊗-unit-l⁻ {g = g -⊗ g})
---         (⊗-intro {g = ε-grammar}{h = g}{k = g -⊗ g}{l = g -⊗ g} pε (id {g = g -⊗ g})))
---       -⊗-app)
+  -- λalg-initial : *r-Algebra
+  -- λalg-initial .the-ℓ = ℓG
+  -- λalg-initial .G = KL* -⊗ KL*
+  -- λalg-initial .nil-case = -⊗-intro ⊗-unit-r
+  -- λalg-initial .cons-case =
+  --   -⊗-intro (-⊗-app ∘g ⊗-intro {!!} id ∘g ⊗-assoc)
 
+  *l-initial : *l-Algebra
+  *l-initial .the-ℓ = _
+  *l-initial .G = KL*
+  *l-initial .nil-case = nil
+  *l-initial .snoc-case =
+    ⟜-intro⁻ (foldKL*r λalg)
+    where
+    λalg : *r-Algebra
+    λalg .the-ℓ = ℓG
+    λalg .G = KL* ⊗- g
+    λalg .nil-case =
+      ⟜-intro (cons ∘g ⊗-intro id nil ∘g ⊗-unit-r⁻ ∘g ⊗-unit-l)
+    λalg .cons-case =
+      ⟜-intro (cons ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
 
+  record *l-AlgebraHom (alg alg' : *l-Algebra) : Typeω where
+    field
+      f : alg .G ⊢ alg' .G
+      on-nil : f ∘g alg .nil-case ≡ alg' .nil-case
+      on-cons : f ∘g alg .snoc-case ≡ alg' .snoc-case ∘g ⊗-intro f id
 
---   -- -- Use IW trees to prove that Kleene star forms a set
---   -- -- (provided that the original grammar outputs sets)
---   -- module isSetKL*TyProof
---   --   (hg : hGrammar)
---   --   where
---   --   g = hg .fst
---   --   setParses = hg .snd
+  open *l-AlgebraHom
 
---   --   KL*Ty-X = String
+  module _ (the-l-alg : *l-Algebra) where
+    λalg : *r-Algebra
+    λalg .the-ℓ = the-l-alg .the-ℓ
+    λalg .G = the-l-alg .G -⊗ the-l-alg .G
+    λalg .nil-case = -⊗-intro ⊗-unit-r
+    λalg .cons-case =
+      -⊗-intro {k = the-l-alg .G}
+        (-⊗-app ∘g
+        ⊗-intro (the-l-alg .snoc-case) id ∘g
+        ⊗-assoc)
 
---   --   KL*Ty-S : KL*Ty-X → Type ℓ
---   --   KL*Ty-S w =
---   --     (w ≡ []) ⊎
---   --     (Σ[ s ∈ Splitting w ] g (s .fst .fst))
+    KL*l-elim : KL* ⊢ the-l-alg .G
+    KL*l-elim =
+      -⊗-app ∘g
+      ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g
+      ⊗-unit-l⁻
 
---   --   KL*Ty-P : ∀ w → KL*Ty-S w → Type ℓ-zero
---   --   KL*Ty-P w (inl x) = ⊥
---   --   KL*Ty-P w (inr x) = ⊤
+    foldKL*l = KL*l-elim
 
---   --   KL*Ty-inX : ∀ w (s : KL*Ty-S w) → KL*Ty-P w s → KL*Ty-X
---   --   KL*Ty-inX w (inr (s , sp)) x = s .fst .snd
-
---   --   KL*Ty→W : ∀ {w} → KL*Ty g w → IW KL*Ty-S KL*Ty-P KL*Ty-inX w
---   --   KL*Ty→W (nil x) = node (inl x) λ ()
---   --   KL*Ty→W (cons x) =
---   --     node (inr ((x .fst) , (x .snd .fst)))
---   --       λ _ → KL*Ty→W (x .snd .snd)
-
---   --   W→KL*Ty : ∀ {w} → IW KL*Ty-S KL*Ty-P KL*Ty-inX w → KL*Ty g w
---   --   W→KL*Ty (node (inl x) subtree) = nil x
---   --   W→KL*Ty (node (inr x) subtree) =
---   --     cons ((x .fst) , ((x .snd) , (W→KL*Ty (subtree _))))
-
---   --   KL*TyRetractofW :
---   --     ∀ {w} (p : KL*Ty g w) →
---   --     W→KL*Ty (KL*Ty→W p) ≡ p
---   --   KL*TyRetractofW (nil x) = refl
---   --   KL*TyRetractofW (cons x) =
---   --     cong cons
---   --       (ΣPathP (refl ,
---   --         (ΣPathP (refl ,
---   --           (KL*TyRetractofW (x .snd .snd))))))
-
-
---   --   isSetKL*Ty-S : ∀ w → isSet (KL*Ty-S w)
---   --   isSetKL*Ty-S w =
---   --     isSet⊎
---   --       (isGroupoidString _ _)
---   --       (isSetΣ (isSetSplitting _) λ _ → setParses _)
-
---   --   isSetKL*Ty : ∀ w → isSet (KL*Ty g w)
---   --   isSetKL*Ty w =
---   --     isSetRetract
---   --       KL*Ty→W W→KL*Ty
---   --       KL*TyRetractofW
---   --       (isOfHLevelSuc-IW 1 isSetKL*Ty-S w)
-
---   -- open isSetKL*TyProof
---   -- KL* : Grammar → Grammar
---   -- KL* g w = KL*Ty g w
-
---   -- isHGrammar-KL* : (g : hGrammar) → isHGrammar (KL* (g .fst))
---   -- isHGrammar-KL* g _ = isSetKL*Ty g _
+    -- TODO prove initiality for the left handed algebra
+    -- ∃*l-AlgebraHom : *l-AlgebraHom *l-initial the-l-alg
+    -- ∃*l-AlgebraHom .f =
+    --   -⊗-app ∘g
+    --   ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g
+    --   ⊗-unit-l⁻
+    -- ∃*l-AlgebraHom .on-nil =
+    --   -⊗-app ∘g
+    --     ⊗-intro id (-⊗-intro ⊗-unit-r) ∘g ⊗-intro (the-l-alg .nil-case) id ∘g ⊗-unit-l⁻
+    --     ≡⟨ (λ i → -⊗-β ⊗-unit-r i ∘g ⊗-intro (the-l-alg .nil-case) id ∘g ⊗-unit-l⁻) ⟩
+    --   ⊗-unit-r ∘g ⊗-intro (the-l-alg .nil-case) id ∘g ⊗-unit-l⁻
+    --     ≡⟨ (λ i → ⊗-unit-r⊗-intro (the-l-alg .nil-case) i ∘g ⊗-unit-l⁻) ⟩
+    --   the-l-alg .nil-case ∘g ⊗-unit-r ∘g ⊗-unit-l⁻
+    --     ≡⟨ cong (the-l-alg .nil-case ∘g_) ⊗-unit-rl⁻ ⟩
+    --   the-l-alg .nil-case
+    --   ∎
+    -- ∃*l-AlgebraHom .on-cons =
+    --   (-⊗-app ∘g
+    --     ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g ⊗-unit-l⁻)
+    --    ∘g ⟜-intro⁻ {!!}
+    --     ≡⟨ {!!} ⟩
+    --   {!!}
+    --   ∎
