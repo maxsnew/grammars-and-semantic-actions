@@ -69,12 +69,21 @@ module v1 where
       ([num] : ∀ {n} → literal (num n) ⊢ [A])
       ([parens] : literal [ ⊗ [S] ⊗ literal ] ⊢ [A])
       where
+      -- this TERMINATING is totally banal and can be avoided easily but meh
+      {-# TERMINATING #-}
       recP : Prod ⊢ [P]
       recS : Sum ⊢ [S]
       recA : Atom ⊢ [A]
-      recS = {!!}
-      recP = {!!}
-      recA  = {!!}
+      recS w (plus .w x) =
+        ([plus] ∘g ⊗-intro recP (⊗-intro id recS)) w x
+      recS w (arg .w x) =
+        ([argS] ∘g recP) w x
+      recP w (times .w x) =
+        ([times] ∘g ⊗-intro recA (⊗-intro id recP)) w x
+      recP w (arg .w x) = ([argP] ∘g recA) w x
+      recA w (num .w x) = [num] w x
+      recA w (parens .w x) =
+        ([parens] ∘g ⊗-intro id (⊗-intro recS id)) w x
 -- -- add associativity, show weak equivalence
 module v2 where
   -- make LL(1), should be *strongly* equivalent to previous
@@ -117,18 +126,23 @@ module v2 where
       ([num] : ∀ {n} → literal (num n) ⊢ [A])
       ([parens] : literal [ ⊗ [S] ⊗ literal ] ⊢ [A])
       where
+      -- this TERMINATING block is totally benign
+      {-# TERMINATING #-}
       recP : Prod ⊢ [P]
       recPS : Prod⊸Sum ⊢ [PS]
       recS : Sum ⊢ [S]
       recAP : Atom⊸Prod ⊢ [AP]
       recA : Atom ⊢ [A]
       recS = [mkS] ∘g ⊗-intro recP recPS
-      recPS = {!!}
+      recPS w (plus .w x) = [plus] w (⊗-intro id recS w x)
+      recPS w (arg .w x) = [argPS] w x
       recP = [mkP] ∘g ⊗-intro recA recAP
-      recAP = {!!}
-      recA  = {!!}
+      recAP w (times .w x) = [times] w (⊗-intro id recP w x)
+      recAP w (arg .w x) = [argAP] w x
+      recA w (num .w x) = [num] w x
+      recA w (parens .w x) =
+        ([parens] ∘g ⊗-intro id (⊗-intro recS id)) w x
 
--- -- make LL(1), show strong equivalence
 ll1-correct : StrongEquivalence v1.Arith v2.Arith
 ll1-correct = mkStrEq
   (v1.recS
