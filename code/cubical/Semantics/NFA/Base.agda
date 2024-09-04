@@ -13,6 +13,7 @@ open import Cubical.Data.List hiding (init)
 
 open import Semantics.Grammar (Σ₀ , isSetΣ₀)
 open import Semantics.Term (Σ₀ , isSetΣ₀)
+open import Semantics.Helper
 
 private
   variable ℓN ℓN' ℓP ℓ : Level
@@ -29,6 +30,18 @@ record NFA : Type (ℓ-suc ℓN) where
     ε-transition : FinSet ℓN
     ε-src : ε-transition .fst → Q .fst
     ε-dst : ε-transition .fst → Q .fst
+
+  decEqQ : Discrete (Q .fst)
+  decEqQ = isFinSet→Discrete (Q .snd)
+
+  hasTransition : Discrete Σ₀ → ⟨ Q ⟩ → Σ₀ → ⟨ Q ⟩ → DecProp ℓN
+  hasTransition discΣ₀ src' label' dst' =
+    DecProp∃ transition (λ t →
+      DecProp×
+         (LiftDecProp {ℓ-zero} {ℓN} (DecProp≡ discΣ₀ label' (label t)))
+         (DecProp×
+           (DecProp≡ decEqQ src' (src t))
+           (DecProp≡ decEqQ dst' (dst t))))
 
   -- The grammar "Parse q" denotes the type of traces in the NFA
   -- from state q to an accepting state

@@ -327,6 +327,18 @@ record DFA : Type (ℓ-suc ℓD) where
     Trace⊣⊢SnocTrace .fun = Trace→SnocTrace
     Trace⊣⊢SnocTrace .inv = SnocTrace→Trace
 
+  module _ (q-start : ⟨ Q ⟩) where
+    TraceFrom : Grammar ℓD
+    TraceFrom = LinΣ[ q-end ∈ ⟨ Q ⟩ ] Trace q-end q-start
+
+    ParseFrom : Grammar ℓD
+    ParseFrom =
+      LinΣ[ q-end ∈ (Σ[ q ∈ ⟨ Q ⟩ ] isAcc q .fst .fst) ]
+        Trace (q-end .fst) q-start
+
+  InitParse : Grammar ℓD
+  InitParse = ParseFrom init
+
   module _ (q-start q-end : ⟨ Q ⟩) where
     TraceAppendLiteral : ∀ c →
       Trace q-end q-start ⊗ literal c ⊢ Trace (δ q-end c) q-start
@@ -335,25 +347,3 @@ record DFA : Type (ℓ-suc ℓD) where
       snoc q-end c ∘g
       ⊗-intro (Trace→SnocTrace q-start q-end) id
 
-    -- Trace≅SnocTrace :
-    --   StrongEquivalence
-    --     (Trace q-end q-start)
-    --     (SnocTrace q-start q-end)
-    -- Trace≅SnocTrace .fun = ∃AlgebraHom q-end alg .f q-start
-    -- Trace≅SnocTrace .inv = ∃SnocAlgebraHom q-start snocAlg .f q-end
-    -- Trace≅SnocTrace .sec =
-    --   !SnocAlgebraHom' q-start
-    --     (initialSnoc q-start)
-    --     (SnocAlgebraHom-seq q-start
-    --       (∃SnocAlgebraHom q-start snocAlg)
-    --       (record {
-    --         f = λ q → ∃AlgebraHom q {!!} .f q-start
-    --       ; on-nil = {!!}
-    --       ; on-snoc = {!!} }))
-    --     -- (record {
-    --     --   f = λ q → {!!}
-    --     -- ; on-nil = {!!}
-    --     -- ; on-snoc = {!!} })
-    --     (idSnocAlgebraHom q-start (initialSnoc q-start)) q-end
-    -- Trace≅SnocTrace .ret =
-    --   {!!}

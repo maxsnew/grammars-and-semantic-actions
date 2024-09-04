@@ -59,6 +59,12 @@ record directedGraph : Type (ℓ-suc ℓ) where
 
   open GraphWalk
 
+  trivialWalk : ⟨ states ⟩ → GraphWalk 0
+  vertices (trivialWalk x) _ = x
+  edges (trivialWalk x) ()
+  compat-src (trivialWalk x) ()
+  compat-dst (trivialWalk x) ()
+
   hasUniqueVertices : GraphWalk n → Type _
   hasUniqueVertices gw = isEmbedding (gw .vertices)
 

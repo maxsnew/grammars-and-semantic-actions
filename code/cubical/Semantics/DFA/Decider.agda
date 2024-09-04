@@ -40,9 +40,6 @@ module _ (D : DFA {ℓD}) where
   open AlgebraHom
 
   module _ (q-start : ⟨ Q ⟩) where
-    TraceFrom : Grammar ℓD
-    TraceFrom = LinΣ[ q-end ∈ ⟨ Q ⟩ ] Trace q-end q-start
-
     -- The decider leverages the function TraceAppendLiteral
     -- which turns the Trace into a SnocTrace, snoc's it, and
     -- then turns the resulting SnocTrace back into a trace.
@@ -53,17 +50,17 @@ module _ (D : DFA {ℓD}) where
     -- definitional harmony with existing Brzozowski derivative
     -- actions on DFAs, AND would lose harmony with the NFA definitions
     ExtendTraceFrom : (c : Σ₀) →
-      TraceFrom ⊗ (literal c) ⊢ TraceFrom
+      TraceFrom q-start ⊗ (literal c) ⊢ TraceFrom q-start
     ExtendTraceFrom c _ (s , (q , trace), lit) =
       (δ q c) ,
       TraceAppendLiteral q-start q c _ (s , (trace , lit))
 
-    RunFromState : KL* ⊕Σ₀ ⊢ TraceFrom
+    RunFromState : KL* ⊕Σ₀ ⊢ TraceFrom q-start
     RunFromState = foldKL*l ⊕Σ₀ the-alg
       where
       the-alg : *l-Algebra ⊕Σ₀
       the-alg .the-ℓ = ℓD
-      the-alg .G = TraceFrom
+      the-alg .G = TraceFrom q-start
       the-alg .nil-case w pε = q-start , (nil _ pε)
       the-alg .snoc-case w (s , trFrom , (c , lit)) =
         ExtendTraceFrom c w (s , (trFrom , lit))
