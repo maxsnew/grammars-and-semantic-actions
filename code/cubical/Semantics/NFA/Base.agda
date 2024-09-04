@@ -15,7 +15,7 @@ open import Semantics.Grammar (Σ₀ , isSetΣ₀)
 open import Semantics.Term (Σ₀ , isSetΣ₀)
 
 private
-  variable ℓΣ₀ ℓN ℓN' ℓP ℓ : Level
+  variable ℓN ℓN' ℓP ℓ : Level
 
 record NFA : Type (ℓ-suc ℓN) where
   field
