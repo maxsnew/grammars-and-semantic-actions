@@ -18,6 +18,18 @@ module _ (g : Grammar ℓG) where
     nil : ε-grammar ⊢ KL*
     cons : g ⊗ KL* ⊢ KL*
 
+  -- I want a non-recursive way to check that a Kleene star is either nil
+  -- or cons
+  -- This shouldn't be definable via fold, because fold necessitates recursion
+  --
+  -- If KL* = μ X . ε ⊕ g ⊗ X, then this term is just ⊕-elim on that sum
+  caseKL* :
+    ε-grammar ⊢ h →
+    g ⊗ KL* ⊢ h →
+    KL* ⊢ h
+  caseKL* eε e* _ (nil _ x) = eε _ x
+  caseKL* eε e* _ (cons _ x) = e* _ x
+
   record *r-Algebra : Typeω where
     field
       the-ℓ : Level

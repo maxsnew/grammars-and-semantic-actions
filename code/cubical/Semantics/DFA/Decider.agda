@@ -27,6 +27,7 @@ open import Semantics.Helper
 private
   variable ℓΣ₀ ℓD ℓP ℓ : Level
 
+-- TODO : put this some place better
 String→KL* : (w : String) → KL* ⊕Σ₀ w
 String→KL* [] = nil _ refl
 String→KL* (x ∷ w) =

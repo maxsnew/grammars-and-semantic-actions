@@ -65,8 +65,8 @@ record PDA : Type (ℓ-suc ℓP) where
     ε-to-push : ⟨ ε-transition ⟩ → Stack
 
   data Parse : (q : ⟨ Q ⟩) (s : Stack) → Grammar ℓP where
-    nil : ∀ {q} s → isAcc q .fst .fst →
-      ε-grammar ⊢ Parse q s
+    nil : ∀ {q} → isAcc q .fst .fst →
+      ε-grammar ⊢ Parse q []
     cons : ∀ t s →
       literal (label t) ⊗ Parse (dst t) (push (to-push t) s)
         ⊢
