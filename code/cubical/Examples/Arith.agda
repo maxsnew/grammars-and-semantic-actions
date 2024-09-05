@@ -23,9 +23,9 @@ data Tok : Type where
 Alphabet : hSet _
 Alphabet = Tok , {!!}
 
-open import Semantics.Grammar Alphabet
-open import Semantics.Grammar.Equivalence Alphabet
-open import Semantics.Term Alphabet
+open import Grammar Alphabet
+open import Grammar.Equivalence Alphabet
+open import Term Alphabet
 
 module v0 where
   -- ambiguous grammar

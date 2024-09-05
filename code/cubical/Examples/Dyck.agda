@@ -31,11 +31,11 @@ isFinBracket = EquivPresIsFinSet (invEquiv BracketRep) isFinSetBool
 Alphabet : hSet _
 Alphabet = (Bracket , isFinSet→isSet isFinBracket)
 
-open import Semantics.Grammar Alphabet
-open import Semantics.Grammar.Maybe Alphabet
-open import Semantics.Grammar.Equivalence Alphabet
-open import Semantics.Grammar.KleeneStar Alphabet
-open import Semantics.Term Alphabet
+open import Grammar Alphabet
+open import Grammar.Maybe Alphabet
+open import Grammar.Equivalence Alphabet
+open import Grammar.KleeneStar Alphabet
+open import Term Alphabet
 
 private
   variable
