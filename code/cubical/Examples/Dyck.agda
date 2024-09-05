@@ -86,27 +86,6 @@ balanced-parser =
   or
   (fmap (⊗-intro Balanced.nil id) ∘g parseε)
 
-_ :
-  is-just mt (Balanced ⊗ string-grammar) (balanced-parser mt ⌈ mt ⌉)
-    ≡
-  true
-_ = refl
-
-_ :
-  is-just a (Balanced ⊗ string-grammar) (balanced-parser a ⌈ a ⌉)
-    ≡
-  true
-_ = refl
-
-_ :
-  is-just a' (Balanced ⊗ string-grammar) (balanced-parser a' ⌈ a' ⌉)
-    ≡
-  true
-_ = refl
-
-is-ε : string-grammar ⊢ Maybe ε-grammar
-is-ε = caseKL* char just nothing
-
 -- An intrinsically verified Dyck grammar parser
 --
 -- However, this parser is susceptible to false negatives
@@ -126,11 +105,7 @@ is-ε = caseKL* char just nothing
 -- 3. ⊤→string, a term ⊤-grammar ⊢ string-grammar. Defined in Parser.
 --      Used to define the _or_ parser combinator (also in Parser)
 balanced-parser' : string-grammar ⊢ Maybe Balanced
-balanced-parser' =
-  fmap ⊗-unit-r ∘g
-  μ ∘g
-  fmap (Maybe⊗r ∘g (⊗-intro id is-ε)) ∘g
-  balanced-parser
+balanced-parser' = consumes-input balanced-parser
 
 _ :
   is-just mt Balanced (balanced-parser' mt (⌈ mt ⌉))

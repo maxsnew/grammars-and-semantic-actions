@@ -38,6 +38,19 @@ private
 Parser : (g : Grammar ℓg) → Type ℓg
 Parser g = string-grammar ⊢ Maybe (g ⊗ string-grammar)
 
+is-ε : string-grammar ⊢ Maybe ε-grammar
+is-ε = caseKL* char just nothing
+
+-- TODO naming
+-- Runs the parser, then only accepts if the parser
+-- consumed all of the input string with none leftover
+consumes-input : Parser g → string-grammar ⊢ Maybe g
+consumes-input parser =
+  fmap ⊗-unit-r ∘g
+  μ ∘g
+  fmap (Maybe⊗r ∘g (⊗-intro id is-ε)) ∘g
+  parser
+
 -- Something about a strong monad?
 _then_ : Parser g → Parser h → Parser (g ⊗ h)
 e then e' =
