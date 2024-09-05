@@ -1,204 +1,309 @@
-module Grammar where
+module Semantics.Grammar where
 
 open import Cubical.Foundations.Prelude
-open import Cubical.Data.Empty
+open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.GroupoidLaws
+open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
+
 open import Cubical.Data.List
-open import Cubical.Data.List.FinData
-open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
-open import Cubical.Data.FinData
+open import Cubical.Data.W.Indexed
 open import Cubical.Data.Unit
+open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.SumFin hiding (fsuc)
+open import Cubical.Data.Sigma
+open import Cubical.Data.FinSet
+open import Cubical.HITs.PropositionalTruncation
 
-open import Cubical.Categories.Category
-open import Cubical.Categories.Functor
-open import Cubical.Categories.Constructions.Power
-open import Cubical.Categories.Instances.Sets
+open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.Properties
+open import Cubical.Relation.Nullary.DecidablePropositions
 
-open Category
-open Functor
+open import Cubical.HITs.PropositionalTruncation as PT
+
+open import Semantics.Helper public
+open import Semantics.String public
 
 private
-  variable
-    ℓ' ℓ'' ℓ''' ℓ'''' ℓx ℓy ℓa ℓb ℓg ℓg' ℓh ℓh' : Level
+  variable ℓ ℓ' : Level
 
-module _ (𝓐 : Set ℓ) where
-  String = List 𝓐
+module GrammarDefs ℓ ((Σ₀ , isFinSetΣ₀) : FinSet ℓ) where
+  open StringDefs ℓ (Σ₀ , isFinSetΣ₀)
+  Grammar : Type (ℓ-suc ℓ)
+  Grammar = String → Type ℓ
 
-  Splitting : String → Type ℓ
-  Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] w₁ ++ w₂ ≡ w
+  isHGrammar : Grammar → Type ℓ
+  isHGrammar g = ∀ w → isSet (g w)
 
-  module _ (ℓ' : Level) where
-    -- GRAMMAR : Category (ℓ-max ℓ (ℓ-suc ℓ')) (ℓ-max ℓ ℓ')
-    -- GRAMMAR = PowerCategory String (SET ℓ')
+  hGrammar : Type (ℓ-suc ℓ)
+  hGrammar = Σ[ g ∈ Grammar ] isHGrammar g
 
-    Grammar : Type _
-    Grammar = String → Type ℓ'
+  ε-grammar : Grammar
+  ε-grammar w = w ≡ []
 
-    -- Total parser, parses every string
-    Parser : (g : Grammar) → Type _
-    Parser g = (w : String) → g w
+  LiftGrammar : ∀ {L} → Grammar → String → Type (ℓ-max (ℓ-suc ℓ) L)
+  LiftGrammar {L} g w = Lift {ℓ}{ℓ-max (ℓ-suc ℓ) L} (g w)
 
-    -- Discrete : Functor (SET ℓ') GRAMMAR
-    -- Discrete .F-ob X w = X
-    -- Discrete .F-hom f w x = f x
-    -- Discrete .F-id = refl
-    -- Discrete .F-seq f g = refl
+  isHGrammar-ε-grammar : isHGrammar ε-grammar
+  isHGrammar-ε-grammar _ = isGroupoidString _ _
 
-    -- An action over X can be equivalently defined as an object of
-    -- - Grammar ^ X
-    -- - Grammar / Δ X
-    Action : ∀ {ℓ''} (X : Type ℓ'') → Type _
-    Action X = X → Grammar
+  _⊗_ : Grammar → Grammar → Grammar
+  (g ⊗ g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
+  infixr 20 _⊗_
 
-    module _ {ℓ''} {X : Type ℓ''} where
-      Actor : (A : Action X) → Type _
-      Actor A = (w : String) → Σ[ x ∈ X ] A x w
+  isHGrammar-⊗ : (g g' : hGrammar) → isHGrammar (g .fst ⊗ g' .fst)
+  isHGrammar-⊗ g g' _ =
+    isSetΣ (isSetSplitting _) (λ s → isSet× (g .snd _) (g' .snd _))
 
-      Actionᴰ : ∀ {ℓ'''} (Y : X → Type ℓ''') → Type _
-      Actionᴰ Y = {x : X} → Action (Y x)
+  literal : Σ₀ → Grammar
+  literal c w = w ≡ [ c ]
 
-  module _ where
-    ¬ : Grammar ℓ' → Grammar ℓ'
-    ¬ g w = g w → ⊥
+  isHGrammar-literal : ∀ c → isHGrammar (literal c)
+  isHGrammar-literal c w = isGroupoidString _ _
 
-    ε : Grammar ℓ
-    ε a = a ≡ []
+  _-⊗_ : Grammar → Grammar → Grammar
+  (g -⊗ g') w = ∀ (w' : String) → g w' → g' (w' ++ w)
 
-    _*_ : Grammar ℓ' → Grammar ℓ'' → Grammar (ℓ-max (ℓ-max ℓ ℓ') ℓ'')
-    (g₁ * g₂) w = Σ[ s ∈ Splitting w ] g₁ (s .fst .fst) × g₂ (s .fst .snd)
+  isHGrammar--⊗ : (g g' : hGrammar) → isHGrammar (g .fst -⊗ g' .fst)
+  isHGrammar--⊗ g g' _ = isSetΠ (λ _ → isSetΠ (λ _ → g' .snd _))
 
-    Σ* : ∀ {X : Type ℓ''} {Y : X → Type ℓ'''}
-           (A : Action ℓa X) (B : Actionᴰ ℓb Y)
-           → Action (ℓ-max (ℓ-max ℓ ℓa) ℓb) (Σ[ x ∈ X ] Y x)
-    Σ* {X = X}{Y = Y} A B (x , y) w = Σ[ s ∈ Splitting w ] A x (s .fst .fst) × B y (s .fst .snd)
+  _⊗-_ : Grammar → Grammar → Grammar
+  (g ⊗- g') w = ∀ (w' : String) → g' w' → g (w ++ w')
 
-    *Σ : ∀ {X : Type ℓ''} {Y : X → Type ℓ'''}
-           (A : Action ℓa X) (B : Actionᴰ ℓb Y)
-           → Action (ℓ-max (ℓ-max ℓ ℓa) ℓb) (Σ[ x ∈ X ] Y x)
-    *Σ {X = X}{Y = Y} A B (x , y) w = Σ[ s ∈ Splitting w ] A x (s .fst .snd) × B y (s .fst .fst)
+  isHGrammar-⊗- : (g g' : hGrammar) → isHGrammar (g .fst ⊗- g' .fst)
+  isHGrammar-⊗- g g' _ = isSetΠ λ _ → isSetΠ (λ _ → g .snd _)
 
-    _-*_ : Grammar ℓ' → Grammar ℓ'' → Grammar (ℓ-max (ℓ-max ℓ ℓ') ℓ'')
-    (g₁ -* g₂) w = (wp : String) → g₁ wp → g₂ (wp ++ w)
+  LinearΠ : {A : Type ℓ} → (A → Grammar) → Grammar
+  LinearΠ {A} f w = ∀ (a : A) → f a w
 
-    _-*A_ : {X : Type ℓx}{Y : Type ℓy}
-          → Action ℓa X → Action ℓb Y
-          → Action _ (X → Y)
-    (A -*A B) f w = ∀ {x} (wp : String) → A x wp → B (f x) (wp ++ w)
+  isHGrammar-LinearΠ :
+    {A : hSet ℓ} → (B : A .fst → hGrammar) →
+    isHGrammar (LinearΠ {A .fst} (λ a → B a .fst))
+  isHGrammar-LinearΠ {A} B _ = isSetΠ (λ a → B a .snd _)
 
-    Πp : ∀ {X : Type ℓ''} {Y : X → Type ℓ'''}
-           (A : Action ℓa X) (B : Actionᴰ ℓb Y)
-           → Action _ ((x : X) → Y x)
-    Πp A B f w = ∀ {x} → (wp : String) → A x wp → B (f x) (wp ++ w)
+  LinearΣ : {A : Type ℓ} → (A → Grammar) → Grammar
+  LinearΣ {A} f w = Σ[ a ∈ A ] f a w
 
-    Πs : ∀ {X : Type ℓ''} {Y : X → Type ℓ'''}
-           (A : Action ℓa X) (B : Actionᴰ ℓb Y)
-           → Action _ ((x : X) → Y x)
-    Πs A B f w = ∀ {x} → (ws : String) → A x ws → B (f x) (w ++ ws)
+  LinearΣ-syntax : {A : Type ℓ} → (A → Grammar) → Grammar
+  LinearΣ-syntax = LinearΣ
 
-    _*-_ : Grammar ℓ' → Grammar ℓ'' → Grammar (ℓ-max (ℓ-max ℓ ℓ') ℓ'')
-    (g₂ *- g₁) w = (ws : String) → g₁ w → g₂ (w ++ ws)
+  syntax LinearΣ-syntax {A} (λ x → B) = LinΣ[ x ∈ A ] B
 
-    _*-A_ : {X : Type ℓx}{Y : Type ℓy}
-          → Action ℓa Y → Action ℓb X
-          → Action _ (X → Y)
-    (B *-A A) f w = ∀ {x} (ws : String) → A x ws → B (f x) (w ++ ws)
+  isHGrammar-LinearΣ :
+    {A : hSet ℓ} → (B : A .fst → hGrammar) →
+    isHGrammar (LinearΣ {A .fst} (λ a → B a .fst))
+  isHGrammar-LinearΣ {A} B _ = isSetΣ (A .snd) (λ a → B a .snd _)
 
-    y : 𝓐 → Grammar ℓ
-    y c w = c ∷ [] ≡ w
+  ⊤-grammar : Grammar
+  ⊤-grammar _ = Unit*
 
-    ∂l : 𝓐 → Grammar ℓ' → Grammar (ℓ-max ℓ ℓ')
-    ∂l c g = y c -* g
+  isHGrammar-⊤-grammar : isHGrammar ⊤-grammar
+  isHGrammar-⊤-grammar _ = isSetUnit*
 
-    ∂r : 𝓐 → Grammar ℓ' → Grammar (ℓ-max ℓ ℓ')
-    ∂r c g = g *- y c
+  _&_ : Grammar → Grammar → Grammar
+  (g & g') w = g w × g' w
 
-    ⊤g : Grammar ℓ-zero
-    ⊤g w = Unit
+  isHGrammar-& :
+    (g : hGrammar) → (g' : hGrammar) → isHGrammar (g .fst & g' .fst)
+  isHGrammar-& g g' _ = isSet× (g .snd _) (g' .snd _)
 
-    ⊤A : Action ℓ-zero Unit
-    ⊤A tt w = Unit
+  _⊕_ : Grammar → Grammar → Grammar
+  (g ⊕ g') w = g w ⊎ g' w
 
-    _∧A_ : ∀ {X : Type ℓx}{Y : Type ℓy} → Action ℓa X → Action ℓb Y
-         → Action (ℓ-max ℓa ℓb) (X × Y)
-    (A ∧A B) (x , y) w = A x w × B y w
+  isHGrammar-⊕ :
+    (g : hGrammar) → (g' : hGrammar) → isHGrammar (g .fst ⊕ g' .fst)
+  isHGrammar-⊕ g g' _ = isSet⊎ (g .snd _) (g' .snd _)
 
-    _⊎g_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-    (g ⊎g h) w = g w ⊎ h w
+  ⊥-grammar : Grammar
+  ⊥-grammar _ = Lift ⊥
 
-    ⊥A : Action ℓ-zero ⊥
-    ⊥A ()
+  isHGrammar-⊥-grammar : isHGrammar ⊥-grammar
+  isHGrammar-⊥-grammar _ = isProp→isSet isProp⊥*
 
-    _⊎A_ : {X : Type ℓx}{Y : Type ℓy}
-          → Action ℓa X → Action ℓb Y
-          → Action (ℓ-max ℓa ℓb) (X ⊎ Y)
-    _⊎A_ {ℓa = ℓa}{ℓb = ℓb} A B (inl x) w = Lift {ℓa}{ℓb} (A x w)
-    _⊎A_ {ℓa = ℓa}{ℓb = ℓb} A B (inr y) w = Lift {ℓb}{ℓa} (B y w)
+  DecProp-grammar' :
+    DecProp ℓ → Grammar
+  DecProp-grammar' d =
+    decRec (λ _ → ⊤-grammar) (λ _ → ⊥-grammar) (d .snd)
 
-    module _ {X : Type ℓx} (A : Action ℓa X) where
-      data Kleene : List X → String → Type ((ℓ-max ℓ (ℓ-max ℓa ℓx))) where
-        [] : Kleene [] []
-        _∷_ : ∀ {x}{xs}{w}{w'} → A x w → Kleene xs w' → Kleene (x ∷ xs) (w ++ w')
+  _⇒_ : Grammar → Grammar → Grammar
+  (g ⇒ g') w = g w → g' w
 
-    push : ∀ {X : Type ℓx}{Y : Type ℓy} (f : X → Y) → Action ℓa X → Action (ℓ-max (ℓ-max ℓx ℓy) ℓa) Y
-    push f A y w = Σ[ x ∈ _ ] (f x ≡ y) × A x w
+  isHGrammar-⇒ :
+    {g : Grammar} → (g' : hGrammar) → isHGrammar ( g ⇒ g' .fst )
+  isHGrammar-⇒ g' _ = isSet→ (g' .snd _)
 
-    pull : ∀ {X : Type ℓx}{Y : Type ℓy} (f : X → Y) → Action ℓa Y → Action ℓa X
-    pull f A x = A (f x)
+  Term : Grammar → Grammar → Type ℓ
+  Term g g' = ∀ {w} → g w → g' w
 
-    Unambiguous : Grammar ℓ' → Type (ℓ-max ℓ ℓ')
-    Unambiguous g = ∀ w → isProp (g w)
+  infix 5 Term
+  syntax Term g g' = g ⊢ g'
 
-    UnderlyingGrammar : (X : Type ℓ') → Action ℓa X → Grammar (ℓ-max ℓ' ℓa)
-    UnderlyingGrammar X A w = Σ[ x ∈ X ] A x w
 
-    PartialG DecG : Grammar ℓ' → Grammar ℓ'
+  data KL*Ty (g : Grammar) : (w : String) → Type ℓ where
+    nil : Term ε-grammar (KL*Ty g)
+    cons : Term (g ⊗ KL*Ty g) (KL*Ty g)
 
-    PartialG g = g ⊎g ⊤g
-    DecG g = g ⊎g (¬ g)
+  -- Use IW trees to prove that Kleene star forms a set
+  -- (provided that the original grammar outputs sets)
+  module isSetKL*TyProof
+    (hg : hGrammar)
+    where
+    g = hg .fst
+    setParses = hg .snd
 
-    SemiParser DecParser : Grammar ℓ' → Type _
+    KL*Ty-X = String
 
-    SemiParser g = Parser _ (PartialG g)
-    DecParser g = Parser _ (DecG g)
+    KL*Ty-S : KL*Ty-X → Type ℓ
+    KL*Ty-S w =
+      (w ≡ []) ⊎
+      (Σ[ s ∈ Splitting w ] g (s .fst .fst))
 
-    Printer : (X : Type ℓx) (A : Action ℓa X) → Type _
-    Printer X A = (x : X) → Σ[ w ∈ String ] A x w
+    KL*Ty-P : ∀ w → KL*Ty-S w → Type ℓ-zero
+    KL*Ty-P w (inl x) = ⊥
+    KL*Ty-P w (inr x) = ⊤
 
--- Regexp
-  -- data RE {ℓ'} : (B : Set ℓ') → Set (ℓ-max ℓ (ℓ-suc ℓ')) where
-  --   Yo : 𝓐 → RE Unit*
-  --   ϵ    : RE Unit*
-  --   _⨾_ : ∀ {B B' : Set ℓ'} → RE B → RE B' → RE (B × B')
-  --   zero : RE ⊥*
-  --   _||_ : ∀ {B B' : Set ℓ'} → RE B → RE B' → RE (B ⊎ B')
-  --   _⋆ : ∀ {B : Set ℓ'} → RE B → RE (List B)
-  --   mapRE : ∀ {B B' : Set ℓ'} → (B → B') → RE B → RE B'
+    KL*Ty-inX : ∀ w (s : KL*Ty-S w) → KL*Ty-P w s → KL*Ty-X
+    KL*Ty-inX w (inr (s , sp)) x = s .fst .snd
 
-  -- -- CFE
-  -- module CFE {ℓ' : Level} where
-  --   data CFE : (Γ : List (Type ℓ')) (B : Type ℓ') → Set ((ℓ-max ℓ (ℓ-suc ℓ'))) where
-  --     Yo : ∀ {Γ} → 𝓐 → CFE Γ Unit*
-  --     ϵ    : ∀ {Γ} → CFE Γ Unit*
-  --     _⨾_ : ∀ {Γ}{B B'} → CFE Γ B → CFE Γ B' → CFE Γ (B × B')
-  --     zero : ∀ {Γ} → CFE Γ ⊥*
-  --     _||_ : ∀ {Γ B B'} → CFE Γ B → CFE Γ B' → CFE Γ (B ⊎ B')
+    KL*Ty→W : ∀ {w} → KL*Ty g w → IW KL*Ty-S KL*Ty-P KL*Ty-inX w
+    KL*Ty→W (nil x) = node (inl x) λ ()
+    KL*Ty→W (cons x) =
+      node (inr ((x .fst) , (x .snd .fst)))
+        λ _ → KL*Ty→W (x .snd .snd)
 
-  --     μ   : ∀ {Γ B} → CFE (B ∷ Γ) B → CFE Γ B
-  --     var : ∀ {Γ} → (x : Fin (length Γ)) → CFE Γ (lookup Γ x)
+    W→KL*Ty : ∀ {w} → IW KL*Ty-S KL*Ty-P KL*Ty-inX w → KL*Ty g w
+    W→KL*Ty (node (inl x) subtree) = nil x
+    W→KL*Ty (node (inr x) subtree) =
+      cons ((x .fst) , ((x .snd) , (W→KL*Ty (subtree _))))
 
-  --     mapCFE : ∀ {Γ B B'} → (B → B') → CFE Γ B → CFE Γ B'
+    KL*TyRetractofW :
+      ∀ {w} (p : KL*Ty g w) →
+      W→KL*Ty (KL*Ty→W p) ≡ p
+    KL*TyRetractofW (nil x) = refl
+    KL*TyRetractofW (cons x) =
+      cong cons
+        (ΣPathP (refl ,
+          (ΣPathP (refl ,
+            (KL*TyRetractofW (x .snd .snd))))))
 
-  -- module CSE {ℓ' : Level} where
-  --   -- "context sensitive expressions" a bit of a misnomer tbh
-  --   data CSE : (Γ : List (Type ℓ')) (B : Type ℓ') → Set ((ℓ-max ℓ (ℓ-suc ℓ'))) where
-  --     Yo : ∀ {Γ} → 𝓐 → CSE Γ Unit*
-  --     ϵ    : ∀ {Γ} → CSE Γ Unit*
-  --     _⨾_ : ∀ {Γ B}{B' : B → _} → CSE Γ B → ((b : B) → CSE Γ (B' b)) → CSE Γ (Σ[ b ∈ B ] (B' b))
-  --     zero : ∀ {Γ} → CSE Γ ⊥*
-  --     _||_ : ∀ {Γ B B'} → CSE Γ B → CSE Γ B' → CSE Γ (B ⊎ B')
 
-  --     μ   : ∀ {Γ B} → CSE (B ∷ Γ) B → CSE Γ B
-  --     var : ∀ {Γ} → (x : Fin (length Γ)) → CSE Γ (lookup Γ x)
+    isSetKL*Ty-S : ∀ w → isSet (KL*Ty-S w)
+    isSetKL*Ty-S w =
+      isSet⊎
+        (isGroupoidString _ _)
+        (isSetΣ (isSetSplitting _) λ _ → setParses _)
 
-  --     mapCSE : ∀ {Γ B B'} → (B → B') → CSE Γ B → CSE Γ B'
+    isSetKL*Ty : ∀ w → isSet (KL*Ty g w)
+    isSetKL*Ty w =
+      isSetRetract
+        KL*Ty→W W→KL*Ty
+        KL*TyRetractofW
+        (isOfHLevelSuc-IW 1 isSetKL*Ty-S w)
 
+  open isSetKL*TyProof
+  KL* : Grammar → Grammar
+  KL* g w = KL*Ty g w
+
+  isHGrammar-KL* : (g : hGrammar) → isHGrammar (KL* (g .fst))
+  isHGrammar-KL* g _ = isSetKL*Ty g _
+
+  ⊕Σ₀ : Grammar
+  ⊕Σ₀ w = Σ[ c ∈ Σ₀ ] literal c w
+
+  isHGrammar-⊕Σ₀ : isHGrammar ⊕Σ₀
+  isHGrammar-⊕Σ₀ _ = isSetΣ isSetΣ₀ (λ _ → isHGrammar-literal _ _)
+
+  MaybeGrammar : Grammar → Grammar
+  MaybeGrammar g = g ⊕ ⊤-grammar
+
+  String→KL* : (w : String) → KL* ⊕Σ₀ w
+  String→KL* [] = nil refl
+  String→KL* (c ∷ w) =
+    cons ((([ c ] , w) , refl) , ((c , refl) , (String→KL* w)))
+
+  KL*→String : ∀ {w} → KL* ⊕Σ₀ w → String
+  KL*→String {w} p = w
+
+  ∥_∥grammar : Grammar → Grammar
+  ∥_∥grammar g w = ∥ g w ∥₁
+
+  isPropValuedGrammar : (g : Grammar) → Type ℓ
+  isPropValuedGrammar g = ∀ {w} → isProp (g w)
+
+  isPropValuedGrammar-literal : ∀ {c} → isPropValuedGrammar (literal c)
+  isPropValuedGrammar-literal {c} = isSetString _ [ c ]
+
+  isPropValuedGrammar-ε-grammar : isPropValuedGrammar ε-grammar
+  isPropValuedGrammar-ε-grammar = isSetString _ []
+
+  data RegularExpression : Type ℓ where
+    ε-Reg : RegularExpression
+    _⊗Reg_ : RegularExpression → RegularExpression → RegularExpression
+    literalReg : Σ₀ → RegularExpression
+    _⊕Reg_ : RegularExpression → RegularExpression → RegularExpression
+    KL*Reg : RegularExpression → RegularExpression
+
+  RegularExpression→Grammar : RegularExpression → Grammar
+  RegularExpression→Grammar ε-Reg = ε-grammar
+  RegularExpression→Grammar (g ⊗Reg g') =
+    (RegularExpression→Grammar g) ⊗ (RegularExpression→Grammar g')
+  RegularExpression→Grammar (literalReg c) = literal c
+  RegularExpression→Grammar (g ⊕Reg g') =
+    RegularExpression→Grammar g ⊕ RegularExpression→Grammar g'
+  RegularExpression→Grammar (KL*Reg g) = KL* (RegularExpression→Grammar g)
+
+  Language : Grammar → Type ℓ
+  Language g = Σ[ w ∈ String ] ∥ g w ∥₁
+
+  isSetLanguage : (g : hGrammar) → isSet (Language (g .fst))
+  isSetLanguage g = isSetΣ isSetString (λ w → isProp→isSet isPropPropTrunc)
+
+  module _ (g g' : Grammar) where
+    isLogicallyEquivalent : Type ℓ
+    isLogicallyEquivalent = Term g g' × Term g' g
+
+    isWeaklyEquivalent : Type ℓ
+    isWeaklyEquivalent = Iso (Language g) (Language g')
+
+    open Iso
+    isLogicalEquivalence→WeakEquivalence :
+      isLogicallyEquivalent → isWeaklyEquivalent
+    fst (fun (isLogicalEquivalence→WeakEquivalence logEq) x) = x .fst
+    snd (fun (isLogicalEquivalence→WeakEquivalence logEq) x) =
+      PT.rec
+        isPropPropTrunc
+        (λ p → ∣ logEq .fst p ∣₁)
+        (x .snd)
+    fst (inv (isLogicalEquivalence→WeakEquivalence logEq) x) = x .fst
+    snd (inv (isLogicalEquivalence→WeakEquivalence logEq) x) =
+      PT.rec
+        isPropPropTrunc
+        (λ p → ∣ logEq .snd p ∣₁)
+        (x .snd)
+    rightInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
+      Σ≡Prop (λ _ → isPropPropTrunc) refl
+    leftInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
+      Σ≡Prop (λ _ → isPropPropTrunc) refl
+
+    isStronglyEquivalent : Type ℓ
+    isStronglyEquivalent = ∀ w → Iso (g w) (g' w)
+
+    isStronglyEquivalent→isWeaklyEquivalent :
+      isStronglyEquivalent → isWeaklyEquivalent
+    fst (fun (isStronglyEquivalent→isWeaklyEquivalent strEq) x) = x .fst
+    snd (fun (isStronglyEquivalent→isWeaklyEquivalent strEq) x) =
+      PT.rec
+        isPropPropTrunc
+        (λ p → ∣ strEq (x .fst) .fun p ∣₁)
+        (x .snd)
+    fst (inv (isStronglyEquivalent→isWeaklyEquivalent strEq) x) = x .fst
+    snd (inv (isStronglyEquivalent→isWeaklyEquivalent strEq) x) =
+      PT.rec
+        isPropPropTrunc
+        (λ p → ∣ strEq (x .fst) .inv p ∣₁)
+        (x .snd)
+    rightInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
+      Σ≡Prop (λ _ → isPropPropTrunc) refl
+    leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
+      Σ≡Prop (λ _ → isPropPropTrunc) refl
