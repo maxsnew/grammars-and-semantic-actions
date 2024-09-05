@@ -471,6 +471,10 @@ cong-∘g⊗-unit-r⁻ f g ∘g≡ =
 ⇒-intro e _ pg = λ ph → e _ (pg , ph)
 
 ⇒-app :
-  g & (g ⇒ h) ⊢ h
-⇒-app _ (pg , f) = f pg
+  (g ⇒ h) & g ⊢ h
+⇒-app _ (f , pg) = f pg
 
+⇒-intro⁻ :
+  g ⊢ h ⇒ k
+  → g & h ⊢ k
+⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₁) &-π₂
