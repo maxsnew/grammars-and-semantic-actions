@@ -108,6 +108,12 @@ is-ε : string-grammar ⊢ Maybe ε-grammar
 is-ε = caseKL* char just nothing
 
 -- An intrinsically verified Dyck grammar parser
+--
+-- However, this parser is susceptible to false negatives
+-- It may choose to error on a give input string when that string
+-- would indeed match the Dyck grammar. And there does not seem
+-- to be anyway we can hope to guarantee this level of completeness
+--
 -- NOTE : This required the addition of a couple things that may be
 -- problematic but are likely admissible
 -- These are not included in this file, but the code presented here
