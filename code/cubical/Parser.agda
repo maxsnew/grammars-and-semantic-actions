@@ -30,6 +30,11 @@ private
     g : Grammar ℓg
     h : Grammar ℓh
 
+-- Potentially abstraction breaking but seemingly needed. However
+-- this is also an axiom we've considered adding
+⊤→string : ∀ {ℓg} → Term {ℓg} ⊤-grammar string-grammar
+⊤→string w _ = ⌈ w ⌉
+
 Parser : (g : Grammar ℓg) → Type ℓg
 Parser g = string-grammar ⊢ Maybe (g ⊗ string-grammar)
 
@@ -42,7 +47,16 @@ e then e' =
   fmap (⊗-intro id e') ∘g
   e
 
+-- Try the first parser. If it fails try the second
+_or_ : Parser g → Parser g → Parser g
+e or e' = ⊕-elim return (e' ∘g ⊤→string) ∘g e
+
 infixr 8 _then_
+
+parseε : Parser ε-grammar
+parseε =
+  just ∘g
+  ⊗-unit-l⁻
 
 parseChar : (c : ⟨ Alphabet ⟩) → Parser (literal c)
 parseChar c =
