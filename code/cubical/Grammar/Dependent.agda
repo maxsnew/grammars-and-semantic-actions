@@ -26,5 +26,3 @@ LinearΣ-syntax = LinearΣ
 
 syntax LinearΣ-syntax {A = A} (λ x → B) = LinΣ[ x ∈ A ] B
 
-⊕Σ₀ : Grammar ℓ-zero
-⊕Σ₀ = LinearΣ λ (c : ⟨ Alphabet ⟩ ) → literal c
