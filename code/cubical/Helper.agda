@@ -1,4 +1,4 @@
-module Semantics.Helper where
+module Helper where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -6,6 +6,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Powerset
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Structure
 open import Cubical.Functions.Embedding
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
@@ -64,6 +65,15 @@ isSetLift isSetA x y a b i =
   liftExt
     (isSetA (lower x) (lower y)
     (cong lower a) (cong lower b) i)
+
+isGroupoidLift :
+  {L L' : Level} →
+  {A : Type L} →
+  isGroupoid A → isGroupoid (Lift {L}{L'} A)
+isGroupoidLift isGroupoidA x y a b u v i j k =
+  lift
+  ((isGroupoidA (lower x) (lower y)) (cong lower a)
+    (cong lower b) (cong (cong lower) u) (cong (cong lower) v) i j k)
 
 DecLift :
   {L L' : Level} →
@@ -238,6 +248,9 @@ DecProp× :
   DecProp ℓ
 DecProp× A B = DecPropΣ A (λ _ → B)
 
+DecProp≡ : ∀ {ℓ} {A : Type ℓ} → Discrete A → A → A → DecProp ℓ
+DecProp≡ disc x y = ((x ≡ y) , Discrete→isSet disc x y) , disc x y
+
 Bool-iso-DecProp' : ∀ {ℓ} → Iso (Bool) (DecProp' ℓ)
 fst (fun Bool-iso-DecProp' false) = ⊥*
 fst (fun Bool-iso-DecProp' true) = Unit*
@@ -282,6 +295,15 @@ Decℙ {ℓ} A = A → DecProp ℓ
 Decℙ' : ∀ {ℓ} → Type ℓ → Type (ℓ-suc ℓ)
 Decℙ' {ℓ} A = A → DecProp' ℓ
 
+LiftDecProp'' :
+  ∀ {L}{L'} →
+  DecProp L →
+  DecProp (ℓ-max L L')
+LiftDecProp'' {L} {L'} (p , _) .fst .fst = Lift {L}{L'} (p .fst)
+LiftDecProp'' {L} {L'} (p , _) .fst .snd = isPropLift (p .snd)
+LiftDecProp'' (p , yes yep) .snd = yes (lift yep)
+LiftDecProp'' (p , no nope) .snd = no (λ lyep → nope (lyep .lower))
+
 LiftDecProp :
   ∀ {L}{L'} →
   DecProp L →
@@ -306,6 +328,14 @@ LiftDecProp'Witness :
 LiftDecProp'Witness {L}{L'} (u , false , v) a = lift {L}{L'} a
 LiftDecProp'Witness {L}{L'} (u , true , v) a = lift {L}{L'} a
 
+LiftDecPropWitness :
+  ∀ {L}{L'} →
+  (A : DecProp L) →
+  (a : A .fst .fst) →
+  LiftDecProp {L}{L'} A .fst .fst
+LiftDecPropWitness {L} {L'} (u , yes p) a = lift a
+LiftDecPropWitness {L} {L'} (u , no ¬p) a = lift a
+
 LowerDecProp'Witness :
   ∀ {L}{L'} →
   (A : DecProp' L) →
@@ -313,6 +343,30 @@ LowerDecProp'Witness :
   A .fst
 LowerDecProp'Witness {L}{L'} (u , false , v) a = lower a
 LowerDecProp'Witness {L}{L'} (u , true , v) a = lower a
+
+LowerDecPropWitness :
+  ∀ {L}{L'} →
+  (A : DecProp L) →
+  (a : LiftDecProp {L}{L'} A .fst .fst) →
+  A .fst .fst
+LowerDecPropWitness {L} {L'} ((u , isProp-u) , yes p) a = lower a
+LowerDecPropWitness {L} {L'} ((u , isProp-u) , no ¬p) a = lower a
+
+LowerLiftWitness :
+  ∀ {L}{L'} →
+  (A : DecProp L) →
+  (a : A .fst .fst) →
+  LowerDecPropWitness {L}{L'} A (LiftDecPropWitness A a) ≡ a
+LowerLiftWitness (_ , yes p) a = refl
+LowerLiftWitness (_ , no p) a = refl
+
+LiftLowerWitness :
+  ∀ {L}{L'} →
+  (A : DecProp L) →
+  (a : LiftDecProp {L}{L'} A .fst .fst) →
+  LiftDecPropWitness {L}{L'} A (LowerDecPropWitness {L}{L'} A a) ≡ a
+LiftLowerWitness (_ , yes p) a = refl
+LiftLowerWitness (_ , no p) a = refl
 
 LiftDecℙ' : ∀ {L}{L'} (A : Type L) →
   (Decℙ' {L} A) → (Decℙ' {ℓ-max L L'} (Lift {L}{L'} A))
@@ -358,3 +412,17 @@ SingletonDecℙ {A = A} a x =
 SingletonDecℙ' : ∀ {ℓ} {A : FinSet ℓ} → (a : A .fst) → Decℙ' (A .fst)
 SingletonDecℙ' {A = A} a =
   DecℙIso (A .fst) .fun (SingletonDecℙ {A = A} a)
+
+Decℙ'→FinSet : ∀ {ℓ} (A : FinSet ℓ) → Decℙ' (A .fst) → FinSet ℓ
+fst (Decℙ'→FinSet A X) = Σ[ a ∈ A .fst ] X a .fst
+snd (Decℙ'→FinSet A X) = isFinSetSub A X
+
+Decℙ→FinSet : ∀ {ℓ} (A : FinSet ℓ) → Decℙ (A .fst) → FinSet ℓ
+Decℙ→FinSet A X = Decℙ'→FinSet A (DecℙIso (A .fst) .fun X )
+
+-- I'm pretty sure this is the `bind` of a FinSet monad
+FinSetDecℙ∃ :
+  ∀ {ℓ} (A B : FinSet ℓ) →
+  ⟨ FinSetDecℙ A ⟩ →
+  (⟨ A ⟩ → ⟨ FinSetDecℙ B ⟩) → ⟨ FinSetDecℙ B ⟩
+FinSetDecℙ∃ A B ℙA f b = DecProp∃ A (λ a → DecProp× (ℙA a) (f a b))

@@ -278,3 +278,4 @@ TSWLatexianTemp*
 
 .DS_Store
 /code/cubical/KleeneCategory/SilvaExercises.agda
+/code/cubical/_build/
