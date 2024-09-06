@@ -288,11 +288,17 @@ cong-∘g⊗-unit-r⁻ f g ∘g≡ =
 
 
 -- TODO : this needs a better name
--⊗-curry :
+-⊗-strength :
   (g -⊗ h) ⊗ k ⊢ g -⊗ (h ⊗ k)
--⊗-curry {g = g}{h = h}{k = k} =
+-⊗-strength {g = g}{h = h}{k = k} =
   -⊗-intro {g = g}{h = (g -⊗ h) ⊗ k}{k = h ⊗ k}
     (⊗-assoc ⋆ ⊗-intro -⊗-app id)
+
+-- THE ORDER SWAPS!
+-⊗-curry :
+  (g ⊗ h) -⊗ k ⊢ h -⊗ (g -⊗ k)
+-⊗-curry {g = g}{k = k} =
+  -⊗-intro {k = g -⊗ k} (-⊗-intro {k = k} (-⊗-app ∘g ⊗-assoc))
 
 -⊗-β :
   (m : (g ⊗ h) ⊢ k) →

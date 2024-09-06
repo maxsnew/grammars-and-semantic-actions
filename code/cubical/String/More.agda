@@ -18,6 +18,7 @@ open import Helper
 
 -- Some resources for reasoning internally about strings
 
+-- why is this in String.More and not Grammar.Something ?
 char : Grammar ℓ-zero
 char = LinΣ[ c ∈ ⟨ Alphabet ⟩ ] literal c
 
