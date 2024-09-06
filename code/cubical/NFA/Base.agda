@@ -24,15 +24,15 @@ record NFA : Type (ℓ-suc ℓN) where
     init : Q .fst
     isAcc : Q .fst → DecProp ℓN
     transition : FinSet ℓN
-    src : transition .fst → Q .fst
-    dst : transition .fst → Q .fst
-    label : transition .fst → ⟨ Alphabet ⟩
+    src : ⟨ transition ⟩ → ⟨ Q ⟩
+    dst : ⟨ transition ⟩ → ⟨ Q ⟩
+    label : ⟨ transition ⟩ → ⟨ Alphabet ⟩
     ε-transition : FinSet ℓN
-    ε-src : ε-transition .fst → Q .fst
-    ε-dst : ε-transition .fst → Q .fst
+    ε-src : ⟨ ε-transition ⟩ → ⟨ Q ⟩
+    ε-dst : ⟨ ε-transition ⟩ → ⟨ Q ⟩
 
-  decEqQ : Discrete (Q .fst)
-  decEqQ = isFinSet→Discrete (Q .snd)
+  decEqQ : Discrete ⟨ Q ⟩
+  decEqQ = isFinSet→Discrete (str Q)
 
   hasTransition : Discrete ⟨ Alphabet ⟩ → ⟨ Q ⟩ →
     ⟨ Alphabet ⟩ → ⟨ Q ⟩ → DecProp ℓN
@@ -46,7 +46,7 @@ record NFA : Type (ℓ-suc ℓN) where
 
   -- The grammar "Parse q" denotes the type of traces in the NFA
   -- from state q to an accepting state
-  data Parse : (q : Q .fst) → Grammar ℓN where
+  data Parse : (q : ⟨ Q ⟩) → Grammar ℓN where
     nil : ∀ {q} → isAcc q .fst .fst →
       ε-grammar ⊢ Parse q
     cons : ∀ tr →
@@ -59,8 +59,8 @@ record NFA : Type (ℓ-suc ℓN) where
 
   record Algebra : Typeω where
     field
-      the-ℓs : Q .fst → Level
-      G : (q : Q .fst) → Grammar (the-ℓs q)
+      the-ℓs : ⟨ Q ⟩ → Level
+      G : (q : ⟨ Q ⟩) → Grammar (the-ℓs q)
       nil-case : ∀ {q} → isAcc q .fst .fst →
         ε-grammar ⊢ G q
       cons-case : ∀ tr →
@@ -79,13 +79,13 @@ record NFA : Type (ℓ-suc ℓN) where
 
   record AlgebraHom (alg alg' : Algebra) : Typeω where
     field
-      f : (q : Q .fst) → alg .G q ⊢ alg' .G q
+      f : (q : ⟨ Q ⟩) → alg .G q ⊢ alg' .G q
       on-nil : ∀ {q} → (qAcc : isAcc q .fst .fst) →
         f q ∘g alg .nil-case qAcc ≡ alg' .nil-case qAcc
-      on-cons : (tr : transition .fst) →
+      on-cons : (tr : ⟨ transition ⟩) →
         f (src tr) ∘g alg .cons-case tr ≡
           alg' .cons-case tr ∘g (⊗-intro id (f (dst tr)))
-      on-ε-cons : (εtr : ε-transition .fst) →
+      on-ε-cons : (εtr : ⟨ ε-transition ⟩) →
         (f (ε-src εtr)) ∘g (alg .ε-cons-case εtr) ≡
           alg' .ε-cons-case εtr ∘g f (ε-dst εtr)
     fInit = f init
