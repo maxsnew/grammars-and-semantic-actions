@@ -41,7 +41,6 @@ open import Grammar.Maybe Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.KleeneStar Alphabet
 open import Term Alphabet
-open import String.More Alphabet
 open import Parser Alphabet isFinBracket
 
 -- a simple, but ambiguous grammar for balanced parentheses
@@ -199,12 +198,12 @@ parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
     ; (suc n) → LinΣ-intro false ∘g leftovers })
   ; cons-case = LinΠ-intro (λ n → ⟜-intro⁻ (LinΣ-elim (λ
     { [ → ⟜-intro {k = Motive n}
-        (-⊗-intro⁻ (LinΣ-elim (λ b → -⊗-intro {k = Motive n} (LinΣ-intro b ∘g open[))) ∘g ⊗-intro id (LinΠ-app (suc n)))
+        (⊸-intro⁻ (LinΣ-elim (λ b → ⊸-intro {k = Motive n} (LinΣ-intro b ∘g open[))) ∘g ⊗-intro id (LinΠ-app (suc n)))
     ; ] → ⟜-intro {k = Motive n}
         (Nat.elim {A = λ n → _ ⊢ Motive n}
           (LinΣ-intro false ∘g unexpected] ∘g ⊗-intro id ⊤-intro)
           (λ n-1 _ →
-        -⊗-intro⁻ (LinΣ-elim (λ b → -⊗-intro {k = Motive (suc n-1)}
+        ⊸-intro⁻ (LinΣ-elim (λ b → ⊸-intro {k = Motive (suc n-1)}
           (LinΣ-intro b ∘g close]))
         ∘g LinΠ-app n-1))
           n)
@@ -235,18 +234,18 @@ mkParseTree = {!!} where
   -- ] S(n)   ⊢ S(n+1)
 
   Motive : ℕ → Grammar _
-  -- Motive = Nat.elim Balanced (λ _ B⟨n⟩ → literal [ -⊗ (Balanced -⊗ B⟨n⟩))
-  Motive = Nat.elim Balanced (λ _ B⟨n⟩ → Balanced -⊗ (literal [ -⊗ B⟨n⟩))
+  -- Motive = Nat.elim Balanced (λ _ B⟨n⟩ → literal [ ⊸ (Balanced ⊸ B⟨n⟩))
+  Motive = Nat.elim Balanced (λ _ B⟨n⟩ → Balanced ⊸ (literal [ ⊸ B⟨n⟩))
   [eof] : ε-grammar ⊢ Motive zero
   [eof] = nil
   [open[] : ∀ {n} → literal [ ⊗ Motive (suc n) ⊢ Motive n
-  [open[] = -⊗-app ∘g ⊗-intro id (-⊗-app ∘g ⊗-intro nil id ∘g ⊗-unit-l⁻)
+  [open[] = ⊸-app ∘g ⊗-intro id (⊸-app ∘g ⊗-intro nil id ∘g ⊗-unit-l⁻)
   -- [open[] = ((-⊗-app ∘g ⊗-intro nil id) ∘g ⊗-unit-l⁻) ∘g -⊗-app
   [close]] : ∀ {n} → literal ] ⊗ Motive n ⊢ Motive (suc n)
   [close]] {n} =
     Nat.elim {A = λ n → (literal ] ⊗ Motive n) ⊢ Motive (suc n)}
-    (-⊗-intro (-⊗-intro balanced))
-    (λ n-1 rec → -⊗-intro (-⊗-intro (-⊗-intro (-⊗-intro {k = Motive n-1} {!!})))) n
+    (⊸-intro (⊸-intro balanced))
+    (λ n-1 rec → ⊸-intro (⊸-intro (⊸-intro (⊸-intro {k = Motive n-1} {!!})))) n
   -- [close]] {n} = Nat.elim
   --                 {A = λ n → Term (literal ] ⊗ Motive n) (literal [ -⊗ Motive n)}
   --   (-⊗-intro {k = Motive zero} {!!})

@@ -35,3 +35,22 @@ module _
 
   infix 5 Term
   syntax Term g g' = g ⊢ g'
+
+id : g ⊢ g
+id _ x = x
+
+seq :
+  g ⊢ h →
+  h ⊢ k →
+  g ⊢ k
+seq e e' _ p = e' _ (e _ p)
+-- e' (e p)
+
+_∘g_ :
+  h ⊢ k →
+  g ⊢ h →
+  g ⊢ k
+_∘g_ e e' = seq e' e
+
+infixr 9 _∘g_
+syntax seq e e' = e ⋆ e'

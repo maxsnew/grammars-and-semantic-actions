@@ -3,8 +3,11 @@ open import Cubical.Foundations.HLevels
 
 module Grammar.KleeneStar (Alphabet : hSet ℓ-zero) where
 
-open import Grammar Alphabet
-open import Term Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.Empty Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
+open import Term.Base Alphabet
 
 private
   variable
@@ -98,7 +101,6 @@ module _ (g : Grammar ℓG) where
 
   open *l-Algebra
 
-
   -- λalg-initial : *r-Algebra
   -- λalg-initial .the-ℓ = ℓG
   -- λalg-initial .G = KL* -⊗ KL*
@@ -115,7 +117,7 @@ module _ (g : Grammar ℓG) where
     where
     λalg : *r-Algebra
     λalg .the-ℓ = ℓG
-    λalg .G = KL* ⊗- g
+    λalg .G = KL* ⟜ g
     λalg .nil-case =
       ⟜-intro (cons ∘g ⊗-intro id nil ∘g ⊗-unit-r⁻ ∘g ⊗-unit-l)
     λalg .cons-case =
@@ -132,17 +134,17 @@ module _ (g : Grammar ℓG) where
   module _ (the-l-alg : *l-Algebra) where
     λalg : *r-Algebra
     λalg .the-ℓ = the-l-alg .the-ℓ
-    λalg .G = the-l-alg .G -⊗ the-l-alg .G
-    λalg .nil-case = -⊗-intro ⊗-unit-r
+    λalg .G = the-l-alg .G ⊸ the-l-alg .G
+    λalg .nil-case = ⊸-intro ⊗-unit-r
     λalg .cons-case =
-      -⊗-intro {k = the-l-alg .G}
-        (-⊗-app ∘g
+      ⊸-intro {k = the-l-alg .G}
+        (⊸-app ∘g
         ⊗-intro (the-l-alg .snoc-case) id ∘g
         ⊗-assoc)
 
     KL*l-elim : KL* ⊢ the-l-alg .G
     KL*l-elim =
-      -⊗-app ∘g
+      ⊸-app ∘g
       ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g
       ⊗-unit-l⁻
 

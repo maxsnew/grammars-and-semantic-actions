@@ -270,22 +270,22 @@ record DFA : Type (ℓ-suc ℓD) where
     alg .G q = SnocTrace q q-end
     alg .nil-case = nil
     alg .cons-case q c =
-      -⊗-app ∘g
+      ⊸-app ∘g
       ⊗-intro id (∃SnocAlgebraHom (δ q c) λsnocAlg .f q-end)
       where
       λsnocAlg : SnocAlgebra (δ q c)
       λsnocAlg .the-ℓs _ = ℓD
-      λsnocAlg .G q' = literal c -⊗ SnocTrace q q'
+      λsnocAlg .G q' = literal c ⊸ SnocTrace q q'
       λsnocAlg .nil-case =
-        -⊗-intro
+        ⊸-intro
           (snoc q c ∘g
           ⊗-intro SnocTrace.nil id ∘g
           ⊗-unit-l⁻ ∘g
           ⊗-unit-r)
       λsnocAlg .snoc-case q' c' =
-        -⊗-intro
+        ⊸-intro
           (snoc q' c' ∘g
-          ⊗-intro -⊗-app id ∘g
+          ⊗-intro ⊸-app id ∘g
           ⊗-assoc)
 
     snocAlg : SnocAlgebra q-start
@@ -298,7 +298,7 @@ record DFA : Type (ℓ-suc ℓD) where
       where
       λalg : Algebra q
       λalg .the-ℓs _ = ℓD
-      λalg .G q' = Trace (δ q c) q' ⊗- literal c
+      λalg .G q' = Trace (δ q c) q' ⟜ literal c
       λalg .nil-case =
         ⟜-intro
           (cons q c ∘g

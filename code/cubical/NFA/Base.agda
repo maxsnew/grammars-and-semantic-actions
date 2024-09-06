@@ -246,7 +246,7 @@ record NFA : Type (ℓ-suc ℓN) where
     module _ (the-p-alg : PAlgebra) where
       underlyingAlg : Algebra
       underlyingAlg .the-ℓs = _
-      underlyingAlg .G q = (the-p-alg .G q) ⊗- P
+      underlyingAlg .G q = (the-p-alg .G q) ⟜ P
       underlyingAlg .nil-case qAcc =
         ⟜-intro ((the-p-alg .nil-case qAcc) ∘g ⊗-unit-l)
       underlyingAlg .cons-case t =

@@ -22,7 +22,6 @@ open import Grammar.Equivalence Alphabet
 open import Grammar.KleeneStar Alphabet
 open import Grammar.Maybe Alphabet
 open import Term Alphabet
-open import String.More Alphabet
 
 private
   variable

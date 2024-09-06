@@ -31,8 +31,6 @@ LinearΠ-syntax = LinearΠ
 syntax LinearΣ-syntax {A = A} (λ x → B) = LinΣ[ x ∈ A ] B
 syntax LinearΠ-syntax {A = A} (λ x → B) = LinΠ[ x ∈ A ] B
 
-
--- I know most things are in rules but I honestly don't understand why
 module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
   LinΠ-intro : (∀ a → g ⊢ h a) → g ⊢ LinΠ[ a ∈ A ] h a
   LinΠ-intro = λ f w z a → f a w z
