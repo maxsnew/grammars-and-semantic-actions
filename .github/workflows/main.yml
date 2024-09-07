@@ -85,7 +85,7 @@ jobs:
         pip install wcwidth
 
     - name: Check line lengths
-      run: 'make check-line-lengths'
+      run: 'cd code/cubical && make check-line-lengths'
 
   check-whitespace:
     runs-on: ubuntu-latest
