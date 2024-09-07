@@ -9,6 +9,7 @@ open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
+open import Grammar.Empty Alphabet
 open import Term.Base Alphabet
 
 private
@@ -30,6 +31,10 @@ _⟜_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
   h ⊢ g ⊸ k
 ⊸-intro e _ p w' q =
   e _ ((_ , refl) , (q , p))
+
+⊸-intro-ε :
+  g ⊢ k → ε-grammar ⊢ g ⊸ k
+⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-r)
 
 ⊸-app :
   g ⊗ (g ⊸ h) ⊢ h
@@ -91,6 +96,10 @@ _⟜_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
   g ⊢ k ⟜ h
 ⟜-intro e _ p w' q =
   e _ ((_ , refl) , p , q)
+
+⟜-intro-ε :
+  g ⊢ k → ε-grammar ⊢ k ⟜ g
+⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-l)
 
 ⟜-app :
   (g ⟜ h) ⊗ h ⊢ g

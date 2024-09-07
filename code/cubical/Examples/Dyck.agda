@@ -223,12 +223,11 @@ decide = {!!}
 
 exhibitTrace : Balanced ⊢ BalancedStkTr zero true
 exhibitTrace = {!!} where
-  Motive = BalancedStkTr zero true
+  Motive = LinΠ[ n ∈ ℕ ] (BalancedStkTr n true ⟜ BalancedStkTr n true)
   [nil] : ε-grammar ⊢ Motive
-  [nil] = eof
+  [nil] = LinΠ-intro λ n → ⟜-intro-ε id
   [balanced] : literal [ ⊗ (Motive ⊗ (literal ] ⊗ Motive)) ⊢ Motive
   [balanced] = {!!}
-    ∘g ⊗-intro id (⊗-intro {l = BalancedStkTr 1 true} id (close] {n = zero}{b = true}))
 
 -- idea: S(n) is a version of Dyck that closes n parens
 -- BST n is something that can be combined with n [ S's to get an S
