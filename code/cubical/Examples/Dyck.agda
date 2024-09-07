@@ -166,7 +166,7 @@ parseStk = foldKL*r _ (record
     ; (suc n)
       → leftovers
     }
-  
+
   ; cons-case = LinΠ-intro (λ n → ⟜-intro⁻ (LinΣ-elim (λ
       { [ → ⟜-intro {k = BalancedStk _}
         -- encountered an open paren, push onto the stack and continue
@@ -255,4 +255,4 @@ mkParseTree = {!!} where
   --   -⊗-intro {k = Motive zero}
   --   (balanced ∘g ⊗-intro id ({!!} ∘g ⊗-intro (⊗-intro nil id ∘g ⊗-unit-l⁻) id))
   -- [close]] {suc n} = {!!}
-  
+

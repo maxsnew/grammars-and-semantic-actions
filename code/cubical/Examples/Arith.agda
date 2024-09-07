@@ -38,7 +38,7 @@ module v0 where
 module v1 where
   -- add precedence, associativity. Should be *weakly* equivalent to
   -- previous
-  
+
   data Sum : Grammar ℓ-zero
   data Prod : Grammar ℓ-zero
   data Atom : Grammar ℓ-zero
@@ -56,7 +56,7 @@ module v1 where
     parens : literal [ ⊗ Sum ⊗ literal ] ⊢ Atom
 
   Arith = Sum
-  
+
   module _ {ℓS ℓP ℓA}
     {[S] : Grammar ℓS}
     {[P] : Grammar ℓP}

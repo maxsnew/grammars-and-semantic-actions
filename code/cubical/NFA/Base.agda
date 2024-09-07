@@ -340,7 +340,7 @@ record NFA : Type (ℓ-suc ℓN) where
         PrT-helper parse (splitting .snd) p
 
       P-recTrace'-nil-test :
-        ∀ {q}{acc : ⟨ isAcc q .fst ⟩ } → 
+        ∀ {q}{acc : ⟨ isAcc q .fst ⟩ } →
         P-recTrace' ∘g ⊗-intro (nil acc) id
         ≡ the-p-alg .nil-case acc ∘g ⊗-unit-l
       P-recTrace'-nil-test = refl
@@ -360,7 +360,7 @@ record NFA : Type (ℓ-suc ℓN) where
       -- Agda can't figure out this definition is terminating unfortunately
       -- P-recTrace' w ((([]' , w'), splits) , nil acc ._ []'≡[] , p) =
       --   (the-p-alg .nil-case acc ∘g ⊗-unit-l) w ((_ , splits) , ([]'≡[] , p))
-      -- -- 
+      -- --
       -- P-recTrace' w (split , cons tr _ (split' , lit , parse) , p) =
       --   the-p-alg .cons-case tr _
         --   ((_ , split .snd ∙ cong (_++ split .fst .snd) (split' .snd) ∙
@@ -370,10 +370,10 @@ record NFA : Type (ℓ-suc ℓN) where
       --   -- (⊗-intro id P-recTrace' _ {!!})
       --     -- (⊗-assoc⁻ _ ((split , ((split' , (lit , parse)) , p)))))
       --   -- (the-p-alg .cons-case tr ∘g ⊗-intro id P-recTrace' ∘g ⊗-assoc⁻)
-      --   --   w 
+      --   --   w
       --   -- the-p-alg .cons-case tr _ {!P-recTrace' _ (? , parse , p)!}
       --   -- where
-          
+
       -- definitional equation 2:
       -- P-recTrace' ∘g ε-cons εtr ≡ the-p-alg .ε-cons-case εtr ∘g P-recTrace'
       --  (the-p-alg .ε-cons-case εtr ∘g P-recTrace') w (split , (parse , p))

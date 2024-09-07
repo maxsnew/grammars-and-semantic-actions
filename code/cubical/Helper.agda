@@ -179,7 +179,7 @@ DecProp→DecProp' = DecPropIso .fun
 
 DecProp'Witness→DecPropWitness :
   ∀ {ℓ} → (A : DecProp' ℓ) → (a : A .fst) →
-   DecProp'→DecProp A .fst .fst 
+   DecProp'→DecProp A .fst .fst
 DecProp'Witness→DecPropWitness (u , false , r) a =
   ⊥.rec (r .fst a)
 DecProp'Witness→DecPropWitness (u , true , r) a = a
