@@ -133,7 +133,7 @@ jobs:
       ########################################################################
 
       # By default github actions do not pull the repo
-      - name: Checkout cubical-categorical-logic
+      - name: Checkout grammars-and-semantic-actions
         uses: actions/checkout@v3
 
       ########################################################################
@@ -201,7 +201,7 @@ jobs:
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
           echo "$AGDA_STDLIB_DIR/standard-library.agda-lib" >> ~/.agda/libraries
-          echo "$GITHUB_WORKSPACE/cubical-categorical-logic.agda-lib" >> ~/.agda/libraries
+          echo "$GITHUB_WORKSPACE/grammars-and-semantic-actions.agda-lib" >> ~/.agda/libraries
 
       - name: Cache External Dependencies
         if: steps.cache-external-restore.outputs.cache-hit != 'true'
@@ -216,7 +216,7 @@ jobs:
       ########################################################################
 
       # By default github actions do not pull the repo
-      - name: Checkout cubical-categorical-logic
+      - name: Checkout grammars-and-semantic-actions
         uses: actions/checkout@v3
 
       ########################################################################
@@ -234,7 +234,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-agdai-
 
-      - name: Test cubical-categorical-logic
+      - name: Test grammars-and-semantic-actions
         run: |
           cd code/cubical && make test \
             AGDA='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
