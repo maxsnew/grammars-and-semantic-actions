@@ -236,5 +236,5 @@ jobs:
 
       - name: Test cubical-categorical-logic
         run: |
-          make test \
+          cd code/cubical && make test \
             AGDA='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
