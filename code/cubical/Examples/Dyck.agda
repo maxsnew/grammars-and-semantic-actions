@@ -54,7 +54,11 @@ data Dyck : Grammar ℓ-zero where
 --   | [ S ] S
 data Balanced : Grammar ℓ-zero where
   nil : ε-grammar ⊢ Balanced
-  balanced : literal [ ⊗ (Balanced ⊗ (literal ] ⊗ Balanced)) ⊢ Balanced
+  balanced : literal [ ⊗ Balanced ⊗ literal ] ⊗ Balanced ⊢ Balanced
+
+data RR1 : Grammar ℓ-zero where
+  nil : ε-grammar ⊢ RR1
+  balanced : RR1 ⊗ literal [ ⊗ RR1 ⊗ literal ] ⊢ RR1
 
 mt : String
 mt = []
@@ -227,32 +231,30 @@ exhibitTrace = {!!} where
     ∘g ⊗-intro id (⊗-intro {l = BalancedStkTr 1 true} id (close] {n = zero}{b = true}))
 
 -- idea: S(n) is a version of Dyck that closes n parens
+-- BST n is something that can be combined with n [ S's to get an S
+-- [ S ] S
+
+-- so maybe it's just (S ])^n S
 mkParseTree : BalancedStkTr zero true ⊢ Balanced
 mkParseTree = {!!} where
-  -- ε        ⊢ S(0)
-  -- [ S(n+1) ⊢ S(n)
-  -- ] S(n)   ⊢ S(n+1)
-
+  Stk : ℕ → Grammar _
+  Stk = Nat.elim ε-grammar λ _ Stk⟨n⟩ → literal ] ⊗ Balanced ⊗ Stk⟨n⟩
+  -- our state is a "current" Balanced expr that we are building, as
+  -- well as a stack of ]-separated balanced exprs that are waiting to
+  -- be completed
   Motive : ℕ → Grammar _
-  -- Motive = Nat.elim Balanced (λ _ B⟨n⟩ → literal [ ⊸ (Balanced ⊸ B⟨n⟩))
-  Motive = Nat.elim Balanced (λ _ B⟨n⟩ → Balanced ⊸ (literal [ ⊸ B⟨n⟩))
+  Motive n = Balanced ⊗ Stk n
+  -- we initialize the current expression to be the empty parse
   [eof] : ε-grammar ⊢ Motive zero
-  [eof] = nil
-  [open[] : ∀ {n} → literal [ ⊗ Motive (suc n) ⊢ Motive n
-  [open[] = ⊸-app ∘g ⊗-intro id (⊸-app ∘g ⊗-intro nil id ∘g ⊗-unit-l⁻)
-  -- [open[] = ((-⊗-app ∘g ⊗-intro nil id) ∘g ⊗-unit-l⁻) ∘g -⊗-app
-  [close]] : ∀ {n} → literal ] ⊗ Motive n ⊢ Motive (suc n)
-  [close]] {n} =
-    Nat.elim {A = λ n → (literal ] ⊗ Motive n) ⊢ Motive (suc n)}
-    (⊸-intro (⊸-intro balanced))
-    (λ n-1 rec → ⊸-intro (⊸-intro (⊸-intro (⊸-intro {k = Motive n-1} {!!})))) n
-  -- [close]] {n} = Nat.elim
-  --                 {A = λ n → Term (literal ] ⊗ Motive n) (literal [ -⊗ Motive n)}
-  --   (-⊗-intro {k = Motive zero} {!!})
-  --   (λ n-1 rec → {!!})
-  --   n
+  [eof] = ⊗-intro nil id ∘g ⊗-unit-l⁻
+  -- when we see a close paren, we push it and the current expression
+  -- onto the stack and initialize the new current exp to be empty
+  [close] : ∀ {n} → literal ] ⊗ Motive n ⊢ Motive (suc n)
+  [close] {n} = ⊗-intro nil id ∘g ⊗-unit-l⁻
+  -- when we see an open paren, we combine the current balanced exp
+  -- with the top frame which we pop off of the stack
+  [open] : ∀ {n} → literal [ ⊗ Motive (suc n) ⊢ Motive n
+  [open] = ⊗-intro balanced id ∘g ⊗-assoc ∘g ⊗-intro id (⊗-assoc ∘g ⊗-intro id ⊗-assoc)
 
-  --   -⊗-intro {k = Motive zero}
-  --   (balanced ∘g ⊗-intro id ({!!} ∘g ⊗-intro (⊗-intro nil id ∘g ⊗-unit-l⁻) id))
-  -- [close]] {suc n} = {!!}
-
+  done : Motive 0 ⊢ Balanced
+  done = ⊗-unit-r
