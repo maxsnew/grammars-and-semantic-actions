@@ -157,16 +157,16 @@ ll1-correct = mkStrEq
     v2.parens)
   (v2.recS
     {[S] = v1.Sum}
-    {[PS] = v1.Prod -⊗ v1.Sum}
+    {[PS] = v1.Prod ⊸ v1.Sum}
     {[P] = v1.Prod}
-    {[AP] = v1.Atom -⊗ v1.Prod}
+    {[AP] = v1.Atom ⊸ v1.Prod}
     {[A] = v1.Atom}
-    -⊗-app
-    (-⊗-intro v1.plus)
-    (-⊗-intro {k = v1.Sum} (v1.arg ∘g ⊗-unit-r))
-    -⊗-app
-    (-⊗-intro v1.times)
-    (-⊗-intro {k = v1.Prod} (v1.arg ∘g ⊗-unit-r))
+    ⊸-app
+    (⊸-intro v1.plus)
+    (⊸-intro {k = v1.Sum} (v1.arg ∘g ⊗-unit-r))
+    ⊸-app
+    (⊸-intro v1.times)
+    (⊸-intro {k = v1.Prod} (v1.arg ∘g ⊗-unit-r))
     v1.num
     v1.parens)
   {!!}
