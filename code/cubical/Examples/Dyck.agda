@@ -221,19 +221,27 @@ parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
 decide : ∀ n → BalancedStk n ⊢ LinΣ[ b ∈ Bool ] BalancedStkTr n b
 decide = {!!}
 
+-- to turn an LL(1) tree of balanced parens into a trace, turn each
+-- subtree into a function that appends onto a balanced stack trace of
+-- arbitrary state without changing it.
 exhibitTrace : Balanced ⊢ BalancedStkTr zero true
 exhibitTrace = {!!} where
   Motive = LinΠ[ n ∈ ℕ ] (BalancedStkTr n true ⟜ BalancedStkTr n true)
   [nil] : ε-grammar ⊢ Motive
   [nil] = LinΠ-intro λ n → ⟜-intro-ε id
+
   [balanced] : literal [ ⊗ (Motive ⊗ (literal ] ⊗ Motive)) ⊢ Motive
-  [balanced] = {!!}
+  [balanced] = LinΠ-intro λ n → ⟜-intro {k = BalancedStkTr n true}
+    ((open[ ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app (suc n)) (close]
+    ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app n) id) ∘g ⊗-assoc⁻) ∘g ⊗-assoc⁻)) ∘g ⊗-assoc⁻)
 
--- idea: S(n) is a version of Dyck that closes n parens
--- BST n is something that can be combined with n [ S's to get an S
--- [ S ] S
-
--- so maybe it's just (S ])^n S
+-- to translate from BST(0) to S we need to generalize the inductive hypothesis
+-- and pick a motive for BST(n) such that we can extract an S from a BST(0).
+--
+-- Idea: BST(n) is a term with some balanced parens, but n unmatched ]'s in it.
+-- We can define this as an alternating sequence of S and ] with n ]'s in it:
+--     S (] S)^n
+-- We can view this as a "stack" of parses marked by ] "delimiters"
 mkParseTree : BalancedStkTr zero true ⊢ Balanced
 mkParseTree = {!!} where
   Stk : ℕ → Grammar _
@@ -257,3 +265,5 @@ mkParseTree = {!!} where
 
   done : Motive 0 ⊢ Balanced
   done = ⊗-unit-r
+
+-- TODO: show this is a *strong* equivalence!
