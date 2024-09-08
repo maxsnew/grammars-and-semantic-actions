@@ -14,3 +14,6 @@ private
 
 ε-grammar : Grammar ℓ-zero
 ε-grammar w = w ≡ []
+
+-- TODO: actually rename
+ε = ε-grammar

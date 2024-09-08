@@ -46,6 +46,9 @@ infixr 20 _⊗_
 ⊗-intro e e' _ p =
   p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
 
+_,⊗_ = ⊗-intro
+infixr 20 _,⊗_
+
 ⊗-unit-r :
   g ⊗ ε-grammar ⊢ g
 ⊗-unit-r {g = g} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =

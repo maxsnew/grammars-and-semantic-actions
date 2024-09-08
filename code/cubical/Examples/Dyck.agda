@@ -11,9 +11,9 @@ open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Bool hiding (_⊕_ ;_or_)
 open import Cubical.Data.Nat as Nat
-open import Cubical.Data.List hiding (init)
+open import Cubical.Data.List hiding (init; rec)
 open import Cubical.Data.Sigma
-open import Cubical.Data.Sum as Sum
+open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.FinSet
 
 private
@@ -49,12 +49,71 @@ data Dyck : Grammar ℓ-zero where
   sequence  : Dyck ⊗ Dyck ⊢ Dyck
   bracketed : literal [ ⊗ Dyck ⊗ literal ] ⊢ Dyck
 
--- LL(1) Dyck grammar:
+-- Dyck grammar, an LL(0) grammar:
 -- S → ε
 --   | [ S ] S
 data Balanced : Grammar ℓ-zero where
   nil : ε-grammar ⊢ Balanced
   balanced : literal [ ⊗ Balanced ⊗ literal ] ⊗ Balanced ⊢ Balanced
+
+module BALANCED where
+  record Algebra ℓ : Type (ℓ-suc ℓ) where
+    field
+      U : Grammar ℓ
+      [nil] : ε ⊢ U
+      [balanced] : literal [ ⊗ U ⊗ literal ] ⊗ U ⊢ U
+
+
+  open Algebra public
+  InitialAlgebra : Algebra _
+  InitialAlgebra .U = Balanced
+  InitialAlgebra .[nil] = nil
+  InitialAlgebra .[balanced] = balanced
+
+  record Hom {ℓ}{ℓ'} (G : Algebra ℓ)(H : Algebra ℓ') : Type (ℓ-max ℓ ℓ') where
+    field
+      fun : U G ⊢ U H
+      fun-nil : fun ∘g G .[nil] ≡ H .[nil]
+      fun-balanced :
+        fun ∘g G .[balanced] ≡ H .[balanced] ∘g (id ,⊗ fun ,⊗ id ,⊗ fun)
+  open Hom public
+
+  idHom : {G : Algebra ℓg} → Hom G G
+  idHom .fun = λ w z → z
+  idHom .fun-nil = refl
+  idHom .fun-balanced = refl
+
+  _∘hom_ : ∀ {ℓ ℓ' ℓ''} {G : Algebra ℓ}{G' : Algebra ℓ'}{G'' : Algebra ℓ''}
+    → Hom G' G'' → Hom G G' → Hom G G''
+  (ϕ ∘hom ψ) .fun = ϕ .fun ∘g ψ .fun
+  (ϕ ∘hom ψ) .fun-nil = cong (ϕ .fun ∘g_) (ψ .fun-nil) ∙ ϕ .fun-nil
+  (ϕ ∘hom ψ) .fun-balanced =
+    cong (ϕ .fun ∘g_) (ψ .fun-balanced)
+    ∙ cong (_∘g id ,⊗ ψ .fun ,⊗ id ,⊗ ψ .fun) (ϕ .fun-balanced)
+
+  {-# TERMINATING #-}
+  rec : ∀ (G : Algebra ℓg) → Hom InitialAlgebra G
+  rec G .fun = go where
+    go : Balanced ⊢ (U G)
+    go w (nil .w x) = [nil] G w x
+    go w (balanced .w x) = (G .[balanced] ∘g (id ,⊗ go ,⊗ id ,⊗ go)) w x
+  rec G .fun-nil = refl
+  rec G .fun-balanced = refl
+
+  ind : ∀ {G : Algebra ℓg} → (ϕ : Hom InitialAlgebra G) → ϕ .fun ≡ rec G .fun
+  ind {G = G} ϕ = funExt λ w → funExt go where
+    go : ∀ {w} → (x : Balanced w) → ϕ .fun w x ≡ rec G .fun w x
+    go (nil _ x) = funExt⁻ (funExt⁻ (ϕ .fun-nil) _) _
+    go (balanced _ x) = funExt⁻ (funExt⁻ (ϕ .fun-balanced) _) _
+      -- lol, lmao even
+      ∙ λ i → G .[balanced] _
+      (x .fst ,
+       x .snd .fst ,
+       x .snd .snd .fst ,
+       go (x .snd .snd .snd .fst) i ,
+       x .snd .snd .snd .snd .fst ,
+       x .snd .snd .snd .snd .snd .fst ,
+       go (x .snd .snd .snd .snd .snd .snd) i)
 
 data RR1 : Grammar ℓ-zero where
   nil : ε-grammar ⊢ RR1
@@ -185,6 +244,7 @@ parseStk = foldKL*r _ (record
   })
 
 -- the n is the number of open parentheses that this datatype closes
+-- the bool is whether the trace is accepting or rejecting
 data BalancedStkTr : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero where
   eof : ε-grammar ⊢ BalancedStkTr zero true
 
@@ -193,7 +253,6 @@ data BalancedStkTr : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero where
 
   leftovers : ∀ {n} → ε-grammar ⊢ BalancedStkTr (suc n) false
   unexpected] : literal ] ⊗ ⊤-grammar ⊢ BalancedStkTr 0 false
-
 
 parseStkTr : string-grammar ⊢ LinΠ[ n ∈ ℕ ] LinΣ[ b ∈ Bool ] BalancedStkTr n b
 parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
@@ -221,19 +280,21 @@ parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
 decide : ∀ n → BalancedStk n ⊢ LinΣ[ b ∈ Bool ] BalancedStkTr n b
 decide = {!!}
 
--- to turn an LL(1) tree of balanced parens into a trace, turn each
+-- to turn an LL(0) tree of balanced parens into a trace, turn each
 -- subtree into a function that appends onto a balanced stack trace of
 -- arbitrary state without changing it.
 exhibitTrace : Balanced ⊢ BalancedStkTr zero true
-exhibitTrace = {!!} where
-  Motive = LinΠ[ n ∈ ℕ ] (BalancedStkTr n true ⟜ BalancedStkTr n true)
-  [nil] : ε-grammar ⊢ Motive
-  [nil] = LinΠ-intro λ n → ⟜-intro-ε id
-
-  [balanced] : literal [ ⊗ (Motive ⊗ (literal ] ⊗ Motive)) ⊢ Motive
-  [balanced] = LinΠ-intro λ n → ⟜-intro {k = BalancedStkTr n true}
+exhibitTrace =
+  (((⟜-app ∘g id ,⊗ eof) ∘g ⊗-unit-r⁻) ∘g LinΠ-app zero)
+  ∘g BALANCED.fun (BALANCED.rec alg)
+  where
+  alg : BALANCED.Algebra _
+  alg .BALANCED.U = LinΠ[ n ∈ ℕ ] (BalancedStkTr n true ⟜ BalancedStkTr n true)
+  alg .BALANCED.[nil] = LinΠ-intro λ n → ⟜-intro-ε id
+  alg .BALANCED.[balanced] = LinΠ-intro λ n → ⟜-intro {k = BalancedStkTr n true}
     ((open[ ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app (suc n)) (close]
-    ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app n) id) ∘g ⊗-assoc⁻) ∘g ⊗-assoc⁻)) ∘g ⊗-assoc⁻)
+    ∘g ⊗-intro id (⟜-app ∘g ⊗-intro (LinΠ-app n) id) ∘g ⊗-assoc⁻) ∘g ⊗-assoc⁻))
+    ∘g ⊗-assoc⁻)
 
 -- to translate from BST(0) to S we need to generalize the inductive hypothesis
 -- and pick a motive for BST(n) such that we can extract an S from a BST(0).
