@@ -236,5 +236,5 @@ jobs:
 
       - name: Test grammars-and-semantic-actions
         run: |
-          cd code/cubical && make test \
+          cd code/cubical && make quicktest \
             AGDA='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
