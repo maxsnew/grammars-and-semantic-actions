@@ -28,7 +28,7 @@ test :
 
 .PHONY: check-whitespace
 check-whitespace:
-	$(FIX_WHITESPACE) --check
+	cd ../.. && $(FIX_WHITESPACE) --check
 
 .PHONY: check-line-lengths
 check-line-lengths:

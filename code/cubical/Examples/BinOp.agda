@@ -32,7 +32,7 @@ data Tok : Type where
 
 --   Exp = Atom ⊗ (KL* (literal * ⊗ Atom))
 --   data Atom where
---     num : ∀ {n} → literal (num n) ⊢ Atom
+--     num : ∀ {n} iteral (num n) ⊢ Atom
 --     parens : literal LP ⊗ Exp ⊗ literal RP ⊢ Atom
 --   -- This grammar is LL(1) because after you match a close paren, you
 --   -- need to look ahead one token to know if you continue matching
@@ -106,7 +106,8 @@ data Tok : Type where
 --       [num]  : ∀ {n} → (LinΣ[ m ∈ ℕ ] literal (num m)) ⊗ UC n ⊢ UO n
 --       [rightMore] : ∀ {n} →
 --         literal RP ⊗ ((ε ⊕ literal RP ⊗ ⊤) & UC n) ⊢ UC (suc n)
---       [rightDone] : ∀ {n} → literal RP ⊗ ((literal * ⊗ ⊤) & UM n) ⊢ UC (suc n)
+--       [rightDone] : ∀ {n} →
+  --       literal RP ⊗ ((literal * ⊗ ⊤) & UM n) ⊢ UC (suc n)
 --       [times] : ∀ {n} → literal * ⊗ UO n ⊢ UM n
 
 --   -- data Exp : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero
