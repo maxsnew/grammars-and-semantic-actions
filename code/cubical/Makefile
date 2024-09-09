@@ -11,12 +11,15 @@ AGDAI_FILES = $(AGDA_FILES:.agda=.agdai)
 .PHONY: all
 all: test check-whitespace check-line-lengths
 
-.PHONY: test
-test: Everything.agda
-	$(AGDA) $<
+.PHONY: quicktest
+quicktest : clean
+	@for file in $(AGDA_FILES); do \
+		$(AGDA) $$file || exit 1; \
+	done; \
+    echo "All files compiled successfully."
 
-.PHONY: test-and-report
-test-and-report:
+.PHONY: test
+test :
 	@failed=""; \
 	for file in $(AGDA_FILES); do \
 		$(AGDA) $$file || failed="$$failed $$file"; \
@@ -31,18 +34,6 @@ check-whitespace:
 check-line-lengths:
 	bash check-line-lengths.sh
 
-# modified from
-# https://github.com/agda/agda-categories/blob/dc2a5bd7ad39b0629b21763884b8e85a96111981/Makefile#L14
-#
-# NOTES:
-# sed: we're using Basic Regular Expression (BRE) syntax
-# sort: LC_ALL=C for a deterministic order
-# PHONY in case agda files are created/deleted
-.PHONY: Everything.agda
-Everything.agda:
-	$(FIND_AGDA_FILES) ! -path './$@' | sed -e 's#/#.#g' -e 's/^\.*//' -e 's/.agda$$//' -e 's/^/import /' | LC_ALL=C sort > $@
-
 .PHONY: clean
 clean:
 	find . -name "*.agdai" -type f -delete
-	-rm Everything.agda
