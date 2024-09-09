@@ -201,7 +201,7 @@ jobs:
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
           echo "$AGDA_STDLIB_DIR/standard-library.agda-lib" >> ~/.agda/libraries
-          echo "$GITHUB_WORKSPACE/code/Cubical/grammar.agda-lib" >> ~/.agda/libraries
+          echo "$GITHUB_WORKSPACE/../code/Cubical/grammar.agda-lib" >> ~/.agda/libraries
 
       - name: Cache External Dependencies
         if: steps.cache-external-restore.outputs.cache-hit != 'true'
