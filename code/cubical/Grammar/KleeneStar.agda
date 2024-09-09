@@ -173,3 +173,6 @@ module _ (g : Grammar ℓG) where
     --     ≡⟨ {!!} ⟩
     --   {!!}
     --   ∎
+
+cons' : ε ⊢ KL* g ⟜ KL* g ⟜ g
+cons' = ⟜2-intro-ε cons

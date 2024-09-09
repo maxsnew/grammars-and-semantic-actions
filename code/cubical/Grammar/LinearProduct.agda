@@ -21,7 +21,7 @@ private
 
 _⊗_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
 (g ⊗ g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
-infixr 20 _⊗_
+infixr 5 _⊗_
 
 ⊗PathP : {g : I → Grammar ℓg}{h : I → Grammar ℓh}
   {w : I → String}

@@ -33,7 +33,7 @@ module _
   Term : Type (ℓ-max ℓg ℓh)
   Term = ∀ w → g w → h w
 
-  infix 5 Term
+  infix 1 Term
   syntax Term g g' = g ⊢ g'
 
 id : g ⊢ g

@@ -28,6 +28,7 @@ LinearΣ-syntax = LinearΣ
 LinearΠ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΠ-syntax = LinearΠ
 
+-- TODO: this precedence isn't really right
 syntax LinearΣ-syntax {A = A} (λ x → B) = LinΣ[ x ∈ A ] B
 syntax LinearΠ-syntax {A = A} (λ x → B) = LinΠ[ x ∈ A ] B
 

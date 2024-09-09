@@ -21,6 +21,8 @@ private
 _⊕_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
 (g ⊕ h) w = g w ⊎ h w
 
+infixr 5 _⊕_
+
 ⊕-inl :
   g ⊢ g ⊕ h
 ⊕-inl _ p = inl p

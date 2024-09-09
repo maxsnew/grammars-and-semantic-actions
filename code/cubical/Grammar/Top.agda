@@ -16,6 +16,9 @@ private
 ⊤-grammar : Grammar ℓg
 ⊤-grammar _ = Unit*
 
+-- TODO: replace ⊤-grammar with this and make the old ⊤-grammar ⊤*
+⊤ = ⊤-grammar {ℓ-zero}
+
 ⊤-intro :
   g ⊢ ⊤-grammar {ℓg = ℓ}
 ⊤-intro _ _ = tt*

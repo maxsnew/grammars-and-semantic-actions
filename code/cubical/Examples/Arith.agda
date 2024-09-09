@@ -1,5 +1,3 @@
-{- Some presentations of the Dyck grammar of balanced parentheses and hopefully some parsers? -}
-
 module Examples.Arith where
 
 open import Cubical.Foundations.Prelude

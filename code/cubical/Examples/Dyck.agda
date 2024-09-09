@@ -63,7 +63,6 @@ module BALANCED where
       [nil] : ε ⊢ U
       [balanced] : literal [ ⊗ U ⊗ literal ] ⊗ U ⊢ U
 
-
   open Algebra public
   InitialAlgebra : Algebra _
   InitialAlgebra .U = Balanced
@@ -229,7 +228,6 @@ parseStk = foldKL*r _ (record
     ; (suc n)
       → leftovers
     }
-
   ; cons-case = LinΠ-intro (λ n → ⟜-intro⁻ (LinΣ-elim (λ
       { [ → ⟜-intro {k = BalancedStk _}
         -- encountered an open paren, push onto the stack and continue
