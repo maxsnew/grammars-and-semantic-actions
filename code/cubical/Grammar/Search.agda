@@ -42,22 +42,23 @@ unfold f w x .viewSearch with f w x
 nil : ⊤-grammar {ℓ-zero} ⊢ Search g
 nil = unfold ⊕-inl
 
-cons : (g & Search g) ⊢ Search g
-cons = {!!}
+-- cons : (g & Search g) ⊢ Search g
+-- cons = {!!}
 
--- left biased search: we exhaustively search the left before moving to the right
-append : Search g & Search g ⊢ Search g
-append = {!!}
+-- -- left biased search: we exhaustively search the left before
+-- -- moving to the right
+-- append : Search g & Search g ⊢ Search g
+-- append = {!!}
 
--- state := (Search g & Search h) ⊕ Search h
-ext : g ⊢ Search h
-  → Search g ⊢ Search h
-ext {h = h} f =
-  unfold (⊕-elim
-    -- we still have some gs left
-    {!!}
-    -- we are just producing hs now
-    (⊕-elim ⊕-inl (⊕-elim {!!} {!!}) ∘g view)
-    -- (⊕-elim ⊕-inl (⊕-inr ∘g {!!}) ∘g view)
-    )
-  ∘g ⊕-inl {h = Search h} ∘g &-intro id (nil {g = h} ∘g ⊤-intro)
+-- -- state := (Search g & Search h) ⊕ Search h
+-- ext : g ⊢ Search h
+--   → Search g ⊢ Search h
+-- ext {h = h} f =
+--   unfold (⊕-elim
+--     -- we still have some gs left
+--     {!!}
+--     -- we are just producing hs now
+--     (⊕-elim ⊕-inl (⊕-elim {!!} {!!}) ∘g view)
+--     -- (⊕-elim ⊕-inl (⊕-inr ∘g {!!}) ∘g view)
+--     )
+--   ∘g ⊕-inl {h = Search h} ∘g &-intro id (nil {g = h} ∘g ⊤-intro)

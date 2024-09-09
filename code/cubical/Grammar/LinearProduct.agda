@@ -71,13 +71,15 @@ rectify :
   → {w≡ w≡' : w ≡ w'}
   → PathP (λ i → g (w≡  i)) p q
   → PathP (λ i → g (w≡' i)) p q
-rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → PathP (λ i → g (w≡ i)) p q)
-  (isSetString _ _ _ _)
+rectify {w = w}{w'}{g = g}{p = p}{q = q} =
+  subst {A = w ≡ w'} (λ w≡ → PathP (λ i → g (w≡ i)) p q)
+    (isSetString _ _ _ _)
 
 ⊗-unit-rr⁻ :
   ∀ {g : Grammar ℓg}
   → ⊗-unit-r⁻ {g = g} ∘g ⊗-unit-r ≡ id
-⊗-unit-rr⁻ {g = g} = funExt λ w → funExt λ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) →
+⊗-unit-rr⁻ {g = g} =
+  funExt λ w → funExt λ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) →
   let w≡w' = (sym (sym (++-unit-r _)
           ∙ cong (w' ++_) (sym []'≡[])
           ∙ sym w≡w'++[]'))
@@ -98,7 +100,8 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
          (hcomp
           (doubleComp-faces (λ _ → w)
            (λ i₁ →
-              hcomp (doubleComp-faces (λ _ → w ++ []) (λ i₂ → ++-unit-r w i₂) i₁)
+              hcomp (doubleComp-faces (λ _ → w ++ [])
+                (λ i₂ → ++-unit-r w i₂) i₁)
               (w ++ []))
            i)
           (++-unit-r w (~ i))))
@@ -146,7 +149,8 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} = subst {A = w ≡ w'} (λ w≡ → Pat
                 ∙ (λ i₁ → ⊗-unit-l⁻ {g = g} w p .fst .snd (~ i₁)))
                i
   in
-  subst (λ w≡w → subst g w≡w p ≡ p) (isSetString _ _ refl w≡w) (substRefl {B = g} p)
+  subst (λ w≡w → subst g w≡w p ≡ p)
+    (isSetString _ _ refl w≡w) (substRefl {B = g} p)
 
 cong-∘g⊗-unit-l⁻ :
   (e e' : ε-grammar ⊗ g ⊢ h) →
@@ -191,7 +195,8 @@ cong-∘g⊗-unit-r⁻ f g ∘g≡ =
 ⊗-assoc :
   g ⊗ (h ⊗ k) ⊢ (g ⊗ h) ⊗ k
 ⊗-assoc _ p =
-  ((fst p .fst .fst ++ fst (p .snd .snd) .fst .fst , fst (p .snd .snd) .fst .snd) ,
+  ((fst p .fst .fst ++ fst (p .snd .snd) .fst .fst ,
+    fst (p .snd .snd) .fst .snd) ,
     p .fst .snd ∙
     cong (p .fst .fst .fst ++_) (p .snd .snd .fst .snd) ∙
     sym
@@ -206,7 +211,8 @@ cong-∘g⊗-unit-r⁻ f g ∘g≡ =
 ⊗-assoc⁻ :
   (g ⊗ h) ⊗ k ⊢ g ⊗ (h ⊗ k)
 ⊗-assoc⁻ _ p =
-  (((fst (p .snd .fst) .fst .fst) , (fst (p .snd .fst) .fst .snd ++ fst p .fst .snd)) ,
+  (((fst (p .snd .fst) .fst .fst) ,
+    (fst (p .snd .fst) .fst .snd ++ fst p .fst .snd)) ,
     (p .fst .snd ∙
     cong (_++ p .fst .fst .snd) (p .snd .fst .fst .snd) ∙
     ++-assoc

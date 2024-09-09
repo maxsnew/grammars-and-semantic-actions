@@ -87,19 +87,18 @@ module _ (N : NFA {ℓN}) (isFinSetΣ₀ : isFinSet ⟨ Alphabet ⟩) where
   private
     module ℙN = DFA ℙN
 
-  open N.Algebra
-  open N.AlgebraHom
-  NAlg : N.Algebra
-  NAlg .the-ℓs _ = ℓ-suc ℓN
-  NAlg .G q =
-    LinΣ[ X ∈ (Σ[ Y ∈ ⟨ ℙN.Q ⟩ ] Y q .fst .fst) ] ℙN.ParseFrom (X .fst)
-  NAlg .nil-case {q} qAcc _ pε = {!!}
-  NAlg .cons-case = {!!}
-  NAlg .ε-cons-case = {!!}
+  -- open N.Algebra
+  -- open N.AlgebraHom
+  -- NAlg : N.Algebra
+  -- NAlg .the-ℓs _ = ℓ-suc ℓN
+  -- NAlg .G q =
+  --   LinΣ[ X ∈ (Σ[ Y ∈ ⟨ ℙN.Q ⟩ ] Y q .fst .fst) ] ℙN.ParseFrom (X .fst)
+  -- NAlg .nil-case {q} qAcc _ pε = {!!}
+  -- NAlg .cons-case = {!!}
+  -- NAlg .ε-cons-case = {!!}
 
-  open LogicalEquivalence
-  N⊣⊢ℙN :
-    LogicalEquivalence N.InitParse ℙN.InitParse
-  N⊣⊢ℙN .fun = {!!}
-  N⊣⊢ℙN .inv = {!!}
-
+  -- open LogicalEquivalence
+  -- N⊣⊢ℙN :
+  --   LogicalEquivalence N.InitParse ℙN.InitParse
+  -- N⊣⊢ℙN .fun = {!!}
+  -- N⊣⊢ℙN .inv = {!!}

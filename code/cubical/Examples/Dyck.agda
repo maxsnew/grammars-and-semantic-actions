@@ -1,4 +1,5 @@
-{- Some presentations of the Dyck grammar of balanced parentheses and hopefully some parsers? -}
+{- Some presentations of the Dyck grammar of balanced parentheses,
+   and hopefully some parsers? -}
 
 module Examples.Dyck where
 
@@ -259,7 +260,9 @@ parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
     ; (suc n) → LinΣ-intro false ∘g leftovers })
   ; cons-case = LinΠ-intro (λ n → ⟜-intro⁻ (LinΣ-elim (λ
     { [ → ⟜-intro {k = Motive n}
-        (⊸-intro⁻ (LinΣ-elim (λ b → ⊸-intro {k = Motive n} (LinΣ-intro b ∘g open[))) ∘g ⊗-intro id (LinΠ-app (suc n)))
+        (⊸-intro⁻ (LinΣ-elim
+          (λ b → ⊸-intro {k = Motive n} (LinΣ-intro b ∘g open[))) ∘g
+            ⊗-intro id (LinΠ-app (suc n)))
     ; ] → ⟜-intro {k = Motive n}
         (Nat.elim {A = λ n → _ ⊢ Motive n}
           (LinΣ-intro false ∘g unexpected] ∘g ⊗-intro id ⊤-intro)
@@ -275,8 +278,8 @@ parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
     Motive = λ n → LinΣ[ b ∈ Bool ] BalancedStkTr n b
 
 -- alternative: define this function by recursion
-decide : ∀ n → BalancedStk n ⊢ LinΣ[ b ∈ Bool ] BalancedStkTr n b
-decide = {!!}
+-- decide : ∀ n → BalancedStk n ⊢ LinΣ[ b ∈ Bool ] BalancedStkTr n b
+-- decide = {!!}
 
 -- to turn an LL(0) tree of balanced parens into a trace, turn each
 -- subtree into a function that appends onto a balanced stack trace of
@@ -301,28 +304,29 @@ exhibitTrace =
 -- We can define this as an alternating sequence of S and ] with n ]'s in it:
 --     S (] S)^n
 -- We can view this as a "stack" of parses marked by ] "delimiters"
-mkParseTree : BalancedStkTr zero true ⊢ Balanced
-mkParseTree = {!!} where
-  Stk : ℕ → Grammar _
-  Stk = Nat.elim ε-grammar λ _ Stk⟨n⟩ → literal ] ⊗ Balanced ⊗ Stk⟨n⟩
-  -- our state is a "current" Balanced expr that we are building, as
-  -- well as a stack of ]-separated balanced exprs that are waiting to
-  -- be completed
-  Motive : ℕ → Grammar _
-  Motive n = Balanced ⊗ Stk n
-  -- we initialize the current expression to be the empty parse
-  [eof] : ε-grammar ⊢ Motive zero
-  [eof] = ⊗-intro nil id ∘g ⊗-unit-l⁻
-  -- when we see a close paren, we push it and the current expression
-  -- onto the stack and initialize the new current exp to be empty
-  [close] : ∀ {n} → literal ] ⊗ Motive n ⊢ Motive (suc n)
-  [close] {n} = ⊗-intro nil id ∘g ⊗-unit-l⁻
-  -- when we see an open paren, we combine the current balanced exp
-  -- with the top frame which we pop off of the stack
-  [open] : ∀ {n} → literal [ ⊗ Motive (suc n) ⊢ Motive n
-  [open] = ⊗-intro balanced id ∘g ⊗-assoc ∘g ⊗-intro id (⊗-assoc ∘g ⊗-intro id ⊗-assoc)
+-- mkParseTree : BalancedStkTr zero true ⊢ Balanced
+-- mkParseTree = {!!} where
+--   Stk : ℕ → Grammar _
+--   Stk = Nat.elim ε-grammar λ _ Stk⟨n⟩ → literal ] ⊗ Balanced ⊗ Stk⟨n⟩
+--   -- our state is a "current" Balanced expr that we are building, as
+--   -- well as a stack of ]-separated balanced exprs that are waiting to
+--   -- be completed
+--   Motive : ℕ → Grammar _
+--   Motive n = Balanced ⊗ Stk n
+--   -- we initialize the current expression to be the empty parse
+--   [eof] : ε-grammar ⊢ Motive zero
+--   [eof] = ⊗-intro nil id ∘g ⊗-unit-l⁻
+--   -- when we see a close paren, we push it and the current expression
+--   -- onto the stack and initialize the new current exp to be empty
+--   [close] : ∀ {n} → literal ] ⊗ Motive n ⊢ Motive (suc n)
+--   [close] {n} = ⊗-intro nil id ∘g ⊗-unit-l⁻
+--   -- when we see an open paren, we combine the current balanced exp
+--   -- with the top frame which we pop off of the stack
+--   [open] : ∀ {n} → literal [ ⊗ Motive (suc n) ⊢ Motive n
+--   [open] = ⊗-intro balanced id ∘g ⊗-assoc ∘g
+--     ⊗-intro id (⊗-assoc ∘g ⊗-intro id ⊗-assoc)
 
-  done : Motive 0 ⊢ Balanced
-  done = ⊗-unit-r
+--   done : Motive 0 ⊢ Balanced
+--   done = ⊗-unit-r
 
--- TODO: show this is a *strong* equivalence!
+-- -- TODO: show this is a *strong* equivalence!

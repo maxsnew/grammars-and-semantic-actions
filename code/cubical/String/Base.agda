@@ -31,7 +31,8 @@ isSetSplitting w =
   isSetΣ (isSet× isSetString isSetString)
     λ s → isGroupoidString w (s .fst ++ s .snd)
 
-SplittingPathP : ∀ {w : I → String}{s0 : Splitting (w i0)}{s1 : Splitting (w i1)}
+SplittingPathP :
+  ∀ {w : I → String}{s0 : Splitting (w i0)}{s1 : Splitting (w i1)}
   → s0 .fst ≡ s1 .fst
   → PathP (λ i → Splitting (w i)) s0 s1
 SplittingPathP s≡ = ΣPathPProp (λ _ → isSetString _ _) s≡

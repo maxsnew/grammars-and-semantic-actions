@@ -101,13 +101,6 @@ module _ (g : Grammar ℓG) where
 
   open *l-Algebra
 
-  -- λalg-initial : *r-Algebra
-  -- λalg-initial .the-ℓ = ℓG
-  -- λalg-initial .G = KL* -⊗ KL*
-  -- λalg-initial .nil-case = -⊗-intro ⊗-unit-r
-  -- λalg-initial .cons-case =
-  --   -⊗-intro (-⊗-app ∘g ⊗-intro {!!} id ∘g ⊗-assoc)
-
   *l-initial : *l-Algebra
   *l-initial .the-ℓ = _
   *l-initial .G = KL*
@@ -151,28 +144,6 @@ module _ (g : Grammar ℓG) where
     foldKL*l = KL*l-elim
 
     -- TODO prove initiality for the left handed algebra
-    -- ∃*l-AlgebraHom : *l-AlgebraHom *l-initial the-l-alg
-    -- ∃*l-AlgebraHom .f =
-    --   -⊗-app ∘g
-    --   ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g
-    --   ⊗-unit-l⁻
-    -- ∃*l-AlgebraHom .on-nil =
-    --   -⊗-app ∘g
-    --     ⊗-intro id (-⊗-intro ⊗-unit-r) ∘g ⊗-intro (the-l-alg .nil-case) id ∘g ⊗-unit-l⁻
-    --     ≡⟨ (λ i → -⊗-β ⊗-unit-r i ∘g ⊗-intro (the-l-alg .nil-case) id ∘g ⊗-unit-l⁻) ⟩
-    --   ⊗-unit-r ∘g ⊗-intro (the-l-alg .nil-case) id ∘g ⊗-unit-l⁻
-    --     ≡⟨ (λ i → ⊗-unit-r⊗-intro (the-l-alg .nil-case) i ∘g ⊗-unit-l⁻) ⟩
-    --   the-l-alg .nil-case ∘g ⊗-unit-r ∘g ⊗-unit-l⁻
-    --     ≡⟨ cong (the-l-alg .nil-case ∘g_) ⊗-unit-rl⁻ ⟩
-    --   the-l-alg .nil-case
-    --   ∎
-    -- ∃*l-AlgebraHom .on-cons =
-    --   (-⊗-app ∘g
-    --     ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g ⊗-unit-l⁻)
-    --    ∘g ⟜-intro⁻ {!!}
-    --     ≡⟨ {!!} ⟩
-    --   {!!}
-    --   ∎
 
 cons' : ε ⊢ KL* g ⟜ KL* g ⟜ g
 cons' = ⟜2-intro-ε cons

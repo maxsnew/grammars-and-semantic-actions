@@ -25,32 +25,46 @@ private
 --      Δ g ⊢ k
 --  However this isn't possible for arbitrary functions Δ
 --  but we can define terms like this for nice enough Δ
---  (i.e. contexts that have a single free variable that occurs positively amongst a
+--  (i.e. contexts that have a single free variable that occurs
+--    positively amongst a
 --    restricted set of context constructors)
 --
--- This isn't meant to be used everywhere, however this can eliminate redundancy in a lot of proofs
--- because without use of it, we must manually conjugate with the introduction and elimination forms
+-- This isn't meant to be used everywhere,
+-- however this can eliminate redundancy in a lot of proofs
+-- because without use of it, we must manually conjugate
+-- with the introduction and elimination forms
 --
 -- Instead below we do this work once
 data FunctorialExpression : (L : Level) → Typeω where
   var : FunctorialExpression ℓ-zero
-  _⊗l_ : ∀ {L}{L'} → FunctorialExpression L' → Grammar L → FunctorialExpression (ℓ-max L L')
-  _⊗r_ : ∀ {L}{L'} → Grammar L → FunctorialExpression L' → FunctorialExpression  (ℓ-max L L')
-  _⊕l_ : ∀ {L}{L'} → FunctorialExpression L' → Grammar  L  → FunctorialExpression (ℓ-max L L')
-  _⊕r_ : ∀ {L}{L'} → Grammar L → FunctorialExpression L' → FunctorialExpression (ℓ-max L L')
-  _⊗func_ : ∀ {L} {L'} → FunctorialExpression L → FunctorialExpression L' → FunctorialExpression (ℓ-max L L')
-  _⊕func_ : ∀ {L} {L'} → FunctorialExpression L → FunctorialExpression L' → FunctorialExpression (ℓ-max L L')
-  _⊸func_ : ∀ {L} {L'} → Grammar L  → FunctorialExpression L' → FunctorialExpression (ℓ-max L L')
-  _⟜func_ : ∀ {L} {L'} → FunctorialExpression L  → Grammar L' → FunctorialExpression (ℓ-max L L')
+  _⊗l_ : ∀ {L}{L'} → FunctorialExpression L' → Grammar L →
+    FunctorialExpression (ℓ-max L L')
+  _⊗r_ : ∀ {L}{L'} → Grammar L → FunctorialExpression L' →
+    FunctorialExpression  (ℓ-max L L')
+  _⊕l_ : ∀ {L}{L'} → FunctorialExpression L' → Grammar  L  →
+    FunctorialExpression (ℓ-max L L')
+  _⊕r_ : ∀ {L}{L'} → Grammar L → FunctorialExpression L' →
+    FunctorialExpression (ℓ-max L L')
+  _⊗func_ : ∀ {L} {L'} → FunctorialExpression L → FunctorialExpression L' →
+    FunctorialExpression (ℓ-max L L')
+  _⊕func_ : ∀ {L} {L'} → FunctorialExpression L → FunctorialExpression L' →
+    FunctorialExpression (ℓ-max L L')
+  _⊸func_ : ∀ {L} {L'} → Grammar L  → FunctorialExpression L' →
+    FunctorialExpression (ℓ-max L L')
+  _⟜func_ : ∀ {L} {L'} → FunctorialExpression L  → Grammar L' →
+    FunctorialExpression (ℓ-max L L')
 
-evalFunctorialExpr : ∀ {L} {L'} → FunctorialExpression L → Grammar L' → Grammar (ℓ-max L L')
+evalFunctorialExpr :
+  ∀ {L} {L'} → FunctorialExpression L → Grammar L' → Grammar (ℓ-max L L')
 evalFunctorialExpr var g = g
 evalFunctorialExpr (x ⊗l h) g = (evalFunctorialExpr x g) ⊗ h
 evalFunctorialExpr (h ⊗r x) g = h ⊗ evalFunctorialExpr x g
 evalFunctorialExpr (x ⊕l h) g = (evalFunctorialExpr x g) ⊕ h
 evalFunctorialExpr (h ⊕r x) g = h ⊕ evalFunctorialExpr x g
-evalFunctorialExpr (x ⊗func y) g = (evalFunctorialExpr x g) ⊗ (evalFunctorialExpr y g)
-evalFunctorialExpr (x ⊕func y) g = (evalFunctorialExpr x g) ⊕ (evalFunctorialExpr y g)
+evalFunctorialExpr (x ⊗func y) g =
+  (evalFunctorialExpr x g) ⊗ (evalFunctorialExpr y g)
+evalFunctorialExpr (x ⊕func y) g =
+  (evalFunctorialExpr x g) ⊕ (evalFunctorialExpr y g)
 evalFunctorialExpr (h ⊸func x) g = h ⊸ (evalFunctorialExpr x g)
 evalFunctorialExpr (x ⟜func h) g = (evalFunctorialExpr x g) ⟜ h
 
@@ -62,7 +76,8 @@ functoriality :
   Δ [ g ]fEval ⊢ Δ [ h ]fEval
 functoriality {g = g}{h = h} var g⊢h = g⊢h
 functoriality {g = g}{h = h} (x ⊗l l) g⊢h =
-  ⊗-intro {g =  evalFunctorialExpr x g} {h = evalFunctorialExpr x h} {k = l}{l = l}
+  ⊗-intro
+    {g =  evalFunctorialExpr x g} {h = evalFunctorialExpr x h} {k = l}{l = l}
     (functoriality {g = g} {h = h} x g⊢h)
     (id {g = l})
 functoriality {g = g}{h = h} (l ⊗r x) g⊢h =
@@ -88,7 +103,8 @@ functoriality {g = g}{h = h} (x ⊗func y) g⊢h =
      (functoriality {g = g} {h = h}  x g⊢h)
      (functoriality {g = g} {h = h}  y g⊢h))
 functoriality {g = g}{h = h} (x ⊕func y) g⊢h =
-  ⊕-elim {g = x [ g ]fEval}{h = (x [ h ]fEval) ⊕ (y [ h ]fEval)}{k = y [ g ]fEval}
+  ⊕-elim {g = x [ g ]fEval}
+    {h = (x [ h ]fEval) ⊕ (y [ h ]fEval)}{k = y [ g ]fEval}
     (seq {h = x [ h ]fEval}
       (functoriality {g = g}{h = h} x g⊢h)
       (⊕-inl {g = x [ h ]fEval}{h = y [ h ]fEval}))
