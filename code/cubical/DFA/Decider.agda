@@ -30,44 +30,39 @@ private
 module _ (D : DFA {ℓD}) where
   open DFA D
 
-  open *l-Algebra
+  open *r-Algebra
   open Algebra
   open AlgebraHom
 
-  module _ (q-start : ⟨ Q ⟩) where
-    -- The decider leverages the function TraceAppendLiteral
-    -- which turns the Trace into a SnocTrace, snoc's it, and
-    -- then turns the resulting SnocTrace back into a trace.
-    --
-    -- This feels like an unsatisfactory definition but there does not
-    -- seem to be a nicer way to do this, other than taking SnocTrace as the
-    -- primitive notion of trace. However, this would sacrifice nice
-    -- definitional harmony with existing Brzozowski derivative
-    -- actions on DFAs, AND would lose harmony with the NFA definitions
-    ExtendTraceFrom : (c : ⟨ Alphabet ⟩) →
-      TraceFrom q-start ⊗ (literal c) ⊢ TraceFrom q-start
-    ExtendTraceFrom c _ (s , (q , trace), lit) =
-      (δ q c) ,
-      TraceAppendLiteral q-start q c _ (s , (trace , lit))
+  run-from-state : string-grammar ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
+  run-from-state = foldKL*r char the-alg
+    where
+    the-alg : *r-Algebra char
+    the-alg .the-ℓ = ℓD
+    the-alg .G = LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
+    the-alg .nil-case = LinΠ-intro (λ q → LinΣ-intro q ∘g nil)
+    the-alg .cons-case = LinΠ-intro (λ q →
+      ⟜-intro⁻ (LinΣ-elim (λ c →
+        ⟜-intro {k = TraceFrom q}
+          (⊸-intro⁻
+            (LinΣ-elim
+              (λ q' → ⊸-intro {k = TraceFrom q}
+                (LinΣ-intro {h = λ q'' → Trace q'' q} q' ∘g
+                  Trace.cons q c))
+            ∘g LinΠ-app (δ q c))))))
 
-    RunFromState : string-grammar ⊢ TraceFrom q-start
-    RunFromState = foldKL*l char the-alg
-      where
-      the-alg : *l-Algebra char
-      the-alg .the-ℓ = ℓD
-      the-alg .G = TraceFrom q-start
-      the-alg .nil-case w pε = q-start , (nil _ pε)
-      the-alg .snoc-case w (s , trFrom , (c , lit)) =
-        ExtendTraceFrom c w (s , (trFrom , lit))
+  check-accept : {q-start : ⟨ Q ⟩} (q : ⟨ Q ⟩) →
+    Trace q q-start ⊢ LinΣ[ b ∈ Bool ] TraceFrom q-start
+  check-accept q =
+    LinΣ-intro
+      (decRec (λ _ → true) (λ _ → false) (isAcc q .snd)) ∘g
+    LinΣ-intro q
 
-    DecideFromState : String → Bool
-    DecideFromState w =
-      let (q-end , trace) = RunFromState _ ⌈ w ⌉ in
-      decRec
-        (λ acc → true)
-        (λ ¬acc → false)
-        (isAcc q-end .snd)
+  run : string-grammar ⊢ InitTrace
+  run = LinΠ-app init ∘g run-from-state
 
-  Decide : String → Bool
-  Decide = DecideFromState init
-
+  decide :
+    string-grammar ⊢ LinΣ[ b ∈ Bool ] InitTrace
+  decide =
+    LinΣ-elim (λ q → check-accept q) ∘g
+    run

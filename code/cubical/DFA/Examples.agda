@@ -20,15 +20,12 @@ open import Cubical.Data.List hiding (init)
 Alphabet : hSet ℓ-zero
 Alphabet = (Fin 2) , (isFinSet→isSet isFinSetFin)
 
-Σ₀ = Alphabet .fst
-isSetΣ₀ = Alphabet .snd
-
-open import Grammar (Σ₀ , isSetΣ₀)
-open import Grammar.Equivalence (Σ₀ , isSetΣ₀)
-open import Grammar.KleeneStar (Σ₀ , isSetΣ₀)
-open import Term (Σ₀ , isSetΣ₀)
-open import DFA.Base (Σ₀ , isSetΣ₀)
-open import DFA.Decider (Σ₀ , isSetΣ₀)
+open import Grammar Alphabet
+open import Grammar.Equivalence Alphabet
+open import Grammar.KleeneStar Alphabet
+open import Term Alphabet
+open import DFA.Base Alphabet
+open import DFA.Decider Alphabet
 open import Helper
 
 module examples where
@@ -58,17 +55,17 @@ module examples where
   w'' : String
   w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
 
-  ex1 : Decide D w ≡ true
-  ex1 = refl
+  _ : decide D _ (⌈ w ⌉) .fst ≡ true
+  _ = refl
 
-  ex2 : Decide D w' ≡ true
-  ex2 = refl
+  _ : decide D _ (⌈ w' ⌉) .fst ≡ true
+  _ = refl
 
-  ex3 : Decide D w'' ≡ false
-  ex3 = refl
+  _ : decide D _ ⌈ w'' ⌉ .fst ≡ false
+  _ = refl
 
-  ex4 : Decide D [] ≡ true
-  ex4 = refl
+  _ : decide D _ ⌈ [] ⌉ .fst ≡ true
+  _ = refl
 
 
  {--       0
@@ -92,5 +89,5 @@ module examples where
   s : String
   s = fsuc fzero ∷ fzero ∷ []
 
-  ex5 : Decide D' s ≡ true
-  ex5 = refl
+  _ : decide D' _ ⌈ s ⌉ .fst ≡ true
+  _ = refl
