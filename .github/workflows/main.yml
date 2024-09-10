@@ -53,18 +53,15 @@ on:
 ## get a new branch version if it changes. This will be fixed in the
 ## next PR.
 ########################################################################
-
 env:
-  AGDA_BRANCH: v2.7.0
-  GHC_VERSION: 9.8.2
-  CABAL_VERSION: 3.10.2.1
+  AGDA_BRANCH: v2.6.4.1
+  GHC_VERSION: 9.4.7
+  CABAL_VERSION: 3.6.2.0
   CABAL_INSTALL: cabal install --overwrite-policy=always --ghc-options='-O1 +RTS -M6G -RTS'
   CACHE_PATHS: |
     ~/.cabal/packages
     ~/.cabal/store
     ~/.cabal/bin
-
-
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -180,11 +177,11 @@ jobs:
           cd ..
           rm -rf agda
 
-      - name: Download Agda Standard Library from github
-        run : |
-          cd ~
-          git clone https://github.com/agda/agda-stdlib.git
-          echo "AGDA_STDLIB_DIR=$PWD/agda-stdlib" >> "$GITHUB_ENV"
+      # - name: Download Agda Standard Library from github
+      #   run : |
+      #     cd ~
+      #     git clone https://github.com/agda/agda-stdlib.git
+      #     echo "AGDA_STDLIB_DIR=$PWD/agda-stdlib" >> "$GITHUB_ENV"
 
       - name: Download Cubical from github
         run : |
@@ -201,7 +198,7 @@ jobs:
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
           echo "$AGDA_STDLIB_DIR/standard-library.agda-lib" >> ~/.agda/libraries
-          echo "$GITHUB_WORKSPACE/../code/Cubical/grammar.agda-lib" >> ~/.agda/libraries
+          echo "$GITHUB_WORKSPACE/code/cubical/grammar.agda-lib" >> ~/.agda/libraries
 
       - name: Cache External Dependencies
         if: steps.cache-external-restore.outputs.cache-hit != 'true'
