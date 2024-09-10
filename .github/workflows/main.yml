@@ -197,7 +197,6 @@ jobs:
           mkdir ~/.agda
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
-          echo "$AGDA_STDLIB_DIR/standard-library.agda-lib" >> ~/.agda/libraries
           echo "$GITHUB_WORKSPACE/code/cubical/grammar.agda-lib" >> ~/.agda/libraries
 
       - name: Cache External Dependencies
