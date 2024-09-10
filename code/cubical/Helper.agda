@@ -124,7 +124,8 @@ isFinOrd⊥ : isFinOrd ⊥
 fst isFinOrd⊥ = 0
 snd isFinOrd⊥ = idEquiv ⊥
 
-takeFirstFinOrd : ∀ {ℓ} → (A : Type ℓ) → (the-ord : isFinOrd A) → 0 Ord.< the-ord .fst → A
+takeFirstFinOrd : ∀ {ℓ} → (A : Type ℓ) →
+  (the-ord : isFinOrd A) → 0 Ord.< the-ord .fst → A
 takeFirstFinOrd A (suc n , the-eq) x =
   the-eq .snd .equiv-proof (Fin→SumFin (Fin.fromℕ≤ 0 n x)) .fst .fst
 
@@ -167,7 +168,8 @@ DecProp≃DecProp' = isoToEquiv DecPropIso
 DecProp≡DecProp' : ∀ {ℓ} → DecProp ℓ ≡ DecProp' ℓ
 DecProp≡DecProp' = isoToPath DecPropIso
 
-DecPropFstPath : ∀ {ℓ} → (A : DecProp ℓ) → A .fst .fst ≡ (DecPropIso .fun A) .fst
+DecPropFstPath : ∀ {ℓ} → (A : DecProp ℓ) →
+  A .fst .fst ≡ (DecPropIso .fun A) .fst
 DecPropFstPath (a , yes p) = refl
 DecPropFstPath (a , no ¬p) = refl
 
@@ -179,7 +181,7 @@ DecProp→DecProp' = DecPropIso .fun
 
 DecProp'Witness→DecPropWitness :
   ∀ {ℓ} → (A : DecProp' ℓ) → (a : A .fst) →
-   DecProp'→DecProp A .fst .fst 
+   DecProp'→DecProp A .fst .fst
 DecProp'Witness→DecPropWitness (u , false , r) a =
   ⊥.rec (r .fst a)
 DecProp'Witness→DecPropWitness (u , true , r) a = a
@@ -206,14 +208,17 @@ snd (DecProp⊎ A B AB→⊥) =
         (B .snd))
     (A .snd)
 
-DecProp'∃ : ∀ {L}{L'} → (X : FinSet L) (P : X .fst → DecProp' L')  → DecProp' (ℓ-max L L')
+DecProp'∃ : ∀ {L}{L'} → (X : FinSet L)
+  (P : X .fst → DecProp' L')  → DecProp' (ℓ-max L L')
 DecProp'∃ X P = (∃[ x ∈ X .fst ] P x .fst) , (isDecProp∃  X P)
 
-DecProp∃ : ∀ {L}{L'} → (X : FinSet L) (P : X .fst → DecProp L')  → DecProp (ℓ-max L L')
+DecProp∃ : ∀ {L}{L'} → (X : FinSet L)
+  (P : X .fst → DecProp L')  → DecProp (ℓ-max L L')
 DecProp∃ X P =
   ((∃[ x ∈ X .fst ] P x .fst .fst) , isPropPropTrunc) ,
     DecProp'→DecProp (∥ Σ (X .fst) (λ x → P x .fst .fst) ∥₁ ,
-                     isDecProp∃ X λ x → P x .fst .fst , transport (cong isDecProp (sym (DecPropFstPath (P x))))
+                     isDecProp∃ X λ x → P x .fst .fst ,
+                     transport (cong isDecProp (sym (DecPropFstPath (P x))))
                      (DecProp→DecProp' (P x) .snd)) .snd
 -- -- (∃[ x ∈ X .fst ] P x .fst) , (isDecProp∃  X P)
 -- --
@@ -254,8 +259,10 @@ DecProp≡ disc x y = ((x ≡ y) , Discrete→isSet disc x y) , disc x y
 Bool-iso-DecProp' : ∀ {ℓ} → Iso (Bool) (DecProp' ℓ)
 fst (fun Bool-iso-DecProp' false) = ⊥*
 fst (fun Bool-iso-DecProp' true) = Unit*
-snd (fun Bool-iso-DecProp' false) = false , (uninhabEquiv lower (λ x → x))
-snd (fun Bool-iso-DecProp' true) = true , (isContr→Equiv isContrUnit* isContrUnit)
+snd (fun Bool-iso-DecProp' false) =
+  false , (uninhabEquiv lower (λ x → x))
+snd (fun Bool-iso-DecProp' true) =
+  true , (isContr→Equiv isContrUnit* isContrUnit)
 inv Bool-iso-DecProp' (a , false , c) = false
 inv Bool-iso-DecProp' (a , true , c) = true
 rightInv Bool-iso-DecProp' (a , false , c) =
@@ -263,7 +270,8 @@ rightInv Bool-iso-DecProp' (a , false , c) =
     (sym (ua (compEquiv c ⊥≃⊥*)) ,
       (ΣPathP
         (refl ,
-        isProp→PathP (λ i → λ x y → Σ≡Prop isPropIsEquiv (isProp→ isProp⊥ _ _)) _ _)))
+        isProp→PathP (λ i → λ x y →
+          Σ≡Prop isPropIsEquiv (isProp→ isProp⊥ _ _)) _ _)))
   where
   ⊥≃⊥* : ⊥ ≃ ⊥*
   ⊥≃⊥* = uninhabEquiv (λ x → x) lower
@@ -272,7 +280,8 @@ rightInv Bool-iso-DecProp' (a , true , c) =
     ((sym (ua (compEquiv c Unit≃Unit*))) ,
       (ΣPathP
         (refl ,
-        isProp→PathP (λ i → λ x y → Σ≡Prop isPropIsEquiv (isProp→ isPropUnit _ _)) _ _)))
+        isProp→PathP (λ i → λ x y →
+          Σ≡Prop isPropIsEquiv (isProp→ isPropUnit _ _)) _ _)))
 leftInv Bool-iso-DecProp' false = refl
 leftInv Bool-iso-DecProp' true = refl
 
@@ -317,8 +326,10 @@ LiftDecProp' :
   ∀ {L}{L'} →
   DecProp' L →
   DecProp' (ℓ-max L L')
-LiftDecProp' {L} {L'} (a , false , c) = (Lift {L}{L'} a) , (false , (compEquiv (invEquiv LiftEquiv) c))
-LiftDecProp' {L} {L'} (a , true , c) = (Lift {L}{L'} a) , (true , (compEquiv (invEquiv LiftEquiv) c))
+LiftDecProp' {L} {L'} (a , false , c) =
+  (Lift {L}{L'} a) , (false , (compEquiv (invEquiv LiftEquiv) c))
+LiftDecProp' {L} {L'} (a , true , c) =
+  (Lift {L}{L'} a) , (true , (compEquiv (invEquiv LiftEquiv) c))
 
 LiftDecProp'Witness :
   ∀ {L}{L'} →

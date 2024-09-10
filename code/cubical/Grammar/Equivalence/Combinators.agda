@@ -73,7 +73,7 @@ module _
   star-strong-equiv .inv = foldKL*r h the-h*-alg
   star-strong-equiv .sec =
     !*r-AlgebraHom' h (*r-initial h)
-      (record { f = foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg 
+      (record { f = foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg
               ; on-nil = refl
               ; on-cons =
                 λ i → cons ∘g ⊗-intro (g≅h .sec i) id ∘g

@@ -24,15 +24,15 @@ record NFA : Type (ℓ-suc ℓN) where
     init : Q .fst
     isAcc : Q .fst → DecProp ℓN
     transition : FinSet ℓN
-    src : transition .fst → Q .fst
-    dst : transition .fst → Q .fst
-    label : transition .fst → ⟨ Alphabet ⟩
+    src : ⟨ transition ⟩ → ⟨ Q ⟩
+    dst : ⟨ transition ⟩ → ⟨ Q ⟩
+    label : ⟨ transition ⟩ → ⟨ Alphabet ⟩
     ε-transition : FinSet ℓN
-    ε-src : ε-transition .fst → Q .fst
-    ε-dst : ε-transition .fst → Q .fst
+    ε-src : ⟨ ε-transition ⟩ → ⟨ Q ⟩
+    ε-dst : ⟨ ε-transition ⟩ → ⟨ Q ⟩
 
-  decEqQ : Discrete (Q .fst)
-  decEqQ = isFinSet→Discrete (Q .snd)
+  decEqQ : Discrete ⟨ Q ⟩
+  decEqQ = isFinSet→Discrete (str Q)
 
   hasTransition : Discrete ⟨ Alphabet ⟩ → ⟨ Q ⟩ →
     ⟨ Alphabet ⟩ → ⟨ Q ⟩ → DecProp ℓN
@@ -46,7 +46,7 @@ record NFA : Type (ℓ-suc ℓN) where
 
   -- The grammar "Parse q" denotes the type of traces in the NFA
   -- from state q to an accepting state
-  data Parse : (q : Q .fst) → Grammar ℓN where
+  data Parse : (q : ⟨ Q ⟩) → Grammar ℓN where
     nil : ∀ {q} → isAcc q .fst .fst →
       ε-grammar ⊢ Parse q
     cons : ∀ tr →
@@ -59,8 +59,8 @@ record NFA : Type (ℓ-suc ℓN) where
 
   record Algebra : Typeω where
     field
-      the-ℓs : Q .fst → Level
-      G : (q : Q .fst) → Grammar (the-ℓs q)
+      the-ℓs : ⟨ Q ⟩ → Level
+      G : (q : ⟨ Q ⟩) → Grammar (the-ℓs q)
       nil-case : ∀ {q} → isAcc q .fst .fst →
         ε-grammar ⊢ G q
       cons-case : ∀ tr →
@@ -79,13 +79,13 @@ record NFA : Type (ℓ-suc ℓN) where
 
   record AlgebraHom (alg alg' : Algebra) : Typeω where
     field
-      f : (q : Q .fst) → alg .G q ⊢ alg' .G q
+      f : (q : ⟨ Q ⟩) → alg .G q ⊢ alg' .G q
       on-nil : ∀ {q} → (qAcc : isAcc q .fst .fst) →
         f q ∘g alg .nil-case qAcc ≡ alg' .nil-case qAcc
-      on-cons : (tr : transition .fst) →
+      on-cons : (tr : ⟨ transition ⟩) →
         f (src tr) ∘g alg .cons-case tr ≡
           alg' .cons-case tr ∘g (⊗-intro id (f (dst tr)))
-      on-ε-cons : (εtr : ε-transition .fst) →
+      on-ε-cons : (εtr : ⟨ ε-transition ⟩) →
         (f (ε-src εtr)) ∘g (alg .ε-cons-case εtr) ≡
           alg' .ε-cons-case εtr ∘g f (ε-dst εtr)
     fInit = f init
@@ -246,7 +246,7 @@ record NFA : Type (ℓ-suc ℓN) where
     module _ (the-p-alg : PAlgebra) where
       underlyingAlg : Algebra
       underlyingAlg .the-ℓs = _
-      underlyingAlg .G q = (the-p-alg .G q) ⊗- P
+      underlyingAlg .G q = (the-p-alg .G q) ⟜ P
       underlyingAlg .nil-case qAcc =
         ⟜-intro ((the-p-alg .nil-case qAcc) ∘g ⊗-unit-l)
       underlyingAlg .cons-case t =
@@ -340,7 +340,7 @@ record NFA : Type (ℓ-suc ℓN) where
         PrT-helper parse (splitting .snd) p
 
       P-recTrace'-nil-test :
-        ∀ {q}{acc : ⟨ isAcc q .fst ⟩ } → 
+        ∀ {q}{acc : ⟨ isAcc q .fst ⟩ } →
         P-recTrace' ∘g ⊗-intro (nil acc) id
         ≡ the-p-alg .nil-case acc ∘g ⊗-unit-l
       P-recTrace'-nil-test = refl
@@ -360,7 +360,7 @@ record NFA : Type (ℓ-suc ℓN) where
       -- Agda can't figure out this definition is terminating unfortunately
       -- P-recTrace' w ((([]' , w'), splits) , nil acc ._ []'≡[] , p) =
       --   (the-p-alg .nil-case acc ∘g ⊗-unit-l) w ((_ , splits) , ([]'≡[] , p))
-      -- -- 
+      -- --
       -- P-recTrace' w (split , cons tr _ (split' , lit , parse) , p) =
       --   the-p-alg .cons-case tr _
         --   ((_ , split .snd ∙ cong (_++ split .fst .snd) (split' .snd) ∙
@@ -370,10 +370,10 @@ record NFA : Type (ℓ-suc ℓN) where
       --   -- (⊗-intro id P-recTrace' _ {!!})
       --     -- (⊗-assoc⁻ _ ((split , ((split' , (lit , parse)) , p)))))
       --   -- (the-p-alg .cons-case tr ∘g ⊗-intro id P-recTrace' ∘g ⊗-assoc⁻)
-      --   --   w 
+      --   --   w
       --   -- the-p-alg .cons-case tr _ {!P-recTrace' _ (? , parse , p)!}
       --   -- where
-          
+
       -- definitional equation 2:
       -- P-recTrace' ∘g ε-cons εtr ≡ the-p-alg .ε-cons-case εtr ∘g P-recTrace'
       --  (the-p-alg .ε-cons-case εtr ∘g P-recTrace') w (split , (parse , p))

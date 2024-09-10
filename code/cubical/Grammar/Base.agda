@@ -3,7 +3,7 @@ open import Cubical.Foundations.HLevels
 
 module Grammar.Base (Alphabet : hSet ℓ-zero) where
 
-open import String Alphabet public
+open import String.Base Alphabet public
 open import Cubical.HITs.PropositionalTruncation as PT
 
 private

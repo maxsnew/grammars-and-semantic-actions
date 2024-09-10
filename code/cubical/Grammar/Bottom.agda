@@ -6,13 +6,23 @@ module Grammar.Bottom (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.Empty as ⊥
 
 open import Grammar.Base Alphabet
+open import Term.Base Alphabet
 
 private
   variable
-    ℓG : Level
+    ℓg : Level
+    g : Grammar ℓg
 
 ⊥-grammar : Grammar ℓ-zero
 ⊥-grammar _ = ⊥
 
-⊥*-grammar : Grammar ℓG
+⊥*-grammar : Grammar ℓg
 ⊥*-grammar _ = ⊥*
+
+⊥-elim :
+  ⊥-grammar ⊢ g
+⊥-elim _ = ⊥.elim
+
+⊥-η : ∀ (f f' : ⊥-grammar ⊢ g)
+  → f ≡ f'
+⊥-η _ _ = funExt λ _ → funExt ⊥.elim

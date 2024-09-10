@@ -58,14 +58,17 @@ Fin≃Finℕ = isoToEquiv FinFinℕIso
 
 FinΣ≃ : (n : ℕ) (m : FinVec ℕ n) → Σ (Fin n) (Fin ∘ m) ≃ Fin (foldrFin _+_ 0 m)
 FinΣ≃ n m =
-  Σ-cong-equiv Fin≃SumFin (λ fn → ≡→Fin≃SumFin (congS m (sym (retIsEq (Fin≃SumFin .snd) fn))))
+  Σ-cong-equiv Fin≃SumFin (λ fn → ≡→Fin≃SumFin
+    (congS m (sym (retIsEq (Fin≃SumFin .snd) fn))))
   ∙ₑ SumFin.SumFinΣ≃ n (m ∘ SumFin→Fin)
   ∙ₑ invEquiv (≡→Fin≃SumFin (sum≡ n m))
   where
-  sum≡ : (n : ℕ) (m : FinVec ℕ n) → foldrFin _+_ 0 m ≡ SumFin.totalSum (m ∘ SumFin→Fin)
+  sum≡ : (n : ℕ) (m : FinVec ℕ n) →
+    foldrFin _+_ 0 m ≡ SumFin.totalSum (m ∘ SumFin→Fin)
   sum≡ = Nat.elim (λ _ → refl) λ n x m → congS (m zero +_) (x (m ∘ suc))
 
-DecΣ : (n : ℕ) → (P : FinVec (Type ℓ) n) → (∀ k → Dec (P k)) → Dec (Σ (Fin n) P)
+DecΣ : (n : ℕ) →
+  (P : FinVec (Type ℓ) n) → (∀ k → Dec (P k)) → Dec (Σ (Fin n) P)
 DecΣ n P decP = EquivPresDec
   (Σ-cong-equiv-fst (invEquiv Fin≃SumFin))
   (SumFinMore.DecΣ n (P ∘ SumFin→Fin) (decP ∘ SumFin→Fin))

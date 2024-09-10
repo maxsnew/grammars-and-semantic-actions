@@ -27,12 +27,6 @@ open import Helper
 private
   variable ℓΣ₀ ℓD ℓP ℓ : Level
 
--- TODO : put this some place better
-String→KL* : (w : String) → KL* ⊕Σ₀ w
-String→KL* [] = nil _ refl
-String→KL* (x ∷ w) =
-  cons _ ((([ x ] , w) , refl) , (((x , refl)) , (String→KL* w)))
-
 module _ (D : DFA {ℓD}) where
   open DFA D
 
@@ -56,10 +50,10 @@ module _ (D : DFA {ℓD}) where
       (δ q c) ,
       TraceAppendLiteral q-start q c _ (s , (trace , lit))
 
-    RunFromState : KL* ⊕Σ₀ ⊢ TraceFrom q-start
-    RunFromState = foldKL*l ⊕Σ₀ the-alg
+    RunFromState : string-grammar ⊢ TraceFrom q-start
+    RunFromState = foldKL*l char the-alg
       where
-      the-alg : *l-Algebra ⊕Σ₀
+      the-alg : *l-Algebra char
       the-alg .the-ℓ = ℓD
       the-alg .G = TraceFrom q-start
       the-alg .nil-case w pε = q-start , (nil _ pε)
@@ -68,7 +62,7 @@ module _ (D : DFA {ℓD}) where
 
     DecideFromState : String → Bool
     DecideFromState w =
-      let (q-end , trace) = RunFromState _ (String→KL* w) in
+      let (q-end , trace) = RunFromState _ ⌈ w ⌉ in
       decRec
         (λ acc → true)
         (λ ¬acc → false)

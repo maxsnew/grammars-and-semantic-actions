@@ -14,7 +14,11 @@ private
     ℓ : Level
     m n : ℕ
 
-DecΣ : (n : ℕ) → (P : Fin n → Type ℓ) → ((k : Fin n) → Dec (P k)) → Dec (Σ (Fin n) P)
+DecΣ :
+  (n : ℕ) →
+  (P : Fin n → Type ℓ) →
+  ((k : Fin n) → Dec (P k)) →
+  Dec (Σ (Fin n) P)
 DecΣ = Nat.elim
   (λ _ _ → no fst)
   (λ n ih P decP → decP fzero & decRec

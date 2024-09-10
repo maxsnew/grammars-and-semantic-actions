@@ -22,7 +22,6 @@ open import Grammar.Equivalence Alphabet
 open import Grammar.KleeneStar Alphabet
 open import Grammar.Maybe Alphabet
 open import Term Alphabet
-open import String.More Alphabet
 
 private
   variable
@@ -60,6 +59,8 @@ e then e' =
   fmap (⊗-intro id e') ∘g
   e
 
+-- TODO this is hella unsafe. Change to not return ⊤, but string-grammar
+-- Moreover, change Parser to be configurable w different monad choices
 -- Try the first parser. If it fails try the second
 _or_ : Parser g → Parser g → Parser g
 e or e' = ⊕-elim return (e' ∘g ⊤→string) ∘g e
