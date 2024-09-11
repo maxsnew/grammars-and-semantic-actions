@@ -120,6 +120,10 @@ module Automaton where
     unexpected : ∀ {n} →
       (literal LP ⊕ literal RP ⊕ anyNum) ⊗ ⊤ ⊢ Multiplying n false
 
+  -- note this is for the true cases, the tautological one would also
+  -- have false cases but we would just use ⊥ for them.
+  --
+  -- because of this we are getting a `warning: -W[no]UnsupportedIndexedMatch`
   record Algebra ℓ : Type (ℓ-suc ℓ) where
     field
       UO : ℕ → Grammar ℓ
@@ -128,11 +132,41 @@ module Automaton where
       [left] : ∀ {n} → literal LP ⊗ UO (suc n) ⊢ UO n
       [num]  : ∀ {n} → (LinΣ[ m ∈ ℕ ] literal (num m)) ⊗ UC n ⊢ UO n
       [rightMore] : ∀ {n} →
-        literal RP ⊗ ((ε ⊕ literal RP ⊗ ⊤) & UC n) ⊢ UC (suc n)
+        literal RP ⊗ ((literal RP ⊗ ⊤) & UC n) ⊢ UC (suc n)
       [rightDone] : ∀ {n} →
-        literal RP ⊗ ((literal * ⊗ ⊤) & UM n) ⊢ UC (suc n)
+        literal RP ⊗ ((ε ⊕ (literal * ⊗ ⊤)) & UM n) ⊢ UC (suc n)
+      [done] : ε ⊢ UM 0
       [times] : ∀ {n} → literal * ⊗ UO n ⊢ UM n
+  open Algebra
+  initialAlgebra : Algebra ℓ-zero
+  initialAlgebra .UO n = Opening n true
+  initialAlgebra .UC n = Closing n true
+  initialAlgebra .UM n = Multiplying n true
+  initialAlgebra .[left] = left
+  initialAlgebra .[num] = num
+  initialAlgebra .[rightMore] = rightMore
+  initialAlgebra .[rightDone] = rightDone
+  initialAlgebra .[times] = times
+  initialAlgebra .[done] = done
 
+  record Hom {ℓ}{ℓ'} (A : Algebra ℓ) (B : Algebra ℓ') : Type (ℓ-max ℓ ℓ') where
+    field
+      fO : ∀ n → A .UO n ⊢ B .UO n
+      fC : ∀ n → A .UC n ⊢ B .UC n
+      fM : ∀ n → A .UM n ⊢ B .UM n
+      -- TODO: the equations
+
+  fold : ∀ {ℓ} (A : Algebra ℓ) → Hom initialAlgebra A
+  fold A = record { fO = rO ; fC = rC ; fM = rM } where
+    rO : ∀ n → Opening n true ⊢ A .UO n
+    rC : ∀ n → Closing n true ⊢ A .UC n
+    rM : ∀ n → Multiplying n true ⊢ A .UM n
+    rO n w (left .w (sp , lp , o)) = A .[left] w (sp , (lp , rO _ _ o))
+    rO n w (num .w (sp , m , c)) = A .[num] _ (sp , m , rC _ _ c)
+    rC _ w (rightMore _ (sp , rp , lookAhead , c)) = A .[rightMore] _ (sp , rp , lookAhead , rC _ _ c)
+    rC _ w (rightDone _ (sp , rp , lookAhead , m)) = A .[rightDone] _ (sp , rp , lookAhead , rM _ _ m)
+    rM _ w (done _ x) = A .[done] _ x
+    rM _ w (times _ (sp , star , o)) = A .[times] _ (sp , star , rO _ _ o)
   Peek : Maybe Tok → Grammar ℓ-zero
   Peek = Maybe.rec ε (λ c → literal c ⊗ ⊤-grammar)
 
@@ -191,25 +225,26 @@ module Automaton where
   parse = ((&-π₁ ∘g LinΠ-app zero) ∘g &-π₂) ∘g parse'
 
 -- Soundness: i.e., that from every trace we can extract an LL(1) parse
--- module Soundness where
---   buildExp : Automaton.Opening 0 true ⊢ LL⟨1⟩.Exp
---   buildExp = {!!} where
---     open LL⟨1⟩ using (Exp; Atom)
---     open Automaton.Algebra
---     Stk : ℕ → Grammar ℓ-zero
---     Stk = Nat.elim ε-grammar
---       (λ _ Stk⟨n⟩ → literal RP ⊗ KL* (literal * ⊗ Atom) ⊗ Stk⟨n⟩)
---     alg : Automaton.Algebra ℓ-zero
---     alg .UO n = Exp ⊗ Stk n
---     alg .UC n = Stk n
---     alg .UM n = literal * ⊗ Atom ⊗ KL* (literal * ⊗ Atom) ⊗ Stk n
---     alg .[left] = ⊗-assoc ∘g ⟜3⊗ LL⟨1⟩.parens'
---     alg .[num] = LinΣ-elim (λ _ → Atom.num ,⊗ nil ∘g ⊗-unit-r⁻) ,⊗
---       id -- LinΣ-elim (λ _ → Atom.num) ,⊗ id
---     alg .[rightMore] =
---       id ,⊗ (⟜0⊗ nil ∘g &-π₂) -- nil ,⊗ id ,⊗ &-π₂ ∘g ⊗-unit-l⁻
---     alg .[rightDone] = id ,⊗ ((⟜2⊗ cons' ∘g ⊗-assoc ) ∘g &-π₂)
---     alg .[times] = id ,⊗ ⊗-assoc⁻
+module Soundness where
+  buildExp : Automaton.Opening 0 true ⊢ LL⟨1⟩.Exp
+  buildExp = ⊗-unit-r ∘g Automaton.Hom.fO (Automaton.fold alg) 0 where
+    open LL⟨1⟩ using (Exp; Atom)
+    open Automaton.Algebra
+    Stk : ℕ → Grammar ℓ-zero
+    Stk = Nat.elim ε-grammar
+      (λ _ Stk⟨n⟩ → literal RP ⊗ KL* (literal * ⊗ Atom) ⊗ Stk⟨n⟩)
+    alg : Automaton.Algebra ℓ-zero
+    alg .UO n = Exp ⊗ Stk n
+    alg .UC n = Stk n
+    alg .UM n = KL* (literal * ⊗ Atom) ⊗ Stk n
+    alg .[left] = ⊗-assoc ∘g ⟜3⊗ LL⟨1⟩.parens'
+    alg .[num] = LinΣ-elim (λ _ → Atom.num ,⊗ nil ∘g ⊗-unit-r⁻) ,⊗
+      id -- LinΣ-elim (λ _ → Atom.num) ,⊗ id
+    alg .[rightMore] =
+      id ,⊗ (⟜0⊗ nil ∘g &-π₂)
+    alg .[rightDone] = id ,⊗ &-π₂
+    alg .[times] = ⟜2⊗ cons' ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc⁻
+    alg .[done] = ⟜0⊗ nil
 -- Completeness i.e., that every LL(1) parse has a trace. Though
 -- completeness would be that every LL(1) parse corresponds to one we
 -- extract from the previous function
