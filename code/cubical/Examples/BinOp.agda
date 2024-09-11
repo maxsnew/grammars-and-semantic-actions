@@ -105,13 +105,13 @@ module Automaton where
 
   data Closing where
     rightMore : ∀ {n b} →
-      literal RP ⊗ ((ε ⊕ literal RP ⊗ ⊤) & Closing n b) ⊢ Closing (suc n) b
+      literal RP ⊗ ((literal RP ⊗ ⊤) & Closing n b) ⊢ Closing (suc n) b
     rightDone : ∀ {n b} →
-      literal RP ⊗ ((literal * ⊗ ⊤) & Multiplying n b) ⊢ Closing (suc n) b
+      literal RP ⊗ ((ε ⊕ literal * ⊗ ⊤) & Multiplying n b) ⊢ Closing (suc n) b
     rightUnmatched : literal RP ⊗ ⊤ ⊢ Closing 0 false
     rightUnexpectedLookahead : ∀ {n} →
-      literal RP ⊗ literal LP ⊗ ⊤ ⊢ Closing n false
-    unexpected : ∀ {n} → ε ⊕ (literal LP ⊕ anyNum) ⊗ ⊤ ⊢ Closing n false
+      literal RP ⊗ (literal LP ⊕ anyNum) ⊗ ⊤ ⊢ Closing (suc n) false
+    unexpected : ∀ {n} → ε ⊕ (literal LP ⊕ literal * ⊕ anyNum) ⊗ ⊤ ⊢ Closing n false
 
   data Multiplying where
     done : ε ⊢ Multiplying 0 true
@@ -136,6 +136,11 @@ module Automaton where
   Peek : Maybe Tok → Grammar ℓ-zero
   Peek = Maybe.rec ε (λ c → literal c ⊗ ⊤-grammar)
 
+  Goal = LinearΣ Peek & LinΠ[ n ∈ ℕ ]
+    (LinearΣ (Opening n)
+    & LinearΣ (Closing n)
+    & LinearΣ (Multiplying n))
+
   parse' : string-grammar ⊢ LinearΣ Peek & LinΠ[ n ∈ ℕ ]
     (LinearΣ (Opening n)
     & LinearΣ (Closing n)
@@ -157,32 +162,54 @@ module Automaton where
          ; RP → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
          ; * → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inr ,⊗ ⊤-intro)
          ; (num x) → ⟜-intro {k = LinearΣ (Opening n)} (⊸-intro⁻ (LinΣ-elim (λ b → ⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ id)) ∘g (&-π₁ ∘g &-π₂ ∘g LinΠ-app n) ∘g &-π₂)) })) (&-intro
-       {!!}
-       {!!})) })
+       (⟜-intro⁻ (LinΣ-elim λ
+         { RP → ⟜-intro {k = LinearΣ (Closing n)} (Nat.elim
+                                                    {A = λ n → Term (literal RP ⊗ Goal) (LinearΣ (Closing n))}
+         (LinΣ-intro false ∘g rightUnmatched ∘g id ,⊗ ⊤-intro)
+         -- here we use exponentials, really all that is required is distributivity of ⊕ over &
+         (λ n-1 _ → ⊸-intro⁻ (⇒-intro⁻ (LinΣ-elim (λ
+           -- ε ⊕ (* ⊗ ⊤) -> shift to multiplying
+           { nothing → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightDone ∘g id ,⊗ &-intro (⊕-inl ∘g &-π₁) &-π₂))) ∘g &-π₂ ∘g &-π₂) ∘g LinΠ-app n-1))
+           ; (just *) → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightDone ∘g id ,⊗ &-intro (⊕-inr ∘g &-π₁) &-π₂))) ∘g &-π₂ ∘g &-π₂) ∘g LinΠ-app n-1))
+           -- RP ⊗ ⊤ -> continue closing
+           ; (just RP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim (λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightMore))) ∘g &-π₁ ∘g &-π₂) ∘g LinΠ-app n-1))
+           -- otherwise fail
+           ; (just LP) → ⇒-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro false ∘g rightUnexpectedLookahead ∘g id ,⊗ ⊕-inl ,⊗ id) ∘g &-π₁)
+           ; (just (num x)) → ⇒-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro false ∘g rightUnexpectedLookahead ∘g id ,⊗ (⊕-inr ∘g LinΣ-intro x) ,⊗ id) ∘g &-π₁) }))))
+         n)
+         -- these cases are all similar
+         ; LP → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
+         ; * → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
+         ; (num x) → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
+       (⟜-intro⁻ (LinΣ-elim λ
+         { * → ⟜-intro {k = LinearΣ (Multiplying n)} (⊸-intro⁻ ((((LinΣ-elim λ b → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
+         ; LP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
+         ; RP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
+         ; (num x) → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) })))) })
 
   parse : string-grammar ⊢ LinΣ[ b ∈ Bool ] Opening zero b
   parse = ((&-π₁ ∘g LinΠ-app zero) ∘g &-π₂) ∘g parse'
 
 -- Soundness: i.e., that from every trace we can extract an LL(1) parse
-module Soundness where
-  buildExp : Automaton.Opening 0 true ⊢ LL⟨1⟩.Exp
-  buildExp = {!!} where
-    open LL⟨1⟩ using (Exp; Atom)
-    open Automaton.Algebra
-    Stk : ℕ → Grammar ℓ-zero
-    Stk = Nat.elim ε-grammar
-      (λ _ Stk⟨n⟩ → literal RP ⊗ KL* (literal * ⊗ Atom) ⊗ Stk⟨n⟩)
-    alg : Automaton.Algebra ℓ-zero
-    alg .UO n = Exp ⊗ Stk n
-    alg .UC n = Stk n
-    alg .UM n = literal * ⊗ Atom ⊗ KL* (literal * ⊗ Atom) ⊗ Stk n
-    alg .[left] = ⊗-assoc ∘g ⟜3⊗ LL⟨1⟩.parens'
-    alg .[num] = LinΣ-elim (λ _ → Atom.num ,⊗ nil ∘g ⊗-unit-r⁻) ,⊗
-      id -- LinΣ-elim (λ _ → Atom.num) ,⊗ id
-    alg .[rightMore] =
-      id ,⊗ (⟜0⊗ nil ∘g &-π₂) -- nil ,⊗ id ,⊗ &-π₂ ∘g ⊗-unit-l⁻
-    alg .[rightDone] = id ,⊗ ((⟜2⊗ cons' ∘g ⊗-assoc ) ∘g &-π₂)
-    alg .[times] = id ,⊗ ⊗-assoc⁻
+-- module Soundness where
+--   buildExp : Automaton.Opening 0 true ⊢ LL⟨1⟩.Exp
+--   buildExp = {!!} where
+--     open LL⟨1⟩ using (Exp; Atom)
+--     open Automaton.Algebra
+--     Stk : ℕ → Grammar ℓ-zero
+--     Stk = Nat.elim ε-grammar
+--       (λ _ Stk⟨n⟩ → literal RP ⊗ KL* (literal * ⊗ Atom) ⊗ Stk⟨n⟩)
+--     alg : Automaton.Algebra ℓ-zero
+--     alg .UO n = Exp ⊗ Stk n
+--     alg .UC n = Stk n
+--     alg .UM n = literal * ⊗ Atom ⊗ KL* (literal * ⊗ Atom) ⊗ Stk n
+--     alg .[left] = ⊗-assoc ∘g ⟜3⊗ LL⟨1⟩.parens'
+--     alg .[num] = LinΣ-elim (λ _ → Atom.num ,⊗ nil ∘g ⊗-unit-r⁻) ,⊗
+--       id -- LinΣ-elim (λ _ → Atom.num) ,⊗ id
+--     alg .[rightMore] =
+--       id ,⊗ (⟜0⊗ nil ∘g &-π₂) -- nil ,⊗ id ,⊗ &-π₂ ∘g ⊗-unit-l⁻
+--     alg .[rightDone] = id ,⊗ ((⟜2⊗ cons' ∘g ⊗-assoc ) ∘g &-π₂)
+--     alg .[times] = id ,⊗ ⊗-assoc⁻
 -- Completeness i.e., that every LL(1) parse has a trace. Though
 -- completeness would be that every LL(1) parse corresponds to one we
 -- extract from the previous function
@@ -190,15 +217,15 @@ module Soundness where
 -- kind of would want a truly dependent linear type here
 -- to formulate it that way...
 module Completeness where
-  mkTrace : LL⟨1⟩.Exp ⊢ Automaton.Opening 0 true
-  mkTrace = {!!} where
-    open LL⟨1⟩.Algebra
-    the-alg : LL⟨1⟩.Algebra ℓ-zero
-    the-alg .UE = {!!}
-    the-alg .UAs = {!!}
-    the-alg .UA = {!!}
-    the-alg .[mkExp] = {!!}
-    the-alg .[nil] = {!!}
-    the-alg .[cons] = {!!}
-    the-alg .[num] = {!!}
-    the-alg .[parens] = {!!}
+  -- mkTrace : LL⟨1⟩.Exp ⊢ Automaton.Opening 0 true
+  -- mkTrace = {!!} where
+  --   open LL⟨1⟩.Algebra
+  --   the-alg : LL⟨1⟩.Algebra ℓ-zero
+  --   the-alg .UE = {!!}
+  --   the-alg .UAs = {!!}
+  --   the-alg .UA = {!!}
+  --   the-alg .[mkExp] = {!!}
+  --   the-alg .[nil] = {!!}
+  --   the-alg .[cons] = {!!}
+  --   the-alg .[num] = {!!}
+  --   the-alg .[parens] = {!!}
