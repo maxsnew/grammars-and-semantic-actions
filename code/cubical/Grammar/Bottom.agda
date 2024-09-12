@@ -83,7 +83,7 @@ is-initial-⊥&g g .snd e = p ∙ cong (⊕-elim f e ∘g_) inl≡inr-⊥&g ∙ 
 
 open isStrongEquivalence
 
--- Every map into ⊥ is an equivalence
+-- Every map into ⊥ is a strong equivalence
 is-strict-initial-⊥ : is-strict-initial ⊥
 is-strict-initial-⊥ f .inv = ⊥-elim
 is-strict-initial-⊥ f .sec = is-initial→propHoms is-initial-⊥ _ _
@@ -100,6 +100,17 @@ is-strict-initial-⊥ {h = h} f .ret =
 
   r : &-π₂ ∘g f ,& id ≡ id
   r = &-β₂ f id
+
+-- Any g with a map into ⊥ is iso to ⊥, so it is also initial
+g⊢⊥→is-initial :
+  g ⊢ ⊥ →
+  is-initial g
+g⊢⊥→is-initial e {h = h} .fst = ⊥-elim {g = h} ∘g e
+g⊢⊥→is-initial e {h = h} .snd e' =
+  cong (_∘g e) p ∙ cong (e' ∘g_) (is-strict-initial-⊥ e .ret)
+  where
+  p : ⊥-elim ≡ e' ∘g ⊥-elim
+  p = is-initial→propHoms is-initial-⊥ _ _
 
 is-initial-⊥* : is-initial (⊥* {ℓg})
 is-initial-⊥* =

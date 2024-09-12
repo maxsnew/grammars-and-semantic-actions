@@ -31,6 +31,7 @@ infixr 5 _⊕_
   g ⊢ g ⊕ h
 ⊕-inl _ p = inl p
 
+
 ⊕-inr :
   g ⊢ h ⊕ g
 ⊕-inr _ p = inr p
@@ -151,3 +152,12 @@ open StrongEquivalence
 &⊕-distL≅ .inv = &⊕-distL⁻
 &⊕-distL≅ .sec = {!!}
 &⊕-distL≅ .ret = {!!}
+
+-- TODO use distributive coproducts to show this
+isMono-⊕-inl : isMono (⊕-inl {g = g} {h = h})
+isMono-⊕-inl {g = g}{h = h}{k = k} e e' inl∘e≡inl∘e' =
+  {!!}
+
+isMono-⊕-inr : isMono (⊕-inr {g = g} {h = h})
+isMono-⊕-inr {g = g}{h = h}{k = k} e e' inr∘e≡inr∘e' =
+  {!!}

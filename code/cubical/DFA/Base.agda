@@ -153,28 +153,18 @@ record DFA : Type (ℓ-suc ℓD) where
       RejectingTrace =
         LinΣ[ acc ∈ (⟨ isAcc q-end .fst ⟩ → Empty.⊥) ] Trace q-end q-start
 
-      open StrongEquivalence
-      ¬AcceptingTrace≅RejectingTrace :
-        StrongEquivalence
-          (¬ AcceptingTrace)
-          RejectingTrace
-      ¬AcceptingTrace≅RejectingTrace .fun =
-        {!!}
-      ¬AcceptingTrace≅RejectingTrace .inv =
-        ⇒-intro
-          (⇒-intro⁻ (LinΣ-elim (λ rej →
-            ⇒-intro (⇒-intro⁻ (LinΣ-elim (λ acc →
-              Empty.rec (rej acc))) ∘g
-            &-intro &-π₂ &-π₁))))
-      ¬AcceptingTrace≅RejectingTrace .sec = {!!}
-      ¬AcceptingTrace≅RejectingTrace .ret = {!!}
-
     TraceFrom : Grammar ℓD
     TraceFrom = LinΣ[ q-end ∈ ⟨ Q ⟩ ] Trace q-end q-start
 
     AcceptingTraceFrom : Grammar ℓD
     AcceptingTraceFrom =
-      LinΣ[ q-end ∈ ⟨ Q ⟩ ] LinΣ[ q-end ∈ ⟨ Q ⟩ ] Trace q-end q-start
+      LinΣ[ q-end ∈ ⟨ Q ⟩ ]
+        LinΣ[ acc ∈ ⟨ isAcc q-end .fst ⟩ ] Trace q-end q-start
+
+    RejectingTraceFrom : Grammar ℓD
+    RejectingTraceFrom =
+      LinΣ[ q-end ∈ ⟨ Q ⟩ ]
+        LinΣ[ acc ∈ (⟨ isAcc q-end .fst ⟩ → Empty.⊥) ] Trace q-end q-start
 
     ParseFrom : Grammar ℓD
     ParseFrom =

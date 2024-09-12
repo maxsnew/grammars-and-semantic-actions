@@ -19,12 +19,36 @@ private
     k : Grammar ℓk
     l : Grammar ℓl
 
+
+open isStrongEquivalence
+
+isStrongEquivalence→isMono :
+  (e : g ⊢ h) →
+  isStrongEquivalence _ _ e →
+  isMono e
+isStrongEquivalence→isMono e streq f f' e∘f≡e∘f' =
+  cong (_∘g f) (sym (streq .ret)) ∙
+  cong (streq .inv ∘g_) e∘f≡e∘f' ∙
+  cong (_∘g f') (streq .ret)
+
+Mono∘g : {e : g ⊢ h} {e' : h ⊢ k} →
+  isMono e' → isMono e → isMono (e' ∘g e)
+Mono∘g {e = e} {e' = e'} mon-e mon-e' f f' e'ef≡e'ef' =
+  mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')
+
 unambiguous : Grammar ℓg → Typeω
-unambiguous {ℓg = ℓg} g = is-mono {g = g}{h = ⊤} (⊤-intro {g = g})
+unambiguous {ℓg = ℓg} g = isMono {g = g}{h = ⊤} (⊤-intro {g = g})
 
 totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)
 totallyParseable {ℓg = ℓg} g =
   Σ[ g' ∈ Grammar ℓg ] StrongEquivalence (g ⊕ g') ⊤
+
+open StrongEquivalence
+
+totallyParseable→unambiguous :
+  totallyParseable g → unambiguous g
+totallyParseable→unambiguous parseable =
+  Mono∘g (isStrongEquivalence→isMono {!!} {!parseable .snd !}) {!!}
 
 decidable : Grammar ℓg → Type ℓg
 decidable g = StrongEquivalence (g ⊕ (¬ g)) ⊤
@@ -36,7 +60,6 @@ unambiguous⊤* : ∀ {ℓg} → unambiguous (⊤* {ℓg})
 unambiguous⊤* e e' _ = refl
 
 unambiguous⊥ : unambiguous ⊥
-unambiguous⊥ e e' !∘ge≡!∘ge' = {!!}
+unambiguous⊥ {k = k} e e' !∘e≡!∘e' =
+  is-initial→propHoms (g⊢⊥→is-initial e) _ _
 
-u : (g : Grammar ℓg) → unambiguous g
-u g e e' = {!!}

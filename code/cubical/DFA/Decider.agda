@@ -61,8 +61,36 @@ module _ (D : DFA {ℓD}) where
       (λ rej → ⊕-inr ∘g LinΣ-intro rej)
       (isAcc q .snd)
 
+  -- TODO unsure which equivalence we want for the decider
   open StrongEquivalence
-
+  module _ (q-start : ⟨ Q ⟩) where
+    ¬AcceptingTraceFrom≅RejectingTraceFrom :
+      StrongEquivalence
+        (¬ AcceptingTraceFrom q-start)
+        (RejectingTraceFrom q-start)
+    ¬AcceptingTraceFrom≅RejectingTraceFrom .fun = {!!}
+    ¬AcceptingTraceFrom≅RejectingTraceFrom .inv = {!!}
+    ¬AcceptingTraceFrom≅RejectingTraceFrom .sec = {!!}
+    ¬AcceptingTraceFrom≅RejectingTraceFrom .ret = {!!}
+  module _ (q-start q-end : ⟨ Q ⟩) where
+    ¬AcceptingTrace≅RejectingTrace :
+      StrongEquivalence
+        (¬ AcceptingTrace q-start q-end)
+        (RejectingTrace q-start q-end)
+    ¬AcceptingTrace≅RejectingTrace .fun =
+      {!!}
+      -- {!!} ∘g
+      -- {!!} ∘g
+      -- -- &-par (LinΣ-elim (λ q-end' → {!check-accept {q-start} q-end'!}) ∘g LinΠ-app q-start) id ∘g
+      -- &-intro (run-from-state ∘g ⊤→string ∘g ⊤-intro) id
+    ¬AcceptingTrace≅RejectingTrace .inv =
+      ⇒-intro
+        (⇒-intro⁻ (LinΣ-elim (λ rej →
+          ⇒-intro (⇒-intro⁻ (LinΣ-elim (λ acc →
+            Empty.rec (rej acc))) ∘g
+          &-intro &-π₂ &-π₁))))
+    ¬AcceptingTrace≅RejectingTrace .sec = {!!}
+    ¬AcceptingTrace≅RejectingTrace .ret = {!!}
   -- run : string-grammar ⊢ InitTrace
   -- run = LinΠ-app init ∘g run-from-state
 
