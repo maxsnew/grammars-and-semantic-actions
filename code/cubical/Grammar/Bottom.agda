@@ -28,8 +28,8 @@ private
 ⊥-elim _ = Empty.elim
 
 ⊥*-elim :
-  ⊥ ⊢ g
-⊥*-elim _ = Empty.elim
+  ⊥* {ℓg} ⊢ g
+⊥*-elim _ x = Empty.elim (lower x)
 
 ⊥-η : ∀ (f f' : ⊥ ⊢ g)
   → f ≡ f'
@@ -45,6 +45,7 @@ is-initial→propHoms :
 is-initial→propHoms initg e e' =
   sym (initg .snd e) ∙ initg .snd e'
 
+-- A grammar is strictly initial if every map into it is a strong equivalence
 is-strict-initial : Grammar ℓg → Typeω
 is-strict-initial g =
   ∀ {ℓh} {h : Grammar ℓh} (f : h ⊢ g) → isStrongEquivalence h g f
@@ -52,12 +53,11 @@ is-strict-initial g =
 is-initial-⊥ : is-initial ⊥
 is-initial-⊥ = ⊥-elim , (λ e → funExt λ x → funExt λ p → Empty.rec p)
 
-
 open StrongEquivalence
 
 is-initial-⊥&g : (g : Grammar ℓg) → is-initial (⊥ & g)
 is-initial-⊥&g g .fst = ⊥-elim ∘g &-π₁
-is-initial-⊥&g g .snd e = {!!}
+is-initial-⊥&g g .snd e = p ∙ cong (⊕-elim f e ∘g_) inl≡inr-⊥&g ∙ sym q
   where
   inl≡inr-⊥ : ⊕-inl ≡ ⊕-inr
   inl≡inr-⊥ =
@@ -65,22 +65,42 @@ is-initial-⊥&g g .snd e = {!!}
       (⊕-inl {g = ⊥}{h = ⊥}) (⊕-inr {g = ⊥}{h = ⊥})
 
   inl≡inr-⊥&g : ⊕-inl {g = ⊥ & g}{h = ⊥ & g} ≡ ⊕-inr {g = ⊥ & g}{h = ⊥ & g}
-  inl≡inr-⊥&g = ?
-    -- is-initial→propHoms is-initial-⊥
-    --   (⊕-inl {g = ⊥}{h = ⊥}) (⊕-inr {g = ⊥}{h = ⊥})
+  inl≡inr-⊥&g i = &⊕-distR ∘g &-par (inl≡inr-⊥ i) id
 
--- ⊥&g≅⊥ : (g : Grammar ℓg) → StrongEquivalence (⊥ & g) ⊥
--- ⊥&g≅⊥ g .fun = {!!}
--- ⊥&g≅⊥ g .inv = ⊥-elim
--- ⊥&g≅⊥ g .sec = {!!}
--- ⊥&g≅⊥ g .ret = {!!}
+  f = is-initial-⊥&g g .fst
 
--- open isStrongEquivalence
+  p : f ≡ (⊕-elim f e) ∘g ⊕-inl
+  p = sym (⊕-βl f e)
 
--- is-strict-initial-⊥ : is-strict-initial ⊥
--- is-strict-initial-⊥ f .inv = ⊥-elim
--- is-strict-initial-⊥ f .sec = is-initial-⊥ (f ∘g ⊥-elim) id
--- is-strict-initial-⊥ f .ret = {!!}
+  q : e ≡ (⊕-elim f e) ∘g ⊕-inr
+  q = sym (⊕-βr f e)
 
--- is-initial-⊥* : ∀ {ℓg} → is-initial (⊥* {ℓg})
--- is-initial-⊥* e e' = funExt (λ x → funExt λ p → Empty.rec (lower p))
+⊥&g≅⊥ : (g : Grammar ℓg) → StrongEquivalence (⊥ & g) ⊥
+⊥&g≅⊥ g .fun = is-initial-⊥&g g .fst
+⊥&g≅⊥ g .inv = ⊥-elim
+⊥&g≅⊥ g .sec = is-initial→propHoms is-initial-⊥ _ _
+⊥&g≅⊥ g .ret = is-initial→propHoms (is-initial-⊥&g g) _ _
+
+open isStrongEquivalence
+
+-- Every map into ⊥ is an equivalence
+is-strict-initial-⊥ : is-strict-initial ⊥
+is-strict-initial-⊥ f .inv = ⊥-elim
+is-strict-initial-⊥ f .sec = is-initial→propHoms is-initial-⊥ _ _
+is-strict-initial-⊥ {h = h} f .ret =
+  cong (_∘g f) (sym q) ∙
+  cong ((&-π₂ ∘g ⊥&g≅⊥ h .inv ∘g f) ∘g_) (sym r) ∙
+  cong (λ a → &-π₂ ∘g a ∘g (f ,& id)) p
+  where
+  p : ⊥&g≅⊥ h .inv ∘g f ∘g &-π₂ ≡ id
+  p = is-initial→propHoms (is-initial-⊥&g h) _ id
+
+  q : &-π₂ ∘g ⊥&g≅⊥ h .inv ≡ ⊥-elim
+  q = is-initial→propHoms is-initial-⊥ _ _
+
+  r : &-π₂ ∘g f ,& id ≡ id
+  r = &-β₂ f id
+
+is-initial-⊥* : is-initial (⊥* {ℓg})
+is-initial-⊥* =
+  ⊥*-elim , (λ e → funExt λ x → funExt λ p → Empty.rec (lower p))
