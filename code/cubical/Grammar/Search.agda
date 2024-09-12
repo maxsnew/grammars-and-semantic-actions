@@ -20,7 +20,7 @@ record Search (g : Grammar ℓG) (w : String) : Type ℓG where
   field
     viewSearch :
       -- done, no more results
-      ( ⊤-grammar {ℓ-zero}
+      (⊤
       -- here's one more result and there may be more
       ⊕ ((g & Search g)
       -- still searching
@@ -28,18 +28,18 @@ record Search (g : Grammar ℓG) (w : String) : Type ℓG where
 
 open Search
 
-view : Search g ⊢ ⊤-grammar {ℓ-zero} ⊕ ((g & Search g) ⊕ Search g)
+view : Search g ⊢ ⊤ ⊕ ((g & Search g) ⊕ Search g)
 view _ = viewSearch
 
 unfold :
-  (h ⊢ ⊤-grammar {ℓ-zero} ⊕ ((g & h) ⊕ h))
+  (h ⊢ ⊤ ⊕ ((g & h) ⊕ h))
   → h ⊢ Search g
 unfold f w x .viewSearch with f w x
 ... | inl _ = inl _
 ... | inr (inl (g-p , h-p)) = inr (inl (g-p , unfold f _ h-p))
 ... | inr (inr h-p) = inr (inr (unfold f _ h-p))
 
-nil : ⊤-grammar {ℓ-zero} ⊢ Search g
+nil : ⊤ ⊢ Search g
 nil = unfold ⊕-inl
 
 -- cons : (g & Search g) ⊢ Search g

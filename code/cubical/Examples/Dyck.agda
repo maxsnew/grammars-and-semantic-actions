@@ -46,7 +46,7 @@ open import Parser Alphabet isFinBracket
 
 -- a simple, but ambiguous grammar for balanced parentheses
 data Dyck : Grammar ℓ-zero where
-  none : ε-grammar ⊢ Dyck
+  none : ε ⊢ Dyck
   sequence  : Dyck ⊗ Dyck ⊢ Dyck
   bracketed : literal [ ⊗ Dyck ⊗ literal ] ⊢ Dyck
 
@@ -54,7 +54,7 @@ data Dyck : Grammar ℓ-zero where
 -- S → ε
 --   | [ S ] S
 data Balanced : Grammar ℓ-zero where
-  nil : ε-grammar ⊢ Balanced
+  nil : ε ⊢ Balanced
   balanced : literal [ ⊗ Balanced ⊗ literal ] ⊗ Balanced ⊢ Balanced
 
 module BALANCED where
@@ -116,7 +116,7 @@ module BALANCED where
        go (x .snd .snd .snd .snd .snd .snd) i)
 
 data RR1 : Grammar ℓ-zero where
-  nil : ε-grammar ⊢ RR1
+  nil : ε ⊢ RR1
   balanced : RR1 ⊗ literal [ ⊗ RR1 ⊗ literal ] ⊢ RR1
 
 mt : String
@@ -213,13 +213,13 @@ _ :
 _ = refl
 
 data BalancedStk : ∀ (n : ℕ) → Grammar ℓ-zero where
-  eof : ε-grammar ⊢ BalancedStk zero
+  eof : ε ⊢ BalancedStk zero
   open[ : ∀ {n} → literal [ ⊗ BalancedStk (suc n) ⊢ BalancedStk n
   close] : ∀ {n} → literal ] ⊗ BalancedStk n ⊢ BalancedStk (suc n)
 
   -- these are the cases for failure
-  leftovers : ∀ {n} → ε-grammar ⊢ BalancedStk (suc n)
-  unexpected] : literal ] ⊗ ⊤-grammar ⊢ BalancedStk 0
+  leftovers : ∀ {n} → ε ⊢ BalancedStk (suc n)
+  unexpected] : literal ] ⊗ ⊤ ⊢ BalancedStk 0
 
 parseStk : string-grammar ⊢ LinΠ[ n ∈ ℕ ] BalancedStk n
 parseStk = foldKL*r _ (record
@@ -245,13 +245,13 @@ parseStk = foldKL*r _ (record
 -- the n is the number of open parentheses that this datatype closes
 -- the bool is whether the trace is accepting or rejecting
 data BalancedStkTr : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero where
-  eof : ε-grammar ⊢ BalancedStkTr zero true
+  eof : ε ⊢ BalancedStkTr zero true
 
   open[ : ∀ {n b} → literal [ ⊗ BalancedStkTr (suc n) b ⊢ BalancedStkTr n b
   close] : ∀ {n b} → literal ] ⊗ BalancedStkTr n b ⊢ BalancedStkTr (suc n) b
 
-  leftovers : ∀ {n} → ε-grammar ⊢ BalancedStkTr (suc n) false
-  unexpected] : literal ] ⊗ ⊤-grammar ⊢ BalancedStkTr 0 false
+  leftovers : ∀ {n} → ε ⊢ BalancedStkTr (suc n) false
+  unexpected] : literal ] ⊗ ⊤ ⊢ BalancedStkTr 0 false
 
 parseStkTr : string-grammar ⊢ LinΠ[ n ∈ ℕ ] LinΣ[ b ∈ Bool ] BalancedStkTr n b
 parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _

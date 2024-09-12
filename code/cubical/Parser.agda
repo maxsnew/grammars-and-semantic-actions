@@ -31,13 +31,16 @@ private
 
 -- Potentially abstraction breaking but seemingly needed. However
 -- this is also an axiom we've considered adding
-⊤→string : ∀ {ℓg} → Term {ℓg} ⊤-grammar string-grammar
+⊤→string : ⊤ ⊢ string-grammar
 ⊤→string w _ = ⌈ w ⌉
+
+⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string-grammar
+⊤*→string w _ = ⌈ w ⌉
 
 Parser : (g : Grammar ℓg) → Type ℓg
 Parser g = string-grammar ⊢ Maybe (g ⊗ string-grammar)
 
-is-ε : string-grammar ⊢ Maybe ε-grammar
+is-ε : string-grammar ⊢ Maybe ε
 is-ε = caseKL* char just nothing
 
 -- TODO naming
@@ -63,11 +66,11 @@ e then e' =
 -- Moreover, change Parser to be configurable w different monad choices
 -- Try the first parser. If it fails try the second
 _or_ : Parser g → Parser g → Parser g
-e or e' = ⊕-elim return (e' ∘g ⊤→string) ∘g e
+e or e' = ⊕-elim return (e' ∘g ⊤*→string) ∘g e
 
 infixr 8 _then_
 
-parseε : Parser ε-grammar
+parseε : Parser ε
 parseε =
   just ∘g
   ⊗-unit-l⁻

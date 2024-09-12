@@ -18,7 +18,7 @@ open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.More
 open import Cubical.Data.Sum as Sum
 open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 open import Cubical.Data.SumFin hiding (fsuc)
 open import Cubical.Data.Unit
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -88,9 +88,7 @@ module _ (c : ⟨ Alphabet ⟩) where
   literalNFA .src _ = c-st
   literalNFA .dst _ = ε-st
   literalNFA .label _ = c
-  literalNFA .ε-transition = ⊥ , isFinSet⊥
-  literalNFA .ε-src = ⊥.rec
-  literalNFA .ε-dst = ⊥.rec
+  literalNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
   litNFA-strong-equiv : StrongEquivalence (InitParse literalNFA) (literal c)
   litNFA-strong-equiv = mkStrEq
@@ -104,7 +102,7 @@ module _ (c : ⟨ Alphabet ⟩) where
         cons _
         ∘g (⊗-intro id (nil Eq.refl))
         ∘g ⊗-unit-rr⁻ i
-      ; on-ε-cons = ⊥.elim })))
+      ; on-ε-cons = Empty.elim })))
     where
       the-inv : literal c ⊢ InitParse literalNFA
       the-inv =
@@ -115,43 +113,34 @@ module _ (c : ⟨ Alphabet ⟩) where
       litAlg : Algebra literalNFA
       litAlg .the-ℓs _ = ℓ-zero
       litAlg .G c-st = literal c
-      litAlg .G ε-st = ε-grammar
+      litAlg .G ε-st = ε
       litAlg .nil-case Eq.refl = id
       litAlg .cons-case _ = ⊗-unit-r
-      litAlg .ε-cons-case = ⊥.elim
 
 -- Nullary Disjunction
 module _ where
-  emptyNFA : NFA {ℓ-zero}
-  emptyNFA .Q = Unit , isFinSetUnit
-  emptyNFA .init = tt
-  emptyNFA .isAcc _ = (⊥ , isProp⊥) , no (λ z → z) -- todo: upstream this def
-  emptyNFA .transition = ⊥ , isFinSet⊥
-  emptyNFA .src = ⊥.elim
-  emptyNFA .dst = ⊥.elim
-  emptyNFA .label = ⊥.elim
-  emptyNFA .ε-transition = ⊥ , isFinSet⊥
-  emptyNFA .ε-src = ⊥.rec
-  emptyNFA .ε-dst = ⊥.rec
+  ⊥NFA : NFA {ℓ-zero}
+  ⊥NFA .Q = Unit , isFinSetUnit
+  ⊥NFA .init = tt
+  ⊥NFA .isAcc _ = (Empty.⊥ , isProp⊥) , no (λ z → z) -- todo: upstream this def
+  ⊥NFA .transition = Empty.⊥ , isFinSet⊥
+  ⊥NFA .ε-transition = Empty.⊥ , isFinSet⊥
 
   emptyNFA-strong-equiv :
-    StrongEquivalence (InitParse emptyNFA) ⊥-grammar
+    StrongEquivalence (InitParse ⊥NFA) ⊥
   emptyNFA-strong-equiv = mkStrEq
     (recInit _ ⊥Alg)
     ⊥-elim
     (⊥-η _ _)
     (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ ⊥Alg)
       (record { f = λ _ → ⊥-elim
-              ; on-nil = ⊥.elim
-              ; on-cons = ⊥.elim
-              ; on-ε-cons = ⊥.elim })))
+              ; on-nil = Empty.elim
+              ; on-cons = Empty.elim
+              ; on-ε-cons = Empty.elim })))
     where
-      ⊥Alg : Algebra emptyNFA
+      ⊥Alg : Algebra ⊥NFA
       ⊥Alg .the-ℓs = _
-      ⊥Alg .G _ = ⊥-grammar
-      ⊥Alg .nil-case = ⊥.elim
-      ⊥Alg .cons-case = ⊥.elim
-      ⊥Alg .ε-cons-case = ⊥.elim
+      ⊥Alg .G _ = ⊥
 
 -- Binary Disjunction
 -- Given two NFAs N and N', accepts a string if and only if
@@ -203,7 +192,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
   ⊕NFA .Q = ⊕State , EquivPresIsFinSet (invEquiv ⊕State-rep)
     (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSet⊎ (N .Q) (N' .Q)))
   ⊕NFA .init = start
-  ⊕NFA .isAcc = λ { start → (⊥* , isProp⊥*) , (no lower)
+  ⊕NFA .isAcc = λ { start → (Empty.⊥* , isProp⊥*) , (no lower)
     ; (inl q) → LiftDecProp'' {ℓN} {ℓN'} (N .isAcc q)
     ; (inr q') → LiftDecProp'' {ℓN'} {ℓN} (N' .isAcc q') }
   ⊕NFA .transition = ⊕Trans
@@ -238,7 +227,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
       { f = λ { start → inj-parse
               ; (inl x) → recTrace _ NAlg
               ; (inr x) → recTrace _ N'Alg }
-      ; on-nil = λ { {start} → ⊥.elim*
+      ; on-nil = λ { {start} → Empty.elim*
                    ; {inl x} → λ _ → refl
                    ; {inr x} → λ _ → refl }
       ; on-cons = λ { (inl x) → refl ; (inr x) → refl }
@@ -307,16 +296,11 @@ module _ where
   εNFA .Q = Unit , isFinSetUnit
   εNFA .init = tt
   εNFA .isAcc = λ x → (Unit , isPropUnit) , (yes _)
-  εNFA .transition = ⊥ , isFinSet⊥
-  εNFA .src = ⊥.rec
-  εNFA .dst = ⊥.rec
-  εNFA .label = ⊥.rec
-  εNFA .ε-transition = ⊥ , isFinSet⊥
-  εNFA .ε-src = ⊥.rec
-  εNFA .ε-dst = ⊥.rec
+  εNFA .transition = Empty.⊥ , isFinSet⊥
+  εNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
   εNFA-strong-equiv :
-    StrongEquivalence (InitParse εNFA) ε-grammar
+    StrongEquivalence (InitParse εNFA) ε
   εNFA-strong-equiv = mkStrEq
     (recInit _ εAlg)
     (nil _)
@@ -324,15 +308,13 @@ module _ where
     (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ εAlg) (record
       { f = λ _ → nil _
       ; on-nil = λ _ → refl
-      ; on-cons = ⊥.elim
-      ; on-ε-cons = ⊥.elim })))
+      ; on-cons = Empty.elim
+      ; on-ε-cons = Empty.elim })))
     where
       εAlg : Algebra εNFA
       εAlg .the-ℓs = _
-      εAlg .G = λ _ → ε-grammar
+      εAlg .G = λ _ → ε
       εAlg .nil-case = λ _ → id
-      εAlg .cons-case = ⊥.elim
-      εAlg .ε-cons-case = ⊥.elim
 
 -- Concatenation
 -- Given two NFAs N and N', accepts a string w if and only if
@@ -372,7 +354,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
   ⊗NFA : NFA
   ⊗NFA .Q = ⊗State
   ⊗NFA .init = inl (N .init)
-  ⊗NFA .isAcc = λ { (inl q) → (⊥* , isProp⊥*) , (no lower)
+  ⊗NFA .isAcc = λ { (inl q) → (Empty.⊥* , isProp⊥*) , (no lower)
                   ; (inr q') → LiftDecProp'' {ℓN'}{ℓN} (N' .isAcc q')}
   ⊗NFA .transition = ⊗Trans
   ⊗NFA .src = λ { (inl t) → inl (N .src t) ; (inr t') → inr (N' .src t') }
@@ -589,7 +571,7 @@ module _ (N : NFA {ℓN}) where
   *NFA .Q = Unit ⊎ N .Q .fst , isFinSet⊎ (_ , isFinSetUnit) (N .Q)
   *NFA .init = inl _
   *NFA .isAcc (inl _) = (Unit* , isPropUnit*) , (yes _)
-  *NFA .isAcc (inr q) = (⊥* , isProp⊥*) , no lower
+  *NFA .isAcc (inr q) = (Empty.⊥* , isProp⊥*) , no lower
   *NFA .transition = N .transition
   *NFA .src = inr ∘ N .src
   *NFA .dst = inr ∘ N .dst

@@ -7,7 +7,7 @@ open import Grammar.Base Alphabet public
 open import Grammar.Bottom Alphabet public
 open import Grammar.DecPropGrammar Alphabet public
 open import Grammar.Dependent Alphabet public
-open import Grammar.Empty Alphabet public
+open import Grammar.Epsilon Alphabet public
 open import Grammar.Function Alphabet public
 open import Grammar.LinearFunction Alphabet public
 open import Grammar.LinearProduct Alphabet public

@@ -102,3 +102,4 @@ module _ (N : NFA {ℓN}) (isFinSetΣ₀ : isFinSet ⟨ Alphabet ⟩) where
   --   LogicalEquivalence N.InitParse ℙN.InitParse
   -- N⊣⊢ℙN .fun = {!!}
   -- N⊣⊢ℙN .inv = {!!}
+

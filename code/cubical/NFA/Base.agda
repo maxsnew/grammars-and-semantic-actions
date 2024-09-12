@@ -48,7 +48,7 @@ record NFA : Type (ℓ-suc ℓN) where
   -- from state q to an accepting state
   data Parse : (q : ⟨ Q ⟩) → Grammar ℓN where
     nil : ∀ {q} → isAcc q .fst .fst →
-      ε-grammar ⊢ Parse q
+      ε ⊢ Parse q
     cons : ∀ tr →
       literal (label tr) ⊗ Parse (dst tr) ⊢ Parse (src tr)
     ε-cons : ∀ εtr →
@@ -62,7 +62,7 @@ record NFA : Type (ℓ-suc ℓN) where
       the-ℓs : ⟨ Q ⟩ → Level
       G : (q : ⟨ Q ⟩) → Grammar (the-ℓs q)
       nil-case : ∀ {q} → isAcc q .fst .fst →
-        ε-grammar ⊢ G q
+        ε ⊢ G q
       cons-case : ∀ tr →
         literal (label tr) ⊗ G (dst tr) ⊢ G (src tr)
       ε-cons-case : ∀ εtr →

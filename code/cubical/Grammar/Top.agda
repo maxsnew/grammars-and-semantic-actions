@@ -13,12 +13,18 @@ private
     ℓg ℓ : Level
     g : Grammar ℓg
 
-⊤-grammar : Grammar ℓg
-⊤-grammar _ = Unit*
+⊤ : Grammar ℓ-zero
+⊤ _ = Unit
 
--- TODO: replace ⊤-grammar with this and make the old ⊤-grammar ⊤*
-⊤ = ⊤-grammar {ℓ-zero}
+⊤* : Grammar ℓg
+⊤* _ = Unit*
 
 ⊤-intro :
-  g ⊢ ⊤-grammar {ℓg = ℓ}
-⊤-intro _ _ = tt*
+  g ⊢ ⊤
+⊤-intro _ _ = tt
+
+⊤*-intro : ∀ {ℓg} → g ⊢ ⊤* {ℓg}
+⊤*-intro _ _ = tt*
+
+unambiguous : Grammar ℓg → Typeω
+unambiguous {ℓg = ℓg} g = is-mono {h = ⊤} (⊤-intro {g = g})

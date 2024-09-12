@@ -10,7 +10,7 @@ open import Cubical.Data.Nat
 
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
-open import Grammar.Empty Alphabet
+open import Grammar.Epsilon Alphabet
 open import Term.Base Alphabet
 
 private
@@ -35,7 +35,7 @@ infixl 2 _⟜_
   e _ ((_ , refl) , (q , p))
 
 ⊸-intro-ε :
-  g ⊢ k → ε-grammar ⊢ g ⊸ k
+  g ⊢ k → ε ⊢ g ⊸ k
 ⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-r)
 
 ⊸-app :
@@ -131,7 +131,7 @@ infixl 2 _⟜_
 ⟜-curry {k = k} = ⟜-intro (⟜-intro {k = k} (⟜-app ∘g ⊗-assoc⁻))
 
 ⟜-intro-ε :
-  g ⊢ k → ε-grammar ⊢ k ⟜ g
+  g ⊢ k → ε ⊢ k ⟜ g
 ⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-l)
 
 ⟜2-intro-ε :

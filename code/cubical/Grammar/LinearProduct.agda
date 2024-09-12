@@ -7,7 +7,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
-open import Grammar.Empty Alphabet
+open import Grammar.Epsilon Alphabet
 open import Term.Base Alphabet
 
 
@@ -50,7 +50,7 @@ _,⊗_ = ⊗-intro
 infixr 20 _,⊗_
 
 ⊗-unit-r :
-  g ⊗ ε-grammar ⊢ g
+  g ⊗ ε ⊢ g
 ⊗-unit-r {g = g} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
   subst g (sym (++-unit-r _)
           ∙ cong (w' ++_) (sym []'≡[])
@@ -58,11 +58,11 @@ infixr 20 _,⊗_
     p⟨w'⟩
 
 ⊗-unit-r⁻ :
-  g ⊢ g ⊗ ε-grammar
+  g ⊢ g ⊗ ε
 ⊗-unit-r⁻ _ p =
   ((_ , []) , (sym (++-unit-r _))) , (p , refl)
 
-isPropε : ∀ w → isProp (ε-grammar w)
+isPropε : ∀ w → isProp (ε w)
 isPropε w = isSetString _ _
 
 rectify :
@@ -110,7 +110,7 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} =
     (substRefl {B = g} p)
 
 ⊗-unit-l :
-  ε-grammar ⊗ g ⊢ g
+  ε ⊗ g ⊢ g
 ⊗-unit-l {g = g} _ p =
   transport
     (cong g (cong (_++  p .fst .fst .snd)
@@ -118,7 +118,7 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} =
     (p .snd .snd)
 
 ⊗-unit-l⁻ :
-  g ⊢ ε-grammar ⊗ g
+  g ⊢ ε ⊗ g
 ⊗-unit-l⁻ _ p =
   (([] , _) , refl) , (refl , p)
 
@@ -153,7 +153,7 @@ rectify {w = w}{w'}{g = g}{p = p}{q = q} =
     (isSetString _ _ refl w≡w) (substRefl {B = g} p)
 
 cong-∘g⊗-unit-l⁻ :
-  (e e' : ε-grammar ⊗ g ⊢ h) →
+  (e e' : ε ⊗ g ⊢ h) →
   (e ∘g ⊗-unit-l⁻ ≡ e' ∘g ⊗-unit-l⁻) →
   e ≡ e'
 cong-∘g⊗-unit-l⁻ f g ∘g≡ =
@@ -162,7 +162,7 @@ cong-∘g⊗-unit-l⁻ f g ∘g≡ =
   cong (g ∘g_) (⊗-unit-ll⁻)
 
 cong-∘g⊗-unit-r⁻ :
-  (e e' : g ⊗ ε-grammar ⊢ h) →
+  (e e' : g ⊗ ε ⊢ h) →
   (e ∘g ⊗-unit-r⁻ ≡ e' ∘g ⊗-unit-r⁻) →
   e ≡ e'
 cong-∘g⊗-unit-r⁻ f g ∘g≡ =
@@ -190,7 +190,7 @@ cong-∘g⊗-unit-r⁻ f g ∘g≡ =
 
 ⊗-unit-rl⁻ : ⊗-unit-r ∘g ⊗-unit-l⁻ ≡ id
 ⊗-unit-rl⁻ = funExt λ w → funExt λ p →
-  isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {g = ε-grammar} w p)
+  isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {g = ε} w p)
 
 ⊗-assoc :
   g ⊗ (h ⊗ k) ⊢ (g ⊗ h) ⊗ k

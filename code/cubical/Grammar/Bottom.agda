@@ -3,7 +3,7 @@ open import Cubical.Foundations.HLevels
 
 module Grammar.Bottom (Alphabet : hSet ℓ-zero) where
 
-open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 
 open import Grammar.Base Alphabet
 open import Term.Base Alphabet
@@ -13,16 +13,20 @@ private
     ℓg : Level
     g : Grammar ℓg
 
-⊥-grammar : Grammar ℓ-zero
-⊥-grammar _ = ⊥
+⊥ : Grammar ℓ-zero
+⊥ _ = Empty.⊥
 
-⊥*-grammar : Grammar ℓg
-⊥*-grammar _ = ⊥*
+⊥* : Grammar ℓg
+⊥* _ = Empty.⊥*
 
 ⊥-elim :
-  ⊥-grammar ⊢ g
-⊥-elim _ = ⊥.elim
+  ⊥ ⊢ g
+⊥-elim _ = Empty.elim
 
-⊥-η : ∀ (f f' : ⊥-grammar ⊢ g)
+⊥*-elim :
+  ⊥ ⊢ g
+⊥*-elim _ = Empty.elim
+
+⊥-η : ∀ (f f' : ⊥ ⊢ g)
   → f ≡ f'
-⊥-η _ _ = funExt λ _ → funExt ⊥.elim
+⊥-η _ _ = funExt λ _ → funExt Empty.elim

@@ -54,3 +54,9 @@ _∘g_ e e' = seq e' e
 
 infixr 9 _∘g_
 syntax seq e e' = e ⋆ e'
+
+is-mono :
+  g ⊢ h → Typeω
+is-mono {g = g}{h = h} f =
+  ∀ {ℓk}{k : Grammar ℓk} (e e' : k ⊢ g) →
+    f ∘g e ≡ f ∘g e'

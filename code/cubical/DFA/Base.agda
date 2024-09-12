@@ -40,7 +40,7 @@ record DFA : Type (ℓ-suc ℓD) where
     -- The grammar "Trace q" denotes the type of traces in the DFA
     -- from state q to q-end
     data Trace : (q : ⟨ Q ⟩) → Grammar ℓD where
-      nil : ε-grammar ⊢ Trace q-end
+      nil : ε ⊢ Trace q-end
       cons : ∀ q c →
         literal c ⊗ Trace (δ q c) ⊢ Trace q
 
@@ -48,7 +48,7 @@ record DFA : Type (ℓ-suc ℓD) where
       field
         the-ℓs : ⟨ Q ⟩ → Level
         G : (q : ⟨ Q ⟩) → Grammar (the-ℓs q)
-        nil-case : ε-grammar ⊢ G q-end
+        nil-case : ε ⊢ G q-end
         cons-case : ∀ q c →
           literal c ⊗ G (δ q c) ⊢ G q
 

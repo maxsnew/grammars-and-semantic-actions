@@ -14,7 +14,7 @@ open import Cubical.Data.Bool
 open import Cubical.Data.Sum
 open import Cubical.Data.SumFin
 open import Cubical.Data.Unit
-open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 open import Cubical.Data.List hiding (init)
 
 Alphabet : hSet ℓ-zero
@@ -38,7 +38,7 @@ module examples where
   D .Q = Fin 3 , isFinSetFin
   D .init = fzero
   D .isAcc fzero = (Unit , isPropUnit ) , yes _
-  D .isAcc (fsuc x) = (⊥* , isProp⊥*) , no lower
+  D .isAcc (fsuc x) = (Empty.⊥* , isProp⊥*) , no lower
   δ D fzero fzero = fromℕ 0
   δ D fzero (fsuc fzero) = fromℕ 1
   δ D (fsuc fzero) fzero = fromℕ 2

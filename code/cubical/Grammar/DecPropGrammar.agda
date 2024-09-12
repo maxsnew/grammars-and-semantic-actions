@@ -19,5 +19,5 @@ DecProp-grammar' :
   DecProp ℓS → Grammar (ℓ-max ℓS ℓG)
 DecProp-grammar' d =
   decRec
-    (λ _ → ⊤-grammar)
-    (λ _ → ⊥*-grammar) (d .snd)
+    (λ _ → ⊤*)
+    (λ _ → ⊥*) (d .snd)

@@ -14,13 +14,13 @@ private
     k : Grammar ℓk
 
 Maybe : Grammar ℓg → Grammar ℓg
-Maybe {ℓg = ℓg} g = g ⊕ ⊤-grammar {ℓg}
+Maybe {ℓg = ℓg} g = g ⊕ ⊤* {ℓg}
 
 just : g ⊢ Maybe g
 just = ⊕-inl
 
 nothing : g ⊢ Maybe h
-nothing = ⊕-inr ∘g ⊤-intro
+nothing = ⊕-inr ∘g ⊤*-intro
 
 return : g ⊢ Maybe g
 return = just
