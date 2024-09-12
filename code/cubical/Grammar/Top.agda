@@ -6,6 +6,7 @@ module Grammar.Top (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.Unit
 
 open import Grammar.Base Alphabet
+open import Grammar.String Alphabet
 open import Term.Base Alphabet
 
 private
@@ -25,6 +26,12 @@ private
 
 ⊤*-intro : ∀ {ℓg} → g ⊢ ⊤* {ℓg}
 ⊤*-intro _ _ = tt*
+
+⊤→string : ⊤ ⊢ string-grammar
+⊤→string w _ = ⌈ w ⌉
+
+⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string-grammar
+⊤*→string w _ = ⌈ w ⌉
 
 unambiguous : Grammar ℓg → Typeω
 unambiguous {ℓg = ℓg} g = is-mono {h = ⊤} (⊤-intro {g = g})

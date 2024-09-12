@@ -19,7 +19,6 @@ open import Cubical.Relation.Nullary.Base
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Grammar.Maybe Alphabet
 open import Term Alphabet
 
@@ -31,12 +30,6 @@ private
 
 -- Potentially abstraction breaking but seemingly needed. However
 -- this is also an axiom we've considered adding
-⊤→string : ⊤ ⊢ string-grammar
-⊤→string w _ = ⌈ w ⌉
-
-⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string-grammar
-⊤*→string w _ = ⌈ w ⌉
-
 Parser : (g : Grammar ℓg) → Type ℓg
 Parser g = string-grammar ⊢ Maybe (g ⊗ string-grammar)
 
