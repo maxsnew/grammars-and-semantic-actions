@@ -5,7 +5,7 @@ open import Cubical.Data.Sum
 
 module Grammar.Search (Alphabet : hSet ℓ-zero) where
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (nil)
 open import Grammar.Maybe Alphabet as Maybe using (Maybe)
 open import Term Alphabet
 

@@ -7,7 +7,6 @@ module NFA.Regex.StrongEquivalence
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Grammar.RegularExpression Alphabet
 
 open import NFA.Base Alphabet

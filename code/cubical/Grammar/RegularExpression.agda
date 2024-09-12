@@ -7,7 +7,6 @@ open import Cubical.Foundations.Structure
 
 open import Helper
 open import Grammar Alphabet
-open import Grammar.KleeneStar Alphabet
 
 private
   variable ℓG ℓG' : Level

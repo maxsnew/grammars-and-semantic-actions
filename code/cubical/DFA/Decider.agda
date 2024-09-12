@@ -19,7 +19,6 @@ open import Cubical.Data.List hiding (init)
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
 open import Helper

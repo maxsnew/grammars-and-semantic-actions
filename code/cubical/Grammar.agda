@@ -9,9 +9,11 @@ open import Grammar.DecPropGrammar Alphabet public
 open import Grammar.Dependent Alphabet public
 open import Grammar.Epsilon Alphabet public
 open import Grammar.Function Alphabet public
+open import Grammar.KleeneStar Alphabet public
 open import Grammar.LinearFunction Alphabet public
 open import Grammar.LinearProduct Alphabet public
 open import Grammar.Literal Alphabet public
+open import Grammar.Negation Alphabet public
 open import Grammar.Product Alphabet public
 open import Grammar.Sum Alphabet public
 open import Grammar.Top Alphabet public

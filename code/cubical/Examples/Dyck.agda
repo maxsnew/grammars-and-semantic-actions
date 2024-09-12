@@ -40,7 +40,6 @@ Alphabet = (Bracket , isFinSet→isSet isFinBracket)
 open import Grammar Alphabet
 open import Grammar.Maybe Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Term Alphabet
 open import Parser Alphabet isFinBracket
 
