@@ -11,8 +11,9 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓ : Level
+    ℓg ℓh : Level
     g : Grammar ℓg
+    h : Grammar ℓh
 
 ⊤ : Grammar ℓ-zero
 ⊤ _ = Unit
@@ -33,3 +34,12 @@ private
 ⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string-grammar
 ⊤*→string w _ = ⌈ w ⌉
 
+is-terminal : Grammar ℓg → Typeω
+is-terminal g =
+  ∀ {ℓh}{h : Grammar ℓh} → (Σ[ e ∈ h ⊢ g ] (∀ e' → e ≡ e'))
+
+is-terminal-⊤ : is-terminal ⊤
+is-terminal-⊤ = ⊤-intro , (λ e → refl)
+
+is-terminal-⊤* : ∀ {ℓg} → is-terminal (⊤* {ℓg})
+is-terminal-⊤* = ⊤*-intro , λ _ → refl

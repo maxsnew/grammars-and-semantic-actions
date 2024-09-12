@@ -5,16 +5,16 @@ module DFA.Decider (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 
-open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.Base hiding (¬_)
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
-open import Cubical.Data.Bool
+open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.Sum
 open import Cubical.Data.SumFin
 open import Cubical.Data.Unit
-open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Empty as Empty
 open import Cubical.Data.List hiding (init)
 
 open import Grammar Alphabet
@@ -50,18 +50,34 @@ module _ (D : DFA {ℓD}) where
                   Trace.cons q c))
             ∘g LinΠ-app (δ q c))))))
 
-  check-accept : {q-start : ⟨ Q ⟩} (q : ⟨ Q ⟩) →
-    Trace q q-start ⊢ LinΣ[ b ∈ Bool ] TraceFrom q-start
+  check-accept : {q-start : ⟨ Q ⟩} (q-end : ⟨ Q ⟩) →
+    Trace q-end q-start ⊢
+      AcceptingTrace q-start q-end ⊕ RejectingTrace q-start q-end
+      -- LinΣ[ acc? ∈ ⟨ isAcc q-end .fst ⟩ ⊎ (⟨ isAcc q-end .fst ⟩ → Empty.⊥) ]
+      --   Trace q-end q-start
   check-accept q =
-    LinΣ-intro
-      (decRec (λ _ → true) (λ _ → false) (isAcc q .snd)) ∘g
-    LinΣ-intro q
+    decRec
+      (λ acc → ⊕-inl ∘g LinΣ-intro acc)
+      (λ rej → ⊕-inr ∘g LinΣ-intro rej)
+      (isAcc q .snd)
 
-  run : string-grammar ⊢ InitTrace
-  run = LinΠ-app init ∘g run-from-state
+  open StrongEquivalence
 
-  decide :
-    string-grammar ⊢ LinΣ[ b ∈ Bool ] InitTrace
-  decide =
-    LinΣ-elim (λ q → check-accept q) ∘g
-    run
+  -- run : string-grammar ⊢ InitTrace
+  -- run = LinΠ-app init ∘g run-from-state
+
+  -- decide :
+  --   string-grammar ⊢ LinΣ[ b ∈ Bool ] InitTrace
+  -- decide =
+  --   LinΣ-elim (λ q → check-accept q) ∘g
+  --   run
+
+
+  decidableDFA : decidable (LinΠ[ q ∈ ⟨ Q ⟩ ] AcceptingTraceFrom q)
+  decidableDFA .fun =
+    {!!}
+  decidableDFA .inv =
+    {!!} ∘g
+    {!!}
+  decidableDFA .sec = {!!}
+  decidableDFA .ret = {!!}

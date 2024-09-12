@@ -59,4 +59,4 @@ is-mono :
   g ⊢ h → Typeω
 is-mono {g = g}{h = h} f =
   ∀ {ℓk}{k : Grammar ℓk} (e e' : k ⊢ g) →
-    f ∘g e ≡ f ∘g e'
+    f ∘g e ≡ f ∘g e' → e ≡ e'

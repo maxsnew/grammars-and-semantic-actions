@@ -4,6 +4,9 @@ open import Cubical.Foundations.HLevels
 module Grammar.Equivalence.Combinators (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.Sum Alphabet
+open import Grammar.KleeneStar Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term Alphabet
 

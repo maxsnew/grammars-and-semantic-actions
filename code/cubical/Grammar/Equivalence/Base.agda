@@ -86,6 +86,15 @@ module _ {ℓG} {ℓG'}
       sec : fun ∘g inv ≡ id
       ret : inv ∘g fun ≡ id
 
+  record isStrongEquivalence (e : g ⊢ g') : Type (ℓ-max ℓG ℓG') where
+    no-eta-equality
+    constructor isStrEq
+    field
+      inv : g' ⊢ g
+      sec : e ∘g inv ≡ id
+      ret : inv ∘g e ≡ id
+
+
 module _ {ℓG} {ℓH}
   {g : Grammar ℓG}
   {h : Grammar ℓH}
