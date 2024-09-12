@@ -9,7 +9,7 @@ open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet
-open import Term Alphabet
+open import Term.Base Alphabet
 
 module _ {ℓG}
   (g : Grammar ℓG)

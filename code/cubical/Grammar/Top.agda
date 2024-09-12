@@ -33,5 +33,3 @@ private
 ⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string-grammar
 ⊤*→string w _ = ⌈ w ⌉
 
-unambiguous : Grammar ℓg → Typeω
-unambiguous {ℓg = ℓg} g = is-mono {h = ⊤} (⊤-intro {g = g})
