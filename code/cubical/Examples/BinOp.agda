@@ -57,6 +57,8 @@ module LL⟨1⟩ where
   -- This grammar is LL(1) because after you match a close paren, you
   -- need to look ahead one token to know if you continue matching
   -- close parens or have finished parsing the Atom.
+  num' : ∀ {n} → ε ⊢ Atom ⟜ literal (num n)
+  num' {n} = ⟜-intro-ε {k = Atom} (num {n})
   parens' = ⟜3-intro-ε parens
 
   record Algebra ℓ : Type (ℓ-suc ℓ) where
@@ -98,7 +100,7 @@ module LL⟨1⟩ where
     rAs _ (KL*.cons _ (sp1 , (sp2 , star , a) , as)) = A .[cons] _ (sp1 , (sp2 , star , rA _ a) , rAs _ as)
     rA _ (num _ x) = A .[num] _ x
     rA _ (parens _ (sp1 , lp , sp2 , e , rp)) = A .[parens] _ (sp1 , lp , sp2 , rE _ e , rp)
-  
+
 module Automaton where
   -- TODO: we should be able to generalize this definition to an
   -- (infinite state) deterministic automaton with guarded
@@ -127,8 +129,8 @@ module Automaton where
   data Multiplying : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero
   DoneOpening : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero
   DoneOpening n b =
-    (ε ⊕ literal * ⊗ ⊤) & Multiplying n b
-    ⊕ (literal RP ⊕ literal LP ⊕ anyNum) & Closing n b
+    ((ε ⊕ (literal * ⊕ literal LP ⊕ anyNum) ⊗ ⊤) & Multiplying n b)
+    ⊕ ((literal RP ⊗ ⊤) & Closing n b)
   data Opening where
     left : ∀ {n b} → literal LP ⊗ Opening (suc n) b ⊢ Opening n b
     num  : ∀ {n b} →
@@ -139,7 +141,7 @@ module Automaton where
     rightClose : ∀ {n b} →
       literal RP ⊗ DoneOpening n b ⊢ Closing (suc n) b
     rightUnmatched : literal RP ⊗ ⊤ ⊢ Closing 0 false
-    unexpected : ∀ {n} → ε ⊕ (literal * ⊗ literal LP ⊕ anyNum) ⊗ ⊤ ⊢ Closing n false
+    unexpected : ∀ {n} → ε ⊕ (literal * ⊕ literal LP ⊕ anyNum) ⊗ ⊤ ⊢ Closing n false
 
   data Multiplying where
     done : ε ⊢ Multiplying 0 true
@@ -208,7 +210,61 @@ module Automaton where
     (LinearΣ (Opening n)
     & LinearΣ (Closing n)
     & LinearΣ (Multiplying n))
-  parse' = {!!}
+  parse' = foldKL*r _ (record { the-ℓ = _ ; G = _
+    ; nil-case =
+      LinΣ-intro Maybe.nothing
+      ,& LinΠ-intro λ n →
+      (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
+      ,& (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
+      ,& Nat.elim {A = λ n → Term ε (LinearΣ (Multiplying n))} (LinΣ-intro true ∘g done) (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
+    ; cons-case =
+      (⟜-intro⁻ (LinΣ-elim (λ tok → ⟜-intro {k = LinearΣ Peek} (LinΣ-intro {A = Maybe Tok} (just tok) ∘g id ,⊗ ⊤-intro))))
+      ,& LinΠ-intro λ n →
+        (⟜-intro⁻
+          (LinΣ-elim λ
+          { (num x) → ⟜-intro {k = LinearΣ (Opening n)} (⊸-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
+            -- goto closing
+            { (just RP) → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ ⊕-inr))) ∘g &-π₁) ∘g &-π₂))
+            ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+            ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+            ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+            ; (just (num y)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro y) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+            }))
+            ∘g id ,⊗ id ,&p LinΠ-app n)
+            --  (⊸-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
+          ; LP → ⟜-intro {k = LinearΣ (Opening n)} (⊸-intro⁻ (((LinΣ-elim (λ b → ⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g left)) ∘g &-π₁)) ∘g LinΠ-app (suc n) ∘g &-π₂))
+          ; RP → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
+          ; * → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inr ,⊗ ⊤-intro)
+          })
+        )
+        -- ⟜-intro⁻
+        ,& ⟜-intro⁻ (LinΣ-elim λ
+         { RP → ⟜-intro {k = LinearΣ (Closing n)} (Nat.elim {A = λ n → Term (literal RP ⊗ Goal) (LinearΣ (Closing n))}
+           -- empty stack
+           (LinΣ-intro false ∘g rightUnmatched ∘g id ,⊗ ⊤-intro)
+           -- popped
+           (λ n-1 _ → (⊸-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
+             { (just RP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ ⊕-inr))) ∘g &-π₁ ∘g &-π₂))
+             ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+             ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+             ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+             ; (just (num x)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+             })) ∘g id ,⊗ id ,&p LinΠ-app n-1))
+           n)
+         ; LP → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
+           unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
+         ; * → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
+           unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
+         ; (num x) → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
+           unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro)
+         })
+        ,&
+       (⟜-intro⁻ (LinΣ-elim λ
+         { * → ⟜-intro {k = LinearΣ (Multiplying n)} (⊸-intro⁻ ((((LinΣ-elim λ b → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
+         ; LP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
+         ; RP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
+         ; (num x) → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
+    })
   -- parse' = foldKL*r _
   --   (record { the-ℓ = _ ; G = _
   --   ; nil-case = &-intro
@@ -245,11 +301,6 @@ module Automaton where
   --        ; LP → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
   --        ; * → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
   --        ; (num x) → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
-  --      (⟜-intro⁻ (LinΣ-elim λ
-  --        { * → ⟜-intro {k = LinearΣ (Multiplying n)} (⊸-intro⁻ ((((LinΣ-elim λ b → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
-  --        ; LP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
-  --        ; RP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
-  --        ; (num x) → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) })))) })
 
   parse : string-grammar ⊢ LinΣ[ b ∈ Bool ] Opening zero b
   parse = ((&-π₁ ∘g LinΠ-app zero) ∘g &-π₂) ∘g parse'
