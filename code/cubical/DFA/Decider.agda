@@ -67,29 +67,6 @@ module _ (D : DFA {ℓD}) where
       ⊕-elim (⊕-inl ∘g LinΣ-intro q-end) (⊕-inr ∘g LinΣ-intro q-end) ∘g
       check-accept q-end)
 
-  open StrongEquivalence
-  module _ (q-start q-end : ⟨ Q ⟩) where
-    ¬AcceptingTrace≅RejectingTrace :
-      StrongEquivalence
-        (¬ AcceptingTrace q-start q-end)
-        (RejectingTrace q-start q-end)
-    ¬AcceptingTrace≅RejectingTrace .fun =
-      {!!}
-      -- {!!} ∘g
-      -- {!!} ∘g
-      -- -- &-par (LinΣ-elim (λ q-end' → {!check-accept {q-start} q-end'!}) ∘g LinΠ-app q-start) id ∘g
-      -- &-intro (run-from-state ∘g ⊤→string ∘g ⊤-intro) id
-    ¬AcceptingTrace≅RejectingTrace .inv =
-      ⇒-intro
-        (⇒-intro⁻ (LinΣ-elim (λ rej →
-          ⇒-intro (⇒-intro⁻ (LinΣ-elim (λ acc →
-            Empty.rec (rej acc))) ∘g
-          &-intro &-π₂ &-π₁))))
-    ¬AcceptingTrace≅RejectingTrace .sec = {!!}
-    ¬AcceptingTrace≅RejectingTrace .ret = {!!}
-  -- run : string-grammar ⊢ InitTrace
-  -- run = LinΠ-app init ∘g run-from-state
-
   decide :
     string-grammar ⊢
       LinΠ[ q ∈ ⟨ Q ⟩ ] (AcceptingTraceFrom q ⊕ RejectingTraceFrom q)
@@ -98,44 +75,75 @@ module _ (D : DFA {ℓD}) where
       check-accept-from q ∘g
       LinΠ-app q) ∘g
     run-from-state
+  -- open StrongEquivalence
+  -- module _ (q-start q-end : ⟨ Q ⟩) where
+  --   ¬AcceptingTrace≅RejectingTrace :
+  --     StrongEquivalence
+  --       (¬ AcceptingTrace q-start q-end)
+  --       (RejectingTrace q-start q-end)
+  --   ¬AcceptingTrace≅RejectingTrace .fun =
+  --     {!!}
+  --     -- {!!} ∘g
+  --     -- {!!} ∘g
+  --     -- -- &-par (LinΣ-elim (λ q-end' → {!check-accept {q-start} q-end'!}) ∘g LinΠ-app q-start) id ∘g
+  --     -- &-intro (run-from-state ∘g ⊤→string ∘g ⊤-intro) id
+  --   ¬AcceptingTrace≅RejectingTrace .inv =
+  --     ⇒-intro
+  --       (⇒-intro⁻ (LinΣ-elim (λ rej →
+  --         ⇒-intro (⇒-intro⁻ (LinΣ-elim (λ acc →
+  --           Empty.rec (rej acc))) ∘g
+  --         &-intro &-π₂ &-π₁))))
+  --   ¬AcceptingTrace≅RejectingTrace .sec = {!!}
+  --   ¬AcceptingTrace≅RejectingTrace .ret = {!!}
+  -- -- run : string-grammar ⊢ InitTrace
+  -- -- run = LinΠ-app init ∘g run-from-state
 
-  Trace→String : ∀ q-start q-end → Trace q-end q-start ⊢ string-grammar
-  Trace→String q-start q-end =
-    recTrace q-end the-alg
-    where
-    the-alg : Algebra q-end
-    the-alg .the-ℓs = _
-    the-alg .G _ = string-grammar
-    the-alg .nil-case = KL*.nil
-    the-alg .cons-case q c = KL*.cons ∘g LinΣ-intro c ,⊗ id
 
-  TraceFrom≅string :
-    ∀ q →
-    StrongEquivalence
-      (TraceFrom q)
-      string-grammar
-  TraceFrom≅string q .fun = LinΣ-elim (λ q' → Trace→String q q')
-  TraceFrom≅string q .inv = LinΠ-app q ∘g run-from-state
-  TraceFrom≅string q .sec = unabmiguous-string _ _ refl
-  TraceFrom≅string q .ret =
-    {!!}
-    -- Should be an algebra-η, but wrapped with a LinΣ
+  -- Trace→String : ∀ q-start q-end → Trace q-end q-start ⊢ string-grammar
+  -- Trace→String q-start q-end =
+  --   recTrace q-end the-alg
+  --   where
+  --   the-alg : Algebra q-end
+  --   the-alg .the-ℓs = _
+  --   the-alg .G _ = string-grammar
+  --   the-alg .nil-case = KL*.nil
+  --   the-alg .cons-case q c = KL*.cons ∘g LinΣ-intro c ,⊗ id
 
-  totallyParseableDFA :
-    ∀ q →
-    totallyParseable (ParseFrom q)
-  totallyParseableDFA q .fst = RejectingTraceFrom q
-  totallyParseableDFA q .snd .fun = ⊤-intro
-  totallyParseableDFA q .snd .inv =
-    LinΠ-app q ∘g decide ∘g ⊤→string
-  totallyParseableDFA q .snd .sec = unambiguous⊤ _ _ refl
-  totallyParseableDFA q .snd .ret = {!!}
+  -- TraceFrom≅string :
+  --   ∀ q →
+  --   StrongEquivalence
+  --     (TraceFrom q)
+  --     string-grammar
+  -- TraceFrom≅string q .fun = LinΣ-elim (λ q' → Trace→String q q')
+  -- TraceFrom≅string q .inv = LinΠ-app q ∘g run-from-state
+  -- TraceFrom≅string q .sec = unabmiguous-string _ _ refl
+  -- TraceFrom≅string q .ret =
+  --   asdf (TraceFrom q) _ id (λ w p → {!!}) {!!}
+  --   where
+  --   asdf : ∀ {ℓg} (g : Grammar ℓg) →
+  --     (e e' : g ⊢ LinΣ[ q' ∈ ⟨ Q ⟩ ] Trace q' q) →
+  --     (∀ w p → e w p .fst ≡ e' w p .fst) →
+  --     {!!} →
+  --     e ≡ e'
+  --   asdf = {!!}
+  --   -- cong LinΣ-elim (funExt (λ q' →
+  --   --   {!!}))
+  --   -- Should be an algebra-η, but wrapped with a LinΣ
 
-  decidableDFA : decidable (LinΠ[ q ∈ ⟨ Q ⟩ ] ParseFrom q)
-  decidableDFA .fun =
-    λ w _ → tt
-  decidableDFA .inv =
-    {!!} ∘g
-    {!!}
-  decidableDFA .sec = {!!}
-  decidableDFA .ret = {!!}
+  -- totallyParseableDFA :
+  --   ∀ q →
+  --   totallyParseable (ParseFrom q)
+  -- totallyParseableDFA q .fst = RejectingTraceFrom q
+  -- totallyParseableDFA q .snd .fun = ⊤-intro
+  -- totallyParseableDFA q .snd .inv =
+  --   LinΠ-app q ∘g decide ∘g ⊤→string
+  -- totallyParseableDFA q .snd .sec = unambiguous⊤ _ _ refl
+  -- totallyParseableDFA q .snd .ret = {!!}
+
+  -- decidableDFA : decidable (LinΠ[ q ∈ ⟨ Q ⟩ ] ParseFrom q)
+  -- decidableDFA .fun = ⊤-intro
+  -- decidableDFA .inv =
+  --   {!!} ∘g
+  --   {!!}
+  -- decidableDFA .sec = unambiguous⊤ _ _ refl
+  -- decidableDFA .ret = {!!}

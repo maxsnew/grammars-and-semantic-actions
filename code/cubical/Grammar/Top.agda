@@ -29,10 +29,10 @@ private
 ⊤*-intro _ _ = tt*
 
 ⊤→string : ⊤ ⊢ string-grammar
-⊤→string w _ = ⌈ w ⌉
+⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
 
 ⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string-grammar
-⊤*→string w _ = ⌈ w ⌉
+⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)
 
 is-terminal : Grammar ℓg → Typeω
 is-terminal g =

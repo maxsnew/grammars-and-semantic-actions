@@ -52,6 +52,43 @@ Mono∘g {e = e} {e' = e'} mon-e mon-e' f f' e'ef≡e'ef' =
 unambiguous : Grammar ℓg → Typeω
 unambiguous {ℓg = ℓg} g = isMono {g = g}{h = ⊤} (⊤-intro {g = g})
 
+module _ where
+  -- This is not intended to be used in the library
+  -- This is the external notion of what we'd expected an unambiguous
+  -- grammar to be, that each input string is parsed uniquely
+
+  unambiguous' : Grammar ℓg → Type ℓg
+  unambiguous' g = ∀ w → isProp (g w)
+
+  unambiguous'→unambiguous : unambiguous' g → unambiguous g
+  unambiguous'→unambiguous {g = g} unambig' e e' _ =
+    funExt (λ w → funExt (λ x → unambig' w (e w x) (e' w x)))
+
+  module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
+    unambiguous→unambiguous' : unambiguous g → unambiguous' g
+    unambiguous→unambiguous' {g = g} unambig w pg pg' =
+      isMono→injective unambig w pg pg' refl
+      where
+      pick-parse : ∀ w' (h : Grammar ℓh) → h w' → ⌈ w' ⌉ ⊢ h
+      pick-parse w' h p w'' x =
+        subst h (uniquely-supported-⌈w⌉ isFinSetAlphabet w' w'' x) p
+
+      isMono→injective : {e : h ⊢ ⊤} →
+        isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
+      isMono→injective {h = h}{e = e} mono-e w p p' ewp≡ewp' =
+        sym (transportRefl p) ∙
+        cong (λ a → transp (λ i → h (a i)) i0 p) (isSetString _ w refl _) ∙
+        funExt⁻
+          (funExt⁻ (mono-e (pick-parse w h p) (pick-parse w h p') refl) w)
+            (internalize w) ∙
+        cong (λ a → transp (λ i → h (a i)) i0 p') (isSetString _ w _ refl) ∙
+        transportRefl p'
+
+  -- Thus the internal and external notions of unambiguity are logically
+  -- equivalent. Moreover, each of these can be show to be prop-valued
+  -- (up to rewriting the definition of mono to not be a Typeω), so the
+  -- logical equivalence can be lifted to an iso
+
 totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)
 totallyParseable {ℓg = ℓg} g =
   Σ[ g' ∈ Grammar ℓg ] StrongEquivalence (g ⊕ g') ⊤
