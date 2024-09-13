@@ -149,6 +149,8 @@ record DFA : Type (ℓ-suc ℓD) where
       AcceptingTrace =
         LinΣ[ acc ∈ ⟨ isAcc q-end .fst ⟩ ] Trace q-end q-start
 
+      Parse = AcceptingTrace
+
       RejectingTrace : Grammar ℓD
       RejectingTrace =
         LinΣ[ acc ∈ (⟨ isAcc q-end .fst ⟩ → Empty.⊥) ] Trace q-end q-start
@@ -161,15 +163,12 @@ record DFA : Type (ℓ-suc ℓD) where
       LinΣ[ q-end ∈ ⟨ Q ⟩ ]
         LinΣ[ acc ∈ ⟨ isAcc q-end .fst ⟩ ] Trace q-end q-start
 
+    ParseFrom = AcceptingTraceFrom
+
     RejectingTraceFrom : Grammar ℓD
     RejectingTraceFrom =
       LinΣ[ q-end ∈ ⟨ Q ⟩ ]
         LinΣ[ acc ∈ (⟨ isAcc q-end .fst ⟩ → Empty.⊥) ] Trace q-end q-start
-
-    ParseFrom : Grammar ℓD
-    ParseFrom =
-      LinΣ[ q-end ∈ (Σ[ q ∈ ⟨ Q ⟩ ] isAcc q .fst .fst) ]
-        Trace (q-end .fst) q-start
 
   InitTrace : Grammar ℓD
   InitTrace = TraceFrom init

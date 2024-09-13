@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
@@ -8,12 +9,18 @@ open import Cubical.Relation.Nullary.Base hiding (¬_)
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
+open import Cubical.Data.List
+open import Cubical.Data.Empty as Empty hiding (⊥;⊥*)
+open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Bottom Alphabet
 open import Grammar.Negation Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.KleeneStar Alphabet
+open import Grammar.String Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
@@ -44,29 +51,6 @@ Mono∘g {e = e} {e' = e'} mon-e mon-e' f f' e'ef≡e'ef' =
 
 unambiguous : Grammar ℓg → Typeω
 unambiguous {ℓg = ℓg} g = isMono {g = g}{h = ⊤} (⊤-intro {g = g})
-
--- Including this at all is maybe not useful because it is
--- abstraction breaking, but it also grounds the implementation
--- in intuition idk...might delete l8r
--- This is not intended to be used in the library
--- This is the external notion of what we'd expected an unambiguous
--- grammar to be, that each input string is parsed uniquely
-unambiguous' : Grammar ℓg → Type ℓg
-unambiguous' g = ∀ w → isProp (g w)
-
--- However the internal notion does subsume the external one
-unambiguous'→unambiguous : unambiguous' g → unambiguous g
-unambiguous'→unambiguous {g = g} unambig' e e' _ =
-  funExt (λ w → funExt (λ x → unambig' w (e w x) (e' w x)))
-
-unambiguous→unambiguous' : unambiguous g → unambiguous' g
-unambiguous→unambiguous' {g = g} unambig w pg pg' =
-  isMono→injective unambig w pg pg' refl
-  where
-  isMono→injective : {e : h ⊢ k} →
-    isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
-  isMono→injective {e = e} mono-e w p p' ewp≡ewp' =
-    {!mono-e (pick-elt ?) !}
 
 totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)
 totallyParseable {ℓg = ℓg} g =
@@ -100,3 +84,43 @@ unambiguous⊥ : unambiguous ⊥
 unambiguous⊥ {k = k} e e' !∘e≡!∘e' =
   is-initial→propHoms (g⊢⊥→is-initial e) _ _
 
+-- Breaking abstractions to prove this.
+-- Should be justified because the axiom we are adding
+-- is "string ≅ ⊤", not just the existence of a map ⊤ ⊢ string
+string≅⊤ : StrongEquivalence string-grammar ⊤
+string≅⊤ .fun = ⊤-intro
+string≅⊤ .inv = ⊤→string
+string≅⊤ .sec = unambiguous⊤ _ _ refl
+string≅⊤ .ret =
+  funExt λ {
+    [] → funExt λ {
+      (KL*.nil .[] x) → cong (KL*.nil []) (isSetString [] [] refl x)
+    ; (KL*.cons .[] x) →
+      Empty.rec (¬nil≡cons (x .fst .snd ∙
+                           cong (_++ x .fst .fst .snd) (x .snd .fst .snd))) }
+  ; (c ∷ w) → funExt (λ {
+    (KL*.nil .(c ∷ w) x) → Empty.rec (¬cons≡nil x)
+  ; (KL*.cons .(c ∷ w) x) →
+    cong (KL*.cons (c ∷ w))
+      {!!}
+      -- (⊗≡ (((c ∷ [] , w) , (λ _ → c ∷ w)) , (c , (λ _ → c ∷ [])) , ⌈ w ⌉)
+      --   x
+      --   (≡-× (cong (_∷ [])
+      --     (cons-inj₁ (x .fst .snd ∙
+      --       cong (_++ x .fst .fst .snd) (x .snd .fst .snd))) ∙
+      --     sym (x .snd .fst .snd))
+      --     (cons-inj₂ (x .fst .snd ∙
+      --       cong (_++ x .fst .fst .snd) (x .snd .fst .snd))))
+      --     (isProp→PathP (λ _ → {!isSetString!}) ((c , (λ _ → c ∷ [])) , ⌈ w ⌉) (x .snd)))
+  }) }
+
+open isStrongEquivalence
+unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
+unambiguous≅ eq unambig-g =
+  Mono∘g {e = eq .inv} unambig-g
+    (isStrongEquivalence→isMono
+      (eq .inv) (isStrEq (eq .fun) (eq .ret) (eq .sec)))
+
+unabmiguous-string : unambiguous string-grammar
+unabmiguous-string =
+  unambiguous≅ (sym-strong-equivalence string≅⊤) unambiguous⊤

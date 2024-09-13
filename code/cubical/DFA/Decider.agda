@@ -53,25 +53,21 @@ module _ (D : DFA {ℓD}) where
   check-accept : {q-start : ⟨ Q ⟩} (q-end : ⟨ Q ⟩) →
     Trace q-end q-start ⊢
       AcceptingTrace q-start q-end ⊕ RejectingTrace q-start q-end
-      -- LinΣ[ acc? ∈ ⟨ isAcc q-end .fst ⟩ ⊎ (⟨ isAcc q-end .fst ⟩ → Empty.⊥) ]
-      --   Trace q-end q-start
   check-accept q =
     decRec
       (λ acc → ⊕-inl ∘g LinΣ-intro acc)
       (λ rej → ⊕-inr ∘g LinΣ-intro rej)
       (isAcc q .snd)
 
-  -- TODO unsure which equivalence we want for the decider
+  check-accept-from : (q-start : ⟨ Q ⟩) →
+    TraceFrom q-start ⊢
+      AcceptingTraceFrom q-start ⊕ RejectingTraceFrom q-start
+  check-accept-from q-start =
+    LinΣ-elim (λ q-end →
+      ⊕-elim (⊕-inl ∘g LinΣ-intro q-end) (⊕-inr ∘g LinΣ-intro q-end) ∘g
+      check-accept q-end)
+
   open StrongEquivalence
-  module _ (q-start : ⟨ Q ⟩) where
-    ¬AcceptingTraceFrom≅RejectingTraceFrom :
-      StrongEquivalence
-        (¬ AcceptingTraceFrom q-start)
-        (RejectingTraceFrom q-start)
-    ¬AcceptingTraceFrom≅RejectingTraceFrom .fun = {!!}
-    ¬AcceptingTraceFrom≅RejectingTraceFrom .inv = {!!}
-    ¬AcceptingTraceFrom≅RejectingTraceFrom .sec = {!!}
-    ¬AcceptingTraceFrom≅RejectingTraceFrom .ret = {!!}
   module _ (q-start q-end : ⟨ Q ⟩) where
     ¬AcceptingTrace≅RejectingTrace :
       StrongEquivalence
@@ -94,16 +90,50 @@ module _ (D : DFA {ℓD}) where
   -- run : string-grammar ⊢ InitTrace
   -- run = LinΠ-app init ∘g run-from-state
 
-  -- decide :
-  --   string-grammar ⊢ LinΣ[ b ∈ Bool ] InitTrace
-  -- decide =
-  --   LinΣ-elim (λ q → check-accept q) ∘g
-  --   run
+  decide :
+    string-grammar ⊢
+      LinΠ[ q ∈ ⟨ Q ⟩ ] (AcceptingTraceFrom q ⊕ RejectingTraceFrom q)
+  decide =
+    LinΠ-intro (λ q →
+      check-accept-from q ∘g
+      LinΠ-app q) ∘g
+    run-from-state
 
+  Trace→String : ∀ q-start q-end → Trace q-end q-start ⊢ string-grammar
+  Trace→String q-start q-end =
+    recTrace q-end the-alg
+    where
+    the-alg : Algebra q-end
+    the-alg .the-ℓs = _
+    the-alg .G _ = string-grammar
+    the-alg .nil-case = KL*.nil
+    the-alg .cons-case q c = KL*.cons ∘g LinΣ-intro c ,⊗ id
 
-  decidableDFA : decidable (LinΠ[ q ∈ ⟨ Q ⟩ ] AcceptingTraceFrom q)
-  decidableDFA .fun =
+  TraceFrom≅string :
+    ∀ q →
+    StrongEquivalence
+      (TraceFrom q)
+      string-grammar
+  TraceFrom≅string q .fun = LinΣ-elim (λ q' → Trace→String q q')
+  TraceFrom≅string q .inv = LinΠ-app q ∘g run-from-state
+  TraceFrom≅string q .sec = unabmiguous-string _ _ refl
+  TraceFrom≅string q .ret =
     {!!}
+    -- Should be an algebra-η, but wrapped with a LinΣ
+
+  totallyParseableDFA :
+    ∀ q →
+    totallyParseable (ParseFrom q)
+  totallyParseableDFA q .fst = RejectingTraceFrom q
+  totallyParseableDFA q .snd .fun = ⊤-intro
+  totallyParseableDFA q .snd .inv =
+    LinΠ-app q ∘g decide ∘g ⊤→string
+  totallyParseableDFA q .snd .sec = unambiguous⊤ _ _ refl
+  totallyParseableDFA q .snd .ret = {!!}
+
+  decidableDFA : decidable (LinΠ[ q ∈ ⟨ Q ⟩ ] ParseFrom q)
+  decidableDFA .fun =
+    λ w _ → tt
   decidableDFA .inv =
     {!!} ∘g
     {!!}
