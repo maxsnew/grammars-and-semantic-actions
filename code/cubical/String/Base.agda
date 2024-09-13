@@ -42,10 +42,12 @@ Splitting≡ : ∀ {w} → {s s' : Splitting w}
   → s ≡ s'
 Splitting≡ = SplittingPathP
 
-module _ (isFinSetΣ₀ : isFinSet ⟨ Alphabet ⟩) where
-  DiscreteΣ₀ : Discrete ⟨ Alphabet ⟩
-  DiscreteΣ₀ = isFinSet→Discrete isFinSetΣ₀
+module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
+  DiscreteAlphabet : Discrete ⟨ Alphabet ⟩
+  DiscreteAlphabet = isFinSet→Discrete isFinSetAlphabet
 
+  DiscreteString : Discrete String
+  DiscreteString = discreteList DiscreteAlphabet
 
 module _ (c : ⟨ Alphabet ⟩) where
   splitChar : (w : String) → Splitting (c ∷ w)

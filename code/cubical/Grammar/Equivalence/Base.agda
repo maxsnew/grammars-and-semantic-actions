@@ -94,6 +94,15 @@ module _ {ℓG} {ℓG'}
       sec : e ∘g inv ≡ id
       ret : inv ∘g e ≡ id
 
+  StrongEquivalence→isStrongEquivalence :
+    (eq : StrongEquivalence) →
+      isStrongEquivalence (eq .StrongEquivalence.fun)
+  StrongEquivalence→isStrongEquivalence eq
+    .isStrongEquivalence.inv = eq .StrongEquivalence.inv
+  StrongEquivalence→isStrongEquivalence eq
+    .isStrongEquivalence.sec = eq .StrongEquivalence.sec
+  StrongEquivalence→isStrongEquivalence eq
+    .isStrongEquivalence.ret = eq .StrongEquivalence.ret
 
 module _ {ℓG} {ℓH}
   {g : Grammar ℓG}
