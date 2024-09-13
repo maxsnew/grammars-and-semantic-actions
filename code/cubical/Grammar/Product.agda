@@ -28,6 +28,9 @@ infixr 5 _&_
 &-intro e e' _ p =
   e _ p , e' _ p
 
+_,&_ = &-intro
+infixr 20 _,&_
+
 &-π₁ :
   g & h ⊢ g
 &-π₁ _ p = p .fst
@@ -35,6 +38,15 @@ infixr 5 _&_
 &-π₂ :
   g & h ⊢ h
 &-π₂ _ p = p .snd
+
+&par : g ⊢ h → k ⊢ l → g & k ⊢ h & l
+&par f f' = (f ∘g &-π₁) ,& (f' ∘g &-π₂)
+
+_,&p_ = &par
+infixr 20 _,&p_
+
+id&_ : h ⊢ k → g & h ⊢ g & k
+id& f = &-π₁ ,& (f ∘g &-π₂)
 
 &-β₁ :
   (e₁ : g ⊢ h) →
