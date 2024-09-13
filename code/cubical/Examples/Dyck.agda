@@ -41,7 +41,6 @@ open import Grammar Alphabet
 open import Grammar.Maybe Alphabet
 open import Grammar.Equivalence Alphabet
 open import Term Alphabet
-open import Parser Alphabet isFinBracket
 
 -- a simple, but ambiguous grammar for balanced parentheses
 data Dyck : Grammar ℓ-zero where
@@ -118,99 +117,6 @@ data RR1 : Grammar ℓ-zero where
   nil : ε ⊢ RR1
   balanced : RR1 ⊗ literal [ ⊗ RR1 ⊗ literal ] ⊢ RR1
 
-mt : String
-mt = []
-
-a : String
-a = [ ∷ ] ∷ []
-
-a' : String
-a' = ] ∷ [ ∷ []
-
-b : String
-b = [ ∷ ] ∷ ] ∷ ] ∷ [ ∷ []
-
-c : String
-c = ] ∷ ] ∷ ] ∷ [ ∷ []
-
-d : String
-d = [ ∷ [ ∷ ] ∷ ] ∷ [ ∷ ] ∷ []
-
--- Testing the above function is wacky bc of normalization
--- My hacky test is to check if it is a just or is a nothing, which
--- isn't a 100% proof of correctness but gives a sanity check
-
-is-just : ∀ w → (g : Grammar ℓg) → Maybe g w → Bool
-is-just w g p = Sum.rec (λ _ → true) (λ _ → false) p
-
-{-# TERMINATING #-} -- uh...
-balanced-parser : Parser Balanced
-balanced-parser =
-  (fmap (⊗-intro balanced id) ∘g
-   (parseChar [ then
-   balanced-parser then
-   parseChar ] then
-   balanced-parser))
-  or
-  (fmap (⊗-intro Balanced.nil id) ∘g parseε)
-
--- An intrinsically verified Dyck grammar parser
---
--- However, this parser is susceptible to false negatives
--- It may choose to error on a give input string when that string
--- would indeed match the Dyck grammar. And there does not seem
--- to be anyway we can hope to guarantee this level of completeness
---
--- NOTE : This required the addition of a couple things that may be
--- problematic but are likely admissible
--- These are not included in this file, but the code presented here
--- makes use of
--- 1. caseKL*, defined in Grammar.KleeneStar, which cases on if a
---      Kleene star was an nil or a cons. Used in parseChar
--- 2. parseChar, defined in Parser. Which breaks some abstractions
---      to build a primitive character parser, and this is justified
---      when the alphabet is a FinSet
--- 3. ⊤→string, a term ⊤-grammar ⊢ string-grammar. Defined in Parser.
---      Used to define the _or_ parser combinator (also in Parser)
-balanced-parser' : string-grammar ⊢ Maybe Balanced
-balanced-parser' = consumes-input balanced-parser
-
-_ :
-  is-just mt Balanced (balanced-parser' mt (⌈ mt ⌉))
-    ≡
-  true
-_ = refl
-
-_ :
-  is-just a Balanced (balanced-parser' a (⌈ a ⌉))
-    ≡
-  true
-_ = refl
-
-_ :
-  is-just a' Balanced (balanced-parser' a' (⌈ a' ⌉))
-    ≡
-  false
-_ = refl
-
-_ :
-  is-just b Balanced (balanced-parser' b (⌈ b ⌉))
-    ≡
-  false
-_ = refl
-
-_ :
-  is-just c Balanced (balanced-parser' c (⌈ c ⌉))
-    ≡
-  false
-_ = refl
-
-_ :
-  is-just d Balanced (balanced-parser' d (⌈ d ⌉))
-    ≡
-  true
-_ = refl
-
 data BalancedStk : ∀ (n : ℕ) → Grammar ℓ-zero where
   eof : ε ⊢ BalancedStk zero
   open[ : ∀ {n} → literal [ ⊗ BalancedStk (suc n) ⊢ BalancedStk n
@@ -220,7 +126,7 @@ data BalancedStk : ∀ (n : ℕ) → Grammar ℓ-zero where
   leftovers : ∀ {n} → ε ⊢ BalancedStk (suc n)
   unexpected] : literal ] ⊗ ⊤ ⊢ BalancedStk 0
 
-parseStk : string-grammar ⊢ LinΠ[ n ∈ ℕ ] BalancedStk n
+parseStk : string ⊢ LinΠ[ n ∈ ℕ ] BalancedStk n
 parseStk = foldKL*r _ (record
   { the-ℓ = _ ; G = _
   ; nil-case = LinΠ-intro λ { zero
@@ -252,7 +158,7 @@ data BalancedStkTr : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero where
   leftovers : ∀ {n} → ε ⊢ BalancedStkTr (suc n) false
   unexpected] : literal ] ⊗ ⊤ ⊢ BalancedStkTr 0 false
 
-parseStkTr : string-grammar ⊢ LinΠ[ n ∈ ℕ ] LinΣ[ b ∈ Bool ] BalancedStkTr n b
+parseStkTr : string ⊢ LinΠ[ n ∈ ℕ ] LinΣ[ b ∈ Bool ] BalancedStkTr n b
 parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
   ; nil-case = LinΠ-intro (λ
     { zero → LinΣ-intro true ∘g eof

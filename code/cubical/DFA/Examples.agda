@@ -10,8 +10,8 @@ open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
-open import Cubical.Data.Bool
-open import Cubical.Data.Sum
+open import Cubical.Data.Bool hiding (_⊕_)
+open import Cubical.Data.Sum as Sum
 open import Cubical.Data.SumFin
 open import Cubical.Data.Unit
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
@@ -22,17 +22,31 @@ Alphabet = (Fin 2) , (isFinSet→isSet isFinSetFin)
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
 open import DFA.Decider Alphabet
 open import Helper
+
+private
+  variable
+    ℓg ℓh : Level
+    g : Grammar ℓg
+    h : Grammar ℓh
 
 module examples where
   -- examples are over alphabet drawn from Fin 2
   -- characters are fzero and (fsuc fzero)
 
   open DFA
+
+  is-inl : ∀ w → (g : Grammar ℓg) (h : Grammar ℓh) → (g ⊕ h) w → Bool
+  is-inl w g h p = Sum.rec (λ _ → true) (λ _ → false) p
+
+  mktest : ∀ {ℓd} → String → DFA {ℓd} → Bool
+  mktest w dfa =
+    is-inl w
+      (AcceptingTraceFrom dfa (dfa .init)) (RejectingTraceFrom dfa (dfa .init))
+      ((decideInit dfa ∘g (⌈w⌉→string {w = w})) w (internalize w))
 
   D : DFA
   D .Q = Fin 3 , isFinSetFin
@@ -55,16 +69,13 @@ module examples where
   w'' : String
   w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
 
-  _ : decide D _ (⌈ w ⌉) .fst ≡ true
+  _ : mktest w' D ≡ true
   _ = refl
 
-  _ : decide D _ (⌈ w' ⌉) .fst ≡ true
+  _ : mktest w'' D ≡ false
   _ = refl
 
-  _ : decide D _ ⌈ w'' ⌉ .fst ≡ false
-  _ = refl
-
-  _ : decide D _ ⌈ [] ⌉ .fst ≡ true
+  _ : mktest [] D ≡ true
   _ = refl
 
 
@@ -89,5 +100,5 @@ module examples where
   s : String
   s = fsuc fzero ∷ fzero ∷ []
 
-  _ : decide D' _ ⌈ s ⌉ .fst ≡ true
+  _ : mktest s D' ≡ true
   _ = refl

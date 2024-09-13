@@ -124,7 +124,7 @@ unambiguous⊥ {k = k} e e' !∘e≡!∘e' =
 -- Breaking abstractions to prove this.
 -- Should be justified because the axiom we are adding
 -- is "string ≅ ⊤", not just the existence of a map ⊤ ⊢ string
-string≅⊤ : StrongEquivalence string-grammar ⊤
+string≅⊤ : StrongEquivalence string ⊤
 string≅⊤ .fun = ⊤-intro
 string≅⊤ .inv = ⊤→string
 string≅⊤ .sec = unambiguous⊤ _ _ refl
@@ -158,6 +158,6 @@ unambiguous≅ eq unambig-g =
     (isStrongEquivalence→isMono
       (eq .inv) (isStrEq (eq .fun) (eq .ret) (eq .sec)))
 
-unabmiguous-string : unambiguous string-grammar
+unabmiguous-string : unambiguous string
 unabmiguous-string =
   unambiguous≅ (sym-strong-equivalence string≅⊤) unambiguous⊤
