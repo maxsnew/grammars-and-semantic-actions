@@ -11,6 +11,7 @@ open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.Maybe as Maybe
 open import Cubical.Data.Nat as Nat
 open import Cubical.Data.FinSet
+open import Cubical.Data.Sum as Sum
 
 data Tok : Type where
   LP RP : Tok   -- parens
@@ -159,26 +160,25 @@ module Automaton where
       UO : ℕ → Grammar ℓ
       UC : ℕ → Grammar ℓ
       UM : ℕ → Grammar ℓ
+    UDO : ℕ → Grammar ℓ
+    UDO n = ((ε ⊕ (literal * ⊕ literal LP ⊕ anyNum) ⊗ ⊤) & UM n)
+      ⊕ ((literal RP ⊗ ⊤) & UC n)
+    field
       [left] : ∀ {n} → literal LP ⊗ UO (suc n) ⊢ UO n
-      [num]  : ∀ {n} → (LinΣ[ m ∈ ℕ ] literal (num m)) ⊗ UC n ⊢ UO n
-      [rightMore] : ∀ {n} →
-        literal RP ⊗ ((literal RP ⊗ ⊤) & UC n) ⊢ UC (suc n)
-      [rightDone] : ∀ {n} →
-        literal RP ⊗ ((ε ⊕ (literal * ⊗ ⊤)) & UM n) ⊢ UC (suc n)
+      [num]  : ∀ {n} → (LinΣ[ m ∈ ℕ ] literal (num m)) ⊗ UDO n ⊢ UO n
+      [rightClose] : ∀ {n} → literal RP ⊗ UDO n ⊢ UC (suc n)
       [done] : ε ⊢ UM 0
       [times] : ∀ {n} → literal * ⊗ UO n ⊢ UM n
   open Algebra
   initialAlgebra : Algebra ℓ-zero
-  initialAlgebra = {!!}
-  -- initialAlgebra .UO n = Opening n true
-  -- initialAlgebra .UC n = Closing n true
-  -- initialAlgebra .UM n = Multiplying n true
-  -- initialAlgebra .[left] = left
-  -- initialAlgebra .[num] = num
-  -- initialAlgebra .[rightMore] = rightMore
-  -- initialAlgebra .[rightDone] = ?
-  -- initialAlgebra .[times] = times
-  -- initialAlgebra .[done] = done
+  initialAlgebra .UO n = Opening n true
+  initialAlgebra .UC n = Closing n true
+  initialAlgebra .UM n = Multiplying n true
+  initialAlgebra .[left] = left
+  initialAlgebra .[num] = num
+  initialAlgebra .[rightClose] = rightClose
+  initialAlgebra .[times] = times
+  initialAlgebra .[done] = done
 
   record Hom {ℓ}{ℓ'} (A : Algebra ℓ) (B : Algebra ℓ') : Type (ℓ-max ℓ ℓ') where
     field
@@ -192,12 +192,14 @@ module Automaton where
     rO : ∀ n → Opening n true ⊢ A .UO n
     rC : ∀ n → Closing n true ⊢ A .UC n
     rM : ∀ n → Multiplying n true ⊢ A .UM n
-    -- rO n w (left .w (sp , lp , o)) = A .[left] w (sp , (lp , rO _ _ o))
-    -- rO n w (num .w (sp , m , c)) = A .[num] _ (sp , m , rC _ _ c)
-    -- rC _ w (rightMore _ (sp , rp , lookAhead , c)) = A .[rightMore] _ (sp , rp , lookAhead , rC _ _ c)
-    -- -- rC _ w (rightDone _ (sp , rp , lookAhead , m)) = A .[rightDone] _ (sp , rp , lookAhead , rM _ _ m)
-    -- rM _ w (done _ x) = A .[done] _ x
-    -- rM _ w (times _ (sp , star , o)) = A .[times] _ (sp , star , rO _ _ o)
+    rDO : ∀ n → DoneOpening n true ⊢ UDO A n
+    rO n w (left _ (sp , lp , o)) = A .[left] w (sp , (lp , rO _ _ o))
+    rO n w (num _ (sp , m , doo)) = A .[num] _ (sp , m , rDO _ _ doo)
+    rC _ w (rightClose _ (sp , rp , doo)) = A .[rightClose] _ (sp , rp , rDO _ _ doo)
+    rM _ w (done _ x) = A .[done] _ x
+    rM _ w (times _ (sp , star , o)) = A .[times] _ (sp , star , rO _ _ o)
+    rDO n w (inl x) = inl ((x .fst) , (rM _ _ (x .snd)))
+    rDO n w (inr x) = inr (x .fst , rC _ _ (x .snd))
   Peek : Maybe Tok → Grammar ℓ-zero
   Peek = Maybe.rec ε (λ c → literal c ⊗ ⊤-grammar)
 
@@ -319,13 +321,19 @@ module Soundness where
     alg .UC n = Stk n
     alg .UM n = KL* (literal * ⊗ Atom) ⊗ Stk n
     alg .[left] = ⊗-assoc ∘g ⟜3⊗ LL⟨1⟩.parens'
-    alg .[num] = LinΣ-elim (λ _ → Atom.num ,⊗ nil ∘g ⊗-unit-r⁻) ,⊗
-      id -- LinΣ-elim (λ _ → Atom.num) ,⊗ id
-    alg .[rightMore] =
-      id ,⊗ (⟜0⊗ nil ∘g &-π₂)
-    alg .[rightDone] = id ,⊗ &-π₂
+    alg .[num] {n} = ⊸-intro⁻ (⊕-elim
+      -- the next thing was multiplying
+      (⊸-intro {k = Exp ⊗ Stk n} (⊗-assoc ∘g (LinΣ-elim λ _ → Atom.num) ,⊗ &-π₂))
+      -- the next thing was closing
+      (⊸-intro {k = Exp ⊗ Stk n} ((LinΣ-elim λ _ → Atom.num ,⊗ nil ∘g ⊗-unit-r⁻) ,⊗ &-π₂)))
+    alg .[rightClose] {n} = ⊸-intro⁻ (⊕-elim
+      -- next is multiplying
+      (⊸-intro {k = Stk (suc n)} (id ,⊗ &-π₂))
+      -- next is more closing
+      (⊸-intro {k = Stk (suc n)} (id ,⊗ (⟜0⊗ nil ∘g &-π₂))))
     alg .[times] = ⟜2⊗ cons' ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc⁻
     alg .[done] = ⟜0⊗ nil
+
 -- Completeness i.e., that every LL(1) parse has a trace. Though
 -- completeness would be that every LL(1) parse corresponds to one we
 -- extract from the previous function
@@ -338,6 +346,7 @@ module Completeness where
   mkTrace = (⟜-app ∘g id ,⊗ Automaton.done ∘g ⊗-unit-r⁻) ∘g LinΠ-app 0 ∘g LL⟨1⟩.fold the-alg .fE where
     open LL⟨1⟩.Algebra
     the-alg : LL⟨1⟩.Algebra ℓ-zero
+    -- need to update the motive: a UAs should also produce a proof that it starts with ε or *
     the-alg .UE = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⟜ Automaton.Multiplying n true )
     the-alg .UAs = LinΠ[ n ∈ ℕ ] (Automaton.Multiplying n true ⟜ Automaton.Multiplying n true )
     the-alg .UA = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⟜ Automaton.Multiplying n true )
@@ -345,6 +354,6 @@ module Completeness where
     the-alg .[nil] = LinΠ-intro λ n → ⟜-intro-ε id
     the-alg .[cons] = LinΠ-intro λ n → ⟜-intro {k = Automaton.Multiplying n true}
       ((((Automaton.times ∘g id ,⊗ ⟜-app) ∘g ⊗-assoc⁻) ∘g (id ,⊗ LinΠ-app n) ,⊗ (⟜-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻)
-    the-alg .[num] = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true}
-      (Automaton.num ∘g {!!})
+    the-alg .[num] {m} = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true}
+      (Automaton.num ∘g LinΣ-intro m ,⊗ (⊕-inl ∘g {!!}))
     the-alg .[parens] = {!!}
