@@ -267,42 +267,6 @@ module Automaton where
          ; RP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
          ; (num x) → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
     })
-  -- parse' = foldKL*r _
-  --   (record { the-ℓ = _ ; G = _
-  --   ; nil-case = &-intro
-  --     (LinΣ-intro Maybe.nothing)
-  --     (LinΠ-intro (λ n → &-intro
-  --     (LinΣ-intro false ∘g unexpected ∘g ⊕-inl) (&-intro
-  --     (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
-  --     (Nat.elim {A = λ n → ε ⊢ LinearΣ (Multiplying n)}
-  --       (LinΣ-intro true ∘g done)
-  --       (λ n-1 _ → LinΣ-intro false ∘g unmatched) n))))
-  --   ; cons-case = &-intro (⟜-intro⁻ (LinΣ-elim (λ tok → ⟜-intro {k = LinearΣ Peek} (LinΣ-intro {A = Maybe Tok} (just tok) ∘g id ,⊗ ⊤-intro))))
-  --     (LinΠ-intro λ n → &-intro
-  --      (⟜-intro⁻ (LinΣ-elim λ
-  --        { LP → ⟜-intro {k = LinearΣ (Opening n)} (⊸-intro⁻ (((LinΣ-elim (λ b → ⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g left)) ∘g &-π₁) ∘g LinΠ-app (suc n)) ∘g &-π₂))
-  --        ; RP → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
-  --        ; * → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inr ,⊗ ⊤-intro)
-  --        ; (num x) → ⟜-intro {k = LinearΣ (Opening n)} (⊸-intro⁻ (LinΣ-elim (λ b → ⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ id)) ∘g (&-π₁ ∘g &-π₂ ∘g LinΠ-app n) ∘g &-π₂)) })) (&-intro
-  --      (⟜-intro⁻ (LinΣ-elim λ
-  --        { RP → ⟜-intro {k = LinearΣ (Closing n)} (Nat.elim
-  --                                                   {A = λ n → Term (literal RP ⊗ Goal) (LinearΣ (Closing n))}
-  --        (LinΣ-intro false ∘g rightUnmatched ∘g id ,⊗ ⊤-intro)
-  --        -- here we use exponentials, really all that is required is distributivity of ⊕ over &
-  --        (λ n-1 _ → ⊸-intro⁻ (⇒-intro⁻ (LinΣ-elim (λ
-  --          -- ε ⊕ (* ⊗ ⊤) -> shift to multiplying
-  --          { nothing → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightDone ∘g id ,⊗ &-intro (⊕-inl ∘g &-π₁) &-π₂))) ∘g &-π₂ ∘g &-π₂) ∘g LinΠ-app n-1))
-  --          ; (just *) → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightDone ∘g id ,⊗ &-intro (⊕-inr ∘g &-π₁) &-π₂))) ∘g &-π₂ ∘g &-π₂) ∘g LinΠ-app n-1))
-  --          -- RP ⊗ ⊤ -> continue closing
-  --          ; (just RP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim (λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightMore))) ∘g &-π₁ ∘g &-π₂) ∘g LinΠ-app n-1))
-  --          -- otherwise fail
-  --          ; (just LP) → ⇒-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro false ∘g rightUnexpectedLookahead ∘g id ,⊗ ⊕-inl ,⊗ id) ∘g &-π₁)
-  --          ; (just (num x)) → ⇒-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro false ∘g rightUnexpectedLookahead ∘g id ,⊗ (⊕-inr ∘g LinΣ-intro x) ,⊗ id) ∘g &-π₁) }))))
-  --        n)
-  --        -- these cases are all similar
-  --        ; LP → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
-  --        ; * → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
-  --        ; (num x) → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
 
   parse : string-grammar ⊢ LinΣ[ b ∈ Bool ] Opening zero b
   parse = ((&-π₁ ∘g LinΠ-app zero) ∘g &-π₂) ∘g parse'
@@ -343,17 +307,19 @@ module Soundness where
 module Completeness where
   open LL⟨1⟩.Hom
   mkTrace : LL⟨1⟩.Exp ⊢ Automaton.Opening 0 true
-  mkTrace = (⟜-app ∘g id ,⊗ Automaton.done ∘g ⊗-unit-r⁻) ∘g LinΠ-app 0 ∘g LL⟨1⟩.fold the-alg .fE where
+  mkTrace = (⟜-app ∘g id ,⊗ (⊕-inl ∘g ⊕-inl ,& Automaton.done) ∘g ⊗-unit-r⁻) ∘g LinΠ-app 0 ∘g LL⟨1⟩.fold the-alg .fE where
     open LL⟨1⟩.Algebra
     the-alg : LL⟨1⟩.Algebra ℓ-zero
     -- need to update the motive: a UAs should also produce a proof that it starts with ε or *
-    the-alg .UE = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⟜ Automaton.Multiplying n true )
-    the-alg .UAs = LinΠ[ n ∈ ℕ ] (Automaton.Multiplying n true ⟜ Automaton.Multiplying n true )
-    the-alg .UA = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⟜ Automaton.Multiplying n true )
-    the-alg .[mkExp] = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true} ((⟜-app ∘g LinΠ-app n ,⊗ (⟜-app ∘g LinΠ-app n ,⊗ id) ) ∘g ⊗-assoc⁻)
+    the-alg .UE = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⟜ Automaton.DoneOpening n true)
+    the-alg .UAs = LinΠ[ n ∈ ℕ ] (Automaton.DoneOpening n true ⟜ Automaton.DoneOpening n true)
+    the-alg .UA = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⟜ Automaton.DoneOpening n true)
+    the-alg .[mkExp] = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true}
+      (((⟜-app ∘g LinΠ-app n ,⊗ (⟜-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻))
     the-alg .[nil] = LinΠ-intro λ n → ⟜-intro-ε id
-    the-alg .[cons] = LinΠ-intro λ n → ⟜-intro {k = Automaton.Multiplying n true}
-      ((((Automaton.times ∘g id ,⊗ ⟜-app) ∘g ⊗-assoc⁻) ∘g (id ,⊗ LinΠ-app n) ,⊗ (⟜-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻)
+    the-alg .[cons] = LinΠ-intro λ n → ⟜-intro {k = Automaton.DoneOpening n true}
+      (((((⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro) ,& Automaton.times) ∘g id ,⊗ ⟜-app) ∘g ⊗-assoc⁻) ∘g (id ,⊗ LinΠ-app n) ,⊗ (⟜-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻)
     the-alg .[num] {m} = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true}
-      (Automaton.num ∘g LinΣ-intro m ,⊗ (⊕-inl ∘g {!!}))
-    the-alg .[parens] = {!!}
+      (Automaton.num ∘g LinΣ-intro m ,⊗ id)
+    the-alg .[parens] = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true}
+      ((Automaton.left ∘g id ,⊗ (⟜-app {g = Automaton.Opening (suc n) true} ∘g LinΠ-app (suc n) ,⊗ (⊕-inr ∘g (id ,⊗ ⊤-intro) ,& Automaton.rightClose)∘g ⊗-assoc⁻)) ∘g ⊗-assoc⁻)
