@@ -37,17 +37,19 @@ module _
   concat-strong-equiv .sec i = ⊗-intro (g≅h .sec i) (k≅l .sec i)
   concat-strong-equiv .ret i = ⊗-intro (g≅h .ret i) (k≅l .ret i)
 
-  disjunct-strong-equiv : StrongEquivalence (g ⊕ k) (h ⊕ l)
-  disjunct-strong-equiv .fun = ⊕-elim (⊕-inl ∘g g≅h .fun) (⊕-inr ∘g k≅l .fun)
-  disjunct-strong-equiv .inv = ⊕-elim (⊕-inl ∘g g≅h .inv) (⊕-inr ∘g k≅l .inv)
-  disjunct-strong-equiv .sec =
-    ⊕≡ _ _
-      (λ i → ⊕-inl ∘g g≅h .sec i)
-      (λ i → ⊕-inr ∘g k≅l .sec i)
-  disjunct-strong-equiv .ret =
-    ⊕≡ _ _
-      (λ i → ⊕-inl ∘g g≅h .ret i)
-      (λ i → ⊕-inr ∘g k≅l .ret i)
+  opaque
+    unfolding ⊕-inl
+    disjunct-strong-equiv : StrongEquivalence (g ⊕ k) (h ⊕ l)
+    disjunct-strong-equiv .fun = ⊕-elim (⊕-inl ∘g g≅h .fun) (⊕-inr ∘g k≅l .fun)
+    disjunct-strong-equiv .inv = ⊕-elim (⊕-inl ∘g g≅h .inv) (⊕-inr ∘g k≅l .inv)
+    disjunct-strong-equiv .sec =
+      ⊕≡ _ _
+        (λ i → ⊕-inl ∘g g≅h .sec i)
+        (λ i → ⊕-inr ∘g k≅l .sec i)
+    disjunct-strong-equiv .ret =
+      ⊕≡ _ _
+        (λ i → ⊕-inl ∘g g≅h .ret i)
+        (λ i → ⊕-inr ∘g k≅l .ret i)
 
 module _
   {g : Grammar ℓg}

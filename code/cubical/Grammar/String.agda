@@ -35,27 +35,31 @@ string = KL* char
 ⌈ c ∷ w ⌉ = literal c ⊗ ⌈ w ⌉
 
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
-  uniquely-supported-⌈w⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
-  uniquely-supported-⌈w⌉ [] [] p = refl
-  uniquely-supported-⌈w⌉ [] (c' ∷ w') p =
-    Empty.rec (¬cons≡nil p)
-  uniquely-supported-⌈w⌉ (c ∷ w) [] p =
-    Empty.rec
-      (¬nil≡cons (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst)))
-  uniquely-supported-⌈w⌉ (c ∷ w) (c' ∷ w') p =
-    decRec
-      (λ c≡c' → cong₂ _∷_ c≡c'
-        (uniquely-supported-⌈w⌉ w w'
-          (subst (⌈ w ⌉) (sym (cons-inj₂ (p .fst .snd ∙
-            cong (_++ p .fst .fst .snd) (p .snd .fst)))) (p .snd .snd))))
-      (λ ¬c≡c → Empty.rec
-        (¬c≡c (sym (cons-inj₁
-          (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst))))))
-      (DiscreteAlphabet isFinSetAlphabet c c')
+  opaque
+    unfolding ε literal
+    uniquely-supported-⌈w⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
+    uniquely-supported-⌈w⌉ [] [] p = refl
+    uniquely-supported-⌈w⌉ [] (c' ∷ w') p =
+      Empty.rec (¬cons≡nil p)
+    uniquely-supported-⌈w⌉ (c ∷ w) [] p =
+      Empty.rec
+        (¬nil≡cons (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst)))
+    uniquely-supported-⌈w⌉ (c ∷ w) (c' ∷ w') p =
+      decRec
+        (λ c≡c' → cong₂ _∷_ c≡c'
+          (uniquely-supported-⌈w⌉ w w'
+            (subst (⌈ w ⌉) (sym (cons-inj₂ (p .fst .snd ∙
+              cong (_++ p .fst .fst .snd) (p .snd .fst)))) (p .snd .snd))))
+        (λ ¬c≡c → Empty.rec
+          (¬c≡c (sym (cons-inj₁
+            (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst))))))
+        (DiscreteAlphabet isFinSetAlphabet c c')
 
-internalize : (w : String) → ⌈ w ⌉ w
-internalize [] = refl
-internalize (c ∷ w) = (([ c ] , w) , refl) , refl , internalize w
+opaque
+  unfolding ε literal
+  internalize : (w : String) → ⌈ w ⌉ w
+  internalize [] = refl
+  internalize (c ∷ w) = (([ c ] , w) , refl) , refl , internalize w
 
 ⌈w⌉→string : ⌈ w ⌉ ⊢ string
 ⌈w⌉→string {[]} = nil

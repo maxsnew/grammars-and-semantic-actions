@@ -13,5 +13,6 @@ private
   variable
     ℓG : Level
 
-literal : ⟨ Alphabet ⟩ → Grammar ℓ-zero
-literal c w = w ≡ [ c ]
+opaque
+  literal : ⟨ Alphabet ⟩ → Grammar ℓ-zero
+  literal c w = w ≡ [ c ]

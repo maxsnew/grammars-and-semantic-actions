@@ -26,12 +26,13 @@ module _ (g : Grammar ℓG) where
   -- This shouldn't be definable via fold, because fold necessitates recursion
   --
   -- If KL* = μ X . ε ⊕ g ⊗ X, then this term is just ⊕-elim on that sum
-  caseKL* :
-    ε ⊢ h →
-    g ⊗ KL* ⊢ h →
-    KL* ⊢ h
-  caseKL* eε e* _ (nil _ x) = eε _ x
-  caseKL* eε e* _ (cons _ x) = e* _ x
+  opaque
+    caseKL* :
+      ε ⊢ h →
+      g ⊗ KL* ⊢ h →
+      KL* ⊢ h
+    caseKL* eε e* _ (nil _ x) = eε _ x
+    caseKL* eε e* _ (cons _ x) = e* _ x
 
   record *r-Algebra : Typeω where
     field
@@ -63,34 +64,36 @@ module _ (g : Grammar ℓG) where
     id*r-AlgebraHom .on-nil = refl
     id*r-AlgebraHom .on-cons = refl
 
-    KL*r-elim : KL* ⊢ the-alg .G
-    KL*r-elim _ (nil _ x) = the-alg .nil-case _ x
-    KL*r-elim _ (cons _ x) =
-      the-alg .cons-case _
-        ((x .fst) , ((x .snd .fst) , (KL*r-elim _ (x .snd .snd))))
+    opaque
+      KL*r-elim : KL* ⊢ the-alg .G
+      KL*r-elim _ (nil _ x) = the-alg .nil-case _ x
+      KL*r-elim _ (cons _ x) =
+        the-alg .cons-case _
+          ((x .fst) , ((x .snd .fst) , (KL*r-elim _ (x .snd .snd))))
+
+
+      ∃*r-AlgebraHom : *r-AlgebraHom *r-initial the-alg
+      ∃*r-AlgebraHom .f = KL*r-elim
+      ∃*r-AlgebraHom .on-nil = refl
+      ∃*r-AlgebraHom .on-cons = refl
+
+      !*r-AlgebraHom :
+        (e : *r-AlgebraHom *r-initial the-alg) →
+        ∀ w p →
+        e .f w p ≡ KL*r-elim w p
+      !*r-AlgebraHom e _ (nil _ x) = funExt⁻ (funExt⁻ (e .on-nil) _) x
+      !*r-AlgebraHom e _ (cons _ x) =
+        funExt⁻ (funExt⁻ (e .on-cons) _) x ∙
+        (λ i → the-alg .cons-case _
+          (x .fst , x .snd .fst , !*r-AlgebraHom e _ (x .snd .snd) i))
+
+      !*r-AlgebraHom' :
+        (e e' : *r-AlgebraHom *r-initial the-alg) →
+        e .f ≡ e' .f
+      !*r-AlgebraHom' e e' = funExt λ w → funExt λ p →
+        !*r-AlgebraHom e w p ∙ sym (!*r-AlgebraHom e' w p)
 
     foldKL*r = KL*r-elim
-
-    ∃*r-AlgebraHom : *r-AlgebraHom *r-initial the-alg
-    ∃*r-AlgebraHom .f = KL*r-elim
-    ∃*r-AlgebraHom .on-nil = refl
-    ∃*r-AlgebraHom .on-cons = refl
-
-    !*r-AlgebraHom :
-      (e : *r-AlgebraHom *r-initial the-alg) →
-      ∀ w p →
-      e .f w p ≡ KL*r-elim w p
-    !*r-AlgebraHom e _ (nil _ x) = funExt⁻ (funExt⁻ (e .on-nil) _) x
-    !*r-AlgebraHom e _ (cons _ x) =
-      funExt⁻ (funExt⁻ (e .on-cons) _) x ∙
-      (λ i → the-alg .cons-case _
-        (x .fst , x .snd .fst , !*r-AlgebraHom e _ (x .snd .snd) i))
-
-    !*r-AlgebraHom' :
-      (e e' : *r-AlgebraHom *r-initial the-alg) →
-      e .f ≡ e' .f
-    !*r-AlgebraHom' e e' = funExt λ w → funExt λ p →
-      !*r-AlgebraHom e w p ∙ sym (!*r-AlgebraHom e' w p)
 
   record *l-Algebra : Typeω where
     field

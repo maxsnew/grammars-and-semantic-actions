@@ -49,148 +49,150 @@ infixr 5 _⊗_
 _,⊗_ = ⊗-intro
 infixr 20 _,⊗_
 
-⊗-unit-r :
-  g ⊗ ε ⊢ g
-⊗-unit-r {g = g} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
-  subst g (sym (++-unit-r _)
-          ∙ cong (w' ++_) (sym []'≡[])
-          ∙ sym w≡w'++[]')
-    p⟨w'⟩
+opaque
+  unfolding ε
+  ⊗-unit-r :
+    g ⊗ ε ⊢ g
+  ⊗-unit-r {g = g} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
+    subst g (sym (++-unit-r _)
+            ∙ cong (w' ++_) (sym []'≡[])
+            ∙ sym w≡w'++[]')
+          p⟨w'⟩
 
-⊗-unit-r⁻ :
-  g ⊢ g ⊗ ε
-⊗-unit-r⁻ _ p =
-  ((_ , []) , (sym (++-unit-r _))) , (p , refl)
+  ⊗-unit-r⁻ :
+    g ⊢ g ⊗ ε
+  ⊗-unit-r⁻ _ p =
+    ((_ , []) , (sym (++-unit-r _))) , (p , refl)
 
-isPropε : ∀ w → isProp (ε w)
-isPropε w = isSetString _ _
+  isPropε : ∀ w → isProp (ε w)
+  isPropε w = isSetString _ _
 
-rectify :
-  ∀ {w w'}{g : Grammar ℓg}
-  → {p : g w}{q : g w'}
-  → {w≡ w≡' : w ≡ w'}
-  → PathP (λ i → g (w≡  i)) p q
-  → PathP (λ i → g (w≡' i)) p q
-rectify {w = w}{w'}{g = g}{p = p}{q = q} =
-  subst {A = w ≡ w'} (λ w≡ → PathP (λ i → g (w≡ i)) p q)
-    (isSetString _ _ _ _)
+  rectify :
+    ∀ {w w'}{g : Grammar ℓg}
+    → {p : g w}{q : g w'}
+    → {w≡ w≡' : w ≡ w'}
+    → PathP (λ i → g (w≡  i)) p q
+    → PathP (λ i → g (w≡' i)) p q
+  rectify {w = w}{w'}{g = g}{p = p}{q = q} =
+    subst {A = w ≡ w'} (λ w≡ → PathP (λ i → g (w≡ i)) p q)
+      (isSetString _ _ _ _)
 
-⊗-unit-rr⁻ :
-  ∀ {g : Grammar ℓg}
-  → ⊗-unit-r⁻ {g = g} ∘g ⊗-unit-r ≡ id
-⊗-unit-rr⁻ {g = g} =
-  funExt λ w → funExt λ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) →
-  let w≡w' = (sym (sym (++-unit-r _)
-          ∙ cong (w' ++_) (sym []'≡[])
-          ∙ sym w≡w'++[]'))
-  in
-  ⊗≡ _ _
-    (≡-× w≡w'
-      (sym []'≡[]))
-    (ΣPathP
-      ( symP (subst-filler g (sym w≡w') p⟨w'⟩)
-      , isProp→PathP (λ _ → isPropε _) refl []'≡[]))
-
-⊗-unit-r⁻r : ∀ {g : Grammar ℓg}
-  → ⊗-unit-r {g = g} ∘g ⊗-unit-r⁻ ≡ id
-⊗-unit-r⁻r {g = g} = funExt λ w → funExt λ p →
-  let
-    w≡w : w ≡ w
-    w≡w =       (λ i →
-         (hcomp
-          (doubleComp-faces (λ _ → w)
-           (λ i₁ →
-              hcomp (doubleComp-faces (λ _ → w ++ [])
-                (λ i₂ → ++-unit-r w i₂) i₁)
-              (w ++ []))
-           i)
-          (++-unit-r w (~ i))))
-  in
-  subst (λ w≡w → subst g w≡w p ≡ p) (isSetString _ _ refl w≡w)
-    (substRefl {B = g} p)
-
-⊗-unit-l :
-  ε ⊗ g ⊢ g
-⊗-unit-l {g = g} _ p =
-  transport
-    (cong g (cong (_++  p .fst .fst .snd)
-      (sym (p .snd .fst)) ∙ sym (p .fst .snd)))
-    (p .snd .snd)
-
-⊗-unit-l⁻ :
-  g ⊢ ε ⊗ g
-⊗-unit-l⁻ _ p =
-  (([] , _) , refl) , (refl , p)
-
-⊗-unit-ll⁻ :
-  ⊗-unit-l⁻ {g = g} ∘g ⊗-unit-l ≡ id
-⊗-unit-ll⁻ {g = g} = funExt λ w → funExt λ p⊗ →
-  let
-    w'≡w : p⊗ .fst .fst .snd ≡ w
-    w'≡w =
-      (λ i →
-          (hcomp
-           (doubleComp-faces (λ _ → p⊗ .fst .fst .snd)
-            (λ i₁ → p⊗ .fst .snd (~ i₁)) i)
-           (p⊗ .snd .fst (~ i) ++ p⊗ .fst .fst .snd)))
+  ⊗-unit-rr⁻ :
+    ∀ {g : Grammar ℓg}
+    → ⊗-unit-r⁻ {g = g} ∘g ⊗-unit-r ≡ id
+  ⊗-unit-rr⁻ {g = g} =
+    funExt λ w → funExt λ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) →
+    let w≡w' = (sym (sym (++-unit-r _)
+            ∙ cong (w' ++_) (sym []'≡[])
+            ∙ sym w≡w'++[]'))
     in
-   ⊗≡ _ _
-     (≡-× (sym (p⊗ .snd .fst)) (sym w'≡w))
-     (ΣPathP ((isProp→PathP (λ i → isSetString _ _) _ _) ,
-     symP (subst-filler g w'≡w (p⊗ .snd .snd))))
+    ⊗≡ _ _
+      (≡-× w≡w'
+        (sym []'≡[]))
+      (ΣPathP
+        ( symP (subst-filler g (sym w≡w') p⟨w'⟩)
+        , isProp→PathP (λ _ → isPropε _) refl []'≡[]))
 
-⊗-unit-l⁻l :
-  ⊗-unit-l {g = g} ∘g ⊗-unit-l⁻ ≡ id
-⊗-unit-l⁻l {g = g} = funExt λ w → funExt λ p →
-  let w≡w = λ i →
-               ((λ i₁ →
-                   ⊗-unit-l⁻ {g = g} w p .snd .fst (~ i₁) ++
-                     ⊗-unit-l⁻ {g = g} w p .fst .fst .snd)
-                ∙ (λ i₁ → ⊗-unit-l⁻ {g = g} w p .fst .snd (~ i₁)))
-               i
-  in
-  subst (λ w≡w → subst g w≡w p ≡ p)
-    (isSetString _ _ refl w≡w) (substRefl {B = g} p)
+  ⊗-unit-r⁻r : ∀ {g : Grammar ℓg}
+    → ⊗-unit-r {g = g} ∘g ⊗-unit-r⁻ ≡ id
+  ⊗-unit-r⁻r {g = g} = funExt λ w → funExt λ p →
+    let
+      w≡w : w ≡ w
+      w≡w =       (λ i →
+           (hcomp
+            (doubleComp-faces (λ _ → w)
+             (λ i₁ →
+                hcomp (doubleComp-faces (λ _ → w ++ [])
+                  (λ i₂ → ++-unit-r w i₂) i₁)
+                (w ++ []))
+             i)
+            (++-unit-r w (~ i))))
+    in
+    subst (λ w≡w → subst g w≡w p ≡ p) (isSetString _ _ refl w≡w)
+      (substRefl {B = g} p)
 
-cong-∘g⊗-unit-l⁻ :
-  (e e' : ε ⊗ g ⊢ h) →
-  (e ∘g ⊗-unit-l⁻ ≡ e' ∘g ⊗-unit-l⁻) →
-  e ≡ e'
-cong-∘g⊗-unit-l⁻ f g ∘g≡ =
-  cong (f ∘g_) (sym ⊗-unit-ll⁻) ∙
-  cong (_∘g ⊗-unit-l) ∘g≡ ∙
-  cong (g ∘g_) (⊗-unit-ll⁻)
+  ⊗-unit-l :
+    ε ⊗ g ⊢ g
+  ⊗-unit-l {g = g} _ p =
+    transport
+      (cong g (cong (_++  p .fst .fst .snd)
+        (sym (p .snd .fst)) ∙ sym (p .fst .snd)))
+      (p .snd .snd)
 
-cong-∘g⊗-unit-r⁻ :
-  (e e' : g ⊗ ε ⊢ h) →
-  (e ∘g ⊗-unit-r⁻ ≡ e' ∘g ⊗-unit-r⁻) →
-  e ≡ e'
-cong-∘g⊗-unit-r⁻ f g ∘g≡ =
-  cong (f ∘g_) (sym ⊗-unit-rr⁻) ∙
-  cong (_∘g ⊗-unit-r) ∘g≡ ∙
-  cong (g ∘g_) (⊗-unit-rr⁻)
+  ⊗-unit-l⁻ :
+    g ⊢ ε ⊗ g
+  ⊗-unit-l⁻ _ p =
+    (([] , _) , refl) , (refl , p)
 
--- TODO this proof seems overly complicated
-⊗-unit-r⊗-intro :
-  (f : g ⊢ h) →
-  ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
-⊗-unit-r⊗-intro f =
-  cong-∘g⊗-unit-r⁻ (⊗-unit-r ∘g ⊗-intro f id) (f ∘g ⊗-unit-r)
-    ((⊗-unit-r ∘g ⊗-intro f id) ∘g ⊗-unit-r⁻
-      ≡⟨ refl ⟩
-      ⊗-unit-r ∘g ⊗-unit-r⁻ ∘g f
-      ≡⟨ ((λ i → ⊗-unit-r⁻r i ∘g f ∘g ⊗-unit-r⁻r (~ i))) ⟩
-    (f ∘g ⊗-unit-r) ∘g ⊗-unit-r⁻
-    ∎)
-    -- (cong (_∘g f) {!sym ⊗-unit-rr⁻!})
-  -- ⊗-unit-r ∘g ⊗-intro f id
-  --   ≡⟨ {!cong-∘g⊗-unit-r!} ⟩
-  -- f ∘g ⊗-unit-r
-  -- ∎
+  ⊗-unit-ll⁻ :
+    ⊗-unit-l⁻ {g = g} ∘g ⊗-unit-l ≡ id
+  ⊗-unit-ll⁻ {g = g} = funExt λ w → funExt λ p⊗ →
+    let
+      w'≡w : p⊗ .fst .fst .snd ≡ w
+      w'≡w =
+        (λ i →
+            (hcomp
+             (doubleComp-faces (λ _ → p⊗ .fst .fst .snd)
+              (λ i₁ → p⊗ .fst .snd (~ i₁)) i)
+             (p⊗ .snd .fst (~ i) ++ p⊗ .fst .fst .snd)))
+      in
+     ⊗≡ _ _
+       (≡-× (sym (p⊗ .snd .fst)) (sym w'≡w))
+       (ΣPathP ((isProp→PathP (λ i → isSetString _ _) _ _) ,
+       symP (subst-filler g w'≡w (p⊗ .snd .snd))))
 
-⊗-unit-rl⁻ : ⊗-unit-r ∘g ⊗-unit-l⁻ ≡ id
-⊗-unit-rl⁻ = funExt λ w → funExt λ p →
-  isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {g = ε} w p)
+  ⊗-unit-l⁻l :
+    ⊗-unit-l {g = g} ∘g ⊗-unit-l⁻ ≡ id
+  ⊗-unit-l⁻l {g = g} = funExt λ w → funExt λ p →
+    let w≡w = λ i →
+                 ((λ i₁ →
+                     ⊗-unit-l⁻ {g = g} w p .snd .fst (~ i₁) ++
+                       ⊗-unit-l⁻ {g = g} w p .fst .fst .snd)
+                  ∙ (λ i₁ → ⊗-unit-l⁻ {g = g} w p .fst .snd (~ i₁)))
+                 i
+    in
+    subst (λ w≡w → subst g w≡w p ≡ p)
+      (isSetString _ _ refl w≡w) (substRefl {B = g} p)
+
+  cong-∘g⊗-unit-l⁻ :
+    (e e' : ε ⊗ g ⊢ h) →
+    (e ∘g ⊗-unit-l⁻ ≡ e' ∘g ⊗-unit-l⁻) →
+    e ≡ e'
+  cong-∘g⊗-unit-l⁻ f g ∘g≡ =
+    cong (f ∘g_) (sym ⊗-unit-ll⁻) ∙
+    cong (_∘g ⊗-unit-l) ∘g≡ ∙
+    cong (g ∘g_) (⊗-unit-ll⁻)
+
+  cong-∘g⊗-unit-r⁻ :
+    (e e' : g ⊗ ε ⊢ h) →
+    (e ∘g ⊗-unit-r⁻ ≡ e' ∘g ⊗-unit-r⁻) →
+    e ≡ e'
+  cong-∘g⊗-unit-r⁻ f g ∘g≡ =
+    cong (f ∘g_) (sym ⊗-unit-rr⁻) ∙
+    cong (_∘g ⊗-unit-r) ∘g≡ ∙
+    cong (g ∘g_) (⊗-unit-rr⁻)
+
+  -- TODO this proof seems overly complicated
+  ⊗-unit-r⊗-intro :
+    (f : g ⊢ h) →
+    ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
+  ⊗-unit-r⊗-intro f =
+    cong-∘g⊗-unit-r⁻ (⊗-unit-r ∘g ⊗-intro f id) (f ∘g ⊗-unit-r)
+      ((⊗-unit-r ∘g ⊗-intro f id) ∘g ⊗-unit-r⁻
+        ≡⟨ refl ⟩
+        ⊗-unit-r ∘g ⊗-unit-r⁻ ∘g f
+        ≡⟨ ((λ i → ⊗-unit-r⁻r i ∘g f ∘g ⊗-unit-r⁻r (~ i))) ⟩
+      (f ∘g ⊗-unit-r) ∘g ⊗-unit-r⁻
+      ∎)
+      -- (cong (_∘g f) {!sym ⊗-unit-rr⁻!})
+    -- ⊗-unit-r ∘g ⊗-intro f id
+    --   ≡⟨ {!cong-∘g⊗-unit-r!} ⟩
+    -- f ∘g ⊗-unit-r
+    -- ∎
+
+  ⊗-unit-rl⁻ : ⊗-unit-r ∘g ⊗-unit-l⁻ ≡ id
+  ⊗-unit-rl⁻ = funExt λ w → funExt λ p →
+    isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {g = ε} w p)
 
 ⊗-assoc :
   g ⊗ (h ⊗ k) ⊢ (g ⊗ h) ⊗ k
@@ -251,14 +253,16 @@ cong-∘g⊗-unit-r⁻ f g ∘g≡ =
   ≡ ⊗-intro f (⊗-intro f' f'') ∘g ⊗-assoc⁻
 ⊗-assoc⁻⊗-intro = refl
 
-⊗-unit-l⁻⊗-intro :
-  ∀ {f : g ⊢ h}
-  → ⊗-unit-l⁻ ∘g f
-  ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
-⊗-unit-l⁻⊗-intro = refl
+opaque
+  unfolding ε ⊗-unit-l⁻
+  ⊗-unit-l⁻⊗-intro :
+    ∀ {f : g ⊢ h}
+    → ⊗-unit-l⁻ ∘g f
+    ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
+  ⊗-unit-l⁻⊗-intro = refl
 
-⊗-unit-r⁻⊗-intro :
-  ∀ {f : g ⊢ h}
-  → ⊗-unit-r⁻ ∘g f
-  ≡ (⊗-intro f id) ∘g ⊗-unit-r⁻
-⊗-unit-r⁻⊗-intro = refl
+  ⊗-unit-r⁻⊗-intro :
+    ∀ {f : g ⊢ h}
+    → ⊗-unit-r⁻ ∘g f
+    ≡ (⊗-intro f id) ∘g ⊗-unit-r⁻
+  ⊗-unit-r⁻⊗-intro = refl

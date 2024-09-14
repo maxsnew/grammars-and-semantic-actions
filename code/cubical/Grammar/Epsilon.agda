@@ -12,5 +12,6 @@ private
   variable
     ℓG : Level
 
-ε : Grammar ℓ-zero
-ε w = w ≡ []
+opaque
+  ε : Grammar ℓ-zero
+  ε w = w ≡ []

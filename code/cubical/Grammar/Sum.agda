@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -21,65 +22,68 @@ private
     k : Grammar ℓk
     l : Grammar ℓl
 
-_⊕_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-(g ⊕ h) w = g w ⊎ h w
+opaque
+  _⊕_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
+  (g ⊕ h) w = g w ⊎ h w
 
 infixr 5 _⊕_
 
-⊕-inl :
-  g ⊢ g ⊕ h
-⊕-inl _ p = inl p
+opaque
+  unfolding _⊕_
+  ⊕-inl :
+    g ⊢ g ⊕ h
+  ⊕-inl _ p = inl p
 
 
-⊕-inr :
-  g ⊢ h ⊕ g
-⊕-inr _ p = inr p
+  ⊕-inr :
+    g ⊢ h ⊕ g
+  ⊕-inr _ p = inr p
 
-⊕-elim :
-  g ⊢ h →
-  k ⊢ h →
-  g ⊕ k ⊢ h
-⊕-elim eg eh _ p =
-  Sum.elim
-    (λ pg → eg _ pg)
-    (λ ph → eh _ ph)
-    p
+  ⊕-elim :
+    g ⊢ h →
+    k ⊢ h →
+    g ⊕ k ⊢ h
+  ⊕-elim eg eh _ p =
+    Sum.elim
+      (λ pg → eg _ pg)
+      (λ ph → eh _ ph)
+      p
 
-⊕≡ :
-  (f f' : g ⊕ k ⊢ h)
-  → (f ∘g ⊕-inl ≡ f' ∘g ⊕-inl)
-  → (f ∘g ⊕-inr ≡ f' ∘g ⊕-inr)
-  → f ≡ f'
-⊕≡ f f' f≡f'inl f≡f'inr = funExt λ w → funExt λ
-  { (inl x) → funExt⁻ (funExt⁻ f≡f'inl _) x
-  ; (inr x) → funExt⁻ (funExt⁻ f≡f'inr _) x }
+  ⊕≡ :
+    (f f' : g ⊕ k ⊢ h)
+    → (f ∘g ⊕-inl ≡ f' ∘g ⊕-inl)
+    → (f ∘g ⊕-inr ≡ f' ∘g ⊕-inr)
+    → f ≡ f'
+  ⊕≡ f f' f≡f'inl f≡f'inr = funExt λ w → funExt λ
+    { (inl x) → funExt⁻ (funExt⁻ f≡f'inl _) x
+    ; (inr x) → funExt⁻ (funExt⁻ f≡f'inr _) x }
 
-⊕-βl :
-  (e₁ : g ⊢ k) →
-  (e₂ : h ⊢ k) →
-  ⊕-inl ⋆ ⊕-elim e₁ e₂
-    ≡
-  e₁
-⊕-βl e₁ e₂ = refl
+  ⊕-βl :
+    (e₁ : g ⊢ k) →
+    (e₂ : h ⊢ k) →
+    ⊕-inl ⋆ ⊕-elim e₁ e₂
+      ≡
+    e₁
+  ⊕-βl e₁ e₂ = refl
 
-⊕-βr :
-  (e₁ : g ⊢ k) →
-  (e₂ : h ⊢ k) →
-  ⊕-inr ⋆ ⊕-elim e₁ e₂
-    ≡
-  e₂
-⊕-βr e₁ e₂ = refl
+  ⊕-βr :
+    (e₁ : g ⊢ k) →
+    (e₂ : h ⊢ k) →
+    ⊕-inr ⋆ ⊕-elim e₁ e₂
+      ≡
+    e₂
+  ⊕-βr e₁ e₂ = refl
 
-⊕-η :
-  (e : g ⊕ h ⊢ k) →
-  (⊕-elim {g = g}{h = k}{k = h}
-    (e ∘g ⊕-inl)
-    (e ∘g ⊕-inr)
-  )
-    ≡
-    e
-⊕-η e i _ (inl x) = e _ (inl x)
-⊕-η e i _ (inr x) = e _ (inr x)
+  ⊕-η :
+    (e : g ⊕ h ⊢ k) →
+    (⊕-elim {g = g}{h = k}{k = h}
+      (e ∘g ⊕-inl)
+      (e ∘g ⊕-inr)
+    )
+      ≡
+      e
+  ⊕-η e i _ (inl x) = e _ (inl x)
+  ⊕-η e i _ (inr x) = e _ (inr x)
 
 ⊗⊕-distL :
   g ⊗ (h ⊕ k) ⊢ (g ⊗ h) ⊕ (g ⊗ k)
@@ -117,16 +121,14 @@ open StrongEquivalence
 &⊕-distR≅ .fun = &⊕-distR
 &⊕-distR≅ .inv = &⊕-distR⁻
 &⊕-distR≅ .sec =
-  {!!}
-  -- ⇒-app ∘g &-intro (⊕-elim (⇒-intro ⊕-inl) (⇒-intro ⊕-inr) ∘g &-π₁) &-π₂ ∘g
-  -- ⊕-elim (&-par ⊕-inl id) (&-par ⊕-inr id)
-  --   ≡⟨ (λ i → ⇒-app ∘g &-intro (⊕-η (⇒-intro {!!}) i ∘g &-π₁) &-π₂ ∘g
-  --             ⊕-elim (&-par ⊕-inl id) (&-par ⊕-inr id)) ⟩
-  -- {!!}
-
-  --   ≡⟨ {!!} ⟩
-  -- id
-  -- ∎
+  ⇒-intro⁻
+    (⊕-elim
+      (⇒-intro ⊕-inl)
+      (⇒-intro ⊕-inr)) ∘g
+  ⊕-elim (&-par ⊕-inl id) (&-par ⊕-inr id)
+    ≡⟨ {!!} ⟩
+  id
+  ∎
 &⊕-distR≅ .ret = {!!}
 
 

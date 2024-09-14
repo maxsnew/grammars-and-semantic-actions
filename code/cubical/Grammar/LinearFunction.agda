@@ -21,106 +21,108 @@ private
     k : Grammar ℓk
     l : Grammar ℓl
 
-_⊸_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-(g ⊸ h) w = ∀ (w' : String) → g w' → h (w' ++ w)
+opaque
+  _⊸_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
+  (g ⊸ h) w = ∀ (w' : String) → g w' → h (w' ++ w)
 
-_⟜_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-(g ⟜ h) w = ∀ (w' : String) → h w' → g (w ++ w')
+  _⟜_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
+  (g ⟜ h) w = ∀ (w' : String) → h w' → g (w ++ w')
 
-infixl 2 _⟜_
-⊸-intro :
-  g ⊗ h ⊢ k →
-  h ⊢ g ⊸ k
-⊸-intro e _ p w' q =
-  e _ ((_ , refl) , (q , p))
+  infixl 2 _⟜_
 
-⊸-intro-ε :
-  g ⊢ k → ε ⊢ g ⊸ k
-⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-r)
+  ⊸-intro :
+    g ⊗ h ⊢ k →
+    h ⊢ g ⊸ k
+  ⊸-intro e _ p w' q =
+    e _ ((_ , refl) , (q , p))
 
-⊸-app :
-  g ⊗ (g ⊸ h) ⊢ h
-⊸-app {h = h} _ p = subst h (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
+  ⊸-intro-ε :
+    g ⊢ k → ε ⊢ g ⊸ k
+  ⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-r)
 
-⊸-intro⁻ :
-  g ⊢ h ⊸ k →
-  h ⊗ g ⊢ k
-⊸-intro⁻ {h = h}{k = k} f =
-  ⊸-app ∘g (⊗-intro (id {g = h}) f)
+  ⊸-app :
+    g ⊗ (g ⊸ h) ⊢ h
+  ⊸-app {h = h} _ p = subst h (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
 
-⊸-intro∘⊸-intro⁻≡id :
-  (e : g ⊢ h ⊸ k) →
-  ⊸-intro {g = h}{h = g}{k = k}(⊸-intro⁻ e) ≡ e
-⊸-intro∘⊸-intro⁻≡id e = funExt λ w → funExt λ pg →
-  funExt λ w' → funExt λ ph → transportRefl _
+  ⊸-intro⁻ :
+    g ⊢ h ⊸ k →
+    h ⊗ g ⊢ k
+  ⊸-intro⁻ {h = h}{k = k} f =
+    ⊸-app ∘g (⊗-intro (id {g = h}) f)
 
-⊸-intro⁻∘⊸-intro≡id :
-  (e : g ⊗ h ⊢ k) →
-  ⊸-intro⁻ {g = h}{h = g}{k = k}(⊸-intro e) ≡ e
-⊸-intro⁻∘⊸-intro≡id {k = k} e = funExt λ w → funExt λ p⊗ →
-  fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-    (⊗PathP (≡-× refl refl) (≡-× refl refl)))
+  ⊸-intro∘⊸-intro⁻≡id :
+    (e : g ⊢ h ⊸ k) →
+    ⊸-intro {g = h}{h = g}{k = k}(⊸-intro⁻ e) ≡ e
+  ⊸-intro∘⊸-intro⁻≡id e = funExt λ w → funExt λ pg →
+    funExt λ w' → funExt λ ph → transportRefl _
 
-
-⊸-strength :
-  (g ⊸ h) ⊗ k ⊢ g ⊸ (h ⊗ k)
-⊸-strength {g = g}{h = h}{k = k} =
-  ⊸-intro {g = g}{h = (g ⊸ h) ⊗ k}{k = h ⊗ k}
-    (⊗-assoc ⋆ ⊗-intro ⊸-app id)
-
--- THE ORDER SWAPS!
-⊸-curry :
-  (g ⊗ h) ⊸ k ⊢ h ⊸ (g ⊸ k)
-⊸-curry {g = g}{k = k} =
-  ⊸-intro {k = g ⊸ k} (⊸-intro {k = k} (⊸-app ∘g ⊗-assoc))
-
-⊸-β :
-  (m : (g ⊗ h) ⊢ k) →
-  (⊸-intro⁻ {g = h}{h = g}{k = k} (⊸-intro {g = g}{h = h}{k = k} m))
-    ≡
-  m
-⊸-β {k = k} m = funExt (λ w → funExt (λ p⊗ →
-  fromPathP {A = λ i → k (p⊗ .fst .snd (~ i))}
-    (congP (λ _ → m _) (⊗PathP refl refl))))
-
-⊸-η :
-  (f : g ⊢ h ⊸ k) →
-  f
-    ≡
-  (⊸-intro {g = h}{h = g}{k = k} (⊸-intro⁻ {g = g}{h = h}{k = k} f))
-⊸-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
-  (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
+  ⊸-intro⁻∘⊸-intro≡id :
+    (e : g ⊗ h ⊢ k) →
+    ⊸-intro⁻ {g = h}{h = g}{k = k}(⊸-intro e) ≡ e
+  ⊸-intro⁻∘⊸-intro≡id {k = k} e = funExt λ w → funExt λ p⊗ →
+    fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
+      (⊗PathP (≡-× refl refl) (≡-× refl refl)))
 
 
-⟜-intro :
-  g ⊗ h ⊢  k →
-  g ⊢ k ⟜ h
-⟜-intro e _ p w' q =
-  e _ ((_ , refl) , p , q)
+  ⊸-strength :
+    (g ⊸ h) ⊗ k ⊢ g ⊸ (h ⊗ k)
+  ⊸-strength {g = g}{h = h}{k = k} =
+    ⊸-intro {g = g}{h = (g ⊸ h) ⊗ k}{k = h ⊗ k}
+      (⊗-assoc ⋆ ⊗-intro ⊸-app id)
 
-⟜-app :
-  (g ⟜ h) ⊗ h ⊢ g
-⟜-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
-  subst g (sym w≡w'++w'') (f _ inp)
+  -- THE ORDER SWAPS!
+  ⊸-curry :
+    (g ⊗ h) ⊸ k ⊢ h ⊸ (g ⊸ k)
+  ⊸-curry {g = g}{k = k} =
+    ⊸-intro {k = g ⊸ k} (⊸-intro {k = k} (⊸-app ∘g ⊗-assoc))
 
-⟜-intro⁻ :
-  g ⊢ h ⟜ k →
-  g ⊗ k ⊢ h
-⟜-intro⁻ {h = h}{k = k} f =
-  ⟜-app ∘g ⊗-intro f (id {g = k})
+  ⊸-β :
+    (m : (g ⊗ h) ⊢ k) →
+    (⊸-intro⁻ {g = h}{h = g}{k = k} (⊸-intro {g = g}{h = h}{k = k} m))
+      ≡
+    m
+  ⊸-β {k = k} m = funExt (λ w → funExt (λ p⊗ →
+    fromPathP {A = λ i → k (p⊗ .fst .snd (~ i))}
+      (congP (λ _ → m _) (⊗PathP refl refl))))
 
-⟜-η :
-  (e : g ⊢ h ⟜ k) →
-  ⟜-intro {g = g}{h = k}{k = h}(⟜-intro⁻ e) ≡ e
-⟜-η e = funExt λ w → funExt λ pg →
-  funExt λ w' → funExt λ pk → transportRefl _
+  ⊸-η :
+    (f : g ⊢ h ⊸ k) →
+    f
+      ≡
+    (⊸-intro {g = h}{h = g}{k = k} (⊸-intro⁻ {g = g}{h = h}{k = k} f))
+  ⊸-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
+    (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
 
-⟜-β :
-  (e : g ⊗ h ⊢ k) →
-  ⟜-intro⁻ {g = g}{h = k}{k = h}(⟜-intro e) ≡ e
-⟜-β e = funExt λ w → funExt λ p⊗ →
-  fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-    (⊗PathP refl refl))
+
+  ⟜-intro :
+    g ⊗ h ⊢  k →
+    g ⊢ k ⟜ h
+  ⟜-intro e _ p w' q =
+    e _ ((_ , refl) , p , q)
+
+  ⟜-app :
+    (g ⟜ h) ⊗ h ⊢ g
+  ⟜-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
+    subst g (sym w≡w'++w'') (f _ inp)
+
+  ⟜-intro⁻ :
+    g ⊢ h ⟜ k →
+    g ⊗ k ⊢ h
+  ⟜-intro⁻ {h = h}{k = k} f =
+    ⟜-app ∘g ⊗-intro f (id {g = k})
+
+  ⟜-η :
+    (e : g ⊢ h ⟜ k) →
+    ⟜-intro {g = g}{h = k}{k = h}(⟜-intro⁻ e) ≡ e
+  ⟜-η e = funExt λ w → funExt λ pg →
+    funExt λ w' → funExt λ pk → transportRefl _
+
+  ⟜-β :
+    (e : g ⊗ h ⊢ k) →
+    ⟜-intro⁻ {g = g}{h = k}{k = h}(⟜-intro e) ≡ e
+  ⟜-β e = funExt λ w → funExt λ p⊗ →
+    fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
+      (⊗PathP refl refl))
 
 -- THE ORDER SWAPS!
 ⟜-mapCod : k ⊢ l → k ⟜ g ⊢ l ⟜ g

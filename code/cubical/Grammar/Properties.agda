@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
@@ -64,24 +65,26 @@ module _ where
     funExt (λ w → funExt (λ x → unambig' w (e w x) (e' w x)))
 
   module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
-    unambiguous→unambiguous' : unambiguous g → unambiguous' g
-    unambiguous→unambiguous' {g = g} unambig w pg pg' =
-      isMono→injective unambig w pg pg' refl
-      where
-      pick-parse : ∀ w' (h : Grammar ℓh) → h w' → ⌈ w' ⌉ ⊢ h
-      pick-parse w' h p w'' x =
-        subst h (uniquely-supported-⌈w⌉ isFinSetAlphabet w' w'' x) p
+    opaque
+      unfolding uniquely-supported-⌈w⌉ internalize ⊤
+      unambiguous→unambiguous' : unambiguous g → unambiguous' g
+      unambiguous→unambiguous' {g = g} unambig w pg pg' =
+        isMono→injective unambig w pg pg' refl
+        where
+        pick-parse : ∀ w' (h : Grammar ℓh) → h w' → ⌈ w' ⌉ ⊢ h
+        pick-parse w' h p w'' x =
+          subst h (uniquely-supported-⌈w⌉ isFinSetAlphabet w' w'' x) p
 
-      isMono→injective : {e : h ⊢ ⊤} →
-        isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
-      isMono→injective {h = h}{e = e} mono-e w p p' ewp≡ewp' =
-        sym (transportRefl p) ∙
-        cong (λ a → transp (λ i → h (a i)) i0 p) (isSetString _ w refl _) ∙
-        funExt⁻
-          (funExt⁻ (mono-e (pick-parse w h p) (pick-parse w h p') refl) w)
-            (internalize w) ∙
-        cong (λ a → transp (λ i → h (a i)) i0 p') (isSetString _ w _ refl) ∙
-        transportRefl p'
+        isMono→injective : {e : h ⊢ ⊤} →
+          isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
+        isMono→injective {h = h}{e = e} mono-e w p p' ewp≡ewp' =
+          sym (transportRefl p) ∙
+          cong (λ a → transp (λ i → h (a i)) i0 p) (isSetString _ w refl _) ∙
+          funExt⁻
+            (funExt⁻ (mono-e (pick-parse w h p) (pick-parse w h p') refl) w)
+              (internalize w) ∙
+          cong (λ a → transp (λ i → h (a i)) i0 p') (isSetString _ w _ refl) ∙
+          transportRefl p'
 
   -- Thus the internal and external notions of unambiguity are logically
   -- equivalent. Moreover, each of these can be show to be prop-valued
@@ -94,14 +97,16 @@ totallyParseable {ℓg = ℓg} g =
 
 open StrongEquivalence
 
-totallyParseable→unambiguous :
-  totallyParseable g → unambiguous g
-totallyParseable→unambiguous parseable =
-  Mono∘g {e = ⊕-inl}
-    (isStrongEquivalence→isMono
-      ⊤-intro
-      (StrongEquivalence→isStrongEquivalence _ _ (parseable .snd)))
-    isMono-⊕-inl
+opaque
+  unfolding ⊤-intro
+  totallyParseable→unambiguous :
+    totallyParseable g → unambiguous g
+  totallyParseable→unambiguous parseable =
+    Mono∘g {e = ⊕-inl}
+      (isStrongEquivalence→isMono
+        (parseable .snd .fun)
+        (StrongEquivalence→isStrongEquivalence _ _ (parseable .snd)))
+      isMono-⊕-inl
 
 decidable : Grammar ℓg → Type ℓg
 decidable g = StrongEquivalence (g ⊕ (¬ g)) ⊤
@@ -110,11 +115,15 @@ decidable→totallyParseable :
   decidable g → totallyParseable g
 decidable→totallyParseable dec-g = _ , dec-g
 
-unambiguous⊤ : unambiguous ⊤
-unambiguous⊤ e e' _ = refl
+opaque
+  unfolding ⊤
+  unambiguous⊤ : unambiguous ⊤
+  unambiguous⊤ e e' _ = refl
 
-unambiguous⊤* : ∀ {ℓg} → unambiguous (⊤* {ℓg})
-unambiguous⊤* e e' _ = refl
+opaque
+  unfolding ⊤*
+  unambiguous⊤* : ∀ {ℓg} → unambiguous (⊤* {ℓg})
+  unambiguous⊤* e e' _ = refl
 
 unambiguous⊥ : unambiguous ⊥
 unambiguous⊥ {k = k} e e' !∘e≡!∘e' =
@@ -126,19 +135,19 @@ unambiguous⊥ {k = k} e e' !∘e≡!∘e' =
 string≅⊤ : StrongEquivalence string ⊤
 string≅⊤ .fun = ⊤-intro
 string≅⊤ .inv = ⊤→string
-string≅⊤ .sec = unambiguous⊤ _ _ refl
-string≅⊤ .ret =
-  funExt λ {
-    [] → funExt λ {
-      (KL*.nil .[] x) → cong (KL*.nil []) (isSetString [] [] refl x)
-    ; (KL*.cons .[] x) →
-      Empty.rec (¬nil≡cons (x .fst .snd ∙
-                           cong (_++ x .fst .fst .snd) (x .snd .fst .snd))) }
-  ; (c ∷ w) → funExt (λ {
-    (KL*.nil .(c ∷ w) x) → Empty.rec (¬cons≡nil x)
-  ; (KL*.cons .(c ∷ w) x) →
-    cong (KL*.cons (c ∷ w))
-      {!!}
+string≅⊤ .sec = unambiguous⊤ _ _ {!!}
+string≅⊤ .ret = {!!}
+  -- funExt λ {
+  --   [] → funExt λ {
+  --     (KL*.nil .[] x) → cong (KL*.nil []) (isSetString [] [] refl x)
+  --   ; (KL*.cons .[] x) →
+  --     Empty.rec (¬nil≡cons (x .fst .snd ∙
+  --                          cong (_++ x .fst .fst .snd) (x .snd .fst .snd))) }
+  -- ; (c ∷ w) → funExt (λ {
+  --   (KL*.nil .(c ∷ w) x) → Empty.rec (¬cons≡nil x)
+  -- ; (KL*.cons .(c ∷ w) x) →
+  --   cong (KL*.cons (c ∷ w))
+  --     {!!}
       -- (⊗≡ (((c ∷ [] , w) , (λ _ → c ∷ w)) , (c , (λ _ → c ∷ [])) , ⌈ w ⌉)
       --   x
       --   (≡-× (cong (_∷ [])
@@ -148,15 +157,15 @@ string≅⊤ .ret =
       --     (cons-inj₂ (x .fst .snd ∙
       --       cong (_++ x .fst .fst .snd) (x .snd .fst .snd))))
       --     (isProp→PathP (λ _ → {!isSetString!}) ((c , (λ _ → c ∷ [])) , ⌈ w ⌉) (x .snd)))
-  }) }
+  -- }) }
 
-open isStrongEquivalence
-unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
-unambiguous≅ eq unambig-g =
-  Mono∘g {e = eq .inv} unambig-g
-    (isStrongEquivalence→isMono
-      (eq .inv) (isStrEq (eq .fun) (eq .ret) (eq .sec)))
+-- open isStrongEquivalence
+-- unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
+-- unambiguous≅ eq unambig-g =
+--   Mono∘g {e = eq .inv} unambig-g
+--     (isStrongEquivalence→isMono
+--       (eq .inv) (isStrEq (eq .fun) (eq .ret) (eq .sec)))
 
-unabmiguous-string : unambiguous string
-unabmiguous-string =
-  unambiguous≅ (sym-strong-equivalence string≅⊤) unambiguous⊤
+-- unabmiguous-string : unambiguous string
+-- unabmiguous-string =
+--   unambiguous≅ (sym-strong-equivalence string≅⊤) unambiguous⊤

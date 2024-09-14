@@ -15,18 +15,29 @@ private
     g : Grammar ℓg
     h : Grammar ℓh
 
-⊤ : Grammar ℓ-zero
-⊤ _ = Unit
+is-terminal : Grammar ℓg → Typeω
+is-terminal g =
+  ∀ {ℓh}{h : Grammar ℓh} → (Σ[ e ∈ h ⊢ g ] (∀ e' → e ≡ e'))
 
-⊤* : Grammar ℓg
-⊤* _ = Unit*
+opaque
+  ⊤ : Grammar ℓ-zero
+  ⊤ _ = Unit
 
-⊤-intro :
-  g ⊢ ⊤
-⊤-intro _ _ = tt
+  ⊤* : Grammar ℓg
+  ⊤* _ = Unit*
 
-⊤*-intro : ∀ {ℓg} → g ⊢ ⊤* {ℓg}
-⊤*-intro _ _ = tt*
+  ⊤-intro :
+    g ⊢ ⊤
+  ⊤-intro _ _ = tt
+
+  ⊤*-intro : ∀ {ℓg} → g ⊢ ⊤* {ℓg}
+  ⊤*-intro _ _ = tt*
+
+  is-terminal-⊤ : is-terminal ⊤
+  is-terminal-⊤ = ⊤-intro , (λ e → refl)
+
+  is-terminal-⊤* : ∀ {ℓg} → is-terminal (⊤* {ℓg})
+  is-terminal-⊤* = ⊤*-intro , λ _ → refl
 
 ⊤→string : ⊤ ⊢ string
 ⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
@@ -34,12 +45,5 @@ private
 ⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string
 ⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)
 
-is-terminal : Grammar ℓg → Typeω
-is-terminal g =
-  ∀ {ℓh}{h : Grammar ℓh} → (Σ[ e ∈ h ⊢ g ] (∀ e' → e ≡ e'))
 
-is-terminal-⊤ : is-terminal ⊤
-is-terminal-⊤ = ⊤-intro , (λ e → refl)
 
-is-terminal-⊤* : ∀ {ℓg} → is-terminal (⊤* {ℓg})
-is-terminal-⊤* = ⊤*-intro , λ _ → refl
