@@ -35,20 +35,6 @@ private
 
 open isStrongEquivalence
 
-isStrongEquivalence→isMono :
-  (e : g ⊢ h) →
-  isStrongEquivalence _ _ e →
-  isMono e
-isStrongEquivalence→isMono e streq f f' e∘f≡e∘f' =
-  cong (_∘g f) (sym (streq .ret)) ∙
-  cong (streq .inv ∘g_) e∘f≡e∘f' ∙
-  cong (_∘g f') (streq .ret)
-
-Mono∘g : {e : g ⊢ h} {e' : h ⊢ k} →
-  isMono e' → isMono e → isMono (e' ∘g e)
-Mono∘g {e = e} {e' = e'} mon-e mon-e' f f' e'ef≡e'ef' =
-  mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')
-
 unambiguous : Grammar ℓg → Typeω
 unambiguous {ℓg = ℓg} g = isMono {g = g}{h = ⊤} (⊤-intro {g = g})
 

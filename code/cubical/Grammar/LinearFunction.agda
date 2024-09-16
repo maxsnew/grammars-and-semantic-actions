@@ -36,20 +36,22 @@ opaque
   ⊸-intro e _ p w' q =
     e _ ((_ , refl) , (q , p))
 
-  ⊸-intro-ε :
-    g ⊢ k → ε ⊢ g ⊸ k
-  ⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-r)
-
   ⊸-app :
     g ⊗ (g ⊸ h) ⊢ h
   ⊸-app {h = h} _ p = subst h (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
 
-  ⊸-intro⁻ :
-    g ⊢ h ⊸ k →
-    h ⊗ g ⊢ k
-  ⊸-intro⁻ {h = h}{k = k} f =
-    ⊸-app ∘g (⊗-intro (id {g = h}) f)
+⊸-intro-ε :
+  g ⊢ k → ε ⊢ g ⊸ k
+⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-r)
 
+⊸-intro⁻ :
+  g ⊢ h ⊸ k →
+  h ⊗ g ⊢ k
+⊸-intro⁻ {h = h}{k = k} f =
+  ⊸-app ∘g (⊗-intro (id {g = h}) f)
+
+opaque
+  unfolding _⊸_
   ⊸-intro∘⊸-intro⁻≡id :
     (e : g ⊢ h ⊸ k) →
     ⊸-intro {g = h}{h = g}{k = k}(⊸-intro⁻ e) ≡ e
@@ -105,12 +107,14 @@ opaque
   ⟜-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
     subst g (sym w≡w'++w'') (f _ inp)
 
-  ⟜-intro⁻ :
-    g ⊢ h ⟜ k →
-    g ⊗ k ⊢ h
-  ⟜-intro⁻ {h = h}{k = k} f =
-    ⟜-app ∘g ⊗-intro f (id {g = k})
+⟜-intro⁻ :
+  g ⊢ h ⟜ k →
+  g ⊗ k ⊢ h
+⟜-intro⁻ {h = h}{k = k} f =
+  ⟜-app ∘g ⊗-intro f (id {g = k})
 
+opaque
+  unfolding _⟜_ ⟜-intro
   ⟜-η :
     (e : g ⊢ h ⟜ k) →
     ⟜-intro {g = g}{h = k}{k = h}(⟜-intro⁻ e) ≡ e

@@ -72,22 +72,23 @@ module _
             ; nil-case = nil
             ; cons-case = cons ∘g ⊗-intro (g≅h .inv) id })
 
-  star-strong-equiv : StrongEquivalence (KL* g) (KL* h)
-  star-strong-equiv .fun = foldKL*r g the-g*-alg
-  star-strong-equiv .inv = foldKL*r h the-h*-alg
-  star-strong-equiv .sec =
-    !*r-AlgebraHom' h (*r-initial h)
-      (record { f = foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg
-              ; on-nil = refl
-              ; on-cons =
-                λ i → cons ∘g ⊗-intro (g≅h .sec i) id ∘g
-                  ⊗-intro id (foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg) })
-      (id*r-AlgebraHom h (*r-initial h))
-  star-strong-equiv .ret =
-    !*r-AlgebraHom' g (*r-initial g)
-      (record { f = foldKL*r h the-h*-alg ∘g foldKL*r g the-g*-alg
-              ; on-nil = refl
-              ; on-cons =
-                λ i → cons ∘g ⊗-intro (g≅h .ret i) id ∘g
-                  ⊗-intro id (foldKL*r h the-h*-alg ∘g foldKL*r g the-g*-alg) })
-      (id*r-AlgebraHom g (*r-initial g))
+  opaque
+    star-strong-equiv : StrongEquivalence (KL* g) (KL* h)
+    star-strong-equiv .fun = foldKL*r g the-g*-alg
+    star-strong-equiv .inv = foldKL*r h the-h*-alg
+    star-strong-equiv .sec =
+      !*r-AlgebraHom' h (*r-initial h)
+        (record { f = foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg
+                ; on-nil = refl
+                ; on-cons =
+                  λ i → cons ∘g ⊗-intro (g≅h .sec i) id ∘g
+                    ⊗-intro id (foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg) })
+        (id*r-AlgebraHom h (*r-initial h))
+    star-strong-equiv .ret =
+      !*r-AlgebraHom' g (*r-initial g)
+        (record { f = foldKL*r h the-h*-alg ∘g foldKL*r g the-g*-alg
+                ; on-nil = refl
+                ; on-cons =
+                  λ i → cons ∘g ⊗-intro (g≅h .ret i) id ∘g
+                    ⊗-intro id (foldKL*r h the-h*-alg ∘g foldKL*r g the-g*-alg) })
+        (id*r-AlgebraHom g (*r-initial g))

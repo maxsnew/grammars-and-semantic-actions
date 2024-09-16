@@ -65,6 +65,14 @@ opaque
     e
   &-η e = refl
 
+&-η' :
+  (e e' : g ⊢ h & k) →
+  &-π₁ ∘g e ≡ &-π₁ ∘g e' →
+  &-π₂ ∘g e ≡ &-π₂ ∘g e' →
+  e ≡ e'
+&-η' e e' p₁ p₂ =
+  sym (&-η e) ∙ cong₂ &-intro p₁ p₂ ∙ &-η e'
+
 &-swap :
   g & h ⊢ h & g
 &-swap = &-intro &-π₂ &-π₁

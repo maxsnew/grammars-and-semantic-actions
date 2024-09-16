@@ -214,77 +214,79 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     ; (N'-ε-trans t') → inr (N' .ε-dst t')
     }
 
-  ⊕-strong-equivalence :
-    StrongEquivalence (InitParse ⊕NFA) (InitParse N ⊕ InitParse N')
-  ⊕-strong-equivalence = mkStrEq
-    (recInit _ ⊕Alg)
-    inj-parse
-    (⊕≡ _ _
-      (λ i → ⊕-inl ∘g N-retr i)
-      λ i → ⊕-inr ∘g N'-retr i)
-    (algebra-η ⊕NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊕Alg) (record
-      { f = λ { start → inj-parse
-              ; (inl x) → recTrace _ NAlg
-              ; (inr x) → recTrace _ N'Alg }
-      ; on-nil = λ { {start} → Empty.elim*
-                   ; {inl x} → λ _ → refl
-                   ; {inr x} → λ _ → refl }
-      ; on-cons = λ { (inl x) → refl ; (inr x) → refl }
-      ; on-ε-cons = λ { pick-inl → refl
-        ; pick-inr → refl
-        ; (N-ε-trans x) → refl
-        ; (N'-ε-trans x) → refl
-        } })))
-    where
-      ⊕Alg : Algebra ⊕NFA
-      ⊕Alg .the-ℓs start = (ℓ-max ℓN ℓN')
-      ⊕Alg .the-ℓs (inl _) = ℓN
-      ⊕Alg .the-ℓs (inr _) = ℓN'
-      ⊕Alg .G start = InitParse N ⊕ InitParse N'
-      ⊕Alg .G (inl q)  = Parse N q
-      ⊕Alg .G (inr q') = Parse N' q'
-      ⊕Alg .nil-case {start} ()
-      ⊕Alg .nil-case {inl x} acc  = nil (lower acc)
-      ⊕Alg .nil-case {inr x} acc' = nil (lower acc')
-      ⊕Alg .cons-case (inl t)  = cons t
-      ⊕Alg .cons-case (inr t') = cons t'
-      ⊕Alg .ε-cons-case pick-inl = ⊕-inl
-      ⊕Alg .ε-cons-case pick-inr = ⊕-inr
-      ⊕Alg .ε-cons-case (N-ε-trans t) = ε-cons t
-      ⊕Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
+  opaque
+    unfolding _⊕_ ⊕-inr ⊕-inl
+    ⊕-strong-equivalence :
+      StrongEquivalence (InitParse ⊕NFA) (InitParse N ⊕ InitParse N')
+    ⊕-strong-equivalence = mkStrEq
+      (recInit _ ⊕Alg)
+      inj-parse
+      (⊕≡ _ _
+        (λ i → ⊕-inl ∘g N-retr i)
+        λ i → ⊕-inr ∘g N'-retr i)
+      (algebra-η ⊕NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊕Alg) (record
+        { f = λ { start → inj-parse
+                ; (inl x) → recTrace _ NAlg
+                ; (inr x) → recTrace _ N'Alg }
+        ; on-nil = λ { {start} → Empty.elim*
+                     ; {inl x} → λ _ → refl
+                     ; {inr x} → λ _ → refl }
+        ; on-cons = λ { (inl x) → refl ; (inr x) → refl }
+        ; on-ε-cons = λ { pick-inl → refl
+          ; pick-inr → refl
+          ; (N-ε-trans x) → refl
+          ; (N'-ε-trans x) → refl
+          } })))
+      where
+        ⊕Alg : Algebra ⊕NFA
+        ⊕Alg .the-ℓs start = (ℓ-max ℓN ℓN')
+        ⊕Alg .the-ℓs (inl _) = ℓN
+        ⊕Alg .the-ℓs (inr _) = ℓN'
+        ⊕Alg .G start = InitParse N ⊕ InitParse N'
+        ⊕Alg .G (inl q)  = Parse N q
+        ⊕Alg .G (inr q') = Parse N' q'
+        ⊕Alg .nil-case {start} ()
+        ⊕Alg .nil-case {inl x} acc  = nil (lower acc)
+        ⊕Alg .nil-case {inr x} acc' = nil (lower acc')
+        ⊕Alg .cons-case (inl t)  = cons t
+        ⊕Alg .cons-case (inr t') = cons t'
+        ⊕Alg .ε-cons-case pick-inl = ⊕-inl
+        ⊕Alg .ε-cons-case pick-inr = ⊕-inr
+        ⊕Alg .ε-cons-case (N-ε-trans t) = ε-cons t
+        ⊕Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
 
-      NAlg : Algebra N
-      NAlg .the-ℓs = _
-      NAlg .G q = Parse ⊕NFA (inl q)
-      NAlg .nil-case acc = nil (lift acc)
-      NAlg .cons-case t = cons (inl t)
-      NAlg .ε-cons-case t = ε-cons (N-ε-trans t)
+        NAlg : Algebra N
+        NAlg .the-ℓs = _
+        NAlg .G q = Parse ⊕NFA (inl q)
+        NAlg .nil-case acc = nil (lift acc)
+        NAlg .cons-case t = cons (inl t)
+        NAlg .ε-cons-case t = ε-cons (N-ε-trans t)
 
-      N'Alg : Algebra N'
-      N'Alg .the-ℓs = _
-      N'Alg .G q = Parse ⊕NFA (inr q)
-      N'Alg .nil-case acc' = nil (lift acc')
-      N'Alg .cons-case t' = cons (inr t')
-      N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
+        N'Alg : Algebra N'
+        N'Alg .the-ℓs = _
+        N'Alg .G q = Parse ⊕NFA (inr q)
+        N'Alg .nil-case acc' = nil (lift acc')
+        N'Alg .cons-case t' = cons (inr t')
+        N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
 
-      inj-parse : Term (InitParse N ⊕ InitParse N') (Parse ⊕NFA start)
-      inj-parse = (⊕-elim
-        (ε-cons pick-inl ∘g recInit _ NAlg)
-        (ε-cons pick-inr ∘g recInit _ N'Alg))
+        inj-parse : Term (InitParse N ⊕ InitParse N') (Parse ⊕NFA start)
+        inj-parse = (⊕-elim
+          (ε-cons pick-inl ∘g recInit _ NAlg)
+          (ε-cons pick-inr ∘g recInit _ N'Alg))
 
-      N-retr : recTrace _ ⊕Alg ∘g recInit _ NAlg ≡ id
-      N-retr = algebra-η N (AlgebraHom-seq _ (∃AlgebraHom _ NAlg) (record
-        { f = λ q → recTrace _ ⊕Alg
-        ; on-nil = λ _ → refl
-        ; on-cons = λ _ → refl
-        ; on-ε-cons = λ _ → refl }))
-      N'-retr : recTrace _ ⊕Alg ∘g recInit _ N'Alg ≡ id
-      N'-retr = algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
-        { f = λ q → recTrace _ ⊕Alg
-        ; on-nil = λ _ → refl
-        ; on-cons = λ _ → refl
-        ; on-ε-cons = λ _ → refl
-        }))
+        N-retr : recTrace _ ⊕Alg ∘g recInit _ NAlg ≡ id
+        N-retr = algebra-η N (AlgebraHom-seq _ (∃AlgebraHom _ NAlg) (record
+          { f = λ q → recTrace _ ⊕Alg
+          ; on-nil = λ _ → refl
+          ; on-cons = λ _ → refl
+          ; on-ε-cons = λ _ → refl }))
+        N'-retr : recTrace _ ⊕Alg ∘g recInit _ N'Alg ≡ id
+        N'-retr = algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
+          { f = λ q → recTrace _ ⊕Alg
+          ; on-nil = λ _ → refl
+          ; on-cons = λ _ → refl
+          ; on-ε-cons = λ _ → refl
+          }))
 
 -- Epsilon, the nullary sequencing
 module _ where
@@ -587,99 +589,101 @@ module _ (N : NFA {ℓN}) where
   *NFA .ε-src (N-internal t) = inr (N .ε-src t)
   *NFA .ε-dst (N-internal t) = inr (N .ε-dst t)
 
-  *-strong-equivalence :
-    StrongEquivalence (InitParse *NFA) (KL* (InitParse N))
-  *-strong-equivalence = mkStrEq
-    (recInit *NFA *Alg)
-    (foldKL*r (InitParse N) the-KL*-alg)
-    (!*r-AlgebraHom' (InitParse N) (*r-initial (InitParse N))
-      (record { f = recInit *NFA *Alg ∘g foldKL*r (InitParse N) the-KL*-alg
-              ; on-nil = refl
-              ; on-cons = (λ i → KL*.cons ∘g
-                nested-induction-lemma i ∘g ⊗-intro id (foldKL*r _ the-KL*-alg))
-      })
-      (id*r-AlgebraHom _ _))
-    (algebra-η *NFA (AlgebraHom-seq _ (∃AlgebraHom _ *Alg)
-      (record { f = λ {
-                  (inl _) → foldKL*r _ the-KL*-alg
-                ; (inr q) → P-recTrace' _ _ NPAlg ∘g
-                            ⊗-intro id (foldKL*r _ the-KL*-alg) }
-              ; on-nil = λ { {inl _} acc → refl }
-              ; on-cons = λ { t → λ i → cons t ∘g ⊗-intro id
-             (P-recTrace' N (InitParse *NFA) NPAlg ∘g
-               ⊗-intro id (foldKL*r (InitParse N) the-KL*-alg))
-               ∘g ⊗-assoc⁻∘⊗-assoc≡id i }
-              ; on-ε-cons = λ {
-                  inr → refl
-                ; (cons⟨N⟩ x) →
-                  λ i → ε-cons (cons⟨N⟩ x) ∘g
-                    ⊗-unit-l⁻l i ∘g foldKL*r (InitParse N) the-KL*-alg
-                ; (N-internal x) → refl } })))
-    where
-      *Alg : Algebra *NFA
-      *Alg .the-ℓs (inl _) = _
-      *Alg .the-ℓs (inr q) = _
-      *Alg .G (inl _) = KL* (InitParse N)
-      *Alg .G (inr q) = Parse N q ⊗ KL* (InitParse N)
-      *Alg .nil-case {q = inl x} _ = KL*.nil
-      *Alg .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-      *Alg .ε-cons-case inr = KL*.cons
-      *Alg .ε-cons-case (cons⟨N⟩ acc) = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
-      *Alg .ε-cons-case (N-internal t) = ⊗-intro (ε-cons t) id
+  opaque
+    unfolding ⊗-unit-l⁻ ⊗-unit-l
+    *-strong-equivalence :
+      StrongEquivalence (InitParse *NFA) (KL* (InitParse N))
+    *-strong-equivalence = mkStrEq
+      (recInit *NFA *Alg)
+      (foldKL*r (InitParse N) the-KL*-alg)
+      (!*r-AlgebraHom' (InitParse N) (*r-initial (InitParse N))
+        (record { f = recInit *NFA *Alg ∘g foldKL*r (InitParse N) the-KL*-alg
+                ; on-nil = refl
+                ; on-cons = (λ i → KL*.cons ∘g
+                  nested-induction-lemma i ∘g ⊗-intro id (foldKL*r _ the-KL*-alg))
+        })
+        (id*r-AlgebraHom _ _))
+      (algebra-η *NFA (AlgebraHom-seq _ (∃AlgebraHom _ *Alg)
+        (record { f = λ {
+                    (inl _) → foldKL*r _ the-KL*-alg
+                  ; (inr q) → P-recTrace' _ _ NPAlg ∘g
+                              ⊗-intro id (foldKL*r _ the-KL*-alg) }
+                ; on-nil = λ { {inl _} acc → refl }
+                ; on-cons = λ { t → λ i → cons t ∘g ⊗-intro id
+               (P-recTrace' N (InitParse *NFA) NPAlg ∘g
+                 ⊗-intro id (foldKL*r (InitParse N) the-KL*-alg))
+                 ∘g ⊗-assoc⁻∘⊗-assoc≡id i }
+                ; on-ε-cons = λ {
+                    inr → refl
+                  ; (cons⟨N⟩ x) →
+                    λ i → ε-cons (cons⟨N⟩ x) ∘g
+                      ⊗-unit-l⁻l i ∘g foldKL*r (InitParse N) the-KL*-alg
+                  ; (N-internal x) → refl } })))
+      where
+        *Alg : Algebra *NFA
+        *Alg .the-ℓs (inl _) = _
+        *Alg .the-ℓs (inr q) = _
+        *Alg .G (inl _) = KL* (InitParse N)
+        *Alg .G (inr q) = Parse N q ⊗ KL* (InitParse N)
+        *Alg .nil-case {q = inl x} _ = KL*.nil
+        *Alg .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
+        *Alg .ε-cons-case inr = KL*.cons
+        *Alg .ε-cons-case (cons⟨N⟩ acc) = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
+        *Alg .ε-cons-case (N-internal t) = ⊗-intro (ε-cons t) id
 
-      -- given a parse starting at q in N and a *NFA parse, make a
-      -- *NFA parse starting at q.
-      NPAlg : PAlgebra N (InitParse *NFA)
-      NPAlg .the-ℓs = _
-      NPAlg .G q = Parse *NFA (inr q)
-      NPAlg .nil-case acc = ε-cons (cons⟨N⟩ acc)
-      NPAlg .cons-case t = cons t
-      NPAlg .ε-cons-case t = ε-cons (N-internal t)
+        -- given a parse starting at q in N and a *NFA parse, make a
+        -- *NFA parse starting at q.
+        NPAlg : PAlgebra N (InitParse *NFA)
+        NPAlg .the-ℓs = _
+        NPAlg .G q = Parse *NFA (inr q)
+        NPAlg .nil-case acc = ε-cons (cons⟨N⟩ acc)
+        NPAlg .cons-case t = cons t
+        NPAlg .ε-cons-case t = ε-cons (N-internal t)
 
-      open *r-Algebra
-      -- NOTE : this is not an algebra for NFAs, rather for Kleene star
-      -- and is used to prove the uniqueness of the foldKL*r term
-      the-KL*-alg : *r-Algebra (InitParse N)
-      the-KL*-alg .the-ℓ = _
-      the-KL*-alg .G = InitParse *NFA
-      the-KL*-alg .nil-case = nil _
-      the-KL*-alg .cons-case = ε-cons inr ∘g P-recInit' _ _ NPAlg
+        open *r-Algebra
+        -- NOTE : this is not an algebra for NFAs, rather for Kleene star
+        -- and is used to prove the uniqueness of the foldKL*r term
+        the-KL*-alg : *r-Algebra (InitParse N)
+        the-KL*-alg .the-ℓ = _
+        the-KL*-alg .G = InitParse *NFA
+        the-KL*-alg .nil-case = nil _
+        the-KL*-alg .cons-case = ε-cons inr ∘g P-recInit' _ _ NPAlg
 
-      NPAlg' : PAlgebra N (InitParse *NFA)
-      NPAlg' .the-ℓs = _
-      NPAlg' .G q = Parse N q ⊗ KL* (InitParse N)
-      NPAlg' .nil-case acc = ⊗-intro (nil acc) (recInit _ *Alg) ∘g ⊗-unit-l⁻
-      NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-      NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
+        NPAlg' : PAlgebra N (InitParse *NFA)
+        NPAlg' .the-ℓs = _
+        NPAlg' .G q = Parse N q ⊗ KL* (InitParse N)
+        NPAlg' .nil-case acc = ⊗-intro (nil acc) (recInit _ *Alg) ∘g ⊗-unit-l⁻
+        NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
+        NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
 
-      nested-induction-lemma :
-        Path (InitParse N ⊗ InitParse *NFA ⊢ InitParse N ⊗ KL* (InitParse N))
-          (recTrace *NFA *Alg ∘g P-recInit' _ _ NPAlg)
-          (⊗-intro id (recInit *NFA *Alg))
-      nested-induction-lemma =
-        !PAlgebraHom' _ _ NPAlg'
-          rec*Alg∘recInitNPAlgHom
-          recInit*AlgHom
-          _
-        where
-          rec*Alg∘recInitNPAlgHom : PAlgebraHom N (InitParse *NFA)
-            (P-initial N (InitParse *NFA))
-            NPAlg'
-          rec*Alg∘recInitNPAlgHom .f q =
-            recTrace *NFA *Alg ∘g P-recTrace' _ _ NPAlg
-          rec*Alg∘recInitNPAlgHom .on-nil acc =
-            λ i → ⊗-intro (nil acc) (recInit *NFA *Alg) ∘g
-              ⊗-unit-ll⁻ i ∘g ⊗-unit-l⁻
-          rec*Alg∘recInitNPAlgHom .on-cons t =
-            λ i → (⊗-intro (cons t) id ∘g ⊗-assoc) ∘g
-              ⊗-intro id (recTrace *NFA *Alg ∘g
-                P-recTrace' N (InitParse *NFA) NPAlg) ∘g ⊗-assoc⁻∘⊗-assoc≡id i
-          rec*Alg∘recInitNPAlgHom .on-ε-cons t = refl
+        nested-induction-lemma :
+          Path (InitParse N ⊗ InitParse *NFA ⊢ InitParse N ⊗ KL* (InitParse N))
+            (recTrace *NFA *Alg ∘g P-recInit' _ _ NPAlg)
+            (⊗-intro id (recInit *NFA *Alg))
+        nested-induction-lemma =
+          !PAlgebraHom' _ _ NPAlg'
+            rec*Alg∘recInitNPAlgHom
+            recInit*AlgHom
+            _
+          where
+            rec*Alg∘recInitNPAlgHom : PAlgebraHom N (InitParse *NFA)
+              (P-initial N (InitParse *NFA))
+              NPAlg'
+            rec*Alg∘recInitNPAlgHom .f q =
+              recTrace *NFA *Alg ∘g P-recTrace' _ _ NPAlg
+            rec*Alg∘recInitNPAlgHom .on-nil acc =
+              λ i → ⊗-intro (nil acc) (recInit *NFA *Alg) ∘g
+                ⊗-unit-ll⁻ i ∘g ⊗-unit-l⁻
+            rec*Alg∘recInitNPAlgHom .on-cons t =
+              λ i → (⊗-intro (cons t) id ∘g ⊗-assoc) ∘g
+                ⊗-intro id (recTrace *NFA *Alg ∘g
+                  P-recTrace' N (InitParse *NFA) NPAlg) ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+            rec*Alg∘recInitNPAlgHom .on-ε-cons t = refl
 
-          recInit*AlgHom :
-            PAlgebraHom N
-              (InitParse *NFA) (P-initial N (InitParse *NFA)) NPAlg'
-          recInit*AlgHom .f q = ⊗-intro id (recTrace _ *Alg)
-          recInit*AlgHom .on-nil acc = refl
-          recInit*AlgHom .on-cons t = refl
-          recInit*AlgHom .on-ε-cons t = refl
+            recInit*AlgHom :
+              PAlgebraHom N
+                (InitParse *NFA) (P-initial N (InitParse *NFA)) NPAlg'
+            recInit*AlgHom .f q = ⊗-intro id (recTrace _ *Alg)
+            recInit*AlgHom .on-nil acc = refl
+            recInit*AlgHom .on-cons t = refl
+            recInit*AlgHom .on-ε-cons t = refl

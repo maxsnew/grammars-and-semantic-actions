@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -114,23 +113,25 @@ opaque
 
 open StrongEquivalence
 
+opaque
+  unfolding _⊕_ ⇒-intro ⇒-intro⁻ ⊕-elim
+  &⊕-distR-sec : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
+    &⊕-distR {g = g}{h = k}{k = h} ∘g &⊕-distR⁻ ≡ id
+  &⊕-distR-sec =
+    funExt λ w → funExt λ { (inl x) → refl ; (inr x) → refl}
+  &⊕-distR-ret : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
+    &⊕-distR⁻ ∘g &⊕-distR {g = g}{h = k}{k = h} ≡ id
+  &⊕-distR-ret =
+    funExt λ w → funExt λ { (inl x , ph) → refl ; (inr x , ph) → refl}
+
 &⊕-distR≅ :
   StrongEquivalence
     ((g ⊕ k) & h)
     ((g & h) ⊕ (k & h))
 &⊕-distR≅ .fun = &⊕-distR
 &⊕-distR≅ .inv = &⊕-distR⁻
-&⊕-distR≅ .sec =
-  ⇒-intro⁻
-    (⊕-elim
-      (⇒-intro ⊕-inl)
-      (⇒-intro ⊕-inr)) ∘g
-  ⊕-elim (&-par ⊕-inl id) (&-par ⊕-inr id)
-    ≡⟨ {!!} ⟩
-  id
-  ∎
-&⊕-distR≅ .ret = {!!}
-
+&⊕-distR≅ .sec = &⊕-distR-sec
+&⊕-distR≅ .ret = &⊕-distR-ret
 
 &⊕-distL :
   g & (h ⊕ k) ⊢ (g & h) ⊕ (g & k)
@@ -145,19 +146,87 @@ open StrongEquivalence
  (g & h) ⊕ (g & k) ⊢ g & (h ⊕ k)
 &⊕-distL⁻ = ⊕-elim (&-par id ⊕-inl) (&-par id ⊕-inr)
 
+opaque
+  unfolding _⊕_ ⇒-intro ⇒-intro⁻ ⊕-elim
+  &⊕-distL-sec : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
+    &⊕-distL {g = g}{h = k}{k = h} ∘g &⊕-distL⁻ ≡ id
+  &⊕-distL-sec =
+    funExt λ w → funExt λ { (inl x) → refl ; (inr x) → refl}
+  &⊕-distL-ret : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
+    &⊕-distL⁻ ∘g &⊕-distL {g = g}{h = k}{k = h} ≡ id
+  &⊕-distL-ret =
+    funExt λ w → funExt λ { (pg , inl x) → refl ; (pg , inr x) → refl}
+
+
 &⊕-distL≅ :
   StrongEquivalence
     (g & (h ⊕ k))
     ((g & h) ⊕ (g & k))
 &⊕-distL≅ .fun = &⊕-distL
 &⊕-distL≅ .inv = &⊕-distL⁻
-&⊕-distL≅ .sec = {!!}
-&⊕-distL≅ .ret = {!!}
+&⊕-distL≅ .sec = &⊕-distL-sec
+&⊕-distL≅ .ret = &⊕-distL-ret
 
--- TODO use distributive coproducts to show this
+open isStrongEquivalence
 isMono-⊕-inl : isMono (⊕-inl {g = g} {h = h})
-isMono-⊕-inl {g = g}{h = h}{k = k} e e' inl∘e≡inl∘e' = {!!}
+isMono-⊕-inl {g = g}{h = h}{k = k} e e' inl∘e≡inl∘e' =
+  sym (&-β₂ _ _) ∙ cong (&-π₂ ∘g_) r ∙ &-β₂ _ _
+  where
+  isMono-k&g→k&g⊕k&h : isMono (⊕-inl {g = k & g } {h = k & h})
+  isMono-k&g→k&g⊕k&h =
+    hasRetraction→isMono ⊕-inl (⊕-elim id (id ,& e ∘g &-π₁))
+      (⊕-βl id (id ,& e ∘g &-π₁))
 
-isMono-⊕-inr : isMono (⊕-inr {g = g} {h = h})
-isMono-⊕-inr {g = g}{h = h}{k = k} e e' inr∘e≡inr∘e' =
-  {!!}
+  distiso∘inl = (&⊕-distL⁻ ∘g ⊕-inl {g = k & g}{h = k & h})
+  isMono-distiso∘inl :
+    isMono (&⊕-distL⁻ ∘g ⊕-inl {g = k & g}{h = k & h})
+  isMono-distiso∘inl =
+    Mono∘g {e = ⊕-inl {g = k & g}{h = k & h}}{e' = &⊕-distL⁻}
+      (isStrongEquivalence→isMono &⊕-distL⁻
+        (isStrEq &⊕-distL (&⊕-distL≅ .ret) (&⊕-distL≅ .sec)))
+      isMono-k&g→k&g⊕k&h
+
+  p : id ,& (⊕-inl {g = g}{h = h} ∘g e) ≡ id ,& (⊕-inl {g = g}{h = h} ∘g e')
+  p = &-η' _ _
+    (&-β₁ id _ ∙ sym (&-β₁ id _))
+    (&-β₂ _ _ ∙ inl∘e≡inl∘e' ∙ sym (&-β₂ _ _))
+
+  opaque
+    unfolding &-intro ⊕-elim
+    q : distiso∘inl ∘g (id ,& e) ≡ distiso∘inl ∘g (id ,& e')
+    q = p
+
+  r : (id {g = k} ,& e) ≡ (id ,& e')
+  r = isMono-distiso∘inl (id ,& e) (id ,& e') q
+
+isMono-⊕-inr : isMono (⊕-inr {g = h} {h = g})
+isMono-⊕-inr {h = h}{g = g}{k = k} e e' inr∘e≡inr∘e' =
+  sym (&-β₂ _ _) ∙ cong (&-π₂ ∘g_) r ∙ &-β₂ _ _
+  where
+  isMono-k&h→k&g⊕k&h : isMono (⊕-inr {g = k & h } {h = k & g})
+  isMono-k&h→k&g⊕k&h =
+    hasRetraction→isMono ⊕-inr
+      (⊕-elim (&-π₁ ,& (e ∘g &-π₁)) id)
+      (⊕-βr (&-π₁ ,& (e ∘g &-π₁)) id)
+
+  distiso∘inr = (&⊕-distL⁻ ∘g ⊕-inr {g = k & h}{h = k & g})
+  isMono-distiso∘inr :
+    isMono (&⊕-distL⁻ ∘g ⊕-inr {g = k & h}{h = k & g})
+  isMono-distiso∘inr =
+    Mono∘g {e = ⊕-inr {g = k & h}{h = k & g}}{e' = &⊕-distL⁻}
+      (isStrongEquivalence→isMono &⊕-distL⁻
+        (isStrEq &⊕-distL (&⊕-distL≅ .ret) (&⊕-distL≅ .sec)))
+      isMono-k&h→k&g⊕k&h
+
+  p : id ,& (⊕-inr {g = h}{h = g} ∘g e) ≡ id ,& (⊕-inr {g = h}{h = g} ∘g e')
+  p = &-η' _ _
+    (&-β₁ id _ ∙ sym (&-β₁ id _))
+    (&-β₂ _ _ ∙ inr∘e≡inr∘e' ∙ sym (&-β₂ _ _))
+
+  opaque
+    unfolding &-intro ⊕-elim
+    q : distiso∘inr ∘g id ,& e ≡ distiso∘inr ∘g id ,& e'
+    q = p
+
+  r : (id {g = k} ,& e) ≡ (id ,& e')
+  r = isMono-distiso∘inr (id ,& e) (id ,& e') q
