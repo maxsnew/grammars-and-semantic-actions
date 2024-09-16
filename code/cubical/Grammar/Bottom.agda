@@ -72,7 +72,7 @@ is-initial-⊥&g g .snd e = p ∙ cong (⊕-elim f e ∘g_) inl≡inr-⊥&g ∙ 
   f = is-initial-⊥&g g .fst
 
   opaque
-    unfolding ⊕-inl ⇒-intro⁻
+    unfolding ⊕-inl ⇒-app
     inl≡inr-⊥&g : ⊕-inl {g = ⊥ & g}{h = ⊥ & g} ≡ ⊕-inr {g = ⊥ & g}{h = ⊥ & g}
     inl≡inr-⊥&g i = &⊕-distR ∘g &-par (inl≡inr-⊥ i) id
 

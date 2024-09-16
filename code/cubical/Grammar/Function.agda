@@ -31,11 +31,13 @@ opaque
     (g ⇒ h) & g ⊢ h
   ⇒-app _ (f , pg) = f pg
 
-  ⇒-intro⁻ :
-    g ⊢ h ⇒ k
-    → g & h ⊢ k
-  ⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₁) &-π₂
+⇒-intro⁻ :
+  g ⊢ h ⇒ k
+  → g & h ⊢ k
+⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₁) &-π₂
 
+opaque
+  unfolding _⇒_ _&_ &-intro ⇒-intro
   ⇒-β :
     (e : g & h ⊢ k) →
     ⇒-intro⁻ (⇒-intro e) ≡ e
@@ -62,11 +64,6 @@ term⇒ f = ⇒-intro (f ∘g &-π₂)
 
 id⇒ : ⊤ ⊢ g ⇒ g
 id⇒ = term⇒ id
-
-⇒-intro⁻ :
-  g ⊢ h ⇒ k
-  → g & h ⊢ k
-⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₁) &-π₂
 
 ⇐-intro :
   g & h ⊢ k →

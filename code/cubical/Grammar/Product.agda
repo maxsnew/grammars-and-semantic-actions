@@ -47,7 +47,8 @@ opaque
       ≡
     e₁
   &-β₁ e₁ e₂ = refl
-    &-β₂ :
+
+  &-β₂ :
     (e₁ : g ⊢ h) →
     (e₂ : g ⊢ k) →
     &-π₂ ∘g (&-intro e₁ e₂)
@@ -69,8 +70,8 @@ opaque
    &-π₁ ∘g e ≡ &-π₁ ∘g e' →
    &-π₂ ∘g e ≡ &-π₂ ∘g e' →
    e ≡ e'
- &-η' e e' p₁ p₂ =
-   sym (&-η e) ∙ cong₂ &-intro p₁ p₂ ∙ &-η e'
+  &-η' e e' p₁ p₂ =
+    sym (&-η e) ∙ cong₂ &-intro p₁ p₂ ∙ &-η e'
 
 _,&_ = &-intro
 infixr 20 _,&_
@@ -110,5 +111,3 @@ id& f = &-π₁ ,& (f ∘g &-π₂)
   (g & h) ⊗ k ⊢ (g ⊗ k) & (h ⊗ k)
 ⊗&-distR = &-intro (⊗-intro &-π₁ id) (⊗-intro &-π₂ id)
 
-_,&_ = &-intro
-infixr 20 _,&_

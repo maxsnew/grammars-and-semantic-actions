@@ -114,7 +114,7 @@ opaque
 open StrongEquivalence
 
 opaque
-  unfolding _⊕_ ⇒-intro ⇒-intro⁻ ⊕-elim
+  unfolding _⊕_ ⇒-intro ⊕-elim
   &⊕-distR-sec : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
     &⊕-distR {g = g}{h = k}{k = h} ∘g &⊕-distR⁻ ≡ id
   &⊕-distR-sec =
@@ -147,7 +147,7 @@ opaque
 &⊕-distL⁻ = ⊕-elim (&-par id ⊕-inl) (&-par id ⊕-inr)
 
 opaque
-  unfolding _⊕_ ⇒-intro ⇒-intro⁻ ⊕-elim
+  unfolding _⊕_ ⇒-intro ⊕-elim
   &⊕-distL-sec : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
     &⊕-distL {g = g}{h = k}{k = h} ∘g &⊕-distL⁻ ≡ id
   &⊕-distL-sec =
