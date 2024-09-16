@@ -8,6 +8,7 @@ open import Cubical.Foundations.Structure
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
+open import Cubical.Data.Empty as Empty
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
@@ -30,17 +31,11 @@ record DFA : Type (ℓ-suc ℓD) where
   isAcc negate q = negateDecProp (isAcc q)
   δ negate = δ
 
-  acc? : ⟨ Q ⟩ → Grammar ℓD
-  acc? q = DecProp-grammar' {ℓG = ℓD} (isAcc q)
-
-  rej? : ⟨ Q ⟩ → Grammar ℓD
-  rej? q = DecProp-grammar' {ℓG = ℓD} (negateDecProp (isAcc q))
-
   module _ (q-end : ⟨ Q ⟩) where
     -- The grammar "Trace q" denotes the type of traces in the DFA
     -- from state q to q-end
     data Trace : (q : ⟨ Q ⟩) → Grammar ℓD where
-      nil : ε-grammar ⊢ Trace q-end
+      nil : ε ⊢ Trace q-end
       cons : ∀ q c →
         literal c ⊗ Trace (δ q c) ⊢ Trace q
 
@@ -48,7 +43,7 @@ record DFA : Type (ℓ-suc ℓD) where
       field
         the-ℓs : ⟨ Q ⟩ → Level
         G : (q : ⟨ Q ⟩) → Grammar (the-ℓs q)
-        nil-case : ε-grammar ⊢ G q-end
+        nil-case : ε ⊢ G q-end
         cons-case : ∀ q c →
           literal c ⊗ G (δ q c) ⊢ G q
 
@@ -149,13 +144,31 @@ record DFA : Type (ℓ-suc ℓD) where
     algebra-η e = initial→initial≡id e _
 
   module _ (q-start : ⟨ Q ⟩) where
+    module _ (q-end : ⟨ Q ⟩) where
+      AcceptingTrace : Grammar ℓD
+      AcceptingTrace =
+        LinΣ[ acc ∈ ⟨ isAcc q-end .fst ⟩ ] Trace q-end q-start
+
+      Parse = AcceptingTrace
+
+      RejectingTrace : Grammar ℓD
+      RejectingTrace =
+        LinΣ[ acc ∈ (⟨ isAcc q-end .fst ⟩ → Empty.⊥) ] Trace q-end q-start
+
     TraceFrom : Grammar ℓD
     TraceFrom = LinΣ[ q-end ∈ ⟨ Q ⟩ ] Trace q-end q-start
 
-    ParseFrom : Grammar ℓD
-    ParseFrom =
-      LinΣ[ q-end ∈ (Σ[ q ∈ ⟨ Q ⟩ ] isAcc q .fst .fst) ]
-        Trace (q-end .fst) q-start
+    AcceptingTraceFrom : Grammar ℓD
+    AcceptingTraceFrom =
+      LinΣ[ q-end ∈ ⟨ Q ⟩ ]
+        LinΣ[ acc ∈ ⟨ isAcc q-end .fst ⟩ ] Trace q-end q-start
+
+    ParseFrom = AcceptingTraceFrom
+
+    RejectingTraceFrom : Grammar ℓD
+    RejectingTraceFrom =
+      LinΣ[ q-end ∈ ⟨ Q ⟩ ]
+        LinΣ[ acc ∈ (⟨ isAcc q-end .fst ⟩ → Empty.⊥) ] Trace q-end q-start
 
   InitTrace : Grammar ℓD
   InitTrace = TraceFrom init

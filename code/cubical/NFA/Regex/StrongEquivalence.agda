@@ -7,7 +7,6 @@ module NFA.Regex.StrongEquivalence
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Grammar.RegularExpression Alphabet
 
 open import NFA.Base Alphabet
@@ -21,7 +20,7 @@ open NFA
 
 regex→NFA : RegularExpression → NFA
 regex→NFA ε-Reg = εNFA
-regex→NFA ⊥-Reg = emptyNFA
+regex→NFA ⊥-Reg = ⊥NFA
 regex→NFA (r ⊗Reg r') = ⊗NFA (regex→NFA r) (regex→NFA r')
 regex→NFA (literalReg c) = literalNFA c
 regex→NFA (r ⊕Reg r') = ⊕NFA (regex→NFA r) (regex→NFA r')

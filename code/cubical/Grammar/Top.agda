@@ -6,19 +6,42 @@ module Grammar.Top (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.Unit
 
 open import Grammar.Base Alphabet
+open import Grammar.String Alphabet
 open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓ : Level
+    ℓg ℓh : Level
     g : Grammar ℓg
+    h : Grammar ℓh
 
-⊤-grammar : Grammar ℓg
-⊤-grammar _ = Unit*
+is-terminal : Grammar ℓg → Typeω
+is-terminal g =
+  ∀ {ℓh}{h : Grammar ℓh} → (Σ[ e ∈ h ⊢ g ] (∀ e' → e ≡ e'))
 
--- TODO: replace ⊤-grammar with this and make the old ⊤-grammar ⊤*
-⊤ = ⊤-grammar {ℓ-zero}
+opaque
+  ⊤ : Grammar ℓ-zero
+  ⊤ _ = Unit
 
-⊤-intro :
-  g ⊢ ⊤-grammar {ℓg = ℓ}
-⊤-intro _ _ = tt*
+  ⊤* : Grammar ℓg
+  ⊤* _ = Unit*
+
+  ⊤-intro :
+    g ⊢ ⊤
+  ⊤-intro _ _ = tt
+
+  ⊤*-intro : ∀ {ℓg} → g ⊢ ⊤* {ℓg}
+  ⊤*-intro _ _ = tt*
+
+  is-terminal-⊤ : is-terminal ⊤
+  is-terminal-⊤ = ⊤-intro , (λ e → refl)
+
+  is-terminal-⊤* : ∀ {ℓg} → is-terminal (⊤* {ℓg})
+  is-terminal-⊤* = ⊤*-intro , λ _ → refl
+
+⊤→string : ⊤ ⊢ string
+⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
+
+⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string
+⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)
+

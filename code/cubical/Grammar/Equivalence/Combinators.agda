@@ -3,7 +3,9 @@ open import Cubical.Foundations.HLevels
 
 module Grammar.Equivalence.Combinators (Alphabet : hSet ℓ-zero) where
 
-open import Grammar Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.Sum Alphabet
 open import Grammar.KleeneStar Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term Alphabet
@@ -35,17 +37,19 @@ module _
   concat-strong-equiv .sec i = ⊗-intro (g≅h .sec i) (k≅l .sec i)
   concat-strong-equiv .ret i = ⊗-intro (g≅h .ret i) (k≅l .ret i)
 
-  disjunct-strong-equiv : StrongEquivalence (g ⊕ k) (h ⊕ l)
-  disjunct-strong-equiv .fun = ⊕-elim (⊕-inl ∘g g≅h .fun) (⊕-inr ∘g k≅l .fun)
-  disjunct-strong-equiv .inv = ⊕-elim (⊕-inl ∘g g≅h .inv) (⊕-inr ∘g k≅l .inv)
-  disjunct-strong-equiv .sec =
-    ⊕≡ _ _
-      (λ i → ⊕-inl ∘g g≅h .sec i)
-      (λ i → ⊕-inr ∘g k≅l .sec i)
-  disjunct-strong-equiv .ret =
-    ⊕≡ _ _
-      (λ i → ⊕-inl ∘g g≅h .ret i)
-      (λ i → ⊕-inr ∘g k≅l .ret i)
+  opaque
+    unfolding ⊕-inl
+    disjunct-strong-equiv : StrongEquivalence (g ⊕ k) (h ⊕ l)
+    disjunct-strong-equiv .fun = ⊕-elim (⊕-inl ∘g g≅h .fun) (⊕-inr ∘g k≅l .fun)
+    disjunct-strong-equiv .inv = ⊕-elim (⊕-inl ∘g g≅h .inv) (⊕-inr ∘g k≅l .inv)
+    disjunct-strong-equiv .sec =
+      ⊕≡ _ _
+        (λ i → ⊕-inl ∘g g≅h .sec i)
+        (λ i → ⊕-inr ∘g k≅l .sec i)
+    disjunct-strong-equiv .ret =
+      ⊕≡ _ _
+        (λ i → ⊕-inl ∘g g≅h .ret i)
+        (λ i → ⊕-inr ∘g k≅l .ret i)
 
 module _
   {g : Grammar ℓg}
@@ -68,22 +72,23 @@ module _
             ; nil-case = nil
             ; cons-case = cons ∘g ⊗-intro (g≅h .inv) id })
 
-  star-strong-equiv : StrongEquivalence (KL* g) (KL* h)
-  star-strong-equiv .fun = foldKL*r g the-g*-alg
-  star-strong-equiv .inv = foldKL*r h the-h*-alg
-  star-strong-equiv .sec =
-    !*r-AlgebraHom' h (*r-initial h)
-      (record { f = foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg
-              ; on-nil = refl
-              ; on-cons =
-                λ i → cons ∘g ⊗-intro (g≅h .sec i) id ∘g
-                  ⊗-intro id (foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg) })
-      (id*r-AlgebraHom h (*r-initial h))
-  star-strong-equiv .ret =
-    !*r-AlgebraHom' g (*r-initial g)
-      (record { f = foldKL*r h the-h*-alg ∘g foldKL*r g the-g*-alg
-              ; on-nil = refl
-              ; on-cons =
-                λ i → cons ∘g ⊗-intro (g≅h .ret i) id ∘g
-                  ⊗-intro id (foldKL*r h the-h*-alg ∘g foldKL*r g the-g*-alg) })
-      (id*r-AlgebraHom g (*r-initial g))
+  opaque
+    star-strong-equiv : StrongEquivalence (KL* g) (KL* h)
+    star-strong-equiv .fun = foldKL*r g the-g*-alg
+    star-strong-equiv .inv = foldKL*r h the-h*-alg
+    star-strong-equiv .sec =
+      !*r-AlgebraHom' h (*r-initial h)
+        (record { f = foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg
+                ; on-nil = refl
+                ; on-cons =
+                  λ i → cons ∘g ⊗-intro (g≅h .sec i) id ∘g
+                    ⊗-intro id (foldKL*r g the-g*-alg ∘g foldKL*r h the-h*-alg) })
+        (id*r-AlgebraHom h (*r-initial h))
+    star-strong-equiv .ret =
+      !*r-AlgebraHom' g (*r-initial g)
+        (record { f = foldKL*r h the-h*-alg ∘g foldKL*r g the-g*-alg
+                ; on-nil = refl
+                ; on-cons =
+                  λ i → cons ∘g ⊗-intro (g≅h .ret i) id ∘g
+                    ⊗-intro id (foldKL*r h the-h*-alg ∘g foldKL*r g the-g*-alg) })
+        (id*r-AlgebraHom g (*r-initial g))

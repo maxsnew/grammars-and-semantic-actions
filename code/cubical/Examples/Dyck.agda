@@ -40,13 +40,11 @@ Alphabet = (Bracket , isFinSet→isSet isFinBracket)
 open import Grammar Alphabet
 open import Grammar.Maybe Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Term Alphabet
-open import Parser Alphabet isFinBracket
 
 -- a simple, but ambiguous grammar for balanced parentheses
 data Dyck : Grammar ℓ-zero where
-  none : ε-grammar ⊢ Dyck
+  none : ε ⊢ Dyck
   sequence  : Dyck ⊗ Dyck ⊢ Dyck
   bracketed : literal [ ⊗ Dyck ⊗ literal ] ⊢ Dyck
 
@@ -54,7 +52,7 @@ data Dyck : Grammar ℓ-zero where
 -- S → ε
 --   | [ S ] S
 data Balanced : Grammar ℓ-zero where
-  nil : ε-grammar ⊢ Balanced
+  nil : ε ⊢ Balanced
   balanced : literal [ ⊗ Balanced ⊗ literal ] ⊗ Balanced ⊢ Balanced
 
 module BALANCED where
@@ -116,112 +114,19 @@ module BALANCED where
        go (x .snd .snd .snd .snd .snd .snd) i)
 
 data RR1 : Grammar ℓ-zero where
-  nil : ε-grammar ⊢ RR1
+  nil : ε ⊢ RR1
   balanced : RR1 ⊗ literal [ ⊗ RR1 ⊗ literal ] ⊢ RR1
 
-mt : String
-mt = []
-
-a : String
-a = [ ∷ ] ∷ []
-
-a' : String
-a' = ] ∷ [ ∷ []
-
-b : String
-b = [ ∷ ] ∷ ] ∷ ] ∷ [ ∷ []
-
-c : String
-c = ] ∷ ] ∷ ] ∷ [ ∷ []
-
-d : String
-d = [ ∷ [ ∷ ] ∷ ] ∷ [ ∷ ] ∷ []
-
--- Testing the above function is wacky bc of normalization
--- My hacky test is to check if it is a just or is a nothing, which
--- isn't a 100% proof of correctness but gives a sanity check
-
-is-just : ∀ w → (g : Grammar ℓg) → Maybe g w → Bool
-is-just w g p = Sum.rec (λ _ → true) (λ _ → false) p
-
-{-# TERMINATING #-} -- uh...
-balanced-parser : Parser Balanced
-balanced-parser =
-  (fmap (⊗-intro balanced id) ∘g
-   (parseChar [ then
-   balanced-parser then
-   parseChar ] then
-   balanced-parser))
-  or
-  (fmap (⊗-intro Balanced.nil id) ∘g parseε)
-
--- An intrinsically verified Dyck grammar parser
---
--- However, this parser is susceptible to false negatives
--- It may choose to error on a give input string when that string
--- would indeed match the Dyck grammar. And there does not seem
--- to be anyway we can hope to guarantee this level of completeness
---
--- NOTE : This required the addition of a couple things that may be
--- problematic but are likely admissible
--- These are not included in this file, but the code presented here
--- makes use of
--- 1. caseKL*, defined in Grammar.KleeneStar, which cases on if a
---      Kleene star was an nil or a cons. Used in parseChar
--- 2. parseChar, defined in Parser. Which breaks some abstractions
---      to build a primitive character parser, and this is justified
---      when the alphabet is a FinSet
--- 3. ⊤→string, a term ⊤-grammar ⊢ string-grammar. Defined in Parser.
---      Used to define the _or_ parser combinator (also in Parser)
-balanced-parser' : string-grammar ⊢ Maybe Balanced
-balanced-parser' = consumes-input balanced-parser
-
-_ :
-  is-just mt Balanced (balanced-parser' mt (⌈ mt ⌉))
-    ≡
-  true
-_ = refl
-
-_ :
-  is-just a Balanced (balanced-parser' a (⌈ a ⌉))
-    ≡
-  true
-_ = refl
-
-_ :
-  is-just a' Balanced (balanced-parser' a' (⌈ a' ⌉))
-    ≡
-  false
-_ = refl
-
-_ :
-  is-just b Balanced (balanced-parser' b (⌈ b ⌉))
-    ≡
-  false
-_ = refl
-
-_ :
-  is-just c Balanced (balanced-parser' c (⌈ c ⌉))
-    ≡
-  false
-_ = refl
-
-_ :
-  is-just d Balanced (balanced-parser' d (⌈ d ⌉))
-    ≡
-  true
-_ = refl
-
 data BalancedStk : ∀ (n : ℕ) → Grammar ℓ-zero where
-  eof : ε-grammar ⊢ BalancedStk zero
+  eof : ε ⊢ BalancedStk zero
   open[ : ∀ {n} → literal [ ⊗ BalancedStk (suc n) ⊢ BalancedStk n
   close] : ∀ {n} → literal ] ⊗ BalancedStk n ⊢ BalancedStk (suc n)
 
   -- these are the cases for failure
-  leftovers : ∀ {n} → ε-grammar ⊢ BalancedStk (suc n)
-  unexpected] : literal ] ⊗ ⊤-grammar ⊢ BalancedStk 0
+  leftovers : ∀ {n} → ε ⊢ BalancedStk (suc n)
+  unexpected] : literal ] ⊗ ⊤ ⊢ BalancedStk 0
 
-parseStk : string-grammar ⊢ LinΠ[ n ∈ ℕ ] BalancedStk n
+parseStk : string ⊢ LinΠ[ n ∈ ℕ ] BalancedStk n
 parseStk = foldKL*r _ (record
   { the-ℓ = _ ; G = _
   ; nil-case = LinΠ-intro λ { zero
@@ -245,15 +150,15 @@ parseStk = foldKL*r _ (record
 -- the n is the number of open parentheses that this datatype closes
 -- the bool is whether the trace is accepting or rejecting
 data BalancedStkTr : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero where
-  eof : ε-grammar ⊢ BalancedStkTr zero true
+  eof : ε ⊢ BalancedStkTr zero true
 
   open[ : ∀ {n b} → literal [ ⊗ BalancedStkTr (suc n) b ⊢ BalancedStkTr n b
   close] : ∀ {n b} → literal ] ⊗ BalancedStkTr n b ⊢ BalancedStkTr (suc n) b
 
-  leftovers : ∀ {n} → ε-grammar ⊢ BalancedStkTr (suc n) false
-  unexpected] : literal ] ⊗ ⊤-grammar ⊢ BalancedStkTr 0 false
+  leftovers : ∀ {n} → ε ⊢ BalancedStkTr (suc n) false
+  unexpected] : literal ] ⊗ ⊤ ⊢ BalancedStkTr 0 false
 
-parseStkTr : string-grammar ⊢ LinΠ[ n ∈ ℕ ] LinΣ[ b ∈ Bool ] BalancedStkTr n b
+parseStkTr : string ⊢ LinΠ[ n ∈ ℕ ] LinΣ[ b ∈ Bool ] BalancedStkTr n b
 parseStkTr = foldKL*r _ (record { the-ℓ = _ ; G = _
   ; nil-case = LinΠ-intro (λ
     { zero → LinΣ-intro true ∘g eof

@@ -9,7 +9,15 @@ open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet
-open import Term Alphabet
+open import Term.Base Alphabet
+
+private
+  variable
+    ℓg ℓh ℓk ℓl : Level
+    g : Grammar ℓg
+    h : Grammar ℓh
+    k : Grammar ℓk
+    l : Grammar ℓl
 
 module _ {ℓG}
   (g : Grammar ℓG)
@@ -86,6 +94,24 @@ module _ {ℓG} {ℓG'}
       sec : fun ∘g inv ≡ id
       ret : inv ∘g fun ≡ id
 
+  record isStrongEquivalence (e : g ⊢ g') : Type (ℓ-max ℓG ℓG') where
+    no-eta-equality
+    constructor isStrEq
+    field
+      inv : g' ⊢ g
+      sec : e ∘g inv ≡ id
+      ret : inv ∘g e ≡ id
+
+  StrongEquivalence→isStrongEquivalence :
+    (eq : StrongEquivalence) →
+      isStrongEquivalence (eq .StrongEquivalence.fun)
+  StrongEquivalence→isStrongEquivalence eq
+    .isStrongEquivalence.inv = eq .StrongEquivalence.inv
+  StrongEquivalence→isStrongEquivalence eq
+    .isStrongEquivalence.sec = eq .StrongEquivalence.sec
+  StrongEquivalence→isStrongEquivalence eq
+    .isStrongEquivalence.ret = eq .StrongEquivalence.ret
+
 module _ {ℓG} {ℓH}
   {g : Grammar ℓG}
   {h : Grammar ℓH}
@@ -119,3 +145,26 @@ module _ {ℓG} {ℓH} {ℓK}
   comp-strong-equiv .ret =
     (λ i → g≅h .inv ∘g h≅k .ret i ∘g g≅h .fun) ∙
     g≅h .ret
+
+hasRetraction→isMono :
+  (e : g ⊢ h) →
+  (inv : h ⊢ g) →
+  (ret : inv ∘g e ≡ id) →
+  isMono e
+hasRetraction→isMono e inv ret f f' e∘f≡e∘f' =
+  cong (_∘g f) (sym ret) ∙
+  cong (inv ∘g_) e∘f≡e∘f' ∙
+  cong (_∘g f') ret
+
+open isStrongEquivalence
+isStrongEquivalence→isMono :
+  (e : g ⊢ h) →
+  isStrongEquivalence _ _ e →
+  isMono e
+isStrongEquivalence→isMono e streq =
+  hasRetraction→isMono e (streq .inv) (streq .ret)
+
+Mono∘g : {e : g ⊢ h} {e' : h ⊢ k} →
+  isMono e' → isMono e → isMono (e' ∘g e)
+Mono∘g {e = e} {e' = e'} mon-e mon-e' f f' e'ef≡e'ef' =
+  mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')

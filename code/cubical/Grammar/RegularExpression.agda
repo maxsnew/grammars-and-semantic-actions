@@ -7,7 +7,6 @@ open import Cubical.Foundations.Structure
 
 open import Helper
 open import Grammar Alphabet
-open import Grammar.KleeneStar Alphabet
 
 private
   variable ℓG ℓG' : Level
@@ -24,8 +23,8 @@ module _ where
     KL*Reg : RegularExpression → RegularExpression
 
   RegularExpression→Grammar : RegularExpression → Grammar ℓ-zero
-  RegularExpression→Grammar  ε-Reg = ε-grammar
-  RegularExpression→Grammar  ⊥-Reg = ⊥-grammar
+  RegularExpression→Grammar  ε-Reg = ε
+  RegularExpression→Grammar  ⊥-Reg = ⊥
   RegularExpression→Grammar (g ⊗Reg g') =
     (RegularExpression→Grammar g) ⊗ (RegularExpression→Grammar g')
   RegularExpression→Grammar (literalReg c) = literal c

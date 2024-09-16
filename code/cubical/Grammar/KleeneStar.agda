@@ -4,7 +4,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.KleeneStar (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
-open import Grammar.Empty Alphabet
+open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Term.Base Alphabet
@@ -18,7 +18,7 @@ private
 module _ (g : Grammar ℓG) where
   data KL* : Grammar ℓG
     where
-    nil : ε-grammar ⊢ KL*
+    nil : ε ⊢ KL*
     cons : g ⊗ KL* ⊢ KL*
 
   -- I want a non-recursive way to check that a Kleene star is either nil
@@ -27,7 +27,7 @@ module _ (g : Grammar ℓG) where
   --
   -- If KL* = μ X . ε ⊕ g ⊗ X, then this term is just ⊕-elim on that sum
   caseKL* :
-    ε-grammar ⊢ h →
+    ε ⊢ h →
     g ⊗ KL* ⊢ h →
     KL* ⊢ h
   caseKL* eε e* _ (nil _ x) = eε _ x
@@ -37,7 +37,7 @@ module _ (g : Grammar ℓG) where
     field
       the-ℓ : Level
       G : Grammar the-ℓ
-      nil-case : ε-grammar ⊢ G
+      nil-case : ε ⊢ G
       cons-case : g ⊗ G ⊢ G
 
   open *r-Algebra
@@ -69,7 +69,6 @@ module _ (g : Grammar ℓG) where
       the-alg .cons-case _
         ((x .fst) , ((x .snd .fst) , (KL*r-elim _ (x .snd .snd))))
 
-    foldKL*r = KL*r-elim
 
     ∃*r-AlgebraHom : *r-AlgebraHom *r-initial the-alg
     ∃*r-AlgebraHom .f = KL*r-elim
@@ -84,7 +83,7 @@ module _ (g : Grammar ℓG) where
     !*r-AlgebraHom e _ (cons _ x) =
       funExt⁻ (funExt⁻ (e .on-cons) _) x ∙
       (λ i → the-alg .cons-case _
-        (x .fst , x .snd .fst , !*r-AlgebraHom e _ (x .snd .snd) i))
+         (x .fst , x .snd .fst , !*r-AlgebraHom e _ (x .snd .snd) i))
 
     !*r-AlgebraHom' :
       (e e' : *r-AlgebraHom *r-initial the-alg) →
@@ -92,11 +91,13 @@ module _ (g : Grammar ℓG) where
     !*r-AlgebraHom' e e' = funExt λ w → funExt λ p →
       !*r-AlgebraHom e w p ∙ sym (!*r-AlgebraHom e' w p)
 
+    foldKL*r = KL*r-elim
+
   record *l-Algebra : Typeω where
     field
       the-ℓ : Level
       G : Grammar the-ℓ
-      nil-case : ε-grammar ⊢ G
+      nil-case : ε ⊢ G
       snoc-case : G ⊗ g ⊢ G
 
   open *l-Algebra

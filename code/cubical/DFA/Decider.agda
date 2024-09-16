@@ -5,21 +5,20 @@ module DFA.Decider (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 
-open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.Base hiding (¬_)
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
-open import Cubical.Data.Bool
+open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.Sum
 open import Cubical.Data.SumFin
 open import Cubical.Data.Unit
-open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Empty as Empty
 open import Cubical.Data.List hiding (init)
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
 open import Helper
@@ -34,7 +33,7 @@ module _ (D : DFA {ℓD}) where
   open Algebra
   open AlgebraHom
 
-  run-from-state : string-grammar ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
+  run-from-state : string ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
   run-from-state = foldKL*r char the-alg
     where
     the-alg : *r-Algebra char
@@ -51,18 +50,33 @@ module _ (D : DFA {ℓD}) where
                   Trace.cons q c))
             ∘g LinΠ-app (δ q c))))))
 
-  check-accept : {q-start : ⟨ Q ⟩} (q : ⟨ Q ⟩) →
-    Trace q q-start ⊢ LinΣ[ b ∈ Bool ] TraceFrom q-start
+  check-accept : {q-start : ⟨ Q ⟩} (q-end : ⟨ Q ⟩) →
+    Trace q-end q-start ⊢
+      AcceptingTrace q-start q-end ⊕ RejectingTrace q-start q-end
   check-accept q =
-    LinΣ-intro
-      (decRec (λ _ → true) (λ _ → false) (isAcc q .snd)) ∘g
-    LinΣ-intro q
+    decRec
+      (λ acc → ⊕-inl ∘g LinΣ-intro acc)
+      (λ rej → ⊕-inr ∘g LinΣ-intro rej)
+      (isAcc q .snd)
 
-  run : string-grammar ⊢ InitTrace
-  run = LinΠ-app init ∘g run-from-state
+  check-accept-from : (q-start : ⟨ Q ⟩) →
+    TraceFrom q-start ⊢
+      AcceptingTraceFrom q-start ⊕ RejectingTraceFrom q-start
+  check-accept-from q-start =
+    LinΣ-elim (λ q-end →
+      ⊕-elim (⊕-inl ∘g LinΣ-intro q-end) (⊕-inr ∘g LinΣ-intro q-end) ∘g
+      check-accept q-end)
 
   decide :
-    string-grammar ⊢ LinΣ[ b ∈ Bool ] InitTrace
+    string ⊢
+      LinΠ[ q ∈ ⟨ Q ⟩ ] (AcceptingTraceFrom q ⊕ RejectingTraceFrom q)
   decide =
-    LinΣ-elim (λ q → check-accept q) ∘g
-    run
+    LinΠ-intro (λ q →
+      check-accept-from q ∘g
+      LinΠ-app q) ∘g
+    run-from-state
+
+  decideInit :
+    string ⊢
+      (AcceptingTraceFrom init ⊕ RejectingTraceFrom init)
+  decideInit = LinΠ-app init ∘g decide
