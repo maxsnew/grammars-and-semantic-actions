@@ -62,3 +62,18 @@ term⇒ f = ⇒-intro (f ∘g &-π₂)
 
 id⇒ : ⊤ ⊢ g ⇒ g
 id⇒ = term⇒ id
+
+⇒-intro⁻ :
+  g ⊢ h ⇒ k
+  → g & h ⊢ k
+⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₁) &-π₂
+
+⇐-intro :
+  g & h ⊢ k →
+  h ⊢ g ⇒ k
+⇐-intro e = ⇒-intro (e ∘g &-intro &-π₂ &-π₁)
+
+⇐-intro⁻ :
+  h ⊢ g ⇒ k
+  → g & h ⊢ k
+⇐-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₂) &-π₁
