@@ -45,5 +45,3 @@ opaque
 ⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string
 ⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)
 
-
-
