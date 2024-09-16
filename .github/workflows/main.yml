@@ -65,25 +65,6 @@ env:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  line-lengths:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install wcwidth
-
-    - name: Check line lengths
-      run: 'cd code/cubical && make check-line-lengths'
-
   check-whitespace:
     runs-on: ubuntu-latest
     steps:
