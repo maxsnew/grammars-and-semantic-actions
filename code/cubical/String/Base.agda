@@ -52,3 +52,6 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
 module _ (c : ⟨ Alphabet ⟩) where
   splitChar : (w : String) → Splitting (c ∷ w)
   splitChar w = ([ c ] , w) , refl
+
+splitting++ : ∀ w1 w2 → Splitting (w1 ++ w2)
+splitting++ w1 w2 = ((w1 , w2) , refl)
