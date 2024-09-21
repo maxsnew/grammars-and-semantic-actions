@@ -257,3 +257,62 @@ opaque
   --   done = ⊗-unit-r
 
   -- -- TODO: show this is a *strong* equivalence!
+
+open import String.Unicode
+open import String.SubAlphabet
+open import Cubical.Data.Empty as Empty
+open import Cubical.Functions.Embedding
+
+pick-char : Bool → ⟨ Unicode ⟩
+pick-char true = '('
+pick-char false = ')'
+
+pick-char-inj : ∀ {b b' : Bool} → pick-char b ≡ pick-char b' → b ≡ b'
+pick-char-inj {false} {false} _ = refl
+pick-char-inj {false} {true} x =
+  Empty.rec (mkUnicodeCharPath-no ')' '(' refl x)
+pick-char-inj {true} {false} x =
+  Empty.rec (mkUnicodeCharPath-no '(' ')' refl x)
+pick-char-inj {true} {true} _ = refl
+
+isEmbedding-pick-char : isEmbedding pick-char
+isEmbedding-pick-char = injEmbedding (Unicode .snd) pick-char-inj
+
+Bracket' : hSet ℓ-zero
+Bracket' =
+  UnicodeSubAlphabet (Bool , isSetBool) (pick-char , isEmbedding-pick-char)
+    isFinSetBool
+
+
+BracketIso : Iso Bracket ⟨ Bracket' ⟩
+BracketIso .Iso.fun [ = '(' , (true , refl)
+BracketIso .Iso.fun ] = ')' , (false , refl)
+BracketIso .Iso.inv (c , true , _) = [
+BracketIso .Iso.inv (c , false , _) = ]
+BracketIso .Iso.rightInv (c , true , fib) i =
+  -- idek anymore
+  fib i , (true , isSetUnicodeChar _ _ (λ j → fib (i ∧ j)) (λ j → fib (i ∧ j)) i)
+BracketIso .Iso.rightInv (c , false , fib) i =
+  fib i , (false , isSetUnicodeChar _ _ (λ j → fib (i ∧ j)) (λ j → fib (i ∧ j)) i)
+BracketIso .Iso.leftInv [ = refl
+BracketIso .Iso.leftInv ] = refl
+
+test : UnicodeString
+-- Also tested with a string that was about 21k characters long
+-- Took 30 seconds to parse,
+-- and correctly fails when the string is unbalanced
+test = "()((((())))()()()()(())()())()()"
+
+test' : List ⟨ Bracket' ⟩
+test' = toString (Bool , isSetBool) (pick-char , isEmbedding-pick-char) isFinSetBool test
+
+w : String
+w = Cubical.Data.List.map (BracketIso .Iso.inv) test'
+
+test-parse : (LinΣ[ b ∈ Bool ] BalancedStkTr 0 b) w
+test-parse = (LinΠ-app 0 ∘g parseStkTr) w (⌈w⌉→string {w = w} w (internalize w))
+
+opaque
+  unfolding ⟜-app _⟜_ ⟜-intro ⊸-app _⊸_ ⊸-app parseStkTr KL*r-elim ⌈w⌉→string
+  _ : test-parse .fst ≡ true
+  _ = refl
