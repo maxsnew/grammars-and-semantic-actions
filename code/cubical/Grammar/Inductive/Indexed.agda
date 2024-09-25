@@ -37,7 +37,22 @@ module _ where
     map (⊕e B F) f = LinΣ-elim λ a → LinΣ-intro a ∘g map (F a) f
     map (⊗e F F') f = map F f ,⊗ map F' f
 
-    -- TODO: map-id, map-∘
+    map-id : ∀ (F : Functor A) {g : A → Grammar _} →
+      map F (λ a → id {g = g a}) ≡ id
+    map-id (k g) i = id
+    map-id (Var a) i = id
+    map-id (&e B F) i = LinΠ-intro (λ a → map-id (F a) i ∘g LinΠ-app a)
+    map-id (⊕e B F) i = LinΣ-elim (λ a → LinΣ-intro a ∘g map-id (F a) i)
+    map-id (⊗e F F') i = map-id F i ,⊗ map-id F' i
+
+    map-∘ :  ∀ (F : Functor A) {g h k : A → Grammar _} (f : ∀ a → h a  ⊢ k a)(f' : ∀ a → g a ⊢ h a)
+      → map F (λ a → f a ∘g f' a) ≡ map F f ∘g map F f'
+    map-∘ (k g) f f' i = id
+    map-∘ (Var a) f f' i = f a ∘g f' a
+    map-∘ (&e B F) f f' i = LinΠ-intro (λ a → map-∘ (F a) f f' i ∘g LinΠ-app a)
+    map-∘ (⊕e B F) f f' i = LinΣ-elim (λ a → LinΣ-intro a ∘g map-∘ (F a) f f' i)
+    map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
+
     data μ (F : A → Functor A) a : Grammar ℓ where
       roll : ⟦ F a ⟧ (μ F) ⊢ μ F a
 
@@ -53,7 +68,16 @@ module _ where
       Σ[ ϕ ∈ (∀ a → g a ⊢ h a) ]
       (∀ a → ϕ a ∘g α a ≡ β a ∘g map (F a) ϕ)
 
-    -- TODO: id, comp
+    idHomo : ∀ {g} → (α : Algebra g) → Homomorphism α α
+    idHomo α = (λ a → id) , λ a → cong (α a ∘g_) (sym (map-id (F a)))
+
+    compHomo : ∀ {g h k} (α : Algebra g)(β : Algebra h)(η : Algebra k)
+      → Homomorphism β η → Homomorphism α β → Homomorphism α η
+    compHomo α β η ϕ ψ .fst a = ϕ .fst a ∘g ψ .fst a
+    compHomo α β η ϕ ψ .snd a =
+      cong (ϕ .fst a ∘g_) (ψ .snd a)
+      ∙ cong (_∘g map (F a) (ψ .fst)) (ϕ .snd a)
+      ∙ cong (η a ∘g_) (sym (map-∘ (F a) (ϕ .fst) (ψ .fst)))
 
     {-# TERMINATING #-}
     recHomo : ∀ {g} → (α : Algebra g) → Homomorphism initialAlgebra α
