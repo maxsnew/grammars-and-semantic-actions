@@ -181,7 +181,7 @@ isMono-⊕-inl {g = g}{h = h}{k = k} e e' inl∘e≡inl∘e' =
   isMono-distiso∘inl :
     isMono (&⊕-distL⁻ ∘g ⊕-inl {g = k & g}{h = k & h})
   isMono-distiso∘inl =
-    Mono∘g {e = ⊕-inl {g = k & g}{h = k & h}}{e' = &⊕-distL⁻}
+    Mono∘g (⊕-inl {g = k & g}{h = k & h}) &⊕-distL⁻
       (isStrongEquivalence→isMono &⊕-distL⁻
         (isStrEq &⊕-distL (&⊕-distL≅ .ret) (&⊕-distL≅ .sec)))
       isMono-k&g→k&g⊕k&h
@@ -213,7 +213,7 @@ isMono-⊕-inr {h = h}{g = g}{k = k} e e' inr∘e≡inr∘e' =
   isMono-distiso∘inr :
     isMono (&⊕-distL⁻ ∘g ⊕-inr {g = k & h}{h = k & g})
   isMono-distiso∘inr =
-    Mono∘g {e = ⊕-inr {g = k & h}{h = k & g}}{e' = &⊕-distL⁻}
+    Mono∘g (⊕-inr {g = k & h}{h = k & g}) &⊕-distL⁻
       (isStrongEquivalence→isMono &⊕-distL⁻
         (isStrEq &⊕-distL (&⊕-distL≅ .ret) (&⊕-distL≅ .sec)))
       isMono-k&h→k&g⊕k&h

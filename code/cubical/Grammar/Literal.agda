@@ -8,11 +8,18 @@ open import Cubical.Foundations.Structure
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
+open import Term.Base Alphabet
 
 private
   variable
     ℓG : Level
+    g : Grammar ℓG
+    c : ⟨ Alphabet ⟩
 
 opaque
   literal : ⟨ Alphabet ⟩ → Grammar ℓ-zero
   literal c w = w ≡ [ c ]
+
+  literal-elim : g [ c ] → literal c ⊢ g
+  literal-elim {g = g} gc w w≡[c] =
+    subst g (sym w≡[c]) gc

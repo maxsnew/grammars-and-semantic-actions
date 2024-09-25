@@ -5,7 +5,7 @@ module Grammar.Function (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.Product Alphabet
-open import Grammar.Top Alphabet
+open import Grammar.Top.Base Alphabet
 open import Term.Base Alphabet
 
 private

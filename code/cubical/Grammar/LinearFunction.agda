@@ -12,6 +12,7 @@ open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Epsilon Alphabet
 open import Term.Base Alphabet
+open import Term.Bilinear Alphabet
 
 private
   variable
@@ -39,6 +40,27 @@ opaque
   ⊸-app :
     g ⊗ (g ⊸ h) ⊢ h
   ⊸-app {h = h} _ p = subst h (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
+
+  ⊸-intro' :
+    g ,, h ⊢ k →
+    h ⊢ g ⊸ k
+  ⊸-intro' f w' p w q = f w w' q p
+
+  ⊸-app' :
+    g ,, (g ⊸ k) ⊢ k
+  ⊸-app' w1 w2 gp f = f w1 gp
+
+  -- this makes me think we don't want ⊸-app' and ⊸-intro' to be opaque...
+  ⊸-β' :
+    ∀ (f : g ,, h ⊢ k) →
+    _b∘r_ {h = g ⊸ k}{k = k} ⊸-app' (⊸-intro' f) ≡ f
+  ⊸-β' f = refl
+
+  ⊸-η' :
+    ∀ (f : h ⊢ g ⊸ k) →
+    f ≡ ⊸-intro' (_b∘r_ {h = g ⊸ k}{k = k} ⊸-app' f)
+  ⊸-η' f = refl
+
 
 ⊸-intro-ε :
   g ⊢ k → ε ⊢ g ⊸ k
@@ -106,6 +128,23 @@ opaque
     (g ⟜ h) ⊗ h ⊢ g
   ⟜-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
     subst g (sym w≡w'++w'') (f _ inp)
+
+  ⟜-intro' :
+    g ,, h ⊢ k
+    → g ⊢ k ⟜ h
+  ⟜-intro' f w x w' x₁ = f w w' x x₁
+  ⟜-app' :
+    (g ⟜ h) ,, h ⊢ g
+  ⟜-app' w w' fp hp = fp w' hp
+  ⟜-β' :
+    ∀ (f : g ,, h ⊢ k) →
+    _b∘l_ {g = k ⟜ h}{k = k} ⟜-app' (⟜-intro' f) ≡ f
+  ⟜-β' f = refl
+
+  ⟜-η' :
+    ∀ (f : g ⊢ k ⟜ h) →
+    f ≡ ⟜-intro' (_b∘l_ {g = k ⟜ h}{k = k} ⟜-app' f)
+  ⟜-η' f = refl
 
 ⟜-intro⁻ :
   g ⊢ h ⟜ k →
