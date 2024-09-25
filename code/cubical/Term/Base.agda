@@ -60,3 +60,8 @@ isMono :
 isMono {g = g}{h = h} f =
   ∀ {ℓk}{k : Grammar ℓk} (e e' : k ⊢ g) →
     f ∘g e ≡ f ∘g e' → e ≡ e'
+
+Mono∘g : (e : g ⊢ h) (e' : h ⊢ k) →
+  isMono e' → isMono e → isMono (e' ∘g e)
+Mono∘g e e' mon-e mon-e' f f' e'ef≡e'ef' =
+  mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')

@@ -4,7 +4,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.Negation (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
-open import Grammar.Bottom Alphabet
+open import Grammar.Bottom.Base Alphabet
 open import Grammar.Function Alphabet
 open import Term.Base Alphabet
 

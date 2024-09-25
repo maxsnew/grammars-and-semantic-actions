@@ -164,7 +164,3 @@ isStrongEquivalence→isMono :
 isStrongEquivalence→isMono e streq =
   hasRetraction→isMono e (streq .inv) (streq .ret)
 
-Mono∘g : {e : g ⊢ h} {e' : h ⊢ k} →
-  isMono e' → isMono e → isMono (e' ∘g e)
-Mono∘g {e = e} {e' = e'} mon-e mon-e' f f' e'ef≡e'ef' =
-  mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')
