@@ -96,3 +96,48 @@ module _ where
   μ-ind-id : ∀ {F : Endofunctor ℓ} (ϕ : Homomorphism F (initialAlgebra F) (initialAlgebra F))
     → ϕ .fst ≡ id
   μ-ind-id {F = F} ϕ = μ-ind (initialAlgebra F) ϕ (idHomo F (initialAlgebra F))
+
+open import Cubical.Data.Bool
+module _ (g : Grammar ℓ-zero) where
+  -- TODO define sugar for binary sum via Σ[ bool ]
+  *endo : Endofunctor ℓ-zero
+  *endo = ⊕e Bool (λ { false → k ε ; true → ⊗e (k g) Var})
+
+  * : Grammar ℓ-zero
+  * = μ *endo
+
+  open *r-Algebra
+  KLalg : *r-Algebra g
+  KLalg .the-ℓ = ℓ-zero
+  KLalg .G = *
+  KLalg .nil-case = roll ∘g LinΣ-intro false
+  KLalg .cons-case = roll ∘g LinΣ-intro true
+
+  KL*→* : KL* g ⊢ *
+  KL*→* = foldKL*r g KLalg
+
+  *alg : Algebra *endo (KL* g)
+  *alg w (false , x) = nil w x
+  *alg w (true , x) = cons w x
+
+  *→KL* : * ⊢ KL* g
+  *→KL* = rec *alg
+
+  open import Grammar.Equivalence Alphabet
+  open StrongEquivalence
+  *≅KL* : StrongEquivalence * (KL* g)
+  *≅KL* .fun = *→KL*
+  *≅KL* .inv = KL*→*
+  *≅KL* .sec =
+    !*r-AlgebraHom' g (*r-initial g)
+      (record {
+        f = *→KL* ∘g KL*→*
+      ; on-nil = refl
+      ; on-cons = refl })
+      (id*r-AlgebraHom g (*r-initial g))
+  *≅KL* .ret =
+    μ-ind-id
+      (KL*→* ∘g *→KL* ,
+      funExt (λ w → funExt λ {
+        (false , x) → refl
+      ; (true , x) → refl }))
