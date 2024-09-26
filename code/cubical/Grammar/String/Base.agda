@@ -36,7 +36,7 @@ string = KL* char
 
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   opaque
-    unfolding ε literal
+    unfolding ε literal _⊗_
     uniquely-supported-⌈w⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
     uniquely-supported-⌈w⌉ [] [] p = refl
     uniquely-supported-⌈w⌉ [] (c' ∷ w') p =
@@ -56,11 +56,11 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
         (DiscreteAlphabet isFinSetAlphabet c c')
 
 opaque
-  unfolding ε literal
+  unfolding ε literal _⊗_
   internalize : (w : String) → ⌈ w ⌉ w
   internalize [] = refl
   internalize (c ∷ w) = (([ c ] , w) , refl) , refl , internalize w
 
-⌈w⌉→string : ⌈ w ⌉ ⊢ string
-⌈w⌉→string {[]} = nil
-⌈w⌉→string {c ∷ w} = cons ∘g LinΣ-intro c ,⊗ ⌈w⌉→string {w}
+  ⌈w⌉→string : ⌈ w ⌉ ⊢ string
+  ⌈w⌉→string {[]} = nil
+  ⌈w⌉→string {c ∷ w} = cons ∘g LinΣ-intro c ,⊗ ⌈w⌉→string {w}
