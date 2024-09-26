@@ -63,7 +63,7 @@ module LL⟨1⟩ where
   -- need to look ahead one token to know if you continue matching
   -- close parens or have finished parsing the Atom.
   opaque
-    unfolding _⊗_ 
+    unfolding _⊗_
     num' : ∀ {n} → ε ⊢ Atom ⟜ literal (num n)
     num' {n} = ⟜-intro-ε {k = Atom} (num {n})
     parens' : ε ⊢ Atom ⟜ literal RP ⟜ Exp ⟜ literal LP
