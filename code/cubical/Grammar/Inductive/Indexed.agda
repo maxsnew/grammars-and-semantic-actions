@@ -97,4 +97,19 @@ module _ where
           ∙ λ i → α a w (map (F a) (λ a w x → μ-η' a w x i) w x)
       μ-η : ϕ .fst ≡ rec α
       μ-η = funExt (λ a → funExt λ w → funExt λ x → μ-η' a w x)
-  -- todo: induction principles
+
+    ind : ∀ {g} (α : Algebra g) (ϕ ϕ' : Homomorphism initialAlgebra α) → ϕ .fst ≡ ϕ' .fst
+    ind α ϕ ϕ' = μ-η α ϕ ∙ sym (μ-η α ϕ')
+
+    ind-id : ∀ (ϕ : Homomorphism initialAlgebra initialAlgebra) → ϕ .fst ≡ idHomo initialAlgebra .fst
+    ind-id ϕ = ind initialAlgebra ϕ (idHomo initialAlgebra)
+
+
+    unroll : ∀ a → μ F a ⊢ ⟦ F a ⟧ (μ F)
+    unroll a w (roll .w x) = x
+
+    -- Lambek's lemma for indexed inductives
+    unroll' : ∀ a → μ F a ⊢ ⟦ F a ⟧ (μ F)
+    unroll' = rec {g = λ a → ⟦ F a ⟧ (μ F)} alg where
+      alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
+      alg a = map (F a) (λ _ → roll)
