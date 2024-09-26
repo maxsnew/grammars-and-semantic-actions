@@ -33,22 +33,30 @@ module _ (D : DFA {ℓD}) where
   open Algebra
   open AlgebraHom
 
-  run-from-state : string ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
-  run-from-state = foldKL*r char the-alg
-    where
-    the-alg : *r-Algebra char
-    the-alg .the-ℓ = ℓD
-    the-alg .G = LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
-    the-alg .nil-case = LinΠ-intro (λ q → LinΣ-intro q ∘g nil)
-    the-alg .cons-case = LinΠ-intro (λ q →
-      ⟜-intro⁻ (LinΣ-elim (λ c →
-        ⟜-intro {k = TraceFrom q}
-          (⊸-intro⁻
-            (LinΣ-elim
-              (λ q' → ⊸-intro {k = TraceFrom q}
-                (LinΣ-intro {h = λ q'' → Trace q'' q} q' ∘g
-                  Trace.cons q c))
-            ∘g LinΠ-app (δ q c))))))
+  opaque
+    unfolding _⊗_
+    run-from-state : string ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
+    run-from-state = foldKL*r char the-alg
+      where
+        the-cons :
+          char ⊗ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q ⊢
+            LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
+        the-cons =
+          LinΠ-intro (λ q →
+          ⟜-intro⁻ (LinΣ-elim (λ c →
+            ⟜-intro {k = TraceFrom q}
+              (⊸-intro⁻
+                (LinΣ-elim
+                  (λ q' → ⊸-intro {k = TraceFrom q}
+                    (LinΣ-intro {h = λ q'' → Trace q'' q} q' ∘g
+                      Trace.cons q c))
+                ∘g LinΠ-app (δ q c))))))
+
+        the-alg : *r-Algebra char
+        the-alg .the-ℓ = ℓD
+        the-alg .G = LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
+        the-alg .nil-case = LinΠ-intro (λ q → LinΣ-intro q ∘g nil)
+        the-alg .cons-case = the-cons
 
   check-accept : {q-start : ⟨ Q ⟩} (q-end : ⟨ Q ⟩) →
     Trace q-end q-start ⊢

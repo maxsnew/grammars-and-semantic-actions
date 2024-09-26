@@ -44,31 +44,19 @@ open import Term Alphabet
 
 -- a simple, but ambiguous grammar for balanced parentheses
 data Dyck : Grammar ℓ-zero where
-  none : ∀ w → ε w → Dyck w
-  sequence  : ∀ w →
-    Σ[ s ∈ Splitting w ]
-      Dyck (s .fst .fst) × Dyck (s .fst .snd) →
-    Dyck w
-  bracketed : ∀ w →
-    Σ[ s ∈ Splitting w ]
-      literal [ (s .fst .fst) ×
-      (Σ[ s' ∈ Splitting (s .fst .snd) ]
-        Dyck (s' .fst .fst) × (literal ]) (s' .fst .snd)) →
-    Dyck w
+  none : ε ⊢ Dyck
+  sequence :
+    Dyck ⊗' Dyck ⊢ Dyck
+  bracketed :
+    literal [ ⊗' Dyck ⊗' literal ] ⊢ Dyck
 
 -- Dyck grammar, an LL(0) grammar:
 -- S → ε
 --   | [ S ] S
 data Balanced : Grammar ℓ-zero where
-  nil : ∀ w → ε w → Balanced w
-  balanced : ∀ w →
-    Σ[ s ∈ Splitting w ]
-      literal [ (s .fst .fst) ×
-      (Σ[ s' ∈ Splitting (s .fst .snd) ]
-        Balanced (s' .fst .fst) ×
-          (Σ[ s'' ∈ Splitting (s' .fst .snd) ]
-            (literal ] )(s'' .fst .fst) × Balanced (s'' .fst .snd))) →
-    Balanced w
+  nil : ε ⊢ Balanced
+  balanced :
+    literal [ ⊗' Balanced ⊗' literal ] ⊗' Balanced ⊢ Balanced
 
 module BALANCED where
   record Algebra ℓ : Type (ℓ-suc ℓ) where
@@ -137,35 +125,21 @@ module BALANCED where
         go (x .snd .snd .snd .snd .snd .snd) i)
 
 data RR1 : Grammar ℓ-zero where
-  nil : ∀ w → ε w → RR1 w
-  balanced : ∀ w →
-    Σ[ s ∈ Splitting w ]
-      RR1 (s .fst .fst) ×
-      (Σ[ s' ∈ Splitting (s .fst .snd) ]
-        (literal [) (s' .fst .fst) ×
-          (Σ[ s'' ∈ Splitting (s' .fst .snd) ]
-            RR1 (s'' .fst .fst) × (literal ]) (s'' .fst .snd))) →
-    RR1 w
+  nil :  ε ⊢ RR1
+  balanced :
+    RR1 ⊗' literal [ ⊗' RR1 ⊗' literal ] ⊢ RR1
 
 data BalancedStk : ∀ (n : ℕ) → Grammar ℓ-zero where
-  eof : ∀ w → ε w → BalancedStk zero w
-  open[ : ∀ {n} w →
-    Σ[ s ∈ Splitting w ]
-      (literal [) (s .fst .fst) ×
-        BalancedStk (suc n) (s .fst .snd) →
-    BalancedStk n w
-  close] : ∀ {n} w →
-    Σ[ s ∈ Splitting w ]
-      (literal ]) (s .fst .fst) ×
-        BalancedStk n (s .fst .snd) →
-    BalancedStk (suc n) w
+  eof : ε ⊢ BalancedStk zero
+  -- ∀ w → ε w → BalancedStk zero w
+  open[ : ∀ {n} →
+    literal [ ⊗' BalancedStk (suc n) ⊢ BalancedStk n
+  close] : ∀ {n} →
+    literal ] ⊗' BalancedStk n ⊢ BalancedStk (suc n)
   -- these are the cases for failure
-  leftovers : ∀ {n} w → ε w → BalancedStk (suc n) w
-  unexpected] : ∀ w →
-    Σ[ s ∈ Splitting w ]
-      (literal ]) (s .fst .fst) ×
-         ⊤ (s .fst .snd) →
-    BalancedStk 0 w
+  leftovers : ∀ {n} → ε ⊢ BalancedStk (suc n)
+  unexpected] :
+    literal ] ⊗' ⊤ ⊢ BalancedStk 0
 
 opaque
   unfolding _⊗_ ε
@@ -193,25 +167,14 @@ opaque
 -- the n is the number of open parentheses that this datatype closes
 -- the bool is whether the trace is accepting or rejecting
 data BalancedStkTr : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero where
-  eof : ∀ w → ε w → BalancedStkTr zero true w
-
-  open[ : ∀ {n b} w →
-    Σ[ s ∈ Splitting w ]
-      (literal [) (s .fst .fst) ×
-        BalancedStkTr (suc n) b (s .fst .snd) →
-    BalancedStkTr n b w
-  close] : ∀ {n b} w →
-    Σ[ s ∈ Splitting w ]
-      (literal ]) (s .fst .fst) ×
-        BalancedStkTr n b (s .fst .snd) →
-    BalancedStkTr (suc n) b w
-
-  leftovers : ∀ {n} w → ε w → BalancedStkTr (suc n) false w
-  unexpected] : ∀ w →
-    Σ[ s ∈ Splitting w ]
-      (literal ]) (s .fst .fst) ×
-        ⊤ (s .fst .snd) →
-    BalancedStkTr 0 false w
+  eof : ε ⊢ BalancedStkTr zero true
+  open[ : ∀ {n b} →
+    literal [ ⊗' BalancedStkTr (suc n) b ⊢ BalancedStkTr n b
+  close] : ∀ {n b} →
+    literal ] ⊗' BalancedStkTr n b ⊢ BalancedStkTr (suc n) b
+  leftovers : ∀ {n} → ε ⊢ BalancedStkTr (suc n) false
+  unexpected] :
+    literal ] ⊗' ⊤ ⊢ BalancedStkTr 0 false
 
 opaque
   unfolding _⊗_

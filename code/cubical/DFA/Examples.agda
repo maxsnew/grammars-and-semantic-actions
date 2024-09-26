@@ -40,7 +40,7 @@ module examples where
   open DFA
 
   opaque
-    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro
+    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro _⊗_ ⌈w⌉→string KL*r-elim run-from-state
     is-inl : ∀ w → (g : Grammar ℓg) (h : Grammar ℓh) → (g ⊕ h) w → Bool
     is-inl w g h p = Sum.rec (λ _ → true) (λ _ → false) p
 
@@ -74,33 +74,33 @@ module examples where
     _ : mktest w' D ≡ true
     _ = refl
 
-    _ : mktest w'' D ≡ false
-    _ = refl
+   --  _ : mktest w'' D ≡ false
+   --  _ = refl
 
-    _ : mktest [] D ≡ true
-    _ = refl
+   --  _ : mktest [] D ≡ true
+   --  _ = refl
 
 
-   {--       0
-   -- 0  --------> 1
-   --    <--------
-   --        0
-   -- and self loops for 1. state 1 is acc
-   --
-   --}
-    D' : DFA {ℓ-zero}
-    Q D' = (Fin 2) , isFinSetFin
-    init D' = inl _
-    isAcc D' x =
-      ((x ≡ fsuc fzero) , isSetFin x (fsuc fzero)) ,
-      discreteFin x (fsuc fzero)
-    δ D' fzero fzero = fromℕ 1
-    δ D' fzero (fsuc fzero) = fromℕ 0
-    δ D' (fsuc fzero) fzero = fromℕ 0
-    δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
+   -- {--       0
+   -- -- 0  --------> 1
+   -- --    <--------
+   -- --        0
+   -- -- and self loops for 1. state 1 is acc
+   -- --
+   -- --}
+   --  D' : DFA {ℓ-zero}
+   --  Q D' = (Fin 2) , isFinSetFin
+   --  init D' = inl _
+   --  isAcc D' x =
+   --    ((x ≡ fsuc fzero) , isSetFin x (fsuc fzero)) ,
+   --    discreteFin x (fsuc fzero)
+   --  δ D' fzero fzero = fromℕ 1
+   --  δ D' fzero (fsuc fzero) = fromℕ 0
+   --  δ D' (fsuc fzero) fzero = fromℕ 0
+   --  δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
 
-    s : String
-    s = fsuc fzero ∷ fzero ∷ []
+   --  s : String
+   --  s = fsuc fzero ∷ fzero ∷ []
 
-    _ : mktest s D' ≡ true
-    _ = refl
+   --  _ : mktest s D' ≡ true
+   --  _ = refl

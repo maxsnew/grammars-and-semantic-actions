@@ -19,9 +19,12 @@ private
     k : Grammar ℓk
     l : Grammar ℓl
 
+_⊗'_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
+(g ⊗' g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
+infixr 5 _⊗'_
 opaque
   _⊗_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-  (g ⊗ g') w = Σ[ s ∈ Splitting w ] g (s .fst .fst) × g' (s .fst .snd)
+  _⊗_ = _⊗'_
 infixr 5 _⊗_
 
 opaque

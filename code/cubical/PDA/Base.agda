@@ -68,7 +68,7 @@ record PDA : Type (ℓ-suc ℓP) where
     nil : ∀ {q} → isAcc q .fst .fst →
       ε ⊢ Parse q []
     cons : ∀ t s →
-      literal (label t) ⊗ Parse (dst t) (push (to-push t) s)
+      literal (label t) ⊗' Parse (dst t) (push (to-push t) s)
         ⊢
       Parse (src t) (withHead (to-pop t) s)
     ε-cons : ∀ t s →

@@ -20,12 +20,8 @@ private
 module _ (g : Grammar ℓG) where
   data KL* : Grammar ℓG
     where
-    nil : ∀ w → ε w → KL* w
-    cons : ∀ w →
-      Σ[ s ∈ Splitting w ]
-       g (s .fst .fst) × KL* (s .fst .snd) →
-      KL* w
-
+    nil : ε ⊢ KL*
+    cons : g ⊗' KL* ⊢ KL*
 
   -- I want a non-recursive way to check that a Kleene star is either nil
   -- or cons

@@ -49,15 +49,12 @@ record NFA : Type (ℓ-suc ℓN) where
   -- The grammar "Parse q" denotes the type of traces in the NFA
   -- from state q to an accepting state
   data Parse : (q : ⟨ Q ⟩) → Grammar ℓN where
-    nil : ∀ {q} → isAcc q .fst .fst → ∀ w →
-      ε w → Parse q w
-    cons : ∀ tr w →
-      Σ[ s ∈ Splitting w ]
-        literal (label tr) (s .fst .fst) ×
-          Parse (dst tr) (s .fst .snd) →
-        Parse (src tr) w
-    ε-cons : ∀ εtr w →
-      Parse (ε-dst εtr) w → Parse (ε-src εtr) w
+    nil : ∀ {q} → isAcc q .fst .fst →
+      ε ⊢ Parse q
+    cons : ∀ tr →
+      literal (label tr) ⊗' Parse (dst tr) ⊢ Parse (src tr)
+    ε-cons : ∀ εtr →
+      Parse (ε-dst εtr) ⊢ Parse (ε-src εtr)
 
   InitParse : Grammar ℓN
   InitParse = Parse init
