@@ -604,7 +604,7 @@ module _ (N : NFA {ℓN}) where
     *-strong-equivalence = mkStrEq
       (recInit *NFA *Alg)
       (foldKL*r (InitParse N) the-KL*-alg)
-      (!*r-AlgebraHom' (InitParse N) (*r-initial (InitParse N))
+      (!*r-AlgebraHom (InitParse N) (*r-initial (InitParse N))
         (record { f = recInit *NFA *Alg ∘g foldKL*r (InitParse N) the-KL*-alg
                 ; on-nil = refl
                 ; on-cons = (λ i → KL*.cons ∘g
