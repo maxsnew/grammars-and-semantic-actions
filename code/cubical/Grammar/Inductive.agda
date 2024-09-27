@@ -24,31 +24,35 @@ module _ where
   ⟦ Var ⟧ g = g
   ⟦ &e X F_x ⟧ g = LinΠ[ x ∈ X ] (⟦ F_x x ⟧ g)
   ⟦ ⊕e X F_x ⟧ g = LinΣ[ x ∈ X ] (⟦ F_x x ⟧ g)
-  ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗ ⟦ F' ⟧ g
+  ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗' ⟦ F' ⟧ g
 
-  map : ∀ (F : Endofunctor ℓ) {g h} → g ⊢ h → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
-  map (k x) f    = id
-  map Var f      = f
-  map (&e X Fx) f = LinΠ-intro λ x → map (Fx x) f ∘g LinΠ-app x
-  map (⊕e X Fx) f = LinΣ-elim (λ x → LinΣ-intro x ∘g map (Fx x) f)
-  map (⊗e F G) f = map F f ,⊗ map G f
+  opaque
+    unfolding _⊗_ ⊗-intro
+    map : ∀ (F : Endofunctor ℓ) {g h} → g ⊢ h → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
+    map (k x) f    = id
+    map Var f      = f
+    map (&e X Fx) f = LinΠ-intro λ x → map (Fx x) f ∘g LinΠ-app x
+    map (⊕e X Fx) f = LinΣ-elim (λ x → LinΣ-intro x ∘g map (Fx x) f)
+    map (⊗e F G) f = map F f ,⊗ map G f
 
-  map-id : ∀ (F : Endofunctor ℓ) {g} → map F (id {g = g}) ≡ id
-  map-id (k h) i w x = x
-  map-id Var i w x = x
-  map-id (&e A F) i w x a = map-id (F a) i w (x a)
-  map-id (⊕e A F) i w (a , x) = a , (map-id (F a) i w x)
-  map-id (⊗e F F') i w (sp , x , x') = sp , map-id F i _ x , map-id F' i _ x'
+    map-id : ∀ (F : Endofunctor ℓ) {g} → map F (id {g = g}) ≡ id
+    map-id (k h) i w x = x
+    map-id Var i w x = x
+    map-id (&e A F) i w x a = map-id (F a) i w (x a)
+    map-id (⊕e A F) i w (a , x) = a , (map-id (F a) i w x)
+    map-id (⊗e F F') i w (sp , x , x') = sp , map-id F i _ x , map-id F' i _ x'
 
-  map-∘ :  ∀ (F : Endofunctor ℓ) {g h k} (f : h ⊢ k)(f' : g ⊢ h)
-    → map F (f ∘g f') ≡ map F f ∘g map F f'
-  map-∘ (k g') f f' i w x = x
-  map-∘ Var f f' i w x = f w (f' w x)
-  map-∘ (&e A F) f f' i w  x   a  = map-∘ (F a) f f' i w (x a)
-  map-∘ (⊕e A F) f f' i w (a , x) = a , map-∘ (F a) f f' i w x
-  map-∘ (⊗e F F') f f' i w (sp , x , x') = sp , map-∘ F f f' i _ x , map-∘ F' f f' i _ x'
+    map-∘ :  ∀ (F : Endofunctor ℓ) {g h k} (f : h ⊢ k)(f' : g ⊢ h)
+      → map F (f ∘g f') ≡ map F f ∘g map F f'
+    map-∘ (k g') f f' i w x = x
+    map-∘ Var f f' i w x = f w (f' w x)
+    map-∘ (&e A F) f f' i w  x   a  = map-∘ (F a) f f' i w (x a)
+    map-∘ (⊕e A F) f f' i w (a , x) = a , map-∘ (F a) f f' i w x
+    map-∘ (⊗e F F') f f' i w (sp , x , x') = sp , map-∘ F f f' i _ x , map-∘ F' f f' i _ x'
+
   data μ (F : Endofunctor ℓ) : Grammar ℓ where
     roll : ⟦ F ⟧ (μ F) ⊢ μ F
+
   module _ (F : Endofunctor ℓ) where
     Algebra : Grammar ℓ → Type _
     Algebra X = ⟦ F ⟧ X ⊢ X
@@ -88,7 +92,7 @@ module _ where
 
     μ-η : ϕ .fst ≡ rec alg
     μ-η = funExt λ w → funExt (μ-η' w)
-    
+
   μ-ind : ∀ {F : Endofunctor ℓ}{X} (alg : Algebra F X) (ϕ ϕ' : Homomorphism F (initialAlgebra F) alg)
     → ϕ .fst ≡ ϕ' .fst
   μ-ind α ϕ ϕ' = μ-η α ϕ ∙ sym (μ-η α ϕ')
@@ -106,15 +110,17 @@ module _ (g : Grammar ℓ-zero) where
   * : Grammar ℓ-zero
   * = μ *endo
 
-  open *r-Algebra
-  KLalg : *r-Algebra g
-  KLalg .the-ℓ = ℓ-zero
-  KLalg .G = *
-  KLalg .nil-case = roll ∘g LinΣ-intro false
-  KLalg .cons-case = roll ∘g LinΣ-intro true
+  opaque
+    unfolding _⊗_
+    open *r-Algebra
+    KLalg : *r-Algebra g
+    KLalg .the-ℓ = ℓ-zero
+    KLalg .G = *
+    KLalg .nil-case = roll ∘g LinΣ-intro false
+    KLalg .cons-case = roll ∘g LinΣ-intro true
 
-  KL*→* : KL* g ⊢ *
-  KL*→* = foldKL*r g KLalg
+    KL*→* : KL* g ⊢ *
+    KL*→* = foldKL*r g KLalg
 
   *alg : Algebra *endo (KL* g)
   *alg w (false , x) = nil w x
@@ -123,21 +129,23 @@ module _ (g : Grammar ℓ-zero) where
   *→KL* : * ⊢ KL* g
   *→KL* = rec *alg
 
-  open import Grammar.Equivalence Alphabet
-  open StrongEquivalence
-  *≅KL* : StrongEquivalence * (KL* g)
-  *≅KL* .fun = *→KL*
-  *≅KL* .inv = KL*→*
-  *≅KL* .sec =
-    !*r-AlgebraHom' g (*r-initial g)
-      (record {
-        f = *→KL* ∘g KL*→*
-      ; on-nil = refl
-      ; on-cons = refl })
-      (id*r-AlgebraHom g (*r-initial g))
-  *≅KL* .ret =
-    μ-ind-id
-      (KL*→* ∘g *→KL* ,
-      funExt (λ w → funExt λ {
-        (false , x) → refl
-      ; (true , x) → refl }))
+  opaque
+    unfolding *r-initial KL*→* KL*r-elim map
+    open import Grammar.Equivalence Alphabet
+    open StrongEquivalence
+    *≅KL* : StrongEquivalence * (KL* g)
+    *≅KL* .fun = *→KL*
+    *≅KL* .inv = KL*→*
+    *≅KL* .sec =
+      !*r-AlgebraHom g (*r-initial g)
+        (record {
+          f = *→KL* ∘g KL*→*
+        ; on-nil = refl
+        ; on-cons = refl })
+        (id*r-AlgebraHom g (*r-initial g))
+    *≅KL* .ret =
+      μ-ind-id
+        (KL*→* ∘g *→KL* ,
+        funExt (λ w → funExt λ {
+          (false , x) → refl
+        ; (true , x) → refl }))
