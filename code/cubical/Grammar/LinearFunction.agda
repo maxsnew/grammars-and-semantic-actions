@@ -23,6 +23,7 @@ private
     l : Grammar ℓl
 
 opaque
+  unfolding _⊗_
   _⊸_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
   (g ⊸ h) w = ∀ (w' : String) → g w' → h (w' ++ w)
 
@@ -73,7 +74,7 @@ opaque
   ⊸-app ∘g (⊗-intro (id {g = h}) f)
 
 opaque
-  unfolding _⊸_
+  unfolding _⊸_ _⊗_ ⊗-intro
   ⊸-intro∘⊸-intro⁻≡id :
     (e : g ⊢ h ⊸ k) →
     ⊸-intro {g = h}{h = g}{k = k}(⊸-intro⁻ e) ≡ e
