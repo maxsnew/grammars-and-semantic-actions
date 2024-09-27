@@ -21,7 +21,7 @@ open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
 opaque
-  unfolding ε literal
+  unfolding ε literal _⊗_ same-splits
   propParses-string : EXTERNAL.propParses string
   propParses-string [] (nil .[] x) (nil .[] y) =
     cong (nil []) (isSetString _ _ _ _)

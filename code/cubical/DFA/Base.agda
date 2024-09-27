@@ -37,7 +37,7 @@ record DFA : Type (ℓ-suc ℓD) where
     data Trace : (q : ⟨ Q ⟩) → Grammar ℓD where
       nil : ε ⊢ Trace q-end
       cons : ∀ q c →
-        literal c ⊗ Trace (δ q c) ⊢ Trace q
+        literal c ⊗' Trace (δ q c) ⊢ Trace q
 
     record Algebra : Typeω where
       field
@@ -49,11 +49,13 @@ record DFA : Type (ℓ-suc ℓD) where
 
     open Algebra
 
-    initial : Algebra
-    the-ℓs initial _ = ℓD
-    G initial = Trace
-    nil-case initial = nil
-    cons-case initial = cons
+    opaque
+      unfolding _⊗_
+      initial : Algebra
+      the-ℓs initial _ = ℓD
+      G initial = Trace
+      nil-case initial = nil
+      cons-case initial = cons
 
     record AlgebraHom (alg alg' : Algebra) : Typeω where
       field
@@ -67,76 +69,76 @@ record DFA : Type (ℓ-suc ℓD) where
 
     open AlgebraHom
 
-    idAlgebraHom : (alg : Algebra) →
-      AlgebraHom alg alg
-    f (idAlgebraHom alg) q = id
-    on-nil (idAlgebraHom alg) = refl
-    on-cons (idAlgebraHom alg) _ _ = refl
+    opaque
+      unfolding ⊗-intro
+      idAlgebraHom : (alg : Algebra) →
+        AlgebraHom alg alg
+      f (idAlgebraHom alg) q = id
+      on-nil (idAlgebraHom alg) = refl
+      on-cons (idAlgebraHom alg) _ _ = refl
 
-    AlgebraHom-seq : {alg alg' alg'' : Algebra} →
-      AlgebraHom alg alg' → AlgebraHom alg' alg'' →
-      AlgebraHom alg alg''
-    AlgebraHom-seq ϕ ψ .f q = ψ .f q ∘g ϕ .f q
-    AlgebraHom-seq ϕ ψ .on-nil =
-      cong (ψ .f _ ∘g_) (ϕ .on-nil)  ∙
-      ψ .on-nil
-    AlgebraHom-seq ϕ ψ .on-cons q c =
-      cong (ψ .f q ∘g_) (ϕ .on-cons q c) ∙
-      cong (_∘g ⊗-intro id (ϕ .f (δ q c))) (ψ .on-cons q c)
+      AlgebraHom-seq : {alg alg' alg'' : Algebra} →
+        AlgebraHom alg alg' → AlgebraHom alg' alg'' →
+        AlgebraHom alg alg''
+      AlgebraHom-seq ϕ ψ .f q = ψ .f q ∘g ϕ .f q
+      AlgebraHom-seq ϕ ψ .on-nil =
+        cong (ψ .f _ ∘g_) (ϕ .on-nil)  ∙
+        ψ .on-nil
+      AlgebraHom-seq ϕ ψ .on-cons q c =
+        cong (ψ .f q ∘g_) (ϕ .on-cons q c) ∙
+        cong (_∘g ⊗-intro id (ϕ .f (δ q c))) (ψ .on-cons q c)
 
     module _ (the-alg : Algebra) where
-      recTrace : ∀ {q} → Trace q ⊢ the-alg .G q
-      recTrace {q} w (nil .w pε) = the-alg .nil-case w pε
-      recTrace {q} w (cons .q c .w p⊗) =
-        the-alg .cons-case q c _
-          (p⊗ .fst , (p⊗ .snd .fst) , (recTrace _ (p⊗ .snd .snd)))
+      opaque
+        unfolding _⊗_
+        recTrace : ∀ {q} → Trace q ⊢ the-alg .G q
+        recTrace {q} w (nil .w pε) = the-alg .nil-case w pε
+        recTrace {q} w (cons .q c .w p⊗) =
+          the-alg .cons-case q c _
+            (p⊗ .fst , (p⊗ .snd .fst) , (recTrace _ (p⊗ .snd .snd)))
 
       recInit : Trace init ⊢ the-alg .G init
       recInit = recTrace
 
-      ∃AlgebraHom : AlgebraHom initial the-alg
-      f ∃AlgebraHom q = recTrace {q}
-      on-nil ∃AlgebraHom = refl
-      on-cons ∃AlgebraHom _ _ = refl
+      opaque
+        unfolding recTrace ⊗-intro initial _⊗_
+        ∃AlgebraHom : AlgebraHom initial the-alg
+        f ∃AlgebraHom q = recTrace {q}
+        on-nil ∃AlgebraHom = refl
+        on-cons ∃AlgebraHom _ _ = refl
 
-      !AlgebraHom-help :
-        (e : AlgebraHom initial the-alg) →
-        (q : ⟨ Q ⟩) →
-        (∀ w p → e .f q w p ≡ recTrace w p)
-      !AlgebraHom-help e q w (nil .w pε) =
-        cong (λ a → a w pε) (e .on-nil)
-      !AlgebraHom-help e q w (cons .q c .w p⊗) =
-        cong (λ a → a w p⊗) (e .on-cons q c) ∙
-        cong (λ a → the-alg .cons-case q c _
-          ((p⊗ .fst) , ((p⊗ .snd .fst) , a)))
-          (!AlgebraHom-help e (δ q c) _
-            (p⊗ .snd .snd))
+        !AlgebraHom-help :
+          (e e' : AlgebraHom initial the-alg) →
+          (q : ⟨ Q ⟩) →
+          (∀ w p → e .f q w p ≡ e' .f q w p)
+        !AlgebraHom-help e e' q w (nil .w pε) =
+          cong (λ a → a w pε) (e .on-nil) ∙
+          sym (cong (λ a → a w pε) (e' .on-nil))
+        !AlgebraHom-help e e' q w (cons .q c .w p⊗) =
+          cong (λ a → a w p⊗) (e .on-cons q c) ∙
+          cong (λ a → the-alg .cons-case q c _
+            ((p⊗ .fst) , ((p⊗ .snd .fst) , a)))
+            (!AlgebraHom-help e e' (δ q c) _
+              (p⊗ .snd .snd)) ∙
+          sym (cong (λ a → a w p⊗) (e' .on-cons q c))
 
       !AlgebraHom :
-        (e : AlgebraHom initial the-alg) →
-        (q : ⟨ Q ⟩) →
-        e .f q ≡ recTrace {q}
-      !AlgebraHom e q =
-        funExt (λ w → funExt (λ p → !AlgebraHom-help e q w p))
-
-      -- TODO rename
-      !AlgebraHom' :
         (e e' : AlgebraHom initial the-alg) →
         (q : ⟨ Q ⟩) →
         e .f q ≡ e' .f q
-      !AlgebraHom' e e' q =
-        !AlgebraHom e q ∙
-        sym (!AlgebraHom e' q)
+      !AlgebraHom e e' q =
+        funExt (λ w → funExt (λ p → !AlgebraHom-help e e' q w p))
 
-    initial→initial≡id :
-      (e : AlgebraHom initial initial) →
-      (q : ⟨ Q ⟩) →
-      (e .f q)
-         ≡
-      id
-    initial→initial≡id e q =
-      !AlgebraHom initial e q ∙
-      sym (!AlgebraHom initial (idAlgebraHom initial) q)
+    opaque
+      unfolding idAlgebraHom
+      initial→initial≡id :
+        (e : AlgebraHom initial initial) →
+        (q : ⟨ Q ⟩) →
+        (e .f q)
+          ≡
+        id
+      initial→initial≡id e q =
+        !AlgebraHom initial e (idAlgebraHom initial) q
 
     algebra-η :
       (e : AlgebraHom initial initial) →
@@ -175,4 +177,3 @@ record DFA : Type (ℓ-suc ℓD) where
 
   InitParse : Grammar ℓD
   InitParse = ParseFrom init
-

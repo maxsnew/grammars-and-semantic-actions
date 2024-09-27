@@ -89,32 +89,34 @@ module _ (c : ⟨ Alphabet ⟩) where
   literalNFA .label _ = c
   literalNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  litNFA-strong-equiv : StrongEquivalence (InitParse literalNFA) (literal c)
-  litNFA-strong-equiv = mkStrEq
-    (recInit _ litAlg)
-    the-inv
-    ⊗-unit-r⁻r
-    (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ litAlg) (record
-      { f = λ { c-st → the-inv ; ε-st → nil Eq.refl }
-      ; on-nil = λ { Eq.refl → refl }
-      ; on-cons = λ _ → λ i →
-        cons _
-        ∘g (⊗-intro id (nil Eq.refl))
-        ∘g ⊗-unit-rr⁻ i
-      ; on-ε-cons = Empty.elim })))
-    where
-      the-inv : literal c ⊢ InitParse literalNFA
-      the-inv =
-        cons _
-        ∘g ⊗-intro id (nil Eq.refl)
-        ∘g ⊗-unit-r⁻
+  opaque
+    unfolding AlgebraHom-seq ∃AlgebraHom
+    litNFA-strong-equiv : StrongEquivalence (InitParse literalNFA) (literal c)
+    litNFA-strong-equiv = mkStrEq
+      (recInit _ litAlg)
+      the-inv
+      ⊗-unit-r⁻r
+      (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ litAlg) (record
+        { f = λ { c-st → the-inv ; ε-st → nil Eq.refl }
+        ; on-nil = λ { Eq.refl → refl }
+        ; on-cons = λ _ → λ i →
+          cons _
+          ∘g (⊗-intro id (nil Eq.refl))
+          ∘g ⊗-unit-rr⁻ i
+        ; on-ε-cons = Empty.elim })))
+      where
+        the-inv : literal c ⊢ InitParse literalNFA
+        the-inv =
+          cons _
+          ∘g ⊗-intro id (nil Eq.refl)
+          ∘g ⊗-unit-r⁻
 
-      litAlg : Algebra literalNFA
-      litAlg .the-ℓs _ = ℓ-zero
-      litAlg .G c-st = literal c
-      litAlg .G ε-st = ε
-      litAlg .nil-case Eq.refl = id
-      litAlg .cons-case _ = ⊗-unit-r
+        litAlg : Algebra literalNFA
+        litAlg .the-ℓs _ = ℓ-zero
+        litAlg .G c-st = literal c
+        litAlg .G ε-st = ε
+        litAlg .nil-case Eq.refl = id
+        litAlg .cons-case _ = ⊗-unit-r
 
 -- Nullary Disjunction
 module _ where
@@ -125,21 +127,23 @@ module _ where
   ⊥NFA .transition = Empty.⊥ , isFinSet⊥
   ⊥NFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  emptyNFA-strong-equiv :
-    StrongEquivalence (InitParse ⊥NFA) ⊥
-  emptyNFA-strong-equiv = mkStrEq
-    (recInit _ ⊥Alg)
-    ⊥-elim
-    (⊥-η _ _)
-    (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ ⊥Alg)
-      (record { f = λ _ → ⊥-elim
-              ; on-nil = Empty.elim
-              ; on-cons = Empty.elim
-              ; on-ε-cons = Empty.elim })))
-    where
-      ⊥Alg : Algebra ⊥NFA
-      ⊥Alg .the-ℓs = _
-      ⊥Alg .G _ = ⊥
+  opaque
+    unfolding AlgebraHom-seq ∃AlgebraHom
+    emptyNFA-strong-equiv :
+      StrongEquivalence (InitParse ⊥NFA) ⊥
+    emptyNFA-strong-equiv = mkStrEq
+      (recInit _ ⊥Alg)
+      ⊥-elim
+      (⊥-η _ _)
+      (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ ⊥Alg)
+        (record { f = λ _ → ⊥-elim
+                ; on-nil = Empty.elim
+                ; on-cons = Empty.elim
+                ; on-ε-cons = Empty.elim })))
+      where
+        ⊥Alg : Algebra ⊥NFA
+        ⊥Alg .the-ℓs = _
+        ⊥Alg .G _ = ⊥
 
 -- Binary Disjunction
 -- Given two NFAs N and N', accepts a string if and only if
@@ -215,7 +219,7 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     }
 
   opaque
-    unfolding _⊕_ ⊕-inr ⊕-inl
+    unfolding _⊕_ ⊕-inr ⊕-inl AlgebraHom-seq ∃AlgebraHom
     ⊕-strong-equivalence :
       StrongEquivalence (InitParse ⊕NFA) (InitParse N ⊕ InitParse N')
     ⊕-strong-equivalence = mkStrEq
@@ -300,22 +304,24 @@ module _ where
   εNFA .transition = Empty.⊥ , isFinSet⊥
   εNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  εNFA-strong-equiv :
-    StrongEquivalence (InitParse εNFA) ε
-  εNFA-strong-equiv = mkStrEq
-    (recInit _ εAlg)
-    (nil _)
-    refl
-    (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ εAlg) (record
-      { f = λ _ → nil _
-      ; on-nil = λ _ → refl
-      ; on-cons = Empty.elim
-      ; on-ε-cons = Empty.elim })))
-    where
-      εAlg : Algebra εNFA
-      εAlg .the-ℓs = _
-      εAlg .G = λ _ → ε
-      εAlg .nil-case = λ _ → id
+  opaque
+    unfolding AlgebraHom-seq ∃AlgebraHom
+    εNFA-strong-equiv :
+      StrongEquivalence (InitParse εNFA) ε
+    εNFA-strong-equiv = mkStrEq
+      (recInit _ εAlg)
+      (nil _)
+      refl
+      (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ εAlg) (record
+        { f = λ _ → nil _
+        ; on-nil = λ _ → refl
+        ; on-cons = Empty.elim
+        ; on-ε-cons = Empty.elim })))
+      where
+        εAlg : Algebra εNFA
+        εAlg .the-ℓs = _
+        εAlg .G = λ _ → ε
+        εAlg .nil-case = λ _ → id
 
 -- Concatenation
 -- Given two NFAs N and N', accepts a string w if and only if
@@ -376,177 +382,179 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
                   ; (N-ε-trans t) → inl (N .ε-dst t)
                   ; (N'-ε-trans t') → inr (N' .ε-dst t') }
 
-  ⊗-strong-equivalence :
-    StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
-  ⊗-strong-equivalence = mkStrEq
-    (recInit _ ⊗Alg)
-    (P-recInit _ _ NPAlg)
-    (!PAlgebraHom' _ _ NPAlg' Prec (P-idAlgebraHom _ _ _) _)
-    (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) ⊗Alg→initial))
-    where
-      ⊗Alg : Algebra ⊗NFA
-      ⊗Alg .the-ℓs (inl q) = _
-      ⊗Alg .the-ℓs (inr q') = _
-      ⊗Alg .G (inl q) = Parse N q ⊗ InitParse N'
-      ⊗Alg .G (inr q') = Parse N' q'
-      ⊗Alg .nil-case {inr q'} acc = nil (lower acc)
-      ⊗Alg .cons-case (inl t) =
-        ⊗-intro (cons t) id
-        ∘g ⊗-assoc
-      ⊗Alg .cons-case (inr t') = cons t'
-      ⊗Alg .ε-cons-case (N-acc q acc) =
-        ⊗-intro (nil acc) id
-        ∘g ⊗-unit-l⁻
-      ⊗Alg .ε-cons-case (N-ε-trans t) =
-        ⊗-intro (ε-cons t) id
-      ⊗Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
+  opaque
+    unfolding AlgebraHom-seq ∃AlgebraHom recTrace P-initial !PAlgebraHom' P-idAlgebraHom
+    ⊗-strong-equivalence :
+      StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
+    ⊗-strong-equivalence = mkStrEq
+      (recInit _ ⊗Alg)
+      (P-recInit _ _ NPAlg)
+      (!PAlgebraHom' _ _ NPAlg' Prec (P-idAlgebraHom _ _ _) _)
+      (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) ⊗Alg→initial))
+      where
+        ⊗Alg : Algebra ⊗NFA
+        ⊗Alg .the-ℓs (inl q) = _
+        ⊗Alg .the-ℓs (inr q') = _
+        ⊗Alg .G (inl q) = Parse N q ⊗ InitParse N'
+        ⊗Alg .G (inr q') = Parse N' q'
+        ⊗Alg .nil-case {inr q'} acc = nil (lower acc)
+        ⊗Alg .cons-case (inl t) =
+          ⊗-intro (cons t) id
+          ∘g ⊗-assoc
+        ⊗Alg .cons-case (inr t') = cons t'
+        ⊗Alg .ε-cons-case (N-acc q acc) =
+          ⊗-intro (nil acc) id
+          ∘g ⊗-unit-l⁻
+        ⊗Alg .ε-cons-case (N-ε-trans t) =
+          ⊗-intro (ε-cons t) id
+        ⊗Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
 
-      N'Alg : Algebra N'
-      N'Alg .the-ℓs = _
-      N'Alg .G q' = Parse ⊗NFA (inr q')
-      N'Alg .nil-case acc' = nil (lift acc')
-      N'Alg .cons-case t' = cons (inr t')
-      N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
+        N'Alg : Algebra N'
+        N'Alg .the-ℓs = _
+        N'Alg .G q' = Parse ⊗NFA (inr q')
+        N'Alg .nil-case acc' = nil (lift acc')
+        N'Alg .cons-case t' = cons (inr t')
+        N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
 
-      NPAlg : PAlgebra N (InitParse N')
-      NPAlg .the-ℓs = _
-      NPAlg .G q = Parse ⊗NFA (inl q)
-      NPAlg .nil-case acc = ε-cons (N-acc _ acc) ∘g recInit _ N'Alg
-      NPAlg .cons-case t = cons (inl t)
-      NPAlg .ε-cons-case t = ε-cons (N-ε-trans t)
+        NPAlg : PAlgebra N (InitParse N')
+        NPAlg .the-ℓs = _
+        NPAlg .G q = Parse ⊗NFA (inl q)
+        NPAlg .nil-case acc = ε-cons (N-acc _ acc) ∘g recInit _ N'Alg
+        NPAlg .cons-case t = cons (inl t)
+        NPAlg .ε-cons-case t = ε-cons (N-ε-trans t)
 
-      NPAlg' : PAlgebra N (InitParse N')
-      NPAlg' .the-ℓs = _
-      NPAlg' .G q = Parse N q ⊗ InitParse N'
-      NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
-      NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-      NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
+        NPAlg' : PAlgebra N (InitParse N')
+        NPAlg' .the-ℓs = _
+        NPAlg' .G q = Parse N q ⊗ InitParse N'
+        NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
+        NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
+        NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
 
-      N'≅⊗NFA⟨inr⟩ : recTrace _ ⊗Alg ∘g recInit _ N'Alg ≡ id
-      N'≅⊗NFA⟨inr⟩ =
-        algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
-          { f = λ q → recTrace _ ⊗Alg
-          ; on-nil = λ _ → refl
-          ; on-cons = λ _ → refl
-          ; on-ε-cons = λ _ → refl }))
+        N'≅⊗NFA⟨inr⟩ : recTrace _ ⊗Alg ∘g recInit _ N'Alg ≡ id
+        N'≅⊗NFA⟨inr⟩ =
+          algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
+            { f = λ q → recTrace _ ⊗Alg
+            ; on-nil = λ _ → refl
+            ; on-cons = λ _ → refl
+            ; on-ε-cons = λ _ → refl }))
 
-      ⊗Alg→initial : AlgebraHom ⊗NFA ⊗Alg (initial ⊗NFA)
-      ⊗Alg→initial .f (inl q) = P-recTrace _ _ NPAlg
-      ⊗Alg→initial .f (inr q') = recTrace _ N'Alg
-      ⊗Alg→initial .on-nil {inr q'} _ = refl
-      ⊗Alg→initial .on-cons (inl t) =
-         (λ i → ⟜-β ((cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) i ∘g
-           ⊗-intro (⊗-intro id (recTrace _ (underlyingAlg _ _ NPAlg))) id ∘g
-             ⊗-assoc) ∙
-          (λ i → cons (inl t) ∘g ⊗-intro id (P-recTrace _ _ NPAlg) ∘g
-            ⊗-assoc⁻∘⊗-assoc≡id i)
-      ⊗Alg→initial .on-cons (inr t) = refl
-      ⊗Alg→initial .on-ε-cons (N-acc _ acc) =
-        ((λ i →
-           ⟜-β (ε-cons (N-acc _ acc) ∘g
-             recInit _ N'Alg ∘g
-               ⊗-unit-l) i ∘g
+        ⊗Alg→initial : AlgebraHom ⊗NFA ⊗Alg (initial ⊗NFA)
+        ⊗Alg→initial .f (inl q) = P-recTrace _ _ NPAlg
+        ⊗Alg→initial .f (inr q') = recTrace _ N'Alg
+        ⊗Alg→initial .on-nil {inr q'} _ = refl
+        ⊗Alg→initial .on-cons (inl t) =
+           (λ i → ⟜-β ((cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) i ∘g
+             ⊗-intro (⊗-intro id (recTrace _ (underlyingAlg _ _ NPAlg))) id ∘g
+               ⊗-assoc) ∙
+            (λ i → cons (inl t) ∘g ⊗-intro id (P-recTrace _ _ NPAlg) ∘g
+              ⊗-assoc⁻∘⊗-assoc≡id i)
+        ⊗Alg→initial .on-cons (inr t) = refl
+        ⊗Alg→initial .on-ε-cons (N-acc _ acc) =
+          ((λ i →
+             ⟜-β (ε-cons (N-acc _ acc) ∘g
+               recInit _ N'Alg ∘g
+                 ⊗-unit-l) i ∘g
+                 ⊗-unit-l⁻) ∙
+          (λ i → ε-cons (N-acc _ acc) ∘g
+          recInit _ N'Alg ∘g ⊗-unit-l⁻l i))
+        ⊗Alg→initial .on-ε-cons (N-ε-trans t) =
+          (λ i → ⟜-β (ε-cons (N-ε-trans t) ∘g ⟜-app) i ∘g
+             ⊗-intro (recTrace _ (underlyingAlg _ _ NPAlg)) id)
+        ⊗Alg→initial .on-ε-cons (N'-ε-trans t') = refl
+
+        Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
+        Prec .f q =
+          recTrace ⊗NFA ⊗Alg ∘g
+          P-recTrace _ _ NPAlg
+        Prec .on-nil qAcc =
+          (λ i → recTrace _ ⊗Alg ∘g (⟜-β
+              ((ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg) ∘g ⊗-unit-l) i) ∘g
                ⊗-unit-l⁻) ∙
-        (λ i → ε-cons (N-acc _ acc) ∘g
-        recInit _ N'Alg ∘g ⊗-unit-l⁻l i))
-      ⊗Alg→initial .on-ε-cons (N-ε-trans t) =
-        (λ i → ⟜-β (ε-cons (N-ε-trans t) ∘g ⟜-app) i ∘g
-           ⊗-intro (recTrace _ (underlyingAlg _ _ NPAlg)) id)
-      ⊗Alg→initial .on-ε-cons (N'-ε-trans t') = refl
+          (λ i → recTrace _ ⊗Alg ∘g
+            ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg ∘g ⊗-unit-l⁻l i) ∙
+          (λ i → ⊗-intro (nil qAcc) id ∘g ⊗-unit-l⁻ ∘g N'≅⊗NFA⟨inr⟩ i)
+        Prec .on-cons t =
+          (λ i → recTrace _ ⊗Alg ∘g
+            ⊗Alg→initial .on-cons (inl t) i)
+        Prec .on-ε-cons t =
+          (λ i → recTrace _ ⊗Alg ∘g
+            ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
 
-      Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
-      Prec .f q =
-        recTrace ⊗NFA ⊗Alg ∘g
-        P-recTrace _ _ NPAlg
-      Prec .on-nil qAcc =
-        (λ i → recTrace _ ⊗Alg ∘g (⟜-β
-            ((ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg) ∘g ⊗-unit-l) i) ∘g
-             ⊗-unit-l⁻) ∙
-        (λ i → recTrace _ ⊗Alg ∘g
-          ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg ∘g ⊗-unit-l⁻l i) ∙
-        (λ i → ⊗-intro (nil qAcc) id ∘g ⊗-unit-l⁻ ∘g N'≅⊗NFA⟨inr⟩ i)
-      Prec .on-cons t =
-        (λ i → recTrace _ ⊗Alg ∘g
-          ⊗Alg→initial .on-cons (inl t) i)
-      Prec .on-ε-cons t =
-        (λ i → recTrace _ ⊗Alg ∘g
-          ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
+    ⊗-strong-equivalence' :
+      StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
+    ⊗-strong-equivalence' = mkStrEq
+      (recInit _ ⊗Alg)
+      (P-recInit' _ _ NPAlg)
+      (!PAlgebraHom' _ _ NPAlg' Prec (P-idAlgebraHom _ _ _) _)
+      (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) ⊗Alg→initial))
+      where
+        ⊗Alg : Algebra ⊗NFA
+        ⊗Alg .the-ℓs (inl q) = _
+        ⊗Alg .the-ℓs (inr q') = _
+        ⊗Alg .G (inl q) = Parse N q ⊗ InitParse N'
+        ⊗Alg .G (inr q') = Parse N' q'
+        ⊗Alg .nil-case {inr q'} acc = nil (lower acc)
+        ⊗Alg .cons-case (inl t) =
+          ⊗-intro (cons t) id
+          ∘g ⊗-assoc
+        ⊗Alg .cons-case (inr t') = cons t'
+        ⊗Alg .ε-cons-case (N-acc q acc) =
+          ⊗-intro (nil acc) id
+          ∘g ⊗-unit-l⁻
+        ⊗Alg .ε-cons-case (N-ε-trans t) =
+          ⊗-intro (ε-cons t) id
+        ⊗Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
 
-  ⊗-strong-equivalence' :
-    StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
-  ⊗-strong-equivalence' = mkStrEq
-    (recInit _ ⊗Alg)
-    (P-recInit' _ _ NPAlg)
-    (!PAlgebraHom' _ _ NPAlg' Prec (P-idAlgebraHom _ _ _) _)
-    (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) ⊗Alg→initial))
-    where
-      ⊗Alg : Algebra ⊗NFA
-      ⊗Alg .the-ℓs (inl q) = _
-      ⊗Alg .the-ℓs (inr q') = _
-      ⊗Alg .G (inl q) = Parse N q ⊗ InitParse N'
-      ⊗Alg .G (inr q') = Parse N' q'
-      ⊗Alg .nil-case {inr q'} acc = nil (lower acc)
-      ⊗Alg .cons-case (inl t) =
-        ⊗-intro (cons t) id
-        ∘g ⊗-assoc
-      ⊗Alg .cons-case (inr t') = cons t'
-      ⊗Alg .ε-cons-case (N-acc q acc) =
-        ⊗-intro (nil acc) id
-        ∘g ⊗-unit-l⁻
-      ⊗Alg .ε-cons-case (N-ε-trans t) =
-        ⊗-intro (ε-cons t) id
-      ⊗Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
+        N'Alg : Algebra N'
+        N'Alg .the-ℓs = _
+        N'Alg .G q' = Parse ⊗NFA (inr q')
+        N'Alg .nil-case acc' = nil (lift acc')
+        N'Alg .cons-case t' = cons (inr t')
+        N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
 
-      N'Alg : Algebra N'
-      N'Alg .the-ℓs = _
-      N'Alg .G q' = Parse ⊗NFA (inr q')
-      N'Alg .nil-case acc' = nil (lift acc')
-      N'Alg .cons-case t' = cons (inr t')
-      N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
+        NPAlg : PAlgebra N (InitParse N')
+        NPAlg .the-ℓs = _
+        NPAlg .G q = Parse ⊗NFA (inl q)
+        NPAlg .nil-case acc = ε-cons (N-acc _ acc) ∘g recInit _ N'Alg
+        NPAlg .cons-case t = cons (inl t)
+        NPAlg .ε-cons-case t = ε-cons (N-ε-trans t)
 
-      NPAlg : PAlgebra N (InitParse N')
-      NPAlg .the-ℓs = _
-      NPAlg .G q = Parse ⊗NFA (inl q)
-      NPAlg .nil-case acc = ε-cons (N-acc _ acc) ∘g recInit _ N'Alg
-      NPAlg .cons-case t = cons (inl t)
-      NPAlg .ε-cons-case t = ε-cons (N-ε-trans t)
+        NPAlg' : PAlgebra N (InitParse N')
+        NPAlg' .the-ℓs = _
+        NPAlg' .G q = Parse N q ⊗ InitParse N'
+        NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
+        NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
+        NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
+        N'≅⊗NFA⟨inr⟩ : recTrace _ ⊗Alg ∘g recInit _ N'Alg ≡ id
+        N'≅⊗NFA⟨inr⟩ =
+          algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
+            { f = λ q → recTrace _ ⊗Alg
+            ; on-nil = λ _ → refl
+            ; on-cons = λ _ → refl
+            ; on-ε-cons = λ _ → refl }))
+        ⊗Alg→initial : AlgebraHom ⊗NFA ⊗Alg (initial ⊗NFA)
+        ⊗Alg→initial .f (inl q) = P-recTrace' _ _ NPAlg
+        ⊗Alg→initial .f (inr q') = recTrace _ N'Alg
+        ⊗Alg→initial .on-nil {inr q'} _ = refl
+        ⊗Alg→initial .on-cons (inl t) =
+          λ i → cons (inl t) ∘g ⊗-intro id (P-recTrace' _ _ NPAlg) ∘g
+            ⊗-assoc⁻∘⊗-assoc≡id i
+        ⊗Alg→initial .on-cons (inr t) = refl
+        ⊗Alg→initial .on-ε-cons (N-acc q x) =
+          λ i → ε-cons (N-acc q x) ∘g recTrace _ N'Alg ∘g ⊗-unit-l⁻l i
+        ⊗Alg→initial .on-ε-cons (N-ε-trans x) = refl
+        ⊗Alg→initial .on-ε-cons (N'-ε-trans x) = refl
 
-      NPAlg' : PAlgebra N (InitParse N')
-      NPAlg' .the-ℓs = _
-      NPAlg' .G q = Parse N q ⊗ InitParse N'
-      NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
-      NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-      NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
-      N'≅⊗NFA⟨inr⟩ : recTrace _ ⊗Alg ∘g recInit _ N'Alg ≡ id
-      N'≅⊗NFA⟨inr⟩ =
-        algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
-          { f = λ q → recTrace _ ⊗Alg
-          ; on-nil = λ _ → refl
-          ; on-cons = λ _ → refl
-          ; on-ε-cons = λ _ → refl }))
-      ⊗Alg→initial : AlgebraHom ⊗NFA ⊗Alg (initial ⊗NFA)
-      ⊗Alg→initial .f (inl q) = P-recTrace' _ _ NPAlg
-      ⊗Alg→initial .f (inr q') = recTrace _ N'Alg
-      ⊗Alg→initial .on-nil {inr q'} _ = refl
-      ⊗Alg→initial .on-cons (inl t) =
-        λ i → cons (inl t) ∘g ⊗-intro id (P-recTrace' _ _ NPAlg) ∘g
-          ⊗-assoc⁻∘⊗-assoc≡id i
-      ⊗Alg→initial .on-cons (inr t) = refl
-      ⊗Alg→initial .on-ε-cons (N-acc q x) =
-        λ i → ε-cons (N-acc q x) ∘g recTrace _ N'Alg ∘g ⊗-unit-l⁻l i
-      ⊗Alg→initial .on-ε-cons (N-ε-trans x) = refl
-      ⊗Alg→initial .on-ε-cons (N'-ε-trans x) = refl
-
-      Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
-      Prec .f q = recTrace _ ⊗Alg ∘g P-recTrace' _ _ NPAlg
-      Prec .on-nil qAcc =
-        (λ i → recTrace _ ⊗Alg ∘g
-          ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg ∘g ⊗-unit-l⁻l i) ∙
-        (λ i → ⊗-intro (nil qAcc) id ∘g ⊗-unit-l⁻ ∘g N'≅⊗NFA⟨inr⟩ i)
-      Prec .on-cons t =
-        (λ i → recTrace _ ⊗Alg ∘g ⊗Alg→initial .on-cons (inl t) i)
-      Prec .on-ε-cons t =
-        (λ i → recTrace _ ⊗Alg ∘g ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
+        Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
+        Prec .f q = recTrace _ ⊗Alg ∘g P-recTrace' _ _ NPAlg
+        Prec .on-nil qAcc =
+          (λ i → recTrace _ ⊗Alg ∘g
+            ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg ∘g ⊗-unit-l⁻l i) ∙
+          (λ i → ⊗-intro (nil qAcc) id ∘g ⊗-unit-l⁻ ∘g N'≅⊗NFA⟨inr⟩ i)
+        Prec .on-cons t =
+          (λ i → recTrace _ ⊗Alg ∘g ⊗Alg→initial .on-cons (inl t) i)
+        Prec .on-ε-cons t =
+          (λ i → recTrace _ ⊗Alg ∘g ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
 
 -- Kleene Star
 module _ (N : NFA {ℓN}) where
@@ -590,13 +598,13 @@ module _ (N : NFA {ℓN}) where
   *NFA .ε-dst (N-internal t) = inr (N .ε-dst t)
 
   opaque
-    unfolding ⊗-unit-l⁻ ⊗-unit-l
+    unfolding ⊗-unit-l⁻ ⊗-unit-l *r-initial KL*r-elim id*r-AlgebraHom AlgebraHom-seq ∃AlgebraHom recTrace P-initial !PAlgebraHom' P-idAlgebraHom
     *-strong-equivalence :
       StrongEquivalence (InitParse *NFA) (KL* (InitParse N))
     *-strong-equivalence = mkStrEq
       (recInit *NFA *Alg)
       (foldKL*r (InitParse N) the-KL*-alg)
-      (!*r-AlgebraHom' (InitParse N) (*r-initial (InitParse N))
+      (!*r-AlgebraHom (InitParse N) (*r-initial (InitParse N))
         (record { f = recInit *NFA *Alg ∘g foldKL*r (InitParse N) the-KL*-alg
                 ; on-nil = refl
                 ; on-cons = (λ i → KL*.cons ∘g

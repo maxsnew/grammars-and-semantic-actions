@@ -21,9 +21,12 @@ private
     k : Grammar ℓk
     l : Grammar ℓl
 
+_⊕'_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
+(g ⊕' h) w = g w ⊎ h w
+infixr 5 _⊕'_
 opaque
   _⊕_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-  (g ⊕ h) w = g w ⊎ h w
+  _⊕_ = _⊕'_
 
 infixr 5 _⊕_
 
