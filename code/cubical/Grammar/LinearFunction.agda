@@ -188,8 +188,13 @@ opaque
   g1 ⊗ g2 ⊗ g3 ⊢ k → ε ⊢ k ⟜ g3 ⟜ g2 ⟜ g1
 ⟜3-intro-ε {k = k} f =
   ⟜-mapCod (⟜-curry {k = k})
-  ∘g ⟜-curry {k = k}
-  ∘g ⟜-intro-ε f
+  ∘g ⟜2-intro-ε f
+
+⟜4-intro-ε :
+  g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊢ k → ε ⊢ k ⟜ g4 ⟜ g3 ⟜ g2 ⟜ g1
+⟜4-intro-ε {k = k} f =
+  ⟜-mapCod (⟜-mapCod (⟜-curry {k = k}))
+  ∘g ⟜3-intro-ε f
 
 ⟜-strength :
   g ⊗ (h ⟜ k) ⊢ (g ⊗ h) ⟜ k
@@ -215,3 +220,9 @@ opaque
 
 ⟜3⊗ : ε ⊢ k ⟜ g3 ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ g3 ⊗ l ⊢ k ⊗ l
 ⟜3⊗ f = ⟜-app-l ∘g ⟜2⊗ f
+
+⟜4⊗ : ε ⊢ k ⟜ g4 ⟜ g3 ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊗ l ⊢ k ⊗ l
+⟜4⊗ f = ⟜-app-l ∘g ⟜3⊗ f
+
+⊸0⊗ : ε ⊢ k → l ⊢ l ⊗ k
+⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻

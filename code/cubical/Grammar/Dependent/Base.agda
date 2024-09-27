@@ -24,15 +24,23 @@ LinearΠ {A = A} f w = ∀ (a : A) → f a w
 LinearΣ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΣ {A = A} f w = Σ[ a ∈ A ] f a w
 
+Dep⊕-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+Dep⊕-syntax = LinearΣ
+
 LinearΣ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΣ-syntax = LinearΣ
+
+Dep&-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+Dep&-syntax = LinearΠ
 
 LinearΠ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΠ-syntax = LinearΠ
 
 -- TODO: this precedence isn't really right
 syntax LinearΣ-syntax {A = A} (λ x → B) = LinΣ[ x ∈ A ] B
+syntax Dep⊕-syntax {A = A} (λ x → B) = ⊕[ x ∈ A ] B
 syntax LinearΠ-syntax {A = A} (λ x → B) = LinΠ[ x ∈ A ] B
+syntax Dep&-syntax {A = A} (λ x → B) = &[ x ∈ A ] B
 
 module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
   LinΠ-intro : (∀ a → g ⊢ h a) → g ⊢ LinΠ[ a ∈ A ] h a
