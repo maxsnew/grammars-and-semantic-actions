@@ -22,6 +22,7 @@ private
 
 open import Examples.Dyck
 open import Grammar Alphabet
+open import Grammar.String.Properties Alphabet
 open import Grammar.Maybe Alphabet hiding (μ)
 open import Grammar.Equivalence Alphabet
 open import Grammar.Inductive.Indexed Alphabet
@@ -44,7 +45,7 @@ TraceTys (n , b) = ⊕e TraceTag (λ
   ; open' → ⊗e (k (literal [)) (Var (suc n , b))
   ; close' → ⊕e (Eq.fiber suc n) λ (n-1 , _) → ⊗e (k (literal ])) (Var (n-1 , b))
   ; leftovers' → ⊕e (Eq.fiber suc n) λ (n-1 , _) → ⊕e (b Eq.≡ false) λ _ → k ε
-  ; unexpected' → ⊕e ((n , b) Eq.≡ (0 , false)) λ _ → ⊗e (k (literal ])) (k ⊤)
+  ; unexpected' → ⊕e ((n , b) Eq.≡ (0 , false)) λ _ → ⊗e (k (literal ])) (k string)
   })
 
 Trace : ℕ → Bool → Grammar ℓ-zero
