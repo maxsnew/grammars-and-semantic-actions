@@ -45,16 +45,14 @@ TraceTys (n , b) = ⊕e TraceTag (λ
   ; open' → ⊗e (k (literal [)) (Var (suc n , b))
   ; close' → ⊕e (Eq.fiber suc n) λ (n-1 , _) → ⊗e (k (literal ])) (Var (n-1 , b))
   ; leftovers' → ⊕e (Eq.fiber suc n) λ (n-1 , _) → ⊕e (b Eq.≡ false) λ _ → k ε
-  ; unexpected' → ⊕e ((n , b) Eq.≡ (0 , false)) λ _ → ⊗e (k (literal ])) (k string)
+  ; unexpected' → ⊕e ((n , b) Eq.≡ (0 , false)) λ _ → ⊗e (k (literal ])) (k ⊤)
   })
 
 Trace : ℕ → Bool → Grammar ℓ-zero
 Trace n b = μ TraceTys (n , b)
 
-opaque
-  unfolding _⊗_ ⊗-intro
-  parse : string ⊢ &[ n ∈ ℕ ] ⊕[ b ∈ _ ] Trace n b
-  parse = foldKL*r _ (record { the-ℓ = ℓ-zero ; G = _
+parse : string ⊢ &[ n ∈ ℕ ] ⊕[ b ∈ _ ] Trace n b
+parse = foldKL*r _ (record { the-ℓ = ℓ-zero ; G = _
     ; nil-case = LinΠ-intro (Nat.elim
       (LinΣ-intro true ∘g roll ∘g LinΣ-intro eof' ∘g LinΣ-intro Eq.refl ∘g LinΣ-intro Eq.refl ∘g id)
       (λ n-1 _ → LinΣ-intro false ∘g roll ∘g LinΣ-intro leftovers' ∘g LinΣ-intro (_ , Eq.refl) ∘g LinΣ-intro Eq.refl ∘g id))
@@ -73,18 +71,18 @@ opaque
       Goal : ℕ → Grammar ℓ-zero
       Goal n = ⊕[ b ∈ Bool ] Trace n b
 
-  mkTree : Trace zero true ⊢ IndDyck
-  mkTree = ⊗-unit-r ∘g rec TraceTys alg (0 , true) where
-    Stk : ℕ → Grammar ℓ-zero
-    Stk = Nat.elim ε λ _ Stk⟨n⟩ → literal ] ⊗ IndDyck ⊗ Stk⟨n⟩
-    GenIndDyck : ℕ × Bool → Grammar ℓ-zero
-    GenIndDyck (n , false) = ⊤
-    GenIndDyck (n , true) = IndDyck ⊗ Stk n
-    alg : Algebra TraceTys GenIndDyck
-    alg (n , b) = LinΣ-elim (λ
-      { eof' → LinΣ-elim (λ { Eq.refl → LinΣ-elim λ { Eq.refl → (roll ∘g LinΣ-intro nil') ,⊗ id ∘g ⊗-unit-r⁻ } })
+
+GenIndDyck : ℕ × Bool → Grammar ℓ-zero
+GenIndDyck (n , false) = ⊤
+GenIndDyck (n , true) =
+      Nat.elim IndDyck (λ _ GID⟨n⟩ → IndDyck ⊗ literal ] ⊗ GID⟨n⟩)
+      n
+
+mkTreeAlg : Algebra TraceTys GenIndDyck
+mkTreeAlg (n , b) = LinΣ-elim (λ
+      { eof' → LinΣ-elim (λ { Eq.refl → LinΣ-elim λ { Eq.refl → roll ∘g ⊕ᴰ-in nil' } })
       ; open' → Bool.elim {A = λ b → literal [ ⊗ GenIndDyck (suc n , b)  ⊢ GenIndDyck (n , b)}
-          (⟜4⊗ (⟜4-intro-ε (roll ∘g LinΣ-intro balanced')))
+          (balance~ n)
           ⊤-intro b
       ; close' → LinΣ-elim (λ { (n-1 , Eq.refl) → Bool.elim
                                                    {A =
@@ -96,16 +94,36 @@ opaque
       ; leftovers' → LinΣ-elim λ { (n-1 , Eq.refl) → LinΣ-elim λ { Eq.refl → ⊤-intro } }
       ; unexpected' → LinΣ-elim λ { Eq.refl → ⊤-intro }
       })
+  where
+    balance~ : ∀ n → literal [ ⊗ IndDyck ⊗ literal ] ⊗ GenIndDyck (n , true) ⊢ GenIndDyck (n , true)
+    balance~ zero = roll ∘g ⊕ᴰ-in balanced'
+    balance~ (suc n) = ⟜4⊗ (⟜4-intro-ε (roll ∘g ⊕ᴰ-in balanced'))
 
-  exhibitTrace' : IndDyck ⊢ Trace zero true
-  exhibitTrace' = ((⟜-app ∘g ⊸0⊗ (roll ∘g LinΣ-intro eof' ∘g LinΣ-intro Eq.refl ∘g LinΣ-intro Eq.refl)) ∘g LinΠ-app 0) ∘g rec DyckTy alg _ where
-    Goal : Unit → Grammar ℓ-zero
-    Goal _ = &[ n ∈ ℕ ] (Trace n true ⟜ Trace n true)
-    alg : Algebra DyckTy Goal
-    alg _ = LinΣ-elim (λ
+mkTree : Trace zero true ⊢ IndDyck
+mkTree = rec TraceTys mkTreeAlg (0 , true)
+
+TraceAction : Unit → Grammar ℓ-zero
+TraceAction _ = &[ n ∈ ℕ ] (Trace n true ⟜ Trace n true)
+
+eTAlg : Algebra DyckTy TraceAction
+eTAlg _ = LinΣ-elim (λ
       { nil' → LinΠ-intro (λ n → ⟜-intro-ε id)
       ; balanced' → LinΠ-intro λ n → ⟜-intro {k = Trace n true}
         (roll ∘g LinΣ-intro open'
         ∘g id ,⊗ ((⟜-app ∘g LinΠ-app (suc n) ,⊗ ((roll ∘g LinΣ-intro close' ∘g LinΣ-intro (_ , Eq.refl) ∘g id ,⊗ (⟜-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻)) ∘g ⊗-assoc⁻)
         ∘g ⊗-assoc⁻)
       })
+
+exhibitTrace' : IndDyck ⊢ Trace zero true
+exhibitTrace' = ((⟜-app ∘g ⊸0⊗ (roll ∘g LinΣ-intro eof' ∘g LinΣ-intro Eq.refl ∘g LinΣ-intro Eq.refl)) ∘g LinΠ-app 0) ∘g rec DyckTy eTAlg _
+
+Dyck≅Trace : StrongEquivalence IndDyck (Trace zero true)
+Dyck≅Trace = mkStrEq exhibitTrace' mkTree
+  {!!} -- use mkTreeAlg
+  (ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) eTAlg (initialAlgebra DyckTy)
+    ((λ _ → mkTree ∘g ((⟜-app ∘g ⊸0⊗ (roll ∘g LinΣ-intro eof' ∘g LinΣ-intro Eq.refl ∘g LinΣ-intro Eq.refl)) ∘g LinΠ-app 0))
+    , λ _ → ⊕ᴰ≡ _ _ (λ
+      { nil' → {!!}
+      ; balanced' → {!!} }))
+    (recHomo DyckTy eTAlg))
+    tt)

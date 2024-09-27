@@ -25,19 +25,20 @@ module _ where
   ⟦ Var a ⟧ g = g a
   ⟦ &e B F ⟧ g = &[ b ∈ B ] ⟦ F b ⟧ g
   ⟦ ⊕e B F ⟧ g = ⊕[ b ∈ B ] ⟦ F b ⟧ g
-  ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗' ⟦ F' ⟧ g
+  ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗ ⟦ F' ⟧ g
+
+  map : ∀ {A : Type ℓ}(F : Functor A) {g h : A → Grammar ℓ}
+        → (∀ a → g a ⊢ h a)
+        → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
+  map (k g) f = id
+  map (Var a) f = f a
+  map (&e B F) f = &ᴰ-intro λ a → map (F a) f ∘g &ᴰ-π a
+  map (⊕e B F) f = ⊕ᴰ-elim λ a → ⊕ᴰ-in a ∘g map (F a) f
+  map (⊗e F F') f = map F f ,⊗ map F' f
 
   module _ {A : Type ℓ} where
     opaque
       unfolding _⊗_ ⊗-intro
-      map : ∀ (F : Functor A) {g h : A → Grammar ℓ}
-        → (∀ a → g a ⊢ h a)
-        → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
-      map (k g) f = id
-      map (Var a) f = f a
-      map (&e B F) f = LinΠ-intro λ a → map (F a) f ∘g LinΠ-app a
-      map (⊕e B F) f = LinΣ-elim λ a → LinΣ-intro a ∘g map (F a) f
-      map (⊗e F F') f = map F f ,⊗ map F' f
 
       map-id : ∀ (F : Functor A) {g : A → Grammar _} →
         map F (λ a → id {g = g a}) ≡ id
@@ -55,6 +56,7 @@ module _ where
       map-∘ (⊕e B F) f f' i = LinΣ-elim (λ a → LinΣ-intro a ∘g map-∘ (F a) f f' i)
       map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
 
+    {-# NO_POSITIVITY_CHECK #-}
     data μ (F : A → Functor A) a : Grammar ℓ where
       roll : ⟦ F a ⟧ (μ F) ⊢ μ F a
 
@@ -106,6 +108,8 @@ module _ where
     ind-id : ∀ (ϕ : Homomorphism initialAlgebra initialAlgebra) → ϕ .fst ≡ idHomo initialAlgebra .fst
     ind-id ϕ = ind initialAlgebra ϕ (idHomo initialAlgebra)
 
+    ind-id' : ∀ (ϕ : Homomorphism initialAlgebra initialAlgebra) a → ϕ .fst a ≡ id
+    ind-id' ϕ a = funExt⁻ (ind-id ϕ) a
 
     unroll : ∀ a → μ F a ⊢ ⟦ F a ⟧ (μ F)
     unroll a w (roll .w x) = x
