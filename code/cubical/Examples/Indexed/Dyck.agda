@@ -187,12 +187,17 @@ Dyck≅Trace = mkStrEq exhibitTrace' mkTree
     where
       -- TODO rename all of these lemmas and put them in the relevant external
       -- files
-      u : unambiguous ε
-      u = {!!}
+      opaque
+        unfolding ε
+        -- Epsilon.Properties
+        u : unambiguous ε
+        u = EXTERNAL.propParses→unambiguous isFinBracket λ w → isSetString _ _
 
+      -- Epsilon.Properties
       s : ⊗-unit-l {g = ε} ≡ ⊗-unit-r {g = ε}
       s = u _ _
 
+      -- Epsilon.Properties
       t : ⊗-unit-l⁻ {g = ε} ≡ ⊗-unit-r⁻ {g = ε}
       t =
         ⊗-unit-l⁻
