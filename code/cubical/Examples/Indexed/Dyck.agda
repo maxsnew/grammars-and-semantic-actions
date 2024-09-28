@@ -11,9 +11,9 @@ open import Cubical.Foundations.Structure
 open import Cubical.Data.Bool as Bool hiding (_⊕_ ;_or_)
 import Cubical.Data.Equality as Eq
 open import Cubical.Data.Nat as Nat
-open import Cubical.Data.List hiding (init; rec)
+open import Cubical.Data.List hiding (init; rec; map)
 open import Cubical.Data.Sigma
-open import Cubical.Data.Sum as Sum hiding (rec)
+open import Cubical.Data.Sum as Sum hiding (rec; map)
 open import Cubical.Data.FinSet
 
 private
@@ -123,7 +123,109 @@ Dyck≅Trace = mkStrEq exhibitTrace' mkTree
   (ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) eTAlg (initialAlgebra DyckTy)
     ((λ _ → mkTree ∘g ((⟜-app ∘g ⊸0⊗ (roll ∘g LinΣ-intro eof' ∘g LinΣ-intro Eq.refl ∘g LinΣ-intro Eq.refl)) ∘g LinΠ-app 0))
     , λ _ → ⊕ᴰ≡ _ _ (λ
-      { nil' → {!!}
-      ; balanced' → {!!} }))
+      { nil' →
+        cong
+          (rec TraceTys mkTreeAlg (0 , true) ∘g_)
+          (p (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl))
+      ; balanced' →
+        rec TraceTys mkTreeAlg (0 , true) ∘g
+        ⟜-app ∘g
+        id ,⊗ (roll ∘g
+            ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g
+        ⊗-unit-r⁻ ∘g
+        ⟜-intro {k = Trace 0 true}
+          (roll ∘g LinΣ-intro open'
+          ∘g id ,⊗ ((⟜-app ∘g LinΠ-app (suc 0) ,⊗ ((roll ∘g LinΣ-intro close' ∘g LinΣ-intro (_ , Eq.refl) ∘g id ,⊗ (⟜-app ∘g LinΠ-app 0 ,⊗ id)) ∘g ⊗-assoc⁻)) ∘g ⊗-assoc⁻)
+          ∘g ⊗-assoc⁻)
+          ≡⟨ cong ((rec TraceTys mkTreeAlg (0 , true)) ∘g_) (q' _ _) ⟩
+        rec TraceTys mkTreeAlg (0 , true) ∘g
+        roll ∘g
+        LinΣ-intro open' ∘g
+        -- Bool.elim {A = λ b → literal [ ⊗ GenIndDyck (suc 0 , b)  ⊢ GenIndDyck (0 , b)}
+        --   (roll ∘g ⊕ᴰ-in balanced')
+        --   ⊤-intro true ∘g
+        id ,⊗
+          (⟜-app ∘g
+            LinΠ-app (suc 0) ,⊗
+            (roll ∘g
+              ⊕ᴰ-in close' ∘g
+              ⊕ᴰ-in (0 , Eq.refl) ∘g id ,⊗ (⟜-app ∘g LinΠ-app 0 ,⊗ id) ∘g
+              ⊗-assoc⁻) ∘g
+           ⊗-assoc⁻) ∘g
+        ⊗-assoc⁻ ∘g
+        id ,⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g
+        ⊗-unit-r⁻
+        -- roll ∘g
+        -- ⊕ᴰ-in balanced' ∘g
+        -- id ,⊗ ({!id!} ∘g map (DyckTy _) {!!} ∘g {!id!}) ∘g
+        -- id ,⊗
+        --   (⟜-app ∘g
+        --     LinΠ-app (suc 0) ,⊗
+        --     (roll ∘g
+        --       ⊕ᴰ-in close' ∘g
+        --       ⊕ᴰ-in (0 , Eq.refl) ∘g id ,⊗ (⟜-app ∘g LinΠ-app 0 ,⊗ id) ∘g
+        --       ⊗-assoc⁻) ∘g
+        --    ⊗-assoc⁻) ∘g
+        -- ⊗-assoc⁻ ∘g
+        -- id ,⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g
+        -- ⊗-unit-r⁻
+          ≡⟨ {!!} ⟩
+        roll ∘g
+        map (DyckTy _)
+          (λ z →
+             mkTree ∘g
+             (⟜-app ∘g
+              ⊸0⊗
+              (roll ∘g
+               ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl))
+             ∘g LinΠ-app 0)
+         ∘g ⊕ᴰ-in balanced'
+        ∎
+     }))
     (recHomo DyckTy eTAlg))
     tt)
+    where
+      -- TODO rename all of these lemmas and put them in the relevant external
+      -- files
+      u : unambiguous ε
+      u = {!!}
+
+      s : ⊗-unit-l {g = ε} ≡ ⊗-unit-r {g = ε}
+      s = u _ _
+
+      t : ⊗-unit-l⁻ {g = ε} ≡ ⊗-unit-r⁻ {g = ε}
+      t =
+        ⊗-unit-l⁻
+          ≡⟨ cong (⊗-unit-l⁻ ∘g_) (sym ⊗-unit-r⁻r) ⟩
+        ⊗-unit-l⁻ ∘g ⊗-unit-r ∘g ⊗-unit-r⁻
+          ≡⟨ cong (λ z → ⊗-unit-l⁻ ∘g z ∘g ⊗-unit-r⁻) (sym s) ⟩
+        ⊗-unit-l⁻ ∘g ⊗-unit-l ∘g ⊗-unit-r⁻
+          ≡⟨ cong (_∘g ⊗-unit-r⁻) ⊗-unit-ll⁻ ⟩
+        ⊗-unit-r⁻
+        ∎
+
+      opaque
+        -- opaque so that ⊗-unit-r⁻ commutes for free
+        unfolding ⊗-unit-r⁻ ⊗-unit-l⁻
+        q' : ∀ {ℓg ℓh ℓk : Level}
+          {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
+          (e : ε ⊢ g)(e' : k ⊗ g ⊢ h) →
+          ⟜-app ∘g (id ,⊗ e) ∘g ⊗-unit-r⁻ ∘g ⟜-intro e' ≡
+            e' ∘g id ,⊗ e ∘g ⊗-unit-r⁻
+        q' e e' = cong (_∘g (id ,⊗ e ∘g ⊗-unit-r⁻)) (⟜-β e')
+
+        q : ∀ {ℓg ℓh : Level}
+          {g : Grammar ℓg}{h : Grammar ℓh}
+          (e : ε ⊢ g)(e' : g ⊢ h) →
+          ⟜-app ∘g (id ,⊗ e) ∘g ⊗-unit-r⁻ ∘g ⟜-intro-ε e' ≡ e' ∘g e
+        q e e' =
+          q' e (e' ∘g ⊗-unit-l) ∙
+          cong ((e' ∘g ⊗-unit-l ∘g id ,⊗ e) ∘g_) (sym t)  ∙
+          cong (λ z → e' ∘g z ∘g e) ⊗-unit-l⁻l
+
+      p : ∀ e →
+        ⟜-app ∘g
+        (id ,⊗ e) ∘g
+        ⊗-unit-r⁻ ∘g
+        ⟜-intro-ε id ≡ e
+      p e = q e id
