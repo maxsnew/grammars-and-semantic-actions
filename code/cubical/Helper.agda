@@ -411,6 +411,9 @@ isFinSetDecℙ' A =
 FinSetDecℙ : ∀ {ℓ} → FinSet ℓ → FinSet (ℓ-suc ℓ)
 FinSetDecℙ {ℓ} A = (Decℙ (A .fst)) , (isFinSetDecℙ A)
 
+_∈-FinSetDecℙ_ : ∀ {ℓ} {A : FinSet ℓ} → ⟨ A ⟩ → ⟨ FinSetDecℙ A ⟩ → Type ℓ
+a ∈-FinSetDecℙ X = X a .fst .fst
+
 FinSetDecℙ' : ∀ {ℓ} → FinSet ℓ → FinSet (ℓ-suc ℓ)
 FinSetDecℙ' {ℓ} A = (Decℙ' (A .fst)) , (isFinSetDecℙ' A)
 
@@ -437,3 +440,4 @@ FinSetDecℙ∃ :
   ⟨ FinSetDecℙ A ⟩ →
   (⟨ A ⟩ → ⟨ FinSetDecℙ B ⟩) → ⟨ FinSetDecℙ B ⟩
 FinSetDecℙ∃ A B ℙA f b = DecProp∃ A (λ a → DecProp× (ℙA a) (f a b))
+

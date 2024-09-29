@@ -93,11 +93,47 @@ record directedGraph : Type (ℓ-suc ℓ) where
   cons e gw p .compat-dst zero = p
   cons e gw p .compat-dst (suc k) = gw .compat-dst k
 
+  ext-fin-last : ∀ {ℓ} {A : Type ℓ} {n} →
+    A → (Fin n → A) → Fin (suc n) → A
+  ext-fin-last {n = zero} last f zero = last
+  ext-fin-last {n = suc n} last f zero = f zero
+  ext-fin-last {n = suc n} last f (suc k) = ext-fin-last {n = n} last (f ∘ suc) k
+
   tail : GraphWalk (suc n) → GraphWalk n
   tail gw .vertices = gw .vertices ∘ suc
   tail gw .edges = gw .edges ∘ suc
   tail gw .compat-src = gw .compat-src ∘ suc
   tail gw .compat-dst = gw .compat-dst ∘ suc
+
+  snoc :
+    (e : ⟨ directed-edges ⟩)
+    (gw : GraphWalk n) →
+    src e ≡ end gw →
+    GraphWalk (suc n)
+  snoc-pres-start :
+    (e : ⟨ directed-edges ⟩)
+    (gw : GraphWalk n) →
+    (p : src e ≡ end gw) →
+    start gw ≡ start (snoc e gw p)
+
+  snoc {zero} e gw p .vertices zero = src e
+  snoc {zero} e gw p .vertices one = dst e
+  snoc {zero} e gw p .edges zero = e
+  snoc {zero} e gw p .compat-src zero = refl
+  snoc {zero} e gw p .compat-dst zero = refl
+  snoc {suc n} e gw p = cons (gw .edges zero) (snoc e (tail gw) p)
+    (gw .compat-dst zero ∙ snoc-pres-start e (tail gw) p)
+
+  snoc-pres-start {zero} e gw p = sym p
+  snoc-pres-start {suc n} e gw p = sym $ gw .compat-src zero
+
+  snoc-end :
+    (e : ⟨ directed-edges ⟩)
+    (gw : GraphWalk n) →
+    (p : src e ≡ end gw) →
+    dst e ≡ end (snoc e gw p)
+  snoc-end {zero} e gw p = refl
+  snoc-end {suc n} e gw p = snoc-end e (tail gw) p
 
   drop :
     (gw : GraphWalk n) →
@@ -224,3 +260,7 @@ record directedGraph : Type (ℓ-suc ℓ) where
   DecReachable : (u v : ⟨ states ⟩) → Dec (Reachable u v)
   DecReachable u v =
     EquivPresDec (PathReachable≃Reachable u v) (DecPathReachable u v)
+
+  Reachable-is-reflexive : (u : ⟨ states ⟩) → Reachable u u
+  Reachable-is-reflexive u = ∣ 0 , trivialWalk u , refl , refl ∣₁
+
