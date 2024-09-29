@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
@@ -226,3 +227,8 @@ opaque
 
 ⊸0⊗ : ε ⊢ k → l ⊢ l ⊗ k
 ⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
+
+⟜-app⊸0⊗ :
+  ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) → 
+  ⟜-app ∘g ⊸0⊗ x ∘g ⟜-intro f ≡ f ∘g ⊸0⊗ x
+⟜-app⊸0⊗ = {!!}

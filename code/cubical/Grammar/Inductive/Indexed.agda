@@ -44,16 +44,16 @@ module _ where
         map F (λ a → id {g = g a}) ≡ id
       map-id (k g) i = id
       map-id (Var a) i = id
-      map-id (&e B F) i = LinΠ-intro (λ a → map-id (F a) i ∘g LinΠ-app a)
-      map-id (⊕e B F) i = LinΣ-elim (λ a → LinΣ-intro a ∘g map-id (F a) i)
+      map-id (&e B F) i = &ᴰ-intro (λ a → map-id (F a) i ∘g &ᴰ-π a)
+      map-id (⊕e B F) i = ⊕ᴰ-elim (λ a → ⊕ᴰ-in a ∘g map-id (F a) i)
       map-id (⊗e F F') i = map-id F i ,⊗ map-id F' i
 
       map-∘ :  ∀ (F : Functor A) {g h k : A → Grammar _} (f : ∀ a → h a  ⊢ k a)(f' : ∀ a → g a ⊢ h a)
         → map F (λ a → f a ∘g f' a) ≡ map F f ∘g map F f'
       map-∘ (k g) f f' i = id
       map-∘ (Var a) f f' i = f a ∘g f' a
-      map-∘ (&e B F) f f' i = LinΠ-intro (λ a → map-∘ (F a) f f' i ∘g LinΠ-app a)
-      map-∘ (⊕e B F) f f' i = LinΣ-elim (λ a → LinΣ-intro a ∘g map-∘ (F a) f f' i)
+      map-∘ (&e B F) f f' i = &ᴰ-intro (λ a → map-∘ (F a) f f' i ∘g &ᴰ-π a)
+      map-∘ (⊕e B F) f f' i = ⊕ᴰ-elim (λ a → ⊕ᴰ-in a ∘g map-∘ (F a) f f' i)
       map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
 
     {-# NO_POSITIVITY_CHECK #-}
