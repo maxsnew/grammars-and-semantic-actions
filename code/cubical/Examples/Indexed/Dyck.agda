@@ -161,6 +161,14 @@ appEOF = (⟜-app ∘g ⊸0⊗ EOF ∘g &ᴰ-π 0)
 traceBuilder : IndDyck ⊢ TraceAction _
 traceBuilder = rec DyckTy eTAlg _
 
+genTraceBuilder : ∀ {m} →
+  GenIndDyck (m , true) ⊢ &[ n ∈ _ ] (Trace (m + n) true ⟜ Trace n true)
+genTraceBuilder {m = zero} = traceBuilder
+genTraceBuilder {m = suc m} = &ᴰ-intro (λ n → ⟜-intro
+  ((⟜-app ∘g (&ᴰ-π (suc (m + n)) ∘g traceBuilder) ,⊗ CLOSE)
+   ∘g id ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g genTraceBuilder {m = m}) ,⊗ id)
+   ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻))
+
 exhibitTrace' : IndDyck ⊢ Trace zero true
 exhibitTrace' = appEOF ∘g traceBuilder
 
@@ -171,6 +179,15 @@ genRetract :
     (genMkTree ∘g ⟜-app ∘g (&ᴰ-π n ∘g traceBuilder) ,⊗ id)
     (genAppend {n = n} ∘g id ,⊗ genMkTree)
 genRetract = {!!}
+
+genSection :
+  ∀ {n} →
+  Path (Trace n true ⊢ Trace n true)
+    -- seems unavoidable unfortunately
+    (subst (λ m → Trace n true ⊢ Trace m true) (+-zero n)
+      (⟜-app ∘g ⊸0⊗ EOF ∘g &ᴰ-π 0 ∘g genTraceBuilder {m = n} ∘g genMkTree))
+    id
+genSection = {!!}
 
 -- mkTree ∘g ((⟜-app ∘g ⊸0⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl)) ∘g &ᴰ-π 0)
 
