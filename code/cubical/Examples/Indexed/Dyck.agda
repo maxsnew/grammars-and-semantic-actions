@@ -37,8 +37,26 @@ DyckTy _ = ⊕e DyckTag (λ
 IndDyck : Grammar ℓ-zero
 IndDyck = μ DyckTy _
 
+NIL : ε ⊢ IndDyck
+NIL = roll ∘g ⊕ᴰ-in nil'
+
 BALANCED : literal [ ⊗ IndDyck ⊗ literal ] ⊗ IndDyck ⊢ IndDyck
 BALANCED = roll ∘g ⊕ᴰ-in balanced'
+
+append : IndDyck ⊗ IndDyck ⊢ IndDyck
+append = ⟜-intro⁻ (rec DyckTy
+  (λ { tt → ⊕ᴰ-elim (λ
+    { nil'      → ⟜-intro-ε id
+    ; balanced' → ⟜-intro
+      (BALANCED
+       -- using app NIL on the left here is a bit weird but I think it works
+      ∘g id ,⊗ (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ ⟜-app
+      ∘g id ,⊗ id ,⊗ ⊗-assoc⁻ ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻) }) })
+  _)
+
+-- Need this lemma for the retract property below
+append-nil-r : append ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ≡ id
+append-nil-r = {!!}
 
 data TraceTag : Type where
   eof' open' close' leftovers' unexpected' : TraceTag
@@ -110,13 +128,18 @@ mkTreeAlg (n , b) = ⊕ᴰ-elim (λ
     balance~ zero = roll ∘g ⊕ᴰ-in balanced'
     balance~ (suc n) = ⟜4⊗ (⟜4-intro-ε (roll ∘g ⊕ᴰ-in balanced'))
 
+genAppend : ∀ {n} → IndDyck ⊗ GenIndDyck (n , true) ⊢ GenIndDyck (n , true)
+genAppend {zero} = append
+genAppend {suc n} = ⟜2⊗ (⟜2-intro-ε append)
+
+genMkTree : ∀ {n b} → Trace n b ⊢ GenIndDyck (n , b)
+genMkTree = rec TraceTys mkTreeAlg _
+
 mkTree : Trace zero true ⊢ IndDyck
 mkTree = rec TraceTys mkTreeAlg (0 , true)
 
 TraceAction : Unit → Grammar ℓ-zero
 TraceAction _ = &[ n ∈ ℕ ] (Trace n true ⟜ Trace n true)
-
-
 
 eTAlg : Algebra DyckTy TraceAction
 eTAlg _ = ⊕ᴰ-elim (λ
@@ -135,16 +158,23 @@ EOF = roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl
 appEOF : TraceAction _ ⊢ Trace zero true
 appEOF = (⟜-app ∘g ⊸0⊗ EOF ∘g &ᴰ-π 0)
 
-exhibitTrace' : IndDyck ⊢ Trace zero true
-exhibitTrace' = appEOF ∘g rec DyckTy eTAlg _
+traceBuilder : IndDyck ⊢ TraceAction _
+traceBuilder = rec DyckTy eTAlg _
 
--- want to show
+exhibitTrace' : IndDyck ⊢ Trace zero true
+exhibitTrace' = appEOF ∘g traceBuilder
+
+-- prove this by induction and this should imply the retract property
+genRetract :
+  ∀ {n} →
+  Path (IndDyck ⊗ Trace n true ⊢ GenIndDyck (n , true))
+    (genMkTree ∘g ⟜-app ∘g (&ᴰ-π n ∘g traceBuilder) ,⊗ id)
+    (genAppend {n = n} ∘g id ,⊗ genMkTree)
+genRetract = {!!}
 
 -- mkTree ∘g ((⟜-app ∘g ⊸0⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl)) ∘g &ᴰ-π 0)
 
 -- is a homomorphism from eTAlg to (initialAlgebra DyckTy)
-
--- 
 
 Dyck≅Trace : StrongEquivalence IndDyck (Trace zero true)
 Dyck≅Trace = mkStrEq exhibitTrace' mkTree
@@ -262,10 +292,16 @@ Dyck≅Trace = mkStrEq exhibitTrace' mkTree
     where
       -- maybe generalize from 0 to n and prove ∀ n by induction?
       the-lemma :
+        Path (TraceAction _ ⊗ literal ] ⊗ TraceAction _ ⊢ IndDyck ⊗ literal ] ⊗ IndDyck)
         (rec TraceTys mkTreeAlg ((suc 0) , true) ∘g (⟜-app ∘g &ᴰ-π (suc 0) ,⊗ id ∘g id ,⊗ (CLOSE ∘g id ,⊗ appEOF)))
-        ≡ (rec TraceTys mkTreeAlg (0 , true) ∘g appEOF) ,⊗ id ,⊗ (rec TraceTys mkTreeAlg (0 , true) ∘g appEOF)
+        ((rec TraceTys mkTreeAlg (0 , true) ∘g appEOF) ,⊗ id ,⊗ (rec TraceTys mkTreeAlg (0 , true) ∘g appEOF))
       the-lemma = {!!}
    
+      the-lemma' :
+        Path (TraceAction _ ⊗ literal ] ⊗ Trace 0 true ⊢ IndDyck ⊗ literal ] ⊗ IndDyck)
+        (rec TraceTys mkTreeAlg ((suc 0) , true) ∘g (⟜-app ∘g &ᴰ-π (suc 0) ,⊗ id ∘g id ,⊗ (CLOSE ∘g id ,⊗ id)))
+        ((rec TraceTys mkTreeAlg (0 , true) ∘g appEOF) ,⊗ id ,⊗ (rec TraceTys mkTreeAlg (0 , true)))
+      the-lemma' = {!!}
       -- TODO rename all of these lemmas and put them in the relevant external
       -- files
       opaque
