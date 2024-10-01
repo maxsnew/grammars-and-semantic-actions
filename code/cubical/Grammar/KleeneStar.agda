@@ -169,3 +169,9 @@ opaque
   unfolding _⊗_
   cons' : ε ⊢ KL* g ⟜ KL* g ⟜ g
   cons' = ⟜2-intro-ε cons
+
+  NIL : ε ⊢ KL* g
+  NIL = nil
+
+  CONS : g ⊗ KL* g ⊢ KL* g
+  CONS = cons

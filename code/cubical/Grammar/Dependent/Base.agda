@@ -10,6 +10,8 @@ open import Cubical.Data.FinSet
 open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
 open import Term.Base Alphabet
 open import Grammar.Literal Alphabet
 
@@ -42,12 +44,6 @@ syntax Dep⊕-syntax {A = A} (λ x → B) = ⊕[ x ∈ A ] B
 syntax LinearΠ-syntax {A = A} (λ x → B) = LinΠ[ x ∈ A ] B
 syntax Dep&-syntax {A = A} (λ x → B) = &[ x ∈ A ] B
 
-module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
-  LinΠ-intro : (∀ a → g ⊢ h a) → g ⊢ LinΠ[ a ∈ A ] h a
-  LinΠ-intro = λ f w z a → f a w z
-
-  LinΣ-elim : (∀ a → h a ⊢ g) → (LinΣ[ a ∈ A ] h a) ⊢ g
-  LinΣ-elim f w x = f (fst x) w (snd x)
 module _ {A : Type ℓS} {h : A → Grammar ℓH} where
   LinΠ-app : ∀ a → LinΠ[ a ∈ A ] h a ⊢ h a
   LinΠ-app = λ a w z → z a
@@ -55,3 +51,26 @@ module _ {A : Type ℓS} {h : A → Grammar ℓH} where
   LinΣ-intro : ∀ a → h a ⊢ LinΣ[ a ∈ A ] h a
   LinΣ-intro = λ a w → _,_ a
 
+module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
+  LinΠ-intro : (∀ a → g ⊢ h a) → g ⊢ LinΠ[ a ∈ A ] h a
+  LinΠ-intro = λ f w z a → f a w z
+
+  LinΣ-elim : (∀ a → h a ⊢ g) → (LinΣ[ a ∈ A ] h a) ⊢ g
+  LinΣ-elim f w x = f (fst x) w (snd x)
+
+  ⊕ᴰ≡ : (f f' : (⊕[ a ∈ A ] h a) ⊢ g)
+    → (∀ a → f ∘g LinΣ-intro a ≡ f' ∘g LinΣ-intro a)
+    → f ≡ f'
+  ⊕ᴰ≡ f f' fa≡fa' i w x = fa≡fa' (x .fst) i w (x .snd)
+
+module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
+  module _ {ℓk}{k : Grammar ℓk} where
+    matchΣ-l :
+      (∀ a → (h a) ⊗ g ⊢ k) →
+      (LinΣ[ a ∈ A ] h a) ⊗ g ⊢ k
+    matchΣ-l f = ⟜-intro⁻ (LinΣ-elim (λ a → ⟜-intro (f a)))
+
+    matchΣ-r :
+      (∀ a → g ⊗ (h a) ⊢ k) →
+      g ⊗ LinΣ[ a ∈ A ] h a ⊢ k
+    matchΣ-r f = ⊸-intro⁻ (LinΣ-elim (λ a → ⊸-intro (f a)))

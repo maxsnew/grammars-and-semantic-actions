@@ -25,19 +25,20 @@ module _ where
   ⟦ Var a ⟧ g = g a
   ⟦ &e B F ⟧ g = &[ b ∈ B ] ⟦ F b ⟧ g
   ⟦ ⊕e B F ⟧ g = ⊕[ b ∈ B ] ⟦ F b ⟧ g
-  ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗' ⟦ F' ⟧ g
+  ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗ ⟦ F' ⟧ g
 
   module _ {A : Type ℓ} where
+    map : ∀ (F : Functor A) {g h : A → Grammar ℓ}
+      → (∀ a → g a ⊢ h a)
+      → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
+    map (k g) f = id
+    map (Var a) f = f a
+    map (&e B F) f = LinΠ-intro λ a → map (F a) f ∘g LinΠ-app a
+    map (⊕e B F) f = LinΣ-elim λ a → LinΣ-intro a ∘g map (F a) f
+    map (⊗e F F') f = map F f ,⊗ map F' f
+
     opaque
       unfolding _⊗_ ⊗-intro
-      map : ∀ (F : Functor A) {g h : A → Grammar ℓ}
-        → (∀ a → g a ⊢ h a)
-        → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
-      map (k g) f = id
-      map (Var a) f = f a
-      map (&e B F) f = LinΠ-intro λ a → map (F a) f ∘g LinΠ-app a
-      map (⊕e B F) f = LinΣ-elim λ a → LinΣ-intro a ∘g map (F a) f
-      map (⊗e F F') f = map F f ,⊗ map F' f
 
       map-id : ∀ (F : Functor A) {g : A → Grammar _} →
         map F (λ a → id {g = g a}) ≡ id
@@ -55,6 +56,7 @@ module _ where
       map-∘ (⊕e B F) f f' i = LinΣ-elim (λ a → LinΣ-intro a ∘g map-∘ (F a) f f' i)
       map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
 
+    {-# NO_POSITIVITY_CHECK #-}
     data μ (F : A → Functor A) a : Grammar ℓ where
       roll : ⟦ F a ⟧ (μ F) ⊢ μ F a
 
@@ -65,10 +67,14 @@ module _ where
     initialAlgebra : Algebra (μ F)
     initialAlgebra = λ a → roll
 
+    isHomo : ∀ {g h} → (α : Algebra g) → (β : Algebra h) →
+      (ϕ : ∀ a → g a ⊢ h a) →
+      Type _
+    isHomo α β ϕ = ∀ a → ϕ a ∘g α a ≡ β a ∘g map (F a) ϕ
+
     Homomorphism : ∀ {g h} → Algebra g → Algebra h → Type _
     Homomorphism {g = g}{h} α β =
-      Σ[ ϕ ∈ (∀ a → g a ⊢ h a) ]
-      (∀ a → ϕ a ∘g α a ≡ β a ∘g map (F a) ϕ)
+      Σ[ ϕ ∈ (∀ (a : A) → g a ⊢ h a) ] isHomo α β ϕ
 
     idHomo : ∀ {g} → (α : Algebra g) → Homomorphism α α
     idHomo α = (λ a → id) , λ a → cong (α a ∘g_) (sym (map-id (F a)))
@@ -103,9 +109,14 @@ module _ where
     ind : ∀ {g} (α : Algebra g) (ϕ ϕ' : Homomorphism initialAlgebra α) → ϕ .fst ≡ ϕ' .fst
     ind α ϕ ϕ' = μ-η α ϕ ∙ sym (μ-η α ϕ')
 
+    ind' : ∀ {g} (α : Algebra g) (ϕ ϕ' : Homomorphism initialAlgebra α) → ∀ a → ϕ .fst a ≡ ϕ' .fst a
+    ind' α ϕ ϕ' = funExt⁻ (ind α ϕ ϕ')
+
     ind-id : ∀ (ϕ : Homomorphism initialAlgebra initialAlgebra) → ϕ .fst ≡ idHomo initialAlgebra .fst
     ind-id ϕ = ind initialAlgebra ϕ (idHomo initialAlgebra)
 
+    ind-id' : ∀ (ϕ : Homomorphism initialAlgebra initialAlgebra) a → ϕ .fst a ≡ id
+    ind-id' ϕ a = funExt⁻ (ind-id ϕ) a
 
     unroll : ∀ a → μ F a ⊢ ⟦ F a ⟧ (μ F)
     unroll a w (roll .w x) = x
@@ -115,3 +126,20 @@ module _ where
     unroll' = rec {g = λ a → ⟦ F a ⟧ (μ F)} alg where
       alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
       alg a = map (F a) (λ _ → roll)
+
+
+  -- -- A states
+  -- -- B tag
+  -- ⊕eisHomo : ∀ {A B : Type ℓ}(F : A → B → Functor A) →
+  --   (ϕ : Algebra (λ a → {!F a!}) {!!}) →
+  --   -- (ϕ : ∀ a → g a ⊢ h a) →
+  --   {!!} →
+  --   isHomo (λ (a : A) → ⊕e B (F a))
+  --     {!!} {!!} {!!}
+  -- ⊕eisHomo = {!!}
+
+    -- termIsHomo : ∀ {g h} → (α : Algebra g) → (β : Algebra h) →
+    --   (ϕ : ∀ a → g a ⊢ h a) →
+    --   {! !} →
+    --   isHomo α β ϕ
+    -- termIsHomo = {!!}

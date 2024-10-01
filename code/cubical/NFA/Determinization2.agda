@@ -106,8 +106,9 @@ module _
       where open PTMonad
     ε-closure X .snd t .snd = refl
 
-  ε-reach : ⟨ N.Q ⟩ → ⟨ ε-closed ⟩
-  ε-reach q = ε-reach' q , ε-reach'-is-ε-closed q
+  opaque
+    ε-reach : ⟨ N.Q ⟩ → ⟨ ε-closed ⟩
+    ε-reach q = ε-reach' q , ε-reach'-is-ε-closed q
 
   opaque
     lit-reach : ⟨ Alphabet ⟩ → ⟨ N.Q ⟩ → Decℙ ⟨ N.Q ⟩
@@ -124,14 +125,20 @@ module _
 
   private module D = DFA determinized
 
+  NFA→DFA' : ∀ (q : ⟨ N.Q ⟩) →
+   N.Parse q ⊢
+     ⊕[ x ∈ ⟨ D.Q ⟩ ] D.Parse (ε-reach q) x
+  NFA→DFA' = {!!}
+
   NFA→DFA : N.InitParse ⊢ D.InitParse
-  NFA→DFA = N.recInit (record
-    { the-ℓs = λ _ → ℓ-suc ℓN
-    ; G = λ q → D.InitParse
-    ; nil-case = λ {q} q-is-acc → LinΣ-intro D.init ∘g LinΣ-intro {!!} ∘g D.nil
-    ; cons-case = {!!}
-    ; ε-cons-case = {!!}
-    })
+  NFA→DFA = NFA→DFA' N.init
+  -- N.recInit (record
+  --   { the-ℓs = λ _ → ℓ-suc ℓN
+  --   ; G = λ q → D.InitParse
+  --   ; nil-case = λ {q} q-is-acc → LinΣ-intro D.init ∘g LinΣ-intro {!!} ∘g D.nil
+  --   ; cons-case = {!!}
+  --   ; ε-cons-case = {!!}
+  --   })
 
   -- DFA→NFA : D.InitParse ⊢ N.InitParse
   -- DFA→NFA = LinΣ-elim (λ X@(X' , X'-is-ε-closed) → LinΣ-elim (λ X-is-acc → D.recInit X (record
@@ -166,7 +173,7 @@ module _
     Nondet-rec : {G H : Grammar ℓ} → Nondet-Algebra G H → Nondet G ⊢ H
     Nondet-rec = Inductive.rec
 
-    Ctor-[-] : {}
+    -- Ctor-[-] : {}
 
     bind : {G H : Grammar ℓ} → (G ⊢ Nondet H) → Nondet G ⊢ Nondet H
     bind f = Nondet-rec (λ w → λ where

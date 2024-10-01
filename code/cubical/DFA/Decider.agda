@@ -16,9 +16,12 @@ open import Cubical.Data.SumFin
 open import Cubical.Data.Unit
 open import Cubical.Data.Empty as Empty
 open import Cubical.Data.List hiding (init)
+import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
+open import Grammar.Inductive.Indexed Alphabet as Idx
 open import Grammar.Equivalence Alphabet
+open import Grammar.String.Properties Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
 open import Helper
@@ -26,65 +29,116 @@ open import Helper
 private
   variable ℓΣ₀ ℓD ℓP ℓ : Level
 
-module _ (D : DFA {ℓD}) where
+module _ (D : DFA) where
   open DFA D
 
   open *r-Algebra
-  open Algebra
-  open AlgebraHom
 
-  opaque
-    unfolding _⊗_
-    run-from-state : string ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
-    run-from-state = foldKL*r char the-alg
-      where
-        the-cons :
-          char ⊗ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q ⊢
-            LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
-        the-cons =
-          LinΠ-intro (λ q →
-          ⟜-intro⁻ (LinΣ-elim (λ c →
-            ⟜-intro {k = TraceFrom q}
-              (⊸-intro⁻
-                (LinΣ-elim
-                  (λ q' → ⊸-intro {k = TraceFrom q}
-                    (LinΣ-intro {h = λ q'' → Trace q'' q} q' ∘g
-                      Trace.cons q c))
-                ∘g LinΠ-app (δ q c))))))
+  -- check-accept : {q-start : ⟨ Q ⟩} (q-end : ⟨ Q ⟩) →
+  --   Trace q-end q-start ⊢
+  --     AcceptingTrace q-start q-end ⊕ RejectingTrace q-start q-end
+  -- check-accept q =
+  --   decRec
+  --     (λ acc → ⊕-inl ∘g LinΣ-intro acc)
+  --     (λ rej → ⊕-inr ∘g LinΣ-intro rej)
+  --     (isAcc q .snd)
 
-        the-alg : *r-Algebra char
-        the-alg .the-ℓ = ℓD
-        the-alg .G = LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
-        the-alg .nil-case = LinΠ-intro (λ q → LinΣ-intro q ∘g nil)
-        the-alg .cons-case = the-cons
+  -- check-accept-from : (q-start : ⟨ Q ⟩) →
+  --   TraceFrom q-start ⊢
+  --     AcceptingTraceFrom q-start ⊕ RejectingTraceFrom q-start
+  -- check-accept-from q-start =
+  --   LinΣ-elim (λ q-end →
+  --     ⊕-elim (⊕-inl ∘g LinΣ-intro q-end) (⊕-inr ∘g LinΣ-intro q-end) ∘g
+  --     check-accept q-end)
 
-  check-accept : {q-start : ⟨ Q ⟩} (q-end : ⟨ Q ⟩) →
-    Trace q-end q-start ⊢
-      AcceptingTrace q-start q-end ⊕ RejectingTrace q-start q-end
-  check-accept q =
-    decRec
-      (λ acc → ⊕-inl ∘g LinΣ-intro acc)
-      (λ rej → ⊕-inr ∘g LinΣ-intro rej)
-      (isAcc q .snd)
+  -- decide :
+  --   string ⊢
+  --     LinΠ[ q ∈ ⟨ Q ⟩ ] (AcceptingTraceFrom q ⊕ RejectingTraceFrom q)
+  -- decide =
+  --   LinΠ-intro (λ q →
+  --     check-accept-from q ∘g
+  --     LinΠ-app q) ∘g
+  --   run-from-state
 
-  check-accept-from : (q-start : ⟨ Q ⟩) →
-    TraceFrom q-start ⊢
-      AcceptingTraceFrom q-start ⊕ RejectingTraceFrom q-start
-  check-accept-from q-start =
-    LinΣ-elim (λ q-end →
-      ⊕-elim (⊕-inl ∘g LinΣ-intro q-end) (⊕-inr ∘g LinΣ-intro q-end) ∘g
-      check-accept q-end)
+  -- decideInit :
+  --   string ⊢
+  --     (AcceptingTraceFrom init ⊕ RejectingTraceFrom init)
+  -- decideInit = LinΠ-app init ∘g decide
 
-  decide :
-    string ⊢
-      LinΠ[ q ∈ ⟨ Q ⟩ ] (AcceptingTraceFrom q ⊕ RejectingTraceFrom q)
-  decide =
-    LinΠ-intro (λ q →
-      check-accept-from q ∘g
-      LinΠ-app q) ∘g
-    run-from-state
 
-  decideInit :
-    string ⊢
-      (AcceptingTraceFrom init ⊕ RejectingTraceFrom init)
-  decideInit = LinΠ-app init ∘g decide
+  parse-from-state : string ⊢ &[ q ∈ ⟨ Q ⟩ ] Trace' q
+  parse-from-state = foldKL*r char the-alg
+    where
+    the-alg : *r-Algebra char
+    the-alg .the-ℓ = ℓ-zero
+    the-alg .G = &[ q ∈ ⟨ Q ⟩ ] Trace' q
+    the-alg .nil-case =
+      LinΠ-intro (λ q →
+       roll ∘g LinΣ-intro stop)
+    the-alg .cons-case =
+      LinΠ-intro (λ q →
+        matchΣ-l λ c →
+          roll ∘g LinΣ-intro step ∘g
+          LinΣ-intro c ∘g id ,⊗ LinΠ-app (δ q c))
+
+  printAlg : Algebra TraceTy λ _ → string
+  printAlg q = LinΣ-elim ((λ {
+      stop → NIL
+    ; step → CONS ∘g LinΣ-elim (λ c → LinΣ-intro c ,⊗ id) }))
+
+  print : (q : ⟨ Q ⟩) → Trace' q ⊢ string
+  print q = Idx.rec TraceTy printAlg q
+
+  open StrongEquivalence
+  Trace'≅string : (q : ⟨ Q ⟩) → StrongEquivalence (Trace' q) string
+  Trace'≅string q .fun = print q
+  Trace'≅string q .inv = LinΠ-app q ∘g parse-from-state
+  Trace'≅string q .sec = unambiguous-string _ _
+  Trace'≅string q .ret = ans
+    where
+    opaque
+      unfolding NIL CONS KL*r-elim
+      ans : LinΠ-app q ∘g parse-from-state ∘g print q ≡ id
+      ans =
+        ind-id' TraceTy
+          (compHomo TraceTy (initialAlgebra _) printAlg (initialAlgebra _)
+            ((λ q → LinΠ-app q ∘g parse-from-state) ,
+            (λ q →
+              ⊕ᴰ≡ _ _
+                λ { stop → refl
+                  ; step →
+                  ⟜-intro⁻
+                    (LinΣ-elim (λ c → ⟜-intro
+                      (roll ∘g
+                      LinΣ-intro step ∘g
+                      LinΣ-intro c ∘g
+                      id ,⊗ LinΠ-app (δ q c)))
+                    ) ∘g
+                    id ,⊗ parse-from-state ∘g
+                    LinΣ-elim (λ c → LinΣ-intro c ,⊗ id)
+                      ≡⟨ {!!} ⟩
+                    {!!}
+                      ≡⟨ {!!} ⟩
+                    roll ∘g
+                    Idx.map
+                      (TraceTy q)
+                      (λ q' → LinΠ-app q' ∘g parse-from-state ) ∘g
+                    LinΣ-intro step
+                    ∎
+                  }
+              -- (LinΠ-app q ∘g parse-from-state) ∘g printAlg q
+              --   ≡⟨ {!!} ⟩
+              -- roll ∘g
+              -- Idx.map (TraceTy q) (λ q₁ → LinΠ-app q₁ ∘g parse-from-state)
+              -- ∎
+              )
+              )
+            (recHomo TraceTy printAlg))
+          -- ((λ q' → LinΠ-app q' ∘g parse-from-state ∘g print q') ,
+          -- λ q' → {!!} )
+          q
+    -- where
+    -- opaque
+    --   unfolding KL*r-elim ⌈w⌉→string internalize uniquely-supported-⌈w⌉
+    --   ans : parse-from-state ∘g ⊤→string ∘g ⊤-intro ≡ id
+    --   ans = {!!}
