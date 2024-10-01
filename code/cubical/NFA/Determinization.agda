@@ -34,7 +34,6 @@ import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.KleeneStar Alphabet
 open import Term Alphabet
 open import NFA.Base Alphabet
 open import DFA Alphabet
@@ -120,7 +119,7 @@ module _ (N : NFA {ℓN}) (isFinSetΣ₀ : isFinSet ⟨ Alphabet ⟩) where
             (LinΣ-elim (λ c → ⟜-intro (LinΣ-intro {h = DetTrace} (ε-closure (lit-closure c (qs .fst))) ∘g det-cons)))
             id)))
 
-  parse : string-grammar ⊢ LinΣ[ qs ∈ ε-closed ] DetTrace qs
+  parse : string ⊢ LinΣ[ qs ∈ ε-closed ] DetTrace qs
   parse = foldKL*r char (record
     { the-ℓ = _
     ; G = _

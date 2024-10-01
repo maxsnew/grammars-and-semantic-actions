@@ -15,7 +15,7 @@ open import Cubical.Data.List
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
 open import Cubical.Data.Nat.Order.Recursive as Ord
-open import Cubical.Data.Bool hiding (_⊕_)
+open import Cubical.Data.Bool as Bool hiding (_⊕_)
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.DecidablePredicate
 open import Cubical.Data.FinSet.Constructors
@@ -139,16 +139,12 @@ isPropCod→isProp≃ isPropB =
 
 open Iso
 DecPropIso : ∀ {ℓ} → Iso (DecProp ℓ) (DecProp' ℓ)
-fun DecPropIso (a , yes p) =
-  (a .fst) ,
-  (true , (isContr→Equiv (p , λ y → a .snd _ _) isContrUnit))
-fun DecPropIso (a , no ¬p) = (a .fst) , ((false , uninhabEquiv ¬p (λ x → x)))
-fst (fst (inv DecPropIso (a , b , c))) = a
-snd (fst (inv DecPropIso (a , b , c))) = isDecProp→isProp (b , c)
-snd (inv DecPropIso (a , false , c)) =
-  no (equivToIso c .fun)
-snd (inv DecPropIso (a , true , c)) =
-  yes (equivToIso c .inv tt)
+DecPropIso .fun (A , dec) = ⟨ A ⟩ , decRec
+  (λ a → true , isContr→Equiv (a , λ y → str A _ _) isContrUnit)
+  (λ ¬a → false , uninhabEquiv ¬a (λ x → x))
+  dec
+DecPropIso .inv (A , isDecPropA) =
+  (A , isDecProp→isProp isDecPropA) , isDecProp→Dec isDecPropA
 rightInv DecPropIso (a , false , c) =
   ΣPathP (refl , (ΣPathP (refl ,
     isPropCod→isProp≃ isProp⊥ _ c )))
@@ -192,6 +188,9 @@ DecPropWitness→DecPropWitness' :
 DecPropWitness→DecPropWitness' (a , yes p) c = c
 DecPropWitness→DecPropWitness' (a , no ¬p) c = ⊥.rec (¬p c)
 
+DecProp→FinSet : ∀ {ℓ} (P : DecProp ℓ) → FinSet ℓ
+DecProp→FinSet P = ⟨ P .fst ⟩ , isDecProp→isFinSet (str (P .fst)) (P .snd)
+
 DecProp⊎ :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
   (A .fst .fst → B .fst .fst → ⊥) → DecProp ℓ
@@ -222,6 +221,34 @@ DecProp∃ X P =
                      (DecProp→DecProp' (P x) .snd)) .snd
 -- -- (∃[ x ∈ X .fst ] P x .fst) , (isDecProp∃  X P)
 -- --
+
+DecProp'∀ :
+  ∀ {ℓ ℓ'} (X : FinSet ℓ) (P : ⟨ X ⟩ → DecProp' ℓ') →
+  DecProp' (ℓ-max ℓ ℓ')
+DecProp'∀ X P = ((x : ⟨ X ⟩) → ⟨ P x ⟩) , (isDecProp∀ X P)
+
+DecProp∀ :
+  ∀ {ℓ ℓ'} (X : FinSet ℓ) (P : ⟨ X ⟩ → DecProp ℓ') →
+  DecProp (ℓ-max ℓ ℓ')
+DecProp∀ X P = DecProp'→DecProp (DecProp'∀ X (DecProp→DecProp' ∘ P))
+
+DecProp→ :
+  ∀ {ℓ ℓ'} (P : DecProp ℓ) (Q : DecProp ℓ') →
+  DecProp (ℓ-max ℓ ℓ')
+DecProp→ P Q = DecProp∀ (DecProp→FinSet P) (λ _ → Q)
+
+DecPropΣProp :
+  ∀ {ℓ ℓ'} (A : FinSet ℓ) (B : ⟨ A ⟩ → DecProp ℓ')
+  (unique : (x y : ⟨ A ⟩) → ⟨ B x .fst ⟩ → ⟨ B y .fst ⟩ → x ≡ y) →
+  DecProp (ℓ-max ℓ ℓ')
+DecPropΣProp A B unique =
+  let C = Σ[ a ∈ ⟨ A ⟩ ] ⟨ B a .fst ⟩ in
+  let isPropC = λ (x , Bx) (y , By) → Σ≡Prop (λ a → str (B a .fst)) (unique x y Bx By) in
+  (C , isPropC) ,
+  mapDec
+    (PT.rec isPropC (λ x → x))
+    (λ ¬c c → ¬c ∣ c ∣₁)
+    (DecProp∃ A B .snd)
 
 DecPropΣ :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : A .fst .fst → DecProp ℓ) →
@@ -427,12 +454,21 @@ SingletonDecℙ' : ∀ {ℓ} {A : FinSet ℓ} → (a : A .fst) → Decℙ' (A .f
 SingletonDecℙ' {A = A} a =
   DecℙIso (A .fst) .fun (SingletonDecℙ {A = A} a)
 
+Decℙ→Type : ∀ {ℓ} (A : FinSet ℓ) → Decℙ ⟨ A ⟩ → Type ℓ
+Decℙ→Type A X = Σ[ a ∈ ⟨ A ⟩ ] ⟨ X a .fst ⟩
+
 Decℙ'→FinSet : ∀ {ℓ} (A : FinSet ℓ) → Decℙ' (A .fst) → FinSet ℓ
-fst (Decℙ'→FinSet A X) = Σ[ a ∈ A .fst ] X a .fst
+fst (Decℙ'→FinSet A X) = Σ[ a ∈ ⟨ A ⟩ ] ⟨ X a ⟩
 snd (Decℙ'→FinSet A X) = isFinSetSub A X
 
-Decℙ→FinSet : ∀ {ℓ} (A : FinSet ℓ) → Decℙ (A .fst) → FinSet ℓ
-Decℙ→FinSet A X = Decℙ'→FinSet A (DecℙIso (A .fst) .fun X )
+Decℙ→FinSet : ∀ {ℓ} (A : FinSet ℓ) → Decℙ ⟨ A ⟩ → FinSet ℓ
+Decℙ→FinSet A X = Decℙ'→FinSet A (DecℙIso ⟨ A ⟩ .fun X)
+
+FinSetSub :
+  ∀ {ℓ ℓ'} (A : FinSet ℓ) (P : ⟨ A ⟩ → DecProp ℓ') →
+  FinSet (ℓ-max ℓ ℓ')
+FinSetSub A P .fst = Σ[ a ∈ ⟨ A ⟩ ] ⟨ DecProp→DecProp' (P a) ⟩
+FinSetSub A P .snd = isFinSetSub A (DecProp→DecProp' ∘ P)
 
 -- I'm pretty sure this is the `bind` of a FinSet monad
 FinSetDecℙ∃ :
