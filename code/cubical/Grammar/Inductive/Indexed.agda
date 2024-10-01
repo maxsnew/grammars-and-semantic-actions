@@ -119,3 +119,62 @@ module _ where
     unroll' = rec {g = λ a → ⟦ F a ⟧ (μ F)} alg where
       alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
       alg a = map (F a) (λ _ → roll)
+
+  module _ {A : Type ℓ}
+    (F : A → Functor A)(P : Grammar ℓ) where
+    PAlgebra : (A → Grammar ℓ) → Type ℓ
+    PAlgebra g = ∀ a → ⟦ F a ⟧ g ⊗ P ⊢ g a
+
+    initialPAlgebra : PAlgebra (μ λ a → ⊗e (F a) (k P))
+    initialPAlgebra = λ a → roll
+
+    PHomomorphism : ∀ {g h} → PAlgebra g → PAlgebra h → Type _
+    PHomomorphism {g = g}{h = h} α β =
+      Σ[ ϕ ∈ (∀ a → g a ⊢ h a) ]
+      (∀ a → ϕ a ∘g α a ≡ β a ∘g map (⊗e (F a) (k P)) ϕ)
+
+    idPHomo : ∀ {g} → (α : PAlgebra g) → PHomomorphism α α
+    idPHomo α =
+      (λ a → id) ,
+      λ a →
+        cong (α a ∘g_) (sym id,⊗id≡id) ∙
+        cong (λ u → α a ∘g u ,⊗ id) (sym (map-id (F a)))
+
+    compPHomo : ∀ {g h k}
+      (α : PAlgebra g)(β : PAlgebra h)(η : PAlgebra k)
+      → PHomomorphism β η → PHomomorphism α β → PHomomorphism α η
+    compPHomo α β η ϕ ψ .fst a = ϕ .fst a ∘g ψ .fst a
+    -- ϕ .fst a ∘g ψ .fst a
+    compPHomo α β η ϕ ψ .snd a =
+      cong (ϕ .fst a ∘g_) (ψ .snd a) ∙
+      cong (_∘g (map (F a) (ψ .fst) ,⊗ id)) (ϕ .snd a) ∙
+      cong (η a ∘g_) (sym (map-∘ (⊗e (F a) (k P)) (ϕ .fst) (ψ .fst)))
+
+    {-# TERMINATING #-}
+    recPHomo : ∀ {g} → (α : PAlgebra g) → PHomomorphism initialPAlgebra α
+    recPHomo α .fst a w (roll ._ x) =
+      α a w (map (⊗e (F a) (k P)) (recPHomo α .fst) w x)
+    recPHomo α .snd a = refl
+
+    recP : ∀ {g} → (α : PAlgebra g) → ∀ a →
+      (μ (λ a' → ⊗e (F a') (k P)) a) ⊢ (g a)
+    recP α = recPHomo α .fst
+
+    module _ {g} (α : PAlgebra g) (ϕ : PHomomorphism initialPAlgebra α) where
+      private
+        {-# TERMINATING #-}
+        Pμ-η' : ∀ a w x → ϕ .fst a w x ≡ recP α a w x
+        Pμ-η' a w (roll _ x) =
+          (λ i → ϕ .snd a i w x) ∙
+          λ i → α a w (map (⊗e (F a) (k P)) (λ a w x → Pμ-η' a w x i) w x)
+      Pμ-η : ϕ .fst ≡ recP α
+      Pμ-η = funExt (λ a → funExt λ w → funExt λ x → Pμ-η' a w x)
+
+    indP : ∀ {g} (α : PAlgebra g) (ϕ ϕ' : PHomomorphism initialPAlgebra α) → ϕ .fst ≡ ϕ' .fst
+    indP α ϕ ϕ' = Pμ-η α ϕ ∙ sym (Pμ-η α ϕ')
+
+    indP-id : ∀ (ϕ : PHomomorphism initialPAlgebra initialPAlgebra) → ϕ .fst ≡ idPHomo initialPAlgebra .fst
+    indP-id ϕ = indP initialPAlgebra ϕ (idHomo (λ a → ⊗e (F a) (k P)) initialPAlgebra)
+
+    indP-id' : ∀ (ϕ : PHomomorphism initialPAlgebra initialPAlgebra) a → ϕ .fst a ≡ id
+    indP-id' ϕ a = funExt⁻ (indP-id ϕ) a
