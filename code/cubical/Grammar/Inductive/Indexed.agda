@@ -56,6 +56,9 @@ module _ where
       map-∘ (⊕e B F) f f' i = ⊕ᴰ-elim (λ a → ⊕ᴰ-in a ∘g map-∘ (F a) f f' i)
       map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
 
+    -- NOTE: this is only needed because ⊗ is opaque. If it's not
+    -- opaque this passes the positivity check.
+    -- https://github.com/agda/agda/issues/6970
     {-# NO_POSITIVITY_CHECK #-}
     data μ (F : A → Functor A) a : Grammar ℓ where
       roll : ⟦ F a ⟧ (μ F) ⊢ μ F a
@@ -104,6 +107,9 @@ module _ where
 
     ind : ∀ {g} (α : Algebra g) (ϕ ϕ' : Homomorphism initialAlgebra α) → ϕ .fst ≡ ϕ' .fst
     ind α ϕ ϕ' = μ-η α ϕ ∙ sym (μ-η α ϕ')
+
+    ind' : ∀ {g} (α : Algebra g) (ϕ ϕ' : Homomorphism initialAlgebra α) → ∀ a → ϕ .fst a ≡ ϕ' .fst a
+    ind' α ϕ ϕ' = funExt⁻ (ind α ϕ ϕ')
 
     ind-id : ∀ (ϕ : Homomorphism initialAlgebra initialAlgebra) → ϕ .fst ≡ idHomo initialAlgebra .fst
     ind-id ϕ = ind initialAlgebra ϕ (idHomo initialAlgebra)
