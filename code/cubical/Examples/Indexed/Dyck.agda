@@ -369,4 +369,54 @@ Dyck≅Trace = mkStrEq exhibitTrace' mkTree
         ⟜-intro-ε id ≡ e
       p e = q e id
 
-    
+-- An alternate definition of traces that I think should work out better.
+TraceBTys : Bool → ℕ → Functor ℕ
+TraceBTys b n = ⊕e TraceTag (λ
+  { eof' → ⊕e (n Eq.≡ zero) (λ _ → ⊕e (b Eq.≡ true) λ _ → k ε)
+  ; open' → ⊗e (k (literal [)) (Var (suc n))
+  ; close' → ⊕e (Eq.fiber suc n) λ (n-1 , _) → ⊗e (k (literal ])) (Var (n-1))
+  ; leftovers' → ⊕e (Eq.fiber suc n) λ (n-1 , _) → ⊕e (b Eq.≡ false) λ _ → k ε
+  ; unexpected' → ⊕e ((n , b) Eq.≡ (0 , false)) λ _ → ⊗e (k (literal ])) (k ⊤)
+  })
+
+Trace' : Bool → ℕ → Grammar _
+Trace' b = μ (TraceBTys b)
+
+parse' : string ⊢ &[ n ∈ ℕ ] ⊕[ b ∈ _ ] Trace' b n
+parse' = foldKL*r _ (record { the-ℓ = _ ; G = _
+  ; nil-case = {!!}
+  ; cons-case = {!!} })
+
+printAlg : ∀ b → Algebra (TraceBTys b) (λ _ → string)
+printAlg b n = ⊕ᴰ-elim (λ
+  { eof' → {!!}
+  ; open' → {!!}
+  ; close' → {!!}
+  ; leftovers' → {!!}
+  ; unexpected' → {!!}
+  })
+
+printTrace : ∀ {n b} → Trace' b n ⊢ string
+printTrace = rec (TraceBTys _) (printAlg _) _
+
+weirdAlg : ∀ b → Algebra (TraceBTys b) (λ n → ⊕[ b' ∈ _ ] Trace' b' n)
+weirdAlg b n = ⊕ᴰ-elim (λ
+  { eof' →
+    ⊕ᴰ-in b
+    ∘g ⊕ᴰ-elim (λ { n≡0 → ⊕ᴰ-elim (λ { b≡true →
+    roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in n≡0 ∘g ⊕ᴰ-in b≡true }) })
+  ; open' →
+    ⊸-intro⁻ (⊕ᴰ-elim λ b' → ⊸-intro (⊕ᴰ-in b' ∘g roll ∘g ⊕ᴰ-in open'))
+  ; close' → ⊕ᴰ-elim λ { n-1 → ⊸-intro⁻ (⊕ᴰ-elim λ b' → ⊸-intro (⊕ᴰ-in b' ∘g roll ∘g ⊕ᴰ-in close' ∘g ⊕ᴰ-in n-1)) }
+  ; leftovers' →
+    ⊕ᴰ-in b ∘g
+    ⊕ᴰ-elim (λ n-1 → ⊕ᴰ-elim (λ { b≡false → roll ∘g ⊕ᴰ-in leftovers' ∘g ⊕ᴰ-in n-1 ∘g ⊕ᴰ-in b≡false }))
+  ; unexpected' → ⊕ᴰ-in b ∘g ⊕ᴰ-elim λ n,b≡0,false → roll ∘g ⊕ᴰ-in unexpected' ∘g ⊕ᴰ-in n,b≡0,false
+  })
+
+Trace≅String : ∀ {n} → StrongEquivalence (⊕[ b ∈ _ ] Trace' b n) string
+Trace≅String = mkStrEq
+  (⊕ᴰ-elim (λ _ → printTrace))
+  (&ᴰ-π _ ∘g parse')
+  {!!}
+  (⊕ᴰ≡ _ _ (λ b → ind' (TraceBTys b) {!!} {!!} {!!} {!!}))
