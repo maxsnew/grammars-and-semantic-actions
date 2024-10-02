@@ -65,6 +65,7 @@ module _ (D : DFA) where
   --     (AcceptingTraceFrom init ⊕ RejectingTraceFrom init)
   -- decideInit = LinΠ-app init ∘g decide
 
+  open StrongEquivalence
 
   parse-from-state : string ⊢ &[ q ∈ ⟨ Q ⟩ ] Trace' q
   parse-from-state = foldKL*r char the-alg
@@ -77,19 +78,19 @@ module _ (D : DFA) where
        roll ∘g LinΣ-intro stop)
     the-alg .cons-case =
       LinΠ-intro (λ q →
-        matchΣ-l λ c →
-          roll ∘g LinΣ-intro step ∘g
-          LinΣ-intro c ∘g id ,⊗ LinΠ-app (δ q c))
+        LinΣ-elim (λ c →
+          (roll ∘g LinΣ-intro step ∘g LinΣ-intro c) ∘g
+          id ,⊗ LinΠ-app (δ q c)) ∘g ⊕ᴰ-dist .fun)
 
   printAlg : Algebra TraceTy λ _ → string
   printAlg q = LinΣ-elim ((λ {
       stop → NIL
-    ; step → CONS ∘g LinΣ-elim (λ c → LinΣ-intro c ,⊗ id) }))
+    ; step → CONS ∘g LinΣ-elim (λ c → LinΣ-intro c ,⊗ id)
+    }))
 
   print : (q : ⟨ Q ⟩) → Trace' q ⊢ string
   print q = Idx.rec TraceTy printAlg q
 
-  open StrongEquivalence
   Trace'≅string : (q : ⟨ Q ⟩) → StrongEquivalence (Trace' q) string
   Trace'≅string q .fun = print q
   Trace'≅string q .inv = LinΠ-app q ∘g parse-from-state
@@ -97,7 +98,7 @@ module _ (D : DFA) where
   Trace'≅string q .ret = ans
     where
     opaque
-      unfolding NIL CONS KL*r-elim
+      unfolding NIL CONS KL*r-elim ⊕ᴰ-dist
       ans : LinΠ-app q ∘g parse-from-state ∘g print q ≡ id
       ans =
         ind-id' TraceTy
@@ -106,39 +107,8 @@ module _ (D : DFA) where
             (λ q →
               ⊕ᴰ≡ _ _
                 λ { stop → refl
-                  ; step →
-                  ⟜-intro⁻
-                    (LinΣ-elim (λ c → ⟜-intro
-                      (roll ∘g
-                      LinΣ-intro step ∘g
-                      LinΣ-intro c ∘g
-                      id ,⊗ LinΠ-app (δ q c)))
-                    ) ∘g
-                    id ,⊗ parse-from-state ∘g
-                    LinΣ-elim (λ c → LinΣ-intro c ,⊗ id)
-                      ≡⟨ {!!} ⟩
-                    {!!}
-                      ≡⟨ {!!} ⟩
-                    roll ∘g
-                    Idx.map
-                      (TraceTy q)
-                      (λ q' → LinΠ-app q' ∘g parse-from-state ) ∘g
-                    LinΣ-intro step
-                    ∎
+                  ; step → refl
                   }
-              -- (LinΠ-app q ∘g parse-from-state) ∘g printAlg q
-              --   ≡⟨ {!!} ⟩
-              -- roll ∘g
-              -- Idx.map (TraceTy q) (λ q₁ → LinΠ-app q₁ ∘g parse-from-state)
-              -- ∎
-              )
-              )
+              ))
             (recHomo TraceTy printAlg))
-          -- ((λ q' → LinΠ-app q' ∘g parse-from-state ∘g print q') ,
-          -- λ q' → {!!} )
           q
-    -- where
-    -- opaque
-    --   unfolding KL*r-elim ⌈w⌉→string internalize uniquely-supported-⌈w⌉
-    --   ans : parse-from-state ∘g ⊤→string ∘g ⊤-intro ≡ id
-    --   ans = {!!}

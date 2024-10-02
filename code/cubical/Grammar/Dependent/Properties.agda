@@ -9,6 +9,9 @@ open import Cubical.Data.FinSet
 open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Top Alphabet
@@ -19,10 +22,22 @@ private
   variable
     ℓg ℓh ℓS : Level
 
+module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
+  open StrongEquivalence
+  opaque
+    unfolding _⊗_
+    ⊕ᴰ-dist :
+      StrongEquivalence
+        ((LinearΣ h) ⊗ g)
+        (LinearΣ λ a → h a ⊗ g)
+    ⊕ᴰ-dist .fun w (s , (a , x) , y) = a , ((s , (x , y)))
+    ⊕ᴰ-dist .inv w (a , (s , (x , y))) = s , ((a , x) , y)
+    ⊕ᴰ-dist .sec = refl
+    ⊕ᴰ-dist .ret = refl
+
 module _
   {A : Type ℓS} {h : A → Grammar ℓh}
-  {isSetA : isSet A}
-  (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
+  (isSetA : isSet A)
   where
 
   isMono-LinΣ-intro : (a : A) → isMono (LinΣ-intro {h = h} a)
