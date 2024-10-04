@@ -32,7 +32,7 @@ import Cubical.Data.Equality as Eq
 -- open import Cubical.Data.SumFin
 -- open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 -- open import Cubical.Data.Sigma
-open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 
 open import Grammar Alphabet
@@ -194,6 +194,14 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
           &ᴰ-π X
           ))
         }) })
+
+  NFA→DFA : ∀ b q → N.Trace b q ⊢
+        &[ X ∈ ε-closed ]
+        &[ a ∈ q ∈-ε-closed X ]
+        ⊕[ X-end ∈ ε-closed ] DetTrace X-end X
+  NFA→DFA b q =
+    rec (NFATraceTyLift b) (NFA→DFA-alg b) (lift q)  ∘g
+    {!liftg!}
 
   -- ⊕e TraceTag λ {
   --   stop → ⊕e (b Eq.≡ isAcc q) λ { Eq.refl → k ε }
