@@ -65,6 +65,13 @@ record directedGraph : Type (ℓ-suc ℓ) where
   compat-src (trivialWalk x) ()
   compat-dst (trivialWalk x) ()
 
+  unitWalk : ⟨ directed-edges ⟩ → GraphWalk 1
+  unitWalk t .vertices zero = src t
+  unitWalk t .vertices (suc n) = dst t
+  unitWalk t .edges _ = t
+  unitWalk t .compat-src zero = refl
+  unitWalk t .compat-dst zero = refl
+
   hasUniqueVertices : GraphWalk n → Type _
   hasUniqueVertices gw = isEmbedding (gw .vertices)
 
