@@ -24,18 +24,22 @@ private
 data Bracket : Type where
   [ ] : Bracket
 
-BracketRep : Bracket ≃ Bool
-BracketRep = isoToEquiv (iso
-  (λ { [ → true ; ] → false })
-  (λ { false → ] ; true → [ })
-  (λ { false → refl ; true → refl })
-  λ { [ → refl ; ] → refl })
+opaque
+  BracketRep : Bracket ≃ Bool
+  BracketRep = isoToEquiv (iso
+    (λ { [ → true ; ] → false })
+    (λ { false → ] ; true → [ })
+    (λ { false → refl ; true → refl })
+    λ { [ → refl ; ] → refl })
 
-isFinBracket : isFinSet Bracket
-isFinBracket = EquivPresIsFinSet (invEquiv BracketRep) isFinSetBool
+  isFinBracket : isFinSet Bracket
+  isFinBracket = EquivPresIsFinSet (invEquiv BracketRep) isFinSetBool
+
+  isSetBracket : isSet Bracket
+  isSetBracket = isFinSet→isSet isFinBracket
 
 Alphabet : hSet _
-Alphabet = (Bracket , isFinSet→isSet isFinBracket)
+Alphabet = (Bracket , isSetBracket)
 
 open import Grammar Alphabet
 open import Grammar.Maybe Alphabet

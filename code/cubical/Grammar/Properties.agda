@@ -131,11 +131,32 @@ decidable→totallyParseable :
   decidable g → totallyParseable g
 decidable→totallyParseable dec-g = _ , dec-g
 
-open isStrongEquivalence
-opaque
-  unfolding ⊤-intro
-  unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
-  unambiguous≅ {g = g}{h = h} eq unambig-g e e' =
-    sym (cong (_∘g e) (eq .sec)) ∙
-    cong (eq .fun ∘g_) (unambig-g (eq .inv ∘g e) (eq .inv ∘g e')) ∙
-    cong (_∘g e') (eq .sec)
+isUnambiguousRetract :
+  ∀ (f : g ⊢ h) (f' : h ⊢ g)
+  → (f' ∘g f ≡ id)
+  → unambiguous h → unambiguous g
+isUnambiguousRetract f f' ret unambH e e' =
+  cong (_∘g e) (sym ret)
+  ∙ cong (f' ∘g_) (unambH _ _)
+  ∙ cong (_∘g e') ret
+
+unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
+unambiguous≅ g≅h unambG = isUnambiguousRetract (g≅h .inv) (g≅h .fun) (g≅h .sec) unambG
+  where open isStrongEquivalence
+
+unambiguous→StrongEquivalence
+  : unambiguous g
+  → unambiguous h
+  → (g ⊢ h)
+  → (h ⊢ g)
+  → StrongEquivalence g h
+unambiguous→StrongEquivalence unambG unambH f f' =
+  mkStrEq f f' (unambH (f ∘g f') id) (unambG (f' ∘g f) id)
+
+unambiguousRetract→StrongEquivalence
+  : ∀ (f : g ⊢ h) (f' : h ⊢ g)
+  → (f' ∘g f ≡ id)
+  → unambiguous h
+  → StrongEquivalence g h
+unambiguousRetract→StrongEquivalence f f' ret unambH
+  = unambiguous→StrongEquivalence (isUnambiguousRetract f f' ret unambH) unambH f f'

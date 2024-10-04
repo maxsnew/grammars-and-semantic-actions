@@ -20,38 +20,52 @@ private
 
 LinearΠ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΠ {A = A} f w = ∀ (a : A) → f a w
+&ᴰ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+&ᴰ = LinearΠ
 
 LinearΣ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΣ {A = A} f w = Σ[ a ∈ A ] f a w
+-- TODO: full rename?
+⊕ᴰ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+⊕ᴰ = LinearΣ
 
-Dep⊕-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-Dep⊕-syntax = LinearΣ
+⊕ᴰ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+⊕ᴰ-syntax = LinearΣ
 
 LinearΣ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΣ-syntax = LinearΣ
 
-Dep&-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-Dep&-syntax = LinearΠ
+&ᴰ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
+&ᴰ-syntax = LinearΠ
 
 LinearΠ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΠ-syntax = LinearΠ
 
 -- TODO: this precedence isn't really right
 syntax LinearΣ-syntax {A = A} (λ x → B) = LinΣ[ x ∈ A ] B
-syntax Dep⊕-syntax {A = A} (λ x → B) = ⊕[ x ∈ A ] B
+syntax ⊕ᴰ-syntax {A = A} (λ x → B) = ⊕[ x ∈ A ] B
 syntax LinearΠ-syntax {A = A} (λ x → B) = LinΠ[ x ∈ A ] B
-syntax Dep&-syntax {A = A} (λ x → B) = &[ x ∈ A ] B
+syntax &ᴰ-syntax {A = A} (λ x → B) = &[ x ∈ A ] B
 
-module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
-  LinΠ-intro : (∀ a → g ⊢ h a) → g ⊢ LinΠ[ a ∈ A ] h a
-  LinΠ-intro = λ f w z a → f a w z
-
-  LinΣ-elim : (∀ a → h a ⊢ g) → (LinΣ[ a ∈ A ] h a) ⊢ g
-  LinΣ-elim f w x = f (fst x) w (snd x)
 module _ {A : Type ℓS} {h : A → Grammar ℓH} where
   LinΠ-app : ∀ a → LinΠ[ a ∈ A ] h a ⊢ h a
   LinΠ-app = λ a w z → z a
+  &ᴰ-π = LinΠ-app
 
   LinΣ-intro : ∀ a → h a ⊢ LinΣ[ a ∈ A ] h a
   LinΣ-intro = λ a w → _,_ a
+  ⊕ᴰ-in = LinΣ-intro
+module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
+  LinΠ-intro : (∀ a → g ⊢ h a) → g ⊢ LinΠ[ a ∈ A ] h a
+  LinΠ-intro = λ f w z a → f a w z
+  &ᴰ-intro = LinΠ-intro
+  &ᴰ-in = LinΠ-intro
 
+  LinΣ-elim : (∀ a → h a ⊢ g) → (LinΣ[ a ∈ A ] h a) ⊢ g
+  LinΣ-elim f w x = f (fst x) w (snd x)
+  ⊕ᴰ-elim = LinΣ-elim
+
+  ⊕ᴰ≡ : (f f' : (⊕[ a ∈ A ] h a) ⊢ g)
+    → (∀ a → f ∘g ⊕ᴰ-in a ≡ f' ∘g ⊕ᴰ-in a)
+    → f ≡ f'
+  ⊕ᴰ≡ f f' fa≡fa' i w x = fa≡fa' (x .fst) i w (x .snd)
