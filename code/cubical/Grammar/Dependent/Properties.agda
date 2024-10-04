@@ -26,33 +26,56 @@ module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
   open StrongEquivalence
   opaque
     unfolding _⊗_
-    ⊕ᴰ-dist :
+    ⊕ᴰ-distL :
       StrongEquivalence
-        ((LinearΣ h) ⊗ g)
-        (LinearΣ λ a → h a ⊗ g)
-    ⊕ᴰ-dist .fun w (s , (a , x) , y) = a , ((s , (x , y)))
-    ⊕ᴰ-dist .inv w (a , (s , (x , y))) = s , ((a , x) , y)
-    ⊕ᴰ-dist .sec = refl
-    ⊕ᴰ-dist .ret = refl
+        ((⊕[ a ∈ A ] h a) ⊗ g)
+        (⊕[ a ∈ A ] (h a ⊗ g))
+    ⊕ᴰ-distL .fun w (s , (a , x) , y) = a , ((s , (x , y)))
+    ⊕ᴰ-distL .inv w (a , (s , (x , y))) = s , ((a , x) , y)
+    ⊕ᴰ-distL .sec = refl
+    ⊕ᴰ-distL .ret = refl
+
+    ⊕ᴰ-distR :
+      StrongEquivalence
+        (g ⊗ (⊕[ a ∈ A ] h a))
+        (⊕[ a ∈ A ] (g ⊗ h a))
+    ⊕ᴰ-distR .fun w (s , x , (a , y)) = a , ((s , (x , y)))
+    ⊕ᴰ-distR .inv w (a , (s , (x , y))) = s , (x , (a , y))
+    ⊕ᴰ-distR .sec = refl
+    ⊕ᴰ-distR .ret = refl
+
+    &ᴰ-strengthL :
+        (&[ a ∈ A ] h a) ⊗ g ⊢ &[ a ∈ A ] (h a ⊗ g)
+    &ᴰ-strengthL w (s , f , pg) a = s , (f a , pg)
+
+    &ᴰ-strengthR :
+        g ⊗ (&[ a ∈ A ] h a) ⊢ &[ a ∈ A ] (g ⊗ h a)
+    &ᴰ-strengthR w (s , pg , f) a = s , (pg , f a)
 
 module _
   {A : Type ℓS} {h : A → Grammar ℓh}
   (isSetA : isSet A)
   where
 
-  isMono-LinΣ-intro : (a : A) → isMono (LinΣ-intro {h = h} a)
-  isMono-LinΣ-intro a e e' !∘e=!∘e' =
+  isMono-⊕ᴰ-in : (a : A) → isMono (⊕ᴰ-in {h = h} a)
+  isMono-⊕ᴰ-in a e e' !∘e=!∘e' =
     funExt λ w → funExt λ p →
       sym (transportRefl (e w p)) ∙
       Σ-contractFst (refl , (isSetA _ _ _)) .fst
         (PathΣ→ΣPathTransport _ _ (funExt⁻ (funExt⁻ !∘e=!∘e' w) p))
 
-  unambiguous'Σ :
-    unambiguous' (LinΣ[ a ∈ A ] h a) →
+  unambiguous'⊕ᴰ :
+    unambiguous' (⊕[ a ∈ A ] h a) →
       (a : A)  → unambiguous' (h a)
-  unambiguous'Σ unambigΣ a f f' !≡ =
-    isMono-LinΣ-intro a f f'
-      (unambigΣ (LinΣ-intro a ∘g f) (LinΣ-intro a ∘g f')
+  unambiguous'⊕ᴰ unambig⊕ a f f' !≡ =
+    isMono-⊕ᴰ-in a f f'
+      (unambig⊕ (LinΣ-intro a ∘g f) (LinΣ-intro a ∘g f')
         -- Need to change the endpoints of !≡ to line up with the
         -- ⊤-intro at the proper domain
         (unambiguous⊤ _ _ ∙ !≡ ∙ sym (unambiguous⊤ _ _)))
+
+  unambiguous⊕ᴰ : unambiguous (⊕[ a ∈ A ] h a) → (a : A) →
+    unambiguous (h a)
+  unambiguous⊕ᴰ unambig⊕ a =
+    unambiguous'→unambiguous
+      (unambiguous'⊕ᴰ (unambiguous→unambiguous' unambig⊕) a)
