@@ -382,22 +382,6 @@ TraceBTys b n = ⊕e TraceTag (λ
 Trace' : Bool → ℕ → Grammar _
 Trace' b = μ (TraceBTys b)
 
-parse' : string ⊢ &[ n ∈ ℕ ] ⊕[ b ∈ _ ] Trace' b n
-parse' = foldKL*r _ (record { the-ℓ = _ ; G = _
-  ; nil-case = {!!}
-  ; cons-case = {!!} })
-
-printAlg : ∀ b → Algebra (TraceBTys b) (λ _ → string)
-printAlg b n = ⊕ᴰ-elim (λ
-  { eof' → {!!}
-  ; open' → {!!}
-  ; close' → {!!}
-  ; leftovers' → {!!}
-  ; unexpected' → {!!}
-  })
-
-printTrace : ∀ {n b} → Trace' b n ⊢ string
-printTrace = rec (TraceBTys _) (printAlg _) _
 
 weirdAlg : ∀ b → Algebra (TraceBTys b) (λ n → ⊕[ b' ∈ _ ] Trace' b' n)
 weirdAlg b n = ⊕ᴰ-elim (λ
@@ -414,9 +398,109 @@ weirdAlg b n = ⊕ᴰ-elim (λ
   ; unexpected' → ⊕ᴰ-in b ∘g ⊕ᴰ-elim λ n,b≡0,false → roll ∘g ⊕ᴰ-in unexpected' ∘g ⊕ᴰ-in n,b≡0,false
   })
 
-Trace≅String : ∀ {n} → StrongEquivalence (⊕[ b ∈ _ ] Trace' b n) string
-Trace≅String = mkStrEq
-  (⊕ᴰ-elim (λ _ → printTrace))
+EOF' : ε ⊢ Trace' true 0
+EOF' = roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl
+
+OPEN' : ∀ {n b} → literal [ ⊗ Trace' b (suc n) ⊢ Trace' b n
+OPEN' = roll ∘g ⊕ᴰ-in open'
+
+CLOSE' : ∀ {n b} → literal ] ⊗ Trace' b n ⊢ Trace' b (suc n)
+CLOSE' = roll ∘g ⊕ᴰ-in close' ∘g ⊕ᴰ-in (_ , Eq.refl)
+
+LEFTOVERS' : ∀ {n} → ε ⊢ Trace' false (suc n)
+LEFTOVERS' = roll ∘g ⊕ᴰ-in leftovers' ∘g ⊕ᴰ-in (_ , Eq.refl) ∘g ⊕ᴰ-in Eq.refl
+
+UNEXPECTED : literal ] ⊗ ⊤ ⊢ Trace' false 0
+UNEXPECTED = roll ∘g ⊕ᴰ-in unexpected' ∘g ⊕ᴰ-in Eq.refl
+
+open StrongEquivalence
+
+parse' : string ⊢ &[ n ∈ ℕ ] ⊕[ b ∈ _ ] Trace' b n
+parse' = foldKL*r _ (record { the-ℓ = _ ; G = _
+  ; nil-case =
+    &ᴰ-in (Nat.elim
+        (⊕ᴰ-in true ∘g EOF')
+        (λ n-1 _ → ⊕ᴰ-in false ∘g LEFTOVERS'))
+  ; cons-case = &ᴰ-in λ n →
+       ⊕ᴰ-elim (λ {
+         [ → ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g OPEN') ∘g
+             ⊕ᴰ-distR .fun ∘g id ,⊗ &ᴰ-π (suc n)
+       ; ] →
+         Nat.elim
+           {A = λ n' → literal ] ⊗
+                       &[ n' ∈ ℕ ] ⊕[ b ∈ Bool ] Trace' b n'
+                         ⊢ ⊕[ b ∈ Bool ] Trace' b n' }
+           (⊕ᴰ-in false ∘g UNEXPECTED ∘g id ,⊗ ⊤-intro)
+           (λ n-1 _ → ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g CLOSE') ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ &ᴰ-π n-1)
+           n
+       })
+       ∘g ⊕ᴰ-distL .fun
+    })
+
+printAlg : ∀ b → Algebra (TraceBTys b) (λ _ → string)
+printAlg b n = ⊕ᴰ-elim (λ
+  { eof' → ⊕ᴰ-elim (λ _ → ⊕ᴰ-elim λ _ → KL*.nil)
+  ; open' → CONS ∘g ⊕ᴰ-in [ ,⊗ id
+  ; close' → ⊕ᴰ-elim (λ _ → CONS ∘g ⊕ᴰ-in ] ,⊗ id)
+  ; leftovers' → ⊕ᴰ-elim (λ _ → ⊕ᴰ-elim (λ _ → KL*.nil))
+  ; unexpected' → ⊕ᴰ-elim (λ _ → CONS ∘g ⊕ᴰ-in ] ,⊗ id ∘g id ,⊗ ⊤→string)
+  })
+
+printTrace' : ∀ {n b} → Trace' b n ⊢ string
+printTrace' = rec (TraceBTys _) (printAlg _) _
+
+⊕ᴰAlg : ∀ b → Algebra (TraceBTys b) (λ n → ⊕[ b' ∈ _ ] Trace' b' n)
+⊕ᴰAlg b n = ⊕ᴰ-elim (λ
+  { eof' →
+    ⊕ᴰ-in b
+    ∘g ⊕ᴰ-elim (λ { Eq.refl → ⊕ᴰ-elim (λ { Eq.refl → EOF' }) })
+  ; open' → ⊕ᴰ-elim (λ b' → ⊕ᴰ-in b' ∘g OPEN') ∘g ⊕ᴰ-distR .fun
+  ; close' → ⊕ᴰ-elim λ { (n-1 , Eq.refl) →
+    ⊕ᴰ-elim (λ b' → ⊕ᴰ-in b' ∘g CLOSE') ∘g ⊕ᴰ-distR .fun }
+  ; leftovers' →
+    ⊕ᴰ-in b ∘g
+    ⊕ᴰ-elim (λ { (n-1 , Eq.refl) → ⊕ᴰ-elim (λ { Eq.refl → LEFTOVERS' }) })
+  ; unexpected' → ⊕ᴰ-in b ∘g ⊕ᴰ-elim (λ { Eq.refl → UNEXPECTED })
+  })
+
+Trace'≅String : ∀ {n} → StrongEquivalence (⊕[ b ∈ _ ] Trace' b n) string
+Trace'≅String {n} = mkStrEq
+  (⊕ᴰ-elim (λ _ → printTrace'))
   (&ᴰ-π _ ∘g parse')
-  {!!}
-  (⊕ᴰ≡ _ _ (λ b → ind' (TraceBTys b) {!!} {!!} {!!} {!!}))
+  (unambiguous-string _ _)
+  retr
+  where
+  opaque
+    unfolding KL*r-elim ⊕ᴰ-distR ⊕ᴰ-distL CONS ⊤
+    retr : (&ᴰ-π n ∘g parse') ∘g ⊕ᴰ-elim (λ z → printTrace') ≡ id
+    retr =
+      ⊕ᴰ≡ _ _
+        (λ b →
+          ind' (TraceBTys b) (⊕ᴰAlg b)
+            (compHomo (TraceBTys b)
+              (initialAlgebra (TraceBTys b))
+              (printAlg b)
+              (⊕ᴰAlg b)
+              ((λ n' → &ᴰ-π n' ∘g parse') ,
+              (λ n' → ⊕ᴰ≡ _ _
+                λ { eof' → funExt λ w → funExt
+                           λ { (Eq.refl , Eq.refl , x) → refl }
+                  ; open' → refl
+                  ; close' → funExt λ w → funExt
+                            λ { ((n-1 , Eq.refl) , x ) → refl }
+                  ; leftovers' → funExt λ w → funExt
+                               λ { ((n-1 , Eq.refl) , Eq.refl , x) → refl }
+                  ; unexpected' → funExt λ w → funExt λ { (Eq.refl , x) → refl } }))
+              (recHomo (TraceBTys b) (printAlg b)))
+            ((λ n' → ⊕ᴰ-in b) ,
+            (λ n' → ⊕ᴰ≡ _ _
+              λ { eof' → funExt λ w → funExt
+                           λ { (Eq.refl , Eq.refl , x) → refl }
+                ; open' → refl
+                ; close' → funExt λ w → funExt
+                            λ { ((n-1 , Eq.refl) , x ) → refl }
+                ; leftovers' → funExt λ w → funExt
+                               λ { ((n-1 , Eq.refl) , Eq.refl , x) → refl }
+                ; unexpected' → funExt λ w → funExt λ { (Eq.refl , x) → refl } }))
+            n
+          )
