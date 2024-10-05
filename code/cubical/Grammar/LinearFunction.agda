@@ -181,6 +181,11 @@ opaque
   g ⊢ k → ε ⊢ k ⟜ g
 ⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-l)
 
+⟜-intro-ε-β :
+  (f : g ⊢ k)
+  → ⟜-app ∘g (⟜-intro-ε f) ,⊗ id ≡ f ∘g ⊗-unit-l
+⟜-intro-ε-β f = ⟜-β (f ∘g ⊗-unit-l)
+
 ⟜2-intro-ε :
   g1 ⊗ g2 ⊢ k → ε ⊢ k ⟜ g2 ⟜ g1
 ⟜2-intro-ε {k = k} f = ⟜-curry {k = k} ∘g ⟜-intro-ε f

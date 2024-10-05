@@ -47,11 +47,11 @@ BALANCED = roll ∘g ⊕ᴰ-in balanced' ∘g liftG ,⊗ liftG ,⊗ liftG ,⊗ l
 
 appendAlg : Algebra DyckTy λ _ → IndDyck ⟜ IndDyck
 appendAlg tt = ⊕ᴰ-elim λ
-  { nil' → ⟜-intro-ε id ∘g lowerG
+  { nil' → ⟜-intro ⊗-unit-l ∘g lowerG
   ; balanced' → ⟜-intro (BALANCED
     ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻)
        ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)
-    ∘g id ,⊗ id ,⊗ ⊗-assoc⁻ ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻)
+    ∘g ⊗-assoc⁻4)
   }
 
 append : IndDyck ⊗ IndDyck ⊢ IndDyck
@@ -59,7 +59,44 @@ append = ⟜-intro⁻ (rec _ appendAlg _)
 
 -- Need this lemma for the retract property below
 append-nil-r : append ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ≡ id
-append-nil-r = {!!}
+append-nil-r = goal where
+  opaque
+    unfolding ⊗-intro ⊗-unit-r⁻ ⊗-assoc⁻
+    pf : (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) ∘g appendAlg _
+         ≡ roll ∘g map (DyckTy _) (λ _ → ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻)
+    pf = ⊕ᴰ≡ _ _ (λ
+      { nil' →
+        (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g ⟜-intro ⊗-unit-l ∘g lowerG)
+          ≡⟨ (λ i → ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻⊗-intro {f = (⟜-intro ⊗-unit-l)} i ∘g lowerG) ⟩
+        (⟜-app ∘g id ,⊗ NIL ∘g ⟜-intro ⊗-unit-l ,⊗ id ∘g ⊗-unit-r⁻ ∘g lowerG)
+          ≡⟨ refl ⟩
+        (⟜-app ∘g (⟜-intro ⊗-unit-l ,⊗ id) ∘g (id ,⊗ NIL) ∘g ⊗-unit-r⁻ ∘g lowerG)
+          ≡⟨ cong (_∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g lowerG) (⟜-β ⊗-unit-l) ⟩
+        (⊗-unit-l ∘g (id ,⊗ NIL) ∘g ⊗-unit-r⁻ ∘g lowerG)
+          ≡⟨ cong (_∘g ⊗-unit-r⁻ ∘g lowerG) (sym (⊗-unit-l⊗-intro NIL)) ⟩
+        (NIL ∘g ⊗-unit-l ∘g ⊗-unit-r⁻ ∘g lowerG)
+          ≡⟨ cong (NIL ∘g_) (cong (_∘g lowerG) ⊗-unit-lr⁻) ⟩
+        NIL ∘g lowerG
+        ∎ 
+      ; balanced' →
+        cong ((⟜-app ∘g id ,⊗ NIL) ∘g_) ⊗-unit-r⁻⊗-intro
+        ∙ cong (_∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) (⟜-β _)
+        ∙ cong ((BALANCED
+                 ∘g id ,⊗ (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g id ,⊗ NIL)
+                 ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ id) ∘g_)
+               ⊗-assoc⁻4⊗-unit-r⁻
+      })
+
+  append-nil-r' : ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g rec DyckTy appendAlg _ ≡ id
+  append-nil-r' = ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) appendAlg (initialAlgebra DyckTy)
+    ((λ _ → ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) , λ _ → pf)
+    (recHomo DyckTy appendAlg))
+    _
+
+  opaque
+    unfolding ⊗-intro ⊗-unit-r⁻
+    goal : append ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ≡ id
+    goal = append-nil-r'
 
 data TraceTag (b : Bool) (n : ℕ) : Type where
   eof' : b Eq.≡ true → n Eq.≡ zero → TraceTag b n

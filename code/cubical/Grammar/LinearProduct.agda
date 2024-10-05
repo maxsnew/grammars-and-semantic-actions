@@ -14,7 +14,7 @@ open import Term.Bilinear Alphabet
 private
   variable
     ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' : Grammar ℓg
+    g g' g'' g''' g'''' g''''' : Grammar ℓg
     h h' h'' : Grammar ℓh
     k : Grammar ℓk
     l : Grammar ℓl
@@ -88,6 +88,14 @@ opaque
     g ⊗ k ⊢ h ⊗ l
   ⊗-intro e e' _ p =
     p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
+
+  ⊗-intro⊗-intro
+    : ∀ {f : g ⊢ g'}{f' : g'' ⊢ g'''}
+        {f'' : g'''' ⊢ g}
+        {f''' : g''''' ⊢ g''}
+    → ⊗-intro f f' ∘g ⊗-intro f'' f'''
+      ≡ ⊗-intro (f ∘g f'') (f' ∘g f''')
+  ⊗-intro⊗-intro = refl
 
   opaque
     unfolding ε
@@ -212,27 +220,15 @@ opaque
       cong (_∘g ⊗-unit-r) ∘g≡ ∙
       cong (g ∘g_) (⊗-unit-rr⁻)
 
-    -- TODO this proof seems overly complicated
-    ⊗-unit-r⊗-intro :
-      (f : g ⊢ h) →
-      ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
-    ⊗-unit-r⊗-intro f =
-      cong-∘g⊗-unit-r⁻ (⊗-unit-r ∘g ⊗-intro f id) (f ∘g ⊗-unit-r)
-        ((⊗-unit-r ∘g ⊗-intro f id) ∘g ⊗-unit-r⁻
-          ≡⟨ refl ⟩
-          ⊗-unit-r ∘g ⊗-unit-r⁻ ∘g f
-          ≡⟨ ((λ i → ⊗-unit-r⁻r i ∘g f ∘g ⊗-unit-r⁻r (~ i))) ⟩
-        (f ∘g ⊗-unit-r) ∘g ⊗-unit-r⁻
-        ∎)
-        -- (cong (_∘g f) {!sym ⊗-unit-rr⁻!})
-      -- ⊗-unit-r ∘g ⊗-intro f id
-      --   ≡⟨ {!cong-∘g⊗-unit-r!} ⟩
-      -- f ∘g ⊗-unit-r
-      -- ∎
 
     ⊗-unit-rl⁻ : ⊗-unit-r ∘g ⊗-unit-l⁻ ≡ id
     ⊗-unit-rl⁻ = funExt λ w → funExt λ p →
       isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {g = ε} w p)
+
+    --technically this follows from more basic monoidal category axioms but it's not simple
+    ⊗-unit-lr⁻ : ⊗-unit-l ∘g ⊗-unit-r⁻ ≡ id
+    ⊗-unit-lr⁻ = funExt λ w → funExt λ p →
+      isSetString w [] ((⊗-unit-l ∘g ⊗-unit-r⁻ ) w p) ((id {g = ε} w p))
 
   ⊗-unit-r' :
     g ⊗ ε ⊢ g
@@ -301,6 +297,14 @@ opaque
   ⊗-assoc⁻⊗-intro = refl
 
   opaque
+    unfolding ⊗-unit-r⁻
+    ⊗-assoc⁻⊗-unit-r⁻ :
+      ⊗-assoc⁻ {g = g}{h = h} ∘g ⊗-unit-r⁻ ≡ ⊗-intro id ⊗-unit-r⁻
+    ⊗-assoc⁻⊗-unit-r⁻ = funExt λ w → funExt λ p →
+      ⊗≡ _ _ (≡-× refl (++-unit-r _))
+        (ΣPathP (refl , ⊗PathP refl refl))
+
+  opaque
     unfolding ε ⊗-unit-l⁻
     ⊗-unit-l⁻⊗-intro :
       ∀ {f : g ⊢ h}
@@ -308,14 +312,54 @@ opaque
       ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
     ⊗-unit-l⁻⊗-intro = refl
 
+    ⊗-unit-l⊗-intro :
+      ∀ (f : g ⊢ h)
+      → f ∘g ⊗-unit-l
+        ≡ ⊗-unit-l ∘g (⊗-intro id f)
+    ⊗-unit-l⊗-intro f =
+      cong-∘g⊗-unit-l⁻ _ _
+        λ i → ⊗-unit-l⁻l (~ i) ∘g f ∘g ⊗-unit-l⁻l i
+
     ⊗-unit-r⁻⊗-intro :
       ∀ {f : g ⊢ h}
       → ⊗-unit-r⁻ ∘g f
       ≡ (⊗-intro f id) ∘g ⊗-unit-r⁻
     ⊗-unit-r⁻⊗-intro = refl
 
+    -- this is the fact that the inverse of a natural transformation is natural
+    ⊗-unit-r⊗-intro :
+      (f : g ⊢ h) →
+      ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
+    ⊗-unit-r⊗-intro f =
+      cong-∘g⊗-unit-r⁻ _ _
+        (λ i → ⊗-unit-r⁻r i ∘g f ∘g ⊗-unit-r⁻r (~ i))
+
     id,⊗id≡id : ⊗-intro id id ≡ id {g = g ⊗ h}
     id,⊗id≡id = refl
 
 _,⊗_ = ⊗-intro
 infixr 20 _,⊗_
+
+⊗-assoc⁻3 :
+  (g ⊗ g' ⊗ g'') ⊗ g''' ⊢ g ⊗ g' ⊗ g'' ⊗ g'''
+⊗-assoc⁻3 = id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻  
+
+⊗-assoc⁻3⊗-unit-r⁻ :
+  ⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''} ∘g ⊗-unit-r⁻
+  ≡ id ,⊗ id ,⊗ ⊗-unit-r⁻
+⊗-assoc⁻3⊗-unit-r⁻ =
+  cong (id ,⊗ ⊗-assoc⁻ ∘g_) ⊗-assoc⁻⊗-unit-r⁻
+  ∙ ⊗-intro⊗-intro
+  ∙ cong (id ,⊗_) ⊗-assoc⁻⊗-unit-r⁻
+
+⊗-assoc⁻4 :
+  (g ⊗ g' ⊗ g'' ⊗ g''') ⊗ g'''' ⊢ g ⊗ g' ⊗ g'' ⊗ g''' ⊗ g''''
+⊗-assoc⁻4 = id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻
+
+⊗-assoc⁻4⊗-unit-r⁻ :
+  ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-unit-r⁻
+  ≡ id ,⊗ id ,⊗ id ,⊗ ⊗-unit-r⁻
+⊗-assoc⁻4⊗-unit-r⁻ =
+  cong (id ,⊗ ⊗-assoc⁻3 ∘g_) ⊗-assoc⁻⊗-unit-r⁻
+  ∙ ⊗-intro⊗-intro
+  ∙ cong (id ,⊗_) ⊗-assoc⁻3⊗-unit-r⁻
