@@ -314,5 +314,8 @@ opaque
       ≡ (⊗-intro f id) ∘g ⊗-unit-r⁻
     ⊗-unit-r⁻⊗-intro = refl
 
+    id,⊗id≡id : ⊗-intro id id ≡ id {g = g ⊗ h}
+    id,⊗id≡id = refl
+
 _,⊗_ = ⊗-intro
 infixr 20 _,⊗_

@@ -70,4 +70,3 @@ module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
     → (∀ a → f ∘g ⊕ᴰ-in a ≡ f' ∘g ⊕ᴰ-in a)
     → f ≡ f'
   ⊕ᴰ≡ f f' fa≡fa' i w x = fa≡fa' (x .fst) i w (x .snd)
-
