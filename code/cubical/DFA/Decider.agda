@@ -23,6 +23,7 @@ open import Grammar Alphabet
 open import Grammar.Inductive.Indexed Alphabet as Idx
 open import Grammar.Equivalence Alphabet
 open import Grammar.String.Properties Alphabet
+open import Grammar.Lift Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
 open import Helper
@@ -44,20 +45,35 @@ module _ (D : DFA) where
     the-alg .the-ℓ = ℓ-zero
     the-alg .G = &[ q ∈ ⟨ Q ⟩ ] ⊕[ b ∈ Bool ] Trace b q
     the-alg .nil-case =
-      &ᴰ-in (λ q → ⊕ᴰ-in (isAcc q) ∘g roll ∘g ⊕ᴰ-in stop ∘g ⊕ᴰ-in Eq.refl)
+      &ᴰ-in (λ q →
+        ⊕ᴰ-in (isAcc q) ∘g
+        roll ∘g
+        ⊕ᴰ-in stop ∘g
+        ⊕ᴰ-in (lift Eq.refl) ∘g
+        liftG ∘g
+        liftG
+        )
     the-alg .cons-case =
       &ᴰ-in λ q →
         ⊕ᴰ-elim (λ c →
           ⊕ᴰ-elim
-            (λ b → ⊕ᴰ-in b ∘g roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in c) ∘g
+            (λ b →
+              ⊕ᴰ-in b ∘g
+              roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in (lift c) ∘g
+              liftG ,⊗ liftG ∘g liftG ,⊗ id) ∘g
           ⊕ᴰ-distR .fun ∘g
           id ,⊗ &ᴰ-π (δ q c)) ∘g
         ⊕ᴰ-distL .fun
 
   printAlg : ∀ b → Algebra (TraceTy b) λ _ → string
   printAlg b q = ⊕ᴰ-elim ((λ {
-      stop → ⊕ᴰ-elim λ { Eq.refl → NIL }
-    ; step → CONS ∘g ⊕ᴰ-elim (λ c → ⊕ᴰ-in c ,⊗ id)
+      stop → ⊕ᴰ-elim λ { (lift Eq.refl) → NIL ∘g lowerG ∘g lowerG }
+    ; step →
+        CONS ∘g
+        ⊕ᴰ-elim λ { (lift c) →
+          ⊕ᴰ-in c ,⊗ id ∘g
+          lowerG ,⊗ lowerG ∘g
+          lowerG ,⊗ id}
     }))
 
   print : ∀ b → (q : ⟨ Q ⟩) → Trace b q ⊢ string
@@ -66,11 +82,14 @@ module _ (D : DFA) where
   ⊕ᴰalg : ∀ b → Algebra (TraceTy b) λ q → ⊕[ b ∈ Bool ] Trace b q
   ⊕ᴰalg b q = ⊕ᴰ-elim (λ {
       stop → ⊕ᴰ-elim λ {
-        Eq.refl → ⊕ᴰ-in (isAcc q) ∘g roll ∘g ⊕ᴰ-in stop ∘g ⊕ᴰ-in Eq.refl}
+        (lift Eq.refl) →
+          ⊕ᴰ-in (isAcc q) ∘g roll ∘g
+          ⊕ᴰ-in stop ∘g ⊕ᴰ-in (lift Eq.refl)}
     ; step →
         ⊕ᴰ-elim (λ c → ⊕ᴰ-elim (λ b →
-          ⊕ᴰ-in b ∘g roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in c)
-          ∘g ⊕ᴰ-distR .fun)
+          ⊕ᴰ-in b ∘g
+          roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in c ∘g liftG ,⊗ liftG)
+          ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG)
     })
 
   Trace≅string :
@@ -78,22 +97,24 @@ module _ (D : DFA) where
   Trace≅string q .fun = ⊕ᴰ-elim (λ b → print b q)
   Trace≅string q .inv = &ᴰ-π q ∘g parse
   Trace≅string q .sec =  unambiguous-string _ _
-  Trace≅string q .ret =  ans
+  Trace≅string q .ret = isRetract
     where
     opaque
       unfolding NIL CONS KL*r-elim ⊕ᴰ-distR
-      ans : &ᴰ-π q ∘g parse ∘g ⊕ᴰ-elim (λ b → print b q) ≡ id
-      ans = ⊕ᴰ≡ _ _ λ b →
+      isRetract : &ᴰ-π q ∘g parse ∘g ⊕ᴰ-elim (λ b → print b q) ≡ id
+      isRetract = ⊕ᴰ≡ _ _ λ b →
         ind'
           (TraceTy b)
           (⊕ᴰalg b)
           ((λ q'  → &ᴰ-π q' ∘g parse ∘g print b q') ,
           λ q' → ⊕ᴰ≡ _ _ (λ {
-            stop → funExt λ w → funExt λ { (Eq.refl , p) → refl}
+            stop → funExt λ w → funExt λ {
+              ((lift Eq.refl) , p) → refl}
           ; step → ⊕ᴰ≡ _ _ λ c → refl }))
           ((λ q' → ⊕ᴰ-in b) ,
           λ q' → ⊕ᴰ≡ _ _ λ {
-            stop → funExt (λ w → funExt λ { (Eq.refl , p) → refl})
+            stop → funExt (λ w → funExt λ {
+              ((lift Eq.refl) , p) → refl})
           ; step → refl })
           q
 

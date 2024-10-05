@@ -131,4 +131,3 @@ module _ where
     unroll' = rec {g = λ a → ⟦ F a ⟧ (μ F)} alg where
       alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
       alg a = map (F a) (λ _ → roll)
-

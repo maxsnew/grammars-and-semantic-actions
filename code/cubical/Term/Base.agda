@@ -52,13 +52,6 @@ _∘g_ :
   g ⊢ k
 _∘g_ e e' = seq e' e
 
-module _ {ℓG}{ℓG'} (g : Grammar ℓG) where
-  liftg : g ⊢ LiftGrammar {ℓG' = ℓG'} g
-  liftg _ = lift
-
-  lowerg : LiftGrammar {ℓG' = ℓG'} g ⊢ g
-  lowerg _ = lower
-
 infixr 9 _∘g_
 syntax seq e e' = e ⋆ e'
 

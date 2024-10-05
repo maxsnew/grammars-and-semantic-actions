@@ -15,6 +15,7 @@ open import Cubical.Data.Bool
 open import Cubical.Data.List hiding (init)
 
 open import Grammar Alphabet
+open import Grammar.Lift Alphabet
 open import Grammar.Inductive.Indexed Alphabet
 import Cubical.Data.Equality as Eq
 open import Term Alphabet
@@ -23,16 +24,16 @@ open import Helper
 private
   variable ℓN ℓN' ℓP ℓ : Level
 
-record NFA : Type (ℓ-suc ℓ-zero) where
+record NFA : Type (ℓ-suc ℓN) where
   field
-    Q : FinSet ℓ-zero
+    Q : FinSet ℓN
     init : Q .fst
     isAcc : Q .fst → Bool
-    transition : FinSet ℓ-zero
+    transition : FinSet ℓN
     src : ⟨ transition ⟩ → ⟨ Q ⟩
     dst : ⟨ transition ⟩ → ⟨ Q ⟩
     label : ⟨ transition ⟩ → ⟨ Alphabet ⟩
-    ε-transition : FinSet ℓ-zero
+    ε-transition : FinSet ℓN
     ε-src : ⟨ ε-transition ⟩ → ⟨ Q ⟩
     ε-dst : ⟨ ε-transition ⟩ → ⟨ Q ⟩
 
@@ -40,26 +41,32 @@ record NFA : Type (ℓ-suc ℓ-zero) where
   decEqQ = isFinSet→Discrete (str Q)
 
   hasTransition : Discrete ⟨ Alphabet ⟩ → ⟨ Q ⟩ →
-    ⟨ Alphabet ⟩ → ⟨ Q ⟩ → DecProp ℓ-zero
-  hasTransition discΣ₀ src' label' dst' =
+    ⟨ Alphabet ⟩ → ⟨ Q ⟩ → DecProp ℓN
+  hasTransition discAlphabet src' label' dst' =
     DecProp∃ transition (λ t →
       DecProp×
-         (DecProp≡ discΣ₀ label' (label t))
+         (DecProp≡ (discreteLift {L' = ℓN} discAlphabet)
+           (lift label') (lift (label t)))
          (DecProp×
-           (DecProp≡ decEqQ src' (src t))
-           (DecProp≡ decEqQ dst' (dst t))))
+           (DecProp≡ (discreteLift {L' = ℓN} decEqQ)
+             (lift src') (lift (src t)))
+           (DecProp≡ (discreteLift {L' = ℓN} decEqQ)
+             (lift dst') (lift (dst t)))
+          ))
 
-  data Tag : Type where
+  data Tag : Type ℓN where
     stop step stepε : Tag
 
   TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
   TraceTy b q = ⊕e Tag λ {
-      stop → ⊕e (b Eq.≡ isAcc q) λ { Eq.refl → k ε }
+      stop → ⊕e (Lift (b Eq.≡ isAcc q)) λ {
+        (lift Eq.refl) → k (LiftG ℓN ε) }
     ; step → ⊕e (Eq.fiber src q) λ {
-        (t , Eq.refl ) → ⊗e (k (literal (label t))) (Var (dst t)) }
+        (t , Eq.refl ) →
+          ⊗e (k (LiftG ℓN (literal (label t)))) (Var (dst t)) }
     ; stepε → ⊕e (Eq.fiber ε-src q) λ { (t , Eq.refl) → Var (ε-dst t) } }
 
-  Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓ-zero
+  Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓN
   Trace b = μ (TraceTy b)
 
 -- record NFA : Type (ℓ-suc ℓN) where
