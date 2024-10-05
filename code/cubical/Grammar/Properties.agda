@@ -31,7 +31,7 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓS : Level
+    ℓ ℓ' ℓg ℓh ℓk ℓl ℓS : Level
     g : Grammar ℓg
     h : Grammar ℓh
     k : Grammar ℓk

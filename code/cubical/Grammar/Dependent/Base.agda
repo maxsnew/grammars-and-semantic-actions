@@ -16,7 +16,7 @@ open import Grammar.Literal Alphabet
 
 private
   variable
-    ℓG ℓH ℓS : Level
+    ℓG ℓH ℓS ℓ ℓ' ℓ'' ℓ''' : Level
 
 LinearΠ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
 LinearΠ {A = A} f w = ∀ (a : A) → f a w
@@ -69,3 +69,10 @@ module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
     → (∀ a → f ∘g ⊕ᴰ-in a ≡ f' ∘g ⊕ᴰ-in a)
     → f ≡ f'
   ⊕ᴰ≡ f f' fa≡fa' i w x = fa≡fa' (x .fst) i w (x .snd)
+
+⊕ᴰ-elim∘g :
+  ∀ {A : Type ℓ}{g : Grammar ℓ'}{h : A → Grammar ℓ''}{k : Grammar ℓ'''}
+  → {f' : ∀ a → h a ⊢ g}
+  → {f : g ⊢ k}
+  → f ∘g ⊕ᴰ-elim f' ≡ ⊕ᴰ-elim (λ a → f ∘g f' a)
+⊕ᴰ-elim∘g = ⊕ᴰ≡ _ _ (λ a → refl)

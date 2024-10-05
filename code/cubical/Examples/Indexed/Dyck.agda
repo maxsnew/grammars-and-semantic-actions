@@ -54,8 +54,11 @@ appendAlg tt = ⊕ᴰ-elim λ
     ∘g ⊗-assoc⁻4)
   }
 
+append' : IndDyck ⊢ IndDyck ⟜ IndDyck
+append' = rec _ appendAlg _
+
 append : IndDyck ⊗ IndDyck ⊢ IndDyck
-append = ⟜-intro⁻ (rec _ appendAlg _)
+append = ⟜-intro⁻ append'
 
 -- Need this lemma for the retract property below
 append-nil-r : append ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ≡ id
@@ -87,7 +90,7 @@ append-nil-r = goal where
                ⊗-assoc⁻4⊗-unit-r⁻
       })
 
-  append-nil-r' : ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g rec DyckTy appendAlg _ ≡ id
+  append-nil-r' : ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g append' ≡ id
   append-nil-r' = ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) appendAlg (initialAlgebra DyckTy)
     ((λ _ → ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) , λ _ → pf)
     (recHomo DyckTy appendAlg))
@@ -224,23 +227,41 @@ Trace≅String {n} = mkStrEq
         (⊕ᴰ-in-homo b)
         n)
 
+isUnambiguousTrace : ∀ {n b} → unambiguous (Trace b n)
+isUnambiguousTrace {n}{b} =
+  unambiguous⊕ᴰ isSetBool
+    (unambiguous≅ (sym-strong-equivalence Trace≅String) unambiguous-string)
+    b
+
 {-
   Next, we establish that IndDyck and Trace true zero are strongly equivalent.
 
   To prove this inductively, we more generally prove that Trace true n
   is strongly equivalent to a "GenDyck n" that is an analogously
   "unbalanced" Dyck tree.
-  
 -}
 GenDyck : ℕ → Grammar _
 GenDyck 0         = IndDyck
 GenDyck (suc n-1) = IndDyck ⊗ literal RP ⊗ GenDyck n-1
 
-{- First, we construct a GenDyck from a Trace -}
+-- We extend the balanced constructor and append to our unbalanced
+-- trees
 genBALANCED : ∀ n → literal LP ⊗ IndDyck ⊗ literal RP ⊗ GenDyck n ⊢ GenDyck n
 genBALANCED zero   = BALANCED
 genBALANCED (suc n) = ⟜4⊗ (⟜4-intro-ε BALANCED)
 
+upgradeBuilder : ∀ n → (IndDyck ⟜ IndDyck) ⊢ GenDyck n ⟜ GenDyck n
+upgradeBuilder zero = id
+upgradeBuilder (suc n) = ⟜-intro (⟜2⊗ (⟜2-intro-ε ⟜-app))
+
+genAppend' : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ GenDyck n)
+genAppend' = (&ᴰ-intro upgradeBuilder) ∘g append'
+
+genAppend : ∀ n → IndDyck ⊗ GenDyck n ⊢ GenDyck n
+genAppend zero    = append
+genAppend (suc _) = ⟜2⊗ (⟜2-intro-ε append)
+
+{- First, we construct a GenDyck n from a Trace n -}
 genMkTreeAlg : Algebra (TraceTys true) GenDyck
 genMkTreeAlg n = ⊕ᴰ-elim (λ
   { (eof' Eq.refl Eq.refl) → NIL ∘g lowerG
@@ -260,14 +281,12 @@ mkTree = genMkTree
   extract one from a GenDyck.
 
   The trick to defining this by structural recursion is to map each
-  IndDyck recursively to a "TraceBuilder"
+  IndDyck recursively to a "TraceBuilder", a linear function that
+  takes a trace to its right and "piles" the characters from the tree
+  onto the trace. Since an IndDyck is balanced, it doesn't affect the
+  state n.
 
 -}
-
-genAppend : ∀ n → IndDyck ⊗ GenDyck n ⊢ GenDyck n
-genAppend zero    = append
-genAppend (suc _) = ⟜2⊗ (⟜2-intro-ε append)
-
 TraceBuilder : Unit → Grammar ℓ-zero
 TraceBuilder _ = &[ n ∈ _ ] (Trace true n ⟜ Trace true n)
 
@@ -284,14 +303,16 @@ buildTraceAlg _ = ⊕ᴰ-elim (λ
      -- build a Trace n with the right subtree
     ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
      -- reassoc the builder arg to the right, and lower everything else
-    ∘g lowerG ,⊗ (lowerG ,⊗ (lowerG ,⊗ lowerG ,⊗ id ∘g  ⊗-assoc⁻) ∘g ⊗-assoc⁻)
-       ∘g ⊗-assoc⁻
+    ∘g ⊗-assoc⁻4
+    ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id
     )
   })
 
 buildTrace : IndDyck ⊢ TraceBuilder _
 buildTrace = rec DyckTy buildTraceAlg _
 
+-- we then extend the builder to generalized trees, which *adds*
+-- closed parens to the trace.
 genBuildTrace : ∀ m → GenDyck m ⊢ &[ n ∈ _ ] (Trace true (m + n) ⟜ Trace true n)
 genBuildTrace zero = buildTrace
 genBuildTrace (suc m) = &ᴰ-intro λ n → ⟜-intro
@@ -302,10 +323,68 @@ genBuildTrace (suc m) = &ᴰ-intro λ n → ⟜-intro
   -- recursively build using the right subtree
   ∘g id ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g genBuildTrace m) ,⊗ id)
   -- reassoc everything
-  ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻)
+  ∘g ⊗-assoc⁻3
+  )
 
--- -- appEOF : TraceAction _ ⊢ Trace zero true
--- -- appEOF = (⟜-app ∘g ⊸0⊗ EOF ∘g &ᴰ-π 0)
+PileAlg : Algebra DyckTy (λ _ → &[ n ∈ _ ] (GenDyck n ⟜ Trace true n))
+PileAlg _ = ⊕ᴰ-elim (λ
+  { nil' → &ᴰ-intro λ n → ⟜-intro-ε genMkTree ∘g lowerG
+  ; balanced' → &ᴰ-intro λ n → ⟜-intro
+    (genBALANCED n
+     ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+     ∘g ⊗-assoc⁻4
+     ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id
+     )
+    --  ⟜-intro (
+    -- {!?!}
+    --   ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+    --   ∘g ⊗-assoc⁻4
+    --   ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id)
+  }) -- ⊕ᴰ-elim (λ
+  -- { nil' → {!!} -- ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g genAppend' ∘g NIL ∘g lowerG
+  -- ; balanced' → ⟜-intro (
+  --     genBALANCED n 
+  --     ∘g {!!}
+  --     ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+  --     ∘g ⊗-assoc⁻4
+  --     ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id)
+  -- })
+
+genRetr :
+  Path (IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n))
+    ((&ᴰ-intro λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n) ∘g buildTrace)
+    ((&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g &ᴰ-π n) ∘g genAppend')
+genRetr = ind' DyckTy PileAlg
+  (compHomo DyckTy (initialAlgebra DyckTy) buildTraceAlg PileAlg
+    ((λ _ → &ᴰ-intro λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n) , λ _ → ⊕ᴰ≡ _ _ λ
+      { nil' → {!refl!}
+      ; balanced' → {!refl!} })
+    (recHomo DyckTy buildTraceAlg))
+  (compHomo DyckTy (initialAlgebra DyckTy) appendAlg PileAlg
+    ((λ _ → (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g &ᴰ-π n) ∘g (&ᴰ-intro upgradeBuilder)) , λ _ → ⊕ᴰ≡ _ _ (λ
+    { nil' → {!refl!}
+    ; balanced' → {!refl!} }))
+    (recHomo DyckTy appendAlg))
+  _
+
+Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
+Dyck≅Trace = 
+  unambiguousRetract→StrongEquivalence
+    (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g genBuildTrace 0)
+    genMkTree
+    {!cong (&ᴰ-π 0 ∘g_) genRetr ∙ ?!}
+    isUnambiguousTrace
+
+-- I don't think we actually need to prove the following
+-- GenDyck≅Trace : ∀ n → StrongEquivalence (GenDyck n) (Trace true n)
+-- GenDyck≅Trace n =
+--   unambiguousRetract→StrongEquivalence
+--     (transportG (cong (Trace true) (+-zero n))
+--       ∘g ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0
+--       ∘g genBuildTrace n)
+--     genMkTree
+--     {!!}
+--     isUnambiguousTrace
 
 -- -- -- prove this by induction and this should imply the retract property
 -- -- genRetract :
