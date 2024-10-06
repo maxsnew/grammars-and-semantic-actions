@@ -112,17 +112,19 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
     -- The decidable finite set of states reachable from q-start
     ε-reach : ⟨ N.Q ⟩ → ⟨ FinSetDecℙ N.Q ⟩
     ε-reach q-start q-end .fst = _ , isPropPropTrunc
-    ε-reach q-start q-end .snd = DecReachable ε-graph q-start q-end
+    ε-reach q-start q-end .snd = {!!}
+    -- DecReachable ε-graph q-start q-end
 
     ε-reach-is-ε-closed : ∀ q-start → is-ε-closed (ε-reach q-start)
-    ε-reach-is-ε-closed q-start t x x-is-reachable = do
-      (n , gw , q-start≡start-gw , x≡end-gw) ← x-is-reachable
-      return
-        (suc n ,
-        ε-graph.snoc t gw x≡end-gw ,
-        q-start≡start-gw ∙ ε-graph.snoc-pres-start t gw x≡end-gw ,
-        ε-graph.snoc-end t gw x≡end-gw)
-      where open PTMonad
+    ε-reach-is-ε-closed q-start t x x-is-reachable = {!!}
+    -- do
+    --   (n , gw , q-start≡start-gw , x≡end-gw) ← x-is-reachable
+    --   return
+    --     (suc n ,
+    --     ε-graph.snoc t gw x≡end-gw ,
+    --     q-start≡start-gw ∙ ε-graph.snoc-pres-start t gw x≡end-gw ,
+    --     ε-graph.snoc-end t gw x≡end-gw)
+    --   where open PTMonad
 
     ε-closure : ⟨ FinSetDecℙ N.Q ⟩ → ε-closed
     ε-closure X .fst = FinSetDecℙ∃ N.Q N.Q X ε-reach
@@ -134,7 +136,8 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
     ε-closure-lift-∈ :
       {A : Decℙ ⟨ N.Q ⟩} {a : ⟨ N.Q ⟩} →
       _∈-FinSetDecℙ_ {A = N.Q} a A → a ∈-ε-closed (ε-closure A)
-    ε-closure-lift-∈ a∈A = ∣ _ , a∈A , (Reachable-is-reflexive ε-graph _) ∣₁
+    ε-closure-lift-∈ a∈A = {!!}
+    -- ∣ _ , a∈A , (Reachable-is-reflexive ε-graph _) ∣₁
 
     ε-closure-transition :
       (t : ⟨ N.ε-transition ⟩) →
@@ -171,11 +174,12 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
     (X q .fst .fst) ⊎
     (Σ[ q' ∈ ⟨ N.Q ⟩ ]
      Σ[ q'∈X ∈ X q' .fst .fst ]
-     Σ[ q-[ε*]→q' ∈ GraphPath ε-graph ]
-       ((GraphWalk.start
-           (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) Eq.≡ q) ×
-        (GraphWalk.end
-           (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) Eq.≡ q')))
+     GraphWalk' ε-graph q q')
+     -- Σ[ q-[ε*]→q' ∈ GraphWalk' ε-graph ]
+     --   ((GraphWalk.start
+     --       (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) Eq.≡ q) ×
+     --    (GraphWalk.end
+     --       (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) Eq.≡ q')))
   witness-ε = λ q X x → {!!}
 
   opaque
@@ -192,10 +196,10 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       (X : ε-closed) →
       N.src t ∈-ε-closed X →
       N.dst t ∈-ε-closed ε-closure (lit-closure (N.label t) (X .fst))
-    lit-closure-transition t X src∈X =
-      ∣ (N.dst t) ,
-        (∣ (N.src t) , (src∈X , ∣ t , (refl , refl , refl) ∣₁) ∣₁ ,
-          ∣ 0 , ((trivialWalk ε-graph (N.dst t)) , (refl , refl)) ∣₁) ∣₁
+    lit-closure-transition t X src∈X = {!!}
+      -- ∣ (N.dst t) ,
+      --   (∣ (N.src t) , (src∈X , ∣ t , (refl , refl , refl) ∣₁) ∣₁ ,
+      --     ∣ 0 , ((trivialWalk ε-graph (N.dst t)) , (refl , refl)) ∣₁) ∣₁
 
     witness-lit :
       (c : ⟨ Alphabet ⟩) → (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
@@ -327,7 +331,7 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
               (witness-lit-help c q
                 (X .fst) q∈litcloseX t q' q'∈X label≡c src≡q' dst≡q)
             )
-            (λ { (q' , q'∈litcloseX , Pth , Eq.refl , Eq.refl) →
+            (λ { (q' , q'∈litcloseX , walk) →
               let
                (t , q'' , q''∈X , label≡c , src≡q'' , dst≡q') =
                   witness-lit c q' (X .fst) q'∈litcloseX
@@ -336,9 +340,7 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
               ⊕ᴰ-in q''∈X ∘g
               witness-lit-help c q' (X .fst) q'∈litcloseX t q'' q''∈X
                 label≡c src≡q'' dst≡q' ∘g
-              id ,⊗ fold-walk c q X q'
-                (ε-closure-lift-∈ q'∈litcloseX)
-                Pth Eq.refl Eq.refl
+              id ,⊗ fold-walk c q X q' q∈εcloselitcloseX walk
               })
             (witness-ε q (lit-closure c (X .fst)) q∈εcloselitcloseX)
           ) ∘g
@@ -370,15 +372,13 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
     fold-walk : ∀ (c : ⟨ Alphabet ⟩) →
       (q : ⟨ N.Q ⟩) → (X : ε-closed) →
       (q' : ⟨ N.Q ⟩) →
-      (q'∈X : q' ∈-ε-closed ε-closure (lit-closure c (X .fst))) →
-      (q-[ε*]→q' : GraphPath ε-graph) →
-      (GraphWalk.start
-        (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) Eq.≡ q) →
-      (GraphWalk.end
-        (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) Eq.≡ q') →
+      (q∈εlitX : q ∈-ε-closed ε-closure (lit-closure c (X .fst))) →
+      (q'-[ε*]→q : GraphWalk' ε-graph q q') →
       N.Trace true q ⊢ N.Trace true q'
-    fold-walk c q X q' q'∈X q-[ε*]→q' Eq.refl Eq.refl =
+    fold-walk c q X q' q∈εlitX nil = id
+    fold-walk c q X q' q∈εlitX (cons e walk) =
       roll ∘g
       ⊕ᴰ-in N.stepε ∘g
-      ⊕ᴰ-in ({!!} , {!!}) ∘g
-      {!!}
+      ⊕ᴰ-in (e , Eq.refl) ∘g
+      liftG ∘g
+      fold-walk c q X (N.ε-dst e) q∈εlitX walk

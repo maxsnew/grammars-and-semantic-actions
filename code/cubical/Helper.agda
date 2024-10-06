@@ -1,3 +1,4 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch --allow-unsolved-metas #-}
 module Helper where
 
 open import Cubical.Foundations.Prelude
@@ -284,6 +285,10 @@ DecProp× :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
   DecProp ℓ
 DecProp× A B = DecPropΣ A (λ _ → B)
+
+DecProp'× :
+  ∀ {ℓ} → (A : DecProp' ℓ) → (B : DecProp' ℓ) → DecProp' ℓ
+DecProp'× A B = (A .fst × B .fst) , (isDecProp× A B)
 
 DecProp≡ : ∀ {ℓ} {A : Type ℓ} → Discrete A → A → A → DecProp ℓ
 DecProp≡ disc x y = ((x ≡ y) , Discrete→isSet disc x y) , disc x y
