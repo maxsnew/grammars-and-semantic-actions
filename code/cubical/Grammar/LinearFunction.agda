@@ -173,6 +173,46 @@ opaque
 ⟜-mapCod : k ⊢ l → k ⟜ g ⊢ l ⟜ g
 ⟜-mapCod f = ⟜-intro (f ∘g ⟜-app)
 
+opaque
+  unfolding ⟜-intro
+  ⟜-mapCod-precomp : (e : g ⊢ h)(f : k ⊗ l ⊢ g) →
+    ⟜-mapCod e ∘g ⟜-intro f ≡ ⟜-intro (e ∘g f)
+  ⟜-mapCod-precomp {g = g}{h = h}{l = l} e f =
+    funExt λ w → funExt λ p → funExt λ w' → funExt λ q →
+    cong (e (w ++ w')) (transportRefl (⟜-intro {h = l} f w p w' q))
+
+opaque
+  unfolding ⟜-intro ⊗-unit-r⁻
+  ⟜-mapCod-postcompε : (e : g ⊢ h)(f : ε ⊢ g) →
+    (⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻) ∘g ⟜-mapCod e ≡
+      e ∘g ⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻
+  ⟜-mapCod-postcompε e f =
+    (⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻) ∘g ⟜-mapCod e
+      ≡⟨ {!!} ⟩
+    e ∘g ⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻
+    ∎
+    -- Some gross equality of transports
+    -- This should follow from another combinator.
+
+
+⟜-mapDom : g ⊢ h → k ⟜ h ⊢ k ⟜ g
+⟜-mapDom f = ⟜-intro (⟜-app ∘g id ,⊗ f)
+
+opaque
+  unfolding ⟜-intro
+  ⟜-mapDom-precomp : (e : g ⊢ h)(f : k ⊗ h ⊢ h) →
+    ⟜-mapDom e ∘g ⟜-intro f ≡ ⟜-intro (f ∘g id ,⊗ e)
+  ⟜-mapDom-precomp {g = g}{h = h} e f =
+      ⟜-η {h = h} (⟜-intro {h = g}(f ∘g id ,⊗ e))
+
+opaque
+  unfolding ⟜-intro ⊗-unit-r⁻
+  ⟜-mapDom-postcompε : (e : g ⊢ h)(f : ε ⊢ g) →
+    (⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom {k = k} e ≡
+      ⟜-app ∘g id ,⊗ (e ∘g f) ∘g ⊗-unit-r⁻
+  ⟜-mapDom-postcompε e f = {!!}
+
+
 ⟜-curry :
   k ⟜ (g ⊗ h) ⊢ k ⟜ h ⟜ g
 ⟜-curry {k = k} = ⟜-intro (⟜-intro {k = k} (⟜-app ∘g ⊗-assoc⁻))

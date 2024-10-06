@@ -344,34 +344,71 @@ genRetr :
 genRetr = ind' DyckTy PileAlg
   (compHomo DyckTy (initialAlgebra DyckTy) buildTraceAlg PileAlg
     ((λ _ → &ᴰ-intro λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n) , λ _ → ⊕ᴰ≡ _ _ λ
-      { nil' → {!refl!}
-      ; balanced' → {!refl!} })
+      { nil' → &ᴰ≡ _ _ (λ m →
+          cong (_∘g lowerG) (⟜-mapCod-precomp genMkTree ⊗-unit-l)
+        )
+      ; balanced' → &ᴰ≡ _ _ λ m →
+         (⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π m) ∘g
+          buildTraceAlg _
+         ∘g ⊕ᴰ-in balanced'
+          ≡⟨ {!!} ⟩
+      &ᴰ-π m ∘g
+        (PileAlg _ ∘g
+        map (DyckTy _)
+        (λ _ → &ᴰ-intro (λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n)))
+        ∘g ⊕ᴰ-in balanced'
+        ∎
+    })
     (recHomo DyckTy buildTraceAlg))
   (compHomo DyckTy (initialAlgebra DyckTy) appendAlg PileAlg
     ((λ _ → (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g &ᴰ-π n) ∘g (&ᴰ-intro upgradeBuilder)) , λ _ → ⊕ᴰ≡ _ _ (λ
-    { nil' → {!refl!}
+    { nil' → &ᴰ≡ _ _ λ {
+        zero →
+       ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g
+       ⟜-intro ⊗-unit-l ∘g lowerG
+        ≡⟨ (λ i → ⟜-mapDom-precomp genMkTree ⊗-unit-l i ∘g lowerG) ⟩
+       ⟜-intro (⊗-unit-l ∘g id ,⊗ genMkTree) ∘g
+       lowerG
+        ≡⟨ ((λ i → ⟜-intro (⊗-unit-l⊗-intro genMkTree (~ i)) ∘g lowerG)) ⟩
+      ⟜-intro (genMkTree ∘g ⊗-unit-l) ∘g
+      lowerG
+      ∎
+      ; (suc m) →
+       ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g
+       ⟜-intro (⟜2⊗ (⟜2-intro-ε ⟜-app)) ∘g
+       ⟜-intro ⊗-unit-l ∘g lowerG
+        ≡⟨ (λ i → ⟜-mapDom-precomp genMkTree (⟜2⊗ (⟜2-intro-ε ⟜-app)) i ∘g
+                  ⟜-intro ⊗-unit-l ∘g lowerG) ⟩
+      ⟜-intro (⟜2⊗ (⟜2-intro-ε ⟜-app) ∘g id ,⊗ genMkTree) ∘g
+      ⟜-intro ⊗-unit-l ∘g lowerG
+        ≡⟨ {!!} ⟩
+      ⟜-intro (genMkTree ∘g ⊗-unit-l) ∘g
+      lowerG
+      ∎
+     }
     ; balanced' → {!refl!} }))
     (recHomo DyckTy appendAlg))
   _
 
 Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
-Dyck≅Trace = 
+Dyck≅Trace =
   unambiguousRetract→StrongEquivalence
     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g genBuildTrace 0)
     genMkTree
-    (genMkTree ∘g
-      ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g buildTrace
-     ≡⟨ {!!} ⟩
-     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n) ∘g buildTrace
+    (genMkTree ∘g ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g buildTrace
+     -- TODO ⟜-mapCod-postcompε needs to be proven in LinearFunction.agda
+     ≡⟨ (λ i → ⟜-mapCod-postcompε (genMkTree {n = 0}) EOF (~ i) ∘g &ᴰ-π 0 ∘g buildTrace) ⟩
+     ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g ⟜-mapCod genMkTree ∘g &ᴰ-π 0 ∘g buildTrace
+     ≡⟨ refl ⟩
+     ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-mapCod genMkTree ∘g &ᴰ-π n) ∘g buildTrace
      ≡⟨ cong (((⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0) ∘g_) genRetr ⟩
      (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree {n = n}) ∘g &ᴰ-π n) ∘g genAppend'
-     ≡⟨ {!!} ⟩
-     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-intro (⟜-app ∘g id ,⊗ mkTree) ∘g &ᴰ-π 0 ∘g genAppend'
      ≡⟨ refl ⟩
-     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-intro (⟜-app ∘g id ,⊗ mkTree) ∘g append'
+     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom mkTree ∘g &ᴰ-π 0 ∘g genAppend'
      ≡⟨ refl ⟩
-     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-intro (⟜-app ∘g id ,⊗ mkTree) ∘g append'
-     ≡⟨ {!!} ⟩
+     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom mkTree ∘g append'
+     -- TODO ⟜-mapDom-postcompε also needs to be proven
+     ≡⟨ ((λ i → ⟜-mapDom-postcompε mkTree EOF i ∘g append')) ⟩
      ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g append'
      ≡⟨ append-nil-r' ⟩
     id ∎)

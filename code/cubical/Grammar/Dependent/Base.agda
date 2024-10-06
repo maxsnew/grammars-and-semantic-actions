@@ -70,6 +70,12 @@ module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
     → f ≡ f'
   ⊕ᴰ≡ f f' fa≡fa' i w x = fa≡fa' (x .fst) i w (x .snd)
 
+  &ᴰ≡ : (f f' : g ⊢ (&[ a ∈ A ] h a))
+    → (∀ a → &ᴰ-π a ∘g f ≡ &ᴰ-π a ∘g f')
+    → f ≡ f'
+  &ᴰ≡ f f' f≡ i w x a = f≡ a i w x
+
+
 ⊕ᴰ-elim∘g :
   ∀ {A : Type ℓ}{g : Grammar ℓ'}{h : A → Grammar ℓ''}{k : Grammar ℓ'''}
   → {f' : ∀ a → h a ⊢ g}
