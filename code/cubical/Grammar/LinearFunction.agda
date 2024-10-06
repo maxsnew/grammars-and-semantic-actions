@@ -261,6 +261,9 @@ opaque
 ⟜2⊗ : ε ⊢ k ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
 ⟜2⊗ f = ⟜-app-l ∘g ⟜1⊗ f
 
+⟜2⊗' : g1 ⊗ g2 ⊢ k → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
+⟜2⊗' f = f ,⊗ id ∘g ⊗-assoc
+
 ⟜3⊗ : ε ⊢ k ⟜ g3 ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ g3 ⊗ l ⊢ k ⊗ l
 ⟜3⊗ f = ⟜-app-l ∘g ⟜2⊗ f
 
@@ -270,6 +273,7 @@ opaque
 ⊸0⊗ : ε ⊢ k → l ⊢ l ⊗ k
 ⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
 
+
 opaque
   unfolding ⊗-intro
   ⟜-app⊸0⊗ :
@@ -278,3 +282,11 @@ opaque
   ⟜-app⊸0⊗ f x =
     cong ((⟜-app ∘g id ,⊗ x) ∘g_) ⊗-unit-r⁻⊗-intro
     ∙ λ i → ⟜-β f i ∘g (id ,⊗ x) ∘g ⊗-unit-r⁻
+
+⟜≡ : ∀ (f f' : g ⊢ k ⟜ h)
+  → ⟜-app ∘g (f ,⊗ id) ≡ ⟜-app ∘g (f' ,⊗ id)
+  → f ≡ f'
+⟜≡ f f' p =
+  sym (⟜-η f)
+  ∙ cong ⟜-intro p
+  ∙ ⟜-η f'

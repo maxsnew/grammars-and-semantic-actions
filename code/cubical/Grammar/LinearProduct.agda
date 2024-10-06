@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -296,6 +297,12 @@ opaque
     ≡ ⊗-intro f (⊗-intro f' f'') ∘g ⊗-assoc⁻
   ⊗-assoc⁻⊗-intro = refl
 
+  ⊗-assoc⊗-intro : 
+    ∀ {f : g ⊢ h}{f' : g' ⊢ h'}{f'' : g'' ⊢ h''}
+    → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'')
+      ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
+  ⊗-assoc⊗-intro = {!!}
+
   opaque
     unfolding ⊗-unit-r⁻
     ⊗-assoc⁻⊗-unit-r⁻ :
@@ -303,6 +310,11 @@ opaque
     ⊗-assoc⁻⊗-unit-r⁻ = funExt λ w → funExt λ p →
       ⊗≡ _ _ (≡-× refl (++-unit-r _))
         (ΣPathP (refl , ⊗PathP refl refl))
+
+  opaque
+    ⊗-unit-l⊗-assoc : ⊗-intro ⊗-unit-l id ∘g ⊗-assoc {h = h}{k = k}
+      ≡ ⊗-unit-l
+    ⊗-unit-l⊗-assoc = {!!}
 
   opaque
     unfolding ε ⊗-unit-l⁻
