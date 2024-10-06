@@ -112,11 +112,15 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
     -- The decidable finite set of states reachable from q-start
     ε-reach : ⟨ N.Q ⟩ → ⟨ FinSetDecℙ N.Q ⟩
     ε-reach q-start q-end .fst = _ , isPropPropTrunc
-    ε-reach q-start q-end .snd = {!!}
-    -- DecReachable ε-graph q-start q-end
+    ε-reach q-start q-end .snd = DecReachable ε-graph q-end q-start
 
+    -- TODO need to define snocs?
     ε-reach-is-ε-closed : ∀ q-start → is-ε-closed (ε-reach q-start)
-    ε-reach-is-ε-closed q-start t x x-is-reachable = {!!}
+    ε-reach-is-ε-closed q-start t x x-is-reachable =
+      PT.rec isPropPropTrunc
+        (λ (n , walk) → ∣ (suc n) , {!!} ∣₁)
+        x-is-reachable
+    -- ∣ {!!} ∣₁
     -- do
     --   (n , gw , q-start≡start-gw , x≡end-gw) ← x-is-reachable
     --   return
@@ -136,8 +140,7 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
     ε-closure-lift-∈ :
       {A : Decℙ ⟨ N.Q ⟩} {a : ⟨ N.Q ⟩} →
       _∈-FinSetDecℙ_ {A = N.Q} a A → a ∈-ε-closed (ε-closure A)
-    ε-closure-lift-∈ a∈A = {!!}
-    -- ∣ _ , a∈A , (Reachable-is-reflexive ε-graph _) ∣₁
+    ε-closure-lift-∈ a∈A = ∣ _ , (a∈A , (Reachable-is-reflexive ε-graph _)) ∣₁
 
     ε-closure-transition :
       (t : ⟨ N.ε-transition ⟩) →
@@ -196,10 +199,10 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       (X : ε-closed) →
       N.src t ∈-ε-closed X →
       N.dst t ∈-ε-closed ε-closure (lit-closure (N.label t) (X .fst))
-    lit-closure-transition t X src∈X = {!!}
-      -- ∣ (N.dst t) ,
-      --   (∣ (N.src t) , (src∈X , ∣ t , (refl , refl , refl) ∣₁) ∣₁ ,
-      --     ∣ 0 , ((trivialWalk ε-graph (N.dst t)) , (refl , refl)) ∣₁) ∣₁
+    lit-closure-transition t X src∈X =
+      ∣ (N.dst t) ,
+        (∣ (N.src t) , (src∈X , ∣ t , refl , refl , refl ∣₁) ∣₁ ,
+          ∣ 0 , nil ∣₁) ∣₁
 
     witness-lit :
       (c : ⟨ Alphabet ⟩) → (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
@@ -230,9 +233,6 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       (λ q → DecProp'×
               (DecℙIso ⟨ N.Q ⟩ .Isom.Iso.fun (X .fst) q)
               (Bool-iso-DecProp' .Isom.Iso.fun (N .isAcc q)))
-    -- DecProp∃
-    --     N.Q
-    --     (λ q → DecProp× (X .fst q) (Bool≃DecProp .fst (N.isAcc q)))
 
   open DFA
   ℙN : DFA {ℓD = ℓ-suc ℓ-zero}
@@ -270,8 +270,7 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
               roll ∘g
               ⊕ᴰ-in ℙN.stop ∘g
               ⊕ᴰ-in (lift (embedAcc q X q∈X acc)) ∘g
-              -- Lifts are needed here but won't fill
-              {!!}
+              liftG ∘g liftG ∘g lowerG ∘g lowerG
             ) })
       ; step → ⊕ᴰ-elim (λ { (t , Eq.refl) →
         &ᴰ-in (λ X → &ᴰ-in λ src∈X →
@@ -313,7 +312,7 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
         roll ∘g
         ⊕ᴰ-in N.stop ∘g
         ⊕ᴰ-in (lift (accX Eq.∙ acc)) ∘g
-        {!!}
+        liftG ∘g liftG ∘g lowerG ∘g lowerG
       })
     ; step → ⊕ᴰ-elim (λ { (lift c) →
       ⊕ᴰ-elim (λ q →
@@ -368,17 +367,21 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       liftG ,⊗ liftG ∘g
       liftG ,⊗ id
 
-    -- TODO need to induct on a walk
     fold-walk : ∀ (c : ⟨ Alphabet ⟩) →
       (q : ⟨ N.Q ⟩) → (X : ε-closed) →
       (q' : ⟨ N.Q ⟩) →
       (q∈εlitX : q ∈-ε-closed ε-closure (lit-closure c (X .fst))) →
       (q'-[ε*]→q : GraphWalk' ε-graph q q') →
       N.Trace true q ⊢ N.Trace true q'
-    fold-walk c q X q' q∈εlitX nil = id
-    fold-walk c q X q' q∈εlitX (cons e walk) =
+    fold-walk c q X q' q∈εlitX (0 , nil) = id
+    fold-walk c q X q' q∈εlitX (n , (cons n-1 e walk)) =
       roll ∘g
       ⊕ᴰ-in N.stepε ∘g
       ⊕ᴰ-in (e , Eq.refl) ∘g
       liftG ∘g
-      fold-walk c q X (N.ε-dst e) q∈εlitX walk
+      fold-walk c q X (N.ε-dst e) q∈εlitX (n-1 , walk)
+
+
+  DFA→NFA : ∀ X →
+    ℙN.Trace true X ⊢ ⊕[ q ∈ ⟨ N.Q ⟩ ] ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q
+  DFA→NFA X = rec (ℙN.TraceTy true) DFA→NFA-alg X

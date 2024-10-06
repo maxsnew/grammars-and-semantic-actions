@@ -59,8 +59,8 @@ record NFA : Type (ℓ-suc ℓN) where
 
   TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
   TraceTy b q = ⊕e Tag λ {
-      stop → ⊕e (Lift (b Eq.≡ isAcc q)) λ {
-        (lift Eq.refl) → k (LiftG ℓN ε) }
+      stop → ⊕e (Lift (b Eq.≡ isAcc q)) (λ
+        (lift acc) → k (LiftG ℓN ε) )
     ; step → ⊕e (Eq.fiber src q) λ {
         (t , Eq.refl ) →
           ⊗e (k (LiftG ℓN (literal (label t)))) (Var (dst t)) }

@@ -34,7 +34,7 @@ record DFA : Type (ℓ-suc ℓD) where
   TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
   TraceTy b q = ⊕e TraceTag λ {
       stop → ⊕e (Lift (b Eq.≡ isAcc q))
-        λ { (lift Eq.refl) → k (LiftG ℓD ε) }
+        (λ (lift acc) → k (LiftG ℓD ε) )
     ; step → ⊕e (Lift ⟨ Alphabet ⟩)
       λ { (lift c) → ⊗e (k (LiftG ℓD (literal c))) (Var (δ q c)) }}
 

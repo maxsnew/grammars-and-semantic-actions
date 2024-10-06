@@ -56,8 +56,11 @@ record directedGraph : Type (ℓ-suc ℓ) where
 
   data GraphWalk (end : ⟨ states ⟩) : ⟨ states ⟩ → ℕ → Type ℓ where
     nil : GraphWalk end end 0
-    cons' : ∀ n (e : ⟨ directed-edges ⟩) →
+    cons : ∀ n (e : ⟨ directed-edges ⟩) →
       GraphWalk end (dst e) n → GraphWalk end (src e) (suc n)
+
+  GraphWalk' : (end start : ⟨ states ⟩) → Type ℓ
+  GraphWalk' end start = Σ[ n ∈ ℕ ] GraphWalk end start n
 
   -- TODO should be provable using IW trees
   postulate
@@ -80,18 +83,18 @@ record directedGraph : Type (ℓ-suc ℓ) where
     {end start : ⟨ states ⟩} →
     (walk : GraphWalk end start (suc n)) →
     ⟨ directed-edges ⟩
-  first-edge (cons' _ e walk) = e
+  first-edge (cons _ e walk) = e
 
   tail :
     {end start : ⟨ states ⟩} →
     (walk : GraphWalk end start (suc n)) →
     GraphWalk end (dst (first-edge walk)) n
-  tail (cons' _ e walk) = walk
+  tail (cons _ e walk) = walk
 
   vertices : {end start : ⟨ states ⟩} →
     GraphWalk end start n → Fin (suc n) → ⟨ states ⟩
   vertices {start = start} walk zero = start
-  vertices (cons' n e walk) (suc m) = vertices walk m
+  vertices (cons n e walk) (suc m) = vertices walk m
 
   hasUniqueVertices : ∀ {end start : ⟨ states ⟩} → GraphWalk end start n → Type ℓ
   hasUniqueVertices walk = isEmbedding (vertices walk)
@@ -114,7 +117,7 @@ record directedGraph : Type (ℓ-suc ℓ) where
     (walk : GraphWalk end start (suc n)) →
     hasUniqueVertices walk →
     hasUniqueVertices (tail walk)
-  tailUniqueVertices (cons' _ e walk) uniq =
+  tailUniqueVertices (cons _ e walk) uniq =
     isEmbedding-∘ uniq (injEmbedding isSetFin injSucFin)
 
   drop : {end start : ⟨ states ⟩} →
@@ -122,7 +125,7 @@ record directedGraph : Type (ℓ-suc ℓ) where
     (k : Fin (suc n)) →
     Σ[ m ∈ ℕ ] GraphWalk end (vertices walk k) m
   drop walk zero = _ , walk
-  drop (cons' n e walk) (suc k) = drop walk k
+  drop (cons n e walk) (suc k) = drop walk k
 
   dropPreservesUnique :
     {end start : ⟨ states ⟩} →
@@ -130,10 +133,10 @@ record directedGraph : Type (ℓ-suc ℓ) where
     (k : Fin (suc (uniqWalk .fst))) →
     hasUniqueVertices (drop (uniqWalk .snd .fst) k .snd)
   dropPreservesUnique uniqWalk zero = uniqWalk .snd .snd
-  dropPreservesUnique (n , cons' n-1 e walk , uniq) (suc k) =
+  dropPreservesUnique (n , cons n-1 e walk , uniq) (suc k) =
     dropPreservesUnique
       (n-1 ,
-      (walk , tailUniqueVertices (cons' n-1 e walk) uniq)) k
+      (walk , tailUniqueVertices (cons n-1 e walk) uniq)) k
 
   GraphPath : ∀ (end start : ⟨ states ⟩) → Type _
   GraphPath end start =
@@ -151,7 +154,7 @@ record directedGraph : Type (ℓ-suc ℓ) where
     injEmbedding
       (isFinSet→isSet (str states))
       (λ _ → isContr→isProp isContrFin1 _ _)
-  makeUnique {end = end}(cons' n e walk) =
+  makeUnique {end = end}(cons n e walk) =
     let new-vert = src e in
     let new-edge = e in
     let n' , walk' , uniq = makeUnique walk in
@@ -169,7 +172,7 @@ record directedGraph : Type (ℓ-suc ℓ) where
       -- There is no repeated vertex
       (λ ¬ΣnewVert →
         suc n' ,
-        (cons' n' new-edge walk' ,
+        (cons n' new-edge walk' ,
         injEmbedding
           (isFinSet→isSet (str states))
               λ { {zero} {zero} p → refl
