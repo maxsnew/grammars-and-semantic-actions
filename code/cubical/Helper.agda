@@ -8,18 +8,20 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Structure
 open import Cubical.Functions.Embedding
+open import Cubical.Relation.Binary.Order.Loset
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.List
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
-open import Cubical.Data.Nat.Order.Recursive as Ord
-open import Cubical.Data.Bool as Bool hiding (_⊕_)
+import Cubical.Data.Nat.Order.Recursive as Ord
+open import Cubical.Data.Bool as Bool hiding (_⊕_; _≤_)
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.DecidablePredicate
 open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.Sum
+open import Cubical.Data.FinSet.Cardinality
+open import Cubical.Data.Sum as Sum
 open import Cubical.Data.W.Indexed
 open import Cubical.Data.Unit
 open import Cubical.Data.Empty as ⊥
@@ -117,6 +119,9 @@ LiftListDist : ∀ {L}{L'} {A : Type L} (w w' : List A) →
 LiftListDist [] w' = refl
 LiftListDist (x ∷ w) w' = cong (lift x ∷_) (LiftListDist w w')
 
+EquivPresIsFinOrd : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → A ≃ B → isFinOrd A → isFinOrd B
+EquivPresIsFinOrd e (_ , p) = _ , compEquiv (invEquiv e) p
+
 isFinOrdFin : ∀ {n} → isFinOrd (Fin n)
 isFinOrdFin {n} = n , (idEquiv (Fin n))
 
@@ -203,7 +208,7 @@ snd (DecProp⊎ A B AB→⊥) =
     (λ ¬a →
       decRec
         (λ b → yes (inr b))
-        (λ ¬b → no (Cubical.Data.Sum.rec ¬a ¬b))
+        (λ ¬b → no (Sum.rec ¬a ¬b))
         (B .snd))
     (A .snd)
 
@@ -279,10 +284,6 @@ DecProp× :
   ∀ {ℓ} → (A : DecProp ℓ) → (B : DecProp ℓ) →
   DecProp ℓ
 DecProp× A B = DecPropΣ A (λ _ → B)
-
-DecProp'× :
-  ∀ {ℓ} → (A : DecProp' ℓ) → (B : DecProp' ℓ) → DecProp' ℓ
-DecProp'× A B = (A .fst × B .fst) , (isDecProp× A B)
 
 DecProp≡ : ∀ {ℓ} {A : Type ℓ} → Discrete A → A → A → DecProp ℓ
 DecProp≡ disc x y = ((x ≡ y) , Discrete→isSet disc x y) , disc x y
@@ -422,6 +423,9 @@ rightInv (DecℙIso A) b =
 leftInv (DecℙIso A) a =
   funExt (λ x → DecPropIso .leftInv _)
 
+isFinSet⊤ : isFinSet ⊤
+isFinSet⊤ = 1 , ∣ invEquiv ⊎-IdR-⊥-≃ ∣₁
+
 inDecℙ :
   ∀ {ℓ} → {A : Type ℓ} →
   (a : A) → Decℙ A → Type ℓ
@@ -480,4 +484,93 @@ FinSetDecℙ∃ :
   ⟨ FinSetDecℙ A ⟩ →
   (⟨ A ⟩ → ⟨ FinSetDecℙ B ⟩) → ⟨ FinSetDecℙ B ⟩
 FinSetDecℙ∃ A B ℙA f b = DecProp∃ A (λ a → DecProp× (ℙA a) (f a b))
+
+subCardBounded :
+  ∀ {ℓ ℓ'} (A : FinSet ℓ) (DecProp'B : ⟨ A ⟩ → DecProp' ℓ') →
+  card (_ , isFinSetSub A DecProp'B) ≤ card A
+subCardBounded A DecProp'B = card↪Inequality
+  (_ , isFinSetSub A DecProp'B) A
+  ∣ fst , (λ w x → isEmbeddingFstΣProp (λ a → isDecProp→isProp (str (DecProp'B a))) {w} {x}) ∣₁
+
+module _
+  {ℓ ℓ'} {A : Type ℓ}
+  (isFinSetA : isFinSet A)
+  (_≺_ : A → A → Type ℓ')
+  (isDecProp≺ : (x y : A) → isDecProp (x ≺ y))
+  (isLoset≺ : IsLoset _≺_) where
+
+  private
+    FinSetA : FinSet ℓ
+    FinSetA = A , isFinSetA
+
+    _DecProp'≺_ : (x y : A) → DecProp' ℓ'
+    x DecProp'≺ y = x ≺ y , isDecProp≺ x y
+
+    module isLoset≺ = IsLoset isLoset≺
+
+    LowerFinSet : (a : A) → FinSet (ℓ-max ℓ ℓ')
+    LowerFinSet a = _ , isFinSetSub FinSetA (_DecProp'≺ a)
+
+    ExceptFinSet : (exception : A) → FinSet ℓ
+    ExceptFinSet exception =
+      let is-exception : A → DecProp ℓ
+          is-exception a = ((_ , isFinSet→isSet isFinSetA exception a) , isFinSet→Discrete isFinSetA exception a) in
+      _ , isFinSetSub FinSetA (DecProp→DecProp' ∘ negateDecProp ∘ is-exception)
+
+    exceptEquiv : (exception : A) → ⟨ ExceptFinSet exception ⟩ ⊎ ⊤ ≃ A
+    exceptEquiv exception = isoToEquiv (iso f g sec ret)
+      where
+      f : ⟨ ExceptFinSet exception ⟩ ⊎ ⊤ → A
+      f = Sum.rec fst (const exception)
+
+      g : A → ⟨ ExceptFinSet exception ⟩ ⊎ ⊤
+      g a = decRec (const (inr tt)) (λ ¬exception≡a → inl (a , ¬exception≡a)) (isFinSet→Discrete isFinSetA exception a)
+
+      sec : (a : A) → f (g a) ≡ a
+      sec a with (isFinSet→Discrete isFinSetA exception a)
+      ... | yes p = p
+      ... | no ¬p = refl
+
+      ret : (b : ⟨ ExceptFinSet exception ⟩ ⊎ ⊤) → g (f b) ≡ b
+      ret (inl a) with (isFinSet→Discrete isFinSetA exception (a .fst))
+      ... | yes p = ⊥.rec (a .snd p)
+      ... | no ¬p = cong inl (Σ≡Prop (λ _ → isProp¬ _) refl)
+      ret (inr tt) with (isFinSet→Discrete isFinSetA exception exception)
+      ... | yes p = refl
+      ... | no ¬p = ⊥.rec (¬p refl)
+
+    cardExcept : (exception : A) → suc (card (ExceptFinSet exception)) ≡ card FinSetA
+    cardExcept exception =
+      +-comm 1 (card (ExceptFinSet exception))
+      ∙ sym (card+ (ExceptFinSet exception) (⊤ , isFinSet⊤))
+      ∙ cardEquiv (_ , isFinSet⊎ (ExceptFinSet exception) (⊤ , isFinSet⊤)) FinSetA ∣ exceptEquiv exception ∣₁
+
+    Lower↪Except : (a : A) → ⟨ LowerFinSet a ⟩ ↪ ⟨ ExceptFinSet a ⟩
+    Lower↪Except a .fst = λ (x , x≺a) → x , λ a≡x → isLoset≺.is-irrefl _ (subst (λ a → x ≺ a) a≡x x≺a)
+    Lower↪Except a .snd = injEmbedding
+      (isFinSet→isSet (str (ExceptFinSet a)))
+      (λ p → Σ≡Prop (λ _ → isLoset≺.is-prop-valued _ _) (PathPΣ p .fst))
+
+    rankBounded : (a : A) → card (LowerFinSet a) < card FinSetA
+    rankBounded a = ≤<-trans
+      (card↪Inequality (LowerFinSet a) (ExceptFinSet a) ∣ Lower↪Except a ∣₁)
+      (0 , cardExcept a)
+
+  rank : (a : A) → Fin (card FinSetA)
+  rank a = enum (card (LowerFinSet a)) (rankBounded a)
+
+  rankedAt : Fin (card FinSetA) → A
+  rankedAt k = {!!}
+
+  rankEquiv : A ≃ Fin (card FinSetA)
+  rankEquiv = isoToEquiv (iso rank rankedAt sec ret)
+    where
+    sec : ∀ k → rank (rankedAt k) ≡ k
+    sec k = {!!}
+
+    ret : ∀ a → rankedAt (rank a) ≡ a
+    ret a = {!!}
+
+  isFinSet→isFinOrd : isFinOrd A
+  isFinSet→isFinOrd = card FinSetA , rankEquiv
 

@@ -19,6 +19,7 @@ open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Nat hiding (elim)
 open import Cubical.Data.Nat.Order
 open import Cubical.Data.Sigma
+open import Cubical.Data.List as List using (List; []; _∷_)
 
 open import Cubical.HITs.PropositionalTruncation as PT hiding (elim ; rec ; map)
 
@@ -26,6 +27,8 @@ open import Cubical.Reflection.RecordEquiv
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
+
+open import Helper
 
 private
   variable
@@ -59,6 +62,20 @@ record directedGraph : Type (ℓ-suc ℓ) where
 
   open GraphWalk
 
+  opaque
+    GraphWalkOfLenBetween : (length : ℕ) (u v : ⟨ states ⟩) → Type ℓ
+    GraphWalkOfLenBetween length u v = Σ[ gw ∈ GraphWalk length ] (u ≡ start gw) × (v ≡ end gw)
+
+    GraphWalkBetween : (u v : ⟨ states ⟩) → Type ℓ
+    GraphWalkBetween u v = Σ[ length ∈ ℕ ] GraphWalkOfLenBetween length u v
+
+  hasUniqueVertices : GraphWalk n → Type _
+  hasUniqueVertices gw = isEmbedding (gw .vertices)
+
+  GraphPath : Type _
+  GraphPath =
+    Σ[ n ∈ ℕ ] (n < card states) × (Σ[ gw ∈ GraphWalk n ] hasUniqueVertices gw)
+
   trivialWalk : ⟨ states ⟩ → GraphWalk 0
   vertices (trivialWalk x) _ = x
   edges (trivialWalk x) ()
@@ -74,6 +91,9 @@ record directedGraph : Type (ℓ-suc ℓ) where
 
   hasUniqueVertices : GraphWalk n → Type _
   hasUniqueVertices gw = isEmbedding (gw .vertices)
+
+  WalkBetween : (u v : ⟨ states ⟩) → Type _
+  WalkBetween u v = Σ[ n ∈ ℕ ] Σ[ gw ∈ GraphWalk n ] (u ≡ start gw) × (v ≡ end gw)
 
   GraphPath : Type _
   GraphPath =
@@ -149,11 +169,6 @@ record directedGraph : Type (ℓ-suc ℓ) where
         (gw .vertices k ≡ start gw') × (end gw ≡ end gw')
   drop gw zero = _ , gw , refl , refl
   drop {suc n} gw (suc k) = drop (tail gw) k
-
-  hasUniqueVertices→boundedLength :
-    (gw : GraphWalk n) → hasUniqueVertices gw → n < card states
-  hasUniqueVertices→boundedLength gw unique =
-    card↪Inequality' (_ , isFinSetFin') states (gw .vertices) unique
 
   tailPresHasUniqueVertices :
     (gw : GraphWalk (suc n)) →
@@ -243,6 +258,16 @@ record directedGraph : Type (ℓ-suc ℓ) where
           (λ _ → _ , isFinSetΠ (_ , isFinSetFin')
             (λ i → _ , isFinSet≡ states _ _))))
 
+  opaque
+    unfolding GraphWalkOfLenBetween
+
+    isFinSetGraphWalkOfLenBetween : (n : ℕ) (u v : ⟨ states ⟩) → isFinSet (GraphWalkOfLenBetween n u v)
+    isFinSetGraphWalkOfLenBetween n u v = isFinSetΣ
+      (_ , isFinSetGraphWalk n)
+      (λ gw → _ , isFinSet×
+        (_ , isFinSet≡ states u (start gw))
+        (_ , isFinSet≡ states v (end gw)))
+
   isFinSetHasUniqueVertices :
     (gw : GraphWalk n) → isFinSet (hasUniqueVertices gw)
   isFinSetHasUniqueVertices gw =
@@ -271,3 +296,8 @@ record directedGraph : Type (ℓ-suc ℓ) where
   Reachable-is-reflexive : (u : ⟨ states ⟩) → Reachable u u
   Reachable-is-reflexive u = ∣ 0 , trivialWalk u , refl , refl ∣₁
 
+  DecGraphWalkBetween : (u v : ⟨ states ⟩) → Dec (GraphWalkBetween u v)
+  DecGraphWalkBetween u v =
+    let queue : List {!!}
+        queue = [] in
+    {!!}
