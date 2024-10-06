@@ -20,6 +20,7 @@ open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Nat hiding (elim)
 open import Cubical.Data.Nat.Order
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sum
 open import Cubical.Data.List as List using (List; []; _∷_)
 import Cubical.Data.List.FinData as ListFin
 import Cubical.Data.Equality as Eq
@@ -41,9 +42,11 @@ private
 isFinSetFin' : isFinSet (Fin n)
 isFinSetFin' = isFinSetFin & subst isFinSet (sym Fin≡SumFin)
 
-{-# NO_POSITIVITY_CHECK #-}
 -- Because it occurs in a subst below, GraphWalk is not strictly positive
--- I don't know if turning off this check is safe or not
+-- I don't know if turning off this check is entirely safe, but
+-- this induvtive construction of GraphWalk seems needed for the
+-- determinization proof
+{-# NO_POSITIVITY_CHECK #-}
 record directedGraph : Type (ℓ-suc ℓ) where
   field
     states : FinSet ℓ
@@ -55,6 +58,23 @@ record directedGraph : Type (ℓ-suc ℓ) where
     nil : GraphWalk end end 0
     cons' : ∀ n (e : ⟨ directed-edges ⟩) →
       GraphWalk end (dst e) n → GraphWalk end (src e) (suc n)
+
+  -- TODO should be provable using IW trees
+  postulate
+    isSetGraphWalk :
+      (end start : ⟨ states ⟩) →
+      (n : ℕ) →
+      isSet (GraphWalk end start n)
+    isFinSetGraphWalk :
+      (end start : ⟨ states ⟩) →
+      (n : ℕ) →
+      isFinSet (GraphWalk end start n)
+
+  trivialWalk→sameEndpoints :
+    (end start : ⟨ states ⟩) →
+    GraphWalk end start 0 →
+    end ≡ start
+  trivialWalk→sameEndpoints end start nil = refl
 
   first-edge :
     {end start : ⟨ states ⟩} →
@@ -75,6 +95,14 @@ record directedGraph : Type (ℓ-suc ℓ) where
 
   hasUniqueVertices : ∀ {end start : ⟨ states ⟩} → GraphWalk end start n → Type ℓ
   hasUniqueVertices walk = isEmbedding (vertices walk)
+
+  hasUniqueVertices→boundedLength :
+    {end start : ⟨ states ⟩} →
+    (walk : GraphWalk end start n) →
+    hasUniqueVertices walk →
+    n < card states
+  hasUniqueVertices→boundedLength walk unique =
+    card↪Inequality' (_ , isFinSetFin') states (vertices walk) unique
 
   uniqueVerticesWalk : ∀ (end start : ⟨ states ⟩) → Type ℓ
   uniqueVerticesWalk end start =
@@ -152,230 +180,53 @@ record directedGraph : Type (ℓ-suc ℓ) where
           )
       )
 
+  GraphWalk→GraphPath :
+    {end start : ⟨ states ⟩} →
+    (walk : GraphWalk end start n) →
+    GraphPath end start
+  GraphWalk→GraphPath walk =
+    let m , walk' , uniq = makeUnique walk in
+    m , (hasUniqueVertices→boundedLength walk' uniq , walk' , uniq)
 
-  -- makeUnique :
-  --   (gw : GraphWalk n) →
-  --   Σ[ m ∈ ℕ ] Σ[ gw' ∈ GraphWalk m ]
-  --     hasUniqueVertices gw' × (start gw ≡ start gw') × (end gw ≡ end gw')
-  -- makeUnique {zero} gw =
-  --   zero ,
-  --   gw ,
-  --   injEmbedding (isFinSet→isSet (str states))
-  --     (λ _ → isContr→isProp isContrFin1 _ _) ,
-  --   refl ,
-  --   refl
-  -- makeUnique {suc n} gw =
-  --   let newVert = gw .vertices zero in
-  --   let newEdge = gw .edges zero in
-  --   let n' , gw' , unique , startAgree , endAgree = makeUnique (tail gw) in
-  --   DecΣ _ (λ k → gw' .vertices k ≡ newVert)
-  --     (λ k → isFinSet→Discrete (str states) _ newVert) & decRec
-  --     (λ (k , p) →
-  --       let n'' , gw'' , startAgree' , endAgree' = drop gw' k in
-  --       let unique' = dropPresHasUniqueVertices gw' unique k in
-  --       n'' , gw'' , unique' , sym p ∙ startAgree' , endAgree ∙ endAgree')
-  --     (λ ¬ΣnewVert →
-  --       let gw'' = cons newEdge gw' (gw .compat-dst zero ∙ startAgree) in
-  --       let uniqueGW'' = injEmbedding (isFinSet→isSet (str states))
-  --             λ { {zero} {zero} p → refl
-  --               ; {zero} {suc j} p →
-  --                 ¬ΣnewVert (j , sym p ∙ gw .compat-src zero) & ⊥.rec
-  --               ; {suc i} {zero} p →
-  --                 ¬ΣnewVert (i , p ∙ gw .compat-src zero) & ⊥.rec
-  --               ; {suc i} {suc j} p → congS suc $ isEmbedding→Inj unique i j p
-  --               }
-  --           in
-  --       _ , gw'' , uniqueGW'' , (sym $ gw .compat-src zero) , endAgree)
+  Reachable PathReachable : ⟨ states ⟩ → ⟨ states ⟩ → Type _
+  Reachable end start =
+    PT.∥ Σ[ n ∈ ℕ ] GraphWalk end start n  ∥₁
+  PathReachable end start =
+    PT.∥ GraphPath end start ∥₁
 
-  -- opaque
-  --   GraphWalkOfLenBetween : (length : ℕ) (u v : ⟨ states ⟩) → Type ℓ
-  --   GraphWalkOfLenBetween length u v = Σ[ gw ∈ GraphWalk length ] (u ≡ start gw) × (v ≡ end gw)
+  PathReachable≃Reachable :
+    (end start : ⟨ states ⟩) → PathReachable end start ≃ Reachable end start
+  PathReachable≃Reachable end start =
+    propBiimpl→Equiv isPropPropTrunc isPropPropTrunc
+      (PT.map (λ gp → (gp .fst) , (gp .snd .snd .fst)))
+      (PT.map (λ (n , gw) → GraphWalk→GraphPath gw))
 
-  --   GraphWalkBetween : (u v : ⟨ states ⟩) → Type ℓ
-  --   GraphWalkBetween u v = Σ[ length ∈ ℕ ] GraphWalkOfLenBetween length u v
+  isFinSetHasUniqueVertices :
+    {end start : ⟨ states ⟩} →
+    (gw : GraphWalk end start n) → isFinSet (hasUniqueVertices gw)
+  isFinSetHasUniqueVertices gw =
+    isFinSetIsEmbedding (_ , isFinSetFin') states (vertices gw)
 
-  -- hasUniqueVertices : GraphWalk n → Type _
-  -- hasUniqueVertices gw = isEmbedding (gw .vertices)
+  isFinSetGraphPath :
+    (end start : ⟨ states ⟩) →
+    isFinSet (GraphPath end start)
+  isFinSetGraphPath end start =
+    EquivPresIsFinSet (Σ-cong-equiv-fst Fin≃Finℕ ∙ₑ Σ-assoc-≃) $
+      isFinSetΣ (_ , isFinSetFin')
+        (λ n → _ , isFinSetΣ (_ , isFinSetGraphWalk _ _ _)
+          (λ walk → _ , isFinSetHasUniqueVertices walk))
 
-  -- trivialWalk : ⟨ states ⟩ → GraphWalk 0
-  -- vertices (trivialWalk x) _ = x
-  -- edges (trivialWalk x) ()
-  -- compat-src (trivialWalk x) ()
-  -- compat-dst (trivialWalk x) ()
+  DecPathReachable : (end start : ⟨ states ⟩) → Dec (PathReachable end start)
+  DecPathReachable end start = isFinSet→Dec∥∥ (isFinSetGraphPath end start)
 
-  -- unitWalk : ⟨ directed-edges ⟩ → GraphWalk 1
-  -- unitWalk t .vertices zero = src t
-  -- unitWalk t .vertices (suc n) = dst t
-  -- unitWalk t .edges _ = t
-  -- unitWalk t .compat-src zero = refl
-  -- unitWalk t .compat-dst zero = refl
+  DecReachable : (end start : ⟨ states ⟩) → Dec (Reachable end start)
+  DecReachable end start =
+    EquivPresDec
+      (PathReachable≃Reachable end start)
+      (DecPathReachable end start)
 
-  -- hasUniqueVertices→boundedLength :
-  --   (gw : GraphWalk n) → hasUniqueVertices gw → n < card states
-  -- hasUniqueVertices→boundedLength gw unique =
-  --   card↪Inequality' (_ , isFinSetFin') states (gw .vertices) unique
-
-  -- WalkBetween : (u v : ⟨ states ⟩) → Type _
-  -- WalkBetween u v = Σ[ n ∈ ℕ ] Σ[ gw ∈ GraphWalk n ] (u ≡ start gw) × (v ≡ end gw)
-
-  -- Reachable PathReachable : ⟨ states ⟩ → ⟨ states ⟩ → Type _
-  -- Reachable u v =
-  --   PT.∥ Σ[ n ∈ ℕ ] Σ[ gw ∈ GraphWalk n ] (u ≡ start gw) × (v ≡ end gw) ∥₁
-  -- PathReachable u v =
-  --   PT.∥ Σ[ gp ∈ GraphPath ]
-  --     (u ≡ start (gp .snd .snd .fst)) × (v ≡ end (gp .snd .snd .fst)) ∥₁
-
-  -- cons :
-  --   (e : ⟨ directed-edges ⟩)
-  --   (gw : GraphWalk n) →
-  --   dst e ≡ start gw →
-  --   GraphWalk (suc n)
-  -- cons e gw p .vertices zero = src e
-  -- cons e gw p .vertices (suc k) = gw .vertices k
-  -- cons e gw p .edges zero = e
-  -- cons e gw p .edges (suc k) = gw .edges k
-  -- cons e gw p .compat-src zero = refl
-  -- cons e gw p .compat-src (suc k) = gw .compat-src k
-  -- cons e gw p .compat-dst zero = p
-  -- cons e gw p .compat-dst (suc k) = gw .compat-dst k
-
-  -- ext-fin-last : ∀ {ℓ} {A : Type ℓ} {n} →
-  --   A → (Fin n → A) → Fin (suc n) → A
-  -- ext-fin-last {n = zero} last f zero = last
-  -- ext-fin-last {n = suc n} last f zero = f zero
-  -- ext-fin-last {n = suc n} last f (suc k) = ext-fin-last {n = n} last (f ∘ suc) k
-
-  -- tail : GraphWalk (suc n) → GraphWalk n
-  -- tail gw .vertices = gw .vertices ∘ suc
-  -- tail gw .edges = gw .edges ∘ suc
-  -- tail gw .compat-src = gw .compat-src ∘ suc
-  -- tail gw .compat-dst = gw .compat-dst ∘ suc
-
-  -- snoc :
-  --   (e : ⟨ directed-edges ⟩)
-  --   (gw : GraphWalk n) →
-  --   src e ≡ end gw →
-  --   GraphWalk (suc n)
-  -- snoc-pres-start :
-  --   (e : ⟨ directed-edges ⟩)
-  --   (gw : GraphWalk n) →
-  --   (p : src e ≡ end gw) →
-  --   start gw ≡ start (snoc e gw p)
-
-  -- snoc {zero} e gw p .vertices zero = src e
-  -- snoc {zero} e gw p .vertices one = dst e
-  -- snoc {zero} e gw p .edges zero = e
-  -- snoc {zero} e gw p .compat-src zero = refl
-  -- snoc {zero} e gw p .compat-dst zero = refl
-  -- snoc {suc n} e gw p = cons (gw .edges zero) (snoc e (tail gw) p)
-  --   (gw .compat-dst zero ∙ snoc-pres-start e (tail gw) p)
-
-  -- snoc-pres-start {zero} e gw p = sym p
-  -- snoc-pres-start {suc n} e gw p = sym $ gw .compat-src zero
-
-  -- snoc-end :
-  --   (e : ⟨ directed-edges ⟩)
-  --   (gw : GraphWalk n) →
-  --   (p : src e ≡ end gw) →
-  --   dst e ≡ end (snoc e gw p)
-  -- snoc-end {zero} e gw p = refl
-  -- snoc-end {suc n} e gw p = snoc-end e (tail gw) p
-
-  -- drop :
-  --   (gw : GraphWalk n) →
-  --   (k : Fin (suc n)) →
-  --     Σ[ m ∈ ℕ ] Σ[ gw' ∈ GraphWalk m ]
-  --       (gw .vertices k ≡ start gw') × (end gw ≡ end gw')
-  -- drop gw zero = _ , gw , refl , refl
-  -- drop {suc n} gw (suc k) = drop (tail gw) k
-
-  -- tailPresHasUniqueVertices :
-  --   (gw : GraphWalk (suc n)) →
-  --   hasUniqueVertices gw → hasUniqueVertices (tail gw)
-  -- tailPresHasUniqueVertices gw unique =
-  --   isEmbedding-∘ unique (injEmbedding isSetFin injSucFin)
-
-  -- dropPresHasUniqueVertices :
-  --   (gw : GraphWalk n) →
-  --   hasUniqueVertices gw →
-  --   (k : Fin (suc n)) → hasUniqueVertices (drop gw k .snd .fst)
-  -- dropPresHasUniqueVertices gw unique zero = unique
-  -- dropPresHasUniqueVertices {suc n} gw unique (suc k) =
-  --   dropPresHasUniqueVertices
-  --     (tail gw) (tailPresHasUniqueVertices gw unique) k
-
-  -- makeUnique :
-  --   (gw : GraphWalk n) →
-  --   Σ[ m ∈ ℕ ] Σ[ gw' ∈ GraphWalk m ]
-  --     hasUniqueVertices gw' × (start gw ≡ start gw') × (end gw ≡ end gw')
-  -- makeUnique {zero} gw =
-  --   zero ,
-  --   gw ,
-  --   injEmbedding (isFinSet→isSet (str states))
-  --     (λ _ → isContr→isProp isContrFin1 _ _) ,
-  --   refl ,
-  --   refl
-  -- makeUnique {suc n} gw =
-  --   let newVert = gw .vertices zero in
-  --   let newEdge = gw .edges zero in
-  --   let n' , gw' , unique , startAgree , endAgree = makeUnique (tail gw) in
-  --   DecΣ _ (λ k → gw' .vertices k ≡ newVert)
-  --     (λ k → isFinSet→Discrete (str states) _ newVert) & decRec
-  --     (λ (k , p) →
-  --       let n'' , gw'' , startAgree' , endAgree' = drop gw' k in
-  --       let unique' = dropPresHasUniqueVertices gw' unique k in
-  --       n'' , gw'' , unique' , sym p ∙ startAgree' , endAgree ∙ endAgree')
-  --     (λ ¬ΣnewVert →
-  --       let gw'' = cons newEdge gw' (gw .compat-dst zero ∙ startAgree) in
-  --       let uniqueGW'' = injEmbedding (isFinSet→isSet (str states))
-  --             λ { {zero} {zero} p → refl
-  --               ; {zero} {suc j} p →
-  --                 ¬ΣnewVert (j , sym p ∙ gw .compat-src zero) & ⊥.rec
-  --               ; {suc i} {zero} p →
-  --                 ¬ΣnewVert (i , p ∙ gw .compat-src zero) & ⊥.rec
-  --               ; {suc i} {suc j} p → congS suc $ isEmbedding→Inj unique i j p
-  --               }
-  --           in
-  --       _ , gw'' , uniqueGW'' , (sym $ gw .compat-src zero) , endAgree)
-
-  -- GraphWalk→GraphPath :
-  --   (gw : GraphWalk n) →
-  --   Σ[ gp ∈ GraphPath ]
-  --     (start gw ≡ start (gp .snd .snd .fst)) ×
-  --       (end gw ≡ end (gp .snd .snd .fst))
-  -- GraphWalk→GraphPath gw =
-  --   let m , gw' , unique , agree = makeUnique gw in
-  --   let m<bound = hasUniqueVertices→boundedLength gw' unique in
-  --   (m , m<bound , gw' , unique) , agree
-
-  -- GraphPath→GraphWalk :
-  --   (gp : GraphPath) →
-  --     Σ[ n ∈ ℕ ] Σ[ gw ∈ GraphWalk n ]
-  --       (start (gp .snd .snd .fst) ≡ start gw) ×
-  --         (end (gp .snd .snd .fst) ≡ end gw)
-  -- GraphPath→GraphWalk (n , _ , gw , _) = n , gw , refl , refl
-
-  -- PathReachable≃Reachable :
-  --   (u v : ⟨ states ⟩) → PathReachable u v ≃ Reachable u v
-  -- PathReachable≃Reachable u v =
-  --   propBiimpl→Equiv isPropPropTrunc isPropPropTrunc
-  --   (PT.map λ (gp , uStart , vEnd) →
-  --     GraphPath→GraphWalk gp & map-snd
-  --       (map-snd λ (s , e) → uStart ∙ s , vEnd ∙ e))
-  --   (PT.map λ (n , gw , uStart , vEnd) →
-  --     GraphWalk→GraphPath gw & map-snd λ (s , e) → uStart ∙ s , vEnd ∙ e)
-
-  -- isFinSetGraphWalk : (n : ℕ) → isFinSet (GraphWalk n)
-  -- isFinSetGraphWalk n =
-  --   EquivPresIsFinSet (isoToEquiv ∘ invIso $ GraphWalkIsoΣ {n}) $
-  --   isFinSetΣ
-  --     (_ , isFinSet→ (_ , isFinSetFin') states)
-  --     (λ vertices → _ , isFinSetΣ
-  --       (_ , isFinSet→ (_ , isFinSetFin') directed-edges)
-  --       (λ edges → _ , isFinSetΣ
-  --         (_ , isFinSetΠ (_ , isFinSetFin') (λ i → _ , isFinSet≡ states _ _))
-  --         (λ _ → _ , isFinSetΠ (_ , isFinSetFin')
-  --           (λ i → _ , isFinSet≡ states _ _))))
+  Reachable-is-reflexive : (u : ⟨ states ⟩) → Reachable u u
+  Reachable-is-reflexive u = ∣ 0 , nil ∣₁
 
   -- opaque
   --   unfolding GraphWalkOfLenBetween
@@ -386,34 +237,6 @@ record directedGraph : Type (ℓ-suc ℓ) where
   --     (λ gw → _ , isFinSet×
   --       (_ , isFinSet≡ states u (start gw))
   --       (_ , isFinSet≡ states v (end gw)))
-
-  -- isFinSetHasUniqueVertices :
-  --   (gw : GraphWalk n) → isFinSet (hasUniqueVertices gw)
-  -- isFinSetHasUniqueVertices gw =
-  --   isFinSetIsEmbedding (_ , isFinSetFin') states (gw .vertices)
-
-  -- isFinSetGraphPath : isFinSet GraphPath
-  -- isFinSetGraphPath =
-  --   EquivPresIsFinSet (Σ-cong-equiv-fst Fin≃Finℕ ∙ₑ Σ-assoc-≃) $
-  --   isFinSetΣ
-  --     (_ , isFinSetFin')
-  --     (λ n → _ , isFinSetΣ
-  --       (_ , isFinSetGraphWalk _)
-  --       (λ gw → _ , isFinSetHasUniqueVertices gw))
-
-  -- DecPathReachable : (u v : ⟨ states ⟩) → Dec (PathReachable u v)
-  -- DecPathReachable u v = isFinSet→Dec∥∥ $ isFinSetΣ
-  --   (_ , isFinSetGraphPath)
-  --   (λ gp → _ , isFinSet×
-  --     (_ , isFinSet≡ states _ _)
-  --     (_ , isFinSet≡ states _ _))
-
-  -- DecReachable : (u v : ⟨ states ⟩) → Dec (Reachable u v)
-  -- DecReachable u v =
-  --   EquivPresDec (PathReachable≃Reachable u v) (DecPathReachable u v)
-
-  -- Reachable-is-reflexive : (u : ⟨ states ⟩) → Reachable u u
-  -- Reachable-is-reflexive u = ∣ 0 , trivialWalk u , refl , refl ∣₁
 
   -- DecGraphWalkBetween : (u v : ⟨ states ⟩) → Dec (GraphWalkBetween u v)
   -- DecGraphWalkBetween u v =
