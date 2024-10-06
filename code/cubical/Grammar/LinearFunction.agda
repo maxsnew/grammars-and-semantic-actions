@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
@@ -175,6 +174,7 @@ opaque
 
 opaque
   unfolding ⟜-intro
+
   ⟜-mapCod-precomp : (e : g ⊢ h)(f : k ⊗ l ⊢ g) →
     ⟜-mapCod e ∘g ⟜-intro f ≡ ⟜-intro (e ∘g f)
   ⟜-mapCod-precomp {g = g}{h = h}{l = l} e f =
@@ -182,23 +182,19 @@ opaque
     cong (e (w ++ w')) (transportRefl (⟜-intro {h = l} f w p w' q))
 
 opaque
-  unfolding ⟜-intro ⊗-unit-r⁻
+  unfolding ⊗-intro
   ⟜-mapCod-postcompε : (e : g ⊢ h)(f : ε ⊢ g) →
     (⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻) ∘g ⟜-mapCod e ≡
       e ∘g ⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻
   ⟜-mapCod-postcompε e f =
-    (⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻) ∘g ⟜-mapCod e
-      ≡⟨ {!!} ⟩
-    e ∘g ⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻
-    ∎
-    -- Some gross equality of transports
-    -- This should follow from another combinator.
-
+    cong ((⟜-app ∘g id ,⊗ f) ∘g_) ⊗-unit-r⁻⊗-intro
+    ∙ (λ i → ⟜-β (e ∘g ⟜-app) i ∘g (id ,⊗ f) ∘g ⊗-unit-r⁻)
 
 ⟜-mapDom : g ⊢ h → k ⟜ h ⊢ k ⟜ g
 ⟜-mapDom f = ⟜-intro (⟜-app ∘g id ,⊗ f)
 
 opaque
+  -- why do we need to unfold ⟜-intro here?
   unfolding ⟜-intro
   ⟜-mapDom-precomp : (e : g ⊢ h)(f : k ⊗ h ⊢ h) →
     ⟜-mapDom e ∘g ⟜-intro f ≡ ⟜-intro (f ∘g id ,⊗ e)
@@ -206,12 +202,13 @@ opaque
       ⟜-η {h = h} (⟜-intro {h = g}(f ∘g id ,⊗ e))
 
 opaque
-  unfolding ⟜-intro ⊗-unit-r⁻
+  unfolding ⊗-intro
   ⟜-mapDom-postcompε : (e : g ⊢ h)(f : ε ⊢ g) →
     (⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom {k = k} e ≡
       ⟜-app ∘g id ,⊗ (e ∘g f) ∘g ⊗-unit-r⁻
-  ⟜-mapDom-postcompε e f = {!!}
-
+  ⟜-mapDom-postcompε e f =
+    cong ((⟜-app ∘g id ,⊗ f) ∘g_) ⊗-unit-r⁻⊗-intro
+    ∙ λ i → ⟜-β (⟜-app ∘g id ,⊗ e) i ∘g (id ,⊗ f) ∘g ⊗-unit-r⁻
 
 ⟜-curry :
   k ⟜ (g ⊗ h) ⊢ k ⟜ h ⟜ g
@@ -273,7 +270,11 @@ opaque
 ⊸0⊗ : ε ⊢ k → l ⊢ l ⊗ k
 ⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
 
-⟜-app⊸0⊗ :
-  ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) → 
-  ⟜-app ∘g ⊸0⊗ x ∘g ⟜-intro f ≡ f ∘g ⊸0⊗ x
-⟜-app⊸0⊗ = {!!}
+opaque
+  unfolding ⊗-intro
+  ⟜-app⊸0⊗ :
+    ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) →
+    ⟜-app ∘g ⊸0⊗ x ∘g ⟜-intro f ≡ f ∘g ⊸0⊗ x
+  ⟜-app⊸0⊗ f x =
+    cong ((⟜-app ∘g id ,⊗ x) ∘g_) ⊗-unit-r⁻⊗-intro
+    ∙ λ i → ⟜-β f i ∘g (id ,⊗ x) ∘g ⊗-unit-r⁻
