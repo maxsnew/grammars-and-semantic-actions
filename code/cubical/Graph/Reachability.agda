@@ -42,18 +42,15 @@ private
 isFinSetFin' : isFinSet (Fin n)
 isFinSetFin' = isFinSetFin & subst isFinSet (sym Fin≡SumFin)
 
--- Because it occurs in a subst below, GraphWalk is not strictly positive
--- I don't know if turning off this check is entirely safe, but
--- this induvtive construction of GraphWalk seems needed for the
--- determinization proof
-{-# NO_POSITIVITY_CHECK #-}
-record directedGraph : Type (ℓ-suc ℓ) where
+record directedGraph ℓ : Type (ℓ-suc ℓ) where
   field
     states : FinSet ℓ
     directed-edges : FinSet ℓ
     src : ⟨ directed-edges ⟩ → ⟨ states ⟩
     dst : ⟨ directed-edges ⟩ → ⟨ states ⟩
 
+module _ (G : directedGraph ℓ) where
+  open directedGraph G
   data GraphWalk (end : ⟨ states ⟩) : ⟨ states ⟩ → ℕ → Type ℓ where
     nil : GraphWalk end end 0
     cons : ∀ n (e : ⟨ directed-edges ⟩) →
@@ -91,8 +88,18 @@ record directedGraph : Type (ℓ-suc ℓ) where
     GraphWalk end (dst (first-edge walk)) n
   tail (cons _ e walk) = walk
 
-  vertices : {end start : ⟨ states ⟩} →
-    GraphWalk end start n → Fin (suc n) → ⟨ states ⟩
+  snoc :
+    {start : ⟨ states ⟩} →
+    (e : ⟨ directed-edges ⟩) →
+    GraphWalk (src e) start n →
+    GraphWalk (dst e) start (suc n)
+  snoc e nil = cons 0 e nil
+  snoc e (cons n e' walk) = cons (suc n) e' (snoc e walk)
+
+  vertices :
+    {end start : ⟨ states ⟩} →
+    GraphWalk end start n →
+    Fin (suc n) → ⟨ states ⟩
   vertices {start = start} walk zero = start
   vertices (cons n e walk) (suc m) = vertices walk m
 

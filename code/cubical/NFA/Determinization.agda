@@ -42,21 +42,21 @@ private
 open NFA
 open StrongEquivalence
 
-module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
+module _ (N : NFA ℓN) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
   private
     module N = NFA N
 
   open directedGraph
   -- The NFA without labelled transitions,
   -- viewed as a directed graph
-  ε-graph : directedGraph
+  ε-graph : directedGraph ℓN
   ε-graph .states = N.Q
   ε-graph .directed-edges = N.ε-transition
   ε-graph .src = N.ε-src
   ε-graph .dst = N.ε-dst
   private module ε-graph = directedGraph ε-graph
 
-  is-ε-closed : ⟨ FinSetDecℙ N.Q ⟩ → Type ℓ-zero
+  is-ε-closed : ⟨ FinSetDecℙ N.Q ⟩ → Type ℓN
   is-ε-closed X =
     (t : ⟨ N.ε-transition ⟩) (x : ⟨ N.Q ⟩)
     (src∈X : X (N.ε-src t) .fst .fst) →
@@ -98,14 +98,14 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       (isProp-is-ε-closed X)
       (Dec-is-ε-closed X)
 
-  ε-closed : Type (ℓ-suc ℓ-zero)
+  ε-closed : Type (ℓ-suc ℓN)
   ε-closed = Σ ⟨ FinSetDecℙ N.Q ⟩ is-ε-closed
 
   isFinSet-ε-closed : isFinSet ε-closed
   isFinSet-ε-closed =
     isFinSetΣ (FinSetDecℙ N.Q) λ X → _ , (isFinSet-is-ε-closed X)
 
-  _∈-ε-closed_ : ⟨ N.Q ⟩ → ε-closed → Type ℓ-zero
+  _∈-ε-closed_ : ⟨ N.Q ⟩ → ε-closed → Type ℓN
   q ∈-ε-closed qs = qs .fst q .fst .fst
 
   opaque
@@ -114,21 +114,11 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
     ε-reach q-start q-end .fst = _ , isPropPropTrunc
     ε-reach q-start q-end .snd = DecReachable ε-graph q-end q-start
 
-    -- TODO need to define snocs?
     ε-reach-is-ε-closed : ∀ q-start → is-ε-closed (ε-reach q-start)
     ε-reach-is-ε-closed q-start t x x-is-reachable =
       PT.rec isPropPropTrunc
-        (λ (n , walk) → ∣ (suc n) , {!!} ∣₁)
+        (λ (n , walk) → ∣ (suc n) , snoc ε-graph t walk ∣₁)
         x-is-reachable
-    -- ∣ {!!} ∣₁
-    -- do
-    --   (n , gw , q-start≡start-gw , x≡end-gw) ← x-is-reachable
-    --   return
-    --     (suc n ,
-    --     ε-graph.snoc t gw x≡end-gw ,
-    --     q-start≡start-gw ∙ ε-graph.snoc-pres-start t gw x≡end-gw ,
-    --     ε-graph.snoc-end t gw x≡end-gw)
-    --   where open PTMonad
 
     ε-closure : ⟨ FinSetDecℙ N.Q ⟩ → ε-closed
     ε-closure X .fst = FinSetDecℙ∃ N.Q N.Q X ε-reach
@@ -149,28 +139,6 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       N.ε-dst t ∈-ε-closed X
     ε-closure-transition t X src∈X = X .snd t (N.ε-src t) src∈X
 
-    -- open GraphWalk
-    -- -- TODO need to induct on a walk
-    -- ε-closure-walk :
-    --   ∀ n →
-    --   (q-[ε*]→q' : GraphWalk ε-graph n) →
-    --   (X : ε-closed) →
-    --   (start∈X : GraphWalk.start q-[ε*]→q' ∈-ε-closed X) →
-    --   GraphWalk.end q-[ε*]→q' ∈-ε-closed X
-    -- ε-closure-walk zero walk X start∈X = start∈X
-    -- ε-closure-walk (suc n) walk X start∈X = {!!}
-
-    -- TODO define in terms of the above
-    -- ε-closure-GraphPath :
-    --   (q-[ε*]→q' : GraphPath ε-graph) →
-    --   (X : ε-closed) →
-    --   (GraphWalk.start
-    --     (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) ∈-ε-closed X) →
-    --   (GraphWalk.end
-    --     (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) ∈-ε-closed X)
-    -- ε-closure-GraphPath walk X start∈X =
-    --   ε-closure-walk (walk .fst) (walk .snd .snd .fst) X start∈X
-
   witness-ε :
     (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
     q ∈-ε-closed (ε-closure X) →
@@ -178,11 +146,6 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
     (Σ[ q' ∈ ⟨ N.Q ⟩ ]
      Σ[ q'∈X ∈ X q' .fst .fst ]
      GraphWalk' ε-graph q q')
-     -- Σ[ q-[ε*]→q' ∈ GraphWalk' ε-graph ]
-     --   ((GraphWalk.start
-     --       (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) Eq.≡ q) ×
-     --    (GraphWalk.end
-     --       (GraphPath→GraphWalk ε-graph q-[ε*]→q' .snd .fst) Eq.≡ q')))
   witness-ε = λ q X x → {!!}
 
   opaque
@@ -224,10 +187,10 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
 
   truth→witness :
     (b : Bool) → true Eq.≡ b →
-    Isom.Iso.fun Bool-iso-DecProp' b .fst
+    Isom.Iso.fun (Bool-iso-DecProp' {ℓ = ℓN}) b .fst
   truth→witness true true≡b = lift tt
 
-  ℙNAcc-DecProp' : (X : ε-closed) → DecProp' ℓ-zero
+  ℙNAcc-DecProp' : (X : ε-closed) → DecProp' ℓN
   ℙNAcc-DecProp' X =
     DecProp'∃ N.Q
       (λ q → DecProp'×
@@ -235,11 +198,10 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
               (Bool-iso-DecProp' .Isom.Iso.fun (N .isAcc q)))
 
   open DFA
-  ℙN : DFA {ℓD = ℓ-suc ℓ-zero}
+  ℙN : DFA (ℓ-suc ℓN)
   ℙN .Q = ε-closed , isFinSet-ε-closed
   ℙN .init = ε-closure (SingletonDecℙ {A = N.Q} N.init)
   ℙN .isAcc X = Bool-iso-DecProp' .Isom.Iso.inv (ℙNAcc-DecProp' X)
-  -- Bool≃DecProp .snd .equiv-proof (ℙNAcc-DecProp' X) .fst fst
   ℙN .δ X c = ε-closure (lit-closure c (X .fst))
 
   private
@@ -383,5 +345,7 @@ module _ (N : NFA) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
 
 
   DFA→NFA : ∀ X →
-    ℙN.Trace true X ⊢ ⊕[ q ∈ ⟨ N.Q ⟩ ] ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q
+    ℙN.Trace true X ⊢
+      ⊕[ q ∈ ⟨ N.Q ⟩ ]
+      ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q
   DFA→NFA X = rec (ℙN.TraceTy true) DFA→NFA-alg X
