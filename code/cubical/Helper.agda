@@ -585,3 +585,8 @@ SplitSupport-FinOrd {A = A} (zero , A≃Fin) ∣a∣ =
   ⊥.rec (PT.rec isProp⊥ (A≃Fin .fst) ∣a∣)
 SplitSupport-FinOrd {A = A} (suc n , A≃Fin) ∣a∣ =
   A≃Fin .snd .equiv-proof (inl _) .fst .fst
+
+isContr→isFinOrd : ∀ {ℓ} → {A : Type ℓ} →
+  isContr A → isFinOrd A
+isContr→isFinOrd isContrA = 1 , isContr→Equiv isContrA isContrSumFin1
+

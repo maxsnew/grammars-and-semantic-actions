@@ -1,3 +1,4 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
@@ -119,7 +120,8 @@ module _
     -- The decidable finite set of states reachable from q-start
     ε-reach : ⟨ N.Q ⟩ → ⟨ FinSetDecℙ N.Q ⟩
     ε-reach q-start q-end .fst = _ , isPropPropTrunc
-    ε-reach q-start q-end .snd = DecReachable ε-graph q-end q-start
+    ε-reach q-start q-end .snd =
+      DecReachable ε-graph isFinOrd-ε-transition q-end q-start
 
     ε-reach-is-ε-closed : ∀ q-start → is-ε-closed (ε-reach q-start)
     ε-reach-is-ε-closed q-start t x x-is-reachable =
@@ -146,39 +148,20 @@ module _
       N.ε-dst t ∈-ε-closed X
     ε-closure-transition t X src∈X = X .snd t (N.ε-src t) src∈X
 
-    isFinOrd-GraphWalk :
-      ∀ (n : ℕ) →
+    isFinOrd-GraphWalk' :
       (q q' : ⟨ N.Q ⟩) →
-      isFinOrd (GraphWalk ε-graph q q' n)
-    isFinOrd-GraphWalk = {!!}
+      isFinOrd (GraphWalk' ε-graph q q')
+    isFinOrd-GraphWalk' q q' = {!!}
 
-    choose-walk : ∀ (n : ℕ) →
-      (q q' : ⟨ N.Q ⟩) →
-      ∥ GraphWalk ε-graph q q' n ∥₁ →
-      GraphWalk ε-graph q q' n
-    choose-walk n q q' = SplitSupport-FinOrd (isFinOrd-GraphWalk n q q')
-
-    case-walk : ∀ (n : ℕ) →
+    isFinOrd-εclosure-witnesses :
       (q : ⟨ N.Q ⟩) →
       (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
-      (X q .fst .fst) ⊎
-      (Σ[ q' ∈ ⟨ N.Q ⟩ ]
-       Σ[ q'∈X ∈ X q' .fst .fst ]
-       Σ[ n ∈ ℕ ]
-       GraphWalk ε-graph q q' n)
-    case-walk n q = {!!}
-
-    choose-∈-ε-closed :
-      (q : ⟨ N.Q ⟩) →
-      (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
-      q ∈-ε-closed (ε-closure X) →
-      Σ[ q' ∈ ⟨ N.Q ⟩ ]
-      Σ[ q'∈X ∈ X q' .fst .fst ]
-        ∥ GraphWalk' ε-graph q q' ∥₁
-    choose-∈-ε-closed q X q∈εX = {!!}
-      -- let q' , q'∈X , ∣n,walk∣ = SplitSupport-FinOrd {!!} q∈εX in
-      -- let n , walk = SplitSupport-FinOrd {!!} ∣n,walk∣ in
-      -- inr (q' , (q'∈X , (n , ∣ walk ∣₁)))
+      (q ∈-ε-closed (ε-closure X)) →
+      isFinOrd (
+        Σ[ q' ∈ ⟨ N.Q ⟩ ]
+        Σ[ q'∈X ∈ X q' .fst .fst ]
+        ∥ Σ[ n ∈ ℕ ] GraphWalk ε-graph q q' n ∥₁)
+    isFinOrd-εclosure-witnesses = {!!}
 
     witness-ε :
       (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
@@ -187,12 +170,14 @@ module _
        Σ[ q'∈X ∈ X q' .fst .fst ]
        Σ[ n ∈ ℕ ]
        GraphWalk ε-graph q q' n)
-    witness-ε q X q∈εX = {!!}
-      -- Sum.rec
-      --   (λ q∈X → inl q∈X)
-      --     (λ (q' , q'∈X , n , ∣walk∣) →
-      --       inr (q' , q'∈X , n , (choose-walk n q q' ∣walk∣)))
-      --   (choose-∈-ε-closed q X q∈εX)
+    witness-ε q X q∈εX =
+      let
+        q' , q'∈X , ∣walk'∣ =
+          SplitSupport-FinOrd (isFinOrd-εclosure-witnesses q X q∈εX) q∈εX in
+      let
+        n , walk =
+          SplitSupport-FinOrd (isFinOrd-GraphWalk' q q') ∣walk'∣ in
+      q' , (q'∈X , (n , walk))
 
   opaque
     unfolding ε-closure
@@ -222,7 +207,7 @@ module _
          (N.label t Eq.≡ c) ×
          (N.src t Eq.≡ q') ×
          (N.dst t Eq.≡ q))
-    witness-lit c q X = {!!}
+    witness-lit c q X q∈litX = {!q∈litX!}
 
   -- TODO this should go elsewhere
   witness-true :

@@ -59,22 +59,74 @@ module _ (G : directedGraph ℓ) where
   GraphWalk' : (end start : ⟨ states ⟩) → Type ℓ
   GraphWalk' end start = Σ[ n ∈ ℕ ] GraphWalk end start n
 
-  -- TODO should be provable using IW trees
-  postulate
-    isSetGraphWalk :
-      (end start : ⟨ states ⟩) →
-      (n : ℕ) →
-      isSet (GraphWalk end start n)
-    isFinSetGraphWalk :
-      (end start : ⟨ states ⟩) →
-      (n : ℕ) →
-      isFinSet (GraphWalk end start n)
-
   trivialWalk→sameEndpoints :
     (end start : ⟨ states ⟩) →
     GraphWalk end start 0 →
     end ≡ start
   trivialWalk→sameEndpoints end start nil = refl
+
+  module _
+    (isFinOrd-directed-edges : isFinOrd ⟨ directed-edges ⟩) where
+    isFinOrdGraphWalk :
+      ∀ (n : ℕ) →
+      (end start : ⟨ states ⟩) →
+      isFinOrd (GraphWalk end start n)
+    isFinOrdGraphWalk zero end start =
+      decRec
+        (λ end≡start →
+           1 ,
+           isoToEquiv (
+             iso
+               (λ _ → inl _)
+               (λ { (inl tt) → subst (λ z → GraphWalk end z zero) end≡start nil })
+               (λ { (inl tt) → refl})
+               λ { nil →
+                 cong (λ u → subst (λ z → GraphWalk end z zero) u nil)
+                   (isFinSet→isSet (str states) end end end≡start refl) ∙
+                 substRefl {B = λ z → GraphWalk end z zero}
+                   GraphWalk.nil }))
+        (λ ¬q≡q' →
+          0 ,
+          uninhabEquiv
+            (λ walk → ¬q≡q' (trivialWalk→sameEndpoints _ _ walk)) (λ x → x)
+            )
+        (isFinSet→Discrete (str states) end start)
+    isFinOrdGraphWalk (suc n) end start =
+      EquivPresIsFinOrd
+        {A = Σ[ e ∈ ⟨ directed-edges ⟩ ] Σ[ src≡start ∈ src e Eq.≡ start ] GraphWalk end (dst e) n}
+        (isoToEquiv
+          (iso
+            (λ { (e , Eq.refl , walk) → cons n e walk })
+            (λ { (cons .n e walk) → e , Eq.refl , walk })
+            (λ { (cons .n e walk) → refl } )
+            λ { (e , Eq.refl , walk) → refl
+            }
+          ))
+        (isFinOrdΣ ⟨ directed-edges ⟩ isFinOrd-directed-edges
+          (λ e → _)
+          (λ e → isFinOrdΣ (src e Eq.≡ start)
+            (decRec
+              (λ src≡start →
+                isContr→isFinOrd ((Eq.pathToEq src≡start) ,
+                (λ { Eq.refl →
+                 cong (Eq.pathToEq)
+                   (isFinSet→isSet (str states) (src e) (src e) src≡start refl) ∙
+                Eq.eqToPath Eq.pathToEq-reflPath })))
+              (λ ¬src≡start → 0 , uninhabEquiv (λ eq → ¬src≡start (Eq.eqToPath eq)) λ x → x)
+              (isFinSet→Discrete (str states) (src e) start))
+            _
+            λ { Eq.refl → isFinOrdGraphWalk n end (dst e)}))
+
+    isFinSetGraphWalk :
+      (end start : ⟨ states ⟩) →
+      (n : ℕ) →
+      isFinSet (GraphWalk end start n)
+    isFinSetGraphWalk end start n = isFinOrd→isFinSet (isFinOrdGraphWalk _ _ _)
+    isSetGraphWalk :
+      (end start : ⟨ states ⟩) →
+      (n : ℕ) →
+      isSet (GraphWalk end start n)
+    isSetGraphWalk end start n = isFinSet→isSet (isFinSetGraphWalk _ _ _)
 
   first-edge :
     {end start : ⟨ states ⟩} →
@@ -217,39 +269,26 @@ module _ (G : directedGraph ℓ) where
   isFinSetHasUniqueVertices gw =
     isFinSetIsEmbedding (_ , isFinSetFin') states (vertices gw)
 
-  isFinSetGraphPath :
-    (end start : ⟨ states ⟩) →
-    isFinSet (GraphPath end start)
-  isFinSetGraphPath end start =
-    EquivPresIsFinSet (Σ-cong-equiv-fst Fin≃Finℕ ∙ₑ Σ-assoc-≃) $
-      isFinSetΣ (_ , isFinSetFin')
-        (λ n → _ , isFinSetΣ (_ , isFinSetGraphWalk _ _ _)
-          (λ walk → _ , isFinSetHasUniqueVertices walk))
+  module _ (isFinOrd-directed-edges : isFinOrd ⟨ directed-edges ⟩) where
+    isFinSetGraphPath :
+      (end start : ⟨ states ⟩) →
+      isFinSet (GraphPath end start)
+    isFinSetGraphPath end start =
+      EquivPresIsFinSet (Σ-cong-equiv-fst Fin≃Finℕ ∙ₑ Σ-assoc-≃) $
+        isFinSetΣ (_ , isFinSetFin')
+          (λ n → _ ,
+                 isFinSetΣ (_ , isFinSetGraphWalk isFinOrd-directed-edges _ _ _)
+            (λ walk → _ , isFinSetHasUniqueVertices walk))
 
-  DecPathReachable : (end start : ⟨ states ⟩) → Dec (PathReachable end start)
-  DecPathReachable end start = isFinSet→Dec∥∥ (isFinSetGraphPath end start)
+    DecPathReachable : (end start : ⟨ states ⟩) → Dec (PathReachable end start)
+    DecPathReachable end start = isFinSet→Dec∥∥ (isFinSetGraphPath end start)
 
-  DecReachable : (end start : ⟨ states ⟩) → Dec (Reachable end start)
-  DecReachable end start =
-    EquivPresDec
-      (PathReachable≃Reachable end start)
-      (DecPathReachable end start)
+    DecReachable : (end start : ⟨ states ⟩) → Dec (Reachable end start)
+    DecReachable end start =
+      EquivPresDec
+        (PathReachable≃Reachable end start)
+        (DecPathReachable end start)
 
   Reachable-is-reflexive : (u : ⟨ states ⟩) → Reachable u u
   Reachable-is-reflexive u = ∣ 0 , nil ∣₁
 
-  -- opaque
-  --   unfolding GraphWalkOfLenBetween
-
-  --   isFinSetGraphWalkOfLenBetween : (n : ℕ) (u v : ⟨ states ⟩) → isFinSet (GraphWalkOfLenBetween n u v)
-  --   isFinSetGraphWalkOfLenBetween n u v = isFinSetΣ
-  --     (_ , isFinSetGraphWalk n)
-  --     (λ gw → _ , isFinSet×
-  --       (_ , isFinSet≡ states u (start gw))
-  --       (_ , isFinSet≡ states v (end gw)))
-
-  -- DecGraphWalkBetween : (u v : ⟨ states ⟩) → Dec (GraphWalkBetween u v)
-  -- DecGraphWalkBetween u v =
-  --   let queue : List {!!}
-  --       queue = [] in
-  --   {!!}
