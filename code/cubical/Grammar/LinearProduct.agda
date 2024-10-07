@@ -17,6 +17,7 @@ private
     ℓg ℓh ℓk ℓl ℓ ℓ' : Level
     g g' g'' g''' g'''' g''''' : Grammar ℓg
     h h' h'' h''' h'''' h''''' : Grammar ℓh
+    f f' f'' f''' f'''' f''''' : g ⊢ h
     k : Grammar ℓk
     l : Grammar ℓl
 
@@ -360,6 +361,10 @@ infixr 20 _,⊗_
   (g ⊗ g' ⊗ g'') ⊗ g''' ⊢ g ⊗ g' ⊗ g'' ⊗ g'''
 ⊗-assoc⁻3 = id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻  
 
+⊗-assoc3 :
+  g ⊗ g' ⊗ g'' ⊗ g''' ⊢ (g ⊗ g' ⊗ g'') ⊗ g'''
+⊗-assoc3 = ⊗-assoc ∘g id ,⊗ ⊗-assoc
+
 ⊗-assoc⁻3⊗-unit-r⁻ :
   ⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''} ∘g ⊗-unit-r⁻
   ≡ id ,⊗ id ,⊗ ⊗-unit-r⁻
@@ -371,6 +376,16 @@ infixr 20 _,⊗_
 ⊗-assoc⁻4 :
   (g ⊗ g' ⊗ g'' ⊗ g''') ⊗ g'''' ⊢ g ⊗ g' ⊗ g'' ⊗ g''' ⊗ g''''
 ⊗-assoc⁻4 = id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻
+
+⊗-assoc4 :
+  g ⊗ g' ⊗ g'' ⊗ g''' ⊗ g'''' ⊢ (g ⊗ g' ⊗ g'' ⊗ g''') ⊗ g''''
+⊗-assoc4 = ⊗-assoc ∘g id ,⊗ ⊗-assoc3
+
+⊗-assoc⁻4⊗-assoc :
+  ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ,⊗ id {g = g'''''}
+  ∘g ⊗-assoc
+  ≡ ⊗-assoc4 ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc ∘g ⊗-assoc⁻4
+⊗-assoc⁻4⊗-assoc = {!!}
 
 ⊗-assoc⁻4⊗-unit-r⁻ :
   ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-unit-r⁻
@@ -395,3 +410,8 @@ infixr 20 _,⊗_
   cong (id ,⊗ ⊗-assoc⁻3 ∘g_) ⊗-assoc⁻⊗-intro
   ∙ cong (_∘g ⊗-assoc⁻) (⊗-intro⊗-intro ∙ cong (⊗-intro _) ⊗-assoc⁻3⊗-intro)
   ∙ {!sym ⊗-intro⊗-intro!}
+
+⊗-assoc4⊗-intro :
+  ⊗-assoc4 ∘g f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f''''
+  ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''' ∘g ⊗-assoc4
+⊗-assoc4⊗-intro = {!!}

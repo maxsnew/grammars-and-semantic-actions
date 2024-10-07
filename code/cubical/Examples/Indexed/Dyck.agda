@@ -249,7 +249,7 @@ GenDyck (suc n-1) = IndDyck ⊗ literal RP ⊗ GenDyck n-1
 opaque
   genBALANCED : ∀ n → literal LP ⊗ IndDyck ⊗ literal RP ⊗ GenDyck n ⊢ GenDyck n
   genBALANCED zero   = BALANCED
-  genBALANCED (suc n) = ⟜4⊗ (⟜4-intro-ε BALANCED)
+  genBALANCED (suc n) = BALANCED ,⊗ id ∘g ⊗-assoc4
 
 upgradeBuilder : ∀ n → (IndDyck ⟜ IndDyck) ⊢ GenDyck n ⟜ GenDyck n
 upgradeBuilder zero = id
@@ -326,7 +326,62 @@ opaque
       ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
       ∘g lowerG ,⊗ (lowerG) ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ f
       ∘g ⊗-assoc⁻4
-  upgradeBalancedBuilder (suc n) f = {!!}
+  upgradeBalancedBuilder (suc n) f =
+    (λ i →
+      (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) i) ∘g
+        (⟜-intro (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)
+        ∘g ⊗-assoc⁻4))
+        ,⊗ f)
+    ∙ (λ i →
+      ⟜-app ,⊗ id
+      ∘g ⊗-assoc⊗-intro {f = ⟜-intro (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id) ∘g ⊗-assoc⁻4)}{f' = id}{f'' = id} i
+      ∘g id ,⊗ f)
+    ∙ (λ i →
+        (⟜-β (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id) ∘g ⊗-assoc⁻4) i) ,⊗ id
+        ∘g ⊗-assoc
+        ∘g id ,⊗ f
+      )
+    ∙ (λ i →
+       BALANCED ,⊗ id
+       ∘g (lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)) ,⊗ id
+       ∘g ⊗-assoc⁻4⊗-assoc i
+       ∘g id ,⊗ f)
+    ∙ (λ i → BALANCED ,⊗ id
+        ∘g ⊗-assoc4⊗-intro {f = lowerG}{f' = ⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻}{f'' = lowerG}{f''' = (⟜-app ∘g lowerG ,⊗ id)}{f'''' = id} (~ i)
+        ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc
+        ∘g ⊗-assoc⁻4
+        ∘g id ,⊗ f)
+    ∙ (λ i → BALANCED ,⊗ id
+        ∘g ⊗-assoc4
+        ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ ((⟜-app ∘g lowerG ,⊗ id) ,⊗ id)
+        ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc
+        ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i)
+    ∙ (λ i → BALANCED ,⊗ id
+        ∘g ⊗-assoc4
+        ∘g lowerG ,⊗ ((⟜-app ∘g (id ,⊗ NIL) ∘g ⊗-unit-r⁻⊗-intro {f = lowerG} (~ i)) ,⊗ lowerG ,⊗ ((⟜-app ∘g lowerG ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f))
+        ∘g ⊗-assoc⁻4)
+    ∙ (
+      λ i → BALANCED ,⊗ id
+        ∘g ⊗-assoc4
+        ∘g id ,⊗ (⟜-app ,⊗ id)
+        ∘g id ,⊗ ((id ,⊗ NIL) ,⊗ id)
+        ∘g id ,⊗ ⊗-assoc⊗-unit-l⁻ (~ i)
+        ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ ((⟜-app ∘g lowerG ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f)
+        ∘g ⊗-assoc⁻4
+      )
+    ∙ (λ i →
+        BALANCED ,⊗ id
+        ∘g ⊗-assoc4
+        ∘g id ,⊗ (⟜-app ,⊗ id)
+        ∘g id ,⊗ (⊗-assoc⊗-intro {f = id}{f' = NIL}{f'' = id} (~ i))
+        ∘g id ,⊗ (id ,⊗ ⊗-unit-l⁻)
+        ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (⟜-app ,⊗ id ∘g (⊗-assoc⊗-intro {f = lowerG}{f' = id}{f'' = id} (~ i)) ∘g id ,⊗ f)
+        ∘g ⊗-assoc⁻4
+      )
+    ∙ λ i → (BALANCED ,⊗ id ∘g ⊗-assoc4) ∘g
+      id ,⊗ (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) (~ i) ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻)) ∘g
+      lowerG ,⊗ (lowerG) ,⊗ lowerG ,⊗ (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) (~ i) ∘g lowerG ,⊗ f)
+      ∘g ⊗-assoc⁻4
 
 genAppend' : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ GenDyck n)
 genAppend' = (&ᴰ-intro upgradeBuilder) ∘g append'
