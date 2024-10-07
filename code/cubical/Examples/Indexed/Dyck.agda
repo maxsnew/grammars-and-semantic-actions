@@ -264,7 +264,6 @@ opaque
   --       (upgradeBuilder n ∘g ⟜-intro {!!}) ,⊗ id
   --       ≡ (f ∘g {!!})
   -- uB-lem' = {!!}
-
   upgradeNilBuilder :
     ∀ n (f : Trace true n ⊢ GenDyck n)
        → (⟜-app ∘g id ,⊗ f) ∘g
@@ -480,9 +479,29 @@ genRetr = ind' DyckTy PileAlg
   where
     f1 : IndDyck ⟜ IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n)
     f1 = (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g &ᴰ-π n) ∘g (&ᴰ-intro upgradeBuilder)
+
+    f1⟨_⟩ : ∀ n → IndDyck ⟜ IndDyck ⊢ GenDyck n ⟜ Trace true n
+    f1⟨_⟩ n = ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g upgradeBuilder n
     opaque
       unfolding ⊗-intro
-        
+
+      -- focusing on a subterm in the proof below
+      f1-homo-lem : ∀ n →
+        (⟜-app ∘g ⟜-intro (⟜-app ,⊗ id {g = literal RP ⊗ GenDyck n} ∘g ⊗-assoc) ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+        ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree)
+        ≡
+        ((⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g f1) ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g f1) ,⊗ id))
+      f1-homo-lem n =
+        (λ i → (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) i ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+          ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree))
+        ∙ (λ i →
+             (⟜-app ,⊗ id ∘g ⊗-assoc⊗-intro {f = id}{f' = NIL}{f'' = id} i ∘g id ,⊗ ⊗-unit-l⁻)
+             ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree))
+        ∙ (λ i → (⟜-app ∘g id ,⊗ NIL) ,⊗ id ∘g ⊗-assoc⊗-unit-l⁻ i ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree))
+        ∙ (λ i → (⟜-β (⟜-app ∘g id ,⊗ genMkTree) (~ i) ∘g upgradeBuilder 0 ,⊗ EOF ∘g ⊗-unit-r⁻)
+                 ,⊗ id
+                 ,⊗ (⟜-β (⟜-app ∘g id ,⊗ genMkTree) (~ i) ∘g upgradeBuilder n ,⊗ id))
+        ∙ λ i → (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻⊗-intro {f = f1} (~ i)) ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g f1) ,⊗ id)
   
       f1-is-homo : f1 ∘g appendAlg _ ≡ PileAlg _ ∘g map (DyckTy _) λ _ → f1
       f1-is-homo = ⊕ᴰ≡ _ _ λ
@@ -493,7 +512,7 @@ genRetr = ind' DyckTy PileAlg
         ; balanced' → &ᴰ≡ _ _ λ n → ⟜≡ _ _
           ( cong (_∘g ((upgradeBuilder n ∘g ⟜-intro (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id) ∘g ⊗-assoc⁻4)) ,⊗ id)) (⟜-β _)
           ∙ upgradeBalancedBuilder n genMkTree
-          ∙ {!!}
+          ∙ (λ i → genBALANCED n ∘g id ,⊗ f1-homo-lem n i ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ id ∘g ⊗-assoc⁻4)
           ∙ cong ((genBALANCED n ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)) ∘g_) (sym (⊗-assoc⁻4⊗-intro {f = lowerG}{f' = f1 ∘g lowerG}{f'' = lowerG}{f''' = f1 ∘g lowerG}{f'''' = id}))
 {-
       (genBALANCED n ∘g
