@@ -14,6 +14,7 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.Empty as Empty hiding (rec)
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.Induction
+open import Cubical.Data.FinSet.DecidablePredicate
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool as Bool hiding (_⊕_)
@@ -42,7 +43,13 @@ private
 open NFA
 open StrongEquivalence
 
-module _ (N : NFA ℓN) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
+module _
+  (N : NFA ℓN)
+  (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ )
+  (isFinOrd-Q : isFinOrd ⟨ N .Q ⟩)
+  (isFinOrd-transition : isFinOrd ⟨ N .transition ⟩)
+  (isFinOrd-ε-transition : isFinOrd ⟨ N .ε-transition ⟩)
+  where
   private
     module N = NFA N
 
@@ -139,14 +146,53 @@ module _ (N : NFA ℓN) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       N.ε-dst t ∈-ε-closed X
     ε-closure-transition t X src∈X = X .snd t (N.ε-src t) src∈X
 
-  witness-ε :
-    (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
-    q ∈-ε-closed (ε-closure X) →
-    (X q .fst .fst) ⊎
-    (Σ[ q' ∈ ⟨ N.Q ⟩ ]
-     Σ[ q'∈X ∈ X q' .fst .fst ]
-     GraphWalk' ε-graph q q')
-  witness-ε = λ q X x → {!!}
+    isFinOrd-GraphWalk :
+      ∀ (n : ℕ) →
+      (q q' : ⟨ N.Q ⟩) →
+      isFinOrd (GraphWalk ε-graph q q' n)
+    isFinOrd-GraphWalk = {!!}
+
+    choose-walk : ∀ (n : ℕ) →
+      (q q' : ⟨ N.Q ⟩) →
+      ∥ GraphWalk ε-graph q q' n ∥₁ →
+      GraphWalk ε-graph q q' n
+    choose-walk n q q' = SplitSupport-FinOrd (isFinOrd-GraphWalk n q q')
+
+    case-walk : ∀ (n : ℕ) →
+      (q : ⟨ N.Q ⟩) →
+      (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
+      (X q .fst .fst) ⊎
+      (Σ[ q' ∈ ⟨ N.Q ⟩ ]
+       Σ[ q'∈X ∈ X q' .fst .fst ]
+       Σ[ n ∈ ℕ ]
+       GraphWalk ε-graph q q' n)
+    case-walk n q = {!!}
+
+    choose-∈-ε-closed :
+      (q : ⟨ N.Q ⟩) →
+      (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
+      q ∈-ε-closed (ε-closure X) →
+      Σ[ q' ∈ ⟨ N.Q ⟩ ]
+      Σ[ q'∈X ∈ X q' .fst .fst ]
+        ∥ GraphWalk' ε-graph q q' ∥₁
+    choose-∈-ε-closed q X q∈εX = {!!}
+      -- let q' , q'∈X , ∣n,walk∣ = SplitSupport-FinOrd {!!} q∈εX in
+      -- let n , walk = SplitSupport-FinOrd {!!} ∣n,walk∣ in
+      -- inr (q' , (q'∈X , (n , ∣ walk ∣₁)))
+
+    witness-ε :
+      (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
+      q ∈-ε-closed (ε-closure X) →
+      (Σ[ q' ∈ ⟨ N.Q ⟩ ]
+       Σ[ q'∈X ∈ X q' .fst .fst ]
+       Σ[ n ∈ ℕ ]
+       GraphWalk ε-graph q q' n)
+    witness-ε q X q∈εX = {!!}
+      -- Sum.rec
+      --   (λ q∈X → inl q∈X)
+      --     (λ (q' , q'∈X , n , ∣walk∣) →
+      --       inr (q' , q'∈X , n , (choose-walk n q q' ∣walk∣)))
+      --   (choose-∈-ε-closed q X q∈εX)
 
   opaque
     unfolding ε-closure
@@ -254,6 +300,20 @@ module _ (N : NFA ℓN) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
             &ᴰ-π X)) ∘g
           lowerG } })
 
+  fold-walk :
+    (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩) →
+    (q' : ⟨ N.Q ⟩) →
+    (q∈εX : q ∈-ε-closed ε-closure X) →
+    (q'-[ε*]→q : GraphWalk' ε-graph q q') →
+    N.Trace true q ⊢ N.Trace true q'
+  fold-walk q X q' q∈εX (0 , nil) = id
+  fold-walk q X q' q∈εX (n , (cons n-1 e walk)) =
+    roll ∘g
+    ⊕ᴰ-in N.stepε ∘g
+    ⊕ᴰ-in (e , Eq.refl) ∘g
+    liftG ∘g
+    fold-walk q X (N.ε-dst e) q∈εX (n-1 , walk)
+
   NFA→DFA : ∀ q →
     N.Trace true q ⊢
       &[ X ∈ ε-closed ]
@@ -278,32 +338,13 @@ module _ (N : NFA ℓN) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       })
     ; step → ⊕ᴰ-elim (λ { (lift c) →
       ⊕ᴰ-elim (λ q →
-        ⊕ᴰ-elim (λ q∈εcloselitcloseX →
-          Sum.rec
-            (λ q∈litcloseX →
-              let
-                -- need to pattern match on these equalities, so
-                -- we will use a helper function below that does that
-                (t , q' , q'∈X , label≡c , src≡q' , dst≡q) =
-                  witness-lit c q (X .fst) q∈litcloseX
-                in
-              ⊕ᴰ-in q' ∘g
-              ⊕ᴰ-in q'∈X ∘g
-              (witness-lit-help c q
-                (X .fst) q∈litcloseX t q' q'∈X label≡c src≡q' dst≡q)
-            )
-            (λ { (q' , q'∈litcloseX , walk) →
-              let
-               (t , q'' , q''∈X , label≡c , src≡q'' , dst≡q') =
-                  witness-lit c q' (X .fst) q'∈litcloseX
-                in
-              ⊕ᴰ-in q'' ∘g
-              ⊕ᴰ-in q''∈X ∘g
-              witness-lit-help c q' (X .fst) q'∈litcloseX t q'' q''∈X
-                label≡c src≡q'' dst≡q' ∘g
-              id ,⊗ fold-walk c q X q' q∈εcloselitcloseX walk
-              })
-            (witness-ε q (lit-closure c (X .fst)) q∈εcloselitcloseX)
+        ⊕ᴰ-elim (λ q∈εlitX →
+          let q' , q'∈litX , n , walk = witness-ε q (lit-closure c (X .fst)) q∈εlitX in
+          let t , qt , qt∈X , label≡c , src≡qt , dst≡q' = witness-lit c q' (X .fst) q'∈litX in
+          ⊕ᴰ-in qt ∘g
+          ⊕ᴰ-in qt∈X ∘g
+          step-help c q (X .fst) q∈εlitX q' q'∈litX n walk
+                    t qt qt∈X label≡c src≡qt dst≡q'
           ) ∘g
         ⊕ᴰ-distR .fun
       ) ∘g
@@ -312,40 +353,43 @@ module _ (N : NFA ℓN) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ ) where
       lowerG ,⊗ lowerG
     }) })
     where
-    witness-lit-help : ∀
-      (c : ⟨ Alphabet ⟩) → (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
-      (lit-closure c X) q .fst .fst →
-      (t : ⟨ N.transition ⟩ ) →
+    step-help : ∀
+      (c : ⟨ Alphabet ⟩) →
+      (q : ⟨ N.Q ⟩) →
+      (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
+      (q∈εlitX : q ∈-ε-closed ε-closure (lit-closure c X)) →
       (q' : ⟨ N.Q ⟩) →
-      (q'∈X : X q' .fst .fst) →
+      (q'∈litX : (lit-closure c X) q' .fst .fst) →
+      (n : ℕ) →
+      (walk : GraphWalk ε-graph q q' n) →
+      (t : ⟨ N.transition ⟩ ) →
+      (qt : ⟨ N.Q ⟩) →
+      (qt∈X : X qt .fst .fst) →
       (N.label t Eq.≡ c) →
-      (N.src t Eq.≡ q') →
-      (N.dst t Eq.≡ q) →
-      (literal c) ⊗ N.Trace true q ⊢ N.Trace true q'
-    witness-lit-help c q X q∈litcloseX t q' q'∈X Eq.refl Eq.refl Eq.refl =
+      (N.src t Eq.≡ qt) →
+      (N.dst t Eq.≡ q') →
+      (literal c) ⊗ N.Trace true q ⊢ N.Trace true qt
+    step-help c q X q∈εlitX q' q'∈litX n walk t qt qt∈x
+      Eq.refl Eq.refl Eq.refl =
       roll ∘g
       ⊕ᴰ-in N.step ∘g
       ⊕ᴰ-in (t , Eq.refl) ∘g
       liftG ,⊗ liftG ∘g
+      id ,⊗ fold-walk q (lit-closure c X) q' q∈εlitX (n , walk) ∘g
       liftG ,⊗ id
-
-    fold-walk : ∀ (c : ⟨ Alphabet ⟩) →
-      (q : ⟨ N.Q ⟩) → (X : ε-closed) →
-      (q' : ⟨ N.Q ⟩) →
-      (q∈εlitX : q ∈-ε-closed ε-closure (lit-closure c (X .fst))) →
-      (q'-[ε*]→q : GraphWalk' ε-graph q q') →
-      N.Trace true q ⊢ N.Trace true q'
-    fold-walk c q X q' q∈εlitX (0 , nil) = id
-    fold-walk c q X q' q∈εlitX (n , (cons n-1 e walk)) =
-      roll ∘g
-      ⊕ᴰ-in N.stepε ∘g
-      ⊕ᴰ-in (e , Eq.refl) ∘g
-      liftG ∘g
-      fold-walk c q X (N.ε-dst e) q∈εlitX (n-1 , walk)
-
 
   DFA→NFA : ∀ X →
     ℙN.Trace true X ⊢
       ⊕[ q ∈ ⟨ N.Q ⟩ ]
       ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q
   DFA→NFA X = rec (ℙN.TraceTy true) DFA→NFA-alg X
+
+  DFA→NFA-init :
+    ℙN.Trace true (ε-closure (SingletonDecℙ {A = N.Q} N.init))
+      ⊢ N.Trace true (N .init)
+  DFA→NFA-init =
+    ⊕ᴰ-elim (λ q → ⊕ᴰ-elim (λ q∈εinit →
+      let q' , q'∈Singleton , walk = witness-ε q (SingletonDecℙ {A = N.Q} N.init) q∈εinit in
+      fold-walk q (SingletonDecℙ {A = N.Q} N.init) N.init q∈εinit
+      (subst (GraphWalk' ε-graph q) q'∈Singleton walk))) ∘g
+    DFA→NFA (ε-closure (SingletonDecℙ {A = N.Q} N.init))

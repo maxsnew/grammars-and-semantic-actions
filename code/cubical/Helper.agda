@@ -579,3 +579,9 @@ module _
   isFinSet→isFinOrd : isFinOrd A
   isFinSet→isFinOrd = card FinSetA , rankEquiv
 
+SplitSupport-FinOrd : ∀ {ℓ} → {A : Type ℓ} →
+  isFinOrd A → SplitSupport A
+SplitSupport-FinOrd {A = A} (zero , A≃Fin) ∣a∣ =
+  ⊥.rec (PT.rec isProp⊥ (A≃Fin .fst) ∣a∣)
+SplitSupport-FinOrd {A = A} (suc n , A≃Fin) ∣a∣ =
+  A≃Fin .snd .equiv-proof (inl _) .fst .fst
