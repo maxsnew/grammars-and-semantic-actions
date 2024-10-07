@@ -256,22 +256,78 @@ upgradeBuilder zero = id
 upgradeBuilder (suc n) = ⟜-intro (⟜-app ,⊗ id ∘g ⊗-assoc)
 
 opaque
-  unfolding ⊗-intro
-  uB-lem :
+  unfolding ⊗-intro genBALANCED
+  -- uB-lem' :
+  --   ∀ n (f : Trace true n ⊢ GenDyck n)
+  --       (f' : {!!} ⊢ {!!})
+  --      → (⟜-app ∘g id ,⊗ f) ∘g
+  --       (upgradeBuilder n ∘g ⟜-intro {!!}) ,⊗ id
+  --       ≡ (f ∘g {!!})
+  -- uB-lem' = {!!}
+
+  upgradeNilBuilder :
     ∀ n (f : Trace true n ⊢ GenDyck n)
        → (⟜-app ∘g id ,⊗ f) ∘g
-        (upgradeBuilder n ∘g ⟜-intro ⊗-unit-l ∘g lowerG) ,⊗ id
-        ≡ (f ∘g ⊗-unit-l) ∘g lowerG {ℓ-zero} ,⊗ id
-  uB-lem zero      f =
-    cong (_∘g (lowerG ,⊗ f)) (⟜-β _)
-    ∙ cong (_∘g (lowerG ,⊗ id)) (sym (⊗-unit-l⊗-intro _))
-  uB-lem (suc n-1) f =
-    cong (_∘g ((⟜-intro ⊗-unit-l ∘g lowerG)) ,⊗ f) (⟜-β _)
+        (upgradeBuilder n ∘g ⟜-intro ⊗-unit-l) ,⊗ id
+        ≡ f ∘g ⊗-unit-l
+  upgradeNilBuilder zero f =
+    cong (_∘g (id ,⊗ f)) (⟜-β _)
+    ∙ sym (⊗-unit-l⊗-intro _)
+  upgradeNilBuilder (suc n) f =
+    cong (_∘g ((⟜-intro ⊗-unit-l)) ,⊗ f) (⟜-β _)
     ∙ cong ((⟜-app ,⊗ id) ∘g_) (cong (_∘g (id ,⊗ f)) (⊗-assoc⊗-intro {f' = id}{f'' = id}))
-    ∙ (λ i → (⟜-β ⊗-unit-l i ∘g lowerG ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f)
+    ∙ ( (λ i → (⟜-β ⊗-unit-l i) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f))
     ∙ cong (_∘g (id ,⊗ f)) (cong ((⊗-unit-l ,⊗ id) ∘g_) (sym (⊗-assoc⊗-intro {f' = id}{f'' = id})))
-    ∙ cong (_∘g lowerG ,⊗ f) ⊗-unit-l⊗-assoc
-    ∙ cong (_∘g lowerG ,⊗ id) (sym (⊗-unit-l⊗-intro _))
+    ∙ cong (_∘g id ,⊗ f) ⊗-unit-l⊗-assoc
+    ∙ sym (⊗-unit-l⊗-intro _)
+
+  upgradeBalancedBuilder :
+    ∀ n (f : Trace true n ⊢ GenDyck n)
+    → (⟜-app ∘g id ,⊗ f)
+      ∘g (upgradeBuilder n ∘g ⟜-intro (
+          BALANCED
+          ∘g lowerG {ℓ-zero} ,⊗ (⟜-app ∘g lowerG{ℓ-zero} ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG {ℓ-zero} ,⊗ (⟜-app ∘g lowerG {ℓ-zero} ,⊗ id)
+          ∘g ⊗-assoc⁻4))
+         ,⊗ id
+      ≡ genBALANCED n
+        ∘g id ,⊗ (⟜-app ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+        ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+        ∘g lowerG ,⊗ (upgradeBuilder (suc n) ∘g lowerG) ,⊗ lowerG ,⊗ ((upgradeBuilder n) ∘g lowerG) ,⊗ f
+        ∘g ⊗-assoc⁻4
+  upgradeBalancedBuilder zero f =
+    cong (_∘g (id ,⊗ f)) (⟜-β _)
+    ∙ (λ i → BALANCED
+       ∘g lowerG ,⊗ (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻⊗-intro {f = lowerG} (~ i)) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)
+       ∘g ⊗-assoc⁻4
+       ∘g id ,⊗ f
+      )
+    ∙ (λ i → BALANCED ∘g
+      lowerG ,⊗ (⟜-app ∘g id ,⊗ NIL) ,⊗ id ∘g
+      id ,⊗ ⊗-assoc⊗-unit-l⁻ (~ i) ∘g
+      id ,⊗ id ,⊗ id ,⊗ ⟜-app ∘g
+      id ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ id
+      ∘g ⊗-assoc⁻4
+      ∘g id ,⊗ f)
+    ∙ (λ i → BALANCED
+      ∘g id ,⊗ ⟜-app ,⊗ id
+      ∘g id ,⊗ ((id ,⊗ NIL) ,⊗ id)
+      ∘g id ,⊗ (⊗-assoc ∘g id ,⊗ ⊗-unit-l⁻)  -- 
+      ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+      ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ id ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i)
+    ∙ (λ i → BALANCED
+      ∘g id ,⊗ (⟜-app ,⊗ id)
+      ∘g id ,⊗ ⊗-assoc⊗-intro {f = id}{f' = NIL}{f'' = id} (~ i)
+      ∘g id ,⊗ (id ,⊗ ⊗-unit-l⁻)
+      ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+      ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ f ∘g ⊗-assoc⁻4
+          )
+    ∙ λ i → BALANCED
+      ∘g id ,⊗ (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) (~ i))
+      ∘g id ,⊗ (id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+      ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+      ∘g lowerG ,⊗ (lowerG) ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ f
+      ∘g ⊗-assoc⁻4
+  upgradeBalancedBuilder (suc n) f = {!!}
 
 genAppend' : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ GenDyck n)
 genAppend' = (&ᴰ-intro upgradeBuilder) ∘g append'
@@ -431,14 +487,39 @@ genRetr = ind' DyckTy PileAlg
       f1-is-homo : f1 ∘g appendAlg _ ≡ PileAlg _ ∘g map (DyckTy _) λ _ → f1
       f1-is-homo = ⊕ᴰ≡ _ _ λ
         { nil' → &ᴰ≡ _ _ λ n →
-          ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g upgradeBuilder n ∘g ⟜-intro ⊗-unit-l ∘g lowerG
-            ≡⟨ ⟜≡ _ _
+          ⟜≡ _ _
               (cong (_∘g ((upgradeBuilder n ∘g ⟜-intro ⊗-unit-l ∘g lowerG) ,⊗ id)) (⟜-β _)
-              ∙ uB-lem n genMkTree
-              ∙ cong (_∘g (lowerG ,⊗ id)) (sym (⟜-β _)))
-             ⟩
-          ⟜-intro (genMkTree ∘g ⊗-unit-l) ∘g lowerG ∎
-        ; balanced' → {!!} }
+              ∙ cong (_∘g (lowerG ,⊗ id)) (upgradeNilBuilder n genMkTree ∙ sym (⟜-β _)))
+        ; balanced' → &ᴰ≡ _ _ λ n → ⟜≡ _ _
+          ( cong (_∘g ((upgradeBuilder n ∘g ⟜-intro (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id) ∘g ⊗-assoc⁻4)) ,⊗ id)) (⟜-β _)
+          ∙ upgradeBalancedBuilder n genMkTree
+          ∙ {!!}
+          ∙ cong ((genBALANCED n ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)) ∘g_) (sym (⊗-assoc⁻4⊗-intro {f = lowerG}{f' = f1 ∘g lowerG}{f'' = lowerG}{f''' = f1 ∘g lowerG}{f'''' = id}))
+{-
+      (genBALANCED n ∘g
+       id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+       ∘g ⊗-assoc⁻4
+       ∘g (lowerG ,⊗ f1 ∘g lowerG ,⊗ lowerG ,⊗ f1 ∘g lowerG) ,⊗ id)
+ -}
+          ∙ cong (_∘g ((id ,⊗ (liftG {ℓ-zero} ∘g f1 ∘g lowerG) ,⊗ id ,⊗ (liftG {ℓ-zero} ∘g f1 ∘g lowerG))) ,⊗ id) (sym (⟜-β _)))
+
+          --  (⟜-app ∘g (⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g upgradeBuilder n ∘g ⟜-intro (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id) ∘g ⊗-assoc⁻4)) ,⊗ id
+          --   ≡⟨ {!!} ⟩
+          --   ⟜-app
+          -- ∘g (⟜-intro (genBALANCED n
+          --             ∘g  id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+          --             ∘g ⊗-assoc⁻4
+          --             ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id)
+          --    ∘g id ,⊗ (liftG {ℓ-zero} ∘g f1 ∘g lowerG) ,⊗ id ,⊗ (liftG {ℓ-zero} ∘g f1 ∘g lowerG))
+          --    ,⊗ id
+          --  ∎)
+          }
+
+      -- ⟜-app ∘g
+      -- (&ᴰ-π n ∘g
+      --  (PileAlg tt ∘g map (DyckTy tt) (λ _ → f1)) ∘g ⊕ᴰ-in balanced')
+      -- ,⊗ id
+
 
 Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
 Dyck≅Trace =

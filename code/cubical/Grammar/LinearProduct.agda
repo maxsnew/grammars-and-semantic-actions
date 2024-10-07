@@ -16,7 +16,7 @@ private
   variable
     ℓg ℓh ℓk ℓl ℓ ℓ' : Level
     g g' g'' g''' g'''' g''''' : Grammar ℓg
-    h h' h'' : Grammar ℓh
+    h h' h'' h''' h'''' h''''' : Grammar ℓh
     k : Grammar ℓk
     l : Grammar ℓl
 
@@ -316,6 +316,10 @@ opaque
       ≡ ⊗-unit-l
     ⊗-unit-l⊗-assoc = {!!}
 
+    ⊗-assoc⊗-unit-l⁻ :
+      ⊗-assoc {g = g}{k = k} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
+    ⊗-assoc⊗-unit-l⁻ = {!!}
+
   opaque
     unfolding ε ⊗-unit-l⁻
     ⊗-unit-l⁻⊗-intro :
@@ -375,3 +379,19 @@ infixr 20 _,⊗_
   cong (id ,⊗ ⊗-assoc⁻3 ∘g_) ⊗-assoc⁻⊗-unit-r⁻
   ∙ ⊗-intro⊗-intro
   ∙ cong (id ,⊗_) ⊗-assoc⁻3⊗-unit-r⁻
+
+⊗-assoc⁻3⊗-intro :
+  ∀ {f f' f'' f'''} →
+  (⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g (f ,⊗ f' ,⊗ f'') ,⊗ f''')
+  ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ∘g (⊗-assoc⁻3 {g = h}{g' = h'}{g'' = h''}{g''' = h'''}))
+⊗-assoc⁻3⊗-intro =
+  {!!}
+
+⊗-assoc⁻4⊗-intro :
+  ∀ {f f' f'' f''' f''''} →
+  (⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''')
+  ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {g = h}{g' = h'}{g'' = h''}{g''' = h'''}{g'''' = h''''}))
+⊗-assoc⁻4⊗-intro =
+  cong (id ,⊗ ⊗-assoc⁻3 ∘g_) ⊗-assoc⁻⊗-intro
+  ∙ cong (_∘g ⊗-assoc⁻) (⊗-intro⊗-intro ∙ cong (⊗-intro _) ⊗-assoc⁻3⊗-intro)
+  ∙ {!sym ⊗-intro⊗-intro!}
