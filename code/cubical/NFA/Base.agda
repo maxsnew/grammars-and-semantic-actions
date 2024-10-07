@@ -24,7 +24,7 @@ open import Helper
 private
   variable ℓN ℓN' ℓP ℓ : Level
 
-record NFA : Type (ℓ-suc ℓN) where
+record NFA ℓN : Type (ℓ-suc ℓN) where
   field
     Q : FinSet ℓN
     init : Q .fst

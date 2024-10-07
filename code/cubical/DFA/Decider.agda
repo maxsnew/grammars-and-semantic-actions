@@ -31,7 +31,7 @@ open import Helper
 private
   variable ℓΣ₀ ℓD ℓP ℓ : Level
 
-module _ (D : DFA) where
+module _ (D : DFA ℓD) where
   open DFA D
 
   open *r-Algebra
@@ -42,7 +42,7 @@ module _ (D : DFA) where
   parse = foldKL*r char the-alg
     where
     the-alg : *r-Algebra char
-    the-alg .the-ℓ = ℓ-zero
+    the-alg .the-ℓ = ℓD
     the-alg .G = &[ q ∈ ⟨ Q ⟩ ] ⊕[ b ∈ Bool ] Trace b q
     the-alg .nil-case =
       &ᴰ-in (λ q →

@@ -21,7 +21,7 @@ open import Helper
 private
   variable ℓD ℓP ℓ : Level
 
-record DFA : Type (ℓ-suc ℓD) where
+record DFA ℓD : Type (ℓ-suc ℓD) where
   field
     Q : FinSet ℓD
     init : ⟨ Q ⟩
