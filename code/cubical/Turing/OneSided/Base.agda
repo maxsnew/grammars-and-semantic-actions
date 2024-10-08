@@ -1,17 +1,21 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
+open import Cubical.Data.FinSet
 
-module Turing.Base where
+module Turing.OneSided.Base
+  (Alphabet : hSet ℓ-zero)
+  (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
+  where
 
 open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
 
-open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.SumFin
+open import Cubical.Data.Maybe as Maybe
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
 open import Cubical.Data.Sum
@@ -27,9 +31,6 @@ private
 
 -- For simplicity, assume that the input alphabet is {0,1}
 -- and the tape alphabet adds a blank character
-Alphabet : hSet ℓ-zero
-Alphabet = Fin 2 , isSetFin
-
 TapeAlphabet : hSet ℓ-zero
 TapeAlphabet =
   ⟨ Alphabet ⟩ ⊎ Unit , isSet⊎ (str Alphabet) isSetUnit
@@ -37,18 +38,13 @@ TapeAlphabet =
 blank : ⟨ TapeAlphabet ⟩
 blank = inr _
 
-z : ⟨ TapeAlphabet ⟩
-z = inl (inl tt)
-
-s : ⟨ TapeAlphabet ⟩
-s = inl (inr (inl tt))
-
 opaque
   isFinSetTapeAlphabet : isFinSet ⟨ TapeAlphabet ⟩
   isFinSetTapeAlphabet =
-    isFinSet⊎ (Fin 2 , isFinSetFin) (Unit , isFinSetUnit)
+    isFinSet⊎ (_ , isFinSetAlphabet) (Unit , isFinSetUnit)
 
 open import Grammar Alphabet
+import Grammar.Maybe Alphabet as MaybeG
 open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.Lift Alphabet
@@ -141,52 +137,9 @@ module _ (TM : TuringMachine) where
     ; snoc-case = ⊕ᴰ-elim (λ tape → ⊕ᴰ-elim (λ c → ⊕ᴰ-in (consTape (inl c) tape) ∘g roll ∘g ⊕ᴰ-in snoc ∘g ⊕ᴰ-in c ∘g ⊕ᴰ-in (tape , λ n → refl) ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun) ∘g ⊕ᴰ-distL .fun
     })
 
-  open import String.Unicode
-  open import Cubical.Data.Maybe as Maybe
-  import Agda.Builtin.Char as BuiltinChar
-  import Agda.Builtin.String as BuiltinString
-
-  unicode→TapeAlphabet : UnicodeChar → Maybe ⟨ TapeAlphabet ⟩
-  unicode→TapeAlphabet c =
-    decRec
-      (λ _ → just (inl (inl _)))
-      (λ _ → decRec
-              (λ _ → just (inl (inr (inl tt))))
-              (λ _ → decRec
-                       (λ _ → just (inr _))
-                       (λ _ → nothing)
-                       (DiscreteUnicodeChar ' ' c))
-              (DiscreteUnicodeChar '1' c))
-      (DiscreteUnicodeChar '0' c)
-
-  mkTapeString : UnicodeString → List ⟨ TapeAlphabet ⟩
-  mkTapeString w = filterMap unicode→TapeAlphabet (BuiltinString.primStringToList w)
-
-  mkInputString : UnicodeString → String
-  mkInputString w =
-    filterMap
-      (λ { (inl fzero) → just (inl _)
-         ; (inl (fsuc fzero)) → just (inr (inl tt))
-         ; (fsuc tt) → nothing })
-    (mkTapeString w)
-
-  mkString : (w : UnicodeString) → string (mkInputString w)
-  mkString w = ⌈w⌉→string {w = mkInputString w} (mkInputString w) (internalize (mkInputString w))
-
-  w : UnicodeString
-  w = "10101"
-
-  t : Tape
-  t = parseInitTape (mkInputString w) (mkString w) .fst
-  opaque
-    unfolding KL*r-elim ⟜-intro ⊗-unit-l⁻ ⌈w⌉→string ⊗-intro ⊕ᴰ-distR ⊕ᴰ-distL
-    -- these values are what we expect
-    _ : (t 0 , t 1 , t 2 , t 3 , t 4 , t 5 , t 6 , t 12312312) ≡ (s , z , s , z , s , blank , blank , blank)
-    _ = refl
-
   -- From an input configuration, find an accepting trace, find a rejecting trace, or timeout
   decide-bounded :
-    ∀ (fuel : ℕ) q t h → Maybe(Σ[ b ∈ Bool ] TuringTrace b (q , t , h))
+    ∀ (fuel : ℕ) q t h → Maybe (Σ[ b ∈ Bool ] TuringTrace b (q , t , h))
   decide-bounded 0 q t h = nothing
   decide-bounded (suc n) q t h =
     decRec
@@ -200,8 +153,6 @@ module _ (TM : TuringMachine) where
             map-Maybe (λ (b , trace) → b , move q t h trace) maybeTrace)
           (isFinSet→Discrete (str Q) rej q))
       (isFinSet→Discrete (str Q) acc q)
-
-  open import Grammar.Maybe Alphabet as MaybeG
 
   run :
     (⊕[ tape ∈ Tape ] TuringG tape)
