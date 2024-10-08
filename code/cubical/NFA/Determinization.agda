@@ -70,9 +70,8 @@ module _
     X (N.ε-dst t) .fst .fst
 
   isProp-is-ε-closed : ∀ X → isProp (is-ε-closed X)
-  isProp-is-ε-closed X a b =
-    funExt λ t → funExt λ x → funExt (λ src∈X →
-      X (N.ε-dst t) .fst .snd (a t x src∈X) (b t x src∈X))
+  isProp-is-ε-closed X = isPropΠ λ t → isPropΠ λ _ → isPropΠ λ _ →
+    X (N.ε-dst t) .fst .snd
 
   Dec-is-ε-closed : ∀ X → Dec (is-ε-closed X)
   Dec-is-ε-closed X =
@@ -105,15 +104,15 @@ module _
       (isProp-is-ε-closed X)
       (Dec-is-ε-closed X)
 
-  ε-closed : Type (ℓ-suc ℓN)
-  ε-closed = Σ ⟨ FinSetDecℙ N.Q ⟩ is-ε-closed
+  εClosedℙQ : Type (ℓ-suc ℓN)
+  εClosedℙQ = Σ ⟨ FinSetDecℙ N.Q ⟩ is-ε-closed
 
-  isFinSet-ε-closed : isFinSet ε-closed
-  isFinSet-ε-closed =
+  isFinSet-εClosedℙQ : isFinSet εClosedℙQ
+  isFinSet-εClosedℙQ =
     isFinSetΣ (FinSetDecℙ N.Q) λ X → _ , (isFinSet-is-ε-closed X)
 
-  _∈-ε-closed_ : ⟨ N.Q ⟩ → ε-closed → Type ℓN
-  q ∈-ε-closed qs = qs .fst q .fst .fst
+  _∈ε_ : ⟨ N.Q ⟩ → εClosedℙQ → Type ℓN
+  q ∈ε qs = qs .fst q .fst .fst
 
   opaque
     -- The decidable finite set of states reachable from q-start
@@ -128,7 +127,7 @@ module _
         (λ (n , walk) → ∣ (suc n) , snoc ε-graph t walk ∣₁)
         x-is-reachable
 
-    ε-closure : ⟨ FinSetDecℙ N.Q ⟩ → ε-closed
+    ε-closure : ⟨ FinSetDecℙ N.Q ⟩ → εClosedℙQ
     ε-closure X .fst = FinSetDecℙ∃ N.Q N.Q X ε-reach
     ε-closure X .snd t x x∈X = do
       (a , a∈X , reach) ← x∈X
@@ -137,20 +136,20 @@ module _
 
     ε-closure-lift-∈ :
       {A : Decℙ ⟨ N.Q ⟩} {a : ⟨ N.Q ⟩} →
-      _∈-FinSetDecℙ_ {A = N.Q} a A → a ∈-ε-closed (ε-closure A)
+      _∈-FinSetDecℙ_ {A = N.Q} a A → a ∈ε (ε-closure A)
     ε-closure-lift-∈ a∈A = ∣ _ , (a∈A , (Reachable-is-reflexive ε-graph _)) ∣₁
 
     ε-closure-transition :
       (t : ⟨ N.ε-transition ⟩) →
-      (X : ε-closed) →
-      N.ε-src t ∈-ε-closed X →
-      N.ε-dst t ∈-ε-closed X
+      (X : εClosedℙQ) →
+      N.ε-src t ∈ε X →
+      N.ε-dst t ∈ε X
     ε-closure-transition t X src∈X = X .snd t (N.ε-src t) src∈X
 
     isFinOrd-εclosure-witnesses :
       (q : ⟨ N.Q ⟩) →
       (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
-      (q ∈-ε-closed (ε-closure X)) →
+      (q ∈ε (ε-closure X)) →
       isFinOrd (
         Σ[ q' ∈ ⟨ N.Q ⟩ ]
         Σ[ q'∈X ∈ X q' .fst .fst ]
@@ -165,7 +164,7 @@ module _
 
     witness-ε :
       (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
-      q ∈-ε-closed (ε-closure X) →
+      q ∈ε (ε-closure X) →
       (Σ[ q' ∈ ⟨ N.Q ⟩ ]
        Σ[ q'∈X ∈ X q' .fst .fst ]
        Σ[ n ∈ ℕ ]
@@ -192,9 +191,9 @@ module _
 
     lit-closure-transition :
       (t : ⟨ N.transition ⟩) →
-      (X : ε-closed) →
-      N.src t ∈-ε-closed X →
-      N.dst t ∈-ε-closed ε-closure (lit-closure (N.label t) (X .fst))
+      (X : εClosedℙQ) →
+      N.src t ∈ε X →
+      N.dst t ∈ε ε-closure (lit-closure (N.label t) (X .fst))
     lit-closure-transition t X src∈X =
       ∣ (N.dst t) ,
         (∣ (N.src t) , (src∈X , ∣ t , refl , refl , refl ∣₁) ∣₁ ,
@@ -276,7 +275,7 @@ module _
     Isom.Iso.fun (Bool-iso-DecProp' {ℓ = ℓN}) b .fst
   truth→witness true true≡b = lift tt
 
-  ℙNAcc-DecProp' : (X : ε-closed) → DecProp' ℓN
+  ℙNAcc-DecProp' : (X : εClosedℙQ) → DecProp' ℓN
   ℙNAcc-DecProp' X =
     DecProp'∃ N.Q
       (λ q → DecProp'×
@@ -285,7 +284,7 @@ module _
 
   open DFA
   ℙN : DFA (ℓ-suc ℓN)
-  ℙN .Q = ε-closed , isFinSet-ε-closed
+  ℙN .Q = εClosedℙQ , isFinSet-εClosedℙQ
   ℙN .init = ε-closure (SingletonDecℙ {A = N.Q} N.init)
   ℙN .isAcc X = Bool-iso-DecProp' .Isom.Iso.inv (ℙNAcc-DecProp' X)
   ℙN .δ X c = ε-closure (lit-closure c (X .fst))
@@ -294,10 +293,10 @@ module _
     module ℙN = DFA ℙN
 
   isFinOrd-q∈X-acc :
-    (X : ε-closed) →
+    (X : εClosedℙQ) →
     isFinOrd (
       Σ[ q ∈ ⟨ N.Q ⟩ ]
-      Σ[ q∈X ∈ q ∈-ε-closed X ] true Eq.≡ N.isAcc q)
+      Σ[ q∈X ∈ q ∈ε X ] true Eq.≡ N.isAcc q)
   isFinOrd-q∈X-acc X =
     isFinOrdΣ ⟨ N.Q ⟩ isFinOrd-Q _
       (λ q →
@@ -305,9 +304,9 @@ module _
           (λ _ → DecProp→isFinOrd (isFinSet→DecProp-Eq≡ isFinSetBool true (N.isAcc q))))
 
   chooseAcc :
-    (X : ε-closed) →
+    (X : εClosedℙQ) →
     (accX : true Eq.≡ ℙN.isAcc X) →
-    (Σ[ q ∈ ⟨ N.Q ⟩ ] Σ[ q∈X ∈ q ∈-ε-closed X ] true Eq.≡ N.isAcc q)
+    (Σ[ q ∈ ⟨ N.Q ⟩ ] Σ[ q∈X ∈ q ∈ε X ] true Eq.≡ N.isAcc q)
   chooseAcc X accX =
     let
       ∣q,q∈X,acc?∣ =
@@ -322,7 +321,7 @@ module _
           q∈X ,
           Bool-iso-DecProp'-witness→truth (N .isAcc q) acc?) ∣q,q∈X,acc?∣)
 
-  embedAcc : (q : ⟨ N.Q ⟩) → (X : ε-closed) → (q ∈-ε-closed X) → true Eq.≡ N.isAcc q →
+  embedAcc : (q : ⟨ N.Q ⟩) → (X : εClosedℙQ) → (q ∈ε X) → true Eq.≡ N.isAcc q →
     true Eq.≡ ℙN.isAcc X
   embedAcc q X q∈X acc =
     witness-true
@@ -332,8 +331,8 @@ module _
   NFA→DFA-alg :
     Algebra (N.TraceTy true)
       (λ q →
-        &[ X ∈ ε-closed ]
-        &[ q∈X ∈ q ∈-ε-closed X ] ℙN.Trace true X
+        &[ X ∈ εClosedℙQ ]
+        &[ q∈X ∈ q ∈ε X ] ℙN.Trace true X
       )
   NFA→DFA-alg q =
     ⊕ᴰ-elim (λ {
@@ -368,7 +367,7 @@ module _
   fold-walk :
     (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩) →
     (q' : ⟨ N.Q ⟩) →
-    (q∈εX : q ∈-ε-closed ε-closure X) →
+    (q∈εX : q ∈ε ε-closure X) →
     (q'-[ε*]→q : GraphWalk' ε-graph q q') →
     N.Trace true q ⊢ N.Trace true q'
   fold-walk q X q' q∈εX (0 , nil) = id
@@ -381,13 +380,13 @@ module _
 
   NFA→DFA : ∀ q →
     N.Trace true q ⊢
-      &[ X ∈ ε-closed ]
-      &[ q∈X ∈ q ∈-ε-closed X ] ℙN.Trace true X
+      &[ X ∈ εClosedℙQ ]
+      &[ q∈X ∈ q ∈ε X ] ℙN.Trace true X
   NFA→DFA q = rec (N.TraceTy true) NFA→DFA-alg q
 
   DFA→NFA-alg :
     Algebra (ℙN.TraceTy true)
-      (λ X → ⊕[ q ∈ ⟨ N.Q ⟩ ] ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q)
+      (λ X → ⊕[ q ∈ ⟨ N.Q ⟩ ] ⊕[ q∈X ∈ q ∈ε X ] N.Trace true q)
   DFA→NFA-alg X =
     ⊕ᴰ-elim (λ {
       stop → ⊕ᴰ-elim (λ { (lift accX) →
@@ -422,7 +421,7 @@ module _
       (c : ⟨ Alphabet ⟩) →
       (q : ⟨ N.Q ⟩) →
       (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
-      (q∈εlitX : q ∈-ε-closed ε-closure (lit-closure c X)) →
+      (q∈εlitX : q ∈ε ε-closure (lit-closure c X)) →
       (q' : ⟨ N.Q ⟩) →
       (q'∈litX : (lit-closure c X) q' .fst .fst) →
       (n : ℕ) →
@@ -446,7 +445,7 @@ module _
   DFA→NFA : ∀ X →
     ℙN.Trace true X ⊢
       ⊕[ q ∈ ⟨ N.Q ⟩ ]
-      ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q
+      ⊕[ q∈X ∈ q ∈ε X ] N.Trace true q
   DFA→NFA X = rec (ℙN.TraceTy true) DFA→NFA-alg X
 
   DFA→NFA-init :
