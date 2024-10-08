@@ -21,7 +21,7 @@ private
     ℓg : Level
 
 open import Examples.Dyck
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (NIL)
 open import Grammar.String.Properties Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.Inductive.Indexed Alphabet
