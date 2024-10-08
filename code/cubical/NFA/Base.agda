@@ -40,11 +40,14 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
   decEqQ : Discrete ⟨ Q ⟩
   decEqQ = isFinSet→Discrete (str Q)
 
-  hasTransition : Discrete ⟨ Alphabet ⟩ → ⟨ Q ⟩ →
-    ⟨ Alphabet ⟩ → ⟨ Q ⟩ → DecProp ℓN
-  hasTransition discAlphabet src' label' dst' =
-    DecProp∃ transition (λ t →
-      DecProp×
+  matchesTransition :
+    Discrete ⟨ Alphabet ⟩ →
+    ⟨ transition ⟩ →
+    ⟨ Q ⟩ →
+    ⟨ Alphabet ⟩ →
+    ⟨ Q ⟩ → DecProp ℓN
+  matchesTransition discAlphabet t src' label' dst' =
+     DecProp×
          (DecProp≡ (discreteLift {L' = ℓN} discAlphabet)
            (lift label') (lift (label t)))
          (DecProp×
@@ -52,7 +55,14 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
              (lift src') (lift (src t)))
            (DecProp≡ (discreteLift {L' = ℓN} decEqQ)
              (lift dst') (lift (dst t)))
-          ))
+          )
+
+  hasTransition : Discrete ⟨ Alphabet ⟩ → ⟨ Q ⟩ →
+    ⟨ Alphabet ⟩ → ⟨ Q ⟩ → DecProp ℓN
+  hasTransition discAlphabet src' label' dst' =
+    DecProp∃ transition (λ t →
+      matchesTransition discAlphabet t src' label' dst')
+
 
   data Tag : Type ℓN where
     stop step stepε : Tag

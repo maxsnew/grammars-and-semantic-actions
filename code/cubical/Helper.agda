@@ -29,6 +29,7 @@ open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.SumFin
 import Cubical.Data.Fin as Fin
 import Cubical.Data.Fin.Arithmetic as Arith
+import Cubical.Data.Equality as Eq
 open import Cubical.Foundations.Equiv renaming (_∙ₑ_ to _⋆_)
 open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -586,7 +587,45 @@ SplitSupport-FinOrd {A = A} (zero , A≃Fin) ∣a∣ =
 SplitSupport-FinOrd {A = A} (suc n , A≃Fin) ∣a∣ =
   A≃Fin .snd .equiv-proof (inl _) .fst .fst
 
+DecProp→isFinOrd :
+  ∀ {ℓ} → (A : DecProp ℓ) → isFinOrd (A .fst .fst)
+DecProp→isFinOrd A =
+  decRec
+    (λ a →
+      1 ,
+      isoToEquiv
+      (iso
+        (λ _ → inl _)
+        (λ { (inl tt) → a })
+        (λ { (inl tt) → refl })
+        (λ a → A .fst .snd _ _)))
+    (λ ¬a → 0 , uninhabEquiv ¬a (λ x → x))
+    (A .snd)
+
 isContr→isFinOrd : ∀ {ℓ} → {A : Type ℓ} →
   isContr A → isFinOrd A
 isContr→isFinOrd isContrA = 1 , isContr→Equiv isContrA isContrSumFin1
 
+Discrete→dec-Eq≡ :
+  ∀ {ℓ} → {A : Type ℓ} →
+  Discrete A →
+  (a b : A) →
+  Dec (a Eq.≡ b)
+Discrete→dec-Eq≡ = {!!}
+
+isSet→prop-Eq≡ :
+  ∀ {ℓ} → {A : Type ℓ} →
+  isSet A →
+  (a b : A) →
+  isProp (a Eq.≡ b)
+isSet→prop-Eq≡ = {!!}
+
+isFinSet→DecProp-Eq≡ :
+  ∀ {ℓ} → {A : Type ℓ} →
+  isFinSet A →
+  (a b : A) →
+  DecProp ℓ
+isFinSet→DecProp-Eq≡ isFinSetA a b =
+  ((a Eq.≡ b) ,
+  (isSet→prop-Eq≡ (isFinSet→isSet isFinSetA) a b)) ,
+  Discrete→dec-Eq≡ (isFinSet→Discrete isFinSetA) a b

@@ -11,9 +11,9 @@ open import Cubical.Foundations.Structure
 open import Cubical.Functions.Embedding
 
 open import Cubical.Data.Empty as ⊥ hiding (elim ; rec)
-open import Cubical.Data.FinData
+open import Cubical.Data.FinData as FD
 open import Cubical.Data.FinData.Order
-open import Cubical.Data.FinData.More using (DecΣ ; Fin≡SumFin ; Fin≃Finℕ)
+open import Cubical.Data.FinData.More using (DecΣ ; Fin≡SumFin ; Fin≃Finℕ ; Fin≃SumFin)
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.Cardinality
 open import Cubical.Data.FinSet.Constructors
@@ -179,6 +179,47 @@ module _ (G : directedGraph ℓ) where
   tailUniqueVertices (cons _ e walk) uniq =
     isEmbedding-∘ uniq (injEmbedding isSetFin injSucFin)
 
+  dec-hasUniqueVertices :
+    ∀ {end start : ⟨ states ⟩} → (walk : GraphWalk end start n) →
+      Dec (hasUniqueVertices walk)
+  dec-hasUniqueVertices nil =
+    yes (injEmbedding (isFinSet→isSet (str states))
+      (λ { {zero} {zero} → λ _ → refl }))
+  dec-hasUniqueVertices (cons n e walk) =
+    decRec
+      (λ (k , p) → no (λ x →
+        FD.znots (x zero (suc k) .equiv-proof (sym p) .fst .fst)))
+      (λ ¬repeatFirst →
+        decRec
+          (λ uniqWalk → yes
+            (λ j k →
+              injEmbedding
+                (isFinSet→isSet (str states))
+                (λ {
+                  {zero} {zero} → λ _ → refl
+                ; {zero} {suc b} →
+                  λ src≡vert →
+                    ⊥.rec (¬repeatFirst (b , (sym src≡vert)))
+                ; {suc a} {zero} →
+                  λ src≡vert → ⊥.rec (¬repeatFirst (a , src≡vert))
+                ; {suc a} {suc b} → λ verts≡ →
+                  decRec
+                    (λ a≡b → cong suc a≡b)
+                    (λ ¬a≡b →
+                      ⊥.rec
+                        (¬a≡b (uniqWalk a b .equiv-proof verts≡ .fst .fst)))
+                    (discreteFin a b)
+                })
+                j
+                k)
+          )
+          (λ ¬uniqWalk → no (λ x → ¬uniqWalk (tailUniqueVertices _ x)))
+          (dec-hasUniqueVertices walk)
+      )
+      (DecΣ (suc n) (λ k → vertices walk k ≡ src e)
+      (λ k → isFinSet→Discrete (str states) (vertices walk k) (src e)))
+
+
   drop : {end start : ⟨ states ⟩} →
     (walk : GraphWalk end start n) →
     (k : Fin (suc n)) →
@@ -199,9 +240,9 @@ module _ (G : directedGraph ℓ) where
 
   GraphPath : ∀ (end start : ⟨ states ⟩) → Type _
   GraphPath end start =
-    Σ[ n ∈ ℕ ]
-      ((n < card states) ×
-      (Σ[ walk ∈ GraphWalk end start n ] hasUniqueVertices walk))
+    Σ[ n ∈ Fin (card states) ]
+    Σ[ walk ∈ GraphWalk end start (toℕ n) ] hasUniqueVertices walk
+
 
   makeUnique :
     {end start : ⟨ states ⟩} →
@@ -246,9 +287,15 @@ module _ (G : directedGraph ℓ) where
     {end start : ⟨ states ⟩} →
     (walk : GraphWalk end start n) →
     GraphPath end start
-  GraphWalk→GraphPath walk =
+  GraphWalk→GraphPath {end = end}{start = start} walk =
     let m , walk' , uniq = makeUnique walk in
-    m , (hasUniqueVertices→boundedLength walk' uniq , walk' , uniq)
+    let bound = hasUniqueVertices→boundedLength walk' uniq in
+    let to-and-fro = sym (toFromId' (card states) m bound) in
+    fromℕ' (card states) m bound ,
+      subst
+        (λ n' → Σ[ walk ∈ GraphWalk end start n' ] hasUniqueVertices walk)
+          to-and-fro (walk' , uniq)
+    -- m , (hasUniqueVertices→boundedLength walk' uniq , walk' , uniq)
 
   Reachable PathReachable : ⟨ states ⟩ → ⟨ states ⟩ → Type _
   Reachable end start =
@@ -260,7 +307,7 @@ module _ (G : directedGraph ℓ) where
     (end start : ⟨ states ⟩) → PathReachable end start ≃ Reachable end start
   PathReachable≃Reachable end start =
     propBiimpl→Equiv isPropPropTrunc isPropPropTrunc
-      (PT.map (λ gp → (gp .fst) , (gp .snd .snd .fst)))
+      (PT.map (λ gp → (toℕ (gp .fst)) , (gp .snd .fst)))
       (PT.map (λ (n , gw) → GraphWalk→GraphPath gw))
 
   isFinSetHasUniqueVertices :
@@ -269,26 +316,34 @@ module _ (G : directedGraph ℓ) where
   isFinSetHasUniqueVertices gw =
     isFinSetIsEmbedding (_ , isFinSetFin') states (vertices gw)
 
-  module _ (isFinOrd-directed-edges : isFinOrd ⟨ directed-edges ⟩) where
-    isFinSetGraphPath :
-      (end start : ⟨ states ⟩) →
-      isFinSet (GraphPath end start)
-    isFinSetGraphPath end start =
-      EquivPresIsFinSet (Σ-cong-equiv-fst Fin≃Finℕ ∙ₑ Σ-assoc-≃) $
-        isFinSetΣ (_ , isFinSetFin')
-          (λ n → _ ,
-                 isFinSetΣ (_ , isFinSetGraphWalk isFinOrd-directed-edges _ _ _)
-            (λ walk → _ , isFinSetHasUniqueVertices walk))
+  module _
+    (isFinOrd-directed-edges : isFinOrd ⟨ directed-edges ⟩)
+    (end start : ⟨ states ⟩)
+    where
 
-    DecPathReachable : (end start : ⟨ states ⟩) → Dec (PathReachable end start)
-    DecPathReachable end start = isFinSet→Dec∥∥ (isFinSetGraphPath end start)
+    isFinOrdGraphPath : isFinOrd (GraphPath end start)
+    isFinOrdGraphPath =
+      isFinOrdΣ
+        (Fin (states .snd .fst))
+        ((card states) , Fin≃SumFin)
+        (λ n → Σ-syntax (GraphWalk end start (toℕ n)) hasUniqueVertices)
+        (λ m → isFinOrdΣ
+          (GraphWalk end start (toℕ m))
+          (isFinOrdGraphWalk isFinOrd-directed-edges (toℕ m) end start)
+          hasUniqueVertices
+          (λ walk → DecProp→isFinOrd ((_ , isPropIsEmbedding) , dec-hasUniqueVertices walk)))
+    isFinSetGraphPath : isFinSet (GraphPath end start)
+    isFinSetGraphPath =
+      isFinOrd→isFinSet isFinOrdGraphPath
 
-    DecReachable : (end start : ⟨ states ⟩) → Dec (Reachable end start)
-    DecReachable end start =
+    DecPathReachable : Dec (PathReachable end start)
+    DecPathReachable = isFinSet→Dec∥∥ isFinSetGraphPath
+
+    DecReachable : Dec (Reachable end start)
+    DecReachable =
       EquivPresDec
         (PathReachable≃Reachable end start)
-        (DecPathReachable end start)
+        DecPathReachable
 
   Reachable-is-reflexive : (u : ⟨ states ⟩) → Reachable u u
   Reachable-is-reflexive u = ∣ 0 , nil ∣₁
-

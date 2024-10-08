@@ -13,6 +13,7 @@ open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.Empty as Empty hiding (rec)
+import Cubical.Data.FinData as FD
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.Induction
 open import Cubical.Data.FinSet.DecidablePredicate
@@ -148,11 +149,6 @@ module _
       N.ε-dst t ∈-ε-closed X
     ε-closure-transition t X src∈X = X .snd t (N.ε-src t) src∈X
 
-    isFinOrd-GraphWalk' :
-      (q q' : ⟨ N.Q ⟩) →
-      isFinOrd (GraphWalk' ε-graph q q')
-    isFinOrd-GraphWalk' q q' = {!!}
-
     isFinOrd-εclosure-witnesses :
       (q : ⟨ N.Q ⟩) →
       (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
@@ -160,8 +156,14 @@ module _
       isFinOrd (
         Σ[ q' ∈ ⟨ N.Q ⟩ ]
         Σ[ q'∈X ∈ X q' .fst .fst ]
-        ∥ Σ[ n ∈ ℕ ] GraphWalk ε-graph q q' n ∥₁)
-    isFinOrd-εclosure-witnesses = {!!}
+        ∥ GraphWalk' ε-graph q q' ∥₁)
+    isFinOrd-εclosure-witnesses q X q∈X =
+      isFinOrdΣ ⟨ N.Q ⟩ isFinOrd-Q _
+        λ q' → isFinOrdΣ (X q' .fst .fst) (DecProp→isFinOrd (X q')) _
+          λ q'∈X →
+            DecProp→isFinOrd
+              ((∥ GraphWalk' ε-graph q q' ∥₁ , isPropPropTrunc) ,
+              DecReachable ε-graph isFinOrd-ε-transition q q')
 
     witness-ε :
       (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
@@ -175,9 +177,11 @@ module _
         q' , q'∈X , ∣walk'∣ =
           SplitSupport-FinOrd (isFinOrd-εclosure-witnesses q X q∈εX) q∈εX in
       let
-        n , walk =
-          SplitSupport-FinOrd (isFinOrd-GraphWalk' q q') ∣walk'∣ in
-      q' , (q'∈X , (n , walk))
+        n , walk , uniq =
+          SplitSupport-FinOrd
+            (isFinOrdGraphPath ε-graph isFinOrd-ε-transition q q')
+            (PT.map (λ (n , walk) → GraphWalk→GraphPath ε-graph walk) ∣walk'∣) in
+      q' , q'∈X , FD.toℕ n , walk
 
   opaque
     unfolding ε-closure
@@ -198,183 +202,206 @@ module _
         (∣ (N.src t) , (src∈X , ∣ t , refl , refl , refl ∣₁) ∣₁ ,
           ∣ 0 , nil ∣₁) ∣₁
 
+    isFinOrd-litclosure-witnesses :
+      (c : ⟨ Alphabet ⟩) →
+      (q : ⟨ N.Q ⟩) →
+      (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
+      (lit-closure c X q .fst .fst) →
+      isFinOrd (
+        Σ[ q' ∈ ⟨ N.Q ⟩ ]
+        Σ[ q'∈X ∈ X q' .fst .fst ]
+        ∥ Σ[ t ∈ ⟨ N.transition ⟩ ]
+         (N.label t Eq.≡ c) ×
+         (N.src t Eq.≡ q') ×
+         (N.dst t Eq.≡ q) ∥₁)
+    isFinOrd-litclosure-witnesses c q X q∈litX =
+      isFinOrdΣ ⟨ N.Q ⟩ isFinOrd-Q _ (λ q' →
+        isFinOrdΣ (X q' .fst .fst) (DecProp→isFinOrd (X q')) _
+          λ q'∈X →
+            isFinOrd∥∥ _ (isFinOrdΣ ⟨ N.transition ⟩ isFinOrd-transition
+              _ λ t → isFinOrdΣ (N.label t Eq.≡ c)
+                (DecProp→isFinOrd (isFinSet→DecProp-Eq≡ isFinSetAlphabet (N.label t) c)) _
+               (λ _ → isFinOrdΣ _ (DecProp→isFinOrd (isFinSet→DecProp-Eq≡ (str N.Q) (N.src t) q')) _
+                 λ _ → DecProp→isFinOrd (isFinSet→DecProp-Eq≡ (str N.Q) (N.dst t) q)))
+        )
+
     witness-lit :
       (c : ⟨ Alphabet ⟩) → (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
       (lit-closure c X) q .fst .fst →
-      (Σ[ t ∈ ⟨ N.transition ⟩ ]
-       Σ[ q' ∈ ⟨ N.Q ⟩  ]
+      (Σ[ q' ∈ ⟨ N.Q ⟩  ]
        Σ[ q'∈X ∈ X q' .fst .fst  ]
+       Σ[ t ∈ ⟨ N.transition ⟩ ]
          (N.label t Eq.≡ c) ×
          (N.src t Eq.≡ q') ×
          (N.dst t Eq.≡ q))
     witness-lit c q X q∈litX = {!q∈litX!}
 
-  -- TODO this should go elsewhere
-  witness-true :
-    (A : DecProp' ℓ) → A .fst →
-    true Eq.≡ Bool-iso-DecProp' .Isom.Iso.inv A
-  witness-true {ℓ} (ty , true , _) a = Eq.refl
-  witness-true {ℓ} (ty , false , snd₁) a = Empty.rec (snd₁ .fst a)
+  -- -- TODO this should go elsewhere
+  -- witness-true :
+  --   (A : DecProp' ℓ) → A .fst →
+  --   true Eq.≡ Bool-iso-DecProp' .Isom.Iso.inv A
+  -- witness-true {ℓ} (ty , true , _) a = Eq.refl
+  -- witness-true {ℓ} (ty , false , snd₁) a = Empty.rec (snd₁ .fst a)
 
-  truth→witness :
-    (b : Bool) → true Eq.≡ b →
-    Isom.Iso.fun (Bool-iso-DecProp' {ℓ = ℓN}) b .fst
-  truth→witness true true≡b = lift tt
+  -- truth→witness :
+  --   (b : Bool) → true Eq.≡ b →
+  --   Isom.Iso.fun (Bool-iso-DecProp' {ℓ = ℓN}) b .fst
+  -- truth→witness true true≡b = lift tt
 
-  ℙNAcc-DecProp' : (X : ε-closed) → DecProp' ℓN
-  ℙNAcc-DecProp' X =
-    DecProp'∃ N.Q
-      (λ q → DecProp'×
-              (DecℙIso ⟨ N.Q ⟩ .Isom.Iso.fun (X .fst) q)
-              (Bool-iso-DecProp' .Isom.Iso.fun (N .isAcc q)))
+  -- ℙNAcc-DecProp' : (X : ε-closed) → DecProp' ℓN
+  -- ℙNAcc-DecProp' X =
+  --   DecProp'∃ N.Q
+  --     (λ q → DecProp'×
+  --             (DecℙIso ⟨ N.Q ⟩ .Isom.Iso.fun (X .fst) q)
+  --             (Bool-iso-DecProp' .Isom.Iso.fun (N .isAcc q)))
 
-  open DFA
-  ℙN : DFA (ℓ-suc ℓN)
-  ℙN .Q = ε-closed , isFinSet-ε-closed
-  ℙN .init = ε-closure (SingletonDecℙ {A = N.Q} N.init)
-  ℙN .isAcc X = Bool-iso-DecProp' .Isom.Iso.inv (ℙNAcc-DecProp' X)
-  ℙN .δ X c = ε-closure (lit-closure c (X .fst))
+  -- open DFA
+  -- ℙN : DFA (ℓ-suc ℓN)
+  -- ℙN .Q = ε-closed , isFinSet-ε-closed
+  -- ℙN .init = ε-closure (SingletonDecℙ {A = N.Q} N.init)
+  -- ℙN .isAcc X = Bool-iso-DecProp' .Isom.Iso.inv (ℙNAcc-DecProp' X)
+  -- ℙN .δ X c = ε-closure (lit-closure c (X .fst))
 
-  private
-    module ℙN = DFA ℙN
+  -- private
+  --   module ℙN = DFA ℙN
 
-  chooseAcc : (X : ε-closed) →
-    (Σ[ q ∈ ⟨ N.Q ⟩ ] Σ[ q∈X ∈ q ∈-ε-closed X ] ℙN.isAcc X Eq.≡ N.isAcc q)
-  chooseAcc = {!!}
+  -- chooseAcc : (X : ε-closed) →
+  --   (Σ[ q ∈ ⟨ N.Q ⟩ ] Σ[ q∈X ∈ q ∈-ε-closed X ] ℙN.isAcc X Eq.≡ N.isAcc q)
+  -- chooseAcc = {!!}
 
-  embedAcc : (q : ⟨ N.Q ⟩) → (X : ε-closed) → (q ∈-ε-closed X) → true Eq.≡ N.isAcc q →
-    true Eq.≡ ℙN.isAcc X
-  embedAcc q X q∈X acc =
-    witness-true
-      (ℙNAcc-DecProp' X)
-      ∣ q , (q∈X , truth→witness (N.isAcc q) acc) ∣₁
+  -- embedAcc : (q : ⟨ N.Q ⟩) → (X : ε-closed) → (q ∈-ε-closed X) → true Eq.≡ N.isAcc q →
+  --   true Eq.≡ ℙN.isAcc X
+  -- embedAcc q X q∈X acc =
+  --   witness-true
+  --     (ℙNAcc-DecProp' X)
+  --     ∣ q , (q∈X , truth→witness (N.isAcc q) acc) ∣₁
 
-  NFA→DFA-alg :
-    Algebra (N.TraceTy true)
-      (λ q →
-        &[ X ∈ ε-closed ]
-        &[ q∈X ∈ q ∈-ε-closed X ] ℙN.Trace true X
-      )
-  NFA→DFA-alg q =
-    ⊕ᴰ-elim (λ {
-        stop → ⊕ᴰ-elim (λ {
-          (lift acc) → &ᴰ-in λ X →
-            &ᴰ-in (λ q∈X →
-              roll ∘g
-              ⊕ᴰ-in ℙN.stop ∘g
-              ⊕ᴰ-in (lift (embedAcc q X q∈X acc)) ∘g
-              liftG ∘g liftG ∘g lowerG ∘g lowerG
-            ) })
-      ; step → ⊕ᴰ-elim (λ { (t , Eq.refl) →
-        &ᴰ-in (λ X → &ᴰ-in λ src∈X →
-          roll ∘g
-          ⊕ᴰ-in ℙN.step ∘g
-          ⊕ᴰ-in (lift (N.label t)) ∘g
-          liftG ,⊗ id ∘g
-          liftG ,⊗ liftG ∘g
-          id ,⊗ &ᴰ-π (lit-closure-transition t X src∈X) ∘g
-          id ,⊗ &ᴰ-π (ε-closure (lit-closure (N.label t) (X .fst))) ∘g
-          lowerG ,⊗ id ∘g
-          lowerG ,⊗ lowerG
-          )
-          })
-      ; stepε →
-        ⊕ᴰ-elim λ { (t , Eq.refl) →
-          &ᴰ-in (λ X → &ᴰ-in (λ src∈X →
-            &ᴰ-π (ε-closure-transition t X src∈X) ∘g
-            &ᴰ-π X)) ∘g
-          lowerG } })
+  -- NFA→DFA-alg :
+  --   Algebra (N.TraceTy true)
+  --     (λ q →
+  --       &[ X ∈ ε-closed ]
+  --       &[ q∈X ∈ q ∈-ε-closed X ] ℙN.Trace true X
+  --     )
+  -- NFA→DFA-alg q =
+  --   ⊕ᴰ-elim (λ {
+  --       stop → ⊕ᴰ-elim (λ {
+  --         (lift acc) → &ᴰ-in λ X →
+  --           &ᴰ-in (λ q∈X →
+  --             roll ∘g
+  --             ⊕ᴰ-in ℙN.stop ∘g
+  --             ⊕ᴰ-in (lift (embedAcc q X q∈X acc)) ∘g
+  --             liftG ∘g liftG ∘g lowerG ∘g lowerG
+  --           ) })
+  --     ; step → ⊕ᴰ-elim (λ { (t , Eq.refl) →
+  --       &ᴰ-in (λ X → &ᴰ-in λ src∈X →
+  --         roll ∘g
+  --         ⊕ᴰ-in ℙN.step ∘g
+  --         ⊕ᴰ-in (lift (N.label t)) ∘g
+  --         liftG ,⊗ id ∘g
+  --         liftG ,⊗ liftG ∘g
+  --         id ,⊗ &ᴰ-π (lit-closure-transition t X src∈X) ∘g
+  --         id ,⊗ &ᴰ-π (ε-closure (lit-closure (N.label t) (X .fst))) ∘g
+  --         lowerG ,⊗ id ∘g
+  --         lowerG ,⊗ lowerG
+  --         )
+  --         })
+  --     ; stepε →
+  --       ⊕ᴰ-elim λ { (t , Eq.refl) →
+  --         &ᴰ-in (λ X → &ᴰ-in (λ src∈X →
+  --           &ᴰ-π (ε-closure-transition t X src∈X) ∘g
+  --           &ᴰ-π X)) ∘g
+  --         lowerG } })
 
-  fold-walk :
-    (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩) →
-    (q' : ⟨ N.Q ⟩) →
-    (q∈εX : q ∈-ε-closed ε-closure X) →
-    (q'-[ε*]→q : GraphWalk' ε-graph q q') →
-    N.Trace true q ⊢ N.Trace true q'
-  fold-walk q X q' q∈εX (0 , nil) = id
-  fold-walk q X q' q∈εX (n , (cons n-1 e walk)) =
-    roll ∘g
-    ⊕ᴰ-in N.stepε ∘g
-    ⊕ᴰ-in (e , Eq.refl) ∘g
-    liftG ∘g
-    fold-walk q X (N.ε-dst e) q∈εX (n-1 , walk)
+  -- fold-walk :
+  --   (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩) →
+  --   (q' : ⟨ N.Q ⟩) →
+  --   (q∈εX : q ∈-ε-closed ε-closure X) →
+  --   (q'-[ε*]→q : GraphWalk' ε-graph q q') →
+  --   N.Trace true q ⊢ N.Trace true q'
+  -- fold-walk q X q' q∈εX (0 , nil) = id
+  -- fold-walk q X q' q∈εX (n , (cons n-1 e walk)) =
+  --   roll ∘g
+  --   ⊕ᴰ-in N.stepε ∘g
+  --   ⊕ᴰ-in (e , Eq.refl) ∘g
+  --   liftG ∘g
+  --   fold-walk q X (N.ε-dst e) q∈εX (n-1 , walk)
 
-  NFA→DFA : ∀ q →
-    N.Trace true q ⊢
-      &[ X ∈ ε-closed ]
-      &[ q∈X ∈ q ∈-ε-closed X ] ℙN.Trace true X
-  NFA→DFA q = rec (N.TraceTy true) NFA→DFA-alg q
+  -- NFA→DFA : ∀ q →
+  --   N.Trace true q ⊢
+  --     &[ X ∈ ε-closed ]
+  --     &[ q∈X ∈ q ∈-ε-closed X ] ℙN.Trace true X
+  -- NFA→DFA q = rec (N.TraceTy true) NFA→DFA-alg q
 
-  DFA→NFA-alg :
-    Algebra (ℙN.TraceTy true)
-      (λ X → ⊕[ q ∈ ⟨ N.Q ⟩ ] ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q)
-  DFA→NFA-alg X =
-    ⊕ᴰ-elim (λ {
-      stop → ⊕ᴰ-elim (λ { (lift accX) →
-        let
-          (q , q∈X , acc) = chooseAcc X
-        in
-        ⊕ᴰ-in q ∘g
-        ⊕ᴰ-in q∈X ∘g
-        roll ∘g
-        ⊕ᴰ-in N.stop ∘g
-        ⊕ᴰ-in (lift (accX Eq.∙ acc)) ∘g
-        liftG ∘g liftG ∘g lowerG ∘g lowerG
-      })
-    ; step → ⊕ᴰ-elim (λ { (lift c) →
-      ⊕ᴰ-elim (λ q →
-        ⊕ᴰ-elim (λ q∈εlitX →
-          let q' , q'∈litX , n , walk = witness-ε q (lit-closure c (X .fst)) q∈εlitX in
-          let t , qt , qt∈X , label≡c , src≡qt , dst≡q' = witness-lit c q' (X .fst) q'∈litX in
-          ⊕ᴰ-in qt ∘g
-          ⊕ᴰ-in qt∈X ∘g
-          step-help c q (X .fst) q∈εlitX q' q'∈litX n walk
-                    t qt qt∈X label≡c src≡qt dst≡q'
-          ) ∘g
-        ⊕ᴰ-distR .fun
-      ) ∘g
-      ⊕ᴰ-distR .fun ∘g
-      lowerG ,⊗ id ∘g
-      lowerG ,⊗ lowerG
-    }) })
-    where
-    step-help : ∀
-      (c : ⟨ Alphabet ⟩) →
-      (q : ⟨ N.Q ⟩) →
-      (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
-      (q∈εlitX : q ∈-ε-closed ε-closure (lit-closure c X)) →
-      (q' : ⟨ N.Q ⟩) →
-      (q'∈litX : (lit-closure c X) q' .fst .fst) →
-      (n : ℕ) →
-      (walk : GraphWalk ε-graph q q' n) →
-      (t : ⟨ N.transition ⟩ ) →
-      (qt : ⟨ N.Q ⟩) →
-      (qt∈X : X qt .fst .fst) →
-      (N.label t Eq.≡ c) →
-      (N.src t Eq.≡ qt) →
-      (N.dst t Eq.≡ q') →
-      (literal c) ⊗ N.Trace true q ⊢ N.Trace true qt
-    step-help c q X q∈εlitX q' q'∈litX n walk t qt qt∈x
-      Eq.refl Eq.refl Eq.refl =
-      roll ∘g
-      ⊕ᴰ-in N.step ∘g
-      ⊕ᴰ-in (t , Eq.refl) ∘g
-      liftG ,⊗ liftG ∘g
-      id ,⊗ fold-walk q (lit-closure c X) q' q∈εlitX (n , walk) ∘g
-      liftG ,⊗ id
+  -- DFA→NFA-alg :
+  --   Algebra (ℙN.TraceTy true)
+  --     (λ X → ⊕[ q ∈ ⟨ N.Q ⟩ ] ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q)
+  -- DFA→NFA-alg X =
+  --   ⊕ᴰ-elim (λ {
+  --     stop → ⊕ᴰ-elim (λ { (lift accX) →
+  --       let
+  --         (q , q∈X , acc) = chooseAcc X
+  --       in
+  --       ⊕ᴰ-in q ∘g
+  --       ⊕ᴰ-in q∈X ∘g
+  --       roll ∘g
+  --       ⊕ᴰ-in N.stop ∘g
+  --       ⊕ᴰ-in (lift (accX Eq.∙ acc)) ∘g
+  --       liftG ∘g liftG ∘g lowerG ∘g lowerG
+  --     })
+  --   ; step → ⊕ᴰ-elim (λ { (lift c) →
+  --     ⊕ᴰ-elim (λ q →
+  --       ⊕ᴰ-elim (λ q∈εlitX →
+  --         let q' , q'∈litX , n , walk = witness-ε q (lit-closure c (X .fst)) q∈εlitX in
+  --         let t , qt , qt∈X , label≡c , src≡qt , dst≡q' = witness-lit c q' (X .fst) q'∈litX in
+  --         ⊕ᴰ-in qt ∘g
+  --         ⊕ᴰ-in qt∈X ∘g
+  --         step-help c q (X .fst) q∈εlitX q' q'∈litX n walk
+  --                   t qt qt∈X label≡c src≡qt dst≡q'
+  --         ) ∘g
+  --       ⊕ᴰ-distR .fun
+  --     ) ∘g
+  --     ⊕ᴰ-distR .fun ∘g
+  --     lowerG ,⊗ id ∘g
+  --     lowerG ,⊗ lowerG
+  --   }) })
+  --   where
+  --   step-help : ∀
+  --     (c : ⟨ Alphabet ⟩) →
+  --     (q : ⟨ N.Q ⟩) →
+  --     (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
+  --     (q∈εlitX : q ∈-ε-closed ε-closure (lit-closure c X)) →
+  --     (q' : ⟨ N.Q ⟩) →
+  --     (q'∈litX : (lit-closure c X) q' .fst .fst) →
+  --     (n : ℕ) →
+  --     (walk : GraphWalk ε-graph q q' n) →
+  --     (t : ⟨ N.transition ⟩ ) →
+  --     (qt : ⟨ N.Q ⟩) →
+  --     (qt∈X : X qt .fst .fst) →
+  --     (N.label t Eq.≡ c) →
+  --     (N.src t Eq.≡ qt) →
+  --     (N.dst t Eq.≡ q') →
+  --     (literal c) ⊗ N.Trace true q ⊢ N.Trace true qt
+  --   step-help c q X q∈εlitX q' q'∈litX n walk t qt qt∈x
+  --     Eq.refl Eq.refl Eq.refl =
+  --     roll ∘g
+  --     ⊕ᴰ-in N.step ∘g
+  --     ⊕ᴰ-in (t , Eq.refl) ∘g
+  --     liftG ,⊗ liftG ∘g
+  --     id ,⊗ fold-walk q (lit-closure c X) q' q∈εlitX (n , walk) ∘g
+  --     liftG ,⊗ id
 
-  DFA→NFA : ∀ X →
-    ℙN.Trace true X ⊢
-      ⊕[ q ∈ ⟨ N.Q ⟩ ]
-      ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q
-  DFA→NFA X = rec (ℙN.TraceTy true) DFA→NFA-alg X
+  -- DFA→NFA : ∀ X →
+  --   ℙN.Trace true X ⊢
+  --     ⊕[ q ∈ ⟨ N.Q ⟩ ]
+  --     ⊕[ q∈X ∈ q ∈-ε-closed X ] N.Trace true q
+  -- DFA→NFA X = rec (ℙN.TraceTy true) DFA→NFA-alg X
 
-  DFA→NFA-init :
-    ℙN.Trace true (ε-closure (SingletonDecℙ {A = N.Q} N.init))
-      ⊢ N.Trace true (N .init)
-  DFA→NFA-init =
-    ⊕ᴰ-elim (λ q → ⊕ᴰ-elim (λ q∈εinit →
-      let q' , q'∈Singleton , walk = witness-ε q (SingletonDecℙ {A = N.Q} N.init) q∈εinit in
-      fold-walk q (SingletonDecℙ {A = N.Q} N.init) N.init q∈εinit
-      (subst (GraphWalk' ε-graph q) q'∈Singleton walk))) ∘g
-    DFA→NFA (ε-closure (SingletonDecℙ {A = N.Q} N.init))
+  -- DFA→NFA-init :
+  --   ℙN.Trace true (ε-closure (SingletonDecℙ {A = N.Q} N.init))
+  --     ⊢ N.Trace true (N .init)
+  -- DFA→NFA-init =
+  --   ⊕ᴰ-elim (λ q → ⊕ᴰ-elim (λ q∈εinit →
+  --     let q' , q'∈Singleton , walk = witness-ε q (SingletonDecℙ {A = N.Q} N.init) q∈εinit in
+  --     fold-walk q (SingletonDecℙ {A = N.Q} N.init) N.init q∈εinit
+  --     (subst (GraphWalk' ε-graph q) q'∈Singleton walk))) ∘g
+  --   DFA→NFA (ε-closure (SingletonDecℙ {A = N.Q} N.init))
