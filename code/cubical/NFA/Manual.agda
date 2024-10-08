@@ -406,4 +406,3 @@ module _ (N : NFA {ℓN}) where
           ∀ {q} → P-recTrace {q = q} ≡ P-recTrace' {q = q}
         P-recTrace'-conservative-extension =
           !PAlgebraHom' ∃PAlgebraHom ∃PAlgebraHom' _
-  

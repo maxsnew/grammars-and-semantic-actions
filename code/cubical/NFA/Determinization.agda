@@ -313,7 +313,7 @@ module _
         subst
         (λ y → y .fst)
         (Bool-iso-DecProp' .Isom.Iso.rightInv (ℙNAcc-DecProp' X))
-          (truth→witness (ℙN.isAcc X) accX) 
+          (truth→witness (ℙN.isAcc X) accX)
       in
       SplitSupport-FinOrd (isFinOrd-q∈X-acc X)
         (PT.map (λ (q , q∈X , acc?) →

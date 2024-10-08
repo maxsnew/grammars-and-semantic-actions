@@ -199,4 +199,3 @@ module _
 
   -- weakEquivalence : isWeaklyEquivalent N.InitParse D.InitParse
   -- weakEquivalence = isLogicalEquivalence→WeakEquivalence _ _ logicalEquivalence
-

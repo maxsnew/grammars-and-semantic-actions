@@ -229,6 +229,6 @@ opaque
 ⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
 
 ⟜-app⊸0⊗ :
-  ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) → 
+  ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) →
   ⟜-app ∘g ⊸0⊗ x ∘g ⟜-intro f ≡ f ∘g ⊸0⊗ x
 ⟜-app⊸0⊗ = {!!}

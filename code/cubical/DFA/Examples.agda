@@ -17,7 +17,7 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 open import Cubical.Data.List hiding (init)
 
-Alph = Fin 2 
+Alph = Fin 2
 opaque
   isSetAlph : isSet Alph
   isSetAlph = isFinSet→isSet isFinSetFin
