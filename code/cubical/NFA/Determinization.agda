@@ -23,7 +23,6 @@ open import Cubical.Data.Nat
 open import Cubical.Data.Sum as Sum hiding (rec ; map)
 import Cubical.Data.Equality as Eq
 
-
 open import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 
@@ -459,3 +458,9 @@ module _
       fold-walk q (SingletonDecℙ {A = N.Q} N.init) N.init q∈εinit
       (subst (GraphWalk' ε-graph q) q'∈Singleton walk))) ∘g
     DFA→NFA (ε-closure (SingletonDecℙ {A = N.Q} N.init))
+
+  NFA≈DFA : isLogicallyEquivalent
+              (N.Trace true N.init)
+              (ℙN.Trace true (ε-closure (SingletonDecℙ {A = N.Q} N.init)))
+  NFA≈DFA .fst = &ᴰ-π (ε-closure-lift-∈ refl) ∘g &ᴰ-π _ ∘g NFA→DFA N.init
+  NFA≈DFA .snd = DFA→NFA-init
