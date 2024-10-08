@@ -1,4 +1,3 @@
-{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
@@ -295,9 +294,34 @@ module _
   private
     module ℙN = DFA ℙN
 
-  chooseAcc : (X : ε-closed) →
-    (Σ[ q ∈ ⟨ N.Q ⟩ ] Σ[ q∈X ∈ q ∈-ε-closed X ] ℙN.isAcc X Eq.≡ N.isAcc q)
-  chooseAcc = {!!}
+  isFinOrd-q∈X-acc :
+    (X : ε-closed) →
+    isFinOrd (
+      Σ[ q ∈ ⟨ N.Q ⟩ ]
+      Σ[ q∈X ∈ q ∈-ε-closed X ] true Eq.≡ N.isAcc q)
+  isFinOrd-q∈X-acc X =
+    isFinOrdΣ ⟨ N.Q ⟩ isFinOrd-Q _
+      (λ q →
+        isFinOrdΣ (X .fst q .fst .fst) (DecProp→isFinOrd (X .fst q)) _
+          (λ _ → DecProp→isFinOrd (isFinSet→DecProp-Eq≡ isFinSetBool true (N.isAcc q))))
+
+  chooseAcc :
+    (X : ε-closed) →
+    (accX : true Eq.≡ ℙN.isAcc X) →
+    (Σ[ q ∈ ⟨ N.Q ⟩ ] Σ[ q∈X ∈ q ∈-ε-closed X ] true Eq.≡ N.isAcc q)
+  chooseAcc X accX =
+    let
+      ∣q,q∈X,acc?∣ =
+        subst
+        (λ y → y .fst)
+        (Bool-iso-DecProp' .Isom.Iso.rightInv (ℙNAcc-DecProp' X))
+          (truth→witness (ℙN.isAcc X) accX) 
+      in
+      SplitSupport-FinOrd (isFinOrd-q∈X-acc X)
+        (PT.map (λ (q , q∈X , acc?) →
+          q ,
+          q∈X ,
+          Bool-iso-DecProp'-witness→truth (N .isAcc q) acc?) ∣q,q∈X,acc?∣)
 
   embedAcc : (q : ⟨ N.Q ⟩) → (X : ε-closed) → (q ∈-ε-closed X) → true Eq.≡ N.isAcc q →
     true Eq.≡ ℙN.isAcc X
@@ -369,13 +393,13 @@ module _
     ⊕ᴰ-elim (λ {
       stop → ⊕ᴰ-elim (λ { (lift accX) →
         let
-          (q , q∈X , acc) = chooseAcc X
+          q , q∈X , acc = chooseAcc X accX
         in
         ⊕ᴰ-in q ∘g
         ⊕ᴰ-in q∈X ∘g
         roll ∘g
         ⊕ᴰ-in N.stop ∘g
-        ⊕ᴰ-in (lift (accX Eq.∙ acc)) ∘g
+        ⊕ᴰ-in (lift acc) ∘g
         liftG ∘g liftG ∘g lowerG ∘g lowerG
       })
     ; step → ⊕ᴰ-elim (λ { (lift c) →

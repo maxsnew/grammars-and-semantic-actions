@@ -1,4 +1,4 @@
-{-# OPTIONS -WnoUnsupportedIndexedMatch --allow-unsolved-metas #-}
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 module Helper where
 
 open import Cubical.Foundations.Prelude
@@ -329,6 +329,13 @@ Bool≃DecProp' = isoToEquiv Bool-iso-DecProp'
 Bool≃DecProp : ∀ {ℓ} → Bool ≃ DecProp ℓ
 Bool≃DecProp = compEquiv Bool≃DecProp' (invEquiv DecProp≃DecProp')
 
+Bool-iso-DecProp'-witness→truth :
+  ∀ {ℓ} →
+  (b : Bool) →
+  Bool-iso-DecProp' {ℓ = ℓ} .fun b .fst →
+  true Eq.≡ b
+Bool-iso-DecProp'-witness→truth true witness = Eq.refl
+
 isFinSetDecProp : ∀ {ℓ} → isFinSet (DecProp ℓ)
 fst isFinSetDecProp = 2
 snd isFinSetDecProp = ∣ the-equiv ∣₁
@@ -498,87 +505,87 @@ subCardBounded A DecProp'B = card↪Inequality
   (_ , isFinSetSub A DecProp'B) A
   ∣ fst , (λ w x → isEmbeddingFstΣProp (λ a → isDecProp→isProp (str (DecProp'B a))) {w} {x}) ∣₁
 
-module _
-  {ℓ ℓ'} {A : Type ℓ}
-  (isFinSetA : isFinSet A)
-  (_≺_ : A → A → Type ℓ')
-  (isDecProp≺ : (x y : A) → isDecProp (x ≺ y))
-  (isLoset≺ : IsLoset _≺_) where
+-- module _
+--   {ℓ ℓ'} {A : Type ℓ}
+--   (isFinSetA : isFinSet A)
+--   (_≺_ : A → A → Type ℓ')
+--   (isDecProp≺ : (x y : A) → isDecProp (x ≺ y))
+--   (isLoset≺ : IsLoset _≺_) where
 
-  private
-    FinSetA : FinSet ℓ
-    FinSetA = A , isFinSetA
+--   private
+--     FinSetA : FinSet ℓ
+--     FinSetA = A , isFinSetA
 
-    _DecProp'≺_ : (x y : A) → DecProp' ℓ'
-    x DecProp'≺ y = x ≺ y , isDecProp≺ x y
+--     _DecProp'≺_ : (x y : A) → DecProp' ℓ'
+--     x DecProp'≺ y = x ≺ y , isDecProp≺ x y
 
-    module isLoset≺ = IsLoset isLoset≺
+--     module isLoset≺ = IsLoset isLoset≺
 
-    LowerFinSet : (a : A) → FinSet (ℓ-max ℓ ℓ')
-    LowerFinSet a = _ , isFinSetSub FinSetA (_DecProp'≺ a)
+--     LowerFinSet : (a : A) → FinSet (ℓ-max ℓ ℓ')
+--     LowerFinSet a = _ , isFinSetSub FinSetA (_DecProp'≺ a)
 
-    ExceptFinSet : (exception : A) → FinSet ℓ
-    ExceptFinSet exception =
-      let is-exception : A → DecProp ℓ
-          is-exception a = ((_ , isFinSet→isSet isFinSetA exception a) , isFinSet→Discrete isFinSetA exception a) in
-      _ , isFinSetSub FinSetA (DecProp→DecProp' ∘ negateDecProp ∘ is-exception)
+--     ExceptFinSet : (exception : A) → FinSet ℓ
+--     ExceptFinSet exception =
+--       let is-exception : A → DecProp ℓ
+--           is-exception a = ((_ , isFinSet→isSet isFinSetA exception a) , isFinSet→Discrete isFinSetA exception a) in
+--       _ , isFinSetSub FinSetA (DecProp→DecProp' ∘ negateDecProp ∘ is-exception)
 
-    exceptEquiv : (exception : A) → ⟨ ExceptFinSet exception ⟩ ⊎ ⊤ ≃ A
-    exceptEquiv exception = isoToEquiv (iso f g sec ret)
-      where
-      f : ⟨ ExceptFinSet exception ⟩ ⊎ ⊤ → A
-      f = Sum.rec fst (const exception)
+--     exceptEquiv : (exception : A) → ⟨ ExceptFinSet exception ⟩ ⊎ ⊤ ≃ A
+--     exceptEquiv exception = isoToEquiv (iso f g sec ret)
+--       where
+--       f : ⟨ ExceptFinSet exception ⟩ ⊎ ⊤ → A
+--       f = Sum.rec fst (const exception)
 
-      g : A → ⟨ ExceptFinSet exception ⟩ ⊎ ⊤
-      g a = decRec (const (inr tt)) (λ ¬exception≡a → inl (a , ¬exception≡a)) (isFinSet→Discrete isFinSetA exception a)
+--       g : A → ⟨ ExceptFinSet exception ⟩ ⊎ ⊤
+--       g a = decRec (const (inr tt)) (λ ¬exception≡a → inl (a , ¬exception≡a)) (isFinSet→Discrete isFinSetA exception a)
 
-      sec : (a : A) → f (g a) ≡ a
-      sec a with (isFinSet→Discrete isFinSetA exception a)
-      ... | yes p = p
-      ... | no ¬p = refl
+--       sec : (a : A) → f (g a) ≡ a
+--       sec a with (isFinSet→Discrete isFinSetA exception a)
+--       ... | yes p = p
+--       ... | no ¬p = refl
 
-      ret : (b : ⟨ ExceptFinSet exception ⟩ ⊎ ⊤) → g (f b) ≡ b
-      ret (inl a) with (isFinSet→Discrete isFinSetA exception (a .fst))
-      ... | yes p = ⊥.rec (a .snd p)
-      ... | no ¬p = cong inl (Σ≡Prop (λ _ → isProp¬ _) refl)
-      ret (inr tt) with (isFinSet→Discrete isFinSetA exception exception)
-      ... | yes p = refl
-      ... | no ¬p = ⊥.rec (¬p refl)
+--       ret : (b : ⟨ ExceptFinSet exception ⟩ ⊎ ⊤) → g (f b) ≡ b
+--       ret (inl a) with (isFinSet→Discrete isFinSetA exception (a .fst))
+--       ... | yes p = ⊥.rec (a .snd p)
+--       ... | no ¬p = cong inl (Σ≡Prop (λ _ → isProp¬ _) refl)
+--       ret (inr tt) with (isFinSet→Discrete isFinSetA exception exception)
+--       ... | yes p = refl
+--       ... | no ¬p = ⊥.rec (¬p refl)
 
-    cardExcept : (exception : A) → suc (card (ExceptFinSet exception)) ≡ card FinSetA
-    cardExcept exception =
-      +-comm 1 (card (ExceptFinSet exception))
-      ∙ sym (card+ (ExceptFinSet exception) (⊤ , isFinSet⊤))
-      ∙ cardEquiv (_ , isFinSet⊎ (ExceptFinSet exception) (⊤ , isFinSet⊤)) FinSetA ∣ exceptEquiv exception ∣₁
+--     cardExcept : (exception : A) → suc (card (ExceptFinSet exception)) ≡ card FinSetA
+--     cardExcept exception =
+--       +-comm 1 (card (ExceptFinSet exception))
+--       ∙ sym (card+ (ExceptFinSet exception) (⊤ , isFinSet⊤))
+--       ∙ cardEquiv (_ , isFinSet⊎ (ExceptFinSet exception) (⊤ , isFinSet⊤)) FinSetA ∣ exceptEquiv exception ∣₁
 
-    Lower↪Except : (a : A) → ⟨ LowerFinSet a ⟩ ↪ ⟨ ExceptFinSet a ⟩
-    Lower↪Except a .fst = λ (x , x≺a) → x , λ a≡x → isLoset≺.is-irrefl _ (subst (λ a → x ≺ a) a≡x x≺a)
-    Lower↪Except a .snd = injEmbedding
-      (isFinSet→isSet (str (ExceptFinSet a)))
-      (λ p → Σ≡Prop (λ _ → isLoset≺.is-prop-valued _ _) (PathPΣ p .fst))
+--     Lower↪Except : (a : A) → ⟨ LowerFinSet a ⟩ ↪ ⟨ ExceptFinSet a ⟩
+--     Lower↪Except a .fst = λ (x , x≺a) → x , λ a≡x → isLoset≺.is-irrefl _ (subst (λ a → x ≺ a) a≡x x≺a)
+--     Lower↪Except a .snd = injEmbedding
+--       (isFinSet→isSet (str (ExceptFinSet a)))
+--       (λ p → Σ≡Prop (λ _ → isLoset≺.is-prop-valued _ _) (PathPΣ p .fst))
 
-    rankBounded : (a : A) → card (LowerFinSet a) < card FinSetA
-    rankBounded a = ≤<-trans
-      (card↪Inequality (LowerFinSet a) (ExceptFinSet a) ∣ Lower↪Except a ∣₁)
-      (0 , cardExcept a)
+--     rankBounded : (a : A) → card (LowerFinSet a) < card FinSetA
+--     rankBounded a = ≤<-trans
+--       (card↪Inequality (LowerFinSet a) (ExceptFinSet a) ∣ Lower↪Except a ∣₁)
+--       (0 , cardExcept a)
 
-  rank : (a : A) → Fin (card FinSetA)
-  rank a = enum (card (LowerFinSet a)) (rankBounded a)
+--   rank : (a : A) → Fin (card FinSetA)
+--   rank a = enum (card (LowerFinSet a)) (rankBounded a)
 
-  rankedAt : Fin (card FinSetA) → A
-  rankedAt k = {!!}
+--   rankedAt : Fin (card FinSetA) → A
+--   rankedAt k = {!!}
 
-  rankEquiv : A ≃ Fin (card FinSetA)
-  rankEquiv = isoToEquiv (iso rank rankedAt sec ret)
-    where
-    sec : ∀ k → rank (rankedAt k) ≡ k
-    sec k = {!!}
+--   rankEquiv : A ≃ Fin (card FinSetA)
+--   rankEquiv = isoToEquiv (iso rank rankedAt sec ret)
+--     where
+--     sec : ∀ k → rank (rankedAt k) ≡ k
+--     sec k = {!!}
 
-    ret : ∀ a → rankedAt (rank a) ≡ a
-    ret a = {!!}
+--     ret : ∀ a → rankedAt (rank a) ≡ a
+--     ret a = {!!}
 
-  isFinSet→isFinOrd : isFinOrd A
-  isFinSet→isFinOrd = card FinSetA , rankEquiv
+--   isFinSet→isFinOrd : isFinOrd A
+--   isFinSet→isFinOrd = card FinSetA , rankEquiv
 
 SplitSupport-FinOrd : ∀ {ℓ} → {A : Type ℓ} →
   isFinOrd A → SplitSupport A
@@ -602,23 +609,42 @@ DecProp→isFinOrd A =
     (λ ¬a → 0 , uninhabEquiv ¬a (λ x → x))
     (A .snd)
 
+
 isContr→isFinOrd : ∀ {ℓ} → {A : Type ℓ} →
   isContr A → isFinOrd A
 isContr→isFinOrd isContrA = 1 , isContr→Equiv isContrA isContrSumFin1
+
+DecProp'→isFinOrd :
+  ∀ {ℓ} → (A : DecProp' ℓ) → isFinOrd (A .fst)
+DecProp'→isFinOrd (u , true , u≃⊤) =
+  EquivPresIsFinOrd
+    (invEquiv u≃⊤)
+    (isContr→isFinOrd isContrUnit)
+DecProp'→isFinOrd (u , false , u≃⊥) =
+  EquivPresIsFinOrd
+    (invEquiv u≃⊥)
+    isFinOrd⊥
 
 Discrete→dec-Eq≡ :
   ∀ {ℓ} → {A : Type ℓ} →
   Discrete A →
   (a b : A) →
   Dec (a Eq.≡ b)
-Discrete→dec-Eq≡ = {!!}
+Discrete→dec-Eq≡ discA a b =
+  decRec
+    (λ a≡b → yes (Eq.pathToEq a≡b))
+    (λ ¬a≡b → no (λ x → ¬a≡b (Eq.eqToPath x)))
+    (discA a b)
 
 isSet→prop-Eq≡ :
   ∀ {ℓ} → {A : Type ℓ} →
   isSet A →
   (a b : A) →
   isProp (a Eq.≡ b)
-isSet→prop-Eq≡ = {!!}
+isSet→prop-Eq≡ isSetA a b Eq.refl y =
+  sym (Eq.eqToPath Eq.pathToEq-reflPath) ∙
+  cong (Eq.pathToEq) (isSetA a b (Eq.eqToPath Eq.refl) (Eq.eqToPath y)) ∙
+  Eq.pathToEq-eqToPath y
 
 isFinSet→DecProp-Eq≡ :
   ∀ {ℓ} → {A : Type ℓ} →
