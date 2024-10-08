@@ -395,14 +395,19 @@ genMkTreeAlg : Algebra (TraceTys true) GenDyck
 genMkTreeAlg n = ⊕ᴰ-elim (λ
   { (eof' Eq.refl Eq.refl) → NIL ∘g lowerG
   ; open' → genBALANCED n ∘g lowerG ,⊗ lowerG
-  ; (close' n-1 Eq.refl) → ⟜0⊗ NIL ∘g lowerG ,⊗ lowerG
+  ; (close' n-1 Eq.refl) → (NIL ,⊗ id ∘g ⊗-unit-l⁻) ∘g lowerG ,⊗ lowerG
   })
 
-genMkTree : ∀ {n} → Trace true n ⊢ GenDyck n
-genMkTree = rec (TraceTys _) genMkTreeAlg _
+genMkTree : ∀ n → Trace true n ⊢ GenDyck n
+genMkTree n = rec (TraceTys _) genMkTreeAlg _
 
-mkTree : Trace true zero ⊢ IndDyck
-mkTree = genMkTree
+mkTree : Trace true 0 ⊢ IndDyck
+mkTree = genMkTree 0
+
+opaque
+  unfolding ⊗-intro
+  genMkTree-β-OPEN : ∀ {n} → genMkTree n ∘g OPEN ≡ genBALANCED n ∘g id ,⊗ genMkTree (suc n)
+  genMkTree-β-OPEN = refl
 
 {-
 
@@ -457,7 +462,7 @@ genBuildTrace (suc m) = &ᴰ-intro λ n → ⟜-intro
 
 PileAlg : Algebra DyckTy (λ _ → &[ n ∈ _ ] (GenDyck n ⟜ Trace true n))
 PileAlg _ = ⊕ᴰ-elim (λ
-  { nil' → &ᴰ-intro λ n → ⟜-intro-ε genMkTree ∘g lowerG
+  { nil' → &ᴰ-intro λ n → ⟜-intro-ε (genMkTree n) ∘g lowerG
   ; balanced' → &ᴰ-intro λ n → ⟜-intro
     (genBALANCED n
      ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
@@ -468,94 +473,111 @@ PileAlg _ = ⊕ᴰ-elim (λ
 
 genRetr :
   Path (IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n))
-    ((&ᴰ-intro λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n) ∘g buildTrace)
-    ((&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g &ᴰ-π n) ∘g genAppend')
+    ((&ᴰ-intro λ n → ⟜-intro (genMkTree n ∘g ⟜-app) ∘g &ᴰ-π n) ∘g buildTrace)
+    ((&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g genAppend')
 genRetr = ind' DyckTy PileAlg
   (compHomo DyckTy (initialAlgebra DyckTy) buildTraceAlg PileAlg
-    ((λ _ → &ᴰ-intro λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n) , λ _ → ⊕ᴰ≡ _ _ λ
-      { nil' → &ᴰ≡ _ _ (λ m →
-          cong (_∘g lowerG) (⟜-mapCod-precomp genMkTree ⊗-unit-l)
-        )
-      ; balanced' → &ᴰ≡ _ _ λ m →
-         (⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π m) ∘g
-          buildTraceAlg _
-         ∘g ⊕ᴰ-in balanced'
-          ≡⟨ {!!} ⟩
-      &ᴰ-π m ∘g
-        (PileAlg _ ∘g
-        map (DyckTy _)
-        (λ _ → &ᴰ-intro (λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n)))
-        ∘g ⊕ᴰ-in balanced'
-        ∎
-    })
+    ((λ _ → f2) , (λ _ → f2-is-homo))
     (recHomo DyckTy buildTraceAlg))
   (compHomo DyckTy (initialAlgebra DyckTy) appendAlg PileAlg
-    ((λ _ → f1) , λ _ → f1-is-homo
-      -- &ᴰ≡ _ _ λ { n →
-      --   ⊕ᴰ≡ _ _ λ
-      --     { nil' →
-      --       ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g {!!}
-      --         ≡⟨ {!!} ⟩
-      --       {!!} ∎
-      --     ; balanced' → {!!}
-      --     }
-      -- }
-      -- ⊕ᴰ≡ _ _ (λ
-    -- { nil' → &ᴰ≡ _ _ λ {
-    --     zero →
-    --   {!⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g !}
-
-    --   --  ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g
-    --   --  ⟜-intro ⊗-unit-l ∘g lowerG
-    --   --   ≡⟨ (λ i → ⟜-mapDom-precomp genMkTree ⊗-unit-l i ∘g lowerG) ⟩
-    --   --  ⟜-intro (⊗-unit-l ∘g id ,⊗ genMkTree) ∘g
-    --   --  lowerG
-    --   --   ≡⟨ ((λ i → ⟜-intro (⊗-unit-l⊗-intro genMkTree (~ i)) ∘g lowerG)) ⟩
-    --   -- ⟜-intro (genMkTree ∘g ⊗-unit-l) ∘g
-    --   -- lowerG
-    --   -- ∎
-    --   ; (suc m) →
-    --    ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g
-    --    ⟜-intro (⟜2⊗ (⟜2-intro-ε ⟜-app)) ∘g
-    --    ⟜-intro ⊗-unit-l ∘g lowerG
-    --     ≡⟨ (λ i → ⟜-mapDom-precomp genMkTree (⟜2⊗ (⟜2-intro-ε ⟜-app)) i ∘g
-    --               ⟜-intro ⊗-unit-l ∘g lowerG) ⟩
-    --   ⟜-intro (⟜2⊗ (⟜2-intro-ε ⟜-app) ∘g id ,⊗ genMkTree) ∘g
-    --   ⟜-intro ⊗-unit-l ∘g lowerG
-    --     ≡⟨ ⟜≡ _ _ nil-lem ⟩
-    --   ⟜-intro (genMkTree ∘g ⊗-unit-l) ∘g
-    --   lowerG
-    --   ∎
-    --  }
-    -- ; balanced' → {!refl!} })
-    )
+    ((λ _ → f1) , λ _ → f1-is-homo)
     (recHomo DyckTy appendAlg))
   _
   where
+    f2 : &[ n ∈ _ ] (Trace true n ⟜ Trace true n) ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n)
+    f2 = &ᴰ-intro λ n → ⟜-intro (genMkTree n ∘g ⟜-app) ∘g &ᴰ-π n
+
+    f2⟨_⟩ : ∀ n → &[ n ∈ _ ] (Trace true n ⟜ Trace true n) ⊢ GenDyck n ⟜ Trace true n
+    f2⟨ n ⟩ = ⟜-intro (genMkTree n ∘g ⟜-app) ∘g &ᴰ-π n
+
+    opaque
+      unfolding ⊗-intro
+      f2-homo-lem : ∀ n →
+        genMkTree (suc n)
+        ∘g (⟜-app ∘g &ᴰ-π (suc n) ,⊗ id)
+        ∘g (id ,⊗ CLOSE)
+        ∘g id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+        ≡
+        (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+        ∘g f2 ,⊗ id ,⊗ f2 ,⊗ id
+      -- this looks false or at least unproveable, the lhs makes
+      -- recursive calls at (suc n) and n whereas the rhs makes
+      -- recursive calls at 0 and n
+      f2-homo-lem n =
+        {!!}
+        ∙ ((λ i → (⟜-β (genMkTree 0 ∘g ⟜-app) (~ i) ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-β (genMkTree n ∘g ⟜-app) (~ i) ∘g &ᴰ-π n ,⊗ id)))
+        ∙ (λ i → (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻⊗-intro {f = f2}(~ i)) ,⊗ id ,⊗ (⟜-app ∘g (f2⟨ n ⟩) ,⊗ id))
+        
+      f2-is-homo : f2 ∘g buildTraceAlg _ ≡ PileAlg _ ∘g map (DyckTy _) (λ _ → f2)
+      f2-is-homo = &ᴰ≡ _ _ λ n →
+        ⊕ᴰ≡ _ _ λ
+          { nil' → cong (_∘g lowerG) (⟜-mapCod-precomp (genMkTree n) ⊗-unit-l)
+          ; balanced' →
+            ⟜-intro-natural
+            ∙ cong ⟜-intro (
+              cong (genMkTree n ∘g_) (⟜-β _)
+              ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ genMkTree (suc n)
+                ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc n) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g ⊗-assoc⁻4
+                ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id)
+              ∙ {!!}
+              ∙ λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = f2}{f'' = id}{f''' = f2}{f'''' = id} (~ i)
+                ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id
+              )
+            ∙ sym ⟜-intro-natural
+          -- (λ i →
+          --   ⟜-intro (genMkTree ∘g ⟜-app)
+          --   ∘g ⟜-intro
+          -- ∙ {!!}
+          -- ∙ (λ i → ⟜-intro
+          --   (genBALANCED n
+          --   ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+          --   ∘g ⊗-assoc⁻4
+          --   ∘g (lowerG ,⊗ lowerG {ℓ-zero} ,⊗ lowerG ,⊗ lowerG {ℓ-zero}) ,⊗ id)
+          --   ∘g id ,⊗ (liftG ∘g f2 ∘g lowerG) ,⊗ id ,⊗ (liftG ∘g f2 ∘g lowerG))
+          }
+    --   ; balanced' → &ᴰ≡ _ _ λ m →
+    --      (⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π m) ∘g
+    --       buildTraceAlg _
+    --      ∘g ⊕ᴰ-in balanced'
+    --       ≡⟨ {!!} ⟩
+    --   &ᴰ-π m ∘g
+    --     (PileAlg _ ∘g
+    --     map (DyckTy _)
+    --     (λ _ → &ᴰ-intro (λ n → ⟜-intro (genMkTree ∘g ⟜-app) ∘g &ᴰ-π n)))
+    --     ∘g ⊕ᴰ-in balanced'
+    --     ∎
+    -- }
+
     f1 : IndDyck ⟜ IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n)
-    f1 = (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g &ᴰ-π n) ∘g (&ᴰ-intro upgradeBuilder)
+    f1 = (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g (&ᴰ-intro upgradeBuilder)
 
     f1⟨_⟩ : ∀ n → IndDyck ⟜ IndDyck ⊢ GenDyck n ⟜ Trace true n
-    f1⟨_⟩ n = ⟜-intro (⟜-app ∘g id ,⊗ genMkTree) ∘g upgradeBuilder n
+    f1⟨_⟩ n = ⟜-intro (⟜-app ∘g id ,⊗ genMkTree n) ∘g upgradeBuilder n
     opaque
       unfolding ⊗-intro
 
       -- focusing on a subterm in the proof below
       f1-homo-lem : ∀ n →
         (⟜-app ∘g ⟜-intro (⟜-app ,⊗ id {g = literal RP ⊗ GenDyck n} ∘g ⊗-assoc) ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
-        ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree)
+        ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree n)
         ≡
         ((⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g f1) ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g f1) ,⊗ id))
       f1-homo-lem n =
         (λ i → (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) i ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
-          ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree))
+          ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree n))
         ∙ (λ i →
              (⟜-app ,⊗ id ∘g ⊗-assoc⊗-intro {f = id}{f' = NIL}{f'' = id} i ∘g id ,⊗ ⊗-unit-l⁻)
-             ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree))
-        ∙ (λ i → (⟜-app ∘g id ,⊗ NIL) ,⊗ id ∘g ⊗-assoc⊗-unit-l⁻ i ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree))
-        ∙ (λ i → (⟜-β (⟜-app ∘g id ,⊗ genMkTree) (~ i) ∘g upgradeBuilder 0 ,⊗ EOF ∘g ⊗-unit-r⁻)
+             ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree n))
+        ∙ (λ i → (⟜-app ∘g id ,⊗ NIL) ,⊗ id ∘g ⊗-assoc⊗-unit-l⁻ i ∘g id ,⊗ id ,⊗ (⟜-app ∘g upgradeBuilder n ,⊗ genMkTree n))
+        ∙ (λ i → (⟜-β (⟜-app ∘g id ,⊗ mkTree) (~ i) ∘g upgradeBuilder 0 ,⊗ EOF ∘g ⊗-unit-r⁻)
                  ,⊗ id
-                 ,⊗ (⟜-β (⟜-app ∘g id ,⊗ genMkTree) (~ i) ∘g upgradeBuilder n ,⊗ id))
+                 ,⊗ (⟜-β (⟜-app ∘g id ,⊗ genMkTree n) (~ i) ∘g upgradeBuilder n ,⊗ id))
         ∙ λ i → (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻⊗-intro {f = f1} (~ i)) ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g f1) ,⊗ id)
   
       f1-is-homo : f1 ∘g appendAlg _ ≡ PileAlg _ ∘g map (DyckTy _) λ _ → f1
@@ -563,10 +585,10 @@ genRetr = ind' DyckTy PileAlg
         { nil' → &ᴰ≡ _ _ λ n →
           ⟜≡ _ _
               (cong (_∘g ((upgradeBuilder n ∘g ⟜-intro ⊗-unit-l ∘g lowerG) ,⊗ id)) (⟜-β _)
-              ∙ cong (_∘g (lowerG ,⊗ id)) (upgradeNilBuilder n genMkTree ∙ sym (⟜-β _)))
+              ∙ cong (_∘g (lowerG ,⊗ id)) (upgradeNilBuilder n (genMkTree n) ∙ sym (⟜-β _)))
         ; balanced' → &ᴰ≡ _ _ λ n → ⟜≡ _ _
           ( cong (_∘g ((upgradeBuilder n ∘g ⟜-intro (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id) ∘g ⊗-assoc⁻4)) ,⊗ id)) (⟜-β _)
-          ∙ upgradeBalancedBuilder n genMkTree
+          ∙ upgradeBalancedBuilder n (genMkTree n)
           ∙ (λ i → genBALANCED n ∘g id ,⊗ f1-homo-lem n i ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ id ∘g ⊗-assoc⁻4)
           ∙ cong ((genBALANCED n ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)) ∘g_) (sym (⊗-assoc⁻4⊗-intro {f = lowerG}{f' = f1 ∘g lowerG}{f'' = lowerG}{f''' = f1 ∘g lowerG}{f'''' = id}))
 {-
@@ -594,36 +616,35 @@ genRetr = ind' DyckTy PileAlg
       --  (PileAlg tt ∘g map (DyckTy tt) (λ _ → f1)) ∘g ⊕ᴰ-in balanced')
       -- ,⊗ id
 
-
-Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
-Dyck≅Trace =
-  unambiguousRetract→StrongEquivalence
-    (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g genBuildTrace 0)
-    genMkTree
-    (genMkTree ∘g ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g buildTrace
-     ≡⟨ (λ i → ⟜-mapCod-postcompε (genMkTree {n = 0}) EOF (~ i) ∘g &ᴰ-π 0 ∘g buildTrace) ⟩
-     ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g ⟜-mapCod genMkTree ∘g &ᴰ-π 0 ∘g buildTrace
-     ≡⟨ refl ⟩
-     ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-mapCod genMkTree ∘g &ᴰ-π n) ∘g buildTrace
-     ≡⟨ cong (((⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0) ∘g_) genRetr ⟩
-     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree {n = n}) ∘g &ᴰ-π n) ∘g genAppend'
-     ≡⟨ refl ⟩
-     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom mkTree ∘g &ᴰ-π 0 ∘g genAppend'
-     ≡⟨ refl ⟩
-     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom mkTree ∘g append'
-     ≡⟨ ((λ i → ⟜-mapDom-postcompε mkTree EOF i ∘g append')) ⟩
-     ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g append'
-     ≡⟨ append-nil-r' ⟩
-    id ∎)
-    isUnambiguousTrace
-
--- I don't think we actually need to prove the following
--- GenDyck≅Trace : ∀ n → StrongEquivalence (GenDyck n) (Trace true n)
--- GenDyck≅Trace n =
+-- Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
+-- Dyck≅Trace =
 --   unambiguousRetract→StrongEquivalence
---     (transportG (cong (Trace true) (+-zero n))
---       ∘g ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0
---       ∘g genBuildTrace n)
---     genMkTree
---     {!!}
+--     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g genBuildTrace 0)
+--     mkTree
+--     (mkTree ∘g ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g buildTrace
+--      ≡⟨ (λ i → ⟜-mapCod-postcompε mkTree EOF (~ i) ∘g &ᴰ-π 0 ∘g buildTrace) ⟩
+--      ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g ⟜-mapCod mkTree ∘g &ᴰ-π 0 ∘g buildTrace
+--      ≡⟨ refl ⟩
+--      ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-mapCod (genMkTree n) ∘g &ᴰ-π n) ∘g buildTrace
+--      ≡⟨ cong (((⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0) ∘g_) genRetr ⟩
+--      (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g genAppend'
+--      ≡⟨ refl ⟩
+--      (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom mkTree ∘g &ᴰ-π 0 ∘g genAppend'
+--      ≡⟨ refl ⟩
+--      (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom mkTree ∘g append'
+--      ≡⟨ ((λ i → ⟜-mapDom-postcompε mkTree EOF i ∘g append')) ⟩
+--      ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g append'
+--      ≡⟨ append-nil-r' ⟩
+--     id ∎)
 --     isUnambiguousTrace
+
+-- -- I don't think we actually need to prove the following
+-- -- GenDyck≅Trace : ∀ n → StrongEquivalence (GenDyck n) (Trace true n)
+-- -- GenDyck≅Trace n =
+-- --   unambiguousRetract→StrongEquivalence
+-- --     (transportG (cong (Trace true) (+-zero n))
+-- --       ∘g ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0
+-- --       ∘g genBuildTrace n)
+-- --     genMkTree
+-- --     {!!}
+-- --     isUnambiguousTrace

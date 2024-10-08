@@ -19,6 +19,7 @@ private
     ℓg ℓh ℓk ℓl ℓ ℓ' : Level
     g g' g'' g1 g2 g3 g4 g5 : Grammar ℓg
     h h' h'' : Grammar ℓh
+    f f' f'' : g ⊢ h
     k : Grammar ℓk
     l : Grammar ℓl
 
@@ -290,3 +291,10 @@ opaque
   sym (⟜-η f)
   ∙ cong ⟜-intro p
   ∙ ⟜-η f'
+opaque
+  unfolding ⊗-intro
+  ⟜-intro-natural :
+    ⟜-intro f ∘g f' ≡ ⟜-intro (f ∘g f' ,⊗ id)
+  ⟜-intro-natural {f = f}{f' = f'} = ⟜≡ _ _
+    ((λ i → ⟜-β f i ∘g (f' ,⊗ id))
+    ∙ sym (⟜-β _) )
