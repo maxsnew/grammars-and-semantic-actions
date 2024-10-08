@@ -9,7 +9,7 @@ open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.RegularExpression Alphabet
 
-open import NFA.Base Alphabet
+open import NFA.Manual Alphabet
 
 open import Term Alphabet
 
