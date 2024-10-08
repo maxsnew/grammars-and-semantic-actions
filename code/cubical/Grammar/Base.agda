@@ -14,10 +14,3 @@ module _ where
     Grammar : Type (ℓ-suc ℓG)
     Grammar = String → Type ℓG
 
-  module _ {ℓG}{ℓG'}
-    (g : Grammar ℓG)
-    where
-
-    LiftGrammar : Grammar (ℓ-max ℓG ℓG')
-    LiftGrammar w = Lift {ℓG}{ℓG'} (g w)
-

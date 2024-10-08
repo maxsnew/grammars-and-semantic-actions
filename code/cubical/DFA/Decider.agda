@@ -16,9 +16,14 @@ open import Cubical.Data.SumFin
 open import Cubical.Data.Unit
 open import Cubical.Data.Empty as Empty
 open import Cubical.Data.List hiding (init)
+import Cubical.Data.Equality as Eq
+
 
 open import Grammar Alphabet
+open import Grammar.Inductive.Indexed Alphabet as Idx
 open import Grammar.Equivalence Alphabet
+open import Grammar.String.Properties Alphabet
+open import Grammar.Lift Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
 open import Helper
@@ -26,65 +31,96 @@ open import Helper
 private
   variable ℓΣ₀ ℓD ℓP ℓ : Level
 
-module _ (D : DFA {ℓD}) where
+module _ (D : DFA ℓD) where
   open DFA D
 
   open *r-Algebra
-  open Algebra
-  open AlgebraHom
 
-  opaque
-    unfolding _⊗_
-    run-from-state : string ⊢ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
-    run-from-state = foldKL*r char the-alg
-      where
-        the-cons :
-          char ⊗ LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q ⊢
-            LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
-        the-cons =
-          LinΠ-intro (λ q →
-          ⟜-intro⁻ (LinΣ-elim (λ c →
-            ⟜-intro {k = TraceFrom q}
-              (⊸-intro⁻
-                (LinΣ-elim
-                  (λ q' → ⊸-intro {k = TraceFrom q}
-                    (LinΣ-intro {h = λ q'' → Trace q'' q} q' ∘g
-                      Trace.cons q c))
-                ∘g LinΠ-app (δ q c))))))
+  open StrongEquivalence
 
-        the-alg : *r-Algebra char
-        the-alg .the-ℓ = ℓD
-        the-alg .G = LinΠ[ q ∈ ⟨ Q ⟩ ] TraceFrom q
-        the-alg .nil-case = LinΠ-intro (λ q → LinΣ-intro q ∘g nil)
-        the-alg .cons-case = the-cons
+  parse : string ⊢ &[ q ∈ ⟨ Q ⟩ ] ⊕[ b ∈ Bool ] Trace b q
+  parse = foldKL*r char the-alg
+    where
+    the-alg : *r-Algebra char
+    the-alg .the-ℓ = ℓD
+    the-alg .G = &[ q ∈ ⟨ Q ⟩ ] ⊕[ b ∈ Bool ] Trace b q
+    the-alg .nil-case =
+      &ᴰ-in (λ q →
+        ⊕ᴰ-in (isAcc q) ∘g
+        roll ∘g
+        ⊕ᴰ-in stop ∘g
+        ⊕ᴰ-in (lift Eq.refl) ∘g
+        liftG ∘g
+        liftG
+        )
+    the-alg .cons-case =
+      &ᴰ-in λ q →
+        ⊕ᴰ-elim (λ c →
+          ⊕ᴰ-elim
+            (λ b →
+              ⊕ᴰ-in b ∘g
+              roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in (lift c) ∘g
+              liftG ,⊗ liftG ∘g liftG ,⊗ id) ∘g
+          ⊕ᴰ-distR .fun ∘g
+          id ,⊗ &ᴰ-π (δ q c)) ∘g
+        ⊕ᴰ-distL .fun
 
-  check-accept : {q-start : ⟨ Q ⟩} (q-end : ⟨ Q ⟩) →
-    Trace q-end q-start ⊢
-      AcceptingTrace q-start q-end ⊕ RejectingTrace q-start q-end
-  check-accept q =
-    decRec
-      (λ acc → ⊕-inl ∘g LinΣ-intro acc)
-      (λ rej → ⊕-inr ∘g LinΣ-intro rej)
-      (isAcc q .snd)
+  printAlg : ∀ b → Algebra (TraceTy b) λ _ → string
+  printAlg b q = ⊕ᴰ-elim ((λ {
+      stop → ⊕ᴰ-elim λ { (lift Eq.refl) → NIL ∘g lowerG ∘g lowerG }
+    ; step →
+        CONS ∘g
+        ⊕ᴰ-elim λ { (lift c) →
+          ⊕ᴰ-in c ,⊗ id ∘g
+          lowerG ,⊗ lowerG ∘g
+          lowerG ,⊗ id}
+    }))
 
-  check-accept-from : (q-start : ⟨ Q ⟩) →
-    TraceFrom q-start ⊢
-      AcceptingTraceFrom q-start ⊕ RejectingTraceFrom q-start
-  check-accept-from q-start =
-    LinΣ-elim (λ q-end →
-      ⊕-elim (⊕-inl ∘g LinΣ-intro q-end) (⊕-inr ∘g LinΣ-intro q-end) ∘g
-      check-accept q-end)
+  print : ∀ b → (q : ⟨ Q ⟩) → Trace b q ⊢ string
+  print b q = Idx.rec (TraceTy b) (printAlg b) q
 
-  decide :
-    string ⊢
-      LinΠ[ q ∈ ⟨ Q ⟩ ] (AcceptingTraceFrom q ⊕ RejectingTraceFrom q)
-  decide =
-    LinΠ-intro (λ q →
-      check-accept-from q ∘g
-      LinΠ-app q) ∘g
-    run-from-state
+  ⊕ᴰalg : ∀ b → Algebra (TraceTy b) λ q → ⊕[ b ∈ Bool ] Trace b q
+  ⊕ᴰalg b q = ⊕ᴰ-elim (λ {
+      stop → ⊕ᴰ-elim λ {
+        (lift Eq.refl) →
+          ⊕ᴰ-in (isAcc q) ∘g roll ∘g
+          ⊕ᴰ-in stop ∘g ⊕ᴰ-in (lift Eq.refl)}
+    ; step →
+        ⊕ᴰ-elim (λ c → ⊕ᴰ-elim (λ b →
+          ⊕ᴰ-in b ∘g
+          roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in c ∘g liftG ,⊗ liftG)
+          ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG)
+    })
 
-  decideInit :
-    string ⊢
-      (AcceptingTraceFrom init ⊕ RejectingTraceFrom init)
-  decideInit = LinΠ-app init ∘g decide
+  Trace≅string :
+    (q : ⟨ Q ⟩) → StrongEquivalence (⊕[ b ∈ Bool ] Trace b q) string
+  Trace≅string q .fun = ⊕ᴰ-elim (λ b → print b q)
+  Trace≅string q .inv = &ᴰ-π q ∘g parse
+  Trace≅string q .sec =  unambiguous-string _ _
+  Trace≅string q .ret = isRetract
+    where
+    opaque
+      unfolding NIL CONS KL*r-elim ⊕ᴰ-distR
+      isRetract : &ᴰ-π q ∘g parse ∘g ⊕ᴰ-elim (λ b → print b q) ≡ id
+      isRetract = ⊕ᴰ≡ _ _ λ b →
+        ind'
+          (TraceTy b)
+          (⊕ᴰalg b)
+          ((λ q'  → &ᴰ-π q' ∘g parse ∘g print b q') ,
+          λ q' → ⊕ᴰ≡ _ _ (λ {
+            stop → funExt λ w → funExt λ {
+              ((lift Eq.refl) , p) → refl}
+          ; step → ⊕ᴰ≡ _ _ λ c → refl }))
+          ((λ q' → ⊕ᴰ-in b) ,
+          λ q' → ⊕ᴰ≡ _ _ λ {
+            stop → funExt (λ w → funExt λ {
+              ((lift Eq.refl) , p) → refl})
+          ; step → refl })
+          q
+
+  unambiguous-⊕Trace : ∀ q → unambiguous (⊕[ b ∈ Bool ] Trace b q)
+  unambiguous-⊕Trace q =
+   unambiguous≅ (sym-strong-equivalence (Trace≅string q)) unambiguous-string
+
+  unambiguous-Trace : ∀ b q → unambiguous (Trace b q)
+  unambiguous-Trace b q = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace q) b

@@ -59,7 +59,8 @@ module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
   LinΠ-intro : (∀ a → g ⊢ h a) → g ⊢ LinΠ[ a ∈ A ] h a
   LinΠ-intro = λ f w z a → f a w z
   &ᴰ-intro = LinΠ-intro
-  &ᴰ-in = LinΠ-intro
+
+  &ᴰ-in = &ᴰ-intro
 
   LinΣ-elim : (∀ a → h a ⊢ g) → (LinΣ[ a ∈ A ] h a) ⊢ g
   LinΣ-elim f w x = f (fst x) w (snd x)

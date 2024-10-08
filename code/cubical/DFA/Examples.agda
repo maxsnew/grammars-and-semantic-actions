@@ -17,8 +17,13 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 open import Cubical.Data.List hiding (init)
 
+Alph = Fin 2
+opaque
+  isSetAlph : isSet Alph
+  isSetAlph = isFinSet→isSet isFinSetFin
+
 Alphabet : hSet ℓ-zero
-Alphabet = (Fin 2) , (isFinSet→isSet isFinSetFin)
+Alphabet = (Alph , isSetAlph)
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
@@ -40,21 +45,18 @@ module examples where
   open DFA
 
   opaque
-    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro _⊗_ ⌈w⌉→string KL*r-elim run-from-state
-    is-inl : ∀ w → (g : Grammar ℓg) (h : Grammar ℓh) → (g ⊕ h) w → Bool
-    is-inl w g h p = Sum.rec (λ _ → true) (λ _ → false) p
-
-    mktest : ∀ {ℓd} → String → DFA {ℓd} → Bool
+    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro _⊗_ ⌈w⌉→string KL*r-elim ⊕ᴰ-distR ⊕ᴰ-distL
+    -- unfolding KL*r-elim ⌈w⌉→string
+    mktest : String → DFA ℓ-zero → Bool
     mktest w dfa =
-      is-inl w
-        (AcceptingTraceFrom dfa (dfa .init)) (RejectingTraceFrom dfa (dfa .init))
-        ((decideInit dfa ∘g (⌈w⌉→string {w = w})) w (internalize w))
+      (&ᴰ-π (dfa .init) ∘g parse dfa) w
+        (⌈w⌉→string {w = w} w (internalize w)) .fst
 
-    D : DFA {ℓ-zero}
+    D : DFA ℓ-zero
     D .Q = Fin 3 , isFinSetFin
     D .init = fzero
-    D .isAcc fzero = (Unit , isPropUnit ) , yes _
-    D .isAcc (fsuc x) = (Empty.⊥* , isProp⊥*) , no lower
+    D .isAcc fzero = true
+    D .isAcc (fsuc x) = false
     δ D fzero fzero = fromℕ 0
     δ D fzero (fsuc fzero) = fromℕ 1
     δ D (fsuc fzero) fzero = fromℕ 2
@@ -74,33 +76,32 @@ module examples where
     _ : mktest w' D ≡ true
     _ = refl
 
-   --  _ : mktest w'' D ≡ false
-   --  _ = refl
+    _ : mktest w'' D ≡ false
+    _ = refl
 
-   --  _ : mktest [] D ≡ true
-   --  _ = refl
+    _ : mktest [] D ≡ true
+    _ = refl
 
 
-   -- {--       0
-   -- -- 0  --------> 1
-   -- --    <--------
-   -- --        0
-   -- -- and self loops for 1. state 1 is acc
-   -- --
-   -- --}
-   --  D' : DFA {ℓ-zero}
-   --  Q D' = (Fin 2) , isFinSetFin
-   --  init D' = inl _
-   --  isAcc D' x =
-   --    ((x ≡ fsuc fzero) , isSetFin x (fsuc fzero)) ,
-   --    discreteFin x (fsuc fzero)
-   --  δ D' fzero fzero = fromℕ 1
-   --  δ D' fzero (fsuc fzero) = fromℕ 0
-   --  δ D' (fsuc fzero) fzero = fromℕ 0
-   --  δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
+   {--       0
+   -- 0  --------> 1
+   --    <--------
+   --        0
+   -- and self loops for 1. state 1 is acc
+   --
+   --}
+    D' : DFA ℓ-zero
+    Q D' = (Fin 2) , isFinSetFin
+    init D' = inl _
+    isAcc D' fzero = false
+    isAcc D' (fsuc fzero) = true
+    δ D' fzero fzero = fromℕ 1
+    δ D' fzero (fsuc fzero) = fromℕ 0
+    δ D' (fsuc fzero) fzero = fromℕ 0
+    δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
 
-   --  s : String
-   --  s = fsuc fzero ∷ fzero ∷ []
+    s : String
+    s = fsuc fzero ∷ fzero ∷ []
 
-   --  _ : mktest s D' ≡ true
-   --  _ = refl
+    _ : mktest s D' ≡ true
+    _ = refl
