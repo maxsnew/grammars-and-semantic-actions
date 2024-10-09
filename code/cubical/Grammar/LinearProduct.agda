@@ -302,7 +302,8 @@ opaque
     ∀ {f : g ⊢ h}{f' : g' ⊢ h'}{f'' : g'' ⊢ h''}
     → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'')
       ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
-  ⊗-assoc⊗-intro = {!!}
+  ⊗-assoc⊗-intro = funExt λ w → funExt λ p →
+    ⊗≡ _ _ (≡-× refl refl) (ΣPathP (refl , refl))
 
   opaque
     unfolding ⊗-unit-r⁻
@@ -313,9 +314,11 @@ opaque
         (ΣPathP (refl , ⊗PathP refl refl))
 
   opaque
+    unfolding ⊗-unit-l⁻
     ⊗-assoc⊗-unit-l⁻ :
-      ⊗-assoc {g = g}{k = k} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
-    ⊗-assoc⊗-unit-l⁻ = {!!}
+     ⊗-assoc {g = g}{k = k} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
+    ⊗-assoc⊗-unit-l⁻ = funExt λ w → funExt λ p →
+      ⊗≡ _ _ (≡-× (++-unit-r _) refl) (ΣPathP (⊗PathP refl refl , refl))
 
   opaque
     unfolding ε ⊗-unit-l⁻
@@ -377,11 +380,18 @@ infixr 20 _,⊗_
   g ⊗ g' ⊗ g'' ⊗ g''' ⊗ g'''' ⊢ (g ⊗ g' ⊗ g'' ⊗ g''') ⊗ g''''
 ⊗-assoc4 = ⊗-assoc ∘g id ,⊗ ⊗-assoc3
 
-⊗-assoc⁻4⊗-assoc :
-  ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ,⊗ id {g = g'''''}
-  ∘g ⊗-assoc
-  ≡ ⊗-assoc4 ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc ∘g ⊗-assoc⁻4
-⊗-assoc⁻4⊗-assoc = {!!}
+opaque
+  unfolding ⊗-intro ⊗-assoc ⊗-assoc⁻
+  ⊗-assoc⁻4⊗-assoc :
+    ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ,⊗ id {g = g'''''}
+    ∘g ⊗-assoc
+    ≡ ⊗-assoc4 ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc ∘g ⊗-assoc⁻4
+  ⊗-assoc⁻4⊗-assoc = funExt λ w → funExt λ p →
+    ⊗PathP (≡-×
+      ((λ i → p .snd .fst .fst .snd i ++ p .snd .snd .fst .fst .fst)
+       ∙ ++-assoc (p .snd .fst .fst .fst .fst) _ _
+       ∙ {!p .snd  .fst .fst .snd!})
+      refl) (ΣPathP ({!!} , {!!}))
 
 ⊗-assoc⁻4⊗-unit-r⁻ :
   ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-unit-r⁻
@@ -398,14 +408,16 @@ infixr 20 _,⊗_
 ⊗-assoc⁻3⊗-intro =
   {!!}
 
-⊗-assoc⁻4⊗-intro :
-  ∀ {f f' f'' f''' f''''} →
-  (⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''')
-  ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {g = h}{g' = h'}{g'' = h''}{g''' = h'''}{g'''' = h''''}))
-⊗-assoc⁻4⊗-intro =
-  cong (id ,⊗ ⊗-assoc⁻3 ∘g_) ⊗-assoc⁻⊗-intro
-  ∙ cong (_∘g ⊗-assoc⁻) (⊗-intro⊗-intro ∙ cong (⊗-intro _) ⊗-assoc⁻3⊗-intro)
-  ∙ {!sym ⊗-intro⊗-intro!}
+opaque
+  unfolding ⊗-intro
+  ⊗-assoc⁻4⊗-intro :
+    ∀ {f f' f'' f''' f''''} →
+    (⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''')
+    ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {g = h}{g' = h'}{g'' = h''}{g''' = h'''}{g'''' = h''''}))
+  ⊗-assoc⁻4⊗-intro {f = f} {f' = f'} {f'' = f''} {f''' = f'''} {f'''' = f''''} =
+    cong (id ,⊗ ⊗-assoc⁻3 ∘g_) (⊗-assoc⁻⊗-intro {f' = f' ,⊗ f'' ,⊗ f'''})
+    ∙ cong (_∘g ⊗-assoc⁻) {!!} -- (cong (⊗-intro _) ⊗-assoc⁻3⊗-intro {f = ?}{f' = ?}{f'' = ?}{f''' = ?})
+    ∙ {!!}
 
 ⊗-assoc4⊗-intro :
   ⊗-assoc4 ∘g f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f''''
