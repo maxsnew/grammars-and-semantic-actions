@@ -313,10 +313,6 @@ opaque
         (ΣPathP (refl , ⊗PathP refl refl))
 
   opaque
-    ⊗-unit-l⊗-assoc : ⊗-intro ⊗-unit-l id ∘g ⊗-assoc {h = h}{k = k}
-      ≡ ⊗-unit-l
-    ⊗-unit-l⊗-assoc = {!!}
-
     ⊗-assoc⊗-unit-l⁻ :
       ⊗-assoc {g = g}{k = k} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
     ⊗-assoc⊗-unit-l⁻ = {!!}
