@@ -84,7 +84,7 @@ append-nil-r' = ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) appendAl
         (NIL ∘g ⊗-unit-l ∘g ⊗-unit-r⁻ ∘g lowerG)
           ≡⟨ cong (NIL ∘g_) (cong (_∘g lowerG) ⊗-unit-lr⁻) ⟩
         NIL ∘g lowerG
-        ∎ 
+        ∎
         ; balanced' →
         cong ((⟜-app ∘g id ,⊗ NIL) ∘g_) ⊗-unit-r⁻⊗-intro
         ∙ cong (_∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) (⟜-β _)
@@ -166,7 +166,7 @@ printAlg b n = ⊕ᴰ-elim λ
 
 print : ∀ {n b} → Trace b n ⊢ string
 print = rec (TraceTys _) (printAlg _) _
- 
+
 ⊕ᴰAlg : ∀ b → Algebra (TraceTys b) (λ n → ⊕[ b' ∈ _ ] Trace b' n)
 ⊕ᴰAlg b n = ⊕ᴰ-elim (λ
   { (eof' Eq.refl Eq.refl) → ⊕ᴰ-in true ∘g EOF ∘g lowerG
@@ -194,7 +194,7 @@ print = rec (TraceTys _) (printAlg _) _
       ; (leftovers' Eq.refl n-1 Eq.refl) → refl
       ; open' → refl
       ; (close' n-1 Eq.refl) → refl
-      ; (unexpected' Eq.refl Eq.refl) → refl }) 
+      ; (unexpected' Eq.refl Eq.refl) → refl })
 
 parseHomo : ∀ b → Homomorphism (TraceTys b) (printAlg b) (⊕ᴰAlg b)
 parseHomo b .fst n = &ᴰ-π n ∘g parse
@@ -202,7 +202,7 @@ parseHomo b .snd n = pf where
   opaque
     unfolding KL*r-elim ⊕ᴰ-distR CONS ⊤
     pf : &ᴰ-π n ∘g parse ∘g printAlg b n
-       ≡ ⊕ᴰAlg b n ∘g map (TraceTys b n) (λ n → &ᴰ-π n ∘g parse) 
+       ≡ ⊕ᴰAlg b n ∘g map (TraceTys b n) (λ n → &ᴰ-π n ∘g parse)
     pf = ⊕ᴰ≡ _ _ λ
       { (eof' Eq.refl Eq.refl) → refl
       ; (close' n-1 Eq.refl) → refl
@@ -311,7 +311,7 @@ opaque
     ∙ (λ i → BALANCED
       ∘g id ,⊗ ⟜-app ,⊗ id
       ∘g id ,⊗ ((id ,⊗ NIL) ,⊗ id)
-      ∘g id ,⊗ (⊗-assoc ∘g id ,⊗ ⊗-unit-l⁻)  -- 
+      ∘g id ,⊗ (⊗-assoc ∘g id ,⊗ ⊗-unit-l⁻)  --
       ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
       ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ id ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i)
     ∙ (λ i → BALANCED
@@ -446,6 +446,14 @@ buildTraceAlg _ = ⊕ᴰ-elim (λ
 buildTrace : IndDyck ⊢ TraceBuilder _
 buildTrace = rec DyckTy buildTraceAlg _
 
+-- buildTraceβBalanced :
+--   buildTrace ∘g roll ∘g ⊕ᴰ-in balanced'
+--   ≡ &ᴰ-intro λ n → ⟜-intro
+--     (({!\!}
+--      ∘g ⊗-assoc⁻4
+--     )
+--     ∘g (lowerG ,⊗ (buildTrace ∘g lowerG) ,⊗ lowerG ,⊗ (buildTrace ∘g lowerG)) ,⊗ id)
+
 -- we then extend the builder to generalized trees, which *adds*
 -- closed parens to the trace.
 genBuildTrace : ∀ m → GenDyck m ⊢ &[ n ∈ _ ] (Trace true (m + n) ⟜ Trace true n)
@@ -537,8 +545,8 @@ PileAlg' _ = ⊕ᴰ-elim λ
   the balanced case as a recurrence because we need to know the left
   subcall inductively
 
-  
-  
+
+
 -}
 
 lhs rhs : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n)
@@ -550,10 +558,6 @@ pfAlg : Algebra DyckTy (λ _ → equalizer lhs rhs)
 pfAlg _ =
   eq-intro _ _ (roll ∘g map (DyckTy _) (λ _ → eq-π _ _))
     pf
-  -- (⊕ᴰ≡ _ _ (λ
-  --   { nil' → nil-case
-  --   ; balanced' → {!balanced-case!} }))
-
   where
     opaque
       unfolding ⊗-intro
@@ -566,7 +570,44 @@ pfAlg _ =
             ((λ i → genMkTree n ∘g ⟜-β ⊗-unit-l i ∘g lowerG ,⊗ id)
             ∙ λ i → upgradeNilBuilder n (genMkTree n) (~ i) ∘g lowerG ,⊗ id)
           ∙ sym ⟜-intro-natural
-        ; balanced' → {!!} }
+        ; balanced' → &ᴰ≡ _ _ λ n →
+          ⟜-intro-natural ∙
+          cong ⟜-intro
+            ( (λ i → genMkTree n
+              ∘g ⟜-β (OPEN
+                ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc n) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g ⊗-assoc⁻4
+                ∘g (lowerG ,⊗ lowerG {ℓ-zero} ,⊗ lowerG ,⊗ lowerG {ℓ-zero}) ,⊗ id) i
+              ∘g (id ,⊗ (liftG {ℓ-zero} ∘g buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id ,⊗ ((liftG {ℓ-zero} ∘g buildTrace ∘g eq-π lhs rhs ∘g lowerG))) ,⊗ id)
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ genMkTree (suc n)
+                ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc n) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g ⊗-assoc⁻4⊗-intro {f = lowerG}{f' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'' = lowerG}{f''' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'''' = id} i)
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-β (genMkTree (suc n) ∘g ⟜-app) (~ i) ∘g (&ᴰ-π (suc n) ∘g (buildTrace ∘g eq-π lhs rhs)) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
+                ∘g ⊗-assoc⁻4)
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-app ∘g (&ᴰ-π (suc n) ∘g eq-π-pf lhs rhs i) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
+                ∘g ⊗-assoc⁻4)
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-app ∘g (&ᴰ-π (suc n) ∘g rhs ∘g eq-π lhs rhs) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
+                ∘g ⊗-assoc⁻4)
+            ∙ {!!})
+          ∙ sym ⟜-intro-natural
+        }
 
 genRetr :
   Path (IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n))
@@ -618,7 +659,7 @@ genRetr = equalizer-section _ _
 --         {!!}
 --         ∙ ((λ i → (⟜-β (genMkTree 0 ∘g ⟜-app) (~ i) ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-β (genMkTree n ∘g ⟜-app) (~ i) ∘g &ᴰ-π n ,⊗ id)))
 --         ∙ (λ i → (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻⊗-intro {f = f2}(~ i)) ,⊗ id ,⊗ (⟜-app ∘g (f2⟨ n ⟩) ,⊗ id))
-        
+
 --       f2-is-homo : f2 ∘g buildTraceAlg _ ≡ PileAlg _ ∘g map (DyckTy _) (λ _ → f2)
 --       f2-is-homo = &ᴰ≡ _ _ λ n →
 --         ⊕ᴰ≡ _ _ λ
@@ -690,7 +731,7 @@ genRetr = equalizer-section _ _
 --                  ,⊗ id
 --                  ,⊗ (⟜-β (⟜-app ∘g id ,⊗ genMkTree n) (~ i) ∘g upgradeBuilder n ,⊗ id))
 --         ∙ λ i → (⟜-app ∘g &ᴰ-π 0 ,⊗ EOF ∘g ⊗-unit-r⁻⊗-intro {f = f1} (~ i)) ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g f1) ,⊗ id)
-  
+
 --       f1-is-homo : f1 ∘g appendAlg _ ≡ PileAlg _ ∘g map (DyckTy _) λ _ → f1
 --       f1-is-homo = ⊕ᴰ≡ _ _ λ
 --         { nil' → &ᴰ≡ _ _ λ n →
