@@ -11,7 +11,6 @@ open import Grammar.Base Alphabet
 open import Grammar.Dependent Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
--- open import Grammar.LinearFunction Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Equalizer Alphabet
 open import Grammar.Lift Alphabet
@@ -31,8 +30,8 @@ module _ (g : Grammar ℓG) where
   *Ty : Unit* {ℓG} → Functor Unit*
   *Ty _ = ⊕e *Tag (λ { nil → k ε* ; cons → ⊗e (k g) (Var _)})
 
-  * : Grammar ℓG
-  * = μ *Ty _
+  KL* : Grammar ℓG
+  KL* = μ *Ty _
 
   repeatTy : Lift {j = ℓG} ℕ → Functor (Lift ℕ)
   repeatTy (lift zero) = k ε*
@@ -53,17 +52,17 @@ module _ (g : Grammar ℓG) where
         ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG
     })
 
-  grade : * ⊢ repeat
+  grade : KL* ⊢ repeat
   grade = rec *Ty gradeAlg _
 
-  ungradeAlg : Algebra repeatTy λ n → *
+  ungradeAlg : Algebra repeatTy λ n → KL*
   ungradeAlg (lift zero) = roll ∘g ⊕ᴰ-in nil
   ungradeAlg (lift (suc a)) = roll ∘g ⊕ᴰ-in cons
 
-  ungrade' : ∀ n → repeat' n ⊢ *
+  ungrade' : ∀ n → repeat' n ⊢ KL*
   ungrade' n = rec repeatTy ungradeAlg n
 
-  ungrade : repeat ⊢ *
+  ungrade : repeat ⊢ KL*
   ungrade = ⊕ᴰ-elim λ n → ungrade' n
 
   opaque
@@ -78,10 +77,10 @@ module _ (g : Grammar ℓG) where
 
   opaque
     unfolding secAlg ⊕ᴰ-distR eq-π ⊗-intro eq-intro
-    ω-colimit : StrongEquivalence * repeat
-    ω-colimit .fun = grade
-    ω-colimit .inv = ungrade
-    ω-colimit .sec =
+    *continuous : StrongEquivalence KL* repeat
+    *continuous .fun = grade
+    *continuous .inv = ungrade
+    *continuous .sec =
       ⊕ᴰ≡ _ _ (λ n →
         equalizer-section (grade ∘g ungrade' n) (⊕ᴰ-in n)
           (rec repeatTy secAlg n)
@@ -94,7 +93,7 @@ module _ (g : Grammar ℓG) where
               λ { (lift zero) → refl ; (lift (suc m)) → refl })
               (recHomo repeatTy secAlg))
             n))
-    ω-colimit .ret =
+    *continuous .ret =
       ind-id' *Ty
         (compHomo *Ty (initialAlgebra *Ty) gradeAlg (initialAlgebra *Ty)
           ((λ _ → ungrade) ,
@@ -102,6 +101,15 @@ module _ (g : Grammar ℓG) where
             λ { nil → refl
               ; cons → refl }))
           (recHomo *Ty gradeAlg)) _
+
+NIL : ∀ {g : Grammar ℓG} → ε ⊢ KL* g
+NIL = roll ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG
+
+CONS : ∀ {g : Grammar ℓG} → g ⊗ KL* g ⊢ KL* g
+CONS = roll ∘g ⊕ᴰ-in cons ∘g liftG ,⊗ liftG
+
+_* : Grammar ℓG → Grammar ℓG
+g * = KL* g
 
 -- TODO left handed Kleene star via indexed inductives
 

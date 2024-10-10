@@ -13,7 +13,7 @@ open import Cubical.Data.Bool
 open import Grammar Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Inductive.Indexed Alphabet
-open import Grammar.Equivalence Alphabet
+open import Grammar.Equivalence.Base Alphabet
 import Cubical.Data.Equality as Eq
 open import Term Alphabet
 open import Helper

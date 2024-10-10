@@ -21,7 +21,7 @@ import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
 open import Grammar.Inductive.Indexed Alphabet as Idx
-open import Grammar.Equivalence Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.Lift Alphabet
 open import Term Alphabet
