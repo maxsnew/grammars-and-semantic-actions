@@ -7,9 +7,11 @@ module Grammar.Inductive.Indexed (Alphabet : hSet ℓ-zero)where
 open import Cubical.Foundations.Structure
 
 open import Helper
-open import Grammar Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.Dependent.Base Alphabet
+open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet
-open import Term Alphabet
+open import Term.Base Alphabet
 
 private
   variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
