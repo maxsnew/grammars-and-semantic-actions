@@ -19,10 +19,7 @@ import Cubical.Data.Equality as Eq
 open import Term Alphabet
 open import Helper
 
-private
-  variable ℓ ℓ' : Level
-
-record DeterministicAutomaton ℓ ℓ' : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
+record DeterministicAutomaton ℓ : Type (ℓ-suc ℓ) where
   field
     Q : Type ℓ
     init : Q
