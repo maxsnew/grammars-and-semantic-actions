@@ -1,19 +1,12 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Isomorphism
 
 module Grammar.Lift (Alphabet : hSet ℓ-zero) where
 
-open import Cubical.Data.List
-open import Cubical.Data.Sigma
-open import Cubical.Data.Nat
-
 open import Grammar.Base Alphabet
-open import Grammar.LinearProduct Alphabet
-open import Grammar.Epsilon Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
-open import Term.Bilinear Alphabet
 
 private
   variable
@@ -31,3 +24,11 @@ liftG = λ w z → lift z
 
 lowerG : LiftG ℓ' g ⊢ g
 lowerG = λ w z → z .lower
+
+open StrongEquivalence
+module _ ℓ (g : Grammar ℓg) where
+  LiftG≅ : StrongEquivalence g (LiftG ℓ g)
+  LiftG≅ .fun = liftG
+  LiftG≅ .inv = lowerG
+  LiftG≅ .sec = refl
+  LiftG≅ .ret = refl

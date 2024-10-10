@@ -29,3 +29,4 @@ opaque
 
 unambiguous⊤* : ∀ {ℓg} → unambiguous (⊤* {ℓg})
 unambiguous⊤* = unambiguous'→unambiguous unambiguous'⊤*
+

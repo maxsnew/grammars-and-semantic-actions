@@ -8,6 +8,7 @@ open import Cubical.Foundations.Structure
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
+open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 
 private
@@ -23,3 +24,6 @@ opaque
   literal-elim : g [ c ] → literal c ⊢ g
   literal-elim {g = g} gc w w≡[c] =
     subst g (sym w≡[c]) gc
+
+literal* : ∀ {ℓ : Level} → ⟨ Alphabet ⟩ → Grammar ℓ
+literal* {ℓ = ℓ} c = LiftG ℓ (literal c)
