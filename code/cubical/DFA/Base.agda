@@ -1,5 +1,6 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Structure
 
 module DFA.Base (Alphabet : hSet ℓ-zero) where
 
@@ -9,10 +10,10 @@ open import Grammar Alphabet
 open import Automaton.Deterministic Alphabet
 
 private
-  variable ℓD : Level
+  variable
+    ℓD : Level
 
 open DeterministicAutomaton
 
-DFA : Type (ℓ-suc ℓD)
-DFA {ℓD = ℓD} = Σ[ D ∈ DeterministicAutomaton ℓD ] isFinSet (D .Q)
-
+DFA : FinSet ℓD → Type (ℓ-suc ℓD)
+DFA Q = DeterministicAutomaton ⟨ Q ⟩

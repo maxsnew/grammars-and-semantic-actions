@@ -19,9 +19,12 @@ import Cubical.Data.Equality as Eq
 open import Term Alphabet
 open import Helper
 
-record DeterministicAutomaton ℓ : Type (ℓ-suc ℓ) where
+private
+  variable
+    ℓ : Level
+
+record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   field
-    Q : Type ℓ
     init : Q
     isAcc : Q → Bool
     δ : Q → ⟨ Alphabet ⟩ → Q

@@ -11,6 +11,7 @@ open import Grammar.Base Alphabet
 open import Grammar.Dependent Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Equalizer Alphabet
 open import Grammar.Lift Alphabet
@@ -20,8 +21,7 @@ open import Term.Base Alphabet
 private
   variable
     ℓG ℓH : Level
-    g : Grammar ℓG
-    h : Grammar ℓH
+    g h : Grammar ℓG
 
 module _ (g : Grammar ℓG) where
   data *Tag : Type ℓG where
@@ -32,6 +32,9 @@ module _ (g : Grammar ℓG) where
 
   KL* : Grammar ℓG
   KL* = μ *Ty _
+
+  fold*r : Algebra *Ty (λ _ → h) → KL* ⊢ h
+  fold*r alg = rec *Ty alg _
 
   repeatTy : Lift {j = ℓG} ℕ → Functor (Lift ℕ)
   repeatTy (lift zero) = k ε*
@@ -102,62 +105,28 @@ module _ (g : Grammar ℓG) where
               ; cons → refl }))
           (recHomo *Ty gradeAlg)) _
 
-NIL : ∀ {g : Grammar ℓG} → ε ⊢ KL* g
-NIL = roll ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG
+  data *TagL : Type ℓG where
+    nil snoc : *TagL
 
-CONS : ∀ {g : Grammar ℓG} → g ⊗ KL* g ⊢ KL* g
-CONS = roll ∘g ⊕ᴰ-in cons ∘g liftG ,⊗ liftG
+  *LTy : Unit* {ℓG} → Functor Unit*
+  *LTy _ = ⊕e *TagL (λ { nil → k ε* ; snoc → ⊗e (Var _) (k g)})
+
+  *LAlg→*Alg : Algebra *LTy (λ _ → h)  → Algebra *Ty (λ _ → h ⊸ h)
+  *LAlg→*Alg l-alg _ = ⊕ᴰ-elim (λ {
+      nil → ⊸-intro-ε id ∘g lowerG ∘g lowerG
+    ; cons → ⊸-intro (⊸-app ∘g (l-alg _ ∘g ⊕ᴰ-in snoc ∘g liftG ,⊗ liftG) ,⊗ id ∘g ⊗-assoc) ∘g lowerG ,⊗ lowerG })
+
+  fold*l : Algebra *LTy (λ _ → h) → KL* ⊢ h
+  fold*l alg = ⊸-app ∘g (alg _ ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG) ,⊗ fold*r (*LAlg→*Alg alg) ∘g ⊗-unit-l⁻
 
 _* : Grammar ℓG → Grammar ℓG
 g * = KL* g
 
--- TODO left handed Kleene star via indexed inductives
+_⊗[_] : Grammar ℓG → ℕ → Grammar ℓG
+g ⊗[ n ] = repeat' g (lift n)
 
---   *l-initial : *l-Algebra
---   *l-initial .the-ℓ = _
---   *l-initial .G = KL*
---   *l-initial .nil-case = nil
---   *l-initial .snoc-case = ans
---     where
---     opaque
---       unfolding _⊗_ ⊗-intro
---       λalg : *r-Algebra
---       λalg .the-ℓ = ℓG
---       λalg .G = KL* ⟜ g
---       λalg .nil-case =
---         ⟜-intro (cons ∘g ⊗-intro id nil ∘g ⊗-unit-r⁻ ∘g ⊗-unit-l)
---       λalg .cons-case =
---         ⟜-intro (cons ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+NIL : ∀ {g : Grammar ℓG} → ε ⊢ g *
+NIL = roll ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG
 
---       ans : KL* ⊗ g ⊢ KL*
---       ans = ⟜-intro⁻ (foldKL*r λalg)
-
---   record *l-AlgebraHom (alg alg' : *l-Algebra) : Typeω where
---     field
---       f : alg .G ⊢ alg' .G
---       on-nil : f ∘g alg .nil-case ≡ alg' .nil-case
---       on-cons : f ∘g alg .snoc-case ≡ alg' .snoc-case ∘g ⊗-intro f id
-
---   open *l-AlgebraHom
-
---   module _ (the-l-alg : *l-Algebra) where
---     λalg : *r-Algebra
---     λalg .the-ℓ = the-l-alg .the-ℓ
---     λalg .G = the-l-alg .G ⊸ the-l-alg .G
---     λalg .nil-case = ⊸-intro ⊗-unit-r
---     λalg .cons-case =
---       ⊸-intro {k = the-l-alg .G}
---         (⊸-app ∘g
---         ⊗-intro (the-l-alg .snoc-case) id ∘g
---         ⊗-assoc)
-
---     KL*l-elim : KL* ⊢ the-l-alg .G
---     KL*l-elim =
---       ⊸-app ∘g
---       ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g
---       ⊗-unit-l⁻
-
---     foldKL*l = KL*l-elim
-
---     -- TODO prove initiality for the left handed algebra
-
+CONS : ∀ {g : Grammar ℓG} → g ⊗ g * ⊢ g *
+CONS = roll ∘g ⊕ᴰ-in cons ∘g liftG ,⊗ liftG

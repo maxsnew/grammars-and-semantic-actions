@@ -15,14 +15,14 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.SumFin
-open import Cubical.Data.Maybe as Maybe
+open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
-open import Cubical.Data.Sum
-open import Cubical.Data.Empty as Empty
+open import Cubical.Data.Sum hiding (rec)
+open import Cubical.Data.Empty as Empty hiding (rec)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
-open import Cubical.Data.List hiding (init)
+open import Cubical.Data.List hiding (init ; rec)
 open import Cubical.Data.List.FinData
 import Cubical.Data.Equality as Eq
 
@@ -46,7 +46,7 @@ opaque
 open import Grammar Alphabet
 import Grammar.Maybe Alphabet as MaybeG
 open import Grammar.Inductive.Indexed Alphabet
-open import Grammar.Equivalence Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Lift Alphabet
 open import Term Alphabet
 
@@ -129,13 +129,13 @@ module _ (TM : TuringMachine) where
   open StrongEquivalence
   -- Linearly build the initial tape
   parseInitTape : string ⊢ ⊕[ tape ∈ Tape ] TuringG tape
-  parseInitTape =
-    foldKL*l char (record {
-      the-ℓ = ℓ-zero
-    ; G = ⊕[ tape ∈ Tape ] TuringG tape
-    ; nil-case = ⊕ᴰ-in blankTape ∘g roll ∘g ⊕ᴰ-in nil ∘g liftG
-    ; snoc-case = ⊕ᴰ-elim (λ tape → ⊕ᴰ-elim (λ c → ⊕ᴰ-in (consTape (inl c) tape) ∘g roll ∘g ⊕ᴰ-in snoc ∘g ⊕ᴰ-in c ∘g ⊕ᴰ-in (tape , λ n → refl) ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun) ∘g ⊕ᴰ-distL .fun
-    })
+  parseInitTape = fold*l char (λ _ → ⊕ᴰ-elim (λ {
+        nil → ⊕ᴰ-in blankTape ∘g roll ∘g ⊕ᴰ-in nil ∘g lowerG
+      ; snoc → (⊕ᴰ-elim (λ tape →
+          ⊕ᴰ-elim (λ c → ⊕ᴰ-in (consTape (inl c) tape)
+            ∘g roll ∘g ⊕ᴰ-in snoc ∘g ⊕ᴰ-in c ∘g ⊕ᴰ-in (tape , λ _ → refl) ∘g liftG ,⊗ liftG)
+          ∘g ⊕ᴰ-distR .fun)
+        ∘g ⊕ᴰ-distL .fun) ∘g lowerG ,⊗ lowerG}))
 
   -- From an input configuration, find an accepting trace, find a rejecting trace, or timeout
   decide-bounded :

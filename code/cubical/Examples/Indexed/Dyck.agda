@@ -100,19 +100,20 @@ UNEXPECTED = roll ∘g ⊕ᴰ-in (unexpected' Eq.refl Eq.refl) ∘g liftG ,⊗ l
 
 parseTy = &[ n ∈ ℕ ] ⊕[ b ∈ _ ] Trace b n
 parse : string ⊢ parseTy
-parse = foldKL*r _ (record { the-ℓ = _ ; G = _
-  ; nil-case =
-    &ᴰ-in (Nat.elim (⊕ᴰ-in true ∘g EOF) (λ _ _ → ⊕ᴰ-in false ∘g LEFTOVERS))
-  ; cons-case = &ᴰ-in λ n →
-    ⊕ᴰ-elim (λ
-      { [ → ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g OPEN) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ &ᴰ-π (suc n)
-      ; ] → Nat.elim {A = λ n → literal RP ⊗ parseTy ⊢ ⊕[ b ∈ _ ] Trace b n}
-        (⊕ᴰ-in false ∘g UNEXPECTED ∘g id ,⊗ ⊤-intro)
-        (λ n-1 _ → ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g CLOSE) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ &ᴰ-π n-1)
-        n
-      })
-    ∘g ⊕ᴰ-distL .fun
-  })
+parse = ?
+-- foldKL*r _ (record { the-ℓ = _ ; G = _
+--   ; nil-case =
+--     &ᴰ-in (Nat.elim (⊕ᴰ-in true ∘g EOF) (λ _ _ → ⊕ᴰ-in false ∘g LEFTOVERS))
+--   ; cons-case = &ᴰ-in λ n →
+--     ⊕ᴰ-elim (λ
+--       { [ → ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g OPEN) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ &ᴰ-π (suc n)
+--       ; ] → Nat.elim {A = λ n → literal RP ⊗ parseTy ⊢ ⊕[ b ∈ _ ] Trace b n}
+--         (⊕ᴰ-in false ∘g UNEXPECTED ∘g id ,⊗ ⊤-intro)
+--         (λ n-1 _ → ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g CLOSE) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ &ᴰ-π n-1)
+--         n
+--       })
+--     ∘g ⊕ᴰ-distL .fun
+--   })
 
 printAlg : ∀ b → Algebra (TraceTys b) (λ _ → string)
 printAlg b n = ⊕ᴰ-elim λ
