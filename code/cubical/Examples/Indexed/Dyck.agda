@@ -24,6 +24,7 @@ open import Examples.Dyck
 open import Grammar Alphabet hiding (NIL)
 open import Grammar.String.Properties Alphabet
 open import Grammar.Equivalence Alphabet
+open import Grammar.Equalizer Alphabet
 open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.Lift Alphabet
 open import Term Alphabet
@@ -47,19 +48,59 @@ BALANCED = roll ∘g ⊕ᴰ-in balanced' ∘g liftG ,⊗ liftG ,⊗ liftG ,⊗ l
 
 appendAlg : Algebra DyckTy λ _ → IndDyck ⟜ IndDyck
 appendAlg tt = ⊕ᴰ-elim λ
-  { nil' → ⟜-intro-ε id ∘g lowerG
+  { nil' → ⟜-intro ⊗-unit-l ∘g lowerG
   ; balanced' → ⟜-intro (BALANCED
     ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻)
        ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)
-    ∘g id ,⊗ id ,⊗ ⊗-assoc⁻ ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻)
+    ∘g ⊗-assoc⁻4)
   }
 
+append' : IndDyck ⊢ IndDyck ⟜ IndDyck
+append' = rec _ appendAlg _
+
 append : IndDyck ⊗ IndDyck ⊢ IndDyck
-append = ⟜-intro⁻ (rec _ appendAlg _)
+append = ⟜-intro⁻ append'
+
+append-nil-r' : ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g append' ≡ id
+append-nil-r' = ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) appendAlg (initialAlgebra DyckTy)
+    ((λ _ → ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) , λ _ → pf)
+    (recHomo DyckTy appendAlg))
+    _
+  where
+    opaque
+      unfolding ⊗-intro ⊗-unit-r⁻ ⊗-assoc⁻
+      pf : (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) ∘g appendAlg _
+         ≡ roll ∘g map (DyckTy _) (λ _ → ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻)
+      pf = ⊕ᴰ≡ _ _ (λ
+        { nil' →
+        (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g ⟜-intro ⊗-unit-l ∘g lowerG)
+          ≡⟨ (λ i → ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻⊗-intro {f = (⟜-intro ⊗-unit-l)} i ∘g lowerG) ⟩
+        (⟜-app ∘g id ,⊗ NIL ∘g ⟜-intro ⊗-unit-l ,⊗ id ∘g ⊗-unit-r⁻ ∘g lowerG)
+          ≡⟨ refl ⟩
+        (⟜-app ∘g (⟜-intro ⊗-unit-l ,⊗ id) ∘g (id ,⊗ NIL) ∘g ⊗-unit-r⁻ ∘g lowerG)
+          ≡⟨ cong (_∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g lowerG) (⟜-β ⊗-unit-l) ⟩
+        (⊗-unit-l ∘g (id ,⊗ NIL) ∘g ⊗-unit-r⁻ ∘g lowerG)
+          ≡⟨ cong (_∘g ⊗-unit-r⁻ ∘g lowerG) (sym (⊗-unit-l⊗-intro NIL)) ⟩
+        (NIL ∘g ⊗-unit-l ∘g ⊗-unit-r⁻ ∘g lowerG)
+          ≡⟨ cong (NIL ∘g_) (cong (_∘g lowerG) ⊗-unit-lr⁻) ⟩
+        NIL ∘g lowerG
+        ∎
+        ; balanced' →
+        cong ((⟜-app ∘g id ,⊗ NIL) ∘g_) ⊗-unit-r⁻⊗-intro
+        ∙ cong (_∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) (⟜-β _)
+        ∙ cong ((BALANCED
+                 ∘g id ,⊗ (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ id ,⊗ (⟜-app ∘g id ,⊗ NIL)
+                 ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ id) ∘g_)
+               ⊗-assoc⁻4⊗-unit-r⁻
+        })
 
 -- Need this lemma for the retract property below
 append-nil-r : append ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ≡ id
-append-nil-r = {!!}
+append-nil-r = goal where
+  opaque
+    unfolding ⊗-intro ⊗-unit-r⁻
+    goal : append ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ≡ id
+    goal = append-nil-r'
 
 data TraceTag (b : Bool) (n : ℕ) : Type where
   eof' : b Eq.≡ true → n Eq.≡ zero → TraceTag b n
@@ -126,7 +167,7 @@ printAlg b n = ⊕ᴰ-elim λ
 
 print : ∀ {n b} → Trace b n ⊢ string
 print = rec (TraceTys _) (printAlg _) _
- 
+
 ⊕ᴰAlg : ∀ b → Algebra (TraceTys b) (λ n → ⊕[ b' ∈ _ ] Trace b' n)
 ⊕ᴰAlg b n = ⊕ᴰ-elim (λ
   { (eof' Eq.refl Eq.refl) → ⊕ᴰ-in true ∘g EOF ∘g lowerG
@@ -154,7 +195,7 @@ print = rec (TraceTys _) (printAlg _) _
       ; (leftovers' Eq.refl n-1 Eq.refl) → refl
       ; open' → refl
       ; (close' n-1 Eq.refl) → refl
-      ; (unexpected' Eq.refl Eq.refl) → refl }) 
+      ; (unexpected' Eq.refl Eq.refl) → refl })
 
 parseHomo : ∀ b → Homomorphism (TraceTys b) (printAlg b) (⊕ᴰAlg b)
 parseHomo b .fst n = &ᴰ-π n ∘g parse
@@ -162,7 +203,7 @@ parseHomo b .snd n = pf where
   opaque
     unfolding KL*r-elim ⊕ᴰ-distR CONS ⊤
     pf : &ᴰ-π n ∘g parse ∘g printAlg b n
-       ≡ ⊕ᴰAlg b n ∘g map (TraceTys b n) (λ n → &ᴰ-π n ∘g parse) 
+       ≡ ⊕ᴰAlg b n ∘g map (TraceTys b n) (λ n → &ᴰ-π n ∘g parse)
     pf = ⊕ᴰ≡ _ _ λ
       { (eof' Eq.refl Eq.refl) → refl
       ; (close' n-1 Eq.refl) → refl
@@ -188,35 +229,187 @@ Trace≅String {n} = mkStrEq
         (⊕ᴰ-in-homo b)
         n)
 
+isUnambiguousTrace : ∀ {n b} → unambiguous (Trace b n)
+isUnambiguousTrace {n}{b} =
+  unambiguous⊕ᴰ isSetBool
+    (unambiguous≅ (sym-strong-equivalence Trace≅String) unambiguous-string)
+    b
+
 {-
   Next, we establish that IndDyck and Trace true zero are strongly equivalent.
 
   To prove this inductively, we more generally prove that Trace true n
   is strongly equivalent to a "GenDyck n" that is an analogously
   "unbalanced" Dyck tree.
-  
 -}
 GenDyck : ℕ → Grammar _
 GenDyck 0         = IndDyck
 GenDyck (suc n-1) = IndDyck ⊗ literal RP ⊗ GenDyck n-1
 
-{- First, we construct a GenDyck from a Trace -}
-genBALANCED : ∀ n → literal LP ⊗ IndDyck ⊗ literal RP ⊗ GenDyck n ⊢ GenDyck n
-genBALANCED zero   = BALANCED
-genBALANCED (suc n) = ⟜4⊗ (⟜4-intro-ε BALANCED)
+-- We extend the balanced constructor and append to our unbalanced
+-- trees
+opaque
+  genBALANCED : ∀ n → literal LP ⊗ IndDyck ⊗ literal RP ⊗ GenDyck n ⊢ GenDyck n
+  genBALANCED zero   = BALANCED
+  genBALANCED (suc n) = BALANCED ,⊗ id ∘g ⊗-assoc4
 
+upgradeBuilder : ∀ n → (IndDyck ⟜ IndDyck) ⊢ GenDyck n ⟜ GenDyck n
+upgradeBuilder zero = id
+upgradeBuilder (suc n) = ⟜-intro (⟜-app ,⊗ id ∘g ⊗-assoc)
+
+opaque
+  unfolding ⊗-intro genBALANCED
+  -- uB-lem' :
+  --   ∀ n (f : Trace true n ⊢ GenDyck n)
+  --       (f' : {!!} ⊢ {!!})
+  --      → (⟜-app ∘g id ,⊗ f) ∘g
+  --       (upgradeBuilder n ∘g ⟜-intro {!!}) ,⊗ id
+  --       ≡ (f ∘g {!!})
+  -- uB-lem' = {!!}
+  upgradeNilBuilder :
+    ∀ n (f : Trace true n ⊢ GenDyck n)
+       → (⟜-app ∘g id ,⊗ f) ∘g
+        (upgradeBuilder n ∘g ⟜-intro ⊗-unit-l) ,⊗ id
+        ≡ f ∘g ⊗-unit-l
+  upgradeNilBuilder zero f =
+    cong (_∘g (id ,⊗ f)) (⟜-β _)
+    ∙ sym (⊗-unit-l⊗-intro _)
+  upgradeNilBuilder (suc n) f =
+    cong (_∘g ((⟜-intro ⊗-unit-l)) ,⊗ f) (⟜-β _)
+    ∙ cong ((⟜-app ,⊗ id) ∘g_) (cong (_∘g (id ,⊗ f)) (⊗-assoc⊗-intro {f' = id}{f'' = id}))
+    ∙ ( (λ i → (⟜-β ⊗-unit-l i) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f))
+    ∙ cong (_∘g (id ,⊗ f)) (cong ((⊗-unit-l ,⊗ id) ∘g_) (sym (⊗-assoc⊗-intro {f' = id}{f'' = id})))
+    ∙ cong (_∘g id ,⊗ f) ⊗-unit-l⊗-assoc
+    ∙ sym (⊗-unit-l⊗-intro _)
+
+  upgradeBalancedBuilder :
+    ∀ n (f : Trace true n ⊢ GenDyck n)
+    → (⟜-app ∘g id ,⊗ f)
+      ∘g (upgradeBuilder n ∘g ⟜-intro (
+          BALANCED
+          ∘g lowerG {ℓ-zero} ,⊗ (⟜-app ∘g lowerG{ℓ-zero} ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG {ℓ-zero} ,⊗ (⟜-app ∘g lowerG {ℓ-zero} ,⊗ id)
+          ∘g ⊗-assoc⁻4))
+         ,⊗ id
+      ≡ genBALANCED n
+        ∘g id ,⊗ (⟜-app ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+        ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+        ∘g lowerG ,⊗ (upgradeBuilder (suc n) ∘g lowerG) ,⊗ lowerG ,⊗ ((upgradeBuilder n) ∘g lowerG) ,⊗ f
+        ∘g ⊗-assoc⁻4
+  upgradeBalancedBuilder zero f =
+    cong (_∘g (id ,⊗ f)) (⟜-β _)
+    ∙ (λ i → BALANCED
+       ∘g lowerG ,⊗ (⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻⊗-intro {f = lowerG} (~ i)) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)
+       ∘g ⊗-assoc⁻4
+       ∘g id ,⊗ f
+      )
+    ∙ (λ i → BALANCED ∘g
+      lowerG ,⊗ (⟜-app ∘g id ,⊗ NIL) ,⊗ id ∘g
+      id ,⊗ ⊗-assoc⊗-unit-l⁻ (~ i) ∘g
+      id ,⊗ id ,⊗ id ,⊗ ⟜-app ∘g
+      id ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ id
+      ∘g ⊗-assoc⁻4
+      ∘g id ,⊗ f)
+    ∙ (λ i → BALANCED
+      ∘g id ,⊗ ⟜-app ,⊗ id
+      ∘g id ,⊗ ((id ,⊗ NIL) ,⊗ id)
+      ∘g id ,⊗ (⊗-assoc ∘g id ,⊗ ⊗-unit-l⁻)  --
+      ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+      ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ id ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i)
+    ∙ (λ i → BALANCED
+      ∘g id ,⊗ (⟜-app ,⊗ id)
+      ∘g id ,⊗ ⊗-assoc⊗-intro {f = id}{f' = NIL}{f'' = id} (~ i)
+      ∘g id ,⊗ (id ,⊗ ⊗-unit-l⁻)
+      ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+      ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ f ∘g ⊗-assoc⁻4
+          )
+    ∙ λ i → BALANCED
+      ∘g id ,⊗ (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) (~ i))
+      ∘g id ,⊗ (id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+      ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+      ∘g lowerG ,⊗ (lowerG) ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ f
+      ∘g ⊗-assoc⁻4
+  upgradeBalancedBuilder (suc n) f =
+    (λ i →
+      (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) i) ∘g
+        (⟜-intro (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)
+        ∘g ⊗-assoc⁻4))
+        ,⊗ f)
+    ∙ (λ i →
+      ⟜-app ,⊗ id
+      ∘g ⊗-assoc⊗-intro {f = ⟜-intro (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id) ∘g ⊗-assoc⁻4)}{f' = id}{f'' = id} i
+      ∘g id ,⊗ f)
+    ∙ (λ i →
+        (⟜-β (BALANCED ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id) ∘g ⊗-assoc⁻4) i) ,⊗ id
+        ∘g ⊗-assoc
+        ∘g id ,⊗ f
+      )
+    ∙ (λ i →
+       BALANCED ,⊗ id
+       ∘g (lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)) ,⊗ id
+       ∘g ⊗-assoc⁻4⊗-assoc i
+       ∘g id ,⊗ f)
+    ∙ (λ i → BALANCED ,⊗ id
+        ∘g ⊗-assoc4⊗-intro {f = lowerG}{f' = ⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻}{f'' = lowerG}{f''' = (⟜-app ∘g lowerG ,⊗ id)}{f'''' = id} (~ i)
+        ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc
+        ∘g ⊗-assoc⁻4
+        ∘g id ,⊗ f)
+    ∙ (λ i → BALANCED ,⊗ id
+        ∘g ⊗-assoc4
+        ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ ((⟜-app ∘g lowerG ,⊗ id) ,⊗ id)
+        ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc
+        ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i)
+    ∙ (λ i → BALANCED ,⊗ id
+        ∘g ⊗-assoc4
+        ∘g lowerG ,⊗ ((⟜-app ∘g (id ,⊗ NIL) ∘g ⊗-unit-r⁻⊗-intro {f = lowerG} (~ i)) ,⊗ lowerG ,⊗ ((⟜-app ∘g lowerG ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f))
+        ∘g ⊗-assoc⁻4)
+    ∙ (
+      λ i → BALANCED ,⊗ id
+        ∘g ⊗-assoc4
+        ∘g id ,⊗ (⟜-app ,⊗ id)
+        ∘g id ,⊗ ((id ,⊗ NIL) ,⊗ id)
+        ∘g id ,⊗ ⊗-assoc⊗-unit-l⁻ (~ i)
+        ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ ((⟜-app ∘g lowerG ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f)
+        ∘g ⊗-assoc⁻4
+      )
+    ∙ (λ i →
+        BALANCED ,⊗ id
+        ∘g ⊗-assoc4
+        ∘g id ,⊗ (⟜-app ,⊗ id)
+        ∘g id ,⊗ (⊗-assoc⊗-intro {f = id}{f' = NIL}{f'' = id} (~ i))
+        ∘g id ,⊗ (id ,⊗ ⊗-unit-l⁻)
+        ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (⟜-app ,⊗ id ∘g (⊗-assoc⊗-intro {f = lowerG}{f' = id}{f'' = id} (~ i)) ∘g id ,⊗ f)
+        ∘g ⊗-assoc⁻4
+      )
+    ∙ λ i → (BALANCED ,⊗ id ∘g ⊗-assoc4) ∘g
+      id ,⊗ (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) (~ i) ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻)) ∘g
+      lowerG ,⊗ (lowerG) ,⊗ lowerG ,⊗ (⟜-β (⟜-app ,⊗ id ∘g ⊗-assoc) (~ i) ∘g lowerG ,⊗ f)
+      ∘g ⊗-assoc⁻4
+
+genAppend' : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ GenDyck n)
+genAppend' = (&ᴰ-intro upgradeBuilder) ∘g append'
+
+genAppend : ∀ n → IndDyck ⊗ GenDyck n ⊢ GenDyck n
+genAppend zero    = append
+genAppend (suc _) = ⟜2⊗ (⟜2-intro-ε append)
+
+{- First, we construct a GenDyck n from a Trace n -}
 genMkTreeAlg : Algebra (TraceTys true) GenDyck
 genMkTreeAlg n = ⊕ᴰ-elim (λ
   { (eof' Eq.refl Eq.refl) → NIL ∘g lowerG
   ; open' → genBALANCED n ∘g lowerG ,⊗ lowerG
-  ; (close' n-1 Eq.refl) → ⟜0⊗ NIL ∘g lowerG ,⊗ lowerG
+  ; (close' n-1 Eq.refl) → (NIL ,⊗ id ∘g ⊗-unit-l⁻) ∘g lowerG ,⊗ lowerG
   })
 
-genMkTree : ∀ {n} → Trace true n ⊢ GenDyck n
-genMkTree = rec (TraceTys _) genMkTreeAlg _
+genMkTree : ∀ n → Trace true n ⊢ GenDyck n
+genMkTree n = rec (TraceTys _) genMkTreeAlg _
 
-mkTree : Trace true zero ⊢ IndDyck
-mkTree = genMkTree
+mkTree : Trace true 0 ⊢ IndDyck
+mkTree = genMkTree 0
+
+opaque
+  unfolding ⊗-intro
+  genMkTree-β-OPEN : ∀ {n} → genMkTree n ∘g OPEN ≡ genBALANCED n ∘g id ,⊗ genMkTree (suc n)
+  genMkTree-β-OPEN = refl
 
 {-
 
@@ -224,14 +417,12 @@ mkTree = genMkTree
   extract one from a GenDyck.
 
   The trick to defining this by structural recursion is to map each
-  IndDyck recursively to a "TraceBuilder"
+  IndDyck recursively to a "TraceBuilder", a linear function that
+  takes a trace to its right and "piles" the characters from the tree
+  onto the trace. Since an IndDyck is balanced, it doesn't affect the
+  state n.
 
 -}
-
-genAppend : ∀ n → IndDyck ⊗ GenDyck n ⊢ GenDyck n
-genAppend zero    = append
-genAppend (suc _) = ⟜2⊗ (⟜2-intro-ε append)
-
 TraceBuilder : Unit → Grammar ℓ-zero
 TraceBuilder _ = &[ n ∈ _ ] (Trace true n ⟜ Trace true n)
 
@@ -248,14 +439,24 @@ buildTraceAlg _ = ⊕ᴰ-elim (λ
      -- build a Trace n with the right subtree
     ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
      -- reassoc the builder arg to the right, and lower everything else
-    ∘g lowerG ,⊗ (lowerG ,⊗ (lowerG ,⊗ lowerG ,⊗ id ∘g  ⊗-assoc⁻) ∘g ⊗-assoc⁻)
-       ∘g ⊗-assoc⁻
+    ∘g ⊗-assoc⁻4
+    ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id
     )
   })
 
 buildTrace : IndDyck ⊢ TraceBuilder _
 buildTrace = rec DyckTy buildTraceAlg _
 
+-- buildTraceβBalanced :
+--   buildTrace ∘g roll ∘g ⊕ᴰ-in balanced'
+--   ≡ &ᴰ-intro λ n → ⟜-intro
+--     (({!\!}
+--      ∘g ⊗-assoc⁻4
+--     )
+--     ∘g (lowerG ,⊗ (buildTrace ∘g lowerG) ,⊗ lowerG ,⊗ (buildTrace ∘g lowerG)) ,⊗ id)
+
+-- we then extend the builder to generalized trees, which *adds*
+-- closed parens to the trace.
 genBuildTrace : ∀ m → GenDyck m ⊢ &[ n ∈ _ ] (Trace true (m + n) ⟜ Trace true n)
 genBuildTrace zero = buildTrace
 genBuildTrace (suc m) = &ᴰ-intro λ n → ⟜-intro
@@ -266,231 +467,179 @@ genBuildTrace (suc m) = &ᴰ-intro λ n → ⟜-intro
   -- recursively build using the right subtree
   ∘g id ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g genBuildTrace m) ,⊗ id)
   -- reassoc everything
-  ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻)
+  ∘g ⊗-assoc⁻3
+  )
 
--- -- appEOF : TraceAction _ ⊢ Trace zero true
--- -- appEOF = (⟜-app ∘g ⊸0⊗ EOF ∘g &ᴰ-π 0)
+{-
 
--- -- -- prove this by induction and this should imply the retract property
--- -- genRetract :
--- --   ∀ {n} →
--- --   Path (IndDyck ⊗ Trace n true ⊢ GenIndDyck (n , true))
--- --     (genMkTree ∘g ⟜-app ∘g (&ᴰ-π n ∘g traceBuilder) ,⊗ id)
--- --     (genAppend {n = n} ∘g id ,⊗ genMkTree)
--- -- genRetract = {!!}
-
--- -- genSection :
--- --   ∀ {n} →
--- --   Path (Trace n true ⊢ Trace n true)
--- --     -- seems unavoidable unfortunately
--- --     (subst (λ m → Trace n true ⊢ Trace m true) (+-zero n)
--- --       (⟜-app ∘g ⊸0⊗ EOF ∘g &ᴰ-π 0 ∘g genTraceBuilder {m = n} ∘g genMkTree))
--- --     id
--- -- genSection = {!!}
-
--- -- -- mkTree ∘g ((⟜-app ∘g ⊸0⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl)) ∘g &ᴰ-π 0)
-
--- -- -- is a homomorphism from eTAlg to (initialAlgebra DyckTy)
-
--- -- Dyck≅Trace : StrongEquivalence IndDyck (Trace zero true)
--- -- Dyck≅Trace = mkStrEq exhibitTrace' mkTree
--- --   {!!} -- use mkTreeAlg
--- --   (ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) eTAlg (initialAlgebra DyckTy)
--- --     ((λ _ → mkTree ∘g appEOF)
--- --     , λ _ → ⊕ᴰ≡ _ _ (λ
--- --       { nil' →
--- --         cong
--- --           (rec TraceTys mkTreeAlg (0 , true) ∘g_)
--- --           (p (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl))
--- --       ; balanced' →
--- --         mkTree ∘g appEOF ∘g eTAlg _ ∘g ⊕ᴰ-in balanced'
--- --           ≡⟨ refl ⟩
--- --         mkTree ∘g ⟜-app ∘g ⊸0⊗ EOF ∘g ⟜-intro {k = Trace 0 true}
--- --           (OPEN
--- --           ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc 0) ,⊗ id)
--- --           ∘g id ,⊗ id ,⊗ CLOSE
--- --           ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ id)
--- --           ∘g id ,⊗ id ,⊗ ⊗-assoc⁻ ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻)
--- --           ≡⟨ {!!} ⟩
--- --         mkTree ∘g OPEN
--- --           ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc 0) ,⊗ id)
--- --           ∘g id ,⊗ id ,⊗ CLOSE
--- --           ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ id)
--- --           ∘g id ,⊗ id ,⊗ ⊗-assoc⁻ ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
--- --           ∘g ⊸0⊗ EOF
--- --           ≡⟨ refl ⟩
--- --         BALANCED
--- --           ∘g id ,⊗ rec TraceTys mkTreeAlg (1 , true)
--- --           ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc 0) ,⊗ id)
--- --           ∘g id ,⊗ id ,⊗ CLOSE
--- --           ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ id)
--- --           ∘g id ,⊗ id ,⊗ ⊗-assoc⁻ ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
--- --           ∘g ⊸0⊗ EOF
--- --           ≡⟨ {!!} ⟩ -- TODO: tedious but just βη
--- --         BALANCED
--- --           ∘g id ,⊗ (rec TraceTys mkTreeAlg (1 , true) ∘g (⟜-app ∘g &ᴰ-π (suc 0) ,⊗ id ∘g id ,⊗ (CLOSE ∘g id ,⊗ appEOF)))
--- --           ≡⟨ (λ i → BALANCED ∘g id ,⊗ the-lemma i) ⟩
--- --         BALANCED
--- --           ∘g id ,⊗ (mkTree ∘g appEOF) ,⊗ id ,⊗ (mkTree ∘g appEOF)
--- --           ∎
--- -- -- ⊸0⊗ : ε ⊢ k → l ⊢ l ⊗ k
--- -- -- ⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
-  
--- --         -- rec TraceTys mkTreeAlg (0 , true) ∘g
--- --         -- ⟜-app ∘g
--- --         -- id ,⊗ (roll ∘g
--- --         --     ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g
--- --         -- ⊗-unit-r⁻ ∘g
--- --         -- ⟜-intro {k = Trace 0 true}
--- --         --   (roll ∘g ⊕ᴰ-in open'
--- --         --   ∘g id ,⊗ ((⟜-app ∘g &ᴰ-π (suc 0) ,⊗ ((roll ∘g ⊕ᴰ-in close' ∘g ⊕ᴰ-in (_ , Eq.refl) ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ id)) ∘g ⊗-assoc⁻)) ∘g ⊗-assoc⁻)
--- --         --   ∘g ⊗-assoc⁻)
--- --         --   ≡⟨ cong ((rec TraceTys mkTreeAlg (0 , true)) ∘g_) (q' _ _) ⟩
--- --         -- rec TraceTys mkTreeAlg (0 , true) ∘g
--- --         -- roll ∘g
--- --         -- ⊕ᴰ-in open' ∘g
--- --         -- -- Bool.elim {A = λ b → literal [ ⊗ GenIndDyck (suc 0 , b)  ⊢ GenIndDyck (0 , b)}
--- --         -- --   (roll ∘g ⊕ᴰ-in balanced')
--- --         -- --   ⊤-intro true ∘g
--- --         -- id ,⊗
--- --         --   (⟜-app ∘g
--- --         --     &ᴰ-π (suc 0) ,⊗
--- --         --     (roll ∘g
--- --         --       ⊕ᴰ-in close' ∘g
--- --         --       ⊕ᴰ-in (0 , Eq.refl) ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ id) ∘g
--- --         --       ⊗-assoc⁻) ∘g
--- --         --    ⊗-assoc⁻) ∘g
--- --         -- ⊗-assoc⁻ ∘g
--- --         -- id ,⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g
--- --         -- ⊗-unit-r⁻
--- --         --   ≡⟨ (λ i → roll ∘g ⊕ᴰ-in balanced' ∘g id ,⊗ rec TraceTys mkTreeAlg (1 , true) ∘g ((id ,⊗ (⟜-app ∘g ⊗-intro (&ᴰ-π 1)
--- --         --     (roll ∘g
--- --         --      ⊕ᴰ-in close' ∘g
--- --         --      ⊕ᴰ-in (0 , Eq.refl) ∘g
--- --         --      id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ id) ∘g ⊗-assoc⁻) ∘g ⊗-assoc⁻)
--- --         --     ∘g ⊗-assoc⁻ ∘g id ,⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g (id ,⊗ rec TraceTys mkTreeAlg (1 , true)) ∘g {!!}) ∘g id ,⊗ id ,⊗ {!!}) ∘g (⊗-assoc⁻ ∘g
--- --         --      id ,⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g
--- --         --      ⊗-unit-r⁻)) ⟩
+  genAppend' n (balanced(lp, d₁, rp, d₂)) (genMkTree n t)
+  ≡ genBAL n lp (d₁ , rp , genAppend' )
 
 
--- --         -- roll ∘g ⊕ᴰ-in balanced' ∘g id ,⊗ recHomo TraceTys mkTreeAlg .fst (1 , true) ∘g {!!} ∘g (⊗-assoc⁻ ∘g
--- --         --      id ,⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g
--- --         --      ⊗-unit-r⁻)
--- --         -- -- roll ∘g
--- --         -- -- ⊕ᴰ-in balanced' ∘g
--- --         -- -- id ,⊗ ({!id!} ∘g map (DyckTy _) {!!} ∘g {!id!}) ∘g
--- --         -- -- id ,⊗
--- --         -- --   (⟜-app ∘g
--- --         -- --     &ᴰ-π (suc 0) ,⊗
--- --         -- --     (roll ∘g
--- --         -- --       ⊕ᴰ-in close' ∘g
--- --         -- --       ⊕ᴰ-in (0 , Eq.refl) ∘g id ,⊗ (⟜-app ∘g &ᴰ-π 0 ,⊗ id) ∘g
--- --         -- --       ⊗-assoc⁻) ∘g
--- --         -- --    ⊗-assoc⁻) ∘g
--- --         -- -- ⊗-assoc⁻ ∘g
--- --         -- -- id ,⊗ (roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl) ∘g
--- --         -- -- ⊗-unit-r⁻
--- --         --   ≡⟨ (λ i → roll ∘g ⊕ᴰ-in balanced' ∘g {!!} ) ⟩
--- --         -- roll ∘g
--- --         -- map (DyckTy _)
--- --         --   (λ z →
--- --         --      mkTree ∘g
--- --         --      (⟜-app ∘g
--- --         --       ⊸0⊗
--- --         --       (roll ∘g
--- --         --        ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl))
--- --         --      ∘g &ᴰ-π 0)
--- --         --  ∘g ⊕ᴰ-in balanced'
--- --         -- ∎
--- --      }))
--- --     (recHomo DyckTy eTAlg))
--- --     tt)
--- --     where
--- --       -- maybe generalize from 0 to n and prove ∀ n by induction?
--- --       the-lemma :
--- --         Path (TraceAction _ ⊗ literal ] ⊗ TraceAction _ ⊢ IndDyck ⊗ literal ] ⊗ IndDyck)
--- --         (rec TraceTys mkTreeAlg ((suc 0) , true) ∘g (⟜-app ∘g &ᴰ-π (suc 0) ,⊗ id ∘g id ,⊗ (CLOSE ∘g id ,⊗ appEOF)))
--- --         ((rec TraceTys mkTreeAlg (0 , true) ∘g appEOF) ,⊗ id ,⊗ (rec TraceTys mkTreeAlg (0 , true) ∘g appEOF))
--- --       the-lemma = {!!}
-   
--- --       the-lemma' :
--- --         Path (TraceAction _ ⊗ literal ] ⊗ Trace 0 true ⊢ IndDyck ⊗ literal ] ⊗ IndDyck)
--- --         (rec TraceTys mkTreeAlg ((suc 0) , true) ∘g (⟜-app ∘g &ᴰ-π (suc 0) ,⊗ id ∘g id ,⊗ (CLOSE ∘g id ,⊗ id)))
--- --         ((rec TraceTys mkTreeAlg (0 , true) ∘g appEOF) ,⊗ id ,⊗ (rec TraceTys mkTreeAlg (0 , true)))
--- --       the-lemma' = {!!}
--- --       -- TODO rename all of these lemmas and put them in the relevant external
--- --       -- files
--- --       opaque
--- --         unfolding ε
--- --         -- Epsilon.Properties
--- --         u : unambiguous ε
--- --         u = EXTERNAL.propParses→unambiguous isFinBracket λ w → isSetString _ _
+-}
 
--- --       -- Epsilon.Properties
--- --       s : ⊗-unit-l {g = ε} ≡ ⊗-unit-r {g = ε}
--- --       s = u _ _
+{-
 
--- --       -- Epsilon.Properties
--- --       t : ⊗-unit-l⁻ {g = ε} ≡ ⊗-unit-r⁻ {g = ε}
--- --       t =
--- --         ⊗-unit-l⁻
--- --           ≡⟨ cong (⊗-unit-l⁻ ∘g_) (sym ⊗-unit-r⁻r) ⟩
--- --         ⊗-unit-l⁻ ∘g ⊗-unit-r ∘g ⊗-unit-r⁻
--- --           ≡⟨ cong (λ z → ⊗-unit-l⁻ ∘g z ∘g ⊗-unit-r⁻) (sym s) ⟩
--- --         ⊗-unit-l⁻ ∘g ⊗-unit-l ∘g ⊗-unit-r⁻
--- --           ≡⟨ cong (_∘g ⊗-unit-r⁻) ⊗-unit-ll⁻ ⟩
--- --         ⊗-unit-r⁻
--- --         ∎
+  This doesn't seem to work, even though it seems provable by induction:
 
--- --       opaque
--- --         -- opaque so that ⊗-unit-r⁻ commutes for free
--- --         unfolding ⊗-unit-r⁻ ⊗-unit-l⁻
--- --         q' : ∀ {ℓg ℓh ℓk : Level}
--- --           {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
--- --           (e : ε ⊢ g)(e' : k ⊗ g ⊢ h) →
--- --           ⟜-app ∘g (id ,⊗ e) ∘g ⊗-unit-r⁻ ∘g ⟜-intro e' ≡
--- --             e' ∘g id ,⊗ e ∘g ⊗-unit-r⁻
--- --         q' e e' = cong (_∘g (id ,⊗ e ∘g ⊗-unit-r⁻)) (⟜-β e')
+  we want to show that
 
--- --         q : ∀ {ℓg ℓh : Level}
--- --           {g : Grammar ℓg}{h : Grammar ℓh}
--- --           (e : ε ⊢ g)(e' : g ⊢ h) →
--- --           ⟜-app ∘g (id ,⊗ e) ∘g ⊗-unit-r⁻ ∘g ⟜-intro-ε e' ≡ e' ∘g e
--- --         q e e' =
--- --           q' e (e' ∘g ⊗-unit-l) ∙
--- --           cong ((e' ∘g ⊗-unit-l ∘g id ,⊗ e) ∘g_) (sym t)  ∙
--- --           cong (λ z → e' ∘g z ∘g e) ⊗-unit-l⁻l
+  d : IndDyck ⊢ (λ& n → λ⟜ t → genMkTree n (buildTrace n d t))
+                ≡ (λ& n → λ⟜ t → genAppend' n d (genMkTree n t))
 
--- --       p : ∀ e →
--- --         ⟜-app ∘g
--- --         (id ,⊗ e) ∘g
--- --         ⊗-unit-r⁻ ∘g
--- --         ⟜-intro-ε id ≡ e
--- --       p e = q e id
+  By induction on d
 
--- -- weirdAlg : ∀ b → Algebra (TraceBTys b) (λ n → ⊕[ b' ∈ _ ] Trace' b' n)
--- -- weirdAlg b n = ⊕ᴰ-elim (λ
--- --   { eof' →
--- --     ⊕ᴰ-in b
--- --     ∘g ⊕ᴰ-elim (λ { n≡0 → ⊕ᴰ-elim (λ { b≡true →
--- --     roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in n≡0 ∘g ⊕ᴰ-in b≡true }) })
--- --   ; open' →
--- --     ⊸-intro⁻ (⊕ᴰ-elim λ b' → ⊸-intro (⊕ᴰ-in b' ∘g roll ∘g ⊕ᴰ-in open'))
--- --   ; close' → ⊕ᴰ-elim λ { n-1 → ⊸-intro⁻ (⊕ᴰ-elim λ b' → ⊸-intro (⊕ᴰ-in b' ∘g roll ∘g ⊕ᴰ-in close' ∘g ⊕ᴰ-in n-1)) }
--- --   ; leftovers' →
--- --     ⊕ᴰ-in b ∘g
--- --     ⊕ᴰ-elim (λ n-1 → ⊕ᴰ-elim (λ { b≡false → roll ∘g ⊕ᴰ-in leftovers' ∘g ⊕ᴰ-in n-1 ∘g ⊕ᴰ-in b≡false }))
--- --   ; unexpected' → ⊕ᴰ-in b ∘g ⊕ᴰ-elim λ n,b≡0,false → roll ∘g ⊕ᴰ-in unexpected' ∘g ⊕ᴰ-in n,b≡0,false
--- --   })
+  n:ℕ ; e : ε , t : Trace n ⊢
+    genMkTree n (buildTrace n (nil(e)) t)
+    ≡ genMkTree n t
+    ≡ genAppend' n nil(e) (genMkTree n t)  [ by defn of genAppend' ]
 
--- -- EOF' : ε ⊢ Trace' true 0
--- -- EOF' = roll ∘g ⊕ᴰ-in eof' ∘g ⊕ᴰ-in Eq.refl ∘g ⊕ᴰ-in Eq.refl
+  n:ℕ ; lp : LP , d₁ : IndDyck , rp : RP , d₂ : IndDyck ⊢
+    genMkTree n (buildTrace n (balanced(lp, d₁, rp, d₂)) t)
+    ≡ genMkTree n (open lp (buildTrace (suc n) d₁ (close rp (buildTrace n d₂ t))))                [ defn of buildTrace ]
+    ≡ genBALANCED n lp (genMkTree (suc n) (buildTrace (suc n) d₁ (close rp (buildTrace n d₂ t)))) [ defn of genMkTree and buildTrace ]
+    ≡ genBALANCED n lp (genAppend' (suc n) d₁ (genMkTree (suc n) (close rp (buildTrace n d₂ t)))) [ by inductive hypothese for d₁ ]
+    ≡ genBALANCED n lp (genAppend' (suc n) d₁ (nil(), rp, genMkTree n (buildTrace n d₂ t)))       [ defn of genMkTree ]
+    ≡ genBALANCED n lp (genAppend' (suc n) d₁ (nil(), rp, genMkTree n (buildTrace n d₂ t)))       [ defn of genMkTree ]
+    ≡ genBALANCED n lp ((append d₁ nil()), rp, genMkTree n (buildTrace n d₂ t))                   [ by append-nil-r ]
+    ≡ genBALANCED n lp (d₁, rp, genMkTree n (buildTrace n d₂ t))                                  [ by inductive hypothesis for d₂ ]
+    ≡ genBALANCED n lp (d₁, rp, genAppend' n d₂ (genMkTree n t))                                                [ defn of genAppend' ]
+    ≡ genAppend' n (balanced(lp, d₁, rp, d₂)) (genMkTree n t)
 
--- -- OPEN' : ∀ {n b} → literal [ ⊗ Trace' b (suc n) ⊢ Trace' b n
--- -- OPEN' = roll ∘g ⊕ᴰ-in open'
+  but I don't really see how to structure this inductive argument as
+  an instance of the universal property of fold.
 
--- -- CLOSE' : ∀ {n b} → literal ] ⊗ Trace' b n ⊢ Trace' b (suc n)
--- -- CLOSE' = roll ∘g ⊕ᴰ-in close' ∘g ⊕ᴰ-in (_ , Eq.refl)
+  The issue is that the universal property allows you to prove two
+  functions are equivalent if you can prove they both satisfy the same
+  recurrence relation, but there doesn't seem to be a way to describe
+  the balanced case as a recurrence because we need to know the left
+  subcall inductively
 
 
 
+-}
+
+lhs rhs : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n)
+lhs = (&ᴰ-intro λ n → ⟜-intro (genMkTree n ∘g ⟜-app) ∘g &ᴰ-π n) ∘g buildTrace
+
+rhs = ((&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g genAppend')
+
+pfAlg : Algebra DyckTy (λ _ → equalizer lhs rhs)
+pfAlg _ =
+  eq-intro _ _ (roll ∘g map (DyckTy _) (λ _ → eq-π _ _))
+    pf
+  where
+    opaque
+      unfolding ⊗-intro
+      pf : lhs ∘g roll ∘g map (DyckTy _) (λ _ → eq-π lhs rhs)
+           ≡ rhs ∘g roll ∘g map (DyckTy _) (λ _ → eq-π _ _)
+      pf = ⊕ᴰ≡ _ _ λ
+        { nil' → &ᴰ≡ _ _ λ n →
+          ⟜-intro-natural
+          ∙ cong ⟜-intro
+            ((λ i → genMkTree n ∘g ⟜-β ⊗-unit-l i ∘g lowerG ,⊗ id)
+            ∙ λ i → upgradeNilBuilder n (genMkTree n) (~ i) ∘g lowerG ,⊗ id)
+          ∙ sym ⟜-intro-natural
+        ; balanced' → &ᴰ≡ _ _ λ n →
+          ⟜-intro-natural ∙
+          cong ⟜-intro
+            ((λ i → genMkTree n
+              ∘g ⟜-β (OPEN
+                ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc n) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g ⊗-assoc⁻4
+                ∘g (lowerG ,⊗ lowerG {ℓ-zero} ,⊗ lowerG ,⊗ lowerG {ℓ-zero}) ,⊗ id) i
+              ∘g (id ,⊗ (liftG {ℓ-zero} ∘g buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id ,⊗ ((liftG {ℓ-zero} ∘g buildTrace ∘g eq-π lhs rhs ∘g lowerG))) ,⊗ id)
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ genMkTree (suc n)
+                ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc n) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g ⊗-assoc⁻4⊗-intro {f = lowerG}{f' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'' = lowerG}{f''' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'''' = id} i)
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-β (genMkTree (suc n) ∘g ⟜-app) (~ i) ∘g (&ᴰ-π (suc n) ∘g (buildTrace ∘g eq-π lhs rhs)) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
+                ∘g ⊗-assoc⁻4)
+            -- by inductive hypothesis for the left subtree
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-app ∘g (&ᴰ-π (suc n) ∘g eq-π-pf lhs rhs i) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
+                ∘g ⊗-assoc⁻4)
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-β (⟜-app ∘g id ,⊗ genMkTree (suc n)) i ∘g (&ᴰ-π (suc n) ∘g genAppend') ,⊗ id)
+                ∘g id ,⊗ id ,⊗ CLOSE
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g (lowerG ,⊗ (eq-π lhs rhs ∘g lowerG) ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
+                ∘g ⊗-assoc⁻4)
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-app ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-β (genMkTree n ∘g ⟜-app) (~ i) ∘g (&ᴰ-π n ∘g buildTrace ∘g eq-π lhs rhs) ,⊗ id)
+                ∘g (lowerG ,⊗ (upgradeBuilder (suc n) ∘g append' ∘g eq-π lhs rhs ∘g lowerG) ,⊗ lowerG ,⊗ lowerG ,⊗ id)
+                ∘g ⊗-assoc⁻4)
+            -- inductive hypothesis 
+            ∙ ((λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-app ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g (&ᴰ-π n ∘g eq-π-pf lhs rhs i) ,⊗ id)
+                ∘g (lowerG ,⊗ (upgradeBuilder (suc n) ∘g append' ∘g eq-π lhs rhs ∘g lowerG) ,⊗ lowerG ,⊗ lowerG ,⊗ id)
+                ∘g ⊗-assoc⁻4))
+            ∙ ((λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-app ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-β (⟜-app ∘g id ,⊗ genMkTree n) i ∘g upgradeBuilder n ,⊗ id)
+                ∘g (lowerG ,⊗ (upgradeBuilder (suc n) ∘g append' ∘g eq-π lhs rhs ∘g lowerG) ,⊗ lowerG ,⊗ (append' ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
+                ∘g ⊗-assoc⁻4))
+            ∙ (λ i → genBALANCED n
+                ∘g id ,⊗ (⟜-app ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
+                ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
+                ∘g lowerG ,⊗ (upgradeBuilder (suc n) ∘g lowerG {ℓ-zero}) ,⊗ lowerG ,⊗ ((upgradeBuilder n) ∘g lowerG {ℓ-zero}) ,⊗ genMkTree n
+                ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = liftG {ℓ-zero} ∘g append' ∘g eq-π lhs rhs ∘g lowerG}{f'' = id}{f''' = liftG {ℓ-zero} ∘g append' ∘g eq-π lhs rhs ∘g lowerG}{f'''' = id} (~ i)
+              )
+            ∙ (λ i →
+              upgradeBalancedBuilder n (genMkTree n) (~ i)
+              ∘g (id ,⊗ (liftG {ℓ-zero} ∘g append' ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id ,⊗ ((liftG {ℓ-zero} ∘g append' ∘g eq-π lhs rhs ∘g lowerG))) ,⊗ id))
+          ∙ sym ⟜-intro-natural
+        }
+
+genRetr :
+  Path (IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n))
+    lhs
+    rhs
+genRetr = equalizer-section _ _
+  (rec DyckTy pfAlg _)
+  (ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) pfAlg (initialAlgebra DyckTy)
+    ((λ _ → eq-π lhs rhs) , λ _ → eq-π-is-homo)
+    (recHomo DyckTy pfAlg)) _)
+  where
+    opaque
+      unfolding eq-π eq-intro
+      eq-π-is-homo : eq-π lhs rhs ∘g pfAlg _ ≡ roll ∘g map (DyckTy _) (λ _ → eq-π lhs rhs)
+      eq-π-is-homo = ⊕ᴰ≡ _ _ λ
+        { nil' → refl
+        ; balanced' → refl
+        }
+
+Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
+Dyck≅Trace =
+  unambiguousRetract→StrongEquivalence
+    (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g genBuildTrace 0)
+    mkTree
+    (mkTree ∘g ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g buildTrace
+     ≡⟨ (λ i → ⟜-mapCod-postcompε mkTree EOF (~ i) ∘g &ᴰ-π 0 ∘g buildTrace) ⟩
+     ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g ⟜-mapCod mkTree ∘g &ᴰ-π 0 ∘g buildTrace
+     ≡⟨ refl ⟩
+     ⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-mapCod (genMkTree n) ∘g &ᴰ-π n) ∘g buildTrace
+     ≡⟨ cong (((⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0) ∘g_) genRetr ⟩
+     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0 ∘g (&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g genAppend'
+     ≡⟨ refl ⟩
+     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom mkTree ∘g &ᴰ-π 0 ∘g genAppend'
+     ≡⟨ refl ⟩
+     (⟜-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom mkTree ∘g append'
+     ≡⟨ ((λ i → ⟜-mapDom-postcompε mkTree EOF i ∘g append')) ⟩
+     ⟜-app ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻ ∘g append'
+     ≡⟨ append-nil-r' ⟩
+    id ∎)
+    isUnambiguousTrace

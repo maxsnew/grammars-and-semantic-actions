@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
@@ -20,6 +19,7 @@ private
     ℓg ℓh ℓk ℓl ℓ ℓ' : Level
     g g' g'' g1 g2 g3 g4 g5 : Grammar ℓg
     h h' h'' : Grammar ℓh
+    f f' f'' : g ⊢ h
     k : Grammar ℓk
     l : Grammar ℓl
 
@@ -173,6 +173,44 @@ opaque
 ⟜-mapCod : k ⊢ l → k ⟜ g ⊢ l ⟜ g
 ⟜-mapCod f = ⟜-intro (f ∘g ⟜-app)
 
+opaque
+  unfolding ⟜-intro
+
+  ⟜-mapCod-precomp : (e : g ⊢ h)(f : k ⊗ l ⊢ g) →
+    ⟜-mapCod e ∘g ⟜-intro f ≡ ⟜-intro (e ∘g f)
+  ⟜-mapCod-precomp {g = g}{h = h}{l = l} e f =
+    funExt λ w → funExt λ p → funExt λ w' → funExt λ q →
+    cong (e (w ++ w')) (transportRefl (⟜-intro {h = l} f w p w' q))
+
+opaque
+  unfolding ⊗-intro
+  ⟜-mapCod-postcompε : (e : g ⊢ h)(f : ε ⊢ g) →
+    (⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻) ∘g ⟜-mapCod e ≡
+      e ∘g ⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻
+  ⟜-mapCod-postcompε e f =
+    cong ((⟜-app ∘g id ,⊗ f) ∘g_) ⊗-unit-r⁻⊗-intro
+    ∙ (λ i → ⟜-β (e ∘g ⟜-app) i ∘g (id ,⊗ f) ∘g ⊗-unit-r⁻)
+
+⟜-mapDom : g ⊢ h → k ⟜ h ⊢ k ⟜ g
+⟜-mapDom f = ⟜-intro (⟜-app ∘g id ,⊗ f)
+
+opaque
+  -- why do we need to unfold ⟜-intro here?
+  unfolding ⟜-intro
+  ⟜-mapDom-precomp : (e : g ⊢ h)(f : k ⊗ h ⊢ h) →
+    ⟜-mapDom e ∘g ⟜-intro f ≡ ⟜-intro (f ∘g id ,⊗ e)
+  ⟜-mapDom-precomp {g = g}{h = h} e f =
+      ⟜-η {h = h} (⟜-intro {h = g}(f ∘g id ,⊗ e))
+
+opaque
+  unfolding ⊗-intro
+  ⟜-mapDom-postcompε : (e : g ⊢ h)(f : ε ⊢ g) →
+    (⟜-app ∘g id ,⊗ f ∘g ⊗-unit-r⁻) ∘g ⟜-mapDom {k = k} e ≡
+      ⟜-app ∘g id ,⊗ (e ∘g f) ∘g ⊗-unit-r⁻
+  ⟜-mapDom-postcompε e f =
+    cong ((⟜-app ∘g id ,⊗ f) ∘g_) ⊗-unit-r⁻⊗-intro
+    ∙ λ i → ⟜-β (⟜-app ∘g id ,⊗ e) i ∘g (id ,⊗ f) ∘g ⊗-unit-r⁻
+
 ⟜-curry :
   k ⟜ (g ⊗ h) ⊢ k ⟜ h ⟜ g
 ⟜-curry {k = k} = ⟜-intro (⟜-intro {k = k} (⟜-app ∘g ⊗-assoc⁻))
@@ -180,6 +218,11 @@ opaque
 ⟜-intro-ε :
   g ⊢ k → ε ⊢ k ⟜ g
 ⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-l)
+
+⟜-intro-ε-β :
+  (f : g ⊢ k)
+  → ⟜-app ∘g (⟜-intro-ε f) ,⊗ id ≡ f ∘g ⊗-unit-l
+⟜-intro-ε-β f = ⟜-β (f ∘g ⊗-unit-l)
 
 ⟜2-intro-ε :
   g1 ⊗ g2 ⊢ k → ε ⊢ k ⟜ g2 ⟜ g1
@@ -219,6 +262,9 @@ opaque
 ⟜2⊗ : ε ⊢ k ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
 ⟜2⊗ f = ⟜-app-l ∘g ⟜1⊗ f
 
+⟜2⊗' : g1 ⊗ g2 ⊢ k → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
+⟜2⊗' f = f ,⊗ id ∘g ⊗-assoc
+
 ⟜3⊗ : ε ⊢ k ⟜ g3 ⟜ g2 ⟜ g1 → g1 ⊗ g2 ⊗ g3 ⊗ l ⊢ k ⊗ l
 ⟜3⊗ f = ⟜-app-l ∘g ⟜2⊗ f
 
@@ -228,7 +274,27 @@ opaque
 ⊸0⊗ : ε ⊢ k → l ⊢ l ⊗ k
 ⊸0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
 
-⟜-app⊸0⊗ :
-  ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) →
-  ⟜-app ∘g ⊸0⊗ x ∘g ⟜-intro f ≡ f ∘g ⊸0⊗ x
-⟜-app⊸0⊗ = {!!}
+
+opaque
+  unfolding ⊗-intro
+  ⟜-app⊸0⊗ :
+    ∀ (f : g ⊗ h ⊢ k) (x : ε ⊢ h) →
+    ⟜-app ∘g ⊸0⊗ x ∘g ⟜-intro f ≡ f ∘g ⊸0⊗ x
+  ⟜-app⊸0⊗ f x =
+    cong ((⟜-app ∘g id ,⊗ x) ∘g_) ⊗-unit-r⁻⊗-intro
+    ∙ λ i → ⟜-β f i ∘g (id ,⊗ x) ∘g ⊗-unit-r⁻
+
+⟜≡ : ∀ (f f' : g ⊢ k ⟜ h)
+  → ⟜-app ∘g (f ,⊗ id) ≡ ⟜-app ∘g (f' ,⊗ id)
+  → f ≡ f'
+⟜≡ f f' p =
+  sym (⟜-η f)
+  ∙ cong ⟜-intro p
+  ∙ ⟜-η f'
+opaque
+  unfolding ⊗-intro
+  ⟜-intro-natural :
+    ⟜-intro f ∘g f' ≡ ⟜-intro (f ∘g f' ,⊗ id)
+  ⟜-intro-natural {f = f}{f' = f'} = ⟜≡ _ _
+    ((λ i → ⟜-β f i ∘g (f' ,⊗ id))
+    ∙ sym (⟜-β _) )

@@ -65,3 +65,12 @@ Mono∘g : (e : g ⊢ h) (e' : h ⊢ k) →
   isMono e' → isMono e → isMono (e' ∘g e)
 Mono∘g e e' mon-e mon-e' f f' e'ef≡e'ef' =
   mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')
+
+transportG :
+  g ≡ h
+  → g ⊢ h
+transportG {g = g}{h = h} p = subst (λ h → g ⊢ h) p id
+
+transportGRefl :
+  transportG {g = g} refl ≡ id
+transportGRefl {g = g} = substRefl {B = λ h → g ⊢ h} _
