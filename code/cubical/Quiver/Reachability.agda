@@ -131,13 +131,13 @@ module Reachability {ℓ} {ℓ'}
     Walk end (cod (first-edge walk)) n
   tail (cons _ e walk) = walk
 
-  snoc :
+  snocWalk :
     {start : ⟨ ob ⟩} →
     (e : mor) →
     Walk (dom e) start n →
     Walk (cod e) start (suc n)
-  snoc e nil = cons 0 e nil
-  snoc e (cons n e' walk) = cons (suc n) e' (snoc e walk)
+  snocWalk e nil = cons 0 e nil
+  snocWalk e (cons n e' walk) = cons (suc n) e' (snocWalk e walk)
 
   vertices :
     {end start : ⟨ ob ⟩} →

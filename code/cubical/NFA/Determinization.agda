@@ -124,7 +124,7 @@ module _
     ε-reach-is-ε-closed : ∀ q-start → is-ε-closed (ε-reach q-start)
     ε-reach-is-ε-closed q-start t x x-is-reachable =
       PT.rec isPropPropTrunc
-        (λ (n , walk) → ∣ (suc n) , snoc t walk ∣₁)
+        (λ (n , walk) → ∣ (suc n) , snocWalk t walk ∣₁)
         x-is-reachable
 
     ε-closure : ⟨ FinSetDecℙ N.Q ⟩ → εClosedℙQ
@@ -282,15 +282,14 @@ module _
               (DecℙIso ⟨ N.Q ⟩ .Isom.Iso.fun (X .fst) q)
               (Bool-iso-DecProp' .Isom.Iso.fun (N .isAcc q)))
 
-  open DFA
-  ℙN : DFA (ℓ-suc ℓN)
-  ℙN .Q = εClosedℙQ , isFinSet-εClosedℙQ
+  open DeterministicAutomaton
+  ℙN : DFA (εClosedℙQ , isFinSet-εClosedℙQ)
   ℙN .init = ε-closure (SingletonDecℙ {A = N.Q} N.init)
   ℙN .isAcc X = Bool-iso-DecProp' .Isom.Iso.inv (ℙNAcc-DecProp' X)
   ℙN .δ X c = ε-closure (lit-closure c (X .fst))
 
   private
-    module ℙN = DFA ℙN
+    module ℙN = DeterministicAutomaton ℙN
 
   isFinOrd-q∈X-acc :
     (X : εClosedℙQ) →

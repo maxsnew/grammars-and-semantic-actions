@@ -7,7 +7,7 @@ module DFA.Base (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.FinSet
 
 open import Grammar Alphabet
-open import Automaton.Deterministic Alphabet
+open import Automaton.Deterministic Alphabet public
 
 private
   variable
