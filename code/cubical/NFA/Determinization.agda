@@ -27,7 +27,6 @@ open import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 
 open import Grammar Alphabet
-open import Grammar.Lift Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.Inductive.Indexed Alphabet as Idx
 open import Term Alphabet

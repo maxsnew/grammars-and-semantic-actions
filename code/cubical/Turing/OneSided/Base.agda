@@ -47,7 +47,6 @@ open import Grammar Alphabet
 import Grammar.Maybe Alphabet as MaybeG
 open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Lift Alphabet
 open import Term Alphabet
 
 data Shift : Type where
