@@ -23,7 +23,8 @@ open import Cubical.Data.SumFin hiding (fsuc)
 open import Cubical.Data.Unit
 open import Cubical.HITs.PropositionalTruncation as PT
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (KL* ; NIL ; CONS)
+open import Grammar.KleeneStar.Manual Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.RegularExpression Alphabet
 
