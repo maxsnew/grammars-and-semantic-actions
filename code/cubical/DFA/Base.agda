@@ -13,7 +13,7 @@ private
   variable
     ℓD : Level
 
-open DeterministicAutomaton
+open DeterministicAutomaton 
 
 DFA : FinSet ℓD → Type (ℓ-suc ℓD)
 DFA Q = DeterministicAutomaton ⟨ Q ⟩
