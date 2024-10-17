@@ -6,7 +6,6 @@ module Grammar.Top.Base (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.Unit
 
 open import Grammar.Base Alphabet
-open import Grammar.String Alphabet
 open import Term.Base Alphabet
 
 private
@@ -39,8 +38,3 @@ opaque
   is-terminal-⊤* : ∀ {ℓg} → is-terminal (⊤* {ℓg})
   is-terminal-⊤* = ⊤*-intro , λ _ → refl
 
-⊤→string : ⊤ ⊢ string
-⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
-
-⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string
-⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)

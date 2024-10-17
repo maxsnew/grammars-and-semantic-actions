@@ -23,15 +23,14 @@ open import Grammar.Literal Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Negation Alphabet
 open import Grammar.LinearProduct Alphabet
-open import Grammar.KleeneStar Alphabet
-open import Grammar.String Alphabet
+-- open import Grammar.String.Base Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓS : Level
+    ℓ ℓ' ℓg ℓh ℓk ℓl ℓS : Level
     g : Grammar ℓg
     h : Grammar ℓh
     k : Grammar ℓk
@@ -59,49 +58,7 @@ unambiguous'→unambiguous unambig e e' =
 unambiguous→unambiguous' : unambiguous g → unambiguous' g
 unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
 
--- A third notion of unambiguity.
--- This is the definition you'd expect in the grammar model of the
--- theory, that each string has at most one parse (up to paths bw parses)
---
--- These definitions should not be used for abstract grammars, but can prove
--- useful for showing unambiguity for things like literals, ε, and string
-module EXTERNAL where
-  propParses : Grammar ℓg → Type ℓg
-  propParses g = ∀ w → isProp (g w)
-
-  propParses→unambiguous' : propParses g → unambiguous' g
-  propParses→unambiguous' {g = g} unambig' e e' _ =
-    funExt (λ w → funExt (λ x → unambig' w (e w x) (e' w x)))
-
-  module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
-    opaque
-      unfolding uniquely-supported-⌈w⌉ internalize ⊤
-      unambiguous'→propParses : unambiguous' g → propParses g
-      unambiguous'→propParses {g = g} unambig w pg pg' =
-        isMono→injective unambig w pg pg' refl
-        where
-        pick-parse : ∀ w' (h : Grammar ℓh) → h w' → ⌈ w' ⌉ ⊢ h
-        pick-parse w' h p w'' x =
-          subst h (uniquely-supported-⌈w⌉ isFinSetAlphabet w' w'' x) p
-
-        isMono→injective : {e : h ⊢ ⊤} →
-          isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
-        isMono→injective {h = h}{e = e} mono-e w p p' ewp≡ewp' =
-          sym (transportRefl p) ∙
-          cong (λ a → transp (λ i → h (a i)) i0 p) (isSetString _ w refl _) ∙
-          funExt⁻
-            (funExt⁻ (mono-e (pick-parse w h p) (pick-parse w h p') refl) w)
-              (internalize w) ∙
-          cong (λ a → transp (λ i → h (a i)) i0 p') (isSetString _ w _ refl) ∙
-          transportRefl p'
-
-    unambigous→propParses : unambiguous g → propParses g
-    unambigous→propParses unambig =
-      unambiguous'→propParses (unambiguous→unambiguous' unambig)
-
-    propParses→unambiguous : propParses g → unambiguous g
-    propParses→unambiguous ppg =
-      unambiguous'→unambiguous (propParses→unambiguous' ppg)
+-- A third notion of unambiguity in String.Properties
 
 totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)
 totallyParseable {ℓg = ℓg} g =

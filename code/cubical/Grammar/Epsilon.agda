@@ -7,6 +7,7 @@ open import Cubical.Data.List
 
 open import Helper
 open import Grammar.Base Alphabet
+open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 open import Term.Nullary Alphabet
 open import Term.Bilinear Alphabet
@@ -51,3 +52,6 @@ opaque
     subst h
       (sym (++-unit-r _) ∙ cong (w1 ++_) (sym w2≡[]))
       (f w1 gp)
+
+ε* : ∀ {ℓ : Level} → Grammar ℓ
+ε* {ℓ = ℓ} = LiftG ℓ ε

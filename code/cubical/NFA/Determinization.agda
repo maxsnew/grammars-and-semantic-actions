@@ -27,14 +27,15 @@ open import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 
 open import Grammar Alphabet
-open import Grammar.Lift Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.Inductive.Indexed Alphabet as Idx
 open import Term Alphabet
 open import NFA.Base Alphabet
 open import DFA Alphabet
 open import Helper
-open import Graph.Reachability
+
+open import Cubical.Data.Quiver.Base -- from cubical-categorical-logic
+open import Quiver.Reachability
 
 private
   variable
@@ -53,15 +54,12 @@ module _
   private
     module N = NFA N
 
-  open directedGraph
-  -- The NFA without labelled transitions,
-  -- viewed as a directed graph
-  ε-graph : directedGraph ℓN
-  ε-graph .states = N.Q
-  ε-graph .directed-edges = N.ε-transition
-  ε-graph .src = N.ε-src
-  ε-graph .dst = N.ε-dst
-  private module ε-graph = directedGraph ε-graph
+  ε-quiver : QuiverOver ⟨ N.Q ⟩ ℓN
+  ε-quiver .QuiverOver.mor = ⟨ N.ε-transition ⟩
+  ε-quiver .QuiverOver.dom = N.ε-src
+  ε-quiver .QuiverOver.cod = N.ε-dst
+
+  open QuiverOver ε-quiver
 
   is-ε-closed : ⟨ FinSetDecℙ N.Q ⟩ → Type ℓN
   is-ε-closed X =
@@ -114,17 +112,18 @@ module _
   _∈ε_ : ⟨ N.Q ⟩ → εClosedℙQ → Type ℓN
   q ∈ε qs = qs .fst q .fst .fst
 
+  open Reachability N.Q ε-quiver (str N.ε-transition)
   opaque
     -- The decidable finite set of states reachable from q-start
     ε-reach : ⟨ N.Q ⟩ → ⟨ FinSetDecℙ N.Q ⟩
     ε-reach q-start q-end .fst = _ , isPropPropTrunc
     ε-reach q-start q-end .snd =
-      DecReachable ε-graph isFinOrd-ε-transition q-end q-start
+      DecReachable isFinOrd-ε-transition q-end q-start
 
     ε-reach-is-ε-closed : ∀ q-start → is-ε-closed (ε-reach q-start)
     ε-reach-is-ε-closed q-start t x x-is-reachable =
       PT.rec isPropPropTrunc
-        (λ (n , walk) → ∣ (suc n) , snoc ε-graph t walk ∣₁)
+        (λ (n , walk) → ∣ (suc n) , snocWalk t walk ∣₁)
         x-is-reachable
 
     ε-closure : ⟨ FinSetDecℙ N.Q ⟩ → εClosedℙQ
@@ -137,7 +136,7 @@ module _
     ε-closure-lift-∈ :
       {A : Decℙ ⟨ N.Q ⟩} {a : ⟨ N.Q ⟩} →
       _∈-FinSetDecℙ_ {A = N.Q} a A → a ∈ε (ε-closure A)
-    ε-closure-lift-∈ a∈A = ∣ _ , (a∈A , (Reachable-is-reflexive ε-graph _)) ∣₁
+    ε-closure-lift-∈ a∈A = ∣ _ , (a∈A , (Reachable-is-reflexive _)) ∣₁
 
     ε-closure-transition :
       (t : ⟨ N.ε-transition ⟩) →
@@ -153,14 +152,14 @@ module _
       isFinOrd (
         Σ[ q' ∈ ⟨ N.Q ⟩ ]
         Σ[ q'∈X ∈ X q' .fst .fst ]
-        ∥ GraphWalk' ε-graph q q' ∥₁)
+        ∥ Walk' q q' ∥₁)
     isFinOrd-εclosure-witnesses q X q∈X =
       isFinOrdΣ ⟨ N.Q ⟩ isFinOrd-Q _
         λ q' → isFinOrdΣ (X q' .fst .fst) (DecProp→isFinOrd (X q')) _
           λ q'∈X →
             DecProp→isFinOrd
-              ((∥ GraphWalk' ε-graph q q' ∥₁ , isPropPropTrunc) ,
-              DecReachable ε-graph isFinOrd-ε-transition q q')
+              ((∥ Walk' q q' ∥₁ , isPropPropTrunc) ,
+              DecReachable isFinOrd-ε-transition q q')
 
     witness-ε :
       (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
@@ -168,7 +167,7 @@ module _
       (Σ[ q' ∈ ⟨ N.Q ⟩ ]
        Σ[ q'∈X ∈ X q' .fst .fst ]
        Σ[ n ∈ ℕ ]
-       GraphWalk ε-graph q q' n)
+       Walk q q' n)
     witness-ε q X q∈εX =
       let
         q' , q'∈X , ∣walk'∣ =
@@ -176,8 +175,8 @@ module _
       let
         n , walk , uniq =
           SplitSupport-FinOrd
-            (isFinOrdGraphPath ε-graph isFinOrd-ε-transition q q')
-            (PT.map (λ (n , walk) → GraphWalk→GraphPath ε-graph walk) ∣walk'∣) in
+            (isFinOrdUniqueWalk isFinOrd-ε-transition q q')
+            (PT.map (λ (n , walk) → Walk→UniqueWalk walk) ∣walk'∣) in
       q' , q'∈X , FD.toℕ n , walk
 
   opaque
@@ -282,15 +281,14 @@ module _
               (DecℙIso ⟨ N.Q ⟩ .Isom.Iso.fun (X .fst) q)
               (Bool-iso-DecProp' .Isom.Iso.fun (N .isAcc q)))
 
-  open DFA
-  ℙN : DFA (ℓ-suc ℓN)
-  ℙN .Q = εClosedℙQ , isFinSet-εClosedℙQ
+  open DeterministicAutomaton
+  ℙN : DFA (εClosedℙQ , isFinSet-εClosedℙQ)
   ℙN .init = ε-closure (SingletonDecℙ {A = N.Q} N.init)
   ℙN .isAcc X = Bool-iso-DecProp' .Isom.Iso.inv (ℙNAcc-DecProp' X)
   ℙN .δ X c = ε-closure (lit-closure c (X .fst))
 
   private
-    module ℙN = DFA ℙN
+    module ℙN = DeterministicAutomaton ℙN
 
   isFinOrd-q∈X-acc :
     (X : εClosedℙQ) →
@@ -368,7 +366,7 @@ module _
     (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩) →
     (q' : ⟨ N.Q ⟩) →
     (q∈εX : q ∈ε ε-closure X) →
-    (q'-[ε*]→q : GraphWalk' ε-graph q q') →
+    (q'-[ε*]→q : Walk' q q') →
     N.Trace true q ⊢ N.Trace true q'
   fold-walk q X q' q∈εX (0 , nil) = id
   fold-walk q X q' q∈εX (n , (cons n-1 e walk)) =
@@ -425,7 +423,7 @@ module _
       (q' : ⟨ N.Q ⟩) →
       (q'∈litX : (lit-closure c X) q' .fst .fst) →
       (n : ℕ) →
-      (walk : GraphWalk ε-graph q q' n) →
+      (walk : Walk q q' n) →
       (t : ⟨ N.transition ⟩ ) →
       (qt : ⟨ N.Q ⟩) →
       (qt∈X : X qt .fst .fst) →
@@ -455,7 +453,7 @@ module _
     ⊕ᴰ-elim (λ q → ⊕ᴰ-elim (λ q∈εinit →
       let q' , q'∈Singleton , walk = witness-ε q (SingletonDecℙ {A = N.Q} N.init) q∈εinit in
       fold-walk q (SingletonDecℙ {A = N.Q} N.init) N.init q∈εinit
-      (subst (GraphWalk' ε-graph q) q'∈Singleton walk))) ∘g
+      (subst (Walk' q) q'∈Singleton walk))) ∘g
     DFA→NFA (ε-closure (SingletonDecℙ {A = N.Q} N.init))
 
   NFA≈DFA : isLogicallyEquivalent

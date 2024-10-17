@@ -28,7 +28,7 @@ char : Grammar ℓ-zero
 char = LinΣ[ c ∈ ⟨ Alphabet ⟩ ] literal c
 
 string : Grammar ℓ-zero
-string = KL* char
+string = char *
 
 ⌈_⌉ : String → Grammar ℓ-zero
 ⌈ [] ⌉ = ε
@@ -62,5 +62,5 @@ opaque
   internalize (c ∷ w) = (([ c ] , w) , refl) , refl , internalize w
 
   ⌈w⌉→string : ⌈ w ⌉ ⊢ string
-  ⌈w⌉→string {[]} = nil
-  ⌈w⌉→string {c ∷ w} = cons ∘g LinΣ-intro c ,⊗ ⌈w⌉→string {w}
+  ⌈w⌉→string {[]} = NIL -- nil
+  ⌈w⌉→string {c ∷ w} = CONS ∘g ⊕ᴰ-in c ,⊗ ⌈w⌉→string {w}

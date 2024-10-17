@@ -45,4 +45,4 @@ regex≅NFA (r ⊕Reg r') =
 regex≅NFA (KL*Reg r) =
   comp-strong-equiv
     (*-strong-equivalence (regex→NFA r))
-    (star-strong-equiv (regex≅NFA r))
+    (manual-star-strong-equiv (regex≅NFA r))
