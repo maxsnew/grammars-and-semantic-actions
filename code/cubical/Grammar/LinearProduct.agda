@@ -412,7 +412,8 @@ opaque
     ⊗-intro ⊗-unit*-r id ∘g ⊗-assoc {g = g}{h = ε* {ℓ}}{k = h}
     ≡ ⊗-intro id ⊗-unit*-l
   ⊗-triangle {g = g}{h = h} = funExt λ w → funExt λ {
-    (((w1 , w2) , w≡w1w2) , (gp , (((w3 , w4) , w2≡w3w4) , ((lift w3≡[]) , hp)))) →
+    (((w1 , w2) , w≡w1w2) ,
+     (gp , (((w3 , w4) , w2≡w3w4) , ((lift w3≡[]) , hp)))) →
     let p1 : w1 ++ w3 ≡ w1
         p1 = (cong (w1 ++_) w3≡[] ∙ ++-unit-r _)
         p2 = (cong (_++ w4) (sym w3≡[]) ∙ sym w2≡w3w4)
@@ -430,6 +431,27 @@ opaque
        (symP (transport-filler (cong g p1') gp))
      , transport-filler (cong h p2) hp))
     }
+
+{- Pentagon -}
+opaque
+  unfolding ⊗-intro ⊗-assoc
+  ⊗-pentagon :
+    ⊗-intro (⊗-assoc {g = g}) id
+    ∘g ⊗-assoc
+    ∘g ⊗-intro id (⊗-assoc {g = g'}{h = g''}{k = g'''})
+      ≡
+    ⊗-assoc
+    ∘g ⊗-assoc
+  ⊗-pentagon {g = g1}{g' = g2}{g'' = g3}{g''' = g4} =
+    funExt λ w → funExt λ {
+    (((w1 , w234) , w≡w1w234) , p1 ,
+    (((w2 , w34) , w234≡w2w34) , p2 ,
+    (((w3 , w4) , w34≡w3w4) , (p3 , p4)))) →
+    ⊗≡ _ _
+    (≡-× (sym (++-assoc w1 w2 w3)) refl)
+    (ΣPathP ((⊗PathP (≡-× refl refl) refl) , refl))
+    }
+
 {- Big associators and big diagrams -}
 
 -- ⊗-assoc⁻3 :
