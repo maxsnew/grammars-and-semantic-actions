@@ -9,13 +9,20 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Structure
 open import Cubical.Functions.Embedding
+open import Cubical.Foundations.Function.More
+
 open import Cubical.Relation.Binary.Order.Loset
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
+
 open import Cubical.Data.List
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
+
+open import Cubical.Data.FinData.More using (DecΣ ; Fin≡SumFin ; Fin≃Finℕ ; Fin≃SumFin)
+import Cubical.Data.FinData as FD
+
 import Cubical.Data.Nat.Order.Recursive as Ord
 open import Cubical.Data.Bool as Bool hiding (_⊕_; _≤_)
 open import Cubical.Data.FinSet
@@ -655,3 +662,6 @@ isFinSet→DecProp-Eq≡ isFinSetA a b =
   ((a Eq.≡ b) ,
   (isSet→prop-Eq≡ (isFinSet→isSet isFinSetA) a b)) ,
   Discrete→dec-Eq≡ (isFinSet→Discrete isFinSetA) a b
+
+isFinSetFin' : ∀ {n} → isFinSet (FD.Fin n)
+isFinSetFin' = isFinSetFin & subst isFinSet (sym Fin≡SumFin)

@@ -54,25 +54,10 @@ Unicode : hSet ℓ-zero
 Unicode .fst = UnicodeChar
 Unicode .snd = isSetUnicodeChar
 
--- I thought this would be good to define alphabets, but
--- that cannot be true because you cannot pattern match on the characters
--- in an alphabet due to the paths in the fibers underlying the subalphabet
--- definitions
--- However, this should still be good to write test cases more concisely?
--- Still likely no. Maybe if Eq was used instead of path?
-module _
+module DecodeUnicode
   (Alphabet : hSet ℓ-zero)
-  (embed : ⟨ Alphabet ⟩ ↪ ⟨ Unicode ⟩)
-  (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
+  (readUnicode : UnicodeChar → Maybe ⟨ Alphabet ⟩)
   where
-  UnicodeSubAlphabet : hSet ℓ-zero
-  UnicodeSubAlphabet = SubAlphabet Alphabet Unicode embed
 
-  -- This should probably be a stricter check that none of the
-  -- characters were from outside of the subalphabet
-  toString : String → List ⟨ UnicodeSubAlphabet ⟩
-  toString w =
-    filterMap
-      (maybe-SubAlphabet Alphabet Unicode embed
-        isFinSetAlphabet DiscreteUnicodeChar)
-      (primStringToList w)
+  mkString : String → List ⟨ Alphabet ⟩
+  mkString w = filterMap readUnicode (primStringToList w)

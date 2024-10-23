@@ -29,8 +29,22 @@ open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
-open import DFA.Decider Alphabet
 open import Helper
+
+open import String.Unicode
+open import Cubical.Data.Maybe
+
+unicode→Alphabet : UnicodeChar → Maybe ⟨ Alphabet ⟩
+unicode→Alphabet c =
+  decRec
+    (λ _ → just fzero)
+    (λ _ → decRec
+            (λ _ → just (fsuc fzero))
+            (λ _ → nothing)
+            (DiscreteUnicodeChar '1' c))
+    (DiscreteUnicodeChar '0' c)
+
+open DecodeUnicode Alphabet unicode→Alphabet
 
 private
   variable
@@ -41,67 +55,30 @@ private
 module examples where
   -- examples are over alphabet drawn from Fin 2
   -- characters are fzero and (fsuc fzero)
+  D : DFA (Fin 3 , isFinSetFin)
+  D .DeterministicAutomaton.init = fzero
+  D .DeterministicAutomaton.isAcc fzero = true
+  D .DeterministicAutomaton.isAcc (fsuc x) = false
+  D .DeterministicAutomaton.δ fzero fzero = fromℕ 0
+  D .DeterministicAutomaton.δ fzero (fsuc fzero) = fromℕ 1
+  D .DeterministicAutomaton.δ (fsuc fzero) fzero = fromℕ 2
+  D .DeterministicAutomaton.δ (fsuc fzero) (fsuc fzero) = fromℕ 0
+  D .DeterministicAutomaton.δ (fsuc (fsuc fzero)) fzero = fromℕ 1
+  D .DeterministicAutomaton.δ (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
 
-  open DFA
+  private
+    module D = DeterministicAutomaton D
 
   opaque
-    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro _⊗_ ⌈w⌉→string KL*r-elim ⊕ᴰ-distR ⊕ᴰ-distL
-    -- unfolding KL*r-elim ⌈w⌉→string
-    mktest : String → DFA ℓ-zero → Bool
-    mktest w dfa =
-      (&ᴰ-π (dfa .init) ∘g parse dfa) w
-        (⌈w⌉→string {w = w} w (internalize w)) .fst
+    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊕ᴰ-distL
+    mktest : String → Bool
+    mktest w = (&ᴰ-π (D.init) ∘g D.parse) w (⌈w⌉→string {w = w} w (internalize w)) .fst
 
-    D : DFA ℓ-zero
-    D .Q = Fin 3 , isFinSetFin
-    D .init = fzero
-    D .isAcc fzero = true
-    D .isAcc (fsuc x) = false
-    δ D fzero fzero = fromℕ 0
-    δ D fzero (fsuc fzero) = fromℕ 1
-    δ D (fsuc fzero) fzero = fromℕ 2
-    δ D (fsuc fzero) (fsuc fzero) = fromℕ 0
-    δ D (fsuc (fsuc fzero)) fzero = fromℕ 1
-    δ D (fsuc (fsuc fzero)) (fsuc fzero) = fromℕ 2
-
-    w : String
-    w = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fzero ∷ []
-
-    w' : String
-    w' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
-
-    w'' : String
-    w'' = fzero ∷ fsuc fzero ∷ fsuc fzero ∷ fsuc fzero ∷ []
-
-    _ : mktest w' D ≡ true
+    _ : mktest (mkString "011") ≡ true
     _ = refl
 
-    _ : mktest w'' D ≡ false
+    _ : mktest (mkString "0111") ≡ false
     _ = refl
 
-    _ : mktest [] D ≡ true
-    _ = refl
-
-
-   {--       0
-   -- 0  --------> 1
-   --    <--------
-   --        0
-   -- and self loops for 1. state 1 is acc
-   --
-   --}
-    D' : DFA ℓ-zero
-    Q D' = (Fin 2) , isFinSetFin
-    init D' = inl _
-    isAcc D' fzero = false
-    isAcc D' (fsuc fzero) = true
-    δ D' fzero fzero = fromℕ 1
-    δ D' fzero (fsuc fzero) = fromℕ 0
-    δ D' (fsuc fzero) fzero = fromℕ 0
-    δ D' (fsuc fzero) (fsuc fzero) = fromℕ 1
-
-    s : String
-    s = fsuc fzero ∷ fzero ∷ []
-
-    _ : mktest s D' ≡ true
+    _ : mktest [] ≡ true
     _ = refl
