@@ -8,6 +8,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.Epsilon Alphabet
 open import Term.Base Alphabet
 open import Term.Bilinear Alphabet
@@ -27,6 +28,11 @@ infixr 5 _⊗'_
 opaque
   _⊗_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
   _⊗_ = _⊗'_
+
+  isSetGrammar⊗ : isSetGrammar g → isSetGrammar h → isSetGrammar (g ⊗ h)
+  isSetGrammar⊗ isSetG isSetH w = isSetΣ (isSetSplitting w)
+    λ _ → isSet× (isSetG _) (isSetH _)
+
 infixr 5 _⊗_
 
 opaque
@@ -114,9 +120,6 @@ opaque
     ⊗-unit-r⁻ _ p =
       ((_ , []) , (sym (++-unit-r _))) , (p , refl)
 
-    isPropε : ∀ w → isProp (ε w)
-    isPropε w = isSetString _ _
-
     rectify :
       ∀ {w w'}{g : Grammar ℓg}
       → {p : g w}{q : g w'}
@@ -141,7 +144,7 @@ opaque
           (sym []'≡[]))
         (ΣPathP
           ( symP (subst-filler g (sym w≡w') p⟨w'⟩)
-          , isProp→PathP (λ _ → isPropε _) refl []'≡[]))
+          , isProp→PathP (λ _ → isLangε _) refl []'≡[]))
 
     ⊗-unit-r⁻r : ∀ {g : Grammar ℓg}
       → ⊗-unit-r {g = g} ∘g ⊗-unit-r⁻ ≡ id
