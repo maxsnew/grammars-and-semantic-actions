@@ -128,15 +128,25 @@ jobs:
           cd ~
           git clone https://github.com/agda/cubical --branch master
           cd cubical
-          git checkout 2ae84643c74750b49865e44c05b508cb2117c740
+          git checkout 581748b01bc43a25295993347bdc8c7cb2166090
           cd ..
           echo "CUBICAL_DIR=$PWD/cubical" >> "$GITHUB_ENV"
+
+      - name: Download categorical-logic from github
+        run : |
+          cd ~
+          git clone https://github.com/maxsnew/cubical-categorical-logic --branch master
+          cd cubical-categorical-logic
+          git checkout 295cc5defa414b861959f89f52325e098b9db6ec
+          cd ..
+          echo "CATLOG_DIR=$PWD/cubical-categorical-logic" >> "$GITHUB_ENV"
 
       - name: Set up Agda dependencies
         run : |
           mkdir ~/.agda
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
+          echo "$CATLOG_DIR/cubical.agda-lib" >> ~/.agda/libraries
           echo "$GITHUB_WORKSPACE/code/cubical/grammar.agda-lib" >> ~/.agda/libraries
 
       ########################################################################
