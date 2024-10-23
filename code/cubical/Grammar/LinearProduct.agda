@@ -298,7 +298,7 @@ opaque
     ≡ ⊗-intro f (⊗-intro f' f'') ∘g ⊗-assoc⁻
   ⊗-assoc⁻⊗-intro = refl
 
-  ⊗-assoc⊗-intro : 
+  ⊗-assoc⊗-intro :
     ∀ {f : g ⊢ h}{f' : g' ⊢ h'}{f'' : g'' ⊢ h''}
     → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'')
       ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
@@ -358,7 +358,7 @@ infixr 20 _,⊗_
 
 ⊗-assoc⁻3 :
   (g ⊗ g' ⊗ g'') ⊗ g''' ⊢ g ⊗ g' ⊗ g'' ⊗ g'''
-⊗-assoc⁻3 = id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻  
+⊗-assoc⁻3 = id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
 
 ⊗-assoc3 :
   g ⊗ g' ⊗ g'' ⊗ g''' ⊢ (g ⊗ g' ⊗ g'') ⊗ g'''
