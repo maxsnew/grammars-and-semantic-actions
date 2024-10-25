@@ -77,7 +77,7 @@ module EXTERNAL where
 opaque
   unfolding ε literal _⊗_ same-splits
   propParses-string : EXTERNAL.propParses string
-  propParses-string = ?
+  propParses-string = {!!}
 --   propParses-string [] (roll .[] (nil , x)) (roll .[] (cons , y)) = {!!}
 --   propParses-string [] (roll .[] (nil , x)) (roll .[] (nil , y)) =
 --     cong (λ z → roll [] (nil , z)) (cong (λ z → lift (lift z)) (isSetString _ _ _ _))
