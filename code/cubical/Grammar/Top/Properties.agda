@@ -5,6 +5,7 @@ open import Cubical.Foundations.Structure
 module Grammar.Top.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Top.Base Alphabet
 open import Term.Base Alphabet
@@ -30,3 +31,10 @@ opaque
 unambiguous⊤* : ∀ {ℓg} → unambiguous (⊤* {ℓg})
 unambiguous⊤* = unambiguous'→unambiguous unambiguous'⊤*
 
+opaque
+  unfolding ⊤
+  isLang⊤ : isLang ⊤
+  isLang⊤ w x y = refl
+
+isSetGrammar⊤ : isSetGrammar ⊤
+isSetGrammar⊤ = isLang→isSetGrammar isLang⊤
