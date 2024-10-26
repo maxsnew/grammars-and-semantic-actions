@@ -70,7 +70,7 @@ module _ {A : Type ℓ} where
       → ∀ w a
       → (e : ⟦ F ⟧ g w)
       → (p : FP F w (getShapeF F _ e))
-      → 
+      →
       let ix = (F-inX F (a , w) _ p) in
       g (ix .fst) (ix .snd)
     getSubtreeF g (Var a') w a e p = e .lower
@@ -109,7 +109,7 @@ module _ {A : Type ℓ} where
     reconstructF (⊕e B F) w a (b , t) i = b , (reconstructF (F b) w a t i)
     reconstructF (⊗e Fl Fr) w a (((wl , wr), sp) , tl , tr) i =
       ((wl , wr) , sp) , (reconstructF Fl wl a tl i , reconstructF Fr wr a tr i)
-    
+
 
     isSet⟦F⟧ : ∀ (F : Functor A)
       → isSetValued F
@@ -160,4 +160,4 @@ isSetGrammarμ : ∀ {A : Type ℓ}
 isSetGrammarμ {A = A} F isSetValuedF a w =
   isSetRetract (encode F (a , w)) (decode F (a , w)) (isRetract F a w)
     (isSetμIW F isSetValuedF (a , w))
-  
+

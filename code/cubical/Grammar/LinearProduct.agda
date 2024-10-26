@@ -499,8 +499,40 @@ opaque
     ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {g = h}{g' = h'}{g'' = h''}{g''' = h'''}{g'''' = h''''}))
   ⊗-assoc⁻4⊗-intro = refl
 
-⊗-assoc4⊗-intro :
-  ⊗-assoc4 ∘g f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f''''
-  ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''' ∘g ⊗-assoc4
-⊗-assoc4⊗-intro =
-  {!!}
+opaque
+  unfolding ⊗-intro
+  ⊗-assoc3⊗-assoc⁻3 : ⊗-assoc3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-assoc⁻3 ≡ id
+  ⊗-assoc3⊗-assoc⁻3 =
+    ⊗-assoc ∘g id ,⊗ ⊗-assoc ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
+      ≡⟨ (λ i → ⊗-assoc ∘g id ,⊗ ⊗-assoc∘⊗-assoc⁻≡id i ∘g ⊗-assoc⁻) ⟩
+    ⊗-assoc ∘g ⊗-assoc⁻
+    ≡⟨ ⊗-assoc∘⊗-assoc⁻≡id ⟩ id ∎
+
+  ⊗-assoc4⊗-assoc⁻4 : ⊗-assoc4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g ⊗-assoc⁻4 ≡ id
+  ⊗-assoc4⊗-assoc⁻4 =
+    ⊗-assoc ∘g id ,⊗ ⊗-assoc3 ∘g id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻
+      ≡⟨ (λ i → ⊗-assoc ∘g id ,⊗ ⊗-assoc3⊗-assoc⁻3 i ∘g ⊗-assoc⁻) ⟩
+    ⊗-assoc ∘g ⊗-assoc⁻
+      ≡⟨ ⊗-assoc∘⊗-assoc⁻≡id ⟩
+    id ∎
+
+  ⊗-assoc⁻3⊗-assoc3 : ⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-assoc3 ≡ id
+  ⊗-assoc⁻3⊗-assoc3 =
+    id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻ ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc
+      ≡⟨ (λ i → id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻∘⊗-assoc≡id i ∘g id ,⊗ ⊗-assoc) ⟩
+    id ,⊗ (⊗-assoc⁻ ∘g ⊗-assoc) ≡⟨ ((λ i → id ,⊗ ⊗-assoc⁻∘⊗-assoc≡id i)) ⟩
+    id ∎
+
+  ⊗-assoc⁻4⊗-assoc4 : ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g ⊗-assoc4 ≡ id
+  ⊗-assoc⁻4⊗-assoc4 =
+    id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻ ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc3
+      ≡⟨ (λ i → id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻∘⊗-assoc≡id i ∘g id ,⊗ ⊗-assoc3) ⟩
+    id ,⊗ (⊗-assoc⁻3 ∘g ⊗-assoc3) ≡⟨ ((λ i → id ,⊗ ⊗-assoc⁻3⊗-assoc3 i)) ⟩
+    id ∎
+
+  ⊗-assoc4⊗-intro :
+    ⊗-assoc4 ∘g f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f''''
+    ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''' ∘g ⊗-assoc4
+  ⊗-assoc4⊗-intro {f = f}{f' = f'}{f'' = f''}{f''' = f'''}{f'''' = f''''} =
+    sym (invMoveR {f = ⊗-assoc⁻4} {f⁻ = ⊗-assoc4} ⊗-assoc4⊗-assoc⁻4
+      (cong ((f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''') ∘g_) ⊗-assoc⁻4⊗-assoc4))

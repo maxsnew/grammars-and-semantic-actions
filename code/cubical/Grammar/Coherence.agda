@@ -28,11 +28,6 @@ private
     k : Grammar ℓk
     l : Grammar ℓl
 
---   ⊗-assoc⁻4⊗-intro {f = f} {f' = f'} {f'' = f''} {f''' = f'''} {f'''' = f''''} =
---     cong (id ,⊗ ⊗-assoc⁻3 ∘g_) (⊗-assoc⁻⊗-intro {f' = f' ,⊗ f'' ,⊗ f'''})
---     ∙ cong (_∘g ⊗-assoc⁻) {!!} -- (cong (⊗-intro _) ⊗-assoc⁻3⊗-intro {f = ?}{f' = ?}{f'' = ?}{f''' = ?})
---     ∙ {!!}
-
 private
   G = GRAMMAR ℓ-zero
   module G = MonoidalCategory G
