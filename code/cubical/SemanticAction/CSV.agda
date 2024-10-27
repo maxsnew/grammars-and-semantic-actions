@@ -2,9 +2,10 @@ module SemanticAction.CSV where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Function
 
 open import Cubical.Data.Empty renaming (⊥ to EmptyType)
-open import Cubical.Data.List
+open import Cubical.Data.List as List
 open import Cubical.Data.Sigma
 
 open import String.Unicode
@@ -61,6 +62,21 @@ module Abstract where
   Line : Type ℓ-zero
   Line = List Field
 
-fieldAction : SemanticAction Concrete.Field Abstract.Field
-fieldAction = semact-⊕ semact-underlying (semact-surround {!!})
+module Concrete→Abstract where
+  quotedLit : SemanticAction Concrete.QuotedLit String
+  quotedLit = semact-⊕ semact-underlying (semact-pure [ '"' ])
+
+  quotedField : SemanticAction Concrete.QuotedField Abstract.Field
+  quotedField = semact-map (List.foldl _++_ []) (semact-* quotedLit)
+
+  field' : SemanticAction Concrete.Field Abstract.Field
+  field' = semact-⊕ semact-underlying (semact-surround quotedField)
+
+  nonemptyLine : SemanticAction Concrete.NonemptyLine Abstract.Line
+  nonemptyLine =
+    semact-map (uncurry _∷_) (semact-concat field'
+      (semact-* (semact-right field')))
+
+  line : SemanticAction Concrete.Line Abstract.Line
+  line = semact-left (semact-⊕ (semact-pure []) nonemptyLine)
 

@@ -74,6 +74,10 @@ opaque
 ⊸-intro⁻ {h = h}{k = k} f =
   ⊸-app ∘g (⊗-intro (id {g = h}) f)
 
+⊸-elim-ε :
+  ε ⊢ g ⊸ k → g ⊢ k
+⊸-elim-ε f = ⊸-intro⁻ f ∘g ⊗-unit-r⁻
+
 opaque
   unfolding _⊸_ _⊗_ ⊗-intro
   ⊸-intro∘⊸-intro⁻≡id :
