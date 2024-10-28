@@ -146,7 +146,7 @@ jobs:
           mkdir ~/.agda
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
-          echo "$CATLOG_DIR/cubical.agda-lib" >> ~/.agda/libraries
+          echo "$CATLOG_DIR/cubical-categorical-logic.agda-lib" >> ~/.agda/libraries
           echo "$GITHUB_WORKSPACE/code/cubical/grammar.agda-lib" >> ~/.agda/libraries
 
       ########################################################################
