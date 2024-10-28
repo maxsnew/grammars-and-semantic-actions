@@ -9,6 +9,7 @@ open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
 open import Grammar.Lift Alphabet
+open import Grammar.HLevels Alphabet hiding (⟨_⟩)
 open import Term.Base Alphabet
 
 private
@@ -24,6 +25,12 @@ opaque
   literal-elim : g [ c ] → literal c ⊢ g
   literal-elim {g = g} gc w w≡[c] =
     subst g (sym w≡[c]) gc
+
+  isLangLiteral : ∀ c → isLang (literal c)
+  isLangLiteral c w = isSetString w [ c ]
+
+isSetGrammarLiteral : ∀ c → isSetGrammar (literal c)
+isSetGrammarLiteral c = isLang→isSetGrammar (isLangLiteral c)
 
 literal* : ∀ {ℓ : Level} → ⟨ Alphabet ⟩ → Grammar ℓ
 literal* {ℓ = ℓ} c = LiftG ℓ (literal c)

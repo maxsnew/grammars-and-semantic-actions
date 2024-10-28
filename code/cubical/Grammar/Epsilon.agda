@@ -7,6 +7,7 @@ open import Cubical.Data.List
 
 open import Helper
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 open import Term.Nullary Alphabet
@@ -53,5 +54,18 @@ opaque
       (sym (++-unit-r _) ∙ cong (w1 ++_) (sym w2≡[]))
       (f w1 gp)
 
+  isLangε : isLang ε
+  isLangε _ _ _ = isSetString _ _ _ _
+
+  isSetGrammarε : isSetGrammar ε
+  isSetGrammarε = isLang→isSetGrammar isLangε
+
 ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε
+
+isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
+isLangε* = isLangLift isLangε
+
+isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
+isSetGrammarε* = isLang→isSetGrammar isLangε*
+

@@ -9,6 +9,7 @@ open import Cubical.Data.FinSet
 open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.Equivalence.Base Alphabet
@@ -79,3 +80,12 @@ module _
   unambiguous⊕ᴰ unambig⊕ a =
     unambiguous'→unambiguous
       (unambiguous'⊕ᴰ (unambiguous→unambiguous' unambig⊕) a)
+
+module _
+  {X : Type ℓS} {A : X → Grammar ℓh}
+  where
+  isSetGrammar&ᴰ : (∀ x → isSetGrammar (A x)) → isSetGrammar (&ᴰ A)
+  isSetGrammar&ᴰ isSetGrammarA w = isSetΠ λ x → isSetGrammarA x w
+
+  isSetGrammar⊕ᴰ : isSet X → (∀ x → isSetGrammar (A x)) → isSetGrammar (⊕ᴰ A)
+  isSetGrammar⊕ᴰ isSetX isSetGrammarA w = isSetΣ isSetX (λ x → isSetGrammarA x w)

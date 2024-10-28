@@ -9,6 +9,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
 
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Epsilon Alphabet
 open import Term.Base Alphabet
@@ -302,3 +303,9 @@ opaque
   ⟜-intro-natural {f = f}{f' = f'} = ⟜≡ _ _
     ((λ i → ⟜-β f i ∘g (f' ,⊗ id))
     ∙ sym (⟜-β _) )
+
+
+opaque
+  unfolding _⟜_
+  isSetGrammar⟜ : isSetGrammar h → isSetGrammar (h ⟜ g)
+  isSetGrammar⟜ isSetH w = isSetΠ (λ w' → isSet→ (isSetH _))

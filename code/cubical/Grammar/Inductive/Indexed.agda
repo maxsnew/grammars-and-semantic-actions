@@ -5,9 +5,12 @@ open import Cubical.Foundations.HLevels
 module Grammar.Inductive.Indexed (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Foundations.Structure
+open import Cubical.Data.Sigma
+open import Cubical.Data.Unit
 
 open import Helper
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet
@@ -133,3 +136,4 @@ module _ where
     unroll' = rec {g = λ a → ⟦ F a ⟧ (μ F)} alg where
       alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
       alg a = map (F a) (λ _ → roll)
+
