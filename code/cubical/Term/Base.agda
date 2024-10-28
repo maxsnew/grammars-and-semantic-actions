@@ -74,3 +74,14 @@ transportG {g = g}{h = h} p = subst (λ h → g ⊢ h) p id
 transportGRefl :
   transportG {g = g} refl ≡ id
 transportGRefl {g = g} = substRefl {B = λ h → g ⊢ h} _
+
+invMoveR :
+  {f : g ⊢ h} {f⁻ : h ⊢ g}
+  {f' : k ⊢ g} {f'' : k ⊢ h}
+  → f⁻ ∘g f ≡ id
+  → f ∘g f' ≡ f''
+  → f' ≡ f⁻ ∘g f''
+invMoveR {f = f}{f⁻}{f'}{f''} retr p =
+  f' ≡⟨ cong (_∘g f') (sym retr) ⟩
+  f⁻ ∘g f ∘g f' ≡⟨ cong (f⁻ ∘g_) p ⟩
+  f⁻ ∘g f'' ∎

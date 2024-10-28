@@ -10,11 +10,13 @@ open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Bool as Bool hiding (_⊕_ ;_or_)
 import Cubical.Data.Equality as Eq
+import Cubical.Data.Equality.Conversion as Eq
 open import Cubical.Data.Nat as Nat
 open import Cubical.Data.List hiding (init; rec; map)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as Sum hiding (rec; map)
 open import Cubical.Data.FinSet
+open import Cubical.Data.Unit
 
 private
   variable
@@ -45,18 +47,41 @@ open import Grammar.String.Properties Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.Equalizer Alphabet
 open import Grammar.Inductive.Indexed Alphabet
+open import Grammar.Inductive.HLevels Alphabet
+open import Grammar.HLevels Alphabet
+open import Grammar.Coherence Alphabet
 open import Term Alphabet
 
 open StrongEquivalence
 
 data DyckTag : Type ℓ-zero where
   nil' balanced' : DyckTag
+
+isSetDyckTag : isSet DyckTag
+isSetDyckTag = isSetRetract enc dec retr isSetBool where
+  enc : DyckTag → Bool
+  enc nil' = false
+  enc balanced' = true
+  dec : Bool → DyckTag
+  dec false = nil'
+  dec true = balanced'
+  retr : (x : DyckTag) → dec (enc x) ≡ x
+  retr nil' = refl
+  retr balanced' = refl
+
 DyckTy : Unit → Functor Unit
 DyckTy _ = ⊕e DyckTag (λ
   { nil' → k ε
   ; balanced' → ⊗e (k (literal [)) (⊗e (Var _) (⊗e (k (literal ])) (Var _))) })
+
+
 IndDyck : Grammar ℓ-zero
 IndDyck = μ DyckTy _
+
+isSetGrammarDyck : isSetGrammar IndDyck
+isSetGrammarDyck = isSetGrammarμ DyckTy
+  (λ _ → isSetDyckTag , (λ { nil' → isSetGrammarε ; balanced' → isSetGrammarLiteral _ , (tt* , (isSetGrammarLiteral _ , tt*)) }))
+  tt
 
 NIL : ε ⊢ IndDyck
 NIL = roll ∘g ⊕ᴰ-in nil' ∘g liftG
@@ -127,6 +152,52 @@ data TraceTag (b : Bool) (n : ℕ) : Type where
   leftovers' : (b Eq.≡ false) → ∀ n-1 → (suc n-1 Eq.≡ n) → TraceTag b n
   unexpected' : b Eq.≡ false → n Eq.≡ zero → TraceTag b n
 
+isSetTraceTag : ∀ b n → isSet (TraceTag b n)
+isSetTraceTag b n = isSetRetract {B = TT} enc dec retr isSetTT where
+  isPropBoolEq : ∀ {b b' : Bool} → isProp (b Eq.≡ b')
+  isPropBoolEq {b}{b'} =
+    subst isProp Eq.PathPathEq (isSetBool _ _)
+
+  isPropℕEq : ∀ {b b' : ℕ} → isProp (b Eq.≡ b')
+  isPropℕEq {b}{b'} =
+    subst isProp Eq.PathPathEq (isSetℕ _ _)
+
+  TT : Type ℓ-zero
+  TT =
+    ((b Eq.≡ true) × (n Eq.≡ zero))
+    ⊎ (Eq.fiber suc n
+    ⊎ (Unit
+    ⊎ (((b Eq.≡ false) × Eq.fiber suc n)
+    ⊎ ((b Eq.≡ false) × (n Eq.≡ zero)))))
+  isSetTT : isSet TT
+  isSetTT =
+    isSet⊎ (isProp→isSet (isProp× isPropBoolEq isPropℕEq))
+    (isSet⊎ (isSetΣ isSetℕ (λ _ → isProp→isSet isPropℕEq))
+    (isSet⊎ isSetUnit
+    (isSet⊎ (isSet× (isProp→isSet isPropBoolEq)
+      (isSetΣ isSetℕ (λ _ → isProp→isSet isPropℕEq)))
+    (isProp→isSet (isProp× isPropBoolEq isPropℕEq)))))
+  enc : TraceTag b n → TT
+  enc (eof' x x₁) = inl (x , x₁)
+  enc (close' n-1 x) = inr (inl (n-1 , x))
+  enc open' = inr (inr (inl tt))
+  enc (leftovers' x n-1 x₁) = inr (inr (inr (inl (x , n-1 , x₁))))
+  enc (unexpected' x x₁) = inr (inr (inr (inr (x , x₁))))
+
+  dec : TT → TraceTag b n
+  dec (inl x) = eof' (x .fst) (x .snd)
+  dec (inr (inl x)) = close' (x .fst) (x .snd)
+  dec (inr (inr (inl x))) = open'
+  dec (inr (inr (inr (inl x)))) = leftovers' (x .fst) _ (x .snd .snd)
+  dec (inr (inr (inr (inr x)))) = unexpected' (x .fst) (x .snd)
+
+  retr : ∀ t → dec (enc t) ≡ t
+  retr (eof' x x₁) = refl
+  retr (close' n-1 x) = refl
+  retr open' = refl
+  retr (leftovers' x n-1 x₁) = refl
+  retr (unexpected' x x₁) = refl
+
 LP = [
 RP = ]
 
@@ -141,6 +212,16 @@ TraceTys b n = ⊕e (TraceTag b n) (λ
 
 Trace : Bool → ℕ → Grammar _
 Trace b = μ (TraceTys b)
+
+isSetGrammarTrace : ∀ b n → isSetGrammar (Trace b n)
+isSetGrammarTrace b = isSetGrammarμ (TraceTys b) λ n →
+  isSetTraceTag b n
+  , λ { (eof' x x₁) → isSetGrammarε
+      ; (close' n-1 x) → (isSetGrammarLiteral _) , tt*
+      ; open' → (isSetGrammarLiteral _) , tt*
+      ; (leftovers' x n-1 x₁) → isSetGrammarε
+      ; (unexpected' x x₁) → (isSetGrammarLiteral _) , isSetGrammar⊤
+      }
 
 EOF : ε ⊢ Trace true 0
 EOF = roll ∘g ⊕ᴰ-in (eof' Eq.refl Eq.refl) ∘g liftG
@@ -267,6 +348,12 @@ GenDyck : ℕ → Grammar _
 GenDyck 0         = IndDyck
 GenDyck (suc n-1) = IndDyck ⊗ literal RP ⊗ GenDyck n-1
 
+isSetGrammarGenDyck : ∀ n → isSetGrammar (GenDyck n)
+isSetGrammarGenDyck zero = isSetGrammarDyck
+isSetGrammarGenDyck (suc n) =
+  isSetGrammar⊗ isSetGrammarDyck
+    (isSetGrammar⊗ (isSetGrammarLiteral _) (isSetGrammarGenDyck n))
+
 -- We extend the balanced constructor and append to our unbalanced
 -- trees
 opaque
@@ -280,13 +367,6 @@ upgradeBuilder (suc n) = ⟜-intro (⟜-app ,⊗ id ∘g ⊗-assoc)
 
 opaque
   unfolding ⊗-intro genBALANCED
-  -- uB-lem' :
-  --   ∀ n (f : Trace true n ⊢ GenDyck n)
-  --       (f' : {!!} ⊢ {!!})
-  --      → (⟜-app ∘g id ,⊗ f) ∘g
-  --       (upgradeBuilder n ∘g ⟜-intro {!!}) ,⊗ id
-  --       ≡ (f ∘g {!!})
-  -- uB-lem' = {!!}
   upgradeNilBuilder :
     ∀ n (f : Trace true n ⊢ GenDyck n)
        → (⟜-app ∘g id ,⊗ f) ∘g
@@ -300,8 +380,7 @@ opaque
     ∙ cong ((⟜-app ,⊗ id) ∘g_) (cong (_∘g (id ,⊗ f)) (⊗-assoc⊗-intro {f' = id}{f'' = id}))
     ∙ ( (λ i → (⟜-β ⊗-unit-l i) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f))
     ∙ cong (_∘g (id ,⊗ f)) (cong ((⊗-unit-l ,⊗ id) ∘g_) (sym (⊗-assoc⊗-intro {f' = id}{f'' = id})))
-    -- ∙ cong (_∘g id ,⊗ f) ⊗-unit-l⊗-assoc
-    ∙ {!!}
+    ∙ cong (_∘g id ,⊗ f) (⊗-unit-l⊗-assoc isSetGrammarDyck (isSetGrammar⊗ (isSetGrammarLiteral _) (isSetGrammarGenDyck n)))
     ∙ sym (⊗-unit-l⊗-intro _)
 
   upgradeBalancedBuilder :
@@ -336,7 +415,8 @@ opaque
       ∘g id ,⊗ ((id ,⊗ NIL) ,⊗ id)
       ∘g id ,⊗ (⊗-assoc ∘g id ,⊗ ⊗-unit-l⁻)  --
       ∘g id ,⊗ id ,⊗ id ,⊗ ⟜-app
-      ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ id ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i)
+      ∘g lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (id ∘g lowerG) ,⊗ id ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i
+      )
     ∙ (λ i → BALANCED
       ∘g id ,⊗ (⟜-app ,⊗ id)
       ∘g id ,⊗ ⊗-assoc⊗-intro {f = id}{f' = NIL}{f'' = id} (~ i)
@@ -368,7 +448,14 @@ opaque
     ∙ (λ i →
        BALANCED ,⊗ id
        ∘g (lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ id)) ,⊗ id
-       ∘g ⊗-assoc⁻4⊗-assoc i
+       ∘g ⊗-assoc⁻4⊗-assoc
+          (isSetGrammarLift (isSetGrammarLiteral _))
+          (isSetGrammarLift (isSetGrammar⟜ isSetGrammarDyck))
+          (isSetGrammarLift (isSetGrammarLiteral _))
+          (isSetGrammarLift (isSetGrammar⟜ isSetGrammarDyck))
+          isSetGrammarDyck
+          (isSetGrammar⊗ (isSetGrammarLiteral _) (isSetGrammarGenDyck n))
+          i
        ∘g id ,⊗ f)
     ∙ (λ i → BALANCED ,⊗ id
         ∘g ⊗-assoc4⊗-intro {f = lowerG}{f' = ⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻}{f'' = lowerG}{f''' = (⟜-app ∘g lowerG ,⊗ id)}{f'''' = id} (~ i)
@@ -379,7 +466,8 @@ opaque
         ∘g ⊗-assoc4
         ∘g lowerG ,⊗ (⟜-app ∘g lowerG ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ lowerG ,⊗ ((⟜-app ∘g lowerG ,⊗ id) ,⊗ id)
         ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc
-        ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i)
+        ∘g ⊗-assoc⁻4⊗-intro {f = id}{f' = id}{f'' = id}{f''' = id}{f'''' = f} i
+        )
     ∙ (λ i → BALANCED ,⊗ id
         ∘g ⊗-assoc4
         ∘g lowerG ,⊗ ((⟜-app ∘g (id ,⊗ NIL) ∘g ⊗-unit-r⁻⊗-intro {f = lowerG} (~ i)) ,⊗ lowerG ,⊗ ((⟜-app ∘g lowerG ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ f))
@@ -468,14 +556,6 @@ buildTraceAlg _ = ⊕ᴰ-elim (λ
 
 buildTrace : IndDyck ⊢ TraceBuilder _
 buildTrace = rec DyckTy buildTraceAlg _
-
--- buildTraceβBalanced :
---   buildTrace ∘g roll ∘g ⊕ᴰ-in balanced'
---   ≡ &ᴰ-intro λ n → ⟜-intro
---     (({!\!}
---      ∘g ⊗-assoc⁻4
---     )
---     ∘g (lowerG ,⊗ (buildTrace ∘g lowerG) ,⊗ lowerG ,⊗ (buildTrace ∘g lowerG)) ,⊗ id)
 
 -- we then extend the builder to generalized trees, which *adds*
 -- closed parens to the trace.
@@ -578,7 +658,8 @@ pfAlg _ =
                 ∘g id ,⊗ (⟜-app ∘g &ᴰ-π (suc n) ,⊗ id)
                 ∘g id ,⊗ id ,⊗ CLOSE
                 ∘g id ,⊗ id ,⊗ id ,⊗ (⟜-app ∘g &ᴰ-π n ,⊗ id)
-                ∘g ⊗-assoc⁻4⊗-intro {f = lowerG}{f' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'' = lowerG}{f''' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'''' = id} i)
+                ∘g ⊗-assoc⁻4⊗-intro {f = lowerG}{f' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'' = lowerG}{f''' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'''' = id} i
+                )
             ∙ (λ i → genBALANCED n
                 ∘g id ,⊗ (⟜-β (genMkTree (suc n) ∘g ⟜-app) (~ i) ∘g (&ᴰ-π (suc n) ∘g (buildTrace ∘g eq-π lhs rhs)) ,⊗ id)
                 ∘g id ,⊗ id ,⊗ CLOSE

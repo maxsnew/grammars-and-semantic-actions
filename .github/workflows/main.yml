@@ -135,9 +135,9 @@ jobs:
       - name: Download categorical-logic from github
         run : |
           cd ~
-          git clone https://github.com/maxsnew/cubical-categorical-logic --branch master
+          git clone https://github.com/maxsnew/cubical-categorical-logic --branch main
           cd cubical-categorical-logic
-          git checkout 295cc5defa414b861959f89f52325e098b9db6ec
+          git checkout 4e7b1c3a2ba7ed528b3cd9a4c3a5e7be3ff3449d
           cd ..
           echo "CATLOG_DIR=$PWD/cubical-categorical-logic" >> "$GITHUB_ENV"
 
@@ -146,7 +146,7 @@ jobs:
           mkdir ~/.agda
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
-          echo "$CATLOG_DIR/cubical.agda-lib" >> ~/.agda/libraries
+          echo "$CATLOG_DIR/cubical-categorical-logic.agda-lib" >> ~/.agda/libraries
           echo "$GITHUB_WORKSPACE/code/cubical/grammar.agda-lib" >> ~/.agda/libraries
 
       ########################################################################

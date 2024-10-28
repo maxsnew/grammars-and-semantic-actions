@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -8,6 +7,8 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
+open import Grammar.Lift Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.Epsilon Alphabet
 open import Term.Base Alphabet
 open import Term.Bilinear Alphabet
@@ -27,6 +28,11 @@ infixr 5 _⊗'_
 opaque
   _⊗_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
   _⊗_ = _⊗'_
+
+  isSetGrammar⊗ : isSetGrammar g → isSetGrammar h → isSetGrammar (g ⊗ h)
+  isSetGrammar⊗ isSetG isSetH w = isSetΣ (isSetSplitting w)
+    λ _ → isSet× (isSetG _) (isSetH _)
+
 infixr 5 _⊗_
 
 opaque
@@ -114,9 +120,6 @@ opaque
     ⊗-unit-r⁻ _ p =
       ((_ , []) , (sym (++-unit-r _))) , (p , refl)
 
-    isPropε : ∀ w → isProp (ε w)
-    isPropε w = isSetString _ _
-
     rectify :
       ∀ {w w'}{g : Grammar ℓg}
       → {p : g w}{q : g w'}
@@ -141,7 +144,7 @@ opaque
           (sym []'≡[]))
         (ΣPathP
           ( symP (subst-filler g (sym w≡w') p⟨w'⟩)
-          , isProp→PathP (λ _ → isPropε _) refl []'≡[]))
+          , isProp→PathP (λ _ → isLangε _) refl []'≡[]))
 
     ⊗-unit-r⁻r : ∀ {g : Grammar ℓg}
       → ⊗-unit-r {g = g} ∘g ⊗-unit-r⁻ ≡ id
@@ -356,6 +359,100 @@ opaque
 _,⊗_ = ⊗-intro
 infixr 20 _,⊗_
 
+{- ε* versions of the unitors  -}
+⊗-unit*-l : ε* {ℓ} ⊗ g ⊢ g
+⊗-unit*-l = ⊗-unit-l ∘g ⊗-intro lowerG id
+
+⊗-unit*-l⁻ : g ⊢ ε* {ℓ} ⊗ g
+⊗-unit*-l⁻ = ⊗-intro liftG id ∘g ⊗-unit-l⁻
+
+opaque
+  unfolding ⊗-intro
+  ⊗-unit*-l⊗-intro :
+      ∀ (f : g ⊢ h)
+      → f ∘g ⊗-unit*-l {ℓ}
+        ≡ ⊗-unit*-l ∘g (⊗-intro id f)
+  ⊗-unit*-l⊗-intro f =
+    cong₂ _∘g_ (⊗-unit-l⊗-intro f) refl
+  ⊗-unit*-ll⁻ :
+    ⊗-unit*-l⁻ {g = g} {ℓ = ℓ} ∘g ⊗-unit*-l ≡ id
+  ⊗-unit*-ll⁻ i = ⊗-intro liftG id ∘g ⊗-unit-ll⁻ i ∘g ⊗-intro lowerG id
+
+  ⊗-unit*-l⁻l :
+    ⊗-unit*-l {ℓ = ℓ} {g = g} ∘g ⊗-unit*-l⁻ ≡ id
+  ⊗-unit*-l⁻l = ⊗-unit-l⁻l
+
+⊗-unit*-r : g ⊗ ε* {ℓ} ⊢ g
+⊗-unit*-r = ⊗-unit-r ∘g ⊗-intro id lowerG
+
+⊗-unit*-r⁻ : g ⊢ g ⊗ ε* {ℓ}
+⊗-unit*-r⁻ = ⊗-intro id liftG ∘g ⊗-unit-r⁻
+
+opaque
+  unfolding ⊗-intro
+  ⊗-unit*-r⊗-intro :
+      ∀ (f : g ⊢ h)
+      → ⊗-unit*-r {ℓ = ℓ} ∘g (⊗-intro f id)
+        ≡ f ∘g ⊗-unit*-r
+  ⊗-unit*-r⊗-intro {ℓ = ℓ} f = cong₂ _∘g_ (⊗-unit-r⊗-intro f) refl
+
+  ⊗-unit*-rr⁻ :
+    ⊗-unit*-r⁻ {g = g} {ℓ = ℓ} ∘g ⊗-unit*-r ≡ id
+  ⊗-unit*-rr⁻ i = ⊗-intro id liftG ∘g ⊗-unit-rr⁻ i ∘g ⊗-intro id lowerG
+
+  ⊗-unit*-r⁻r :
+    ⊗-unit*-r {g = g} {ℓ = ℓ} ∘g ⊗-unit*-r⁻ ≡ id
+  ⊗-unit*-r⁻r = ⊗-unit-r⁻r
+
+{- Triangle -}
+opaque
+  unfolding ⊗-intro ⊗-unit-r ⊗-unit-l ⊗-assoc
+  ⊗-triangle :
+    ⊗-intro ⊗-unit*-r id ∘g ⊗-assoc {g = g}{h = ε* {ℓ}}{k = h}
+    ≡ ⊗-intro id ⊗-unit*-l
+  ⊗-triangle {g = g}{h = h} = funExt λ w → funExt λ {
+    (((w1 , w2) , w≡w1w2) ,
+     (gp , (((w3 , w4) , w2≡w3w4) , ((lift w3≡[]) , hp)))) →
+    let p1 : w1 ++ w3 ≡ w1
+        p1 = (cong (w1 ++_) w3≡[] ∙ ++-unit-r _)
+        p2 = (cong (_++ w4) (sym w3≡[]) ∙ sym w2≡w3w4)
+        p1' : w1 ≡ w1 ++ w3
+        p1' = λ i → (hcomp
+           (doubleComp-faces (λ _ → w1)
+            (λ i₁ →
+               hcomp (doubleComp-faces (λ _ → w1 ++ []) (λ i₂ → w1 ++ w3) i₁)
+               (w1 ++ w3≡[] (~ i₁)))
+            i)
+           (++-unit-r w1 (~ i)))
+    in
+    ⊗≡ _ _ (≡-× p1 p2)
+     (ΣPathP (rectify {g = g} {w≡ = sym p1'}{w≡' = p1}
+       (symP (transport-filler (cong g p1') gp))
+     , transport-filler (cong h p2) hp))
+    }
+
+{- Pentagon -}
+opaque
+  unfolding ⊗-intro ⊗-assoc
+  ⊗-pentagon :
+    ⊗-intro (⊗-assoc {g = g}) id
+    ∘g ⊗-assoc
+    ∘g ⊗-intro id (⊗-assoc {g = g'}{h = g''}{k = g'''})
+      ≡
+    ⊗-assoc
+    ∘g ⊗-assoc
+  ⊗-pentagon {g = g1}{g' = g2}{g'' = g3}{g''' = g4} =
+    funExt λ w → funExt λ {
+    (((w1 , w234) , w≡w1w234) , p1 ,
+    (((w2 , w34) , w234≡w2w34) , p2 ,
+    (((w3 , w4) , w34≡w3w4) , (p3 , p4)))) →
+    ⊗≡ _ _
+    (≡-× (sym (++-assoc w1 w2 w3)) refl)
+    (ΣPathP ((⊗PathP (≡-× refl refl) refl) , refl))
+    }
+
+{- Big associators and big diagrams -}
+
 ⊗-assoc⁻3 :
   (g ⊗ g' ⊗ g'') ⊗ g''' ⊢ g ⊗ g' ⊗ g'' ⊗ g'''
 ⊗-assoc⁻3 = id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
@@ -380,19 +477,6 @@ infixr 20 _,⊗_
   g ⊗ g' ⊗ g'' ⊗ g''' ⊗ g'''' ⊢ (g ⊗ g' ⊗ g'' ⊗ g''') ⊗ g''''
 ⊗-assoc4 = ⊗-assoc ∘g id ,⊗ ⊗-assoc3
 
-opaque
-  unfolding ⊗-intro ⊗-assoc ⊗-assoc⁻
-  ⊗-assoc⁻4⊗-assoc :
-    ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ,⊗ id {g = g'''''}
-    ∘g ⊗-assoc
-    ≡ ⊗-assoc4 ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc ∘g ⊗-assoc⁻4
-  ⊗-assoc⁻4⊗-assoc = funExt λ w → funExt λ p →
-    ⊗PathP (≡-×
-      ((λ i → p .snd .fst .fst .snd i ++ p .snd .snd .fst .fst .fst)
-       ∙ ++-assoc (p .snd .fst .fst .fst .fst) _ _
-       ∙ {!p .snd  .fst .fst .snd!})
-      refl) (ΣPathP ({!!} , {!!}))
-
 ⊗-assoc⁻4⊗-unit-r⁻ :
   ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-unit-r⁻
   ≡ id ,⊗ id ,⊗ id ,⊗ ⊗-unit-r⁻
@@ -401,25 +485,54 @@ opaque
   ∙ ⊗-intro⊗-intro
   ∙ cong (id ,⊗_) ⊗-assoc⁻3⊗-unit-r⁻
 
-⊗-assoc⁻3⊗-intro :
-  ∀ {f f' f'' f'''} →
-  (⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g (f ,⊗ f' ,⊗ f'') ,⊗ f''')
-  ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ∘g (⊗-assoc⁻3 {g = h}{g' = h'}{g'' = h''}{g''' = h'''}))
-⊗-assoc⁻3⊗-intro =
-  {!!}
-
+-- ⊗-assoc⁻3⊗-intro :
+--   ∀ {f f' f'' f'''} →
+--   (⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g (f ,⊗ f' ,⊗ f'') ,⊗ f''')
+--   ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ∘g (⊗-assoc⁻3 {g = h}{g' = h'}{g'' = h''}{g''' = h'''}))
+-- ⊗-assoc⁻3⊗-intro =
+--   {!!}
 opaque
   unfolding ⊗-intro
   ⊗-assoc⁻4⊗-intro :
     ∀ {f f' f'' f''' f''''} →
     (⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''')
     ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {g = h}{g' = h'}{g'' = h''}{g''' = h'''}{g'''' = h''''}))
-  ⊗-assoc⁻4⊗-intro {f = f} {f' = f'} {f'' = f''} {f''' = f'''} {f'''' = f''''} =
-    cong (id ,⊗ ⊗-assoc⁻3 ∘g_) (⊗-assoc⁻⊗-intro {f' = f' ,⊗ f'' ,⊗ f'''})
-    ∙ cong (_∘g ⊗-assoc⁻) {!!} -- (cong (⊗-intro _) ⊗-assoc⁻3⊗-intro {f = ?}{f' = ?}{f'' = ?}{f''' = ?})
-    ∙ {!!}
+  ⊗-assoc⁻4⊗-intro = refl
 
-⊗-assoc4⊗-intro :
-  ⊗-assoc4 ∘g f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f''''
-  ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''' ∘g ⊗-assoc4
-⊗-assoc4⊗-intro = {!!}
+opaque
+  unfolding ⊗-intro
+  ⊗-assoc3⊗-assoc⁻3 : ⊗-assoc3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-assoc⁻3 ≡ id
+  ⊗-assoc3⊗-assoc⁻3 =
+    ⊗-assoc ∘g id ,⊗ ⊗-assoc ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
+      ≡⟨ (λ i → ⊗-assoc ∘g id ,⊗ ⊗-assoc∘⊗-assoc⁻≡id i ∘g ⊗-assoc⁻) ⟩
+    ⊗-assoc ∘g ⊗-assoc⁻
+    ≡⟨ ⊗-assoc∘⊗-assoc⁻≡id ⟩ id ∎
+
+  ⊗-assoc4⊗-assoc⁻4 : ⊗-assoc4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g ⊗-assoc⁻4 ≡ id
+  ⊗-assoc4⊗-assoc⁻4 =
+    ⊗-assoc ∘g id ,⊗ ⊗-assoc3 ∘g id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻
+      ≡⟨ (λ i → ⊗-assoc ∘g id ,⊗ ⊗-assoc3⊗-assoc⁻3 i ∘g ⊗-assoc⁻) ⟩
+    ⊗-assoc ∘g ⊗-assoc⁻
+      ≡⟨ ⊗-assoc∘⊗-assoc⁻≡id ⟩
+    id ∎
+
+  ⊗-assoc⁻3⊗-assoc3 : ⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-assoc3 ≡ id
+  ⊗-assoc⁻3⊗-assoc3 =
+    id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻ ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc
+      ≡⟨ (λ i → id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻∘⊗-assoc≡id i ∘g id ,⊗ ⊗-assoc) ⟩
+    id ,⊗ (⊗-assoc⁻ ∘g ⊗-assoc) ≡⟨ ((λ i → id ,⊗ ⊗-assoc⁻∘⊗-assoc≡id i)) ⟩
+    id ∎
+
+  ⊗-assoc⁻4⊗-assoc4 : ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g ⊗-assoc4 ≡ id
+  ⊗-assoc⁻4⊗-assoc4 =
+    id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻ ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc3
+      ≡⟨ (λ i → id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻∘⊗-assoc≡id i ∘g id ,⊗ ⊗-assoc3) ⟩
+    id ,⊗ (⊗-assoc⁻3 ∘g ⊗-assoc3) ≡⟨ ((λ i → id ,⊗ ⊗-assoc⁻3⊗-assoc3 i)) ⟩
+    id ∎
+
+  ⊗-assoc4⊗-intro :
+    ⊗-assoc4 ∘g f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f''''
+    ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''' ∘g ⊗-assoc4
+  ⊗-assoc4⊗-intro {f = f}{f' = f'}{f'' = f''}{f''' = f'''}{f'''' = f''''} =
+    sym (invMoveR {f = ⊗-assoc⁻4} {f⁻ = ⊗-assoc4} ⊗-assoc4⊗-assoc⁻4
+      (cong ((f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''') ∘g_) ⊗-assoc⁻4⊗-assoc4))

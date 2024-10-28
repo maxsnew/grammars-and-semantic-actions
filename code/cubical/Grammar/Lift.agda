@@ -5,6 +5,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.Lift (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
@@ -32,3 +33,9 @@ module _ ℓ (g : Grammar ℓg) where
   LiftG≅ .inv = lowerG
   LiftG≅ .sec = refl
   LiftG≅ .ret = refl
+
+isLangLift : isLang g → isLang (LiftG ℓ' g)
+isLangLift isLangG w = isOfHLevelLift 1 (isLangG w)
+
+isSetGrammarLift : isSetGrammar g → isSetGrammar (LiftG ℓ' g)
+isSetGrammarLift isSetGrammarG w = isOfHLevelLift 2 (isSetGrammarG w)
