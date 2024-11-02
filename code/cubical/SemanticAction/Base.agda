@@ -5,11 +5,13 @@ open import Cubical.Foundations.Function
 
 module SemanticAction.Base (Alphabet : hSet ℓ-zero) where
 
-open import Cubical.Data.List
+open import Cubical.Data.List hiding (rec)
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sum hiding (rec)
 open import Cubical.Data.Unit
 
 open import Grammar Alphabet
+open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term Alphabet
@@ -45,11 +47,20 @@ semact-Δ = ⊸-intro-ε id
 semact-⊤ : {g : Grammar ℓg} → SemanticAction g Unit
 semact-⊤ = semact-pure tt
 
+semact-lift : {g : Grammar ℓg} → SemanticAction g A → SemanticAction (LiftG ℓh g) A
+semact-lift = semact-map-g lowerG
+
 semact-⊕ :
   {g : Grammar ℓg} {h : Grammar ℓh} →
   SemanticAction g A → SemanticAction h A →
   SemanticAction (g ⊕ h) A
 semact-⊕ x y = ⊸-intro-ε (⊕-elim (⊸-elim-ε x) (⊸-elim-ε y))
+
+semact-disjunct :
+  {g : Grammar ℓg} {h : Grammar ℓh} →
+  SemanticAction g A → SemanticAction h B →
+  SemanticAction (g ⊕ h) (A ⊎ B)
+semact-disjunct x y = semact-⊕ (semact-map inl x) (semact-map inr y)
 
 semact-concat :
   {g : Grammar ℓg} {h : Grammar ℓh} →
@@ -72,6 +83,11 @@ semact-right :
   {g : Grammar ℓg} {h : Grammar ℓh} →
   SemanticAction h A → SemanticAction (g ⊗ h) A
 semact-right x = semact-map snd (semact-concat semact-⊤ x)
+
+semact-rec :
+  {F : A → Functor A} {B : A → Type ℓS} →
+  Algebra F (Δ ∘ B) → (a : A) → SemanticAction (μ F a) (B a)
+semact-rec alg a = ⊸-intro-ε (rec _ alg a)
 
 semact-* : {g : Grammar ℓg} → SemanticAction g A → SemanticAction (g *) (List A)
 semact-* {g = g} x =

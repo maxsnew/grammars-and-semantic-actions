@@ -52,8 +52,8 @@ module Concrete where
 CST : Grammar ℓ-zero
 CST = KL* Concrete.Line
 
-parser : string ⊢ CST
-parser = {!!}
+concrete-parser : string ⊢ CST
+concrete-parser = {!!}
 
 module Abstract where
   Field : Type ℓ-zero
@@ -61,6 +61,9 @@ module Abstract where
 
   Line : Type ℓ-zero
   Line = List Field
+
+AST : Type ℓ-zero
+AST = List Abstract.Line
 
 module Concrete→Abstract where
   quotedLit : SemanticAction Concrete.QuotedLit String
@@ -79,4 +82,10 @@ module Concrete→Abstract where
 
   line : SemanticAction Concrete.Line Abstract.Line
   line = semact-left (semact-⊕ (semact-pure []) nonemptyLine)
+
+  ast : SemanticAction CST AST
+  ast = semact-* line
+
+parser : string ⊢ Δ AST
+parser = ⊸-elim-ε Concrete→Abstract.ast ∘g concrete-parser
 

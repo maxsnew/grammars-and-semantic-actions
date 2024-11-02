@@ -85,3 +85,4 @@ invMoveR {f = f}{f⁻}{f'}{f''} retr p =
   f' ≡⟨ cong (_∘g f') (sym retr) ⟩
   f⁻ ∘g f ∘g f' ≡⟨ cong (f⁻ ∘g_) p ⟩
   f⁻ ∘g f'' ∎
+

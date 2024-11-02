@@ -746,3 +746,11 @@ Dyck≅Trace =
      ≡⟨ append-nil-r' ⟩
     id ∎)
     isUnambiguousTrace
+
+parser : string ⊢ IndDyck ⊕ ⊤
+parser =
+  ⊕ᴰ-elim (λ where
+    false → ⊕-inr ∘g ⊤-intro
+    true → ⊕-inl ∘g Dyck≅Trace .inv)
+  ∘g Trace≅String .inv
+
