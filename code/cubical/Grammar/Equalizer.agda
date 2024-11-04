@@ -98,3 +98,44 @@ module _ {A : Type ℓ} (F : A → Functor A) {g : Grammar ℓg}
         eq-π (e a) (e' a) ∘g pfAlg a ≡
           roll ∘g map (F a) λ a' → eq-π (e a') (e' a')
       eq-π-is-homo a = refl
+
+module _ {A : Type ℓ} (F : A → Functor A) {g : Grammar ℓg}
+  (a : A)
+  (e e' : μ F a ⊢ g) where
+  equalizer-ind' :
+    {!!} →
+    -- (pf : ∀ (a : A) →
+    --   e  a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')) ≡
+    --   e' a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a'))
+    -- ) →
+    e ≡ e'
+  equalizer-ind' pf =
+    equalizer-section e e' (rec F pfAlg a)
+      (ind-id' F (compHomo F (initialAlgebra F) pfAlg (initialAlgebra F)
+        ({!λ a' → ?!} ,
+         {!!})
+        (recHomo F pfAlg)) a)
+    where
+    pfAlg : Algebra F λ _ → equalizer e e'
+    pfAlg = {!!}
+  -- λ a →
+  --   equalizer-section (e a) (e' a)
+  --     (rec F pfAlg a)
+  --     (ind-id' F (compHomo F (initialAlgebra F) pfAlg (initialAlgebra F)
+  --       ((λ a' → eq-π (e a') (e' a')) ,
+  --        λ a' → eq-π-is-homo a')
+  --       (recHomo F pfAlg)) a)
+  --   where
+  --   pfAlg : Algebra F λ a → equalizer (e a) (e' a)
+  --   pfAlg a =
+  --     eq-intro (e a) (e' a)
+  --       (roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')))
+  --       (pf a)
+
+  --   opaque
+  --     unfolding eq-π eq-intro
+  --     eq-π-is-homo :
+  --       ∀ a →
+  --       eq-π (e a) (e' a) ∘g pfAlg a ≡
+  --         roll ∘g map (F a) λ a' → eq-π (e a') (e' a')
+  --     eq-π-is-homo a = refl
