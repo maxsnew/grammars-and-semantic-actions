@@ -11,7 +11,7 @@ open import Cubical.Foundations.Isomorphism
 
 module Grammar.Equalizer (Alphabet : hSet ℓ-zero) where
 
-open import Cubical.Data.List
+open import Cubical.Data.List hiding (rec ; map)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
 
@@ -65,3 +65,36 @@ module _ {g : Grammar ℓ}{h : Grammar ℓ'} (f f' : g ⊢ h) where
     cong (f ∘g_) (sym p)
     ∙ cong (_∘g f'') eq-π-pf
     ∙ cong (f' ∘g_) p
+
+open import Grammar.Inductive.Indexed Alphabet
+open import Grammar.Dependent Alphabet
+
+module _ {A : Type ℓ} (F : A → Functor A) {g : Grammar ℓg}
+  (e e' : ∀ (a : A) → μ F a ⊢ g) where
+  equalizer-ind :
+    (pf : ∀ (a : A) →
+      e  a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')) ≡
+      e' a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a'))
+    ) →
+    ∀ (a : A) → e a ≡ e' a
+  equalizer-ind pf = λ a →
+    equalizer-section (e a) (e' a)
+      (rec F pfAlg a)
+      (ind-id' F (compHomo F (initialAlgebra F) pfAlg (initialAlgebra F)
+        ((λ a' → eq-π (e a') (e' a')) ,
+         λ a' → eq-π-is-homo a')
+        (recHomo F pfAlg)) a)
+    where
+    pfAlg : Algebra F λ a → equalizer (e a) (e' a)
+    pfAlg a =
+      eq-intro (e a) (e' a)
+        (roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')))
+        (pf a)
+
+    opaque
+      unfolding eq-π eq-intro
+      eq-π-is-homo :
+        ∀ a →
+        eq-π (e a) (e' a) ∘g pfAlg a ≡
+          roll ∘g map (F a) λ a' → eq-π (e a') (e' a')
+      eq-π-is-homo a = refl
