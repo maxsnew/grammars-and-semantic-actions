@@ -574,18 +574,7 @@ genBuildTrace (suc m) = &ᴰ-intro λ n → ⟜-intro
 
 {-
 
-  genAppend' n (balanced(lp, d₁, rp, d₂)) (genMkTree n t)
-  ≡ genBAL n lp (d₁ , rp , genAppend' )
-
-
--}
-
-{-
-
-  This doesn't seem to work, even though it seems provable by induction:
-
-  we want to show that
-
+  Here is the informal inductive argument
   d : IndDyck ⊢ (λ& n → λ⟜ t → genMkTree n (buildTrace n d t))
                 ≡ (λ& n → λ⟜ t → genAppend' n d (genMkTree n t))
 
@@ -608,34 +597,20 @@ genBuildTrace (suc m) = &ᴰ-intro λ n → ⟜-intro
     ≡ genBALANCED n lp (d₁, rp, genAppend' n d₂ (genMkTree n t))                                                [ defn of genAppend' ]
     ≡ genAppend' n (balanced(lp, d₁, rp, d₂)) (genMkTree n t)
 
-  but I don't really see how to structure this inductive argument as
-  an instance of the universal property of fold.
-
-  The issue is that the universal property allows you to prove two
-  functions are equivalent if you can prove they both satisfy the same
-  recurrence relation, but there doesn't seem to be a way to describe
-  the balanced case as a recurrence because we need to know the left
-  subcall inductively
-
-
-
+  We use equalizers to give us this induction principle. It's not
+  clear whether you can prove this "directly" using the initial
+  algebra properties without using equalizers.
 -}
 
 lhs rhs : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n)
 lhs = (&ᴰ-intro λ n → ⟜-intro (genMkTree n ∘g ⟜-app) ∘g &ᴰ-π n) ∘g buildTrace
-
 rhs = ((&ᴰ-intro λ n → ⟜-intro (⟜-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g genAppend')
 
-pfAlg : Algebra DyckTy (λ _ → equalizer lhs rhs)
-pfAlg _ =
-  eq-intro _ _ (roll ∘g map (DyckTy _) (λ _ → eq-π _ _))
-    pf
-  where
-    opaque
-      unfolding ⊗-intro
-      pf : lhs ∘g roll ∘g map (DyckTy _) (λ _ → eq-π lhs rhs)
-           ≡ rhs ∘g roll ∘g map (DyckTy _) (λ _ → eq-π _ _)
-      pf = ⊕ᴰ≡ _ _ λ
+opaque
+  unfolding ⊗-intro
+  pf : lhs ∘g roll ∘g map (DyckTy _) (λ _ → eq-π lhs rhs)
+       ≡ rhs ∘g roll ∘g map (DyckTy _) (λ _ → eq-π _ _)
+  pf = ⊕ᴰ≡ _ _ λ
         { nil' → &ᴰ≡ _ _ λ n →
           ⟜-intro-natural
           ∙ cong ⟜-intro
@@ -711,19 +686,7 @@ genRetr :
   Path (IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⟜ Trace true n))
     lhs
     rhs
-genRetr = equalizer-section _ _
-  (rec DyckTy pfAlg _)
-  (ind-id' DyckTy (compHomo DyckTy (initialAlgebra DyckTy) pfAlg (initialAlgebra DyckTy)
-    ((λ _ → eq-π lhs rhs) , λ _ → eq-π-is-homo)
-    (recHomo DyckTy pfAlg)) _)
-  where
-    opaque
-      unfolding eq-π eq-intro
-      eq-π-is-homo : eq-π lhs rhs ∘g pfAlg _ ≡ roll ∘g map (DyckTy _) (λ _ → eq-π lhs rhs)
-      eq-π-is-homo = ⊕ᴰ≡ _ _ λ
-        { nil' → refl
-        ; balanced' → refl
-        }
+genRetr = equalizer-ind-unit (DyckTy tt) pf
 
 Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
 Dyck≅Trace =

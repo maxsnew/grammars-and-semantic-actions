@@ -27,7 +27,7 @@ open import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 
 open import Grammar Alphabet hiding (KL* ; NIL ; CONS)
 open import Grammar.KleeneStar Alphabet
-open import Grammar.Inductive.Indexed Alphabet
+open import Grammar.Inductive.Indexed Alphabet as Ind
 open import Grammar.Equalizer Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.RegularExpression Alphabet
@@ -88,84 +88,49 @@ module _ (c : ⟨ Alphabet ⟩) where
   literalNFA .label _ = c
   literalNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  litNFA≅ : StrongEquivalence (Trace (literalNFA) true c-st) (literal c)
+  litNFA≅ : StrongEquivalence (Trace literalNFA true c-st) (literal c)
   litNFA≅ =
     mkStrEq
       (rec (TraceTy literalNFA true) litAlg c-st)
-      (roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in (_ , Eq.refl)
-        ∘g (liftG ∘g liftG) ,⊗ liftG
-        ∘g id ,⊗ (roll ∘g ⊕ᴰ-in stop)
-        ∘g id ,⊗ (⊕ᴰ-in (lift (Eq.refl)) ∘g liftG ∘g liftG) ∘g ⊗-unit-r⁻)
+      (toNFA c-st)
       the-ret
-      the-sec
+      (the-sections c-st)
     where
-    litAlg : Algebra (TraceTy literalNFA true) λ { c-st → literal c ; ε-st → ε}
-    litAlg c-st = ⊕ᴰ-elim (λ {
-        stop → ⊕ᴰ-elim (λ {()})
-      ; step → ⊕ᴰ-elim (λ { (_ , Eq.refl) → ⊗-unit-r ∘g (lowerG ∘g lowerG) ,⊗ lowerG})
-      ; stepε → ⊕ᴰ-elim (λ {()})})
-    litAlg ε-st = ⊕ᴰ-elim (λ {
-        stop → ⊕ᴰ-elim (λ { (lift Eq.refl) → lowerG ∘g lowerG})
-      ; step → ⊕ᴰ-elim (λ {()})
-      ; stepε → ⊕ᴰ-elim (λ {()})})
+    ⟦_⟧st : ⟨ literalNFA .Q ⟩ → Grammar ℓ-zero
+    ⟦ c-st ⟧st = literal c
+    ⟦ ε-st ⟧st = ε
+
+    litAlg : Algebra (TraceTy literalNFA true) ⟦_⟧st
+    litAlg c-st = ⊕ᴰ-elim (λ { (step t _) →
+      ⊗-unit-r ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      })
+    litAlg ε-st = ⊕ᴰ-elim (λ { (stop _) → lowerG ∘g lowerG })
+
+    fromNFA = rec (TraceTy literalNFA true) litAlg
+
+    toNFA : ∀ q → ⟦ q ⟧st ⊢ Trace literalNFA true q
+    toNFA c-st = STEP literalNFA _ ∘g id ,⊗ STOP literalNFA ∘g ⊗-unit-r⁻
+    toNFA ε-st = STOP literalNFA
 
     opaque
       unfolding ⊗-intro ⊗-unit-r⁻
-      the-ret :
-        rec (TraceTy literalNFA true) litAlg c-st ∘g
-        roll ∘g
-        ⊕ᴰ-in step ∘g
-        ⊕ᴰ-in (tt , Eq.refl) ∘g
-        (liftG ∘g liftG) ,⊗ liftG ∘g
-        id ,⊗ (roll ∘g ⊕ᴰ-in stop) ∘g
-        id ,⊗ (⊕ᴰ-in (lift Eq.refl) ∘g liftG ∘g liftG) ∘g ⊗-unit-r⁻
-        ≡ id
+      the-ret : rec (TraceTy literalNFA true) litAlg c-st ∘g toNFA c-st ≡ id
       the-ret = ⊗-unit-r⁻r
 
-    opaque
-      unfolding
-      the-sec :
-        (roll ∘g
-         ⊕ᴰ-in step ∘g
-         ⊕ᴰ-in (tt , Eq.refl) ∘g
-         (liftG ∘g liftG) ,⊗ liftG ∘g
-         id ,⊗ (roll ∘g ⊕ᴰ-in stop) ∘g
-         id ,⊗ (⊕ᴰ-in (lift Eq.refl) ∘g liftG ∘g liftG) ∘g ⊗-unit-r⁻)
-        ∘g rec (TraceTy literalNFA true) litAlg c-st
-        ≡ id
-      the-sec =
-        equalizer-ind (TraceTy literalNFA true)
-          {!!}
-          {!!}
-          {!!} c-st
-  --   mkStrEq
-  --     ?
-  --     the-inv
-  --     {!!}
-  --     -- ⊗-unit-r⁻r
-  --     {!equalizer-ind!}
-  -- --   (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ litAlg) (record
-  -- --     { f = λ { c-st → the-inv ; ε-st → nil Eq.refl }
-  -- --     ; on-nil = λ { Eq.refl → refl }
-  -- --     ; on-cons = λ _ → λ i →
-  -- --       cons _
-  -- --       ∘g (⊗-intro id (nil Eq.refl))
-  -- --       ∘g ⊗-unit-rr⁻ i
-  -- --     ; on-ε-cons = Empty.elim })))
-  --   where
-  --     the-inv : literal c ⊢ ?
-  --     the-inv = {!!}
-  --       -- cons _
-  --       -- ∘g ⊗-intro id (nil Eq.refl)
-  --       -- ∘g ⊗-unit-r⁻
-
-  --     litAlg : Algebra literalNFA
-  --     litAlg = ?
-  --     -- litAlg .the-ℓs _ = ℓ-zero
-  --     -- litAlg .G c-st = literal c
-  --     -- litAlg .G ε-st = ε
-  --     -- litAlg .nil-case Eq.refl = id
-  --     -- litAlg .cons-case _ = ⊗-unit-r
+      the-sections :
+        ∀ q → toNFA q ∘g fromNFA q ≡ id
+      the-sections = equalizer-ind (TraceTy literalNFA true) (Trace literalNFA true)
+                      (λ q → toNFA q ∘g fromNFA q) (λ q → id)
+       λ { c-st → ⊕ᴰ≡ _ _ λ { (step tt Eq.refl) →
+           (λ i → STEP literalNFA tt ∘g id ,⊗ toNFA ε-st
+            ∘g ⊗-unit-rr⁻ i
+            ∘g id ,⊗ fromNFA ε-st
+            ∘g (lowerG ∘g lowerG) ,⊗ (eq-π (toNFA _ ∘g fromNFA _) id ∘g lowerG))
+           ∙ (λ i → STEP literalNFA tt
+            ∘g id ,⊗ (eq-π-pf (toNFA _ ∘g fromNFA _) id i)
+            ∘g (lowerG ∘g lowerG) ,⊗ lowerG)
+         }
+         ; ε-st → ⊕ᴰ≡ _ _ λ { (stop Eq.refl) → refl } }
 
 -- -- Nullary Disjunction
 -- module _ where

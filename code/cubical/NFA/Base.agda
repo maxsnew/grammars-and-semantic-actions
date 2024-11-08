@@ -62,18 +62,24 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     DecProp∃ transition (λ t →
       matchesTransition discAlphabet t src' label' dst')
 
-  data Tag : Type ℓN where
-    stop step stepε : Tag
+  data Tag (b : Bool) (q : ⟨ Q ⟩) : Type ℓN where
+    stop : b Eq.≡ isAcc q → Tag b q
+    step : ∀ t → (src t Eq.≡ q) → Tag b q
+    stepε : ∀ t → (ε-src t Eq.≡ q) → Tag b q
 
   TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
-  TraceTy b q = ⊕e Tag λ {
-      stop → ⊕e (Lift (b Eq.≡ isAcc q)) (λ
-        (lift acc) → k (LiftG ℓN ε) )
-    ; step → ⊕e (Eq.fiber src q) λ {
-        (t , Eq.refl ) →
-          ⊗e (k (LiftG ℓN (literal (label t)))) (Var (dst t)) }
-    ; stepε → ⊕e (Eq.fiber ε-src q) λ { (t , Eq.refl) → Var (ε-dst t) } }
-
+  TraceTy b q = ⊕e (Tag b q) λ
+    { (stop x) → k ε*
+    ; (step t x) → ⊗e (k (literal* (label t))) (Var (dst t))
+    ; (stepε t x) → Var (ε-dst t) }
   Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓN
   Trace b = μ (TraceTy b)
 
+  STOP : ∀ {q} → ε ⊢ Trace (isAcc q) q
+  STOP = roll ∘g ⊕ᴰ-in (stop Eq.refl) ∘g liftG ∘g liftG
+
+  STEP : ∀ {b} t → literal (label t) ⊗ Trace b (dst t) ⊢ Trace b (src t)
+  STEP t = roll ∘g ⊕ᴰ-in (step _ Eq.refl) ∘g (liftG ∘g liftG) ,⊗ liftG
+
+  STEPε : ∀ {b} t → Trace b (ε-dst t) ⊢ Trace b (ε-src t)
+  STEPε t = roll ∘g ⊕ᴰ-in (stepε t Eq.refl) ∘g liftG
