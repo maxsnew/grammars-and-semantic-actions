@@ -944,7 +944,7 @@ introduction rule $\sigma$, but its elimination rule is given by
 define the more typical nullary and binary versions of these
 connectives by using indexing over the empty and boolean type
 respectively. We will freely use $\bot$ to refer to this empty
-discunction and $\top$ to refer to the empty conjunction. Lastly, we
+disjunction and $\top$ to refer to the empty conjunction. Lastly, we
 include a type $\equalizer {a}{f}{g}$ that we call the
 \emph{equalizer} of $f$ and $g$. We think of this type as the
 ``subset'' of $A$ that satisfy the equation $f\,a\equiv g\,a$. If
@@ -1043,7 +1043,7 @@ define it for each of the operations given above. Lastly, we give a
 \emph{functorial action} $\map(F)$ for each of the codes.\max{TODO:
   find a citation for this kind of approach. Container papers work
   this way for instance. I think there is a linear container paper
-  that uses this appraoch}
+  that uses this approach}
 
 With this notion of strictly-positive functor so defined, in
 \Cref{fig:iilt} we next add a linear type constructor $\mu F$, which
@@ -1230,7 +1230,7 @@ types, terms and axioms that allow us to reason about formal grammars.
 \section{Formal Grammar Theory in \theoryname}
 \label{sec:applications}
 This section explores the applications of \theoryabbv to conducting formal
-gramamr theory. We demonstrate that several classical notions and constructions
+grammar theory. We demonstrate that several classical notions and constructions
 integral to the theory of formal languages are faithfully represented
 in \theoryname. By encoding well-established formal grammar concepts, we ensure
 that our framework remains grounded in the
@@ -1288,11 +1288,11 @@ that reifies the semantic description of ambiguity.
   then $\f \equiv \g$
 \end{definition}
 \cref{def:unambig} can be read more intuitively as stating that $\A$ is
-unabmiguous if there is at most one way to transform parses of any other grammar
+unambiguous if there is at most one way to transform parses of any other grammar
 $\B$ into parse of $\A$.
 
 Note that this definition of unambiguity is preserved by strong equivalence, so a common proof technique for showing $\A$ is unambiguous is by proving $\A$
-is strongly equivalent to an unambguous grammar $\B$. In this style of proof, we
+is strongly equivalent to an unambiguous grammar $\B$. In this style of proof, we
 build the parse transformers $\f : \ltonl{(\A \lto \B)}$ and
 $\g : \ltonl{(\B \lto \A)}$, then we have the obligation to show
 $\f \circ \g \equiv \ident$ and $\g \circ \f \equiv \ident$. However, because $\B$ is
@@ -1361,7 +1361,7 @@ through this
 NFA, as
 presented in \cref{fig:nfainductive}, inspects the concrete structure of the
 NFA.\ When generalizing from this example to an arbitrary NFA, we do not have the
-luxury of inspecting a concrete defintion. Therefore, we abstract over the
+luxury of inspecting a concrete definition. Therefore, we abstract over the
 specification of an arbitrary NFA and define traces with respect to that
 specification.
 
@@ -1491,7 +1491,7 @@ print .s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c (D.(*@$\delta$@*) c s) b a
 \label{fig:printdfa}
 \end{figure}
 
-\steven{TODO make the agda logo clickable, and mention its meaning somewhere}
+\steven{TODO make the Agda logo clickable, and mention its meaning somewhere}
 \newcommand{\Agda}{\agdalogo}
 \begin{theorem}[Determinization, \Agda]
   Given an NFA $N$, there exists a DFA $D$ such that
@@ -1502,14 +1502,14 @@ print .s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c (D.(*@$\delta$@*) c s) b a
 \newcommand{\x}{\texttt{x}}
 \newcommand{\y}{\texttt{y}}
 \begin{proof}
-  We present a variant of Rabin and Scotts's classic powerset construction \cite{rabinFiniteAutomataTheir1959}. First, we build
+  We present a variant of Rabin and Scott's classic powerset construction \cite{rabinFiniteAutomataTheir1959}. First, we build
   the DFA $\D$. Define the
   states of $\D$ to be the $\mathbb{P}_{\varepsilon}(\N.\states)$ --- the type
   of $\epsilon$-closed\footnote{A subset of states $\X$ is $\epsilon$-closed if
     for every $\s \in \X$ and $\epsilon$-transition $\s \overset{\epsilon}{\to} \s'$ we have $\s' \in \X$.} subsets of
   $\N.\states$. A subset is accepting in $\D$ if it contains an accepting state
   from $\N$. Construct the initial state of $\D$ as the
-  $\epsilon$-closure of $\N.\init$. Lastly define the transtion function
+  $\epsilon$-closure of $\N.\init$. Lastly define the transition function
   of $\D$ to send the subset $X$ under the character $\c$ to the
   $\epsilon$-closure of all the states reachable from $X$ via a transition
   labelled with the character $\c$.
@@ -1555,7 +1555,7 @@ If the NFA trace is defined via $\cons$ for a labeled transition
 $\texttt{trans} : \N.\transitions$ such that $N.\src~\texttt{trans} \in \X$, then
 we first decompose the trace into a parse of $\N.\labelt~\texttt{trans}$ and a
 trace starting from $\N.\dst~\texttt{trans}$. We then recursively call $\NtoD$
-on this trace which returns a family of traces parametrized by $\epsilon$-closed
+on this trace which returns a family of traces parameterized by $\epsilon$-closed
 subsets containing $N.\dst~\texttt{trans}$. We instantiate this family at the
 set of states
 $\D.\delta~(\N.\labelt~\texttt{trans})~X$. Because $\N.\dst~\texttt{trans}$ is
@@ -1568,7 +1568,7 @@ recursive call to get a trace in $\D$ rooted at $X$.
 Lastly, if the NFA trace is defined via $\epsilon\cons$ for an $\epsilon$-transition
 $\epsilon\texttt{trans} : \N.\epstransitions$ such that
 $\N.\epssrc~\epsilon\texttt{trans} \in \X$, then the construction is quite
-similar. In this case we again recursivley call $\NtoD$, except afterwards we
+similar. In this case we again recursively call $\NtoD$, except afterwards we
 instantiate the family of grammars at the set $X$ itself. We may do this because
 all states in $\D$ are taken to be $\epsilon$-closed, therefore
 $\N.\epsdst~\epsilon\texttt{trans} \in \X$ because
@@ -1598,7 +1598,7 @@ Next if the trace in $\D$ is defined via transition
 $\X \overset{\c}{\to} (\D.\delta~\c~\X)$ then we may choose some state in
 $\s \in \D.\delta~\c~\X$. Recursively, $\DtoN$ sends the trace rooted at
 $\D.\delta~\c~\X$ to one rooted at $\s$. By definition of $\D.\delta~\c~\X$,
-there exists some $\s' \in \X$ such that $\s'$ tranitions to $\s$ by some number of
+there exists some $\s' \in \X$ such that $\s'$ transitions to $\s$ by some number of
 $\epsilon$-transitions followed by a transition labeled by $\c$.
 We order all
 such traces of this form and choose the smallest one, which is then linearly
@@ -1757,7 +1757,7 @@ cut to the essence of what it means to be context free.
 
 $\Dyck$ is a grammar over the alphabet $\{ \stringquote{(}, \stringquote{)} \}$
 and is defined in \cref{fig:dyckinductive}. The $\nil$ constructor shows that
-the empty string is balanced, and the $\balanced$ constrcutor builds a balanced
+the empty string is balanced, and the $\balanced$ constructor builds a balanced
 parse by wrapping an already balanced parse in an additional set of parentheses
 then following it with another balanced parse.
 
@@ -1840,8 +1840,8 @@ finiteness condition on the states of the automaton.
 \newcommand{\snoc}{\mathtt{snoc}}
 \steven{This subsection is still a WIP}
 %% 5. Expressiveness: Turing Machines
-The expressive power of \theoryabbv spans the entire Chomsky hierachy, as we may
-encode the acccepting traces of Turing machines as linear types.
+The expressive power of \theoryabbv spans the entire Chomsky hierarchy, as we may
+encode the accepting traces of Turing machines as linear types.
 
 \steven{TODO introduce tape alphabet and blank symbol}
 
@@ -1906,8 +1906,8 @@ where $\mathsf{TuringTrace}$ is a nonlinear type denoting terminating traces
 through the Turing machine. Note that $\mathsf{run}$ returns a $\mathsf{Maybe}$
 type in a fuel parameter. Turing machines may not terminate. If they do
 terminate within $\mathsf{fuel}$-many steps, then we return the trace along with
-the current tape and a boolean denoting if the trace is accepting or rejcting.
-If the trace does not terminate within the alloted amount of fuel, then we
+the current tape and a boolean denoting if the trace is accepting or rejecting.
+If the trace does not terminate within the allotted amount of fuel, then we
 timeout and return nothing.
 
 \subsection{Semantic Actions}
@@ -2563,7 +2563,7 @@ transformer. This defines a \emph{category}.
   grammars and morphisms are parse transformers.
 \end{definition}
 This category is equivalent to the slice category $\Set/\Sigma^*$ and
-as such is very well-behaved. It is complete, co-complete, cartesian
+as such is very well-behaved. It is complete, co-complete, Cartesian
 closed and carries a monoidal biclosed structure. We will use these
 structures to model the linear types, terms and equalities in
 \theoryabbv.
@@ -2642,7 +2642,7 @@ We can now define our denotational semantics.
 \end{definition}
 
 For reasons of brevity, we present only a selection of cases in
-\Cref{fig:semantics}. The full details are in the appendix.\max{todo:
+\Cref{fig:semantics}. The full details are in the appendix.\max{TODO:
   put the full details in the appendix}.
 \max{TODO: how to describe $\mu$ succinctly?}\max{make sure $\lto$ and $\tol$ are right}
 \begin{figure}
@@ -2664,7 +2664,7 @@ For reasons of brevity, we present only a selection of cases in
 
 \max{TODO: prose}
 
-\max{todo: spelling}
+\max{TODO: spelling}
 \begin{theorem}[Adamek]
   If a functor $F : \mathcal C \to \mathcal C$ preserves
   $\omega$-colimits and $\mathcal C$ has an initial object and
@@ -3429,7 +3429,7 @@ calculus as a logical system for linguistic derivations. In fact, one may view
 the subtheory of our calculus generated over $\otimes, \lto, \tol$ to be a proof
 relevant presentation of Lambek's original system.
 
-\steven{Should discussion of this connection to lambek calculus be spread
+\steven{Should discussion of this connection to Lambek calculus be spread
   throughout the paper?}
 
 Lambek later explicitly connects his syntactic calculus to the structure of a
@@ -3442,20 +3442,20 @@ even Lambek calculus with dependent types \cite{luoLambekCalculusDependent}. As
 far as the authors can tell, these works seem to be primarily interested in natural
 language semantics in the style of Montague grammars, rather than parsing formal
 languages. That is, they seem to try to give a functorial semantic
-interpretation of natrual language.
+interpretation of natural language.
 
 There seem to be some implementations from the abstract categorial grammar
 toolkit, but again they seem natural language focused and not up to the task of
 verified formal language parsing.
 
 Also mention here that \cite{luoLambekCalculusDependent} seems similar at first
-glance, but isn't as similar as it might look because the judgements and
+glance, but isn't as similar as it might look because the judgments and
 dependent types seem to
 take on a different interpretation of ours. Say something here like, ``as we
 understand it, it differs in x,y,z ways''
 
 \steven{TODO Edit the above}
-\steven{Even though the above sounds bad, are there lambek/categorial things that are missed?}
+\steven{Even though the above sounds bad, are there Lambek/categorial things that are missed?}
 
 %% 1. More practical: integrating it into a larger verified development
 %%    - verified imperative implementation: Lambek logic ala separation
@@ -3507,7 +3507,7 @@ parallel tracks of research that have missed each other for decades}
   first glance, as its parsing with types, but that he actually is representing
   something quite different. Or is it so different that its not worth mentioning?}
 
-\steven{TODO add lambek calculus/categorial grammars here}
+\steven{TODO add Lambek calculus/categorial grammars here}
 
 \paragraph{Kleene Algebra}
 Since the early works in the theory of formal languages, Kleene
@@ -3826,9 +3826,9 @@ but families of sets indexed by \emph{abstract syntax trees}.
   \caption{Judgmental equality for linear terms}
   \label{fig:jdgeq}
 \end{figure}
-\steven{Do we need inverse for $\ltonl A$ in judgemental equality figure?}
+\steven{Do we need inverse for $\ltonl A$ in judgmental equality figure?}
 \steven{Do we need to say anything about the equalizer proofs being unique in
-  judgemental equality figure?}
+  judgmental equality figure?}
 
 
 \end{document}
