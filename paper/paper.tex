@@ -1832,44 +1832,37 @@ finiteness condition on the states of the automaton.
 \subsection{Turing Machines}
 \newcommand{\Turing}{\mathtt{Turing}}
 \newcommand{\ttt}{\mathtt{t}}
+\newcommand{\blank}{\mathtt{blank}}
+\newcommand{\push}{\mathtt{push}}
 \newcommand{\T}{\mathtt{T}}
 \newcommand{\acc}{\mathtt{acc}}
 \newcommand{\rej}{\mathtt{rej}}
 \newcommand{\Tape}{\mathtt{Tape}}
 \newcommand{\parseTape}{\mathtt{parseTape}}
 \newcommand{\snoc}{\mathtt{snoc}}
-\steven{This subsection is still a WIP}
 %% 5. Expressiveness: Turing Machines
 The expressive power of \theoryabbv spans the entire Chomsky hierarchy, as we may
 encode the accepting traces of Turing machines as linear types.
 
-\steven{TODO introduce tape alphabet and blank symbol}
-
 The data of a Turing machine $\T$  is given by the following data,
 \begin{itemize}
+  \item $\Gamma$ --- the tape alphabet, a superset of the input alphabet $\Sigma$
+  \item $\blank : \Gamma$ --- a distinguished character that marks an empty cell on the tape
   \item $\T.\states$ --- a finite set of states
   \item $\T.\init : \T.\states$ --- the initial state
   \item $\T.\acc , \T.\rej : \T.\states$ --- distinguished accepting and
         rejecting states, respectively, such that $\T.\acc \neq \T.\rej$
-  \item $\T.\delta : \T.\states \to \Gamma \to \T.\states \times \Gamma \times \Bool$
-        --- a deterministic transition function. Given the current state and the
-        head of the tape return the new state, the character written to the
-        tape, and which direction to shift ($\true$ for left, $\false$ for right)
+  \item $\T.\delta : \T.\states \times \Tape \times \mathbb{N} \to \T.\states \times \Tape \times \mathbb{N}$
+        --- a deterministic transition function. $\T.\delta$ reads the current state, the
+        current tape, and the index of the head of the tape and then returns the
+        updated state, tape, and head.
 \end{itemize}
-
-The tape of a
-(one-sided) Turing machine is encoded as nonlinear function from the natural numbers to the tape
-alphabet $\Gamma$, $\Tape = \mathbb{N} \to \Gamma$. To initialize the tape of
-$\T$, we define the parse transformer
-$\parseTape : \ltonl {(\stringg \lto \LinSigTy {\ttt} {\Tape} {\Turing~\ttt})}$ in \cref{fig:parseTape}.
-
-\steven{TODO finish the description of Turing machines}
 
 \begin{figure}
 \begin{lstlisting}
-data Turing : (t : Tape) (*@$\to$@*) L where
-  nil : (*@$\uparrow$@*)(&[ t (*@$\in$@*) Tape ] Turing t)
-  snoc : (*@$\uparrow$@*)(&[ c (*@$\in$@*) (*@$\Sigma$@*) ] &[ t (*@$\in$@*) Tape ](Turing t (*@$\lto$@*) c (*@$\lto$@*) Turing (push c t)))
+data Turing(*@$_{\T}$@*) : (t : Tape) (*@$\to$@*) L where
+  nil : (*@$\uparrow$@*)(&[ t (*@$\in$@*) Tape ] Turing(*@$_{\T}$@*) t)
+  snoc : (*@$\uparrow$@*)(&[ c (*@$\in$@*) (*@$\Sigma$@*) ] &[ t (*@$\in$@*) Tape ](Turing t (*@$\lto$@*) c (*@$\lto$@*) Turing(*@$_{\T}$@*) (push c t)))
 \end{lstlisting}
 \caption{Inductive linear type of Turing machines initialized with tape $\ttt$}
 \label{fig:turinginductive}
@@ -1877,7 +1870,7 @@ data Turing : (t : Tape) (*@$\to$@*) L where
 
 \begin{figure}
 \begin{lstlisting}
-parseTape : (*@$\uparrow$@*)(String (*@$\lto$@*) (*@$\oplus$@*)[ t (*@$\in$@*) Tape ] Turing t)
+parseTape : (*@$\uparrow$@*)(String (*@$\lto$@*) (*@$\oplus$@*)[ t (*@$\in$@*) Tape ] Turing(*@$_{\T}$@*) t)
 parseTape String.nil = (*@$\sigma$@*) ((*@$\lambda$@*) n . blank) (Turing.nil ((*@$\lambda$@*) n . blank))
 parseTape (String.cons ((*@$\sigma$@*) c a) w) =
   let (*@$\sigma$@*) t Tur = parseTape w in (*@$\sigma$@*) (push c t) (snoc c t Tur a)
@@ -1886,29 +1879,69 @@ parseTape (String.cons ((*@$\sigma$@*) c a) w) =
 \label{fig:parseTape}
 \end{figure}
 
+The tape of a
+(one-sided) Turing machine is encoded as nonlinear function from the natural numbers to the tape
+alphabet $\Gamma$, $\Tape = \mathbb{N} \to \Gamma$.
+We define $\push~\c~\ttt : \Tape \to \Tape$ to increment the index of every
+character in the tape and insert $\c$ at index $0$. To run $\T$ on
+the input string $\w$, we write $\w$ to the leftmost entries of the tape and
+then repeatedly transition according to $\T.\delta$. If the machine enters the
+states $\T.\acc$ or $\T.\rej$, then the execution of $\T$ halts and either
+accepts or rejects accordingly.
 
+In \cref{fig:turinginductive}, we give an inductive linear type that describes
+Turing machines initialized with a given tape. However, unlike the types of
+traces for finite automata, the execution of a Turing machine is not described
+directly by the linear type system. We simply use the type $\Turing_{\T}$ to encode
+the initial state of the machine. To write the input string to the leftmost
+entries of the tape, we define the parse transformer
+$\parseTape : \ltonl {(\stringg \lto \LinSigTy {\ttt} {\Tape} {\Turing_{\T}~\ttt})}$
+in \cref{fig:parseTape}. Once the tape has been initialized, we capture the
+execution of $\T$ via the non-linear types.
+% data TuringTrace (b : Bool) : ⟨ Q ⟩ × Tape × Head → Type ℓ-zero where
+%   accept : ∀ t h → b ≡ true → TuringTrace b (acc , t , h)
+%   reject : ∀ t h → b ≡ false → TuringTrace b (rej , t , h)
+%   move : ∀ q t h →
+%     TuringTrace b (transition q t h) →
+%     TuringTrace b (q , t , h)
+\begin{figure}
+\begin{lstlisting}
+data Trace(*@$_{\T}$@*) : Bool (*@$\to$@*) T.states (*@$\times$@*) Tape (*@$\times$@*) (*@$\mathbb{N}$@*) (*@$\to$@*) U where
+  accept : (*@$\forall$@*) (t : Tape) (n : (*@$\mathbb{N}$@*)) (*@$\to$@*) Trace(*@$_{\T}$@*) true (T.acc , t , n)
+  reject : (*@$\forall$@*) (t : Tape) (n : (*@$\mathbb{N}$@*)) (*@$\to$@*) Trace(*@$_{\T}$@*) false (T.rej , t , n)
+  move : (*@$\forall$@*) (b : Bool) (s : T.states) (t : Tape) (n : (*@$\mathbb{N}$@*)) (*@$\to$@*)
+             Trace(*@$_{\T}$@*) b (T.(*@$\delta$@*) s t n) (*@$\to$@*) Trace(*@$_{\T}$@*) b (s , t , n)
+\end{lstlisting}
+\caption{Traces through a Turing machine as a non-linear inductive type}
+\label{fig:turingtrace}
+\end{figure}
 
-We may then define a term of type
-$\mathsf{parseTape} : \ltonl {\left( \stringg \lto \LinSigTy {\ttt} {\Tape} {\Turing~\ttt} \right)}$.
-In this manner, all of the interesting computations that the Turing machine
-would do occur solely inside of the nonlinear index. That is,
-$\mathsf{parseTape}$ does not discern which strings are accepted by the Turing
-machine, nor does it do any computation. $\mathsf{parseTape}$ simply loads the
-input string into the initial spaces on the tape.
+In \cref{fig:turingtrace} we define $\Trace_{\T}$ as a nonlinear type indexed by
+an acceptance Boolean and start configuration. A configuration of a Turing
+machine is the data of the start state, start tape, and start index for the head
+of tape. The
+traces of $\T$ either accept, reject, or transitions as described by $\T.\delta$.
 
-Once the string has been loaded onto the tape, we may further define the
-following term to run the Turing machine.
+Once the input string has been loaded onto the tape, we execute $\T$ by defining
+a Turing machine interpreter of the following type,
+
 \[
-  \mathsf{run} : \ltonl {\left( \bigoplus\limits_{t : \mathbb{N} \to \Gamma} \Turing(t) \lto \bigwith\limits_{\mathsf{fuel} : \mathbb{N}} \mathsf{Maybe} \left( \bigoplus\limits_{t : \mathbb{N} \to \Gamma} \bigoplus\limits_{b : \Bool} \bigoplus\limits_{\mathsf{trace} : \mathsf{TuringTrace}(b , t)} \Turing(t) \right) \right)}
+  \texttt{run} : \ltonl {\left( \bigoplus\limits_{\ttt : \Tape} \Turing_{\T}~\ttt \lto \bigwith\limits_{\texttt{fuel} : \mathbb{N}} \texttt{Maybe} \left(  \bigoplus\limits_{\b : \Bool} \bigoplus\limits_{\s : \T.\states}  \bigoplus\limits_{\texttt{n} : \mathbb{N}} \bigoplus\limits_{\ttt : \Tape}  \bigoplus\limits_{\texttt{tr} : \Trace_{\T}~\b~(\s , \ttt , \texttt{n})} \Turing_{\T}~\ttt \right) \right)}
 \]
 
-where $\mathsf{TuringTrace}$ is a nonlinear type denoting terminating traces
-through the Turing machine. Note that $\mathsf{run}$ returns a $\mathsf{Maybe}$
-type in a fuel parameter. Turing machines may not terminate. If they do
-terminate within $\mathsf{fuel}$-many steps, then we return the trace along with
-the current tape and a boolean denoting if the trace is accepting or rejecting.
-If the trace does not terminate within the allotted amount of fuel, then we
-timeout and return nothing.
+$\mathtt{run}$ returns a result of $\mathtt{Maybe}$
+type varying over a fuel\footnote{Putting termination issues aside, we may omit
+  this fuel parameter. Although it is necessary when defining a Turing machine
+  interpreter in a total language like Agda.} parameter. It takes transitions at most
+$\texttt{fuel}$-many transitions in $\T$, and it returns a halting trace if one is
+found or timeouts otherwise. The data of this trace is encoded in the nonlinear
+index $\texttt{tr} : \Trace_{\T}~\b~(\s , \ttt , \texttt{n})$. Importantly, when
+$\texttt{tr}$ is an \emph{accepting} trace then the grammar
+\[
+\bigoplus\limits_{\s : \T.\states}  \bigoplus\limits_{\texttt{n} : \mathbb{N}} \bigoplus\limits_{\ttt : \Tape}  \bigoplus\limits_{\texttt{tr} : \Trace_{\T}~\true~(\s , \ttt , \texttt{n})} \Turing_{\T}~\ttt
+\]
+describes the strings that are accepted by $\T$. Therefore, we may encode
+arbitrary recusively enumerable languages within \theoryabbv.
 
 \subsection{Semantic Actions}
 \steven{TODO write this section and give some small simple actions}
