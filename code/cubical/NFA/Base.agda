@@ -83,3 +83,8 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
 
   STEPε : ∀ {b} t → Trace b (ε-dst t) ⊢ Trace b (ε-src t)
   STEPε t = roll ∘g ⊕ᴰ-in (stepε t Eq.refl) ∘g liftG
+
+  Parse : Grammar _
+  Parse = Trace true init
+
+  TraceAlg = Algebra (TraceTy true)

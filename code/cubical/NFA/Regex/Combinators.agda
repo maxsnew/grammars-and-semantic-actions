@@ -132,32 +132,25 @@ module _ (c : ⟨ Alphabet ⟩) where
          }
          ; ε-st → ⊕ᴰ≡ _ _ λ { (stop Eq.refl) → refl } }
 
--- -- Nullary Disjunction
--- module _ where
---   ⊥NFA : NFA {ℓ-zero}
---   ⊥NFA .Q = Unit , isFinSetUnit
---   ⊥NFA .init = tt
---   ⊥NFA .isAcc _ = (Empty.⊥ , isProp⊥) , no (λ z → z) -- todo: upstream this def
---   ⊥NFA .transition = Empty.⊥ , isFinSet⊥
---   ⊥NFA .ε-transition = Empty.⊥ , isFinSet⊥
+-- Nullary Disjunction
+module _ where
+  ⊥NFA : NFA ℓ-zero
+  ⊥NFA .Q = Unit , isFinSetUnit
+  ⊥NFA .init = tt
+  ⊥NFA .isAcc _ = false
+  ⊥NFA .transition = Empty.⊥ , isFinSet⊥
+  ⊥NFA .ε-transition = Empty.⊥ , isFinSet⊥
 
---   opaque
---     unfolding AlgebraHom-seq ∃AlgebraHom
---     emptyNFA-strong-equiv :
---       StrongEquivalence (InitParse ⊥NFA) ⊥
---     emptyNFA-strong-equiv = mkStrEq
---       (recInit _ ⊥Alg)
---       ⊥-elim
---       (⊥-η _ _)
---       (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ ⊥Alg)
---         (record { f = λ _ → ⊥-elim
---                 ; on-nil = Empty.elim
---                 ; on-cons = Empty.elim
---                 ; on-ε-cons = Empty.elim })))
---       where
---         ⊥Alg : Algebra ⊥NFA
---         ⊥Alg .the-ℓs = _
---         ⊥Alg .G _ = ⊥
+  emptyNFA-strong-equiv : StrongEquivalence (Parse ⊥NFA) ⊥
+  emptyNFA-strong-equiv = mkStrEq
+    (rec _ ⊥Alg _)
+    ⊥-elim
+    (⊥-η _ _)
+    (equalizer-ind-unit (TraceTy ⊥NFA _ _)
+      (⊕ᴰ≡ _ _ λ { (stop ()) }))
+    where
+      ⊥Alg : TraceAlg ⊥NFA λ _ → ⊥
+      ⊥Alg tt = ⊕ᴰ-elim λ { (stop ()) }
 
 -- -- Binary Disjunction
 -- -- Given two NFAs N and N', accepts a string if and only if
