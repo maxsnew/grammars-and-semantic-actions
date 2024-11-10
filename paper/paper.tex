@@ -8,6 +8,16 @@
 \usepackage{fancyvrb}
 \usepackage{xspace}
 
+\usepackage[LGR,T1]{fontenc}
+\DeclareMathAlphabet{\mathgtt}{LGR}{cmtt}{m}{n}
+
+\renewcommand{\Gamma}{\mathgtt{G}}
+\renewcommand{\Delta}{\mathgtt{D}}
+
+\renewcommand{\familydefault}{\ttdefault}
+\usepackage{mathastext}
+\renewcommand{\familydefault}{\rmdefault}
+
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
@@ -87,7 +97,7 @@ frame=single
 \newcommand{\false}{\mathtt{false}}
 \newcommand{\nat}{\mathbb{N}}
 \newcommand{\theoryname}{Dependent Lambek Calculus\xspace}
-\newcommand{\theoryabbv}{$\textrm{Lambek}^D$}
+\newcommand{\theoryabbv}{$\textrm{Lambek}^D$~}
 \newcommand{\lnld}{$\textrm{LNL}_D$}
 
 \newcommand{\isTy}{\textrm{ type}}
@@ -120,7 +130,8 @@ frame=single
 \newcommand{\data}{\mathsf{data}}
 \newcommand{\where}{\mathsf{where}}
 \newcommand{\Trace}{\texttt{Trace}}
-\newcommand{\stringquote}[1]{\texttt{\textquotesingle#1\textquotesingle}}
+\newcommand{\literal}[1]{\texttt{\textquotesingle#1\textquotesingle}}
+\newcommand{\stringquote}[1]{\texttt{\textquotedbl#1\textquotedbl}}
 \newcommand{\internalize}[1]{\lceil#1\rceil}
 
 \newcommand{\oplusinj}[2]{\sigma\,#1\,#2}
@@ -455,7 +466,8 @@ $\Sigma = \{ \texttt{a} , \texttt{b}, \texttt{c} \}$.
 First consider finite grammars --- those built from base types via disjunctions and
 concatenations. The base types comprise characters drawn from the alphabet, the
 empty string, and the empty grammar.
-For instance, the grammar for the single character $\a$ has a single parse tree for the string
+For instance, the grammar corresponding to the character $a$ is given by $\literal a$ which
+has a single parse tree for the string
 \stringquote{a} and no parse trees at any other strings. The grammar $\I$ recognizes has a single
 parse tree for the empty string $\epsilon = \stringquote{}$ and no parses for any other strings.
 The final base type, the empty grammar $\bot$, has no parses for any string. We
@@ -471,14 +483,14 @@ For a grammar $\A$, a parse tree of a string $\w$ can be represented as
 a term of type $\A$ in the context $\internalize \w$, where
 $\internalize \w$ is a context with one variable for each character of
 $\w$. For example, to define a parse tree for \stringquote{ab}, we use
-the context $\internalize{\stringquote{ab}} = a : \a , b : \b$. Then the left of
+the context $\internalize{\stringquote{ab}} = a : \literal a , b : \literal b$. Then the left of
 \cref{fig:fingram} gives a typing derivation that shows that $\inl(a
-\otimes b)$ defines a valid parse tree for the finite grammar $(\a \otimes \b)
-\oplus \c$. On the right of \cref{fig:fingram}, we give a linear $\lambda$-term
+\otimes b)$ defines a valid parse tree for the finite grammar
+$(\literal a \otimes \literal b)
+\oplus \literal c$. Underneath the derivation in \cref{fig:fingram}, we give a linear $\lambda$-term
 that implements the program given in the derivation.
 
 \begin{figure}
-\begin{minipage}{0.5\textwidth}
 \begin{mathpar}
   \inferrule
   {
@@ -486,24 +498,24 @@ that implements the program given in the derivation.
     {
       \inferrule
       {~}
-      {a : \a \vdash a : \a}
+      {a : \literal a \vdash a : \literal a}
       \\
       \inferrule
       {~}
-      {b : \b \vdash b : \b}
+      {b : \literal b \vdash b : \literal b}
     }
-    {a : \a , b : \b \vdash a \otimes b : \a \otimes \b}
+    {a : \literal a , b : \literal b \vdash a \otimes b : \literal a \otimes
+      \literal b}
   }
-  {a : \a , b : \b \vdash \texttt{f} := \inl(a \otimes b) : (\a \otimes \b) \oplus \c}
+  {a : \literal a , b : \literal b \vdash \texttt{f} := \inl(a \otimes b) :
+    (\literal a \otimes \literal b) \oplus \literal c}
 \end{mathpar}
-\end{minipage}%
-\begin{minipage}{0.5\textwidth}
 \begin{lstlisting}
-f : (*@$\uparrow$@*)(a (*@$\otimes$@*) b (*@$\lto$@*) (a (*@$\otimes$@*) b) (*@$\oplus$@*) c)
-f (a' , b') = inl (a' , b')
+f : (*@$\uparrow$@*)('a' (*@$\otimes$@*) 'b' (*@$\lto$@*) ('a' (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
+f (a , b) = inl (a (*@$\otimes$@*) b)
 \end{lstlisting}
-\end{minipage}
-\caption{\stringquote{ac} matches $(a \oplus b) \otimes c$}
+\caption{\stringquote{ac} matches
+  $(\literal a \oplus \literal b) \otimes \literal c$}
 \label{fig:fingram}
 \end{figure}
 For this interpretation of terms as parse trees to make sense, our
@@ -514,7 +526,7 @@ variable to be used twice, but in a parse tree, every character must
 be accounted for exactly once. That is, we want to prevent the following
 erroneous derivations,
 \[
-  a : \a , b : \b \not \vdash a : \a \qquad a : \a , b : \b \not \vdash (a, a) : \a \otimes \a
+  a : \literal a , b : \literal b \not \vdash a : \literal a \qquad a : \literal a , b : \literal b \not \vdash (a, a) : \literal a \otimes \literal a
 \]
 
 %
@@ -522,7 +534,7 @@ Finally, the ordering of characters in a string cannot be ignored while
 parsing, so we omit the exchange rule because it would allow
 for variables in the context to be reordered,
 \[
-  a : \a , b : \b \not \vdash (b , a) : \b \otimes \a
+  a : \literal a , b : \literal b \not \vdash (b , a) : \literal b \otimes \literal a
 \]
 % otherwise we would have that $\inl(x\otimes y)$ is a valid
 % term in context $y:b,x:a$, but there should be no parses of $ba$ in
@@ -562,12 +574,12 @@ data A(*@$^*$@*) : L where
 \end{figure}
 
 Through repeated application of the Kleene star constructors, \cref{fig:kleenestarderivation} gives a derivation that shows \stringquote{ab} matches the
-regular expression $(\a^{*} \otimes \b) \oplus \c$. The leaves of the proof tree
+regular expression $({\literal a}^{*} \otimes \literal b) \oplus \literal c$. The leaves of the proof tree
 that mention the arrow $\uparrow$ describe a cast from a non-linear type to a linear type.
 For instance, the premise of the leaf involving $\nil$
-views $\nil : \ltonl {(\a^{*})}$ as the name of a
+views $\nil : \ltonl {({\literal a}^{*})}$ as the name of a
 constructor, and a constructor should be nonlinearly valued because we may call
-it several time. However, the conclusion of this leaf views $\nil : \a^{*}$ as a
+it several time. However, the conclusion of this leaf views $\nil : {\literal a}^{*}$ as a
 linear value. After we call the constructor it returns a value that may only be
 used a single time. In this paper such casts are often made implicitly, but this
 does not introduce any ambiguity.
@@ -576,8 +588,10 @@ linear value produced by it
 , we differentiate between the two views by inspecting
 the type.
 
+\steven{TODO fig 3 sizing}
 \begin{figure}
 \begin{mathpar}
+\footnotesize
 \inferrule
 {
   \inferrule
@@ -590,60 +604,62 @@ the type.
         {
           \inferrule
           {~}
-          {\cdot \vdash \cons : \ltonl {(\a \lto \a^* \lto \a^*)}}
+          {\cdot \vdash \cons : \ltonl {({\literal a} \lto {\literal a}^* \lto {\literal a}^*)}}
         }
-        {\cdot \vdash \cons : \a \lto \a^* \lto \a^*}
+        {\cdot \vdash \cons : {\literal a} \lto {\literal a}^* \lto {\literal a}^*}
         \\
         \inferrule
         {~}
-        {a : \a \vdash a : \a}
+        {a : {\literal a} \vdash a : {\literal a}}
       }
-      {a : a \vdash \cons~a : \a^* \lto \a^*}
+      {a : a \vdash \cons~a : {\literal a}^* \lto {\literal a}^*}
       \\
       \inferrule
       {
         \inferrule
         {~}
-        {\cdot \vdash \nil : \ltonl {(\a^*)}}
+        {\cdot \vdash \nil : \ltonl {({\literal a}^*)}}
       }
-      {\cdot \vdash \nil : \a^*}
+      {\cdot \vdash \nil : {\literal a}^*}
     }
-    {a : \a \vdash \cons~a~\nil : \a^{*}}
+    {a : {\literal a} \vdash \cons~a~\nil : {\literal a}^{*}}
     \\
     \inferrule
     {~}
-    {b : \b \vdash b : \b}
+    {b : {\literal b} \vdash b : {\literal b}}
   }
-  {a : \a , b : \b \vdash (\cons~a~\nil) \otimes b : \a^{*} \otimes \b}
+  {a : {\literal a} , b : {\literal b} \vdash (\cons~a~\nil) \otimes b : {\literal a}^{*} \otimes {\literal b}}
 }
-{a : \a , b : \b \vdash \texttt{g} := \inl ((\cons~a~\nil) \otimes b) : (\a^{*} \otimes \b) \oplus \c}
+{a : \literal a , b : \literal b \vdash \texttt{g} := \inl ((\cons~a~\nil)
+  \otimes b) : ({\literal a}^{*} \otimes \literal b) \oplus \literal c}
 \end{mathpar}
 \begin{lstlisting}
-g : (*@$\uparrow$@*)((a (*@$\otimes$@*) b) (*@$\lto$@*) (a(*@$^*$@*) (*@$\otimes$@*) b) (*@$\oplus$@*) c)
-g (a' , b') = inl (cons a' nil (*@$\otimes$@*) b')
+g : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*) ('a'(*@$^*$@*) (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
+g (a , b) = inl (cons a' nil (*@$\otimes$@*) b')
 \end{lstlisting}
-\caption{\stringquote{ab} matches $(a^{*} \otimes b) \oplus c$}
+\caption{\stringquote{ab} matches
+  $({\literal a}^{*} \otimes \literal b) \oplus \literal c$}
 \label{fig:kleenestarderivation}
 \end{figure}
 
 We may also have derivations where the term in context is not simply a
 string of base types. In \cref{fig:kleeneabstractproof} we show that every parse
-of the grammar $(\A \otimes \A)^{*}$ induces a parse of $\A^{*}$ for an
-arbitrary grammar $\A$. The context $(\A \otimes \A)^{*}$ does not correspond directly to a string, so it is
+of the grammar $(A \otimes A)^{*}$ induces a parse of $A^{*}$ for an
+arbitrary grammar $A$. The context $(A \otimes A)^{*}$ does not correspond directly to a string, so it is
 not quite appropriate
 to treat linear terms here as parse \textit{trees}.
 The
-context $a : (\A \otimes \A)^{*}$ does not contain concrete data to be parsed; rather, there may be many choices of string underlying the parse tree captured
+context $a : (A \otimes A)^{*}$ does not contain concrete data to be parsed; rather, there may be many choices of string underlying the parse tree captured
 by the variable $a$. Thus, the term $\texttt{h}$ from
 \cref{fig:kleeneabstractproof} is not a parse of a string, and
 it is more
 appropriate to think of it as a parse \textit{transformer} --- a function from
 parses of $(\A \otimes \A)^{*}$ to parse of $\A^{*}$.
 
-$\texttt{h}$ is defined by recursion on terms of type $(\A \otimes \A)^{*}$.
+We define $\texttt{h}$ by recursion on terms of type $(\A \otimes \A)^{*}$.
 This recursion is expressed in the derivation tree by invoking the
 elimination principle for Kleene star, written
-as $\fold$. $\texttt{h}$ is more compactly presented in the pseudocode
+as $\fold$. The parse transformer $\texttt{h}$ is more compactly presented in the pseudocode
 of \cref{fig:kleeneabstractproof} by pattern matching on the input and making an
 explicit recursive call in the body of its definition. When appropriate we will favor this code-like
 presentation of terms in our calculus, as it is more readable and more
@@ -674,7 +690,7 @@ faithful to the implementation of \theoryabbv in Agda.
 \begin{lstlisting}
 h : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
 h nil = nil
-h (cons (a (*@$\otimes$@*) a') as) = cons a (cons a' (h as))
+h (cons (a1 (*@$\otimes$@*) a2) as) = cons a1 (cons a2 (h as))
 \end{lstlisting}
 \caption{A parse transformer for abstract grammars}
 \label{fig:kleeneabstractproof}
@@ -687,14 +703,15 @@ h (cons (a (*@$\otimes$@*) a') as) = cons a (cons a' (h as))
 \newcommand{\2}{\texttt{2}}
 Regular expressions are a compact formalism for defining a formal grammar,
 however simply defining a regular expression --- such as
-$(\a^{*} \otimes \b) \oplus \c$ --- does not give any insight into how to parse
+$({\literal a}^{*} \otimes \literal b) \oplus \literal c$ --- does not give any insight into how to parse
 it. Many parsing algorithms are based on a notion of automaton, and to verify
 these algorithms we need to represent their associated automata in
 \theoryabbv.
 
 Finite automata are precisely the class of machines that recognize regular
 expressions. \cref{fig:exampleNFA} shows a non-deterministic
-finite automaton (NFA) for the regular expression $(\a^{*} \otimes b) \oplus c$.
+finite automaton (NFA) for the regular expression
+$({\literal a}^{*} \otimes \literal b) \oplus \literal c$.
 \cref{fig:nfainductive} defines $\Trace$ an \emph{indexed} inductive linear type of
 traces through this automaton. Defining an indexed inductive type can be thought
 of like defining a family of mutually inductive types varying coherently over a
@@ -717,11 +734,11 @@ $\texttt{0to1}$ takes in a trace beginning a state $\1$ and returns a trace
 beginning at state $\0$ corresponding to the same underlying string.
 
 Just as \cref{fig:kleenestarderivation} shows the \stringquote{ab} matches
-$(a^{*} \otimes b) \oplus c$, \cref{fig:nfaderivation} demonstrates that \stringquote{ab} is
+$({\literal a}^{*} \otimes \literal b) \oplus \literal c$, \cref{fig:nfaderivation} demonstrates that \stringquote{ab} is
 accepted by the NFA representation of this regular expression. In particular, we
 show that \stringquote{ab} matches the grammar $\Trace~0$ because $\0$ is the
 initial state of the NFA.\ We may imagine defining parse transformers from
-$(\a^{*} \otimes b) \oplus c$ to $\Trace~\1$, and vice versa. The existence of
+$({\literal a}^{*} \otimes \literal b) \oplus \literal c$ to $\Trace~\1$, and vice versa. The existence of
 such maps between the two types would demonstrate that the regular expression
 and the automaton capture the same language --- i.e.\ they recognize the same
 set of strings. As we will see in LATER SECTION, we can define parse
@@ -750,9 +767,9 @@ capture precisely the same data.
 \begin{lstlisting}
 data Trace : (s : Fin 3) (*@$\to$@*) L where
   stop : (*@$\uparrow$@*)(Trace 2)
-  1to1 : (*@$\uparrow$@*)(a (*@$\lto$@*) Trace 1 (*@$\lto$@*) Trace 1)
-  1to2 : (*@$\uparrow$@*)(b (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 1)
-  0to2 : (*@$\uparrow$@*)(c (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 0)
+  1to1 : (*@$\uparrow$@*)('a' (*@$\lto$@*) Trace 1 (*@$\lto$@*) Trace 1)
+  1to2 : (*@$\uparrow$@*)('b' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 1)
+  0to2 : (*@$\uparrow$@*)('c' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 0)
   0to1 : (*@$\uparrow$@*)(Trace 1 (*@$\lto$@*) Trace 0)
 \end{lstlisting}
 \caption{$N$ as an indexed inductive type}
@@ -761,10 +778,11 @@ data Trace : (s : Fin 3) (*@$\to$@*) L where
 
 \begin{figure}
 \begin{lstlisting}
-k : (*@$\uparrow$@*)((a (*@$\otimes$@*) b) (*@$\lto$@*)  Trace 0)
-k (a' , b') = 0to1 (1to1 a' (1to2 b' stop))
+k : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*)  Trace 0)
+k (a , b) = 0to1 (1to1 a (1to2 b stop))
 \end{lstlisting}
-\caption{\stringquote{ab} is accepted by the NFA for $(a^{*} \otimes b) \oplus c$}
+\caption{\stringquote{ab} is accepted by the NFA for
+  $({\literal a}^{*} \otimes {\literal b }) \oplus \literal c$}
 \label{fig:nfaderivation}
 \end{figure}
 
@@ -873,7 +891,6 @@ similar role to the $!$ modality of ordinary linear logic.
 %%   \]
 %%   \caption{Non-linear Types}
 %% \end{figure}
-
 \begin{figure}
   \begin{mathpar}
     \inferrule{}{\Gamma \vdash U \isTy}\and
@@ -1293,10 +1310,10 @@ $\B$ into parse of $\A$.
 
 Note that this definition of unambiguity is preserved by strong equivalence, so a common proof technique for showing $\A$ is unambiguous is by proving $\A$
 is strongly equivalent to an unambiguous grammar $\B$. In this style of proof, we
-build the parse transformers $\f : \ltonl{(\A \lto \B)}$ and
+build the functions $\f : \ltonl{(\A \lto \B)}$ and
 $\g : \ltonl{(\B \lto \A)}$, then we have the obligation to show
 $\f \circ \g \equiv \ident$ and $\g \circ \f \equiv \ident$. However, because $\B$ is
-unambiguous there is only one parse transformer $\ltonl{(\B \lto \B)}$, so
+unambiguous there is only one function of type $\ltonl{(\B \lto \B)}$, so
 $\f \circ \g : \ltonl{(\B \lto \B)}$ and $\ident : \ltonl{(\B \lto \B)}$ are equal.
 Thus, in this type of proof, we really only have the obligation of building each of $\f$
 and $\g$ and demonstrating that $\g \circ \f \equiv \ident$.
@@ -1356,7 +1373,7 @@ $\otimes$, $\oplus$, and Kleene star over the types $\bot$, $I$, and characters 
 
 \paragraph{Nondeterministic Finite Automata} In \cref{sec:type-theory-examples}, we saw
 one particular NFA corresponding to the regular expression
-$(a^{*} \otimes b) \oplus c$. The definition of the linear type of traces
+$({\literal a}^{*} \otimes \literal b) \oplus \literal c$. The definition of the linear type of traces
 through this
 NFA, as
 presented in \cref{fig:nfainductive}, inspects the concrete structure of the
@@ -1397,7 +1414,7 @@ $\epsilon$-transition and construct a trace beginning at the source of the $\eps
 data Trace(*@$_{\N}$@*) : (s : N.states) (b : Bool) (*@$\to$@*) L where
   nil : (*@$\uparrow$@*)(&[ s (*@$\in$@*) N.states ] Trace(*@$_{\N}$@*)(s , N.isAcc s))
   cons : (*@$\uparrow$@*)(&[ t (*@$\in$@*) N.transitions ] &[ b (*@$\in$@*) Bool ]
-           (N.label(t) (*@$\lto$@*) Trace(*@$_{\N}$@*)(N.dst(t) , b) (*@$\lto$@*) Trace(*@$_{\N}$@*)(N.src(t) , b)))
+           ('N.label(t)' (*@$\lto$@*) Trace(*@$_{\N}$@*)(N.dst(t) , b) (*@$\lto$@*) Trace(*@$_{\N}$@*)(N.src(t) , b)))
   (*@$\epsilon$@*)cons : (*@$\uparrow$@*)(&[ t (*@$\in$@*) N.(*@$\epsilon$@*)transitions ] &[ b (*@$\in$@*) Bool ]
            (Trace(*@$_{\N}$@*)(N.(*@$\epsilon$@*)dst(t) , b) (*@$\lto$@*) Trace(*@$_{\N}$@*)(N.(*@$\epsilon$@*)src(t) , b)))
 \end{lstlisting}
@@ -1417,7 +1434,7 @@ given by the following data,
   \item $\D.\isAcc : \D.\states \to \Bool$ --- a mapping marking which states
         are accepting
 \item $\D.\delta : \Sigma \to \D.\states \to \D.\states$ --- a deterministic transition function. Given a character $\c$ and a state
-        $\s$, $\D.\delta~\c~\s$ is the state for which there is a transition $\s \overset{\c}{\to} (\D.\delta~\c~\s)$
+        $\s$, $\D.\delta~\c~\s$ is the state for which there is a transition $\s \overset{\stringquote{c}}{\to} (\D.\delta~\c~\s)$
 \end{itemize}
 
 \begin{figure}
@@ -1425,31 +1442,31 @@ given by the following data,
 data Trace(*@$_{\D}$@*) : (s : D.states) (b : Bool) (*@$\to$@*) L where
   nil : (*@$\uparrow$@*)(&[ s (*@$\in$@*) D.states ] Trace(*@$_{\D}$@*)(s , D.isAcc s))
   cons : (*@$\uparrow$@*)(&[ c (*@$\in$@*) (*@$\Sigma$@*) ] &[ s (*@$\in$@*) D.states ] &[ b (*@$\in$@*) Bool ]
-             (c (*@$\lto$@*) Trace(*@$_{\D}$@*)(D.(*@$\delta$@*) c s , b) (*@$\lto$@*) Trace(*@$_{\D}$@*)(s , b)))
+             ('c' (*@$\lto$@*) Trace(*@$_{\D}$@*)(D.(*@$\delta$@*) c s , b) (*@$\lto$@*) Trace(*@$_{\D}$@*)(s , b)))
 \end{lstlisting}
 \caption{Traces through the DFA $D$ as an indexed inductive type}
 \label{fig:dfatrace}
 \end{figure}
 
-$\Trace_{\D}$ --- the linear type of traces through $\D$ --- is given in
-\cref{fig:dfatrace}, and its is
-quite similar to the definition of $\Trace_{\N}$. These
+$\Trace_{\D}$, the linear type of traces through $\D$, is given in
+\cref{fig:dfatrace}. These
 traces may be terminated in an accepting state $\s$ with the $\nil$ constructor.
 The $\cons$ constructor builds a trace out of state $\s$ by linearly combining
 a parse of some character $\c$ with a
 trace out of the state $\D.\delta~\c~\s$. The trace built with $\cons$ is
-accepting if and only if the trace out of $D.\delta_{c}(s)$ is accepting.
+accepting if and only if the trace out of $D.\delta~c~s$ is accepting.
 
 Because DFAs are deterministic, we are able to prove that their type of traces
 are unambiguous and define a parser for them. In particular we show that
-$\LinPiTy {s} {D.\states} {\LinSigTy {b} {\Bool} \Trace_{D}(s , b)}$ is isomorphic to
+$\LinPiTy {s} {D.\states} {\LinSigTy {b} {\Bool} \Trace_{D}(s , b)}$ is strongly
+equivalent to
 $\stringg$, which simultaneously constructs a parser and demonstrates that
-traces through $D$ is unambiguous. This isomorphism intuitively says that we pay
+traces through $D$ is unambiguous. Intuitively this strong equivalence says that we may
 unambiguously build traces through $D$ beginning at any state $s$, and further
 that from any trace through $D$ we can uniquely recover the string that built
 the trace.
 
-The first half of the isomorphism,
+The first half of the equivalence,
 $\parse_{D} : \ltonl {\left( \stringg \lto \LinPiTy {s} {D.\states} {\Trace_{D}(s)} \right)}$,
 is defined by induction on strings in \cref{fig:dfaparser}. If this string is empty, then $\parse_{D}$
 defines a linear function that terminates a trace at the input state $s$. If the
@@ -1467,7 +1484,7 @@ parse (String.cons ((*@$\sigma$@*) c a) w) s = let (*@$\sigma$@*) b t = parse w 
 \label{fig:dfaparser}
 \end{figure}
 
-The second half of the isomorphism,
+The second half of the equivalence,
 $\print_{D} : \ltonl {\left( \LinPiTy {s} {D.\states} {\Trace_{D}(s)} \lto \stringg \right)}$,
 is given in \cref{fig:printdfa} by induction on traces. If the trace is defined
 via $\nil$, then $\print_{D}$ returns the empty string. Otherwise, if the trace
@@ -1477,8 +1494,8 @@ string and recurses.
 \begin{figure}
 \begin{lstlisting}
 print : (s : D.states) (*@$\to$@*) (*@$\uparrow$@*)(((*@$\oplus$@*)[ b (*@$\in$@*) Bool ] Trace(*@$_{\D}$@*)(s , b)) (*@$\lto$@*) String)
-print .s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).nil s)) = String.nil
-print .s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c (D.(*@$\delta$@*) c s) b a trace)) =
+print s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).nil .s)) = String.nil
+print s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c (D.(*@$\delta$@*) c .s) b a trace)) =
   String.cons ((*@$\sigma$@*) c a) (print (D.(*@$\delta$@*) c s) ((*@$\sigma$@*) b trace))
 \end{lstlisting}
 % \[
@@ -1535,11 +1552,11 @@ NtoD : (s : N.states) (*@$\to$@*)
        (*@$\uparrow$@*)(Trace(*@$_{\N}$@*) s true (*@$\lto$@*)
            &[ X (*@$\in$@*) D.states ] &[ sInX (*@$\in$@*) (X (*@$\ni$@*) s) ] Trace(*@$_{\D}$@*) X true)
 NtoD .s (nil s) X sInX = nil s
-NtoD .(N.src trans) (N.cons trans .true a dstTrace) X sInX =
-  D.cons (N.label trans) X true a
-    (((NtoD s dstTrace).(*@$\pi$@*) (D.(*@$\delta$@*) (N.label trans) X)).(*@$\pi$@*) (N.dst trans))
-NtoD .(N.(*@$\epsilon$@*)src trans) ((*@$\epsilon$@*)cons (*@$\epsilon$@*)trans .true (*@$\epsilon$@*)DstTrace) X sInX =
-  ((NtoD s (*@$\epsilon$@*)DstTrace).(*@$\pi$@*) X).(*@$\pi$@*) (N.(*@$\epsilon$@*)dst trans)
+NtoD .(N.src t) (N.cons trans .true a dstTrace) X sInX =
+  D.cons (N.label t) X true a
+    (((NtoD s dstTrace).(*@$\pi$@*) (D.(*@$\delta$@*) (N.label t) X)).(*@$\pi$@*) (N.dst t))
+NtoD .(N.(*@$\epsilon$@*)src t) ((*@$\epsilon$@*)cons (*@$\epsilon$@*)trans .true (*@$\epsilon$@*)DstTrace) X sInX =
+  ((NtoD s (*@$\epsilon$@*)DstTrace).(*@$\pi$@*) X).(*@$\pi$@*) (N.(*@$\epsilon$@*)dst t)
 \end{lstlisting}
 \caption{Parse transformer from NFA traces to Powerset DFA traces}
 \label{fig:NtoD}
@@ -1595,7 +1612,7 @@ some accepting $\epsilon$-closed subset $\X$, then we may choose some state
 $\s \in X$ such that $\s$ is accepting and terminate the trace in $\N$ at $\s$.
 
 Next if the trace in $\D$ is defined via transition
-$\X \overset{\c}{\to} (\D.\delta~\c~\X)$ then we may choose some state in
+$\X \overset{\stringquote{c}}{\to} (\D.\delta~\c~\X)$ then we may choose some state in
 $\s \in \D.\delta~\c~\X$. Recursively, $\DtoN$ sends the trace rooted at
 $\D.\delta~\c~\X$ to one rooted at $\s$. By definition of $\D.\delta~\c~\X$,
 there exists some $\s' \in \X$ such that $\s'$ transitions to $\s$ by some number of
@@ -1764,7 +1781,7 @@ then following it with another balanced parse.
 \begin{figure}
 \begin{lstlisting}
 data Dyck : L where
-  nil : (*@$\uparrow$@*)(Dyck)
+  nil : (*@$\uparrow$@*) Dyck
   balanced : (*@$\uparrow$@*)('(' (*@$\lto$@*) Dyck (*@$\lto$@*) ')' (*@$\lto$@*) Dyck (*@$\lto$@*) Dyck)
 \end{lstlisting}
 \caption{The Dyck grammar as an inductive linear type}
@@ -1829,119 +1846,24 @@ finiteness condition on the states of the automaton.
 
 % \steven{TODO impute LL(1) example, mention that its weak equivalence is mechanized}
 
-\subsection{Turing Machines}
-\newcommand{\Turing}{\mathtt{Turing}}
-\newcommand{\ttt}{\mathtt{t}}
-\newcommand{\blank}{\mathtt{blank}}
-\newcommand{\push}{\mathtt{push}}
-\newcommand{\T}{\mathtt{T}}
-\newcommand{\acc}{\mathtt{acc}}
-\newcommand{\rej}{\mathtt{rej}}
-\newcommand{\Tape}{\mathtt{Tape}}
-\newcommand{\parseTape}{\mathtt{parseTape}}
-\newcommand{\snoc}{\mathtt{snoc}}
-%% 5. Expressiveness: Turing Machines
-The expressive power of \theoryabbv spans the entire Chomsky hierarchy, as we may
-encode the accepting traces of Turing machines as linear types.
+\subsection{Unrestricted Grammars}
+% \newcommand{\P}{\texttt{P}}
+\steven{Need to better introduce nonlinear type of strings. We haven't talked
+  about semantics nor have we included a nonlinear type of strings in the syntax}
+\newcommand{\stringNL}{String'}
+Let $\stringNL$ represent a nonlinear type of strings and let
+$P : \stringNL \to U$
+\steven{Or should $P$ be a semantic grammar?}
 
-The data of a Turing machine $\T$  is given by the following data,
-\begin{itemize}
-  \item $\Gamma$ --- the tape alphabet, a superset of the input alphabet $\Sigma$
-  \item $\blank : \Gamma$ --- a distinguished character that marks an empty cell on the tape
-  \item $\T.\states$ --- a finite set of states
-  \item $\T.\init : \T.\states$ --- the initial state
-  \item $\T.\acc , \T.\rej : \T.\states$ --- distinguished accepting and
-        rejecting states, respectively, such that $\T.\acc \neq \T.\rej$
-  \item $\T.\delta : \T.\states \times \Tape \times \mathbb{N} \to \T.\states \times \Tape \times \mathbb{N}$
-        --- a deterministic transition function. $\T.\delta$ reads the current state, the
-        current tape, and the index of the head of the tape and then returns the
-        updated state, tape, and head.
-\end{itemize}
-
-\begin{figure}
-\begin{lstlisting}
-data Turing(*@$_{\T}$@*) : (t : Tape) (*@$\to$@*) L where
-  nil : (*@$\uparrow$@*)(&[ t (*@$\in$@*) Tape ] Turing(*@$_{\T}$@*) t)
-  snoc : (*@$\uparrow$@*)(&[ c (*@$\in$@*) (*@$\Sigma$@*) ] &[ t (*@$\in$@*) Tape ](Turing t (*@$\lto$@*) c (*@$\lto$@*) Turing(*@$_{\T}$@*) (push c t)))
-\end{lstlisting}
-\caption{Inductive linear type of Turing machines initialized with tape $\ttt$}
-\label{fig:turinginductive}
-\end{figure}
-
-\begin{figure}
-\begin{lstlisting}
-parseTape : (*@$\uparrow$@*)(String (*@$\lto$@*) (*@$\oplus$@*)[ t (*@$\in$@*) Tape ] Turing(*@$_{\T}$@*) t)
-parseTape String.nil = (*@$\sigma$@*) ((*@$\lambda$@*) n . blank) (Turing.nil ((*@$\lambda$@*) n . blank))
-parseTape (String.cons ((*@$\sigma$@*) c a) w) =
-  let (*@$\sigma$@*) t Tur = parseTape w in (*@$\sigma$@*) (push c t) (snoc c t Tur a)
-\end{lstlisting}
-\caption{Initialization of the tape of Turing machine as a parse transformer}
-\label{fig:parseTape}
-\end{figure}
-
-The tape of a
-(one-sided) Turing machine is encoded as nonlinear function from the natural numbers to the tape
-alphabet $\Gamma$, $\Tape = \mathbb{N} \to \Gamma$.
-We define $\push~\c~\ttt : \Tape \to \Tape$ to increment the index of every
-character in the tape and insert $\c$ at index $0$. To run $\T$ on
-the input string $\w$, we write $\w$ to the leftmost entries of the tape and
-then repeatedly transition according to $\T.\delta$. If the machine enters the
-states $\T.\acc$ or $\T.\rej$, then the execution of $\T$ halts and either
-accepts or rejects accordingly.
-
-In \cref{fig:turinginductive}, we give an inductive linear type that describes
-Turing machines initialized with a given tape. However, unlike the types of
-traces for finite automata, the execution of a Turing machine is not described
-directly by the linear type system. We simply use the type $\Turing_{\T}$ to encode
-the initial state of the machine. To write the input string to the leftmost
-entries of the tape, we define the parse transformer
-$\parseTape : \ltonl {(\stringg \lto \LinSigTy {\ttt} {\Tape} {\Turing_{\T}~\ttt})}$
-in \cref{fig:parseTape}. Once the tape has been initialized, we capture the
-execution of $\T$ via the non-linear types.
-% data TuringTrace (b : Bool) : ⟨ Q ⟩ × Tape × Head → Type ℓ-zero where
-%   accept : ∀ t h → b ≡ true → TuringTrace b (acc , t , h)
-%   reject : ∀ t h → b ≡ false → TuringTrace b (rej , t , h)
-%   move : ∀ q t h →
-%     TuringTrace b (transition q t h) →
-%     TuringTrace b (q , t , h)
-\begin{figure}
-\begin{lstlisting}
-data Trace(*@$_{\T}$@*) : Bool (*@$\to$@*) T.states (*@$\times$@*) Tape (*@$\times$@*) (*@$\mathbb{N}$@*) (*@$\to$@*) U where
-  accept : (*@$\forall$@*) (t : Tape) (n : (*@$\mathbb{N}$@*)) (*@$\to$@*) Trace(*@$_{\T}$@*) true (T.acc , t , n)
-  reject : (*@$\forall$@*) (t : Tape) (n : (*@$\mathbb{N}$@*)) (*@$\to$@*) Trace(*@$_{\T}$@*) false (T.rej , t , n)
-  move : (*@$\forall$@*) (b : Bool) (s : T.states) (t : Tape) (n : (*@$\mathbb{N}$@*)) (*@$\to$@*)
-             Trace(*@$_{\T}$@*) b (T.(*@$\delta$@*) s t n) (*@$\to$@*) Trace(*@$_{\T}$@*) b (s , t , n)
-\end{lstlisting}
-\caption{Traces through a Turing machine as a non-linear inductive type}
-\label{fig:turingtrace}
-\end{figure}
-
-In \cref{fig:turingtrace} we define $\Trace_{\T}$ as a nonlinear type indexed by
-an acceptance Boolean and start configuration. A configuration of a Turing
-machine is the data of the start state, start tape, and start index for the head
-of tape. The
-traces of $\T$ either accept, reject, or transitions as described by $\T.\delta$.
-
-Once the input string has been loaded onto the tape, we execute $\T$ by defining
-a Turing machine interpreter of the following type,
+The type of $P$ very nearly describes a formal grammar in \theoryabbv. That is,
+$P$ describes a mapping from strings to sets of parse trees; however, even
+though $P$ captures the same grammatical data $P$ is not
+a first-class linear type. We reflect this nonlinear notion of grammar as a
+linear type,
 
 \[
-  \texttt{run} : \ltonl {\left( \bigoplus\limits_{\ttt : \Tape} \Turing_{\T}~\ttt \lto \bigwith\limits_{\texttt{fuel} : \mathbb{N}} \texttt{Maybe} \left(  \bigoplus\limits_{\b : \Bool} \bigoplus\limits_{\s : \T.\states}  \bigoplus\limits_{\texttt{n} : \mathbb{N}} \bigoplus\limits_{\ttt : \Tape}  \bigoplus\limits_{\texttt{tr} : \Trace_{\T}~\b~(\s , \ttt , \texttt{n})} \Turing_{\T}~\ttt \right) \right)}
+Reflect~P = \LinSigTyLimit {w} {\stringNL} {\LinSigTyLimit {x} {P~w} {~\lceil w \rceil}}
 \]
-
-$\mathtt{run}$ returns a result of $\mathtt{Maybe}$
-type varying over a fuel\footnote{Putting termination issues aside, we may omit
-  this fuel parameter. Although it is necessary when defining a Turing machine
-  interpreter in a total language like Agda.} parameter. It takes transitions at most
-$\texttt{fuel}$-many transitions in $\T$, and it returns a halting trace if one is
-found or timeouts otherwise. The data of this trace is encoded in the nonlinear
-index $\texttt{tr} : \Trace_{\T}~\b~(\s , \ttt , \texttt{n})$. Importantly, when
-$\texttt{tr}$ is an \emph{accepting} trace then the grammar
-\[
-\bigoplus\limits_{\s : \T.\states}  \bigoplus\limits_{\texttt{n} : \mathbb{N}} \bigoplus\limits_{\ttt : \Tape}  \bigoplus\limits_{\texttt{tr} : \Trace_{\T}~\true~(\s , \ttt , \texttt{n})} \Turing_{\T}~\ttt
-\]
-describes the strings that are accepted by $\T$. Therefore, we may encode
-arbitrary recusively enumerable languages within \theoryabbv.
 
 \subsection{Semantic Actions}
 \steven{TODO write this section and give some small simple actions}
