@@ -73,10 +73,13 @@ module _ where
   module _ {A : Type ℓ} (F : A → Functor A) where
     Algebra : (A → Grammar ℓ') → Type (ℓ-max ℓ ℓ')
     Algebra g = ∀ a → ⟦ F a ⟧ g ⊢ g a
-    Homomorphism : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''} → Algebra g → Algebra h → Type _
-    Homomorphism {g = g}{h} α β =
-      Σ[ ϕ ∈ (∀ a → g a ⊢ h a) ]
-      (∀ a → ϕ a ∘g α a ≡ β a ∘g map (F a) ϕ)
+
+    module _ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''} (α : Algebra g) (β : Algebra h) where
+      isHomo : (∀ a → g a ⊢ h a) → Type _
+      isHomo ϕ = (∀ a → ϕ a ∘g α a ≡ β a ∘g map (F a) ϕ)
+
+      Homomorphism : Type _
+      Homomorphism = Σ _ isHomo
 
     idHomo : ∀ {g : A → Grammar ℓ'} → (α : Algebra g) → Homomorphism α α
     idHomo α = (λ a → id) , λ a → cong (α a ∘g_) (sym (map-id (F a)))

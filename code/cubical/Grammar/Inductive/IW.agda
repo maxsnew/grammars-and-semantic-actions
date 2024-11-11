@@ -1,5 +1,4 @@
 {- The initial algebra of a strictly positive functor, constructed as an IW type -}
-
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -24,6 +23,8 @@ open import Term.Base Alphabet
 
 private
   variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
+
+open StrongEquivalence
 
 module _ {A : Type ℓ} where
   FS : (F : Functor A) → String → Type ℓ
@@ -60,8 +61,16 @@ module _ {A : Type ℓ} where
       → Container F g ⊢ Container F h
   map F f w (s , child) = s , (λ p → f _ _ (child p))
 
-  -- containerHomo : ∀ (F : A → Functor A){g : A → Grammar ℓ'}{h : A → Grammar ℓ''} → Algebra F g → Algebra F h → Type _
-  -- containerHomo F {g = g}{h} α β = Σ[ ϕ ∈ (∀ a → g a ⊢ h a) ] (∀ a → {!α!})
+  module _ (F : A → Functor A) where
+    Algebra' : (A → Grammar ℓ') → Type (ℓ-max ℓ ℓ')
+    Algebra' g = ∀ a → Container (F a) g ⊢ g a
+
+    isHomo' : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}
+      → Algebra' g
+      → Algebra' h
+      → (∀ a → g a ⊢ h a)
+      → Type (ℓ-max (ℓ-max ℓ ℓ') ℓ'')
+    isHomo' α β f = ∀ a → f a ∘g α a ≡ β a ∘g map (F a) f
 
   module _ {g : A → Grammar ℓ'} where
     getShapeF : {g : A → Grammar ℓ'}(F : Functor A)
@@ -97,7 +106,6 @@ module _ {A : Type ℓ} where
        splits
         , (fromContainer Fl _ (sl , λ p → child (inl p)))
         , (fromContainer Fr _ (sr , λ p → child (inr p)))
-      open StrongEquivalence
 
       secFC : ∀ (F : Functor A) w t → (fromContainer F ∘g toContainer F) w t ≡ t
       secFC (k g) w t = refl
@@ -134,70 +142,94 @@ module _ {A : Type ℓ} where
       retFC : ∀ (F : Functor A) w t → (toContainer F ∘g fromContainer F) w t ≡ t
       retFC F w t = ΣPathP ((retFC1 F w t) , retFC2 F w t)
 
-      F≅Container :
+    F≅Container :
         ∀ (F : Functor A) → StrongEquivalence (Container F g) (⟦ F ⟧ g)
-      F≅Container F .fun = fromContainer F
-      F≅Container F .inv = toContainer F
-      F≅Container F .sec = funExt λ w → funExt (secFC F w)
-      F≅Container F .ret = funExt λ w → funExt (retFC F w)
+    F≅Container F .fun = fromContainer F
+    F≅Container F .inv = toContainer F
+    F≅Container F .sec = funExt λ w → funExt (secFC F w)
+    F≅Container F .ret = funExt λ w → funExt (retFC F w)
 
-  --   isMap : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}(F : Functor A)
-  --     → ∀ w a
-  --     → (t : ⟦ F ⟧ g w)
-  --     → (f : ∀ a → g a ⊢ h a)
-  --     → nodeF F w a (getShapeF F w t) (λ p → f _ _ (getSubtreeF g F w a t p))
-  --       ≡ SPF.map F f w t
-  --   isMap (k g) w a t f = refl
-  --   isMap (Var a') w a t f = refl
-  --   isMap (&e B F) w a t f i b = isMap (F b) w a (t b) f i
-  --   isMap (⊕e B F) w a (b , t) f i = b , isMap (F b) w a t f i
-  --   isMap (⊗e Fl Fr) w a (splits , tl , tr) f i =
-  --     splits , isMap Fl _ a tl f i , isMap Fr _ a tr f i 
+  module _ (F : A → Functor A) where
+    Algebra→Algebra' : ∀ {g : A → Grammar ℓ'}
+      → Algebra F g
+      → Algebra' F g
+    Algebra→Algebra' α a = α a ∘g fromContainer (F a)
 
-  -- module _ (F : A → Functor A) where
-  --   μ : A → Grammar ℓ
-  --   μ a s = IW (λ ix → FS (F (ix .fst)) (ix .snd))
-  --           (λ ix → FP (F (ix .fst)) (ix .snd))
-  --           (λ ix → F-inX (F (ix .fst)) ix) (a , s)
+  opaque
+    unfolding fromContainer
+    fromContainerMap  : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}(F : Functor A)
+      → (f : ∀ a → g a ⊢ h a)
+      → fromContainer F ∘g map F f ≡ SPF.map F f ∘g fromContainer F
+    fromContainerMap (k g) f = refl
+    fromContainerMap (Var a) f = refl
+    fromContainerMap (⊕e B F) f i w ((b , s) , child) =
+      b , (fromContainerMap (F b) f i w (s , child))
+    fromContainerMap (&e B F) f i w (s , child) b =
+      fromContainerMap (F b) f i w (s b , λ p → child (b , p))
+    fromContainerMap (⊗e Fl Fr) f i w ((splits , sl , sr) , child) =
+      splits
+      , fromContainerMap Fl f i _ (sl , λ p → child (inl p))
+      , fromContainerMap Fr f i _ (sr , λ p → child (inr p))
 
-  --   roll : ∀ a → ⟦ F a ⟧ μ ⊢ μ a
-  --   roll a w t = node (getShapeF (F a) _ t) (getSubtreeF μ (F a) w a t)
+  module _ (F : A → Functor A) where
+    μ : A → Grammar ℓ
+    μ a s = IW (λ ix → FS (F (ix .fst)) (ix .snd))
+            (λ ix → FP (F (ix .fst)) (ix .snd))
+            (λ ix → F-inX (F (ix .fst)) (ix .snd)) (a , s)
 
-  --   initialAlgebra : Algebra F μ
-  --   initialAlgebra = roll
+    ContainerToμ : ∀ a → Container (F a) μ ⊢ μ a
+    ContainerToμ a w (s , child) = node s child
 
-  --   module _ {g : A → Grammar ℓ'} (α : Algebra F g) where
-  --     rec : ∀ a → μ a ⊢ g a
-  --     rec a w (node s subtree) =
-  --       α a w (nodeF (F a) w a s (λ p → rec _ _ (subtree p)))
+    roll : ∀ a → ⟦ F a ⟧ μ ⊢ μ a
+    roll a = ContainerToμ a ∘g toContainer (F a)
 
-  --     recHomo : Homomorphism F roll α
-  --     recHomo .fst = rec
-  --     recHomo .snd a = funExt λ w → funExt λ t → cong (α a w) (isMap (F a) w a t rec)
+    initialAlgebra : Algebra F μ
+    initialAlgebra = roll
 
-  --     private
-  --       re-wrap : ∀ a w s subtree
-  --         → (node s subtree) ≡ roll a w (nodeF (F a) w a s subtree)
-  --       re-wrap = {!!}
+    initialAlgebra' : Algebra' F μ
+    initialAlgebra' = λ a w z → node (z .fst) (z .snd)
 
-  --     module _ (ϕ : Homomorphism F initialAlgebra α) where
-  --       private
-  --         ϕ-lem : ∀ a w s subtree
-  --           → ϕ .fst a w (node s subtree)
-  --             ≡ α a w (nodeF (F a) w a s (λ p → ϕ .fst _ _ (subtree p)))
-  --         ϕ-lem a w s subtree = {!!}
+    initAlgFromContainer : ∀ a → initialAlgebra' a ≡ initialAlgebra a ∘g fromContainer (F a)
+    initAlgFromContainer a = cong (ContainerToμ a ∘g_) (sym (F≅Container (F a) .ret))
 
-  --       η' : ∀ a w x → ϕ .fst a w x ≡ rec a w x
-  --       η' a w (node s subtree) =
-  --         cong (ϕ .fst a w) (re-wrap _ _ s subtree) 
-  --         ∙ (λ i → ϕ .snd a i w (nodeF (F a) w a s subtree))
-  --         ∙ cong (α a w)
-  --           (sym (isMap (F a) w a (nodeF (F a) w a s subtree) (ϕ .fst))
-  --           ∙ {!!}
-  --           ∙ cong (nodeF (F a) w a s) (funExt λ p → η' _ _ (subtree p)))
-  --         -- ∙ (λ i → α a w (isMap (F a) w a (nodeF (F a) w a s subtree) (ϕ .fst) (~ i)))
-  --         -- ∙ {!!}
-  --         -- ∙ (λ i → α a w (nodeF (F a) w a s (λ p → η' _ _ (subtree p) i)))
 
-  --       η : ϕ .fst ≡ rec
-  --       η = funExt λ a → funExt λ w → funExt (η' a w)
+    module _ {g : A → Grammar ℓ'} where
+      module _ (α : Algebra' F g) where
+        rec' : ∀ a → μ a ⊢ g a
+        rec' a w (node s child) = α a w (s , (λ p → rec' _ _ (child p)))
+
+        rec'IsHomo : isHomo' F initialAlgebra' α rec'
+        rec'IsHomo a = refl
+
+        module _ (f : ∀ a → μ a ⊢ g a) (fIsHomo' : isHomo' F initialAlgebra' α f) where
+          η'' : ∀ a w t → f a w t ≡ rec' a w t
+          η'' a w (node s subtree) = funExt⁻ (funExt⁻ (fIsHomo' a) w) (s , subtree)
+            ∙ λ i → α a w (s , (λ p → η'' _ _ (subtree p) i))
+
+    module _ {g : A → Grammar ℓ'} (α : Algebra F g) where
+      rec : ∀ a → μ a ⊢ g a
+      rec = rec' (Algebra→Algebra' F α)
+
+      opaque
+        unfolding toContainer
+        recIsHomo : isHomo F initialAlgebra α rec
+        recIsHomo a = cong (α a ∘g_)
+          (cong (_∘g toContainer (F a)) (fromContainerMap (F a) rec)
+          ∙ cong (SPF.map (F a) rec ∘g_) (F≅Container (F a) .sec))
+
+      module _  (f : ∀ a → μ a ⊢ g a) (fIsHomo : isHomo F initialAlgebra α f) where
+        private
+          fIsHomo' : isHomo' F initialAlgebra' (Algebra→Algebra' F α) f
+          fIsHomo' a =
+            cong (f a ∘g_) (initAlgFromContainer a)
+            ∙ cong (_∘g fromContainer (F a)) (fIsHomo a)
+            ∙ cong (α a ∘g_) (sym (fromContainerMap (F a) f))
+
+        η' : ∀ a w t → f a w t ≡ rec a w t
+        η' = η'' (Algebra→Algebra' F α) f fIsHomo'
+
+        η : ∀ a → f a ≡ rec a
+        η a = funExt₂ (η' a)
+
+    unroll : ∀ a → μ a ⊢ ⟦ F a ⟧ μ
+    unroll = rec λ a → SPF.map (F a) roll
