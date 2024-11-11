@@ -763,6 +763,8 @@ for this type is that its elements are the linear terms that are
 $\ltonl A$ when we have a linear term of type $A$ with no free linear
 variables. This type is used extensively in our examples, playing a
 similar role to the $!$ modality of ordinary linear logic.
+\pedro{We should also reference the persistence modality $\square$
+from separation logic}
 
 %% \begin{figure}
 %%   \[
@@ -837,6 +839,8 @@ combination with the $\uparrow$ connective, we can abstract over
 linear terms, in that the non-linear type $\ltonl{A \lto B}$ is a
 non-linear type of linear terms with one linear input $A$ and output
 $B$.
+\pedro{Isn't this is a slightly incorrect desciption of $\ltonl{A \lto B}$?
+How is the description above distinct form $A \lto B$?}
 
 Next, we have the ``additive'' connectives. For these, we use the
 non-linear types to define \emph{indexed} versions of the additive
@@ -895,7 +899,7 @@ domain is an inductive type.
     %
     \and
     %
-    \inferrule{\Gamma ; \Delta \vdash e : A \otimes B \\ \Gamma ; \Delta'_1, a : A, b : B, \Delta'_2 \vdash e'}{\Gamma ;  \Delta_1', \Delta, \Delta'_2 \vdash \letin {a \otimes b} e {e'}}
+    \inferrule{\Gamma ; \Delta \vdash e : A \otimes B \\ \Gamma ; \Delta'_1, a : A, b : B, \Delta'_2 \vdash e' : C}{\Gamma ;  \Delta_1', \Delta, \Delta'_2 \vdash \letin {a \otimes b} e {e'} : C}
     \\
     %
     \inferrule{\Gamma ; \Delta , a : A \vdash e : B}{\Gamma ; \Delta \vdash \lamblto a e : A\lto B}
@@ -932,6 +936,10 @@ domain is an inductive type.
   \caption{Linear terms (selection)}
   \label{fig:linsyntax}
 \end{figure}
+\pedro{Fixed tensor elimination rule (added output type)}
+\pedro{Perhaps we should modify the equalizer introduction rule.
+  As it stands, readers might be confused by the same symbol $e$
+  being used everywhere.}
 
 \subsection{Indexed Inductive Linear Types}
 
@@ -1157,6 +1165,10 @@ these notions of equivalence in \theoryabbv.
   Grammars $\A$ and $\B$ are \emph{weakly equivalent} if there exists parse
   transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B \lto \A)}$.
 \end{definition}
+\pedro{Up to this point, we have mentioned a couple of times parse transformers,
+  but we have never defined what they are. In particular, why does the definition
+  require the $\uparrow$ modality. I'm assuming that it's to properly deal with
+  linear variables, but these things are not obvious at first.}
 
 \newcommand{\lang}{\texttt{Lang}}
 A parse transformer $\f : \ltonl{(\A \lto \B)}$ takes as input parses of $\A$ for string
@@ -1519,7 +1531,10 @@ weakly equivalent.
 \end{theorem}
 
 \begin{proof}
-\steven{TODO this proof needs to be rewritten. Likely through use of equalizers}
+  \steven{TODO this proof needs to be rewritten. Likely through use of equalizers}
+  \pedro{Since this proof and the determinization one are well-known and we have
+    proved it in Agda, it's probably a good idea to include a much shorter proof sketch,
+    or move it to the appendix, though this would feel a bit superfluous.}
 We present a variant of Thompson's construction
 \cite{thompsonProgrammingTechniquesRegular1968} in which we recurse on the
 structure of $\R$ to construct a strongly equivalent NFAs. In this paper we will walk through
@@ -1690,6 +1705,9 @@ Moving up the Chomsky hierarchy from regular grammars, we arrive at context-free
 grammars (CFGs). The smallest nontrivial CFG is the Dyck grammar
 $\Dyck$ --- the grammar of balanced parentheses.
 
+\pedro{Is it actually the smallest? How do you quantify size of nontrivial things?
+  Might be better to just say ``an interesting nontrivial CFG [...]''}
+
 $\Dyck$ is a grammar over the alphabet $\{ \stringquote{(}, \stringquote{)} \}$
 and is defined in \cref{fig:dyckinductive}. The $\nil$ constructor shows that
 the empty string is balanced, and the $bal$ constructor builds a balanced
@@ -1727,6 +1745,9 @@ mechanized in our Agda development. We can build a $Dyck$ parser by utilizing
 this artifact, and the
 runtime of the $Dyck$ parser is about 30 seconds for input that is 25,000
 characters long.
+\pedro{It might be a good idea to mention explicitly in the introduction
+  that we are not claiming that our verified parsers are competitive with
+  the state of the art.}
 
 \begin{figure}
   \begin{tikzpicture}[node distance = 17mm ]
@@ -1811,6 +1832,8 @@ returning the length the input string, or
 even an interpreter that evaluates arithmetic expressions at parse-time.
 
 \steven{What can I say about what we have in the Agda development here?}
+\pedro{I'm assuming that this section is still incomplete, so I'll wait
+for it to be complete in order to make more detailed comments.}
 
 \section{Denotational Semantics}
 \label{sec:semantics-and-metatheory}
@@ -1825,7 +1848,7 @@ precise. To interpret our types of codes we assume a universe of
 
 First, we need to establish a precise definition of a formal grammar
 that accounts for the possibility of ambiguity. The most common
-definition of a formal grammar is as a generative grammars, defined by
+definition of a formal grammar is as generative grammars, defined by
 a set of non-terminals, with a specified start symbol and set of
 production rules. We instead use a more abstract formulation that is
 closer in spirit to the standard definition of a formal language:
@@ -1853,7 +1876,7 @@ the element of $A(w)$ is.
 
 The linear types of \theoryabbv can all be interpreted as formal
 grammars, but what about the linear terms? These can be interpreted as
-\emph{parse transformers}
+\emph{parse transformers}, which we now define.
 \begin{definition}
   Let $L_1,L_2$ be formal languages. Then we say $L_1\subseteq L_2$ if
   for every string $w$, $L_1(w)\Rightarrow L_2(w)$.
@@ -1862,6 +1885,8 @@ grammars, but what about the linear terms? These can be interpreted as
   $A_1$ to $A_2$ is a function assigning to each string $w$ a function
   $f_w : A_1(w) \to A_2(w)$.
 \end{definition}
+\pa{Do we actually need a definition of formal language morphism?
+In case we do, it should probably be its own definition.}
 First, note that parse transformers generalize language inclusion: if
 $A_1(w), A_2(w)$ are all subsets of a one-element set, then a parse
 transformer is equivalent to showing that $A_1(w) \subseteq A_2(w)$.
@@ -1870,8 +1895,11 @@ such parse transformers, and the notions of unambiguous grammar,
 parseability, etc, introduced in \Cref{sec:concepts} can be verified
 to correspond to their intended meanings under this interpretation.
 
-Parse transformers have an obvious notion of composition and identity
-transformer. This defines a \emph{category}.
+Parse transformers can be composed: given two parse transformers $f$ and $g$,
+their composition is defined pointwise, i.e. $(f\circ g)_w = f_w \circ g_w$.
+Furthemore, given a formal grammar $A$, its identity transformer is $id_w =
+id_{A(w)}$, where $id_{A(w)}$ is the identity function on the set $A(w)$. This
+defines a \emph{category}.
 \begin{definition}
   Define $\Grammar$ to be the category whose objects are formal
   grammars and morphisms are parse transformers.
