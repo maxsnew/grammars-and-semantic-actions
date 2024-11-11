@@ -2641,37 +2641,97 @@ We can now define our denotational semantics.
   \end{enumerate}
 \end{definition}
 
-For reasons of brevity, we present only a selection of cases in
-\Cref{fig:semantics}. The full details are in the appendix.\max{TODO:
-  put the full details in the appendix}.
-\max{TODO: how to describe $\mu$ succinctly?}\max{make sure $\lto$ and $\tol$ are right}
+For reasons of brevity, we present only the cases related to the
+linear types in \Cref{fig:semantics}. The full details are in the
+appendix.\max{TODO: put the full details in the appendix}.  The
+grammar for a literal $c$ has a single parse precisely when the input
+string consists of the single character. The grammar for the unit
+similarly has a single parse for the empty string.  A parse of the
+tensor product $A \otimes B$ consists of a \emph{splitting} of the
+empty string into a prefix $w_1$ and suffix $w_2$ along with an $A$
+parse of $w_1$ and $B$ parse of $w_2$. A parse of $\bigoplus_{x:X} A$
+is a pair of an element of the set $X$ and a parse of $A(x)$, while
+dually a parse of $\bigwith_{x:X} A$ is a \emph{function} taking any
+$x:X$ to a parse of $A(x)$. A $w$-parse of $A \lto B$ is a function
+that takes an $A$ parse of some other string $w'$ to a $B$ parse of
+$ww'$, and $B \tol A$ is the same except the $B$ parse is for the
+reversed concatenation $w'w$.
+%
+The set $\uparrow A$ is the set of parse for the empty string for
+$A$. This definition means that $\sem{\uparrow (A \lto B)}$ (or $\sem{\uparrow (B \tol A)}$) is
+equivalent to the set of parse transformers:
+\[ \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\varepsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\]
+Next, a parse in the equalizer $\equalizer{a : A}{f}{g}$ is defined as
+a parse in $\sem{A}$ that is mapped to the same parse by $f$ and
+$g$. Recall that $\sem{f}\gamma$ and $\sem{g}$ are elements of
+$\sem{\uparrow(A \lto B)}$, i.e., parse transformers.
+
+The universe $L$ of linear types is interpreted as the set of all
+(small) grammars.
+
 \begin{figure}
   \begin{align*}
     \sem{c}\gamma\,w &= \{ c | w = c\}\\
     \sem{I}\gamma\,w &= \{ () \pipe w = \varepsilon \}\\
     \sem{A \otimes B}\gamma\,w &= \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
-    \sem{\bigoplus_{x:X} A}\gamma\,w &= \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}\\
-    \sem{\bigwith_{x:X} A}\gamma\,w &= \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w\\
     \sem{A \lto B}\gamma\,w &= \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,ww'\\
     \sem{B \tol A}\gamma\,w &= \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'w\\
+    \sem{\bigoplus_{x:X} A}\gamma\,w &= \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}\\
+    \sem{\bigwith_{x:X} A}\gamma\,w &= \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w\\
     \sem{\uparrow A}\gamma &= \sem{A}\gamma\,\varepsilon\\
-    \sem{\SPF\,X}\gamma &= \{ F : \textrm{Functor}(\textrm{Grammar}^{\sem{X}\gamma}, \textrm{Grammar}) \pipe F \textrm{ preserves $\omega$-colimits.} \}\\
-    \sem{\el(F)}\gamma\,G &= \sem{A}\gamma\,G\\
-    \sem{\mu A}\gamma &= \mu (\sem{A}\gamma) \tag{\Cref{thm:adamek}}
+    \sem{\equalizer{a:A}{f}{g}}\gamma\,w &= \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
+    \sem{L}\gamma &= \Grammar_0\\
+    \sem{\SPF\,X}\gamma &= \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)\\
+    \sem{\el(F)}\gamma\,G &= \sem{F}\gamma\,G\\
+    \sem{\map(F)}\gamma\,f &= \sem{F}\gamma\,f\\
+    \sem{\mu A}\gamma &= \mu (\sem{A}\gamma) \tag{\Cref{thm:indexed-container}}\\
   \end{align*}
   \caption{Grammar Semantics}
 \end{figure}
 
-\max{TODO: prose}
+The most complex part of the semantics is the interpretation of
+strictly positive functors and indexed inductive linear types.  We
+interpret a strictly positive functor as a \emph{dependent polynomial
+functor} on the category of sets, also sometimes called an
+\emph{indexed container} \cite{dep-poly,indexed-container}.
+\begin{definition}
+  Let $I$ and $O$ be sets. A (dependent) \emph{polynomial} (of sets)
+  from $I$ to $O$ consists of a set of shapes $S$, a set of positions
+  $P$ and functions $I \leftarrow P \to S \to O$. The \emph{extension}
+  of a polynomial is a functor $\Set/I \to \Set/O$ defined by
+  \max{TODO: fill in details}.
 
-\max{TODO: spelling}
-\begin{theorem}[Adamek]
-  If a functor $F : \mathcal C \to \mathcal C$ preserves all 
-  $\kappa$-colimits and $\mathcal C$ has an initial object and
-  $\kappa$-colimits, then $F$ has an initial algebra given by the
-  colimit of the chain
-  \[ 0 \to F(0) \to F(F(0)) \to \cdots \]
+  A dependent polynomial functor from $I$ to $O$ is a functor $\Set/I
+  \to \Set/O$ that is nautrally isomorphic to the extension of a
+  dependent polynomial from $I$ to $O$.
+\end{definition}
+With this interpretation, $\el(F)$ and $\map(F)$ are just interpreted
+as the action of the functor on objects and morphisms,
+respectively. We interpret the constructors $\mathsf{K},\Var$, etc. on
+functors in the obvious way that matches the definitional behavior of
+$\el$ and $\map$. The non-trivial part of the construction is
+verifying that such functors are constructing corresponding dependent
+polynomials. The details are tedious but straightforward extension of
+prior work on dependent polynomials and indexed containers and we have
+verified the construction in Agda.
+
+The reason we use dependent polynomials functors on sets is that it is
+well-known that their initial algebras exist
+\cite{initial-algebras-of-dep-poly}. Additionally, initial algebras
+for dependent polynomials are straightforwardly constructed in Agda as
+an inductive type of ``IW'' trees, which is available as a
+construction in the cubical library of Agda \cite{iw,cubical-library}.
+\begin{theorem}
+  Every dependent polynomial functor from $I$ to $I$ has an initial
+  algebra.
 \end{theorem}
+Then an element $F \in \sem{X \to \SPF\,X}\gamma$ is an
+$\sem{X}\gamma$-indexed family of polynomial functors from
+$\sem{X}\gamma\times \Sigma^*$ to $\Sigma^*$, and taking the product
+of these constructs a polynomial functor from $\sem{X}\gamma\times
+\Sigma^*$ to itself. Then $\sem{\mu\,F}\gamma$ is defined to be the
+initial algebra of this functor, and the initial algebra structure is
+used to interpret $\roll, \fold$ and the corresponding axioms.
 
 %% That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
 %% complete to parses of $B$. In this manner, the linear function types generalize
@@ -3486,6 +3546,9 @@ these above works can embed naturally into a rich, unifying theory.
 \steven{I'd like to synthesize the discussion of these works with the categorial
 grammar works, but I am not sure how. It seems as though there are these
 parallel tracks of research that have missed each other for decades}
+
+\paragraph{Inductive Linear Types}
+
 
 
 % In \cite{firsovCertifiedNormalizationContextFree2015}, Firsov and Uustalu

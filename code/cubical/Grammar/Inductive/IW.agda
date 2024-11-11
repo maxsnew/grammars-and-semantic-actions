@@ -157,19 +157,20 @@ module _ {A : Type ℓ} where
 
   opaque
     unfolding fromContainer
-    fromContainerMap  : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}(F : Functor A)
+    -- fromContainer is a natural isomorphism
+    fromContainerNat  : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}(F : Functor A)
       → (f : ∀ a → g a ⊢ h a)
       → fromContainer F ∘g map F f ≡ SPF.map F f ∘g fromContainer F
-    fromContainerMap (k g) f = refl
-    fromContainerMap (Var a) f = refl
-    fromContainerMap (⊕e B F) f i w ((b , s) , child) =
-      b , (fromContainerMap (F b) f i w (s , child))
-    fromContainerMap (&e B F) f i w (s , child) b =
-      fromContainerMap (F b) f i w (s b , λ p → child (b , p))
-    fromContainerMap (⊗e Fl Fr) f i w ((splits , sl , sr) , child) =
+    fromContainerNat (k g) f = refl
+    fromContainerNat (Var a) f = refl
+    fromContainerNat (⊕e B F) f i w ((b , s) , child) =
+      b , (fromContainerNat (F b) f i w (s , child))
+    fromContainerNat (&e B F) f i w (s , child) b =
+      fromContainerNat (F b) f i w (s b , λ p → child (b , p))
+    fromContainerNat (⊗e Fl Fr) f i w ((splits , sl , sr) , child) =
       splits
-      , fromContainerMap Fl f i _ (sl , λ p → child (inl p))
-      , fromContainerMap Fr f i _ (sr , λ p → child (inr p))
+      , fromContainerNat Fl f i _ (sl , λ p → child (inl p))
+      , fromContainerNat Fr f i _ (sr , λ p → child (inr p))
 
   module _ (F : A → Functor A) where
     μ : A → Grammar ℓ
@@ -192,7 +193,6 @@ module _ {A : Type ℓ} where
     initAlgFromContainer : ∀ a → initialAlgebra' a ≡ initialAlgebra a ∘g fromContainer (F a)
     initAlgFromContainer a = cong (ContainerToμ a ∘g_) (sym (F≅Container (F a) .ret))
 
-
     module _ {g : A → Grammar ℓ'} where
       module _ (α : Algebra' F g) where
         rec' : ∀ a → μ a ⊢ g a
@@ -214,7 +214,7 @@ module _ {A : Type ℓ} where
         unfolding toContainer
         recIsHomo : isHomo F initialAlgebra α rec
         recIsHomo a = cong (α a ∘g_)
-          (cong (_∘g toContainer (F a)) (fromContainerMap (F a) rec)
+          (cong (_∘g toContainer (F a)) (fromContainerNat (F a) rec)
           ∙ cong (SPF.map (F a) rec ∘g_) (F≅Container (F a) .sec))
 
       module _  (f : ∀ a → μ a ⊢ g a) (fIsHomo : isHomo F initialAlgebra α f) where
@@ -223,7 +223,7 @@ module _ {A : Type ℓ} where
           fIsHomo' a =
             cong (f a ∘g_) (initAlgFromContainer a)
             ∙ cong (_∘g fromContainer (F a)) (fIsHomo a)
-            ∙ cong (α a ∘g_) (sym (fromContainerMap (F a) f))
+            ∙ cong (α a ∘g_) (sym (fromContainerNat (F a) f))
 
         η' : ∀ a w t → f a w t ≡ rec a w t
         η' = η'' (Algebra→Algebra' F α) f fIsHomo'
