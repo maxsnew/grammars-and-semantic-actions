@@ -72,14 +72,15 @@ frame=single
 
 \usepackage{pdfpages}
 
-\newcommand{\SPF}{\texttt{SPF}}
-\newcommand{\Var}{\texttt{Var}}
-\newcommand{\K}{\texttt{K}}
-\newcommand{\map}{\texttt{map}}
-\newcommand{\roll}{\texttt{roll}}
-\newcommand{\fold}{\texttt{fold}}
-\newcommand{\inl}{\texttt{inl}}
-\newcommand{\inr}{\texttt{inr}}
+\newcommand{\Subst}{\textrm{Subst}}
+\newcommand{\SPF}{\mathsf{SPF}}
+\newcommand{\Var}{\mathsf{Var}}
+\newcommand{\K}{\mathsf{K}}
+\newcommand{\map}{\mathsf{map}}
+\newcommand{\roll}{\mathsf{roll}}
+\newcommand{\fold}{\mathsf{fold}}
+\newcommand{\inl}{\mathsf{inl}}
+\newcommand{\inr}{\mathsf{inr}}
 \newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
@@ -208,14 +209,6 @@ frame=single
 }
 \email{nvarner@umich.edu}
 
-\author{Max S. New}
-\affiliation{
-  \department{Electrical Engineering and Computer Science}
-  \institution{University of Michigan}
-  \country{USA}
-}
-\email{maxsnew@umich.edu}
-
 \author{Pedro H. Azevedo de Amorim}
 \affiliation{
   \department{Department of Computer Science}
@@ -223,6 +216,14 @@ frame=single
   \country{UK}
 }
 \email{pedro.azevedo.de.amorim@cs.ox.ac.uk}
+
+\author{Max S. New}
+\affiliation{
+  \department{Electrical Engineering and Computer Science}
+  \institution{University of Michigan}
+  \country{USA}
+}
+\email{maxsnew@umich.edu}
 
 \makeatletter
 \let\@authorsaddresses\@empty
@@ -1971,38 +1972,97 @@ We can now define our denotational semantics.
   \end{enumerate}
 \end{definition}
 
-For reasons of brevity, we present only a selection of cases in
-\Cref{fig:semantics}. The full details are in the appendix.\max{TODO:
-  put the full details in the appendix}.
-\max{TODO: how to describe $\mu$ succinctly?}\max{make sure $\lto$ and $\tol$ are right}
+For reasons of brevity, we present only the cases related to the
+linear types in \Cref{fig:semantics}. The full details are in the
+appendix.\max{TODO: put the full details in the appendix}.  The
+grammar for a literal $c$ has a single parse precisely when the input
+string consists of the single character. The grammar for the unit
+similarly has a single parse for the empty string.  A parse of the
+tensor product $A \otimes B$ consists of a \emph{splitting} of the
+empty string into a prefix $w_1$ and suffix $w_2$ along with an $A$
+parse of $w_1$ and $B$ parse of $w_2$. A parse of $\bigoplus_{x:X} A$
+is a pair of an element of the set $X$ and a parse of $A(x)$, while
+dually a parse of $\bigwith_{x:X} A$ is a \emph{function} taking any
+$x:X$ to a parse of $A(x)$. A $w$-parse of $A \lto B$ is a function
+that takes an $A$ parse of some other string $w'$ to a $B$ parse of
+$ww'$, and $B \tol A$ is the same except the $B$ parse is for the
+reversed concatenation $w'w$.
+%
+The set $\uparrow A$ is the set of parse for the empty string for
+$A$. This definition means that $\sem{\uparrow (A \lto B)}$ (or $\sem{\uparrow (B \tol A)}$) is
+equivalent to the set of parse transformers:
+\[ \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\varepsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\]
+Next, a parse in the equalizer $\equalizer{a : A}{f}{g}$ is defined as
+a parse in $\sem{A}$ that is mapped to the same parse by $f$ and
+$g$. Recall that $\sem{f}\gamma$ and $\sem{g}$ are elements of
+$\sem{\uparrow(A \lto B)}$, i.e., parse transformers.
+
+The universe $L$ of linear types is interpreted as the set of all
+(small) grammars.
+
 \begin{figure}
   \begin{align*}
     \sem{c}\gamma\,w &= \{ c | w = c\}\\
     \sem{I}\gamma\,w &= \{ () \pipe w = \varepsilon \}\\
     \sem{A \otimes B}\gamma\,w &= \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
-    \sem{\bigoplus_{x:X} A}\gamma\,w &= \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}\\
-    \sem{\bigwith_{x:X} A}\gamma\,w &= \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w\\
     \sem{A \lto B}\gamma\,w &= \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,ww'\\
     \sem{B \tol A}\gamma\,w &= \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'w\\
+    \sem{\bigoplus_{x:X} A}\gamma\,w &= \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}\\
+    \sem{\bigwith_{x:X} A}\gamma\,w &= \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w\\
     \sem{\uparrow A}\gamma &= \sem{A}\gamma\,\varepsilon\\
-    \sem{\SPF\,X}\gamma &= \{ F : \textrm{Functor}(\textrm{Grammar}^{\sem{X}\gamma}, \textrm{Grammar}) \pipe F \textrm{ preserves $\omega$-colimits.} \}\\
-    \sem{\el(F)}\gamma\,G &= \sem{A}\gamma\,G\\
-    \sem{\mu A}\gamma &= \mu (\sem{A}\gamma) \tag{\Cref{thm:adamek}}
+    \sem{\equalizer{a:A}{f}{g}}\gamma\,w &= \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
+    \sem{L}\gamma &= \Grammar_0\\
+    \sem{\SPF\,X}\gamma &= \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)\\
+    \sem{\el(F)}\gamma\,G &= \sem{F}\gamma\,G\\
+    \sem{\map(F)}\gamma\,f &= \sem{F}\gamma\,f\\
+    \sem{\mu A}\gamma &= \mu (\sem{A}\gamma) \tag{\Cref{thm:indexed-container}}\\
   \end{align*}
   \caption{Grammar Semantics}
 \end{figure}
 
-\max{TODO: prose}
+The most complex part of the semantics is the interpretation of
+strictly positive functors and indexed inductive linear types.  We
+interpret a strictly positive functor as a \emph{dependent polynomial
+functor} on the category of sets, also sometimes called an
+\emph{indexed container} \cite{dep-poly,indexed-container}.
+\begin{definition}
+  Let $I$ and $O$ be sets. A (dependent) \emph{polynomial} (of sets)
+  from $I$ to $O$ consists of a set of shapes $S$, a set of positions
+  $P$ and functions $I \leftarrow P \to S \to O$. The \emph{extension}
+  of a polynomial is a functor $\Set/I \to \Set/O$ defined by
+  \max{TODO: fill in details}.
 
-\max{TODO: spelling}
-\begin{theorem}[Adamek]
-  If a functor $F : \mathcal C \to \mathcal C$ preserves
-  $\omega$-colimits and $\mathcal C$ has an initial object and
-  $\omega$-colimits, then $F$ has an initial algebra given by the
-  colimit of the chain
-  \[ 0 \to F(0) \to F(F(0)) \to \cdots \]
+  A dependent polynomial functor from $I$ to $O$ is a functor $\Set/I
+  \to \Set/O$ that is nautrally isomorphic to the extension of a
+  dependent polynomial from $I$ to $O$.
+\end{definition}
+With this interpretation, $\el(F)$ and $\map(F)$ are just interpreted
+as the action of the functor on objects and morphisms,
+respectively. We interpret the constructors $\mathsf{K},\Var$, etc. on
+functors in the obvious way that matches the definitional behavior of
+$\el$ and $\map$. The non-trivial part of the construction is
+verifying that such functors are constructing corresponding dependent
+polynomials. The details are tedious but straightforward extension of
+prior work on dependent polynomials and indexed containers and we have
+verified the construction in Agda.
+
+The reason we use dependent polynomials functors on sets is that it is
+well-known that their initial algebras exist
+\cite{initial-algebras-of-dep-poly}. Additionally, initial algebras
+for dependent polynomials are straightforwardly constructed in Agda as
+an inductive type of ``IW'' trees, which is available as a
+construction in the cubical library of Agda \cite{iw,cubical-library}.
+\begin{theorem}
+  Every dependent polynomial functor from $I$ to $I$ has an initial
+  algebra.
 \end{theorem}
-
+Then an element $F \in \sem{X \to \SPF\,X}\gamma$ is an
+$\sem{X}\gamma$-indexed family of polynomial functors from
+$\sem{X}\gamma\times \Sigma^*$ to $\Sigma^*$, and taking the product
+of these constructs a polynomial functor from $\sem{X}\gamma\times
+\Sigma^*$ to itself. Then $\sem{\mu\,F}\gamma$ is defined to be the
+initial algebra of this functor, and the initial algebra structure is
+used to interpret $\roll, \fold$ and the corresponding axioms.
 
 %% That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
 %% complete to parses of $B$. In this manner, the linear function types generalize
@@ -2818,6 +2878,9 @@ these above works can embed naturally into a rich, unifying theory.
 grammar works, but I am not sure how. It seems as though there are these
 parallel tracks of research that have missed each other for decades}
 
+\paragraph{Inductive Linear Types}
+
+
 
 % In \cite{firsovCertifiedNormalizationContextFree2015}, Firsov and Uustalu
 % constructed a verified normalization procedure to turn a
@@ -2963,9 +3026,11 @@ but families of sets indexed by \emph{abstract syntax trees}.
 
 \appendix
 
-\section{Elided Syntax}
+\section{Syntax}
 
-\max{TODO: add prose}
+In this section we include the elided syntactic forms, as well as
+definitions and basic properties of linear and non-linear
+substitution.
 
 \begin{figure}
   \begin{mathpar}
@@ -2982,7 +3047,6 @@ but families of sets indexed by \emph{abstract syntax trees}.
   \end{mathpar}
   \caption{Context Rules}
 \end{figure}
-
 
 \max{TODO: add rules for non-linear types $\Pi,\Sigma$, equality etc}
 
@@ -3159,6 +3223,212 @@ but families of sets indexed by \emph{abstract syntax trees}.
 \steven{Do we need inverse for $\ltonl A$ in judgmental equality figure?}
 \steven{Do we need to say anything about the equalizer proofs being unique in
   judgmental equality figure?}
+
+\begin{definition}
+  The set of (non-linear) substitutions $\gamma \in
+  \textrm{Subst}(\Gamma,\Gamma')$ where $\Gamma \isCtx$ and $\Gamma'
+  \isCtx$ is defined by recursion on $\Gamma$:
+  \begin{align*}
+    \textrm{Subst}(\Gamma,\cdot) &= \{\cdot \}\\
+    \textrm{Subst}(\Gamma,\Gamma',x:A) &= \{ (\gamma,M/x) \pipe \gamma \in \textrm{Subst}(\Gamma,\Gamma') \wedge \Gamma \vdash M : A[\gamma] \}
+  \end{align*}
+  simultaneously with an action of substitution on types, terms,
+  etc. in the standard way.
+
+  \max{do we need identity and composition of substitutions and their functoriality?}
+  %% By induction we can define an identity substitution
+  %% $\textrm{Subst}(\Gamma,\Gamma)$ which maps each variable to
+  %% itself. We write this substitution simply as $\Gamma$.
+  %% \begin{align*}
+  %%   \cdot \circ \gamma' &= \cdot\\
+  %%   (\gamma,M/x) \circ \gamma' &= (\gamma\circ \gamma') , M[\gamma']/x
+  %% \end{align*}
+
+  It is straightforward, but laborious to establish that all forms in
+  the type theory that are parameterized by a non-linear context
+  $\Gamma$ support an admissible action of a substitution $\gamma \in
+  \Subst(\Gamma',\Gamma)$:
+  \begin{mathpar}
+    \inferrule
+    {\Gamma \vdash X \isTy}
+    {\Gamma' \vdash X[\gamma] \isTy}
+
+    \inferrule
+    {\Gamma \vdash X \isSmall}
+    {\Gamma' \vdash X[\gamma] \isSmall}
+
+    \inferrule
+    {\Gamma \vdash X \equiv Y}
+    {\Gamma' \vdash X[\gamma] \equiv Y[\gamma]}
+
+    \inferrule
+    {\Gamma \vdash M : X}
+    {\Gamma' \vdash M[\gamma] : X[\gamma]}
+
+    \inferrule
+    {\Gamma \vdash M \equiv N : X}
+    {\Gamma' \vdash M[\gamma] \equiv N[\gamma] : X[\gamma]}
+
+    \inferrule
+    {\Gamma \vdash \Delta \isLinCtx}
+    {\Gamma' \vdash \Delta[\gamma] \isLinCtx}
+
+    \inferrule
+    {\Gamma \vdash A \isLinTy}
+    {\Gamma' \vdash A[\gamma] \isLinTy}
+
+    \inferrule
+    {\Gamma \vdash A \equiv B}
+    {\Gamma' \vdash A[\gamma] \equiv B[\gamma]}
+
+    \inferrule
+    {\Gamma;\Delta \vdash e : A}
+    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] : A[\gamma]}j
+
+    \inferrule
+    {\Gamma;\Delta \vdash e \equiv f : A}
+    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] \equiv f[\gamma] : A[\gamma]}j
+  \end{mathpar}
+
+  %% Further, these all satisfy identity and composition equations M[\Gamma] = M and M[\gamma][\gamma'] = M[(\gamma \circ \gamma')]
+\end{definition}
+
+\begin{definition}
+  Let $\Gamma \vdash \Delta \isLinCtx$ and $\Gamma \vdash \Delta'
+  \isLinCtx$. The set of linear substitutions $\Subst(\Delta',\Delta)$
+  is defined by recursion on $\Delta$:
+  \begin{align*}
+    \Subst(\Delta',\cdot) &= \{ \cdot \pipe \Delta' = \cdot \}\\
+    \Subst(\Delta',(\Delta,a:A)) &= \{ (\delta, e/a) \pipe \delta \in \Subst(\Delta_1, \Delta) \and \Delta_2 \vdash e : A \and \Delta' = \Delta_1,\Delta_2\}
+  \end{align*}
+
+  Given substitutions $\delta_1 \in \Subst(\Delta_1', \Delta_1)$ and
+  $\delta_2 \in \Subst(\Delta_2', \Delta_2)$, we can define a
+  substitution $\delta_1,\delta_2 \in
+  \Subst((\Delta_1',\Delta_2'),(\Delta_1,\Delta_2))$. Furthermore, for
+  any substitution $\delta \in \Subst(\Delta,(\Delta_1,\Delta_2))$, we
+  can deconstruct $\delta = \delta_1,\delta_2$ with $\delta_1 \in
+  \Subst(\Delta_1', \Delta_1)$ and $\delta_2 \in \Subst(\Delta_2',
+  \Delta_2)$.
+  %% Again for any $\Gamma \vdash \Delta$, we can define an identity
+  %% substitution mapping each variable to itself. Additionally we can define composition of 
+\end{definition}
+
+\begin{definition}
+  Given any $\Gamma ; \Delta \vdash e : A$ and $\delta \in
+  \Subst(\Delta',\Delta)$, we define the action of the substitution on
+  $e$ as follows, frequently using the inversion principle to split
+  the substitution into constituent components.
+  \begin{align*}
+    a[e/a] &= e\\
+    (e_1,e_2)[\delta_1,\delta_2] &= (e_1[\delta_1], e_2[\delta_2])\\
+    (\letin {(a , b)} e {e'})[\delta_1,\delta_2,\delta_3] &= \letin{(a,b)} {e[\delta_2]}{e'[\delta_1,a/a,b/b,\delta_2]}\\
+    ()[\cdot] &= ()\\
+    \letin{()} e {e'}[\delta_1,\delta_2,\delta_3] &= \letin{()} {e[\delta_2]}{e'[\delta_1,a/a,b/b,\delta_2]}\\
+    (\lamblto {a} e)[\delta] &= \lamblto a {e[\delta,a/a]}\\
+    (\applto {e'} {e})[\delta_1,\delta_2] &= \applto {e'[\delta_1]} {e[\delta_2]}\\
+    (\lamblto {a} e)[\delta] &= \lamblto a {e[\delta,a/a]}\\
+    (\applto {e'} {e})[\delta_1,\delta_2] &= \applto {e'[\delta_1]} {e[\delta_2]}\\
+    (\lambtol {a} e)[\delta] &= \lamblto a {e[a/a,\delta]}\\
+    (\apptol {e'} {e})[\delta_1,\delta_2] &= \apptol {e'[\delta_1]} {e[\delta_2]}\\
+    (\dlamb x e)[\delta] &= \dlamb x {e[\delta]}\\
+    (e\,.\pi\,M)[\delta] &= (e[\delta]\,.\pi\,M)\\
+    (\sigma\,M\,e)[\delta] &= \sigma\,M\,e[\delta]\\
+    (\letin{\sigma\,x\,a}{e}{e'})[\delta_1,\delta_2,\delta_3] &= \letin{\sigma\,x\,a} {e[\delta_2]}{e'[\delta_1,\delta_3]}\\
+    (\equalizerin{e})[\delta] &= \equalizerin{e[\delta]}\\
+    (\equalizerpi{e})[\delta] &= \equalizerpi{e[\delta]}
+  \end{align*}
+  By induction on linear term and equality judgments, we establish the
+  following admissible rules for $\delta \in \Subst(\Delta',\Delta)$:
+  \begin{mathpar}
+    \inferrule
+    {\Gamma; \Delta \vdash e : A}
+    {\Gamma; \Delta' \vdash e[\delta] : A}
+
+    \inferrule
+    {\Gamma; \Delta \vdash e \equiv f : A}
+    {\Gamma; \Delta' \vdash e[\delta] \equiv f[\delta'] : A}
+  \end{mathpar}
+
+  \max{identity and composition?}
+\end{definition}
+
+\section{Denotational Semantics}
+
+\begin{definition}
+  We define the unit grammar
+  \[ I\,w = \{ ()\pipe w = \varepsilon \}\]
+  and given grammars $A$ and $B$ we define their tensor product
+  \[ (A \otimes B)\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in A\,w_1 \wedge b \in B\,w_2 \} \]
+  This extends to a monoidal structure on the category of grammars. Note that we defined in the semantics of linear types $\sem{I}\gamma = I$ and $\sem{A \otimes B}\gamma = \sem{A}\gamma \otimes \sem{B} \gamma$
+\end{definition}
+
+\begin{definition}[Denotation of Linear Contexts]
+  The semantics of linear contexts $\Gamma \vdash \Delta \isLinCtx$ is
+  defined as follows:
+  \max{make sure this aligns with our interpretation of $\lto$/$\tol$}
+  \begin{align*}
+    \sem{\cdot}\,\gamma &= I \\
+    \sem{\Delta,x:A}\,\gamma &= \sem{\Delta}\,\gamma \otimes \sem{A}\gamma \\
+  \end{align*}
+\end{definition}
+
+We define denotations of linear terms in
+\Cref{fig:linear-term-semantics}. Note that the denotations interpret
+typing derivations, not raw terms, as the data of how contexts are
+split is needed in order to construct the correct associator
+functions.
+\max{todo: describe associators, define denotations, prove axioms}
+\begin{figure}
+  \begin{mathpar}
+  \inferrule
+  {\Delta_1 \vdash e_1 : A_1 \and \Delta_2 \vdash e_2 : A_2}
+  {\sem{(e_1,e_2)}\gamma\,w\,\delta
+    = \letin{(w_1,w_2,\delta_1,\delta_2)} {m(\Delta_1,\Delta_2)(\delta)} {(w_1,w_2,\sem{e_1}\gamma\,w_1\,\delta_1, \sem{e_2}\gamma\,w_2\,\delta_2)}
+  }
+
+  \inferrule
+  {\Delta_2 \vdash e : A \otimes B \and \Delta_1,a:A,b:B,\Delta_3 \vdash e' : C}
+  {\sem{\letin{(a,b)}{e}{e'}}\gamma\,w\,\delta =
+    \letin{(w_1,w_2w_3,\delta_1,(w_2,w_3,\delta_2,\delta_3))}{m_{\Delta_1,\Delta_2,\Delta_3}(\delta)}
+    \letin{(w_{2,1},w_{2,2},a,b)}{\sem{e}\gamma\,w_2\,\delta_2}
+    {\sem{e'}\gamma\,w\,(w_1,w_{2,1}w_{2,2}w_3, \delta_1, (w_{2,1},w_{2,2}w_3, a, (w_{2,2},w_3, b, \delta_3)))}
+    }
+\end{mathpar}
+  \caption{Denotations of linear terms}
+\end{figure}
+
+\begin{definition}
+  For any $\Gamma \vdash \Delta_1,\Delta_2 \isLinCtx$ and $\gamma \in
+  \sem{\Gamma}$ there is an isomorphism $m_{\Delta_1,\Delta_2} :
+  \sem{\Delta_1, \Delta_2}\gamma \cong \sem{\Delta_1}\gamma \otimes
+  \sem{\Delta_2}\gamma$.
+
+  This can be extended to a sequence of contexts of any length.
+\end{definition}
+
+\begin{lemma}[Equations for $\otimes$]
+  
+\end{lemma}
+
+\begin{lemma}[Equations for $I$]
+  
+\end{lemma}
+
+\begin{lemma}[Equations for $\lto$]
+  
+\end{lemma}
+
+\begin{lemma}[Equations for $\tol$]
+  
+\end{lemma}
+
+
+\begin{align*}
+  \sem{(e_1,e_2)}\gamma\,w\,\delta &=
+  \letin{(w_1,w_2,\delta_1,\delta_2)} {m(\Delta_1,\Delta_2)(\delta)} {(w_1,w_2,\sem{e_1}\gamma\,w_1\,\delta_1, \sem{e_2}\gamma\,w_2\,\delta_2)}\\
+\end{align*}
+
 
 
 \end{document}
