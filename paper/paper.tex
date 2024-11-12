@@ -230,67 +230,93 @@ frame=single
 \makeatother
 
 \begin{abstract}
-  We propose \theoryname~(\theoryabbv), a domain-specific dependent type theory
-  for the definition of intrinsically verified parsers and verification of weak
-  and strong equivalences of formal grammars. The linear types in \theoryabbv
-  have a simple interpretation as formal grammars, with values of the types
-  interpreted as parse trees and general terms as a form of intrinsically
-  verified parse transformers, of which parsers being a special case. We
-  demonstrate the expressivity of this system by showing that the indexed
-  inductive linear types in this calculus can be used to encode many different
-  familiar grammar formalisms, including regular and context-free grammars but
-  also traces of various types of automata. We can then construct strong
-  equivalences between grammar and automata formalisms and construct verified
-  parsers as simple linear functional programs. All of our examples have been
-  implemented in a prototype implementation of \theoryabbv as a shallow
-  embedding in Agda.
+  We present \theoryname~(\theoryabbv), a domain-specific dependent
+  type theory for verified parsing and formal grammar theory. In
+  \theoryabbv, linear types are used as a syntax for formal grammars,
+  and parsers can be written as linear terms. The linear typing
+  restriction provides a form of intrinsic verification that a parser
+  yields only valid parse trees for the input string. We demonstrate
+  the expressivity of this system by showing that the combination of
+  inductive linear types and dependency on non-linear data can be used
+  to encode commonly used grammar formalisms such as regular and
+  context-free grammars as well as traces of various types of
+  automata. Using these encodings, we define parsers for regular
+  expressions using deterministic automata, as well as providing
+  examples parsers for LL(1) and LR(1) grammars.
+
+  We present a denotational semantics of our type theory that
+  interprets the types as a mathematical notion of formal
+  grammars. Based on this denotational semantics, we have made a
+  prototype implementation of \theoryabbv using a shallow embedding in
+  the Agda proof assistant. All of our examples parsers have been
+  implemented in this prototype implementation.
 \end{abstract}
 
 \maketitle
 
 \section{Introduction}
 \label{sec:intro}
-Formal verification encompasses a broad suite of techniques one may use to
-mathematically guarantee the correctness of software systems. We can only
-reap the benefits of
-any proof effort if its underlying assumptions hold. For instance, verifying the
-functional correctness of an algorithm is no use if it is run on buggy hardware.
-Likewise, the promised guarantees of a program may be jeopardized if it is
-parsed incorrectly.
+Parsing structured data from untrusted input is a ubiquitous task in
+computing. Any formally verified software system that interacts with
+the outside world must contain some parsing component. For example, in
+an extensive experiment finding bugs in C compilers
+\cite{yangFindingUnderstandingBugs}, an early version of the formally
+verified CompCert C compiler only contained bugs in the then
+unverified parsing component \cite{leroy_formal_2009}. Bugs in parsers
+undermine the overall correctness theorem for a verified system: an
+incorrectly parsed C program will be compiled correctly but this is
+not very useful if it did not correctly correspond to the actual
+source program. Eventually, a correct parser was implemented using an
+automaton that is formally verified to implement an LR grammar
+\cite{jourdanValidatingLRParsers2012}.
 
-Large verified developments, like CompCert \cite{leroy_formal_2009},
-invest a significant number of person-hours into proof development. In early
-versions of CompCert, the apparent
-assurances associated with their effort were at risk of invalidation by
-parser bugs \cite{yangFindingUnderstandingBugs}. Parsing is a ubiquitous task
-throughout computing and yet parsers are frequently unverified, even in
-otherwise verified systems. The CompCert team later
-developed a method for validating the correctness of LR parsers
-\cite{jourdanValidatingLRParsers2012} and then replaced their parser with one
-that is certified to be correct. Despite their success in  validating their C parser and other work in the
-generation of  verified parsers
-\cite{lasserCoStarVerifiedALL2021,firsovCertifiedNormalizationContextFree2015,danielssonTotalParserCombinators2010},
-it is still arduous and highly nontrivial to write a verified
-parser. Further, approaches are sensitive to a choice of grammar and automata formalism to serve
-as a
-foundation, which can make it difficult to relate and interoperate different
-styles of verified parsers.
+It is entirely understandable from an engineering perspective
+\emph{why} verified parsing was not part of the initial releases of
+CompCert: parsing algorithms and formal grammars are a complex area,
+featuring a variety of domain-specific formalisms such as context-free
+grammars and various automata. These formalisms have little relation
+to the main components of a verified compiler. For this reason, it is
+advantageous for verified parsers to be implemented using a reusable
+verified library, just as parser generators and regular expression
+matchers have done for many decades in unverified software.
 
-In \cite{elliottSymbolicAutomaticDifferentiation2021}, Elliott describes formal
-grammar as type-level predicates on strings that prove
-language membership. That is, a \emph{formal grammar} $A$ is a function
-$\String \to \Set$ such that for a string $w$, $A~w$ is the set of proofs
-showing that $w$ belongs to the language recognized by $A$. This typed approach
-to parsing serves a general setting that can simultaneuously interpret many distinct
-grammar formalisms. In this paper, we adopt Elliott's view on formal grammars and present a
-syntax that axiomatizes this semantic notion of grammar.
+Prior approaches to verified parsing focus on verification of a
+particular grammar formalism such as \max{Steven write down what the
+  related work uses
+  here}\cite{lasserCoStarVerifiedALL2021,firsovCertifiedNormalizationContextFree2015,danielssonTotalParserCombinators2010}.
+Each new grammar formalism must then be extended with its own verified
+implementation.
 
-We present \theoryname (\theoryabbv) as a domain specific
-type theory for building verified parsers. The type theory itself is a form of dependent linear-non-linear type
-theory: the linear types can be interpreted as grammars, whereas the
-non-linear types can be interpreted as ordinary sets. As in prior work
-on dependent linear-non-linear types, the linear types are allowed to
-depend on the non-linear types but not vice-versa \cite{krishnaswami_integrating_2015}.
+In this work, we present the design of \theoryname (\theoryabbv), a
+domain-specific language for formal verification of parsers. A key
+property is that \theoryabbv is an \emph{extensible} framework for
+verification of parsers in that it supports the definition of grammar
+formalisms of unrestricted complexity. That is, \theoryabbv is not a
+system for verifying \emph{one} type of grammar formalism, but instead
+is a domain-specific language in which many grammar formalisms and
+their verified parsers can be implemented. For example, \theoryabbv is
+not a verified parser generator that compiles regular expressions to
+deterministic finite automata, but is instead is a domain specific
+language \emph{for writing} such a verified parser generator.
+
+\max{Steven, is this accurate comparison?} The design of \theoryabbv
+is an extension of Joachim Lambek's \emph{categorial grammars}
+\cite{lambek}. Categorial grammars are a grammar formalism equivalent
+in expressive power to context-free grammars that in modern
+terminology would be considered a kind of \emph{non-commutative linear
+logic}, a version of linear logic where the tensor product is not
+commutative, reflecting the obvious property that the relative
+ordering of characters is significant in parsing problems. We extend
+non-commutative linear logic with two key components that increase its
+power to support arbitrarily powerful grammar formalisms: inductive
+linear types, as well as dependency of linear types on non-linear
+data. The resulting system has two kinds of types: non-linear types
+which model sets and linear types which model formal
+grammars. Crucially, the non-linear types and linear types are allowed
+to be dependent on non-linear types, but not on linear types. This
+combination has been used previously in the ``linear-non-linear
+dependent'' type theory with \emph{commutative} linear logic to model
+imperative programming \cite{krishnaswami_integrating_2015}.
 
 The substructural nature of \theoryabbv is well-aligned with the
 requirements intrinsic to parsing and to the theory of formal
@@ -299,31 +325,66 @@ that cannot be duplicated, reordered, or dropped. Moreover, the constructive
 aspect of \theoryabbv ensures that verification of parsers written in the
 calculus are \emph{correct-by-construction}. The type system is powerful enough
 that derivations of a term type checking carry intrinsic proofs of correctness.
-
 Parsers written in \theoryabbv take on a linear functional style, which makes
-them familiar to write and amenable to compositional verification techniques. We
-implement \theoryabbv as a shallowly embedded domain-specific langauge in the
-Cubical Agda proof assistant. Throughout this paper, we will use \agdalogo~ to
-mark results that are mechanized in our Agda development.
+them familiar to write and amenable to compositional verification techniques.
 
-\paragraph{Contributions} This paper begins in \cref{sec:type-theory-examples}
-by studying small example programs from \theoryabbv to build intuition.
-From there, in \cref{sec:tt} we provide the syntax of \theoryname, a type theory
-that axiomatizes the underlying structures needed to conduct formal grammar
-theory. Later in \cref{sec:applications} we demonstrate the
-applicability of \theoryabbv for relating familiar grammar and automata
-formalisms as well as building concrete parsers.
-Then in \cref{sec:semantics-and-metatheory}, we give a denotational semantics
-that makes precise the connection between \theoryabbv syntax and formal grammars.
+To show the feasibility of our design, we have implemented \theoryabbv
+as a shallowly embedded domain-specific langauge in the Cubical Agda
+proof assistant \cite{agda,cubical}. We have implemented many example
+grammars and parsers in our system including regular expressions,
+non-deterministic and deterministic automata, as well as some example
+context-free grammars and parsers based on LL(1) and LR(1)
+automata. Throughout this paper, we will use \agdalogo~ to mark
+results that are mechanized in our Agda development.
 
-Our contributions are then:
+Our Agda prototype is based on a \emph{denotational semantics} of
+\theoryabbv. The core idea of the denotational semantics is
+\cite{elliottSymbolicAutomaticDifferentiation2021}, Elliott describes
+a formal grammar as type-level predicates on strings that prove
+language membership. That is, a \emph{formal grammar} $A$ is a
+function $\String \to \Set$ such that for a string $w$, $A~w$ is the
+set of ``proofs'' showing that $w$ belongs to the language recognized
+by $A$. We show that all linear types in \theoryabbv can be so
+interpreted as an abstract formal grammar in this sense, and that
+linear terms are a kind of \emph{parse transformer}, a function that
+takes a parse tree from one grammar to a parse tree in a different
+grammar but over the same underlying string.
+
+%% Formal verification encompasses a broad suite of techniques one may use to
+%% mathematically guarantee the correctness of software systems. We can only
+%% reap the benefits of
+%% any proof effort if its underlying assumptions hold. For instance, verifying the
+%% functional correctness of an algorithm is no use if it is run on buggy hardware.
+%% Likewise, the promised guarantees of a program may be jeopardized if it is
+%% parsed incorrectly.
+
+Our contributions are then:\max{This contribution section needs to be punchier}
 %
 \begin{itemize}
-  \item \theoryname (\theoryabbv): A dependent
-        linear-non-linear type theory for building verified parsers
-  \item A denotational grammars semantics for \theoryabbv
-  \item An implementation of \theoryabbv in Agda
+  \item The design of \theoryname (\theoryabbv): A dependent
+    linear-non-linear type theory for building verified parsers, which
+    extends prior work on dependent linear-non-linear type theory to
+    support inductive linear types
+  \item Demonstration of how to encode many common grammar formalisms
+    (regular expressions, (non-)deterministic automata, context-free
+    grammars) and parser formalisms within our type theory.
+  \item A prototype implementation of \theoryabbv in Agda with all
+    examples mechanized.
+  \item A denotational semantics for \theoryabbv that shows that the
+    parsers are in fact verified to be correct and soundness of the
+    equational theory.
 \end{itemize}
+
+This paper begins in \cref{sec:type-theory-examples} by studying small
+example programs from \theoryabbv to build intuition.  From there, in
+\cref{sec:tt} we provide the syntax, typing and equational theory of
+\theoryname. In \cref{sec:applications} we demonstrate the
+applicability of \theoryabbv for relating familiar grammar and
+automata formalisms as well as building concrete parsers.  Then in
+\cref{sec:semantics-and-metatheory}, we give a denotational semantics
+that makes precise the connection between \theoryabbv syntax and
+formal grammars. Finally in \Cref{sec:discussion} we discuss related
+and future work.
 
 \section{\theoryname by Example}
 \label{sec:type-theory-examples}
