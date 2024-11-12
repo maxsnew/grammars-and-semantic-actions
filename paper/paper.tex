@@ -249,19 +249,6 @@ frame=single
 
 \section{Introduction}
 \label{sec:intro}
-\steven{This intro sounds reallchoppy but follows the following outline.
-
-  \begin{itemize}
-  \item parsing correctness is imporant because parsing is
-  everywhere and failure
-          could even invalidate other proof efforts.
-  \item verified parsers should be
-          easier to write
-  \item Conal Elliott gives the right idea for what the foundation
-          of parser verification should be --- type theory
-
-  \end{itemize}
-          }
 Formal verification encompasses a broad suite of techniques one may use to
 mathematically guarantee the correctness of software systems. We can only
 reap the benefits of
@@ -271,9 +258,9 @@ Likewise, the promised guarantees of a program may be jeopardized if it is
 parsed incorrectly.
 
 Large verified developments, like CompCert \cite{leroy_formal_2009},
-invest enormous amounts of person-hours into proof development. In early
+invest a significant number of person-hours into proof development. In early
 versions of CompCert, the apparent
-assurances associated with their effort could indeed be invalidated through
+assurances associated with their effort were at risk of invalidation by
 parser bugs \cite{yangFindingUnderstandingBugs}. Parsing is a ubiquitous task
 throughout computing and yet parsers are frequently unverified, even in
 otherwise verified systems. The CompCert team later
@@ -282,23 +269,22 @@ developed a method for validating the correctness of LR parsers
 that is certified to be correct. Despite their success in  validating their C parser and other work in the
 generation of  verified parsers
 \cite{lasserCoStarVerifiedALL2021,firsovCertifiedNormalizationContextFree2015,danielssonTotalParserCombinators2010},
-it is still arduous and highly nontrivial to write and verify a
-parser. Further, distinct approaches to generating verified parsing
-implementations are often relative to a different grammar formalism. We believe
-that these sepearate grammar formalisms can all be unified into a
-syntax-independent notion of grammar, and that this notion of grammar can be
-axiomatized into a syntax that is useful for building verified parsers.
+it is still arduous and highly nontrivial to write a verified
+parser. Further, approaches are sensitive to a choice of grammar and automata formalism to serve
+as a
+foundation, which can make it difficult to relate and interoperate different
+styles of verified parsers.
 
-\steven{I don't like how I make the cited work sound bad above}
-
-Elliott \cite{elliottSymbolicAutomaticDifferentiation2021}
-notes that grammars can be described as type-level predicates on strings that prove
+In \cite{elliottSymbolicAutomaticDifferentiation2021}, Elliott describes formal
+grammar as type-level predicates on strings that prove
 language membership. That is, a \emph{formal grammar} $A$ is a function
 $\String \to \Set$ such that for a string $w$, $A~w$ is the set of proofs
-showing that $w$ belongs to the language recognized by $A$. We adopt this
-definition of a formal grammar.
+showing that $w$ belongs to the language recognized by $A$. This typed approach
+to parsing serves a general setting that can simultaneuously interpret many distinct
+grammar formalisms. In this paper, we adopt Elliott's view on formal grammars and present a
+syntax that axiomatizes this semantic notion of grammar.
 
-In this paper, we present \theoryname (\theoryabbv) as a domain specific
+We present \theoryname (\theoryabbv) as a domain specific
 type theory for building verified parsers. The type theory itself is a form of dependent linear-non-linear type
 theory: the linear types can be interpreted as grammars, whereas the
 non-linear types can be interpreted as ordinary sets. As in prior work
@@ -313,13 +299,19 @@ aspect of \theoryabbv ensures that verification of parsers written in the
 calculus are \emph{correct-by-construction}. The type system is powerful enough
 that derivations of a term type checking carry intrinsic proofs of correctness.
 
+Parsers written in \theoryabbv take on a linear functional style, which makes
+them familiar to write and amenable to compositional verification techniques. We
+implement \theoryabbv as a shallowly embedded domain-specific langauge in the
+Cubical Agda proof assistant. Throughout this paper, we will use \agdalogo~ to
+mark results that are mechanized in our Agda development.
+
 \paragraph{Contributions} This paper begins in \cref{sec:type-theory-examples}
-by giving small examples of programs in \theoryabbv so that we may build intuition.
+by studying small example programs from \theoryabbv to build intuition.
 From there, in \cref{sec:tt} we provide the syntax of \theoryname, a type theory
 that axiomatizes the underlying structures needed to conduct formal grammar
-theory. In \cref{sec:applicatoins} we demonstrate the
-applicablity of \theoryabbv for defining parser terms and representing results
-from formal language theory as proof terms in our calculus.
+theory. Later in \cref{sec:applications} we demonstrate the
+applicability of \theoryabbv for relating familiar grammar and automata
+formalisms as well as building concrete parsers.
 Then in \cref{sec:semantics-and-metatheory}, we give a denotational semantics
 that makes precise the connection between \theoryabbv syntax and formal grammars.
 
@@ -328,9 +320,8 @@ Our contributions are then:
 \begin{itemize}
   \item \theoryname (\theoryabbv): A dependent
         linear-non-linear type theory for building verified parsers
-  \item An implementation of \theoryabbv, which is embedded shallowly in Cubical
-        Agda. Throughout this paper, we will use \agdalogo~ to mark results that
-        have been mechanized in our Agda development.
+  \item A denotational grammars semantics for \theoryabbv
+  \item An implementation of \theoryabbv in Agda
 \end{itemize}
 
 \section{\theoryname by Example}
@@ -1576,9 +1567,9 @@ fromN(*@$_c$@*) 1 (nil .1) = ()
 \label{fig:litNFAterms}
 \end{figure}
 
-In \cref{litNFATterms} we define a family of grammars $A$ and then prove that each $A~s$ is
-equivalent to the accepting traces in $N_{c}$ out of state $s$. Then the desired
-equivalence arises from taking $s = 0$.
+In \cref{fig:litNFAterms} we define a family of grammars $A$ that serve as
+interpretations for each state in $N_{c}$. We then prove that each $A~s$ is
+equivalent to the accepting traces through $N_{c}$ out of state $s$.
 
 When
 defining $fromN_{c}$ we pattern match on the accepting traces beginning in each
@@ -1586,7 +1577,7 @@ state. Out of state $0$ the only accepting traces are built via $cons$ over the
 single transition $t$, and out
 of state $1$ the only accepting trace is built via $nil$.
 
-Note that each $A~s$ is unambiguous, so $(fromN_{c}~s) \circ (toN_{c}~s)$ is equal to the
+Each $A~s$ is unambiguous, so $(fromN_{c}~s) \circ (toN_{c}~s)$ is equal to the
 identity on each $A~s$. To complete the proof of strong equivalence it remains
 to show that $(toN_{c}~s) \circ (fromN_{c}~s)$ is equal to the identity on
 $Trace~s~true$, which we show by using the equalizer type.
@@ -1702,11 +1693,8 @@ elided details may be found in the Agda formalization.
 \newcommand{\balanced}{\mathtt{balanced}}
 \newcommand{\Dyck}{\mathtt{Dyck}}
 Moving up the Chomsky hierarchy from regular grammars, we arrive at context-free
-grammars (CFGs). The smallest nontrivial CFG is the Dyck grammar
+grammars (CFGs). An interesting nontrivial CFG is the Dyck grammar
 $\Dyck$ --- the grammar of balanced parentheses.
-
-\pedro{Is it actually the smallest? How do you quantify size of nontrivial things?
-  Might be better to just say ``an interesting nontrivial CFG [...]''}
 
 $\Dyck$ is a grammar over the alphabet $\{ \stringquote{(}, \stringquote{)} \}$
 and is defined in \cref{fig:dyckinductive}. The $\nil$ constructor shows that
@@ -1885,7 +1873,7 @@ grammars, but what about the linear terms? These can be interpreted as
   $A_1$ to $A_2$ is a function assigning to each string $w$ a function
   $f_w : A_1(w) \to A_2(w)$.
 \end{definition}
-\pa{Do we actually need a definition of formal language morphism?
+\pedro{Do we actually need a definition of formal language morphism?
 In case we do, it should probably be its own definition.}
 First, note that parse transformers generalize language inclusion: if
 $A_1(w), A_2(w)$ are all subsets of a one-element set, then a parse
