@@ -3905,27 +3905,62 @@ substitution.
   simultaneously with an action of substitution on types, terms,
   etc. in the standard way.
 
-  By induction we can define an identity substitution $\textrm{id} :
-  \textrm{Subst}(\Gamma,\Gamma)$ which maps each variable to itself,
-  and composition of substitutions
-  \begin{align*}
-    \cdot \circ \gamma' &= \cdot\\
-    (\gamma,M/x) \circ \gamma' &= (\gamma\circ \gamma') , M[\gamma']/x
-  \end{align*}
+  \max{do we need identity and composition of substitutions and their functoriality?}
+  %% By induction we can define an identity substitution
+  %% $\textrm{Subst}(\Gamma,\Gamma)$ which maps each variable to
+  %% itself. We write this substitution simply as $\Gamma$.
+  %% \begin{align*}
+  %%   \cdot \circ \gamma' &= \cdot\\
+  %%   (\gamma,M/x) \circ \gamma' &= (\gamma\circ \gamma') , M[\gamma']/x
+  %% \end{align*}
 
   It is straightforward, but laborious to establish that all forms in
-  the type theory that are parameterized by a $\Gamma$ support an
-  admissible action of substitution:
+  the type theory that are parameterized by a non-linear context
+  $\Gamma$ support an admissible action of a substitution $\gamma \in
+  \Subst(\Gamma',\Gamma)$:
   \begin{mathpar}
     \inferrule
-    {\Gamma \vdash M : X \and \gamma \in \Subst(\Gamma',\Gamma)}
+    {\Gamma \vdash X \isTy}
+    {\Gamma' \vdash X[\gamma] \isTy}
+
+    \inferrule
+    {\Gamma \vdash X \isSmall}
+    {\Gamma' \vdash X[\gamma] \isSmall}
+
+    \inferrule
+    {\Gamma \vdash X \equiv Y}
+    {\Gamma' \vdash X[\gamma] \equiv Y[\gamma]}
+
+    \inferrule
+    {\Gamma \vdash M : X}
     {\Gamma' \vdash M[\gamma] : X[\gamma]}
 
     \inferrule
-    {\Gamma;\Delta \vdash e : A \and \gamma \in \Subst(\Gamma',\Gamma)}
-    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] : A[\gamma]}
+    {\Gamma \vdash M \equiv N : X}
+    {\Gamma' \vdash M[\gamma] \equiv N[\gamma] : X[\gamma]}
+
+    \inferrule
+    {\Gamma \vdash \Delta \isLinCtx}
+    {\Gamma' \vdash \Delta[\gamma] \isLinCtx}
+
+    \inferrule
+    {\Gamma \vdash A \isLinTy}
+    {\Gamma' \vdash A[\gamma] \isLinTy}
+
+    \inferrule
+    {\Gamma \vdash A \equiv B}
+    {\Gamma' \vdash A[\gamma] \equiv B[\gamma]}
+
+    \inferrule
+    {\Gamma;\Delta \vdash e : A}
+    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] : A[\gamma]}j
+
+    \inferrule
+    {\Gamma;\Delta \vdash e \equiv f : A}
+    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] \equiv f[\gamma] : A[\gamma]}j
   \end{mathpar}
-  et cetera.
+
+  %% Further, these all satisfy identity and composition equations M[\Gamma] = M and M[\gamma][\gamma'] = M[(\gamma \circ \gamma')]
 \end{definition}
 
 \begin{definition}
@@ -3951,9 +3986,9 @@ substitution.
 
 \begin{definition}
   Given any $\Gamma ; \Delta \vdash e : A$ and $\delta \in
-  \Subst(\Delta',\Delta)$, we define the substitution $\Gamma; \Delta
-  \vdash e[\delta] : A$ as follows, frequently using the inversion
-  principle to split the substitution into constituent components.
+  \Subst(\Delta',\Delta)$, we define the action of the substitution on
+  $e$ as follows, frequently using the inversion principle to split
+  the substitution into constituent components.
   \begin{align*}
     a[e/a] &= e\\
     (e_1,e_2)[\delta_1,\delta_2] &= (e_1[\delta_1], e_2[\delta_2])\\
@@ -3973,22 +4008,49 @@ substitution.
     (\equalizerin{e})[\delta] &= \equalizerin{e[\delta]}\\
     (\equalizerpi{e})[\delta] &= \equalizerpi{e[\delta]}
   \end{align*}
+  By induction on linear term and equality judgments, we establish the
+  following admissible rules for $\delta \in \Subst(\Delta',\Delta)$:
+  \begin{mathpar}
+    \inferrule
+    {\Gamma; \Delta \vdash e : A}
+    {\Gamma; \Delta' \vdash e[\delta] : A}
+
+    \inferrule
+    {\Gamma; \Delta \vdash e \equiv f : A}
+    {\Gamma; \Delta' \vdash e[\delta] \equiv f[\delta'] : A}
+  \end{mathpar}
+
+  \max{identity and composition?}
 \end{definition}
 
 \section{Denotational Semantics}
 
-Next we define the term semantics for linear terms.
-
 \begin{definition}
-  For any $\Gamma \vdash \Delta_1,\Delta_2 \isLinCtx$ and $\gamma \in
-  \sem{\Gamma}$ there is an isomorphism $m_{\Delta_1,\Delta_2} :
-  \sem{\Delta_1, \Delta_2}\gamma \cong \sem{\Delta_1}\gamma \otimes
-  \sem{\Delta_2}\gamma$.
-
-  This can be extended to a sequence of contexts of any length.
+  We define the unit grammar
+  \[ I\,w = \{ ()\pipe w = \varepsilon \}\]
+  and given grammars $A$ and $B$ we define their tensor product
+  \[ (A \otimes B)\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in A\,w_1 \wedge b \in B\,w_2 \} \]
+  This extends to a monoidal structure on the category of grammars. Note that we defined in the semantics of linear types $\sem{I}\gamma = I$ and $\sem{A \otimes B}\gamma = \sem{A}\gamma \otimes \sem{B} \gamma$
 \end{definition}
 
-\begin{mathpar}
+\begin{definition}[Denotation of Linear Contexts]
+  The semantics of linear contexts $\Gamma \vdash \Delta \isLinCtx$ is
+  defined as follows:
+  \max{make sure this aligns with our interpretation of $\lto$/$\tol$}
+  \begin{align*}
+    \sem{\cdot}\,\gamma &= I \\
+    \sem{\Delta,x:A}\,\gamma &= \sem{\Delta}\,\gamma \otimes \sem{A}\gamma \\
+  \end{align*}
+\end{definition}
+
+We define denotations of linear terms in
+\Cref{fig:linear-term-semantics}. Note that the denotations interpret
+typing derivations, not raw terms, as the data of how contexts are
+split is needed in order to construct the correct associator
+functions.
+\max{todo: describe associators, define denotations, prove axioms}
+\begin{figure}
+  \begin{mathpar}
   \inferrule
   {\Delta_1 \vdash e_1 : A_1 \and \Delta_2 \vdash e_2 : A_2}
   {\sem{(e_1,e_2)}\gamma\,w\,\delta
@@ -4003,6 +4065,35 @@ Next we define the term semantics for linear terms.
     {\sem{e'}\gamma\,w\,(w_1,w_{2,1}w_{2,2}w_3, \delta_1, (w_{2,1},w_{2,2}w_3, a, (w_{2,2},w_3, b, \delta_3)))}
     }
 \end{mathpar}
+  \caption{Denotations of linear terms}
+\end{figure}
+
+\begin{definition}
+  For any $\Gamma \vdash \Delta_1,\Delta_2 \isLinCtx$ and $\gamma \in
+  \sem{\Gamma}$ there is an isomorphism $m_{\Delta_1,\Delta_2} :
+  \sem{\Delta_1, \Delta_2}\gamma \cong \sem{\Delta_1}\gamma \otimes
+  \sem{\Delta_2}\gamma$.
+
+  This can be extended to a sequence of contexts of any length.
+\end{definition}
+
+\begin{lemma}[Equations for $\otimes$]
+  
+\end{lemma}
+
+\begin{lemma}[Equations for $I$]
+  
+\end{lemma}
+
+\begin{lemma}[Equations for $\lto$]
+  
+\end{lemma}
+
+\begin{lemma}[Equations for $\tol$]
+  
+\end{lemma}
+
+
 \begin{align*}
   \sem{(e_1,e_2)}\gamma\,w\,\delta &=
   \letin{(w_1,w_2,\delta_1,\delta_2)} {m(\Delta_1,\Delta_2)(\delta)} {(w_1,w_2,\sem{e_1}\gamma\,w_1\,\delta_1, \sem{e_2}\gamma\,w_2\,\delta_2)}\\
