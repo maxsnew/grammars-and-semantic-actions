@@ -66,36 +66,40 @@ module _ {g : Grammar ℓ}{h : Grammar ℓ'} (f f' : g ⊢ h) where
     ∙ cong (_∘g f'') eq-π-pf
     ∙ cong (f' ∘g_) p
 
+module _ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} (f f' : g ⊢ h)(f'' : h ⊢ k) where
+  equalizer-cong : equalizer f f' ⊢ equalizer (f'' ∘g f) (f'' ∘g f')
+  equalizer-cong = eq-intro (f'' ∘g f) (f'' ∘g f') (eq-π f f') (cong (f'' ∘g_) (eq-π-pf f f'))
+
 open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.Dependent Alphabet
 
 module _ {A : Type ℓ} (F : A → Functor A) (g : A → Grammar ℓg)
-  (e e' : ∀ (a : A) → μ F a ⊢ g a) where
-  equalizer-ind :
-    (pf : ∀ (a : A) →
-      e  a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')) ≡
-      e' a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a'))
-    ) →
-    ∀ (a : A) → e a ≡ e' a
-  equalizer-ind pf = λ a →
+  (e e' : ∀ (a : A) → μ F a ⊢ g a)
+  (pf : ∀ (a : A) →
+    e  a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')) ≡
+    e' a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a'))) where
+
+  equalizer-ind-alg : Algebra F λ a → equalizer (e a) (e' a)
+  equalizer-ind-alg a =
+    eq-intro (e a) (e' a)
+      (roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')))
+      (pf a)
+
+  equalizer-ind : ∀ (a : A) → e a ≡ e' a
+  equalizer-ind = λ a →
     equalizer-section (e a) (e' a)
-      (rec F pfAlg a)
-      (ind-id' F (compHomo F (initialAlgebra F) pfAlg (initialAlgebra F)
+      (rec F equalizer-ind-alg a)
+      (ind-id' F (compHomo F (initialAlgebra F) equalizer-ind-alg (initialAlgebra F)
         ((λ a' → eq-π (e a') (e' a')) ,
          λ a' → eq-π-is-homo a')
-        (recHomo F pfAlg)) a)
+        (recHomo F equalizer-ind-alg)) a)
     where
-    pfAlg : Algebra F λ a → equalizer (e a) (e' a)
-    pfAlg a =
-      eq-intro (e a) (e' a)
-        (roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')))
-        (pf a)
 
     opaque
       unfolding eq-π eq-intro
       eq-π-is-homo :
         ∀ a →
-        eq-π (e a) (e' a) ∘g pfAlg a ≡
+        eq-π (e a) (e' a) ∘g equalizer-ind-alg a ≡
           roll ∘g map (F a) λ a' → eq-π (e a') (e' a')
       eq-π-is-homo a = refl
 

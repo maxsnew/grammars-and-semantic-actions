@@ -75,6 +75,13 @@ transportGRefl :
   transportG {g = g} refl ≡ id
 transportGRefl {g = g} = substRefl {B = λ h → g ⊢ h} _
 
+import Cubical.Data.Equality as Eq
+EqtransportG :
+  g Eq.≡ h
+  → g ⊢ h
+EqtransportG {g = g}{h = h} Eq.refl =
+  Eq.transport (λ h → g ⊢ h) Eq.refl id
+
 invMoveR :
   {f : g ⊢ h} {f⁻ : h ⊢ g}
   {f' : k ⊢ g} {f'' : k ⊢ h}
