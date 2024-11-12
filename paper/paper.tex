@@ -60,6 +60,7 @@ frame=single
 
 \usepackage{pdfpages}
 
+\newcommand{\Subst}{\textrm{Subst}}
 \newcommand{\SPF}{\mathsf{SPF}}
 \newcommand{\Var}{\mathsf{Var}}
 \newcommand{\K}{\mathsf{K}}
@@ -3695,9 +3696,11 @@ but families of sets indexed by \emph{abstract syntax trees}.
 
 \appendix
 
-\section{Elided Syntax}
+\section{Syntax}
 
-\max{TODO: add prose}
+In this section we include the elided syntactic forms, as well as
+definitions and basic properties of linear and non-linear
+substitution.
 
 \begin{figure}
   \begin{mathpar}
@@ -3714,7 +3717,6 @@ but families of sets indexed by \emph{abstract syntax trees}.
   \end{mathpar}
   \caption{Context Rules}
 \end{figure}
-
 
 \max{TODO: add rules for non-linear types $\Pi,\Sigma$, equality etc}
 
@@ -3891,6 +3893,121 @@ but families of sets indexed by \emph{abstract syntax trees}.
 \steven{Do we need inverse for $\ltonl A$ in judgmental equality figure?}
 \steven{Do we need to say anything about the equalizer proofs being unique in
   judgmental equality figure?}
+
+\begin{definition}
+  The set of (non-linear) substitutions $\gamma \in
+  \textrm{Subst}(\Gamma,\Gamma')$ where $\Gamma \isCtx$ and $\Gamma'
+  \isCtx$ is defined by recursion on $\Gamma$:
+  \begin{align*}
+    \textrm{Subst}(\Gamma,\cdot) &= \{\cdot \}\\
+    \textrm{Subst}(\Gamma,\Gamma',x:A) &= \{ (\gamma,M/x) \pipe \gamma \in \textrm{Subst}(\Gamma,\Gamma') \wedge \Gamma \vdash M : A[\gamma] \}
+  \end{align*}
+  simultaneously with an action of substitution on types, terms,
+  etc. in the standard way.
+
+  By induction we can define an identity substitution $\textrm{id} :
+  \textrm{Subst}(\Gamma,\Gamma)$ which maps each variable to itself,
+  and composition of substitutions
+  \begin{align*}
+    \cdot \circ \gamma' &= \cdot\\
+    (\gamma,M/x) \circ \gamma' &= (\gamma\circ \gamma') , M[\gamma']/x
+  \end{align*}
+
+  It is straightforward, but laborious to establish that all forms in
+  the type theory that are parameterized by a $\Gamma$ support an
+  admissible action of substitution:
+  \begin{mathpar}
+    \inferrule
+    {\Gamma \vdash M : X \and \gamma \in \Subst(\Gamma',\Gamma)}
+    {\Gamma' \vdash M[\gamma] : X[\gamma]}
+
+    \inferrule
+    {\Gamma;\Delta \vdash e : A \and \gamma \in \Subst(\Gamma',\Gamma)}
+    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] : A[\gamma]}
+  \end{mathpar}
+  et cetera.
+\end{definition}
+
+\begin{definition}
+  Let $\Gamma \vdash \Delta \isLinCtx$ and $\Gamma \vdash \Delta'
+  \isLinCtx$. The set of linear substitutions $\Subst(\Delta',\Delta)$
+  is defined by recursion on $\Delta$:
+  \begin{align*}
+    \Subst(\Delta',\cdot) &= \{ \cdot \pipe \Delta' = \cdot \}\\
+    \Subst(\Delta',(\Delta,a:A)) &= \{ (\delta, e/a) \pipe \delta \in \Subst(\Delta_1, \Delta) \and \Delta_2 \vdash e : A \and \Delta' = \Delta_1,\Delta_2\}
+  \end{align*}
+
+  Given substitutions $\delta_1 \in \Subst(\Delta_1', \Delta_1)$ and
+  $\delta_2 \in \Subst(\Delta_2', \Delta_2)$, we can define a
+  substitution $\delta_1,\delta_2 \in
+  \Subst((\Delta_1',\Delta_2'),(\Delta_1,\Delta_2))$. Furthermore, for
+  any substitution $\delta \in \Subst(\Delta,(\Delta_1,\Delta_2))$, we
+  can deconstruct $\delta = \delta_1,\delta_2$ with $\delta_1 \in
+  \Subst(\Delta_1', \Delta_1)$ and $\delta_2 \in \Subst(\Delta_2',
+  \Delta_2)$.
+  %% Again for any $\Gamma \vdash \Delta$, we can define an identity
+  %% substitution mapping each variable to itself. Additionally we can define composition of 
+\end{definition}
+
+\begin{definition}
+  Given any $\Gamma ; \Delta \vdash e : A$ and $\delta \in
+  \Subst(\Delta',\Delta)$, we define the substitution $\Gamma; \Delta
+  \vdash e[\delta] : A$ as follows, frequently using the inversion
+  principle to split the substitution into constituent components.
+  \begin{align*}
+    a[e/a] &= e\\
+    (e_1,e_2)[\delta_1,\delta_2] &= (e_1[\delta_1], e_2[\delta_2])\\
+    (\letin {(a , b)} e {e'})[\delta_1,\delta_2,\delta_3] &= \letin{(a,b)} {e[\delta_2]}{e'[\delta_1,a/a,b/b,\delta_2]}\\
+    ()[\cdot] &= ()\\
+    \letin{()} e {e'}[\delta_1,\delta_2,\delta_3] &= \letin{()} {e[\delta_2]}{e'[\delta_1,a/a,b/b,\delta_2]}\\
+    (\lamblto {a} e)[\delta] &= \lamblto a {e[\delta,a/a]}\\
+    (\applto {e'} {e})[\delta_1,\delta_2] &= \applto {e'[\delta_1]} {e[\delta_2]}\\
+    (\lamblto {a} e)[\delta] &= \lamblto a {e[\delta,a/a]}\\
+    (\applto {e'} {e})[\delta_1,\delta_2] &= \applto {e'[\delta_1]} {e[\delta_2]}\\
+    (\lambtol {a} e)[\delta] &= \lamblto a {e[a/a,\delta]}\\
+    (\apptol {e'} {e})[\delta_1,\delta_2] &= \apptol {e'[\delta_1]} {e[\delta_2]}\\
+    (\dlamb x e)[\delta] &= \dlamb x {e[\delta]}\\
+    (e\,.\pi\,M)[\delta] &= (e[\delta]\,.\pi\,M)\\
+    (\sigma\,M\,e)[\delta] &= \sigma\,M\,e[\delta]\\
+    (\letin{\sigma\,x\,a}{e}{e'})[\delta_1,\delta_2,\delta_3] &= \letin{\sigma\,x\,a} {e[\delta_2]}{e'[\delta_1,\delta_3]}\\
+    (\equalizerin{e})[\delta] &= \equalizerin{e[\delta]}\\
+    (\equalizerpi{e})[\delta] &= \equalizerpi{e[\delta]}
+  \end{align*}
+\end{definition}
+
+\section{Denotational Semantics}
+
+Next we define the term semantics for linear terms.
+
+\begin{definition}
+  For any $\Gamma \vdash \Delta_1,\Delta_2 \isLinCtx$ and $\gamma \in
+  \sem{\Gamma}$ there is an isomorphism $m_{\Delta_1,\Delta_2} :
+  \sem{\Delta_1, \Delta_2}\gamma \cong \sem{\Delta_1}\gamma \otimes
+  \sem{\Delta_2}\gamma$.
+
+  This can be extended to a sequence of contexts of any length.
+\end{definition}
+
+\begin{mathpar}
+  \inferrule
+  {\Delta_1 \vdash e_1 : A_1 \and \Delta_2 \vdash e_2 : A_2}
+  {\sem{(e_1,e_2)}\gamma\,w\,\delta
+    = \letin{(w_1,w_2,\delta_1,\delta_2)} {m(\Delta_1,\Delta_2)(\delta)} {(w_1,w_2,\sem{e_1}\gamma\,w_1\,\delta_1, \sem{e_2}\gamma\,w_2\,\delta_2)}
+  }
+
+  \inferrule
+  {\Delta_2 \vdash e : A \otimes B \and \Delta_1,a:A,b:B,\Delta_3 \vdash e' : C}
+  {\sem{\letin{(a,b)}{e}{e'}}\gamma\,w\,\delta =
+    \letin{(w_1,w_2w_3,\delta_1,(w_2,w_3,\delta_2,\delta_3))}{m_{\Delta_1,\Delta_2,\Delta_3}(\delta)}
+    \letin{(w_{2,1},w_{2,2},a,b)}{\sem{e}\gamma\,w_2\,\delta_2}
+    {\sem{e'}\gamma\,w\,(w_1,w_{2,1}w_{2,2}w_3, \delta_1, (w_{2,1},w_{2,2}w_3, a, (w_{2,2},w_3, b, \delta_3)))}
+    }
+\end{mathpar}
+\begin{align*}
+  \sem{(e_1,e_2)}\gamma\,w\,\delta &=
+  \letin{(w_1,w_2,\delta_1,\delta_2)} {m(\Delta_1,\Delta_2)(\delta)} {(w_1,w_2,\sem{e_1}\gamma\,w_1\,\delta_1, \sem{e_2}\gamma\,w_2\,\delta_2)}\\
+\end{align*}
+
 
 
 \end{document}
