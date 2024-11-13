@@ -958,11 +958,11 @@ domain is an inductive type.
     \inferrule{\Gamma, x : X ; \Delta  \vdash e : A}
               {\Gamma ; \Delta \vdash \dlamb x e : \LinPiTy x X A}
     \and
-    \inferrule{\Gamma ; \Delta \vdash e : \LinPiTy x X A \\ \Gamma \vdash M : X}{\Gamma ; \Delta \vdash e\,.\pi\,M : \subst A {e'} x}
+    \inferrule{\Gamma ; \Delta \vdash e : \LinPiTy x X A \\ \Gamma \vdash M : X}{\Gamma ; \Delta \vdash e\,.\pi\,M : \subst A {M} x}
     %
     \\
     %
-    \inferrule{\Gamma \vdash M : X \quad \Gamma ; \Delta \vdash e : \subst A e x}{\Gamma ; \Delta \vdash \sigma\,M\,e : \bigoplus\limits_{x:X} A}
+    \inferrule{\Gamma \vdash M : X \quad \Gamma ; \Delta \vdash e : \subst A M x}{\Gamma ; \Delta \vdash \sigma\,M\,e : \bigoplus\limits_{x:X} A}
     %
     \and
     %
