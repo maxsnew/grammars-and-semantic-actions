@@ -34,7 +34,7 @@ repeat→Δ = ⊕ᴰ-elim (λ {(lift n) →
     (λ (lift n) → ⊕ᴰ-in n ∘g ⊤-intro)
     (lift n)})
 
--- TODO should be able to prove this using equalizers
--- after I merge the univprop for equalizer
-sameLength : ⊸-elim-ε length' ≡ repeat→Δ ∘g grade char 
-sameLength = {!!}
+-- -- TODO should be able to prove this using equalizers
+-- -- after I merge the univprop for equalizer
+-- sameLength : ⊸-elim-ε length' ≡ repeat→Δ ∘g grade char 
+-- sameLength = {!!}

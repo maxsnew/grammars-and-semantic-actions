@@ -245,6 +245,10 @@ opaque
   ⟜-mapCod (⟜-mapCod (⟜-curry {k = k}))
   ∘g ⟜3-intro-ε f
 
+⟜-elim-ε :
+  ε ⊢ k ⟜ g → g ⊢ k
+⟜-elim-ε f = ⟜-intro⁻ f ∘g ⊗-unit-l⁻
+
 ⟜-strength :
   g ⊗ (h ⟜ k) ⊢ (g ⊗ h) ⟜ k
 ⟜-strength {g = g}{h = h}{k = k} =
