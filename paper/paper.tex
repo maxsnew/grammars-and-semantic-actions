@@ -733,21 +733,25 @@ k (a , b) = 0to1 (1to1 a (1to2 b stop))
 %% 4. Cover indexed inductive linear types
 %% 5. Cover the "axioms" we add
 
-The syntax of
-\theoryabbv is based on the dependent linear-non-linear (\lnld)
-calculus from \cite{krishnaswami_integrating_2015}. As in \lnld, \theoryabbv includes both
-non-linear dependent types, as well as linear types, which are allowed
-to depend on the non-linear types, but not on other linear types.
+The design of \theoryabbv is based the dependent
+linear-non-linear calculus (\lnld) and Lambek calculus, also known as
+non-commutative linear logic.
+\cite{krishnaswami_integrating_2015,lambekCalculus}. As in \lnld,
+\theoryabbv includes both non-linear dependent types, as well as
+linear types, which are allowed to depend on the non-linear types, but
+not on other linear types.
 %
-The main point of departure from \lnld's design in that the linear
+The main point of departure from \lnld's design is that, as in Lambek calculus \cite{lambekCalculus, the linear
 typing is \emph{non-commutative}, i.e., that exchange is not an
 admissible structural rule. Furthermore, we add a general-purpose
 indexed inductive linear type connective, as well as an
 \emph{equalizer} type, which we will show allows us to perform
 inductive proofs of equalities between linear terms.
 %
-Finally, we add base types and axioms to the system specifically to
-model formal grammars and parsing.
+Finally, while \lnld was enhanced with special connectives
+inspired by separation logic to model imperative programming, we
+instead add base types and axioms to the system specifically to model
+formal grammars and parsing.
 
 The formation rules for the judgments of \theoryabbv are shown in
 \Cref{fig:formation}. $\Gamma$ stand for non-linear contexts, $X,Y,Z$
@@ -797,18 +801,18 @@ booleans, unit and empty types. We include these rules in the
 appendix. We present the other non-linear type constructions in
 \Cref{fig:non-linear-stuff}. First, we include universe types $U$ of
 small non-linear types and $L$ of linear types. These are defined as
-``universes ala Coquand'' in that we define a judgment saying when a
+universes ``ala Coquand'' in that we define a judgment saying when a
 non-linear type is small and define the universe to internalize
-precisely this judgment. These universe types are needed so that we
-can define types by recursion on natural numbers. Next, we include a
-non-linear type $\ltonl A$ where $A$ is a linear type. The intuition
-for this type is that its elements are the linear terms that are
-``resource free'': its introduction rule says we can construct an
-$\ltonl A$ when we have a linear term of type $A$ with no free linear
-variables. This type is used extensively in our examples, playing a
-similar role to the $!$ modality of ordinary linear logic.
-\pedro{We should also reference the persistence modality $\square$
-from separation logic}
+precisely this judgment \cite{universesAlaCoquand}. These universe
+types are needed so that we can define types by recursion on natural
+numbers. Next, we include a non-linear type $\ltonl A$ where $A$ is a
+linear type. The intuition for this type is that its elements are the
+linear terms that are ``resource free'': its introduction rule says we
+can construct an $\ltonl A$ when we have a linear term of type $A$
+with no free linear variables. This type is used extensively in our
+examples, playing a similar role to the $!$ modality of ordinary
+linear logic or the persistence modality $\square$ of separation logic
+\cite{linearlogic,persistencemodalityseparationlogic}.
 
 %% \begin{figure}
 %%   \[
