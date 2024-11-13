@@ -86,6 +86,7 @@ frame=single
 \newcommand{\lto}{\multimap}
 \newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
 \newcommand{\String}{\textbf{String}}
+\newcommand{\Char}{\textbf{Char}}
 \newcommand{\stringg}{\texttt{String}}
 \newcommand{\charg}{\mathtt{Char}}
 \newcommand{\Set}{\mathbf{Set}}
@@ -741,7 +742,7 @@ non-commutative linear logic.
 linear types, which are allowed to depend on the non-linear types, but
 not on other linear types.
 %
-The main point of departure from \lnld's design is that, as in Lambek calculus \cite{lambekCalculus, the linear
+The main point of departure from \lnld's design is that, as in Lambek calculus \cite{lambekCalculus}, the linear
 typing is \emph{non-commutative}, i.e., that exchange is not an
 admissible structural rule. Furthermore, we add a general-purpose
 indexed inductive linear type connective, as well as an
@@ -794,11 +795,11 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
 \end{figure}
 
 \subsection{Non-linear Typing}
-\max{todo: include these rules in the appendix}
 The non-linear types of \theoryabbv include the standard dependent
 types for $\Pi,\Sigma$, extensional equality, natural numbers,
-booleans, unit and empty types. We include these rules in the
-appendix. We present the other non-linear type constructions in
+booleans, unit and empty types, and we assume function
+extensionality\cite{standard-type-theory-reference}. We present the
+other non-linear type constructions in
 \Cref{fig:non-linear-stuff}. First, we include universe types $U$ of
 small non-linear types and $L$ of linear types. These are defined as
 universes ``ala Coquand'' in that we define a judgment saying when a
@@ -860,6 +861,7 @@ linear logic or the persistence modality $\square$ of separation logic
   \caption{Non-linear types (selection)}
   \label{fig:non-linear-types}
 \end{figure}
+\max{todo: decide if we shoudl keep all of these rules or not}
 
 \subsection{Linear Typing}
 
@@ -870,53 +872,77 @@ linear variable rule says that a linear variable can be used if it is
 the \emph{only} variable in the context.
 
 First, we cover the ``multiplicative'' connectives of non-commutative
-linear logic. The linear unit and tensor product are standard for a
-non-commutative linear logic: when we construct a linear unit we
-cannot use any variables and when we construct a tensor product, the
-two sides must use disjoint variables, and the variables the left side
-of the product uses must be to the left in the context of the
-variables used by the right side of the tensor product. Because we are
-non-commutative, there are two function types: $A \lto B$ and $B \tol
-A$. The difference between these is that the introduction rule for $A
-\lto B$ adds a variable to the right side of the context, whereas the
-introduction rule for $B \tol A$ adds a variable to the left side of
-the context. In our experience, because by convention parsing
-algorithms parse from left-to-right, we rarely need to use the $B \tol
-A$ connective. One of the main uses of linear types is that, in
-combination with the $\uparrow$ connective, we can abstract over
-linear terms, in that the non-linear type $\ltonl{A \lto B}$ is a
-non-linear type of linear terms with one linear input $A$ and output
-$B$.
-\pedro{Isn't this is a slightly incorrect desciption of $\ltonl{A \lto B}$?
-How is the description above distinct form $A \lto B$?}
+linear logic. The linear unit ($\I$) and tensor product ($\otimes$)
+are standard for a non-commutative linear logic: when we construct a
+linear unit we cannot use any variables and when we construct a tensor
+product, the two sides must use disjoint variables, and the variables
+the left side of the product uses must be to the left in the context
+of the variables used by the right side of the tensor product. The
+elimination rules for unit and tensor are given by pattern
+matching. The pattern matching rules split the linear context into
+three pieces $\Delta_1,\Delta_2,\Delta_3$: the middle $\Delta_2$ is
+used by the scrutinee of the pattern match, and in the continuation
+this context is replaced by the variables brought into scope by the
+pattern match. This ensures that pattern matches maintain the proper
+ordering of resource usage.
 
-Next, we have the ``additive'' connectives. For these, we use the
+Because we are non-commutative, there are two function types: $A \lto
+B$ and $B \tol A$, which have similar $\lambda$ introduction forms and
+application elimination forms. The difference between these is that
+the introduction rule for $A \lto B$ adds a variable to the right side
+of the context, whereas the introduction rule (elided) for $B \tol A$ adds a
+variable to the left side of the context. In our experience, because
+by convention parsing algorithms parse from left-to-right, we rarely
+need to use the $B \tol A$ connective. As we have already seen, the
+$\lto$ connective is frequently used in conjunction with the
+$\uparrow$ connective so that we can abstract non-linearly over linear
+functions.
+
+Next, we cover the ``additive'' connectives. First, we use the
 non-linear types to define \emph{indexed} versions of the additive
-disjunction $\oplus$ and additive conjunction $\&$ of linear
-logic. These are like a linear version of the $\Sigma$ and $\Pi$
-connectives of ordinary dependent type theory. The indexed $\&$ is
-defined by a $\lambda$ and eliminated using projection. The indexed
-$\oplus$ is like a \emph{weak} $\Sigma$ type: it has an injection
-introduction rule $\sigma$, but its elimination rule is given by
-\emph{pattern matching} rather than projections. Note that we can
-define the more typical nullary and binary versions of these
-connectives by using indexing over the empty and boolean type
-respectively. We will freely use $0$ to refer to this empty
-disjunction and $\top$ to refer to the empty conjunction. Lastly, we
-include a type $\equalizer {a}{f}{g}$ that we call the
-\emph{equalizer} of $f$ and $g$. We think of this type as the
-``subset'' of $A$ that satisfy the equation $f\,a\equiv g\,a$. If
-these were non-linear types, such a type could be constructed using
-the equality type as $\sum_{x:X} f\,x=_Y g\,x$, but this construction
-can't be used because it uses a \emph{dependent} equality type. We
-note that the equalizer type is not used in defining any of our
-parsers or formal grammars, but instead will be used shortly to derive
-an induction principle for proving equalities of functions whose
-domain is an inductive type.
+disjunction $\oplus$ and additive conjunction $\&$ of linear logic,
+which can be thought of as linear versions of the $\Sigma$ and $\Pi$
+connectives of ordinary dependent type theory, respectively. The
+indexed $\&$ is defined by a $\lambda$ that brings a \emph{non-linear}
+variable into scope and eliminated using projection where the index
+specified is given by a non-linear term. The rules for indexed
+$\oplus$ are analogous to a \emph{weak} $\Sigma$ type: it has an
+injection introduction rule $\sigma$, but its elimination rule is
+given by \emph{pattern matching} rather than projections
+\cite{weakSigmatype}. We can define the more typical nullary and
+binary versions of these connectives by using indexing over the empty
+and boolean type respectively. We will freely use $0$ to refer to this
+empty disjunction and $\top$ to refer to the empty conjunction, and
+use infix $\oplus/\&$ for binary disjunction/conjunction.
+%
+In addition to the introduction and elimination rules for
+$\bigamp,\bigoplus$, our development requires an additional axiom that
+is not proveable from these rules: that additive conjunction
+\emph{distributes} over additive disjunction, e.g., in the finitary
+case that $0 \& A \cong 0$ and $(A + B) \& C \cong (A \& C) + (B \&
+C)$. In its most general form, the axiom says that the definable function
+${\bigoplus\limits_{f : \prod_{x:X}
+    Y(x)}\bigamp\limits_{x:X}A\,x\,(f\,x) \lto
+  \bigamp\limits_{x:X}\bigoplus\limits_{y:Y(x)}A\,x\,y}$ has an
+inverse.
+
+Lastly, we include a type $\equalizer {a}{f}{g}$ that we call the
+\emph{equalizer} of linear functions $f$ and $g$. We think of this
+type as the ``subtype'' of elements of $A$ that satisfy the equation
+$f\,a\equiv g\,a$. Note that it is important here that $f, g$
+themselves are non-linearly used functions, as linear values cannot be
+used in a type.  Equalizer types are not needed for non-linear types
+since they can be constructed using the equality type as $\sum_{x:X}
+f\,x=_Y g\,x$, but this construction can't be used for linear types
+because it uses a \emph{dependent} version of the equality type, which
+we cannot define as a linear type. While the equalizer type is not
+used directly in defining any of our parsers or formal grammars, it is
+used for several proofs, allowing for inductive arguments about our
+indexed inductive types.
 
 \begin{figure}
   \begin{mathpar}
-    \inferrule{}{\Gamma \vdash I \isLinTy}\and
+    \inferrule{}{\Gamma \vdash \I \isLinTy}\and
     \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \otimes B \isLinTy}\and
     \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \lto B \isLinTy}\and
     \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \tol B \isLinTy}\and
@@ -939,15 +965,15 @@ domain is an inductive type.
     %
     \inferrule{~}{\Gamma ; \cdot \vdash () : I}
     \and
-    \inferrule{\Gamma ; \Delta \vdash e : I \\ \Gamma ; \Delta_1',\Delta_2' \vdash e' : C}{\Gamma ; \Delta_1',\Delta,\Delta_2' \vdash \letin {()} e {e'} : C}
+    \inferrule{\Gamma ; \Delta_2 \vdash e : I \\ \Gamma ; \Delta_1,\Delta_3 \vdash e' : C}{\Gamma ; \Delta_1,\Delta_2,\Delta_3 \vdash \letin {()} e {e'} : C}
     %
     \\
     %
-    \inferrule{\Gamma ; \Delta \vdash e : A \\ \Gamma ; \Delta' \vdash e' : B}{\Gamma ; \Delta, \Delta' \vdash e \otimes e' : A \otimes B}
+    \inferrule{\Gamma ; \Delta \vdash e : A \\ \Gamma ; \Delta' \vdash e' : B}{\Gamma ; \Delta, \Delta' \vdash (e , e') : A \otimes B}
     %
     \and
     %
-    \inferrule{\Gamma ; \Delta \vdash e : A \otimes B \\ \Gamma ; \Delta'_1, a : A, b : B, \Delta'_2 \vdash e' : C}{\Gamma ;  \Delta_1', \Delta, \Delta'_2 \vdash \letin {a \otimes b} e {e'} : C}
+    \inferrule{\Gamma ; \Delta_2 \vdash e : A \otimes B \\ \Gamma ; \Delta_1, a : A, b : B, \Delta_2 \vdash e' : C}{\Gamma ;  \Delta_1, \Delta_2, \Delta_3 \vdash \letin {(a , b)} e {e'} : C}
     \\
     %
     \inferrule{\Gamma ; \Delta , a : A \vdash e : B}{\Gamma ; \Delta \vdash \lamblto a e : A\lto B}
@@ -966,14 +992,14 @@ domain is an inductive type.
     %
     \and
     %
-    \inferrule{\Gamma ; \Delta \vdash e : \bigoplus\limits_{x:X} A \quad \Gamma, x : X ; \Delta'_1, a : A, \Delta'_2 \vdash e' : C}{\Gamma; \Delta'_1, \Delta, \Delta'_2 \vdash \letin {\sigma\,x\,a} e {e'}: C}
+    \inferrule{\Gamma ; \Delta_2 \vdash e : \bigoplus\limits_{x:X} A \quad \Gamma, x : X ; \Delta_1, a : A, \Delta_3 \vdash e' : C}{\Gamma; \Delta_1, \Delta_2, \Delta_3 \vdash \letin {\sigma\,x\,a} e {e'}: C}
     %
     \and
     %
     \inferrule
     { \Gamma ; \Delta \vdash e : A \\
       \Gamma ; \Delta \vdash \applto {f}{e} \equiv \applto {g}{e}}
-    {\Gamma ; \Delta \vdash \equalizerin{e} : \equalizer {e}{f}{g}}
+    {\Gamma ; \Delta \vdash \equalizerin{e} : \equalizer {a}{f}{g}}
     %
     \and
     %
@@ -984,126 +1010,132 @@ domain is an inductive type.
   \caption{Linear terms (selection)}
   \label{fig:linsyntax}
 \end{figure}
-\pedro{Fixed tensor elimination rule (added output type)}
-\pedro{Perhaps we should modify the equalizer introduction rule.
-  As it stands, readers might be confused by the same symbol $e$
-  being used everywhere.}
 
 \subsection{Indexed Inductive Linear Types}
 
-Next, we introduce one of the most complex and important linear
-type constructors of our development, \emph{indexed inductive linear
-types} $\mu F$. To encode these, we first add a non-linear type
-$\SPF\,X$ of \emph{strictly-positive functorial} linear type
-expressions indexed by a non-linear type $X$. We give the rules for
-strictly-positive functors in \Cref{fig:spf}. First, we add operations
-for a recursive reference $\Var~x$ the constant functor, $K$, tensor
-products and additive conjunction and disjunction. As an example,
-\max{TODO: make an example}.  Next we add an operation $\el(F)$ which
-interprets our syntactic codes as an actual type constructor, and
-define it for each of the operations given above. Lastly, we give a
-\emph{functorial action} $\map(F)$ for each of the codes.\max{TODO:
-  find a citation for this kind of approach. Container papers work
-  this way for instance. I think there is a linear container paper
-  that uses this approach}
+Next, we introduce the most complex and important linear type
+constructors of our development, \emph{indexed inductive linear
+types}. We encode these by adding a mechanism for constructing initial
+algebras of strictly positive functorial type expressions, following
+prior work on inductive types
+\cite{quantitativePolynomialFunctors,indexedContainers}. The syntax is
+given in \Cref{fig:iilt}. First, we add a non-linear type $\SPF\,X$ of
+\emph{strictly positive functorial} linear type expressions indexed by
+a non-linear type $X$. We think of the elements of this type as
+syntactic descriptions of linear types that are parameterized by
+$X$-many variables standing for linear types that are only used in
+strictly positive positions. Accordingly, the $\SPF\,X$ type supports
+an operation $\el$ that interprets it as such a type constructor, as
+well as an operator $\map$ that defines a functorial action on parse
+transformers. The $\SPF\,X$ type supports constructors for a reference
+$\Var~x$ to one of the linear type variables, a constant expression
+that doesn't mention any type variables $K$, as well as tensor
+products and additive conjunction and disjunction of type expressions.
+We additionally add equations in the appendix that say that the
+$\el$/$\map$ operations correspond to these descriptions of the
+constructors.
 
-With this notion of strictly-positive functor so defined, in
-\Cref{fig:iilt} we next add a linear type constructor $\mu F$, which
-defines a family of mutually-recursive inductive types for the family
-of type expressions $F$. The introduction rule for this is
-$\roll$, which constructs an element of $\mu F\,x$ from its
-one-level unfolding. The elimination principle is defined by a
-$\fold$ operation. The equations ensure that this makes the
-family an \emph{initial algebra} for the type expressions. That is the
-$\beta$ rule says that a $\mathsf{fold}$ applied to a $\mathsf{roll}$
-is equivalent to $\mathsf{map}$ping the $\mathsf{fold}$ over all the
-sub-expressions, which means that $\mathsf{fold}$ is an algebra
-homomorphism from $\mathsf{roll}$ to $\mathsf{f}$. Then the $\eta$
-rule says that $\mathsf{fold}$ is the \emph{unique} such homomorphism.
+\begin{figure}
+  \begin{footnotesize}
+    \begin{mathpar}
+      \inferrule{\Gamma \vdash X\isTy}{\Gamma \vdash \SPF\,X \isTy}\and
+      \inferrule{\Gamma \vdash X\isSmall}{\Gamma \vdash \SPF\,X \isSmall}\and
+    \el : \prod_{X:U}\SPF\,X \to (X \to L) \to L\and
+    \map : \prod_{X:U}\prod_{F : \SPF\,X}\prod_{A,B:X\to L}{\left(\prod_{x:X}\uparrow(\unquoteTy{A\,x}\lto \unquoteTy{B\,x})\right)} \to {\uparrow(\unquoteTy{\el(F)(A)} \lto \unquoteTy{\el(F)(B)})}\and
+    \mathsf{Var} : \prod_{X:U} X \to \SPF\,X\and
+    \mathsf{K} : \prod_{X:U} L \to \SPF\,X\and
+    \mathsf{\bigoplus} : \prod_{X:U}\prod_{Y:U}(Y \to \SPF\,X) \to \SPF\,X\and
+    \mathsf{\bigamp} : \prod_{X:U}\prod_{Y:U}(Y \to \SPF\,X) \to \SPF\,X\and
+    \mathsf{\otimes} : \prod_{X:U}\SPF\,X \to \SPF\,X \to \SPF\,X\and
+    \roll : \prod_{X:U}\prod_{F:X \to \SPF\,X}\prod_{x:X}\ltonl{(\el(F\,x)(\mu\,F))}\and
+    \fold : \prod_{X:U}\prod_{F:X\to\SPF\,X}\prod_{A:X \to L}
+    \left(\prod_{x:X}\ltonl{(\unquoteTy{\el(F\,x)(\unquoteTy{A})} \lto \unquoteTy{A\,x})}\right)
+    \to \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}\and
+
+    \inferrule*[right=Ind$\beta$]
+    {\Gamma \vdash f : \prod_{x:X}\ltonl{(\el(F\,x)(A) \lto A\,x)} \and \Gamma; \Delta \vdash e : \el(F\,x)(\mu\,F)}
+    {\Gamma;\Delta \vdash \fold\,F\,f\,x\,(\roll e) \equiv f\,x\,(\map(F\,x)\,(\fold\,F\,f)) : A\,x}
+
+    \inferrule*[right=Ind$\eta$]
+    {\Gamma \vdash f : \prod_{x:X}\ltonl{(\el(F\,x)(A) \lto A\,x)}
+     \and \Gamma \vdash e : \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}\\\\
+      \Gamma,x:X;a:\el(F\,x)(\mu F) \vdash e\,x\,(\roll a) \equiv f\,x\,(\map(F\,x)\,e) : A\,x }
+    {\fold\,F\,f\equiv e' : \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}}
+  \end{mathpar}
+  \end{footnotesize}
+  %% \begin{footnotesize}
+  %%   \begin{align*}
+  %%   \mathsf{Var} &: \prod_{X:U} X \to \SPF\,X\\
+  %%   \mathsf{K} &: \prod_{X:U} L \to \SPF\,X\\
+  %%   \mathsf{\bigoplus} &: \prod_{X:U}\prod_{Y:U}(Y \to \SPF\,X) \to \SPF\,X\\
+  %%   \mathsf{\bigamp} &: \prod_{X:U}\prod_{Y:U}(Y \to \SPF\,X) \to \SPF\,X\\
+  %%   \mathsf{\otimes} &: \prod_{X:U}\SPF\,X \to \SPF\,X \to \SPF\,X\\
+  %%   \el &: \prod_{X:U}\SPF\,X \to (X \to A) \to L\\
+  %%   \map &: \prod_{X:U}\prod_{F : \SPF\,X}\prod_{A,B:X\to L}{\left(\prod_{x:X}\uparrow(\unquoteTy{A\,x}\lto \unquoteTy{B\,x})\right)} \to {\uparrow(\unquoteTy{\el(F)(A)} \lto \unquoteTy{\el(F)(B)})}\\\\
+  %%   \roll &: \prod_{X:U}\prod_{F:X \to \SPF\,X}\prod_{x:X}\ltonl{(\el(F\,x)(\mu\,F))}\\
+  %%   \fold &: \prod_{X:U}\prod_{F:X\to\SPF\,X}\prod_{A:X \to L}
+  %%   \left(\prod_{x:X}\ltonl{(\el(F\,x)(A) \lto A\,x)}\right)
+  %%   \to \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}
+  %% \end{align*}
+  %% \end{footnotesize}
+  \caption{Strictly Positive Functors and Indexed Inductive Linear Types}
+  \label{fig:iilt}
+\end{figure}
+
+Next, given a family of $X$-many strictly positive linear type
+expressions $F : X \to \SPF\,X$, we define a family $\mu F : X \to L$
+of $X$-many mutually recursive inductive types. The introduction rule
+for this is $\roll$, which constructs an element of $\mu F\,x$ from
+the one-level of the $x$th type expression. The elimination principle
+is defined by a mutual $\fold$ operation: given a family of output
+types $A$ indexed by $X$, we can define a family of functions from
+$\mu F\,x \multimap A\,x$ if you specify how to interpret all of the
+constructors as operations on $A$ values. We add $\beta\eta$ equations
+that specify that this makes the family $\mu F$ into an \emph{initial
+algebra} for the functor $\el(F)$. That is the $\beta$ rule says that
+a $\mathsf{fold}$ applied to a $\mathsf{roll}$ is equivalent to
+$\mathsf{map}$ping the $\mathsf{fold}$ over all the sub-expressions,
+which means that $\mathsf{fold}$ interprets all of the constructors
+homomorphically using the provided interpretation $\mathsf{f}$. Then
+the $\eta$ rule says that $\mathsf{fold}$ is the \emph{unique} such
+homomorphism, i.e. anything that satisfies the recurrence equation of
+the $\mathsf{fold}$ is equal to it.
 
 This definition as an initial algebra is well-understood semantically
 but the $\eta$ principle in particular is somewhat cumbersome to use
 directly in proofs. In dependent type theory, we would have a
-dependent \emph{elimination} principle, which justifies
-\emph{inductive proofs}. However since linear types do not support
-dependency on linear types, we cannot directly adapt this
-approach. However, if we are trying to prove that two morphisms out of
-a mutually recursive type are equal, we can use the \emph{equalizer}
-type to prove their equality by induction.\max{TODO: show how this is
-  done.}
-
-\begin{figure}
-  \begin{align*}
-    \mathsf{Var} &: X \to \SPF\,X\\
-    \mathsf{K} &: L \to \SPF\,X\\
-    \mathsf{\bigoplus} &: (Y \to \SPF\,X) \to \SPF\,X\\
-    \mathsf{\bigamp} &: (Y \to \SPF\,X) \to \SPF\,X\\
-    \mathsf{\otimes} &: \SPF\,X \to \SPF\,X \to \SPF\,X\\
-    \el &: \prod_{X:U}\SPF\,X \to (X \to L) \to L\\
-    \map &: \prod_{X:U}\prod_{F : \SPF\,X}\prod_{A,B:X\to L}(\prod_{x:X}\uparrow(A\,x\lto B\,x)) \to \uparrow(\el(F)(A) \lto \el(F)(B))\\\\
-    \el(\Var\,M) B &= B\,M\\
-    \el(\mathsf{K}\,A) B &= A\\
-    \el(\bigoplus A) B &= \bigoplus_{y:Y}\el(A y)B\\
-    \el(\bigamp A) B &= \bigamp_{y:Y}\el(A y)B\\
-    \el(A \otimes A') B &= \el(A)B \otimes \el(A')B\\\\
-    \map(\Var\,M)\,f &= f\,M\\
-    \map(\K\,A)\,f &= \lambda a. a\\
-    \map(\bigoplus A)\,f &= \lambda a. \letin{\oplusinj y {a_y}}{a}{\oplusinj y {\map(A\,y)\,f\,a_y}}\\
-    \map(\bigwith\,A)\,f &= \lambda a. \withlamb{y}{\map(A\,y)\,f\,(\withprj y a)}\\
-    \map(A \otimes A')\,f &= \lambda b. \letin{(a,a')}{b}{(\map(A)\,f\,a,\map(A')\,f\,a')}
-  \end{align*}
-  \begin{mathpar}
-  \end{mathpar}
-  \caption{Strictly Positive Functors}
-  \label{fig:spf}
-\end{figure}
-
-\begin{figure}
-  \begin{mathpar}
-    \mathsf{roll} : \prod_{X:U}\prod_{F:X \to \SPF\,X}\prod_{x:X}\ltonl{(\el(F\,x)(\mu\,F))}
-
-    %% \inferrule*[right=IndIntro]
-    %% {\Gamma \vdash A : X \to \textrm{SPF}\,X\and
-    %%  \Gamma \vdash M : X\and
-    %%  \Gamma; \Delta \vdash e : \textrm{el}(A\,M) (\mu\,A)}
-    %% {\Gamma; \Delta \vdash \mathsf{roll}\, e : \mu\,A\, M}
-
-    \mathsf{fold} : \prod_{X:U}\prod_{F:X\to\SPF\,X}\prod_{A:X \to L}
-    (\prod_{x:X}\ltonl{(\el(F\,x)(A) \lto A\,x)})
-    \to \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}
-
-    \inferrule*[right=Ind$\beta$]
-    {}
-    {\fold\,F\,f\,x\,(\roll e) \equiv f\,x\,(\map(F\,x)\,(\fold\,F\,f))}
-
-    \inferrule*[right=Ind$\eta$]
-    {x:X;a:\el(F\,x)(\mu F) \vdash e'\,x\,(\roll a) \equiv f\,x\,(\map(F\,x)\,e')
-    }
-    {\fold\,F\,f\equiv e'}
-    %% {\Gamma,x:X; a:\mu\,A\,x \vdash e' : B\,x
-    %%   \and \Gamma;\Delta \vdash e : \mu A M\\\\
-    %%   \Gamma,x:X; a':\el(A x)(\mu A) \vdash
-    %%   e'[x/x][\roll(a')/a] = f[x/x][\map(A\,x)\,(y.a.e'[y/x][a/a])\,a/b] : B\,x
-    %% }
-    %% {\Gamma; \Delta \vdash \fold(A)(x.b.f)(M,e) = e'[M/x][e/a] : B\,M}
-  \end{mathpar}
-  \caption{Indexed Inductive Linear Types}
-  \label{fig:iilt}
-\end{figure}
+dependent \emph{elimination} principle, which can be used to
+implemetns functions by recursion as well as proofs by
+induction. However since linear types do not support dependency on
+linear types, we cannot directly adapt this approach. However, if we
+are trying to prove that two morphisms out of a mutually recursive
+type are equal, we can use the \emph{equalizer} type to prove their
+equality by induction. That is, if our goal is to prove two functions
+$f,g : \uparrow(\mu F\,x \lto A\,x)$ are equal, it suffices to
+implement a function $\mathsf{ind} : \uparrow(\mu F\,x \lto \equalizer
+{a} f g)$ such that $\textrm{ind}(a) \equiv a$. Then an
+inductive-style proof can be implemented by constructing
+$\mathsf{ind}$ using a $\fold$. This can all be justified using only
+the $\beta\eta$ principles for equalizers and inductive types, and
+this is how our most complex inductive proofs are implemented in Agda
+formalization.
 
 \subsection{Grammar-specific Additions}
 
-So far, our calculus is a generic combination of dependent types with
-non-commutative linear types. In order to carry out formal grammar
-theory and define parsers, however, we add a few carefully chosen base
-types, terms and axioms that allow us to reason about formal grammars.
-\max{TODO: more prose, also are these all of our axioms?}
-\begin{enumerate}
-\item (Characters) For each character of our alphabet $c \in \Sigma$, we add a linear type $c \isLinTy$.
-\item (Strings are total) The function $\ltonl{(\String \lto \top)}$ is an isomorphism.\max{for this need to define $\String$, and isomorphism, and possibly we should define $\top$ in more detail earlier? idk}
-\item (Distributivity of $\oplus,\&$) The function  $\ltonl{(\bigoplus\limits_{f : \prod_{x:X} Y(x)}\bigamp\limits_{x:X}A\,x\,(f\,x) \lto \bigamp\limits_{x:X}\bigoplus\limits_{y:Y(x)}A\,x\,y)}$ is an isomorphism.
-\item ($\ltonl$ preserves $\oplus$) The function $\sum_{x:X}\ltonl{(A\,x)} \to \ltonl{(\bigoplus\limits_{x:X}A\,x)}$ is an isomorphism.
-\end{enumerate}
+So far, our calculus is a somewhat generic combination of dependent
+types with non-commutative linear types. In order to carry out formal
+grammar theory and define parsers, we need only add a few
+grammar-specific constructions. First for each character in our
+alphabet, we add a corresponding linear type $c$. We can then define a
+non-linear type $\Char$ as the disjunction of all of these characters,
+and define a type $\String$ as the Kleene star of $\Char$, i.e. as an
+inductive linear types. Then we add a function $\mathsf{read} :
+\ltonl{(\top\lto \String)}$ that says that we can extract the current
+string from the empty additive conjunction. Further, we add an axiom
+that this function is an isomorphism, i.e. that it is inverse to the
+unique function $\ltonl{(\String \lto \top)}$. In the next section, we
+will show how these basic principles are enough to provide a basis for
+verified parsing and formal grammar theory.
 
 % \steven{TODO the intro to this section is to be condensed based on what is
 %   included in the examples section as motivation and intuition building}
@@ -3085,6 +3117,22 @@ but families of sets indexed by \emph{abstract syntax trees}.
 \appendix
 
 \section{Syntax}
+
+\begin{figure}
+  \begin{align*}
+    \el(\Var\,M) B &= B\,M\\
+    \el(\mathsf{K}\,A) B &= A\\
+    \el(\bigoplus A) B &= \bigoplus_{y:Y}\el(A y)B\\
+    \el(\bigamp A) B &= \bigamp_{y:Y}\el(A y)B\\
+    \el(A \otimes A') B &= \el(A)B \otimes \el(A')B\\\\
+    \map(\Var\,M)\,f &= f\,M\\
+    \map(\K\,A)\,f &= \lambda a. a\\
+    \map(\bigoplus A)\,f &= \lambda a. \letin{\oplusinj y {a_y}}{a}{\oplusinj y {\map(A\,y)\,f\,a_y}}\\
+    \map(\bigwith\,A)\,f &= \lambda a. \withlamb{y}{\map(A\,y)\,f\,(\withprj y a)}\\
+    \map(A \otimes A')\,f &= \lambda b. \letin{(a,a')}{b}{(\map(A)\,f\,a,\map(A')\,f\,a')}
+  \end{align*}
+  \caption{Strictly Positive Functors functorial actions}
+\end{figure}
 
 In this section we include the elided syntactic forms, as well as
 definitions and basic properties of linear and non-linear
