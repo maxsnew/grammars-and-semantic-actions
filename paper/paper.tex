@@ -11,6 +11,8 @@
 \usepackage[LGR,T1]{fontenc}
 \DeclareMathAlphabet{\mathgtt}{LGR}{cmtt}{m}{n}
 
+ %% \steven{TODO make the Agda logo clickable} %
+\newcommand{\Agda}{\agdalogo}
 \renewcommand{\Gamma}{\mathgtt{G}}
 \renewcommand{\Delta}{\mathgtt{D}}
 \renewcommand{\Sigma}{\mathgtt{S}}
@@ -1130,12 +1132,17 @@ alphabet, we add a corresponding linear type $c$. We can then define a
 non-linear type $\Char$ as the disjunction of all of these characters,
 and define a type $\String$ as the Kleene star of $\Char$, i.e. as an
 inductive linear types. Then we add a function $\mathsf{read} :
-\ltonl{(\top\lto \String)}$ that says that we can extract the current
-string from the empty additive conjunction. Further, we add an axiom
-that this function is an isomorphism, i.e. that it is inverse to the
-unique function $\ltonl{(\String \lto \top)}$. In the next section, we
-will show how these basic principles are enough to provide a basis for
-verified parsing and formal grammar theory.
+\ltonl{(\top\lto \String)}$ that intuitively ``reads'' the input
+string from the input and makes it available. It is important that the
+input type of $\mathsf{read}$ is $\top$, which can control any amount
+of resources, and not $\I$ which controls no resources. Further, we
+add an axiom that $\lambda s. \mathsf{read}(\top) \equiv \lambda
+s. s$, i.e., that if we have a string, but then throw it away and read
+it from the input, then in fact that is equivalent to the string we
+were given originally. This ensures that the elements of the $\String$
+type always stand for the actual input string in our reasoning. In the
+next section, we will show how these basic principles are enough to
+provide a basis for verified parsing and formal grammar theory.
 
 % \steven{TODO the intro to this section is to be condensed based on what is
 %   included in the examples section as motivation and intuition building}
@@ -1231,73 +1238,88 @@ that our framework remains grounded in the
 foundational principles of formal language theory while opening the door to
 compositional formal verification of parsers.
 
-\paragraph{Equivalence}
-In \cite{chom1963}, Chomsky differentiates between the weak generative capacity
-of a formal grammar --- the set of strings accepted by it --- and its strong
-generative capacity --- the set of ``structural descriptions'', or parse trees,
-that it generates. Two grammars are said to be \emph{weakly equivalent} if they
-agree in their weak generative capacity, and likewise \emph{strongly equivalent}
-if they agree in their strong generative capacity. We aim to recover each of
+\paragraph{Weak and Strong Equivalence}
+In the theory of formal grammars, there are two different notions of
+equivalence: weak generative capacity, meaning just which strings are
+accepted by the grammar, and \emph{strong} generative capacity, when
+the parse trees of the two grammars are isomorphic
+\cite{chom1963}. Using linear types as grammars, we can define both of
 these notions of equivalence in \theoryabbv.
 
 \begin{definition}
   \label{def:weakequiv}
-  Grammars $\A$ and $\B$ are \emph{weakly equivalent} if there exists parse
-  transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B \lto \A)}$.
-\end{definition}
-\pedro{Up to this point, we have mentioned a couple of times parse transformers,
-  but we have never defined what they are. In particular, why does the definition
-  require the $\uparrow$ modality. I'm assuming that it's to properly deal with
-  linear variables, but these things are not obvious at first.}
-
-\newcommand{\lang}{\texttt{Lang}}
-A parse transformer $\f : \ltonl{(\A \lto \B)}$ takes as input parses of $\A$ for string
-$\w$ and returns a parse of $\B$ for $\w$. Therefore, $\f$ demonstrates an
-inclusion of languages $\lang(\A) \subset \lang(\B)$. Similarly, the existence of
-$\g$ shows that $\lang(\B) \subset \lang(\A)$, and thus $\lang(\A) = \lang(\B)$.
-
-\steven{Need better notation for language that is cohesive throughout the paper}
-
-\begin{definition}
-  \label{def:strongequiv}
-  Grammars $\A$ and $\B$ are \emph{strongly equivalent} if there exists parse
-  transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B \lto \A)}$ such
-  that $\f \circ \g \equiv \ident$ and $\g \circ \f \equiv \ident$.
+  Grammars $\A$ and $\B$ are \emph{weakly equivalent} if there exists
+  parse transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B
+    \lto \A)}$. $\A$ is a \emph{retract} of $\B$ if $\A$ and $\B$ are
+  weakly equivalent and $\lambda a. g(f(a)) \equiv \lambda a.a$. They
+  are \emph{strongly equivalent} if further the other composition is
+  the identity, i.e., $\lambda b. f(g(b)) \equiv \lambda b.b$.
 \end{definition}
 
-For a string $\w$, \cref{def:strongequiv} induces a bijection between the
-$\A$-parses of $\w$ and the $\B$-parses of $\w$, thus demonstrating that $\A$
-and $\B$ agree in their strong generative capacity.
+That is, grammars are weakly equivalent if we can construct a parse
+tree of $B$ from a parse tree of $A$ and vice-versa, whereas they are
+strongly equivalent if these processes are inverse to each other. The
+definition of retract is a useful intermediate notion. In retrospect,
+our axiom about $\String$ says that $\String$ is a retract of $\top$.
+
+%% \newcommand{\lang}{\texttt{Lang}}
+%% A parse transformer $\f : \ltonl{(\A \lto \B)}$ takes as input parses of $\A$ for string
+%% $\w$ and returns a parse of $\B$ for $\w$. Therefore, $\f$ demonstrates an
+%% inclusion of languages $\lang(\A) \subset \lang(\B)$. Similarly, the existence of
+%% $\g$ shows that $\lang(\B) \subset \lang(\A)$, and thus $\lang(\A) = \lang(\B)$.
+
+%% \steven{Need better notation for language that is cohesive throughout the paper}
+
+%% \begin{definition}
+%%   \label{def:strongequiv}
+%%   Grammars $\A$ and $\B$ are \emph{strongly equivalent} if there exists parse
+%%   transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B \lto \A)}$ such
+%%   that $\f \circ \g \equiv \ident$ and $\g \circ \f \equiv \ident$.
+%% \end{definition}
+
+%% For a string $\w$, \cref{def:strongequiv} induces a bijection between the
+%% $\A$-parses of $\w$ and the $\B$-parses of $\w$, thus demonstrating that $\A$
+%% and $\B$ agree in their strong generative capacity.
 
 \paragraph{Ambiguity}
-A formal grammar $\A$ is ambiguous if there is a string $\w$ for which $\A$ has
-several parse trees of $\w$.
-For example, $\a \oplus \a$ is ambiguous because
-$\stringquote{a}$ has two parse trees --- on either side of the disjunction. On
-the other hand, a formal grammar is unambiguous when there is at most
-one parse tree for any input string. These notions of ambiguity are entirely
-semantic, so we seek to find a property expressible in the syntax of \theoryabbv
-that reifies the semantic description of ambiguity.
-
+A formal grammar $\A$ is ambiguous if there are multiple parse trees
+for the \emph{same} string $\w$.  For example, $\a \oplus \a$ is
+ambiguous because there are two parses of $\stringquote{a}$,
+constructed using $\inl$ and $\inr$. On the other hand, a formal
+grammar is unambiguous when there is at most one parse tree for any
+input string. We can capture this notion as a type in \theoryabbv in a
+clever way:
 \begin{definition}
   \label{def:unambig}
   A grammar $\A$ is \emph{unambiguous} if for every linear type $\B$,
   $\f : \ltonl{(\B \lto \A)}$, and $\g : \ltonl{(\B \lto \A)}$
   then $\f \equiv \g$
 \end{definition}
-\cref{def:unambig} can be read more intuitively as stating that $\A$ is
-unambiguous if there is at most one way to transform parses of any other grammar
-$\B$ into parse of $\A$.
-
-Note that this definition of unambiguity is preserved by strong equivalence, so a common proof technique for showing $\A$ is unambiguous is by proving $\A$
-is strongly equivalent to an unambiguous grammar $\B$. In this style of proof, we
-build the functions $\f : \ltonl{(\A \lto \B)}$ and
-$\g : \ltonl{(\B \lto \A)}$, then we have the obligation to show
-$\f \circ \g \equiv \ident$ and $\g \circ \f \equiv \ident$. However, because $\B$ is
-unambiguous there is only one function of type $\ltonl{(\B \lto \B)}$, so
-$\f \circ \g : \ltonl{(\B \lto \B)}$ and $\ident : \ltonl{(\B \lto \B)}$ are equal.
-Thus, in this type of proof, we really only have the obligation of building each of $\f$
-and $\g$ and demonstrating that $\g \circ \f \equiv \ident$.
+\cref{def:unambig} can be read more intuitively as stating that $\A$
+is unambiguous if there is at most one way to transform parses of any
+other grammar $\B$ into parse of $\A$. This notion of an unambiguous
+type is the analog for linear types of the definition of a (homotopy)
+\emph{proposition} in the terminology of homotopy type
+theory\cite{hott}. The most basic unambiguous types are $\top$ and
+$0$, and in a system of classical logic all unambiguous types would
+have to be equivalent to one of these, but with our axioms we can show
+also that $\I$ and literals $\literal c$ are unambiguous. To see this, first, we
+establish two useful properties of unambiguity.
+\begin{lemma}[\agdalogo]
+  If $\B$ is unambiguous and $\A$ is a retract of $\B$ then $\A$ is unambiguous.
+  If a disjunction $\bigoplus\limits_{x:X} A(x)$ is unambiguous then
+  each $A(x)$ is unambiguous.
+\end{lemma}
+From the first principle, we can prove that $\String$ is unambiguous,
+since it is a retract of $\top$. In fact, observe that if $\A$ is a
+retract of $\B$ and $\B$ is unambiguous, then in fact $\A$ and $\B$
+are strongly equivalent, as the equation $\lambda b. f(g(b)) \equiv
+\lambda b. b$ follows because $\B$ is unambiguous. Therefore also
+$\String$ is strongly equivalent to $\top$. Next, since $\String$ is
+defined as a Kleene star, we can easily show that $\String \cong \I
+\oplus \Char \oplus (\Char \otimes \Char \otimes \String)$. Then by
+the second principle we have that $\I$ and $\Char$ and each literal
+$\literal c$ are unambiguous as well.
 
 % \paragraph{A Grammar of Strings}
 % Define the character grammar $\charg$ to be the disjunction over characters in the alphabet $\Sigma$,
@@ -1323,6 +1345,61 @@ and $\g$ and demonstrating that $\g \circ \f \equiv \ident$.
 % In the case that $A$ is parseable with respect to $\neg A$ --- i.e.\
 % there's a map $\top \to A \oplus \neg A$ --- then call $A$ \emph{decidable}.
 
+\paragraph{Partial and Total Parsers}
+
+We now turn to our main task, which is using our linear type system to
+implement verified parsers. Given a grammar defined as a linear type
+$A$, a first attempt at defining a parser would be to implement a
+function $\uparrow{(\String \lto A)}$. But since our linear functions
+must be total, this means that we can construct an $A$ parse for
+\emph{every} input string, which is impossible for most grammars of
+interest. Instead we might try to write a partial function as a
+$\ltonl{(\String \lto (A \oplus \top))}$ using the ``option'' monad
+\cite{maybeMonad}. This allows for the possibility that the input
+string doesn't parse, but is far too weak as a specification: we can
+trivially implement a parser for any type by always returning
+$\inr$. The correct notion of a parser should be one that allows for
+failure, but only in the case that a parse cannot be constructed.
+\begin{definition}
+  A parser for a linear type $A$ is a function $\uparrow{(\String \lto
+    A \oplus A_{\neg})}$ where $A_{\neg}$ is a linear type that is
+  \emph{disjoint} from $A$ in that we can implement a function
+  $\uparrow{(A \& A_{\neg} \lto 0)}$
+\end{definition}
+Here we replace $\top$ in our partial parser type with a type
+$A_{\neg}$ that we can think of as a negation of $A$. The function
+$\uparrow{(A \& A_{\neg} \lto 0)}$ ensures that it is impossible for
+$A$ and $A_{\neg}$ to match the same input string. This means that in
+defining a parser, we will need to define a kind of negative grammar
+for strings that do not parse. Fortunately, we will see that
+deterministic automata naturally support such a notion with no
+additional effort: the negative grammar is simply the grammar for
+traces that end in a rejecting state.
+
+The main benefit of writing such a parser as a linear term, is that it
+looks just like an ordinary functional program into a sum type. We
+typically construct it by doing a fold over $\String$, which as we
+recall is defined as a type of linear lists of characters. But we get
+the \emph{soundness} of the parser completely for free from the
+typing: any $\inl$ parse that we return must correspond to a parse
+tree of the input string. Further if we verify the disjointness
+property we then also get the \emph{completeness} of the parser as
+well, that it never fails to generate an $A$ parse when it is
+possible.
+
+Our main proof tool then for constructing verified parsers is to show
+that a grammar $A$ is weakly equivalent to a grammar for a
+deterministic automaton. The parsers for deterministic automata can
+simply be implemented by stepping through the states of the
+automaton. The key is then the following simple observation:
+\begin{lemma}[\agdalogo]
+  If $\A$ is weakly equivalent to $\B$ then any parser for $\A$ can be
+  extended to a parser for $\B$.
+\end{lemma}
+Here we need both directions of the weak equivalence. We need $A \lto
+B$ to extend the parser from $\String \lto A \oplus A_{\neg}$ to
+$\String \lto B \oplus A_{\neg}$ but then we also need $B \lto A$ to
+establish that $A_{\neg}$ is disjoint from $B$.
 
 \subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
@@ -1487,8 +1564,6 @@ print(*@$_D$@*) s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c (D.(*@$\delta$@*)
 \label{fig:printdfa}
 \end{figure}
 
-\steven{TODO make the Agda logo clickable, and mention its meaning somewhere}
-\newcommand{\Agda}{\agdalogo}
 \begin{theorem}[Determinization, \Agda]
   \label{thm:determinization}
   Given an NFA $N$, there exists a DFA $D$ such that
