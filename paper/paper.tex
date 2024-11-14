@@ -941,8 +941,8 @@ is empty.
     \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \otimes B \isLinTy}\and
     \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \lto B \isLinTy}\and
     \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \tol B \isLinTy}\and
-    \inferrule{\Gamma,x:X \vdash A \isLinTy}{\Gamma \vdash \bigoplus\limits_{x:X} A}\and
-    \inferrule{\Gamma,x:X \vdash A \isLinTy}{\Gamma \vdash \bigamp\limits_{x:X} A}\and
+    \inferrule{\Gamma,x:X \vdash A \isLinTy}{\Gamma \vdash \bigoplus\limits_{x:X} A \isLinTy}\and
+    \inferrule{\Gamma,x:X \vdash A \isLinTy}{\Gamma \vdash \bigamp\limits_{x:X} A \isLinTy}\and
     \inferrule
     {\Gamma \vdash f : \ltonl {(A \lto B)} \and \Gamma \vdash g : \ltonl { (A \lto B) }}
     {\Gamma \vdash \equalizer {a}{f}{g} \isLinTy}
@@ -3334,7 +3334,7 @@ substitution.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash e \equiv \lamblto a {\app e a} : A \lto B}
+    \inferrule{\Gamma ; \Delta \vdash e : A \lto B}{\Gamma; \Delta \vdash e \equiv \lamblto a {\app e a} : A \lto B}
 %
     \and
 %
@@ -3342,7 +3342,7 @@ substitution.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash e \equiv \lambtol a {\app e a} : B \tol A}
+    \inferrule{\Gamma ; \Delta \vdash e : B \tol A}{\Gamma; \Delta \vdash e \equiv \lambtol a {\app e a} : B \tol A}
 %
     \and
 %
@@ -3350,7 +3350,7 @@ substitution.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash e \equiv \dlamb x {\app e x} : \LinPiTy x X A}
+    \inferrule{\Gamma ; \Delta \vdash e : \LinPiTy {x} {X} {A}}{\Gamma; \Delta \vdash e \equiv \dlamb x {\app e x} : \LinPiTy x X A}
 %
     \and
 %
@@ -3366,7 +3366,7 @@ substitution.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \letin {()} {()} e \equiv e : C}
+    \inferrule{\Gamma ; \Delta_1 , \Delta_2 \vdash e : C}{\Gamma; \Delta_1 , \Delta_2 \vdash \letin {()} {()} e \equiv e : C}
     %
     \and
     %
@@ -3390,13 +3390,13 @@ substitution.
     \and
     %
     \inferrule
-    {~}
+    {\Gamma ; \Delta \vdash e : A \\ \Gamma ; \Delta \vdash f~e \equiv g~e}
     {\Gamma ; \Delta \vdash \equalizerpi {\equalizerin {e}} \equiv e : A}
     %
     \and
     %
     \inferrule
-    {~}
+    {\Gamma ; \Delta \vdash e : \equalizer e f g}
     {\Gamma ; \Delta \vdash \equalizerin {\equalizerpi {e}} \equiv e :
       \equalizer e f g}
 \end{mathpar}
