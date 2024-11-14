@@ -4068,7 +4068,17 @@ The $\beta$ rule for $\bigoplus$ is given by,
 \end{proof}
 
 \paragraph{$\bigoplus\eta$}
-\steven{TODO $\eta$ for sums}
+It suffices to show
+\[
+  \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}} = \semg{f[c'/c]}
+\]
+\begin{proof}
+  \begin{align*}
+    \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}}
+    &= [ \sem{f[\sigma~x~a/c]} ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m
+  \end{align*}
+\end{proof}
+\max{todo: finish}
 
 \subsubsection{Equalizer}
 %equalizer
