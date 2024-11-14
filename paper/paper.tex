@@ -3300,49 +3300,47 @@ substitution.
   \caption{Context Rules}
 \end{figure}
 
-\max{TODO: add rules for non-linear types $\Pi,\Sigma$, equality etc}
+%% \begin{figure}
+%%   \begin{mathpar}
+%%   \boxed{\Gamma \vdash M : X}
 
-\begin{figure}
-  \begin{mathpar}
-  \boxed{\Gamma \vdash M : X}
-
-  \inferrule{~}{\Gamma, x : X, \Gamma' \vdash x : X}
-  %
-  \and
-  %
-  \inferrule{\Gamma \vdash M : Y \quad \ctxwffjdg \Gamma {X \equiv Y}}{\Gamma \vdash M : X}
-  %
-  \and
-  %
-  \inferrule{~}{\Gamma \vdash () : 1}
-  %
-  \and
-  %
-  \inferrule{\Gamma \vdash M : X \\ \Gamma \vdash N : \subst Y M x}{\Gamma \vdash (M, N) : \SigTy x X Y}
-  %
-  \and
-%
-  \inferrule{\Gamma \vdash M : \SigTy x X Y}{\Gamma \vdash \pi_1\, M : X}
-  %
-  \and
-  %
-  \inferrule{\Gamma \vdash M : \SigTy x X Y}{\Gamma \vdash \pi_2\, M : \subst Y {\pi_1\, M} x}
-  \and
-  \inferrule{\Gamma, x : X \vdash M : Y}{\Gamma \vdash \lamb x M : \PiTy x X Y}
-  %
-  \and
-  %
-  \inferrule{\Gamma \vdash M : \PiTy x X Y \\ \Gamma \vdash N : X}{\Gamma \vdash \app M {N} : \subst Y {N} x}
-  %
-  \and
-  %
-  \inferrule{\Gamma \vdash M \equiv N : X}{\Gamma \vdash \mathsf{refl} : M =_X N}
-  \and
-  \textrm{TODO: inductive types (boolean, nat) with their eliminators allowed in }
-  \end{mathpar}
-  \caption{Intuitionistic typing}
-  \label{fig:inttyping}
-\end{figure}
+%%   \inferrule{~}{\Gamma, x : X, \Gamma' \vdash x : X}
+%%   %
+%%   \and
+%%   %
+%%   \inferrule{\Gamma \vdash M : Y \quad \ctxwffjdg \Gamma {X \equiv Y}}{\Gamma \vdash M : X}
+%%   %
+%%   \and
+%%   %
+%%   \inferrule{~}{\Gamma \vdash () : 1}
+%%   %
+%%   \and
+%%   %
+%%   \inferrule{\Gamma \vdash M : X \\ \Gamma \vdash N : \subst Y M x}{\Gamma \vdash (M, N) : \SigTy x X Y}
+%%   %
+%%   \and
+%% %
+%%   \inferrule{\Gamma \vdash M : \SigTy x X Y}{\Gamma \vdash \pi_1\, M : X}
+%%   %
+%%   \and
+%%   %
+%%   \inferrule{\Gamma \vdash M : \SigTy x X Y}{\Gamma \vdash \pi_2\, M : \subst Y {\pi_1\, M} x}
+%%   \and
+%%   \inferrule{\Gamma, x : X \vdash M : Y}{\Gamma \vdash \lamb x M : \PiTy x X Y}
+%%   %
+%%   \and
+%%   %
+%%   \inferrule{\Gamma \vdash M : \PiTy x X Y \\ \Gamma \vdash N : X}{\Gamma \vdash \app M {N} : \subst Y {N} x}
+%%   %
+%%   \and
+%%   %
+%%   \inferrule{\Gamma \vdash M \equiv N : X}{\Gamma \vdash \mathsf{refl} : M =_X N}
+%%   \and
+%%   \textrm{TODO: inductive types (boolean, nat) with their eliminators allowed in }
+%%   \end{mathpar}
+%%   \caption{Intuitionistic typing}
+%%   \label{fig:inttyping}
+%% \end{figure}
 
 \begin{figure}
   \begin{mathpar}
@@ -3350,51 +3348,12 @@ substitution.
     \inferrule{\Gamma ; a : A , \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lambtol a e : B\tol A}
     \and
     \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta', \Delta \vdash \apptol e {e'} : B}
-    %
-    \\
-
   \end{mathpar}
   \caption{Linear Terms, extended}
 \end{figure}
 
 \begin{figure}
   \begin{mathpar}
-    \boxed{\Gamma \vdash M \equiv N : X}
-
-    \inferrule{\Gamma \vdash p : M =_X N}{\Gamma \vdash M \equiv N : X}
-%
-    \and
-%
-    \inferrule{~}{\Gamma \vdash \app {(\lamb x M)} {N} \equiv \subst x M {N} : X}
-%
-    \and
-%
-    \inferrule{~}{\Gamma \vdash m \equiv \lamb x {\app M x} : \PiTy x X Y}
-%
-    \and
-%
-    \inferrule{~}{\Gamma \vdash \pi_1\, (M, N) \equiv M : X}
-%
-    \and
-%
-    \inferrule{~}{\Gamma \vdash \pi_2\, (M , N) \equiv N : \subst x {M} Y}
-%
-    \and
-%
-    \inferrule{~}{\Gamma \vdash M \equiv (\pi_1\, M, \pi_2\, M) : \SigTy x X Y}
-%
-    \and
-%
-    % \inferrule{~}{}
-%
-    \inferrule{~}{\Gamma \vdash M \equiv N : 1}
-%
-    % \and
-%
-    % \inferrule{~}{\Gamma \vdash G\, (G^{-1} \, t) \equiv t : G A}
-
-    \\
-
     \boxed{\Gamma ; \Delta \vdash e \equiv e' : A}
 
     % \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
@@ -3486,7 +3445,7 @@ substitution.
   simultaneously with an action of substitution on types, terms,
   etc. in the standard way.
 
-  \max{do we need identity and composition of substitutions and their functoriality?}
+  %% \max{do we need identity and composition of substitutions and their functoriality?}
   %% By induction we can define an identity substitution
   %% $\textrm{Subst}(\Gamma,\Gamma)$ which maps each variable to
   %% itself. We write this substitution simply as $\Gamma$.
@@ -3497,8 +3456,12 @@ substitution.
 
   It is straightforward, but laborious to establish that all forms in
   the type theory that are parameterized by a non-linear context
-  $\Gamma$ support an admissible action of a substitution $\gamma \in
-  \Subst(\Gamma',\Gamma)$:
+  $\Gamma$ support the admissible actions of a substitution $\gamma
+  \in \Subst(\Gamma',\Gamma)$ in \Cref{fig:non-linear-substitution}.
+  %% Further, these all satisfy identity and composition equations M[\Gamma] = M and M[\gamma][\gamma'] = M[(\gamma \circ \gamma')]
+\end{definition}
+
+\begin{figure}
   \begin{mathpar}
     \inferrule
     {\Gamma \vdash X \isTy}
@@ -3539,10 +3502,10 @@ substitution.
     \inferrule
     {\Gamma;\Delta \vdash e \equiv f : A}
     {\Gamma'; \Delta[\gamma] \vdash e[\gamma] \equiv f[\gamma] : A[\gamma]}j
-  \end{mathpar}
-
-  %% Further, these all satisfy identity and composition equations M[\Gamma] = M and M[\gamma][\gamma'] = M[(\gamma \circ \gamma')]
-\end{definition}
+  \end{mathpar}  
+  \caption{Non-linear substitution}
+  \label{fig:non-linear-substitution}
+\end{figure}
 
 \begin{definition}
   Let $\Gamma \vdash \Delta \isLinCtx$ and $\Gamma \vdash \Delta'
@@ -3608,11 +3571,18 @@ all lowercase is beter?}
     {\Gamma; \Delta' \vdash e[\delta] \equiv f[\delta'] : A}
   \end{mathpar}
 
-  \max{identity and composition?}
+  %% \max{identity and composition?}
 \end{definition}
 
 \section{Denotational Semantics}
-Here we extend the denotational semantics from \cref{sec:semantics-and-metatheory} to cover all of \theoryname syntax.
+Here we extend the denotational semantics from
+\cref{sec:semantics-and-metatheory} to cover all of \theoryname
+syntax. Here we will freely use that the category of grammars is a
+complete, co-complete biclosed monoidal category, and use categorical
+notation for the constructions in the denotational semantics. For
+example, we will use the same notation $I,\otimes,\lto,\tol$ for the
+biclosed monoidal structure of $\Grammar$ that we do for the
+corresponding syntactic notions.
 
 \begin{definition}[Denotation of Linear Contexts]
   The semantics of linear contexts $\Gamma \vdash \Delta \isLinCtx$ is
@@ -3660,11 +3630,19 @@ Construct $m_{\Delta_{1},\Delta_{2}}$ by recursion on $\Delta_{2}$.
 \end{lemma}
 
 \subsection{Grammar Semantics for Linear Terms}
-Here we define denotations of linear terms. Note that the denotations interpret
-typing derivations, not raw terms, as the data of how contexts are
-split is needed in order to construct the correct associator
-functions. Further, we demonstrate that the denotational semantics resprects the
-equational theory of \theoryabbv.
+Here we define denotations of linear terms. Note that the denotations
+interpret typing derivations, not raw terms, as the data of how
+contexts are split is needed in order to construct the correct
+associator functions. Further, we demonstrate that the denotational
+semantics resprects the equational theory of \theoryabbv. The
+correctness of the equational theory heavily relies on the
+\emph{coherence theorem} for monoidal categories. The coherence
+theorem says that any diagram in a monoidal category constructed using
+only associators $\alpha_{A,B,C} : (A \otimes B) \otimes C \cong A
+\otimes (B \otimes C)$, unitors $\rho_A : A \otimes I \cong A$ and
+$\lambda_A : I \otimes A \cong A$ and compositions and tensor products
+of these, commutes. We call a morphism built in this way a
+\emph{generalized associator}.
 
 \subsubsection{Variables}
 Note that the denotation of a singleton context $a : A$ is given as
@@ -3748,8 +3726,6 @@ will additionally use this style of argumentation when necessary throughout this
   & = \semg{e'} \circ m^{-1}_{\Delta'_{1},\Delta'_{2}} \circ \rho \otimes id \circ (id \otimes \lambda) \otimes id \circ m_{\Delta_{1},\cdot} \otimes id \circ m_{\Delta'_{1},\Delta'_{2}} \\
   & = \semg{e'} \tag{coherence}
 \end{align*}
-
-\steven{Define generalized associators}
 
 Because
 $m^{-1}_{\Delta'_{1},\Delta'_{2}} \circ \rho \otimes id \circ (id \otimes \lambda) \otimes id \circ m_{\Delta_{1},\cdot} \otimes id \circ m_{\Delta'_{1},\Delta'_{2}}$
@@ -4059,7 +4035,7 @@ is defined in the diagram
 {\semg{\Delta'_1,\Delta,\Delta'_2}} \arrow[r, "{m_{(\Delta'_1,\Delta),\Delta'_2}}"]                                                                                                           & {\semg{\Delta'_1,\Delta} \otimes \semg{\Delta'_2}} \arrow[d, "{m_{\Delta'_1,\Delta}\otimes id}"]                             \\
 {\left( \semg{\Delta'_1} \otimes \coprod_{x:X} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, "d"]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
 {\coprod_{x : X} {\left( \sem{\Delta'_1}(\gamma , x) \otimes
-      \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, "{m^{-1}_{(\Delta'_1,a:A),\Delta'_2}}"] & {\coprod_{x : X} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : X)}}"]     \\
+      \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, "\coprod_{x:X}({m^{-1}_{(\Delta'_1,a:A),\Delta'_2}})"] & {\coprod_{x : X} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : X)}}"]     \\
 \semg{C}                                                                                                                                                                                      & {\sem{C}(\gamma, x)} \arrow[l]
 \end{tikzcd}
 \end{center}
@@ -4075,15 +4051,14 @@ The $\beta$ rule for $\bigoplus$ is given by,
 \begin{proof}
   \begin{align*}
   \semg{\letin {\sigma~x~a} {\sigma~M~a'} {e'}}
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id
   \otimes \semg{\sigma~M~a'}) \otimes id \circ m \otimes id \circ m \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X}m^{-1} \circ d \circ (id
   \otimes (i_M \circ \semg{a'})) \otimes id \circ m \otimes id \circ m \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
-  \otimes (i_M \circ \lambda)) \otimes id \circ m \otimes id \circ m \\
-  & = ? \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ i_{M} \\
-  & = \sem{e'}(\gamma , x)
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X} m^{-1} \circ d \circ (id \otimes i_M) \otimes id \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X} m^{-1} \circ i_M \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
+  & = \sem{e'}(\gamma , M) \circ m^{-1} (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
+  & = \sem{e'}(\gamma , M) \tag{coherence}
   \end{align*}
 
   \steven{How does the distributivity morphism handled? Seems like its a barrier to invoking coherence}
