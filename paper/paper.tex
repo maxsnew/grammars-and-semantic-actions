@@ -3330,7 +3330,7 @@ substitution.
     % \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
 %
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \app {(\lamblto a e)} {e'} \equiv \subst e {e'} a : C}
+    \inferrule{\Gamma ; \Delta , a : A \vdash e : C \\ \Gamma ; \Delta' \vdash e' : A }{\Gamma; \Delta,\Delta' \vdash \app {(\lamblto a e)} {e'} \equiv \subst e {e'} a : C}
 %
     \and
 %
@@ -3338,7 +3338,7 @@ substitution.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \app {(\lambtol a e)} {e'} \equiv \subst e {e'} a : C}
+    \inferrule{\Gamma ; a : A , \Delta \vdash e : C \\ \Gamma ; \Delta' \vdash e' : A }{\Gamma; \Delta , \Delta' \vdash \app {(\lambtol a e)} {e'} \equiv \subst e {e'} a : C}
 %
     \and
 %
@@ -3346,7 +3346,7 @@ substitution.
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \app {(\dlamb x e)} {M} \equiv \subst {e} M x : C}
+    \inferrule{\Gamma , x : X \vdash e : A \\ \Gamma \vdash M : X}{\Gamma; \Delta \vdash \app {(\dlamb x e)} {M} \equiv \subst {e} M x : C}
 %
     \and
 %
@@ -3370,23 +3370,23 @@ substitution.
     %
     \and
     %
-    \inferrule{~}{\Gamma; \Delta \vdash \letin {()} e {\subst {e'} {()} a} \equiv \subst {e'} e a : C}
+    \inferrule{\Gamma ; \Delta_2 \vdash e : I \\ \Gamma ; \Delta_1 , a : A , \Delta_3 \vdash e' : C}{\Gamma; \Delta_1 , \Delta_3 \vdash \letin {()} e {\subst {e'} {()} a} \equiv \subst {e'} e a : C}
 %
     \and
 %
-    \inferrule{~}{\Gamma; \Delta \vdash \letin {a \otimes b} {e \otimes e'} e'' \equiv e'' \{ e/a , e'/b \} : C}
+    \inferrule{\Gamma ; \Delta_2 \vdash e : A \\ \Gamma ; \Delta_3 \vdash e' : B \\ \Gamma ; \Delta_1 , a : A , b : B , \Delta_4 \vdash e'' : C}{\Gamma; \Delta_1 , \Delta_2, \Delta_3 , \Delta_4 \vdash \letin {(a, b)} {(e , e')} e'' \equiv e'' \{ e/a , e'/b \} : C}
 %
-    \and
-    %
-    \inferrule{~}{\Gamma; \Delta \vdash \letin {a \otimes b} e {\subst {e'} {a \otimes b} c} \equiv \subst {e'} e c : C}
-%
-    \and
-%
-    \inferrule{~}{\Gamma;\Delta \vdash \letin {(x, a)} {(M, e)} {e'} \equiv e' \{ M/x , e/a \} : C}
-    %
     \and
     %
-    \inferrule{~}{\Gamma; \Delta \vdash \letin {(x, a)} e {\subst {e'} {(x, a)} y} \equiv \subst {e'} e y : C}
+    \inferrule{\Gamma ; \Delta_2 \vdash e : A \otimes B \\ \Gamma ; \Delta_1 , c : A \otimes B , \Delta_3 \vdash e' : C }{\Gamma; \Delta_1, \Delta_2, \Delta_3 \vdash \letin {(a , b)} e {\subst {e'} {(a, b)} c} \equiv \subst {e'} e c : C}
+%
+    \and
+%
+    \inferrule{\Gamma \vdash M : X \\ \Gamma ; \Delta_2 \vdash e : A \\ \Gamma , x : X \vdash \Delta_1 , a : A , \Delta_3 }{\Gamma;\Delta_1 , \Delta_2 , \Delta_3 \vdash \letin {\sigma~x~a} {\sigma~M~e} {e'} \equiv e' \{ M/x , e/a \} : C}
+    %
+    \and
+    %
+    \inferrule{\Gamma ; \Delta_1, y : \LinSigTy {x} {X} {A}, \Delta_2 \vdash e' : C \\ \Gamma ; \Delta_2 \vdash e : \LinSigTy {x} {X} {A}}{\Gamma; \Delta_1 , \Delta_2 , \Delta_3 \vdash \letin {\sigma~x~a} e {\subst {e'} {\sigma~x~a} y} \equiv \subst {e'} e y : C}
     \and
     %
     \inferrule
@@ -3484,7 +3484,7 @@ substitution.
   is defined by recursion on $\Delta$:
   \begin{align*}
     \Subst(\Delta',\cdot) &= \{ \cdot \pipe \Delta' = \cdot \}\\
-    \Subst(\Delta',(\Delta,a:A)) &= \{ (\delta, e/a) \pipe \delta \in \Subst(\Delta_1, \Delta) \and \Delta_2 \vdash e : A \and \Delta' = \Delta_1,\Delta_2\}
+    \Subst(\Delta',(\Delta,a:A)) &= \{ (\delta, e/a) \pipe \delta \in \Subst(\Delta_1, \Delta) , \Delta_2 \vdash e : A , \Delta' = (\Delta_1,\Delta_2)\}
   \end{align*}
 
   Given substitutions $\delta_1 \in \Subst(\Delta_1', \Delta_1)$ and
