@@ -246,8 +246,8 @@ frame=single
   to encode commonly used grammar formalisms such as regular and
   context-free grammars as well as traces of various types of
   automata. Using these encodings, we define parsers for regular
-  expressions using deterministic automata, as well as providing
-  examples parsers for LL(1) and LR(1) grammars.
+  expressions using deterministic automata, as well as
+  examples of verified parsers of context-free grammars.
 
   We present a denotational semantics of our type theory that
   interprets the types as a mathematical notion of formal
@@ -363,7 +363,7 @@ grammar but over the same underlying string.
 %% Likewise, the promised guarantees of a program may be jeopardized if it is
 %% parsed incorrectly.
 
-Our contributions are then:\max{This contribution section needs to be punchier}
+Our contributions are then:% \max{This contribution section needs to be punchier}
 %
 \begin{itemize}
   \item The design of \theoryname (\theoryabbv): A dependent
@@ -646,7 +646,6 @@ $({\literal a}^{*} \otimes \literal b) \oplus \literal c$ does not give a very o
 it. For this reason, most parsers are based on compiling a grammar to a corresponding notion of automaton, which is readily implemented. To impleemnt
 these algorithms in \theoryabbv, we need a way to represent automata as types in the same way we can represent regular expressions.
 
-\max{combine these three figures into one?}
 Finite automata are precisely the class of machines that recognize regular
 expressions. \cref{fig:exampleNFA} shows a non-deterministic
 finite automaton (NFA) for the regular expression
@@ -4058,7 +4057,7 @@ this is equal to $\semg{f}$, it is sufficient to prove they are equal
 when composed with the injections:
 
 \begin{align*}
-  \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id
+  \semg{f} &\circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id\\
   &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d  \circ (id \otimes i_y) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
   &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ i_y \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
   &= \semg{f} \circ (id \otimes i_y) \otimes id \circ (m^{-1}) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \\
