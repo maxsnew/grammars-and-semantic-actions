@@ -3106,18 +3106,17 @@ and parsers, and it is unclear if these could be implemented in their calculus.
 \subsubsection{Typed Grammars}
 The usage of a simple type system to reason about regular expressions up to weak
 equivalence was
-introduced by Frisch and Cardelli \cite{frischCardelli}.  Hengelin and Nielsen
+introduced by Frisch and Cardelli \cite{frischCardelli}. Hengelin and Nielsen
 \cite{henglein_regular_2011} later adapt this approach by providing a type
 system for regular expressions whose semantics were in one-to-one correspondence
 with the set of parse trees.
 Elliott \cite{elliottSymbolicAutomaticDifferentiation2021} gives a similar
-semantic interpretation of grammars as type-level predicates on strings. The type system of \theoryabbv extends these semantic interpretations of to a broader class
-of grammars.
+semantic interpretation of regular grammars as type-level predicates on strings. The type system of \theoryabbv extends these semantic interpretations of to a broader class of grammars and also gives a formal syntax and equational theory for the parse transformers that these prior works lack.
 
-Krishnaswami and Yallop \cite{krishnaswami_typed_2019} provide a type system for
-demonstrating that carries proves of the LL(1) condition for context-free
-grammars. Despite being a type system over formal grammars, their interpretation
-of types is very different from the semantics of \theoryabbv.
+%% Krishnaswami and Yallop \cite{krishnaswami_typed_2019} provide a type system for
+%% demonstrating that carries proves of the LL(1) condition for context-free
+%% grammars. Despite being a type system over formal grammars, their interpretation
+%% of types is very different from the semantics of \theoryabbv.
 
 
 %% 1. More practical: integrating it into a larger verified development
