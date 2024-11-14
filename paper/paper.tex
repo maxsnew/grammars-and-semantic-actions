@@ -3759,7 +3759,7 @@ $\beta$ law is
   & = \semg{e'} \circ m^{-1}_{\Delta'_{1},\Delta'_{2}} \circ \rho \otimes id \circ (id \otimes \semg{()}) \otimes id \circ m_{\Delta_{1},\cdot} \otimes id \circ m_{(\Delta'_{1},\cdot),\Delta'_{2}} \\
   & = \semg{e'} \circ m^{-1}_{\Delta'_{1},\Delta'_{2}} \circ \rho \otimes id \circ (id \otimes id) \otimes id \circ m_{\Delta_{1},\cdot} \otimes id \circ m_{\Delta'_{1},\Delta'_{2}} \\
   & = \semg{e'} \circ m^{-1}_{\Delta'_{1},\Delta'_{2}} \circ \rho \otimes id \circ \rho^{-1} \otimes id \circ m_{\Delta'_{1},\Delta'_{2}} \\
-  & = \semg{e'}
+  & = \semg{e'} \tag{coherence}
 \end{align*}
 \end{proof}
 
@@ -3775,14 +3775,15 @@ where $e$ is a variable $a'$. That is,
 \letin {()} {e} {e'[()/a]} &= (\letin {()} {a'} {e'[()/a]})[e/a'] \\
 e'[e/a] &= e'[a'/a][e/a]
 \end{align*}
-so without loss of generality we may take may take $e$ to be variable $a'$.
+so without loss of generality we may take may take $e$ to be variable $a'$. We
+will additionally use this style of argumentation when necessary throughout this section.
 
 \begin{proof}
 \begin{align*}
   \semg{\letin {()} {a'} {e'[()/a]}}
   & = \semg{e'} \circ m^{-1}_{\Delta'_{1},\Delta'_{2}} \circ \rho \otimes id \circ (id \otimes \semg{a'}) \otimes id \circ m_{\Delta_{1},\cdot} \otimes id \circ m_{\Delta'_{1},\Delta'_{2}} \\
   & = \semg{e'} \circ m^{-1}_{\Delta'_{1},\Delta'_{2}} \circ \rho \otimes id \circ (id \otimes \lambda) \otimes id \circ m_{\Delta_{1},\cdot} \otimes id \circ m_{\Delta'_{1},\Delta'_{2}} \\
-  & = \semg{e'}
+  & = \semg{e'} \tag{coherence}
 \end{align*}
 
 \steven{Define generalized associators}
@@ -3795,10 +3796,10 @@ $\semg{\Delta'_{1},\Delta'_{2}}$ to itself, it is equal to the identity by the c
 Further by \cref{lem:subst},
 \begin{align*}
   \semg{e'[a'/a]}
-  &= \semg{e'} \circ \semg{a'/a} \\
-  &= \semg{e'}
+  &= \semg{e'} \circ \semg{a'/a} \tag{\cref{lem:subst}} \\
+  &= \semg{e'} \tag{coherence}
 \end{align*}
-Again by the coherence theorem, $\semg{a'a} = id$. Thus, $\eta$ law for $I$
+Again by the coherence theorem, $\semg{a'/a} = id$. Thus, $\eta$ law for $I$
 holds in the denotational semantics.
 \end{proof}
 
@@ -3808,16 +3809,19 @@ holds in the denotational semantics.
 $\semg{(e_{1}, e_{2})} : \semg{\Delta,\Delta'} \to \semg{A \otimes B}$ is given
 by the diagram
 
+\begin{center}
 \begin{tikzcd}
   \semg{\Delta,\Delta'} \arrow[r, "m_{\Delta,\Delta'}"] &
   \semg{\Delta} \otimes \semg{\Delta'} \arrow[r, "\semg{e_1} \otimes \semg{e_2}"] &
   \semg{A} \otimes \semg{G}
 \end{tikzcd}
+\end{center}
 
 \paragraph{$\otimes$-Elimination}
 $\semg{\letin {(a,b)} e f} : \semg{\Delta'_{1},\Delta,\Delta'_{2}} \to \semg{C}$
 defined via the diagram,
 
+\begin{center}
 \begin{tikzcd}
   \semg{\Delta'_1,\Delta,\Delta'_2} \arrow[r , "m_{(\Delta'_1,\Delta),\Delta'_2}"] &
   \semg{\Delta'_1,\Delta} \otimes \semg{\Delta'_2}
@@ -3829,26 +3833,70 @@ defined via the diagram,
   & \left(\semg{\Delta'_1} \otimes \left( \semg{A} \otimes \semg{B}\right) \right) \otimes \semg{\Delta'_2}
     \arrow[l , "\alpha \otimes id"]
 \end{tikzcd}
+\end{center}
 
 \paragraph{$\otimes\beta$}
+The desired $\beta$ equality for $\otimes$ is,
+\[
+  \semg{\letin {(a,b)} {(a',b')} {f}} = \semg{f[a'/a,b'/b]}
+\]
 
+\begin{proof}
+The left hand side reduces as follows,
+\begin{align*}
+  \semg{\letin {(a,b)} {(a',b')} {f}}
+  & = \semg{f} \circ \alpha \otimes id \circ (id \otimes \semg{(a' , b')}) \otimes id \circ m_{\Delta,\Delta'} \\
+  & = \semg{f} \circ \alpha \otimes id \circ (id \otimes \lambda \otimes \lambda \circ m_{a : A, b : B})) \otimes id \circ m_{\Delta,\Delta'} \\
+  & = \semg{f} \tag{coherence}
+\end{align*}
+
+Which is equal to the right hand side,
+\begin{align*}
+  \semg{f[a'/a,b'/b]}
+  & = \semg{f} \circ \semg{a'/a,b'/b} \\
+  & = \semg{f} \tag{coherence}
+\end{align*}
+\end{proof}
 
 \paragraph{$\otimes\eta$}
+The desired $\eta$ equality for $\otimes$ is,
+\[
+  \semg{\letin {(a,b)} {c'} {f[(a,b)/c]}} = \semg{f[c'/c]}
+\]
+
+\begin{proof}
+\begin{align*}
+  \semg{\letin {(a,b)} {c'} {f[(a,b)/c]}}
+  & = \semg{f[(a,b)/c]} \circ \alpha \otimes id \circ (id \otimes \semg{c'}) \otimes id \circ m_{\Delta,\Delta'} \\
+  & = \semg{f} \circ \semg{(a,b)/c} \circ \alpha \otimes id \circ (id \otimes \semg{c'}) \otimes id \circ m_{\Delta,\Delta'} \\
+  & = \semg{f} \tag{coherence}
+\end{align*}
+
+\begin{align*}
+  \semg{f[c'/c]}
+  &= \semg{f} \circ \semg{c'/c} \tag{\cref{lem:subst}} \\
+  &= \semg{f} \tag{coherence}
+\end{align*}
+\end{proof}
 
 
+\subsubsection{$\lto$-Functions}
 % linear function
-In the semantics $\semg{- \otimes A}$ and $\semg{A \lto -}$ are left adjoint, so
-for all $A$ and $B$ we have the natural isomorphism
-$\phi : Hom(\semg{\Delta} \otimes \semg{A}, \semg{B}) \to Hom(\semg{\Delta}, \semg{A \lto B})$.
-We use this adjunction to provide the denotation $\semg{\lamblto a e} : \semg{\Delta} \to \semg{A \lto B}$.
+\paragraph{$\lto$-Introduction}
+$\semg{\lamblto a e} : \semg{\Delta} \to \semg{A \lto B}$ is defined using the
+natural isomorphism
+$\phi : Hom(\semg{\Delta} \otimes \semg{A}, \semg{B}) \to Hom(\semg{\Delta}, \semg{A \lto B})$
+that is provided by the adjunction between $\semg{- \otimes A}$ and $\semg{A \lto -}$.
 
 \[
 \semg{\lamblto a e} = \phi\left( \semg{e} \right)
 \]
 
-The denotation for application of a $\lto$-function,
-$\semg{\applto {e'} {e}} : \semg{\Delta,\Delta'} \to \semg{B}$ defined by the diagram
+\paragraph{$\lto$-Elimination}
+$\semg{\applto {e'} {e}} : \semg{\Delta,\Delta'} \to \semg{B}$ is defined by the
+diagram,
 
+\begin{center}
 \begin{tikzcd}
   \semg{\Delta,\Delta'} \arrow[r , "m_{\Delta,\Delta'}"] &
   \semg{\Delta} \otimes \semg{\Delta'} \arrow[r , "id \otimes \semg{e}"] &
@@ -3856,28 +3904,82 @@ $\semg{\applto {e'} {e}} : \semg{\Delta,\Delta'} \to \semg{B}$ defined by the di
   &
   \semg{B}
 \end{tikzcd}
+\end{center}
 
-$\semg{\lambtol a e} : \semg{\Delta} \to \semg{B \tol A}$ defined using the
+\paragraph{$\lto\beta$}
+The $\beta$ rule for $\lto$ is given by,
+\[
+  \semg{\applto {(\lamblto {a} {e})} {a'}} = \semg{e[a'/a]}
+\]
+\begin{proof}
+\begin{align*}
+  \semg{\applto {(\lamblto {a} {e})} {a'}}
+  & = \phi^{-1}(\semg{\lamblto {a} {e}}) \circ id \otimes \semg{a'} \circ m_{\Delta,\Delta'} \\
+  & = \phi^{-1}(\phi(\semg{e})) \circ id \otimes \semg{a'} \circ m_{\Delta,\Delta'} \\
+  & = \semg{e} \circ id \otimes \semg{a'} \circ m_{\Delta,\Delta'} \\
+  & = \semg{e} \circ id \otimes \lambda \circ m_{\Delta,\Delta'} \\
+  & = \semg{e} \tag{coherence}
+\end{align*}
+
+\begin{align*}
+  \semg{e[a'/a]}
+  & = \semg{e} \circ \semg{a'/a} \tag{\cref{lem:subst}} \\
+  & = \semg{e} \tag{coherence}
+\end{align*}
+\end{proof}
+
+\paragraph{$\lto\eta$}
+The $\eta$ rule for $\lto$ is given by,
+\[
+  \semg{\lamblto {a} {\applto e a}} = \semg{e}
+\]
+
+\begin{proof}
+\begin{align*}
+  \semg{\lamblto {a} {\applto e a}}
+  & = \phi(\semg{\applto e a}) \\
+  & = \phi(\phi^{-1}(\semg{e}) \circ id \otimes \semg{a} \circ m_{\Delta,a:A}) \\
+  & = \phi(\phi^{-1}(\semg{e}) \circ id \otimes \lambda \circ m_{\Delta,a:A}) \\
+  & = \phi(\phi^{-1}(\semg{e})) \tag{coherence} \\
+  & = \semg{e}
+\end{align*}
+\end{proof}
+
+
+\subsubsection{$\tol$-Functions}
+\paragraph{$\tol$-Introduction}
+Just as with the other linear function type, we have an adjunction between
+$\semg{A \otimes -}$ and $\semg{- \tol A}$. $\semg{\lambtol a e} : \semg{\Delta} \to \semg{B \tol A}$ is defined using the
 natural isomorphism
 $\psi : Hom(\semg{A} \otimes \semg{\Delta}, \semg{B}) \to Hom(\semg{\Delta}, \semg{B \tol A})$
+induced by this adjunction. In particular, $\semg{\lambtol a e}$ is given by $\psi$
 acting on the following diagram
 
+\begin{center}
 \begin{tikzcd}
   \semg{A} \otimes \semg{\Delta} \arrow[r , "\lambda^{-1} \otimes id"] &
   \semg{a : A} \otimes \semg{\Delta} \arrow[r , "m^{-1}_{a : A , \Delta}"] &
   \semg{a : A , \Delta} \arrow[r , "\semg{e}"] &
   \semg{B}
 \end{tikzcd}
+\end{center}
 
+\paragraph{$\tol$-Elimination}
 The application of a $\tol$-function,
 $\semg{\apptol {e} {e'}} : \semg{\Delta',\Delta} \to \semg{B}$ defined by the diagram
 
+\begin{center}
 \begin{tikzcd}
   \semg{\Delta',\Delta} \arrow[r , "m_{\Delta',\Delta}"] &
   \semg{\Delta'} \otimes \semg{\Delta} \arrow[r , "\semg{e'} \otimes id"] &
   \semg{A} \otimes \semg{\Delta} \arrow[r , "\phi^{-1}\left( \semg{e} \right)"] &
   \semg{B}
 \end{tikzcd}
+\end{center}
+
+\paragraph{$\tol\beta$}
+
+\paragraph{$\tol\eta$}
 
 % Products
 Product introduction,
