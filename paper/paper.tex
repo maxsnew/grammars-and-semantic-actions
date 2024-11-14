@@ -3071,8 +3071,7 @@ existing proof assistant.
 \label{sec:discussion}
 \subsection{Typed Approaches to Grammars}
 
-
-\subsubsection{Lambek Calculus and Categorial Grammar}
+%% \subsubsection{Lambek Calculus and Categorial Grammar}
 Lambek's original syntactic calculus \cite{lambek58} describes a logical system
 for linguistic derivations. Later, he explicitly gives semantics to his
 syntactic calculus inside of a non-commutative biclosed monoidal category
@@ -3102,7 +3101,7 @@ semantics. Further, we provide several examples showing that
 \theoryabbv is a practical system for describing grammar formalisms
 and parsers, and it is unclear if these could be implemented in their calculus.
 
-\subsubsection{Typed Grammars}
+%% \subsubsection{Typed Grammars}
 The usage of a simple type system to reason about regular expressions up to weak
 equivalence was
 introduced by Frisch and Cardelli \cite{frischCardelli}. Hengelin and Nielsen
@@ -3214,7 +3213,7 @@ the correctness of a parser generator that produces imperative
 programs, and to what extent the correctness of those imperative
 programs can be proven within \theoryabbv.
 
-\subsection{Type Checking and Elaboration}
+\subsection{Type Checking and Semantic Analysis}
 Our focus in this work has been on the verification of parsers for
 grammars over strings, but because \theoryabbv allows for the
 definition of arbitrarily powerful grammars, the system could also be
@@ -4066,15 +4065,29 @@ The $\beta$ rule for $\bigoplus$ is given by,
 \paragraph{$\bigoplus\eta$}
 It suffices to show
 \[
-  \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}} = \semg{f[c'/c]}
-\]
+  \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}} = \semg{f[c'/c]} = \semg{f}
+  \]
+First, expanding the left hand side, we have.
 \begin{proof}
   \begin{align*}
     \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}}
-    &= [ \sem{f[\sigma~x~a/c]} ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m
+    &= [ \semg{f[\sigma~x~a/c]} ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    &= [ \semg{f} \circ (id \otimes i_x) \otimes id ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
   \end{align*}
+Since the domain has the universal property of a coproduct (due to distributivity), to prove
+this is equal to $\semg{f}$, it is sufficient to prove they are equal
+when composed with the injections:
+
+\begin{align*}
+  \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id
+  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d  \circ (id \otimes i_y) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
+  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ i_y \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
+  &= \semg{f} \circ (id \otimes i_y) \otimes id \circ (m^{-1}) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \\
+  &= \semg{f} \circ (m^{-1}) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id \\
+  &= \semg{f} \circ (id \otimes i_y) \otimes id \tag{coherence}\\
+\end{align*}
 \end{proof}
-\max{todo: finish}
 
 \subsubsection{Equalizer}
 %equalizer
