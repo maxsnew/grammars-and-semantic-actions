@@ -2055,28 +2055,25 @@ languages in the Chomsky hierarchy.
 \section{Denotational Semantics and Implementation}
 \label{sec:semantics-and-metatheory}
 
-
-
 To justify our assertion that \theoryabbv is a syntax for formal
 grammars and parse transformers, we will now define a
-\emph{denotational semantics} that makes this mathematically
-precise. To interpret our types of codes we assume a universe of
-\emph{small} sets.
+\emph{denotational semantics} that makes this mathematically precise
+by defining a notion of formal grammar and parse transformer and
+showing that our type theory can be soundly interpreted in this
+model. We then discuss how this denotational semantics provides the
+basis for our prototype implementation in Agda.
 
 \subsection{Formal Grammars and Parse Transformers}
 
-First, we need to establish a precise definition of a formal grammar
-that accounts for the possibility of ambiguity. The most common
-definition of a formal grammar is as generative grammars, defined by
-a set of non-terminals, with a specified start symbol and set of
-production rules. We instead use a more abstract formulation that is
-closer in spirit to the standard definition of a formal language:
-
+The most common definition of a formal grammar is as generative
+grammars, defined by a set of non-terminals, a specified start symbol
+and set of production rules. We instead use a more abstract
+formulation that is closer in spirit to the standard definition of a
+formal \emph{language}\cite{elliott}:
 \begin{definition}
   A \emph{formal language} $L$ is a function from strings to propositions.
-  A \emph{formal grammar} $A$ is a function from strings to small sets.
+  A (small) \emph{formal grammar} $A$ is a function from strings to (small) sets.
 \end{definition}
-
 We think of the grammar $A$ as taking a string to the set of all parse
 trees for that string. However since $A$ could be any function
 whatsoever there is no requirement that an element of $A(w)$ be a
@@ -2091,28 +2088,25 @@ language is that formal grammars can be \emph{ambiguous} in that there
 can be more than one parse of the same string. Even for unambiguous
 grammars, we care not just about \emph{whether} a string has a parse
 tree, but \emph{which} parse tree it has, i.e., what the structure of
-the element of $A(w)$ is.
+the element of $A(w)$ is.  To interpret our universes $U , L$ we
+assume we have a universe of \emph{small} sets. In the remainder, all
+formal grammars are assumed to be small.
 
-The linear types of \theoryabbv can all be interpreted as formal
-grammars, but what about the linear terms? These can be interpreted as
-\emph{parse transformers}, which we now define.
+We then interpret linear \emph{terms} as \emph{parse transformers}:
 \begin{definition}
-  Let $L_1,L_2$ be formal languages. Then we say $L_1\subseteq L_2$ if
-  for every string $w$, $L_1(w)\Rightarrow L_2(w)$.
-
   Let $A_1,A_2$ be formal grammars. Then a parse transformer $f$ from
   $A_1$ to $A_2$ is a function assigning to each string $w$ a function
   $f_w : A_1(w) \to A_2(w)$.
 \end{definition}
-\pedro{Do we actually need a definition of formal language morphism?
-In case we do, it should probably be its own definition.}
-First, note that parse transformers generalize language inclusion: if
-$A_1(w), A_2(w)$ are all subsets of a one-element set, then a parse
-transformer is equivalent to showing that $A_1(w) \subseteq A_2(w)$.
-In our denotational semantics, linear terms will be interpreted as
-such parse transformers, and the notions of unambiguous grammar,
-parseability, etc, introduced in \Cref{sec:concepts} can be verified
-to correspond to their intended meanings under this interpretation.
+Just as formal grammars generalize formal languages, parse
+transformers generalize formal language inclusion: if $A_1(w), A_2(w)$
+are all subsets of a one-element set, then a parse transformer is
+equivalent to showing that $A_1(w) \subseteq A_2(w)$. In our
+denotational semantics, linear terms will be interpreted as such parse
+transformers, and the notions of unambiguous grammar, parsers,
+disjointness, etc, introduced in \Cref{sec:applications} can be
+verified to correspond to their intended meanings under this
+interpretation.
 
 Parse transformers can be composed: given two parse transformers $f$ and $g$,
 their composition is defined pointwise, i.e. $(f\circ g)_w = f_w \circ g_w$.
@@ -2127,7 +2121,8 @@ This category is equivalent to the slice category $\Set/\Sigma^*$ and
 as such is very well-behaved. It is complete, co-complete, Cartesian
 closed and carries a monoidal biclosed structure. We will use these
 structures to model the linear types, terms and equalities in
-\theoryabbv.
+\theoryabbv. These categorical properties are precisely what is
+required to interpret all of the linear type and term constructors.
 %% \begin{theorem}
 %%   The category $\Grammar$ is complete, co-complete and cartesian
 %%   closed. Furthermore, it is monoidal biclosed with the monoidal
@@ -2176,9 +2171,8 @@ structures to model the linear types, terms and equalities in
 % \pedro{In which case we should introduce it in the previous section. I suggest
 %   adding this right after ``and the intuitionistic typing rules in fig 3''}
 \subsection{Semantics}
-\steven{Add definitions of kleene,lambek,and chomsky categories here?}
 
-We can now define our denotational semantics.
+We now define our denotational semantics.
 \begin{definition}[Grammar Semantics]
   We define the following interpretations by mutual recursion on the
   judgments of \theoryabbv:
@@ -2196,28 +2190,29 @@ We can now define our denotational semantics.
   And we verify the following conditions:
   \begin{enumerate}
   \item If $\Gamma \vdash X \isSmall$, then $\sem X \gamma$ is a small set.
-  \item If $\Gamma \vdash X \cong X'$ then for every $\gamma$, $\sem{X}\gamma = \sem{X'}\gamma$
-  \item If $\Gamma \vdash A \cong A'$ then for every $\gamma$, $\sem{A}\gamma = \sem{A'}\gamma$
-  \item If $\Gamma \vdash M \cong M' : X$ then for every $\gamma$, $\sem{M}\gamma = \sem{M'}\gamma$
-  \item If $\Gamma;\Delta \vdash e \cong e' : A$ then for every $\gamma$, $\sem{e}\gamma = \sem{e'}\gamma$
+  \item If $\Gamma \vdash X \equiv X'$ then for every $\gamma$, $\sem{X}\gamma = \sem{X'}\gamma$
+  \item If $\Gamma \vdash A \equiv A'$ then for every $\gamma$, $\sem{A}\gamma = \sem{A'}\gamma$
+  \item If $\Gamma \vdash M \equiv M' : X$ then for every $\gamma$, $\sem{M}\gamma = \sem{M'}\gamma$
+  \item If $\Gamma;\Delta \vdash e \equiv e' : A$ then for every $\gamma$, $\sem{e}\gamma = \sem{e'}\gamma$
   \end{enumerate}
 \end{definition}
 
-For reasons of brevity, we present only the cases related to the
-linear types in \Cref{fig:semantics}. The full details are in the
-appendix.\max{TODO: put the full details in the appendix}.  The
-grammar for a literal $c$ has a single parse precisely when the input
-string consists of the single character. The grammar for the unit
-similarly has a single parse for the empty string.  A parse of the
-tensor product $A \otimes B$ consists of a \emph{splitting} of the
-empty string into a prefix $w_1$ and suffix $w_2$ along with an $A$
-parse of $w_1$ and $B$ parse of $w_2$. A parse of $\bigoplus_{x:X} A$
-is a pair of an element of the set $X$ and a parse of $A(x)$, while
-dually a parse of $\bigwith_{x:X} A$ is a \emph{function} taking any
-$x:X$ to a parse of $A(x)$. A $w$-parse of $A \lto B$ is a function
-that takes an $A$ parse of some other string $w'$ to a $B$ parse of
-$ww'$, and $B \tol A$ is the same except the $B$ parse is for the
-reversed concatenation $w'w$.
+The interpretation of dependent types as sets is standard
+\cite{dependent-types-as-sets}. We present the concrete descriptions
+of the semantics of linear types, as well as our non-standard
+non-linear types in \Cref{fig:semantics}.
+The grammar for a literal $c$ has a single parse
+precisely when the input string consists of the single character. The
+grammar for the unit similarly has a single parse for the empty
+string.  A parse of the tensor product $A \otimes B$ consists of a
+\emph{splitting} of the empty string into a prefix $w_1$ and suffix
+$w_2$ along with an $A$ parse of $w_1$ and $B$ parse of $w_2$. A parse
+of $\bigoplus_{x:X} A$ is a pair of an element of the set $X$ and a
+parse of $A(x)$, while dually a parse of $\bigwith_{x:X} A$ is a
+\emph{function} taking any $x:X$ to a parse of $A(x)$. A $w$-parse of
+$A \lto B$ is a function that takes an $A$ parse of some other string
+$w'$ to a $B$ parse of $ww'$, and $B \tol A$ is the same except the
+$B$ parse is for the reversed concatenation $w'w$.
 %
 The set $\uparrow A$ is the set of parse for the empty string for
 $A$. This definition means that $\sem{\uparrow (A \lto B)}$ (or $\sem{\uparrow (B \tol A)}$) is
@@ -2227,10 +2222,9 @@ Next, a parse in the equalizer $\equalizer{a}{f}{g}$ is defined as
 a parse in $\sem{A}$ that is mapped to the same parse by $f$ and
 $g$. Recall that $\sem{f}\gamma$ and $\sem{g}$ are elements of
 $\sem{\uparrow(A \lto B)}$, i.e., parse transformers.
-
+%
 The universe $L$ of linear types is interpreted as the set of all
 (small) grammars.
-
 \begin{figure}
   \begin{align*}
     \sem{c}\gamma\,w &= \{ c | w = c\}\\
@@ -2259,7 +2253,7 @@ functor} on the category of sets, also sometimes called an
 \begin{definition}
   Let $I$ and $O$ be sets. A (dependent) \emph{polynomial} (of sets)
   from $I$ to $O$ consists of a set of shapes $S$, a set of positions
-  $P$ and functions $I \leftarrow P \to S \to O$. The \emph{extension}
+  $P$ and functions $f : P \to I$, $g : P \to S$ and $h : S \to O$. The \emph{extension}
   of a polynomial is a functor $\Set/I \to \Set/O$ defined as the
   composite
   % https://q.uiver.app/#q=WzAsNCxbMCwwLCJcXFNldC9JIl0sWzMsMCwiXFxTZXQvTyJdLFsxLDAsIlxcU2V0L1AiXSxbMiwwLCJcXFNldC9TIl0sWzAsMiwiZl4qIl0sWzIsMywiXFxQaV9nIl0sWzMsMSwiXFxTaWdtYV9oIl1d
@@ -2272,32 +2266,25 @@ functor} on the category of sets, also sometimes called an
   Where $f^*$ is the pullback functor along $f$; $\Pi_g$ is the depedent
   product operation and $\Sigma_h$ is the dependent sum operation, which
   are, respectively, the right and left adjoint of their pullback functors
-  $g^*$ and $h^*$.
-
-  A dependent polynomial functor from $I$ to $O$ is a functor $\Set/I
+  $g^*$ and $h^*$. A dependent polynomial functor from $I$ to $O$ is a functor $\Set/I
   \to \Set/O$ that is nautrally isomorphic to the extension of a
   dependent polynomial from $I$ to $O$.
 \end{definition}
-With this interpretation, $\el(F)$ and $\map(F)$ are just interpreted
-as the action of the functor on objects and morphisms,
-respectively. We interpret the constructors $\mathsf{K},\Var$, etc. on
-functors in the obvious way that matches the definitional behavior of
-$\el$ and $\map$. The non-trivial part of the construction is
-verifying that such functors are constructing corresponding dependent
-polynomials. The details are tedious but straightforward extension of
-prior work on dependent polynomials and indexed containers and we have
-verified the construction in Agda.
+With this interpretation of $F$ as a polynomial functor, $\el(F)$ and
+$\map(F)$ are just interpreted as the action of the functor on objects
+and morphisms, respectively. We interpret the constructors
+$\mathsf{K},\Var$, etc. on functors in the obvious way that matches
+the definitional behavior of $\el$ and $\map$. The non-trivial part of
+the construction is verifying that such such constructions are closed
+under being polynomial. The details are tedious but straightforward
+extension of prior work on dependent polynomials and indexed
+containers and we have verified the construction in Agda.
 
-The reason we use dependent polynomials functors on sets is that it is
-well-known that their initial algebras exist
-\cite{initial-algebras-of-dep-poly}. Additionally, initial algebras
-for dependent polynomials are straightforwardly constructed in Agda as
-an inductive type of ``IW'' trees, which is available as a
-construction in the cubical library of Agda \cite{iw,cubical-library}.
-\begin{theorem}
-  Every dependent polynomial functor from $I$ to $I$ has an initial
-  algebra.
-\end{theorem}
+We use dependent polynomials functors on sets as these are guaranteed
+to have initial algebras \cite{initial-algebras-of-dep-poly}.  Further
+these initial algebras are readily constructed in our Agda
+implementation as an inductive type of $IW$ trees which are already
+available in the cubical library of Agda \cite{iw,cubical-library}.
 Then an element $F \in \sem{X \to \SPF\,X}\gamma$ is an
 $\sem{X}\gamma$-indexed family of polynomial functors from
 $\sem{X}\gamma\times \Sigma^*$ to $\Sigma^*$, and taking the product
@@ -2305,6 +2292,37 @@ of these constructs a polynomial functor from $\sem{X}\gamma\times
 \Sigma^*$ to itself. Then $\sem{\mu\,F}\gamma$ is defined to be the
 initial algebra of this functor, and the initial algebra structure is
 used to interpret $\roll, \fold$ and the corresponding axioms.
+
+The remaining details of the interpretation of linear terms as parse
+transformers and verification of the equational axioms is a relatively
+straightforward extension of existing semantics of linear logic in
+monoidal categories, and is included in the
+appendix\cite{linearLogicMonoidalCategory}.
+
+\subsection{Agda Implementation}
+
+This denotational semantics in grammars and parse transformers serves
+as the basis for our prototype implementation of \theoryabbv in
+cubical Agda. The implementation is a shallow embedding, meaning that
+rather than formalizing a syntax of \theoryabbv types and terms, we
+work directly with Agda types and a definition of a formal grammar as
+a function $\String \to \Set$. Then we implement each of the type and
+term constructors of \theoryabbv as combinators on formal grammars or
+parse transformers, and use cubical Agda's equality type to model the
+term equalities. Cubical Agda is convenient for this purpose as it has
+built-in support for function extensionality which we use
+extensively. Axioms such as distributivity of $\oplus/\&$ and
+disjointness of constructors are then provable directly in Agda, and
+we are careful to only construct grammars, terms and proofs using
+constructs that are possible in \theoryabbv. The main difference
+between our shallow embedding and \theoryabbv is that our linear terms
+are written in a combinator-style, without being able to use named
+variables in linear terms. A benefit of this shallow embedding is that
+the parsers are immediately available to a larger Agda development, as
+they are just normal Agda code. In future work we will look to
+implement a type checker for a syntax closer to the presentation in
+this paper, but with the goal of still making it integrate with an
+existing proof assistant.
 
 %% That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
 %% complete to parses of $B$. In this manner, the linear function types generalize
@@ -4154,7 +4172,5 @@ The $\eta$ rule for $\equalizer e f g$ is given as,
 \end{tikzcd}
 \end{center}
 \end{proof}
-
-\steven{Add the arithmetic expression automaton}
 
 \end{document}
