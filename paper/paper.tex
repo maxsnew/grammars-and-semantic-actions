@@ -916,17 +916,6 @@ binary versions of these connectives by using indexing over the empty
 and boolean type respectively. We will freely use $0$ to refer to this
 empty disjunction and $\top$ to refer to the empty conjunction, and
 use infix $\oplus/\&$ for binary disjunction/conjunction.
-%
-In addition to the introduction and elimination rules for
-$\bigamp,\bigoplus$, our development requires an additional axiom that
-is not proveable from these rules: that additive conjunction
-\emph{distributes} over additive disjunction, e.g., in the finitary
-case that $0 \& A \cong 0$ and $(A + B) \& C \cong (A \& C) + (B \&
-C)$. In its most general form, the axiom says that the definable function
-${\bigoplus\limits_{f : \prod_{x:X}
-    Y(x)}\bigamp\limits_{x:X}A\,x\,(f\,x) \lto
-  \bigamp\limits_{x:X}\bigoplus\limits_{y:Y(x)}A\,x\,y}$ has an
-inverse.
 
 Lastly, we include a type $\equalizer {a}{f}{g}$ that we call the
 \emph{equalizer} of linear functions $f$ and $g$. We think of this
@@ -941,6 +930,23 @@ we cannot define as a linear type. While the equalizer type is not
 used directly in defining any of our parsers or formal grammars, it is
 used for several proofs, allowing for inductive arguments about our
 indexed inductive types.
+
+In addition to these type-theoretic principles, we need two additional
+axioms that do not generally hold in systems based on linear
+logic. First, we need that additive conjunction \emph{distributes}
+over additive disjunction, e.g., in the finitary case that $0 \& A
+\cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. In its most
+general form, the axiom says that the definable function
+${\bigoplus\limits_{f : \prod_{x:X}
+    Y(x)}\bigamp\limits_{x:X}A\,x\,(f\,x) \lto
+  \bigamp\limits_{x:X}\bigoplus\limits_{y:Y(x)}A\,x\,y}$ has an
+inverse. Second, we need that the different constructors of
+$\bigoplus$ are disjoint. We add this by adding the axiom that for any
+$A : X \to L$ and $x \neq x' : X$ there is a function
+$\uparrow(\equalizer{b}{\sigma\,x \circ \pi_1}{\sigma\,x'\circ \pi_2}
+\lto 0)$ where $b: A(x) \& A(x')$, i.e., the grammar of pairs of an
+$a:A(x)$ and an $a': A(x')$ such that $\sigma\,x\,a = \sigma\,x'\,a'$
+is empty.
 
 \begin{figure}
   \begin{mathpar}
@@ -1374,7 +1380,9 @@ defining a parser, we will need to define a kind of negative grammar
 for strings that do not parse. Fortunately, we will see that
 deterministic automata naturally support such a notion with no
 additional effort: the negative grammar is simply the grammar for
-traces that end in a rejecting state.
+traces that end in a rejecting state. This follows from the following
+principle, a consequence of our axiom that $\oplus$ constructors are
+disjoint.
 \begin{lemma}[\agdalogo]
   If $A \oplus A_{\neg}$ is unambiguous, then $A$ and $A_{\neg}$ are
   disjoint.
@@ -2210,7 +2218,7 @@ The set $\uparrow A$ is the set of parse for the empty string for
 $A$. This definition means that $\sem{\uparrow (A \lto B)}$ (or $\sem{\uparrow (B \tol A)}$) is
 equivalent to the set of parse transformers:
 \[ \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\varepsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\]
-Next, a parse in the equalizer $\equalizer{a : A}{f}{g}$ is defined as
+Next, a parse in the equalizer $\equalizer{a}{f}{g}$ is defined as
 a parse in $\sem{A}$ that is mapped to the same parse by $f$ and
 $g$. Recall that $\sem{f}\gamma$ and $\sem{g}$ are elements of
 $\sem{\uparrow(A \lto B)}$, i.e., parse transformers.
@@ -2228,7 +2236,7 @@ The universe $L$ of linear types is interpreted as the set of all
     \sem{\bigoplus_{x:X} A}\gamma\,w &= \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}\\
     \sem{\bigwith_{x:X} A}\gamma\,w &= \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w\\
     \sem{\uparrow A}\gamma &= \sem{A}\gamma\,\varepsilon\\
-    \sem{\equalizer{a:A}{f}{g}}\gamma\,w &= \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
+    \sem{\equalizer{a}{f}{g}}\gamma\,w &= \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
     \sem{L}\gamma &= \Grammar_0\\
     \sem{\SPF\,X}\gamma &= \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)\\
     \sem{\el(F)}\gamma\,G &= \sem{F}\gamma\,G\\
