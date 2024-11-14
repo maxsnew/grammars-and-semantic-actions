@@ -286,9 +286,11 @@ verified library, just as parser generators and regular expression
 matchers have done for many decades in unverified software.
 
 Prior approaches to verified parsing focus on verification of a
-particular grammar formalism such as \max{Steven write down what the
-  related work uses
-  here}\cite{lasserCoStarVerifiedALL2021,firsovCertifiedNormalizationContextFree2015,danielssonTotalParserCombinators2010}.
+particular grammar formalism such as non-left-recursive grammars or LL(1) grammars \cite{lasserCoStarVerifiedALL2021,EdelmannZippy2020,danielssonTotalParserCombinators2010}.
+\steven{These have restrictions on left recursion or LL(1)-ness. Is it the most accurate
+  to call that a difference in formalism? It would seem that these are all CFGs
+  + conditions. Maybe these aren't the best works to
+  compare to if they're verifying particular algorithms}
 Each new grammar formalism must then be extended with its own verified
 implementation.
 
@@ -304,12 +306,12 @@ not a verified parser generator that compiles regular expressions to
 deterministic finite automata, but is instead is a domain specific
 language \emph{for writing} such a verified parser generator.
 
-\max{Steven, is this accurate comparison?} The design of \theoryabbv
+The design of \theoryabbv
 is an extension of Joachim Lambek's \emph{categorial grammars}
 \cite{lambek}. Categorial grammars are a grammar formalism equivalent
 in expressive power to context-free grammars that in modern
 terminology would be considered a kind of \emph{non-commutative linear
-logic}, a version of linear logic where the tensor product is not
+logic} --- a version of linear logic where the tensor product is not
 commutative, reflecting the obvious property that the relative
 ordering of characters is significant in parsing problems. We extend
 non-commutative linear logic with two key components that increase its
@@ -436,7 +438,7 @@ derivation that shows that $\inl(a \otimes b)$ defines a valid parse
 tree for the finite grammar $(\literal a \otimes \literal b) \oplus
 \literal c$. Underneath the derivation in \cref{fig:fingram}, we give
 a linear $\lambda$-term that implements the program given in the
-derivation.\max{reverse the order of these?}
+derivation.\max{reverse the order of these?} \steven{the order of what?}
 
 \begin{figure}
 \begin{mathpar}
@@ -535,7 +537,6 @@ value, which in our syntax is an implicit coercion from a nonlinear
 value to a linear value. After we call the constructor it ``returns''
 a value that may only be used a single time.
 
-\steven{TODO fig 3 sizing}
 \begin{figure}
 \begin{mathpar}
 \footnotesize
@@ -1322,8 +1323,8 @@ From the first principle, we can prove that $\String$ is unambiguous,
 since it is a retract of $\top$. In fact, observe that if $\A$ is a
 retract of $\B$ and $\B$ is unambiguous, then in fact $\A$ and $\B$
 are strongly equivalent, as the equation $\lambda b. f(g(b)) \equiv
-\lambda b. b$ follows because $\B$ is unambiguous. Therefore also
-$\String$ is strongly equivalent to $\top$. Next, since $\String$ is
+\lambda b. b$ follows because $\B$ is unambiguous. Therefore
+$\String$ is also strongly equivalent to $\top$. Next, since $\String$ is
 defined as a Kleene star, we can easily show that $\String \cong \I
 \oplus \Char \oplus (\Char \otimes \Char \otimes \String)$. Then by
 the second principle we have that $\I$ and $\Char$ and each literal
@@ -1950,7 +1951,7 @@ unambiguous.
 
 Our final example is of a simple grammar of arithmetic expressions
 with an associative operation. Here we take the alphabet to be $\{
-\stringquote{(}, \stringquote{)}, \stringquote{+} \stringquote{NUM}
+\stringquote{(}, \stringquote{)}, \stringquote{+} , \stringquote{NUM}
 \}$. In \Cref{fig:binop-inductive} we define it using two mutually
 recursive types, corresponding to the two non-terminals we would use
 in a CFG syntax. The syntactic structure encodes that the binary
@@ -1962,7 +1963,8 @@ which case it increments the stack and stays in the opening state, or
 sees a number and proceeds to the $D$ state. The ``done opening''
 state $D$ is where lookahead is used: if the next token will be a
 right paren, then we proceed to $C$, otherwise we proceed to $M$. Here
-$\mathsf{NotStartsWithRP}$ is defined as $\I \oplus (('(' \oplus '+'
+$\mathsf{NotStartsWithRP}$ is defined as
+$\I \oplus (({\literal{(}} \oplus {\literal {+}}
 \oplus \mathsf{NUM}) \otimes \top)$. In the ``closing'' state $C$ if
 we observe a close paren we decrement the count and continue to the
 $D$ state. In the ``multiplying'' state $M$, we succeed if the string
@@ -1974,7 +1976,7 @@ generalizing the approach for deterministic automata.
 
 \begin{theorem}[\agdalogo]
   We construct a parser for $\mathsf{Exp}$ by showing it is weakly
-  equivalent to $\mathsf{O}~0~\true$ 
+  equivalent to $\mathsf{O}~0~\true$.
 \end{theorem}
 \begin{figure}
 \begin{lstlisting}
@@ -2174,6 +2176,7 @@ structures to model the linear types, terms and equalities in
 % \pedro{In which case we should introduce it in the previous section. I suggest
 %   adding this right after ``and the intuitionistic typing rules in fig 3''}
 \subsection{Semantics}
+\steven{Add definitions of kleene,lambek,and chomsky categories here?}
 
 We can now define our denotational semantics.
 \begin{definition}[Grammar Semantics]
@@ -3052,14 +3055,17 @@ used to interpret $\roll, \fold$ and the corresponding axioms.
 
 \section{Discussion and Future Work}
 \label{sec:discussion}
-\paragraph{Lambek Calculus and Categorial Grammar}
+\subsection{Typed Approaches to Grammars}
+\subsubsection{Lambek Calculus and Categorial Grammar}
+
+\steven{Note that lambek calculus and its extensions don't have inductives, or
+  even kleene star as far as I can tell. }
+
+\steven{Choppy notes about lambek calc:
 In 1958 \cite{lambek1958mathematics}, Joachim Lambek introduced his syntactic
 calculus as a logical system for linguistic derivations. In fact, one may view
 the subtheory of our calculus generated over $\otimes, \lto, \tol$ to be a proof
 relevant presentation of Lambek's original system.
-
-\steven{Should discussion of this connection to Lambek calculus be spread
-  throughout the paper?}
 
 Lambek later explicitly connects his syntactic calculus to the structure of a
 non-commutative biclosed monoidal category \cite{lambek1988categorial}. There is
@@ -3077,14 +3083,24 @@ There seem to be some implementations from the abstract categorial grammar
 toolkit, but again they seem natural language focused and not up to the task of
 verified formal language parsing.
 
-Also mention here that \cite{luoLambekCalculusDependent} seems similar at first
+Also mention here that Luo's work \cite{luoLambekCalculusDependent} seems similar at first
 glance, but isn't as similar as it might look because the judgments and
 dependent types seem to
 take on a different interpretation of ours. Say something here like, ``as we
 understand it, it differs in x,y,z ways''
+}
 
-\steven{TODO Edit the above}
-\steven{Even though the above sounds bad, are there Lambek/categorial things that are missed?}
+\subsubsection{Other typed approaches}
+\steven{this subsection should be renamed}
+The usage of a simple type system to reason about regular expressions was
+introduced by Frisch and Cardelli in 2004 \cite{frischCardelli}, and later expanded
+by Hengelin and Nielsen in 2011 \cite{henglein_regular_2011} to handle proofs of regular expression
+containment.
+
+\steven{Mention Neel's typed algebraic approach paper here. Say it is similar at
+  first glance, as its parsing and it has types, but that he actually is representing
+  a system for proving the LL(1) condition }
+
 
 %% 1. More practical: integrating it into a larger verified development
 %%    - verified imperative implementation: Lambek logic ala separation
@@ -3092,56 +3108,8 @@ understand it, it differs in x,y,z ways''
 %% 2. Semantic actions
 %% 3. Type systems as tree grammars
 
-\paragraph{Typed Approaches to Regular Expressions}
-The usage of a simple type system to reason about regular expressions was
-introduced by Frisch and Cardelli in 2004 \cite{frischCardelli}, and later expanded
-by Hengelin and Nielsen in 2011 \cite{henglein_regular_2011} to handle proofs of regular expression
-containment. In 1992, while investigating the addition of arbitrary recursion to Kleene
-algebra \cite{leiss},
-Lei{\ss} used a least fixed-point operator instead of the Kleene star. Although
-he did not explicitly make use of a type system, or have access to the view of Frisch and
-Cardelli, Lei{\ss} had added the full power of inductive types to a type system
-of regular expressions.
 
-Pratt's work on the residuation of action algebras in \cite{prattActionLogicPure1991} closely mirrors
-our observation that Brzozowski derivatives mirror linear function types.
-Moreover, he shows that his residuals form a Galois connection with sequential
-composition. This is precisely a posetal --- or \emph{thin} --- version of the
-adjunction between
-linear function types and tensor product in \theoryabbv.
-
-Our primary observation in this paper can be summarized as saying that all of
-these above works can embed naturally into a rich, unifying theory.
-
-\steven{I'd like to synthesize the discussion of these works with the categorial
-grammar works, but I am not sure how. It seems as though there are these
-parallel tracks of research that have missed each other for decades}
-
-\paragraph{Inductive Linear Types}
-
-
-
-% In \cite{firsovCertifiedNormalizationContextFree2015}, Firsov and Uustalu
-% constructed a verified normalization procedure to turn a
-% context-free grammar into an equivalent grammar in Chomsky normal form.
-% Combining their work with a CYK parser, they have built a verified context-free
-% grammar parser, \emph{up to weak equivalence}. To upgrade from a weak
-% equivalence to a strong equivalence, they suggest updating their grammar
-% formalism to treat parse trees as first-class proofs of language membership.
-% That is, without explicitly stating so, they suggest that they next natural step
-% is to reason about grammars in a system where parse trees are terms, as we have
-% given in this paper.
-
-% \steven{Make the above paragraph shorter. Also idk if its worth including, but I
-% like that they practically ask for a type theory}
-
-\steven{Mention Neel's typed algebraic approach paper here. Say it is similar at
-  first glance, as its parsing with types, but that he actually is representing
-  something quite different. Or is it so different that its not worth mentioning?}
-
-\steven{TODO add Lambek calculus/categorial grammars here}
-
-\paragraph{Kleene Algebra}
+\subsubsection{Kleene Algebra}
 Since the early works in the theory of formal languages, Kleene
 algebras have played an important role in its development. They
 generalize the operations known from regular languages by introducing
@@ -3163,15 +3131,24 @@ theory. By adopting a category-theoretic treatment and allowing the
 inequalities, we were able to extend Kleene algebra to reason about
 parsing as well.
 
-\steven{Can we sketch here what an apt categorification of KATs might be? As a
-  poor first pass: perhaps a Kleene category with a full involutive
-  subcategory that corresponds to the Boolean algebra?.}
-\steven{What can we say about internalizing Kleene algebra proofs or extensions?}
-\steven{any KA citations needed above?}
+\subsection{Semantic Actions}
+
+Our verification has mainly focused on the verification that a parser
+outputs a correct concrete syntax tree for a grammar. However, in
+practice, parsers are combined with a \emph{semantic action} that
+emits an \emph{abstract} syntax tree that omits superflous syntactic
+details that aren't needed in later stages of the overall program. We
+can define a semantic action in \theoryabbv for a linear type $A$ with
+semantic outputs in a non-linear type $X$ to be a function $\ltonl {(A
+  \lto \bigoplus_{\_:X} \top)}$. That is, a semantic action is a
+function that produces a semantic element of $X$ from the concrete
+parses of $A$. In future work, we aim to study the question of
+verifying efficient implementations of parsers with semantic actions.
+
 
 %%    - verified imperative implementation: Lambek logic ala separation
 %%      logic?
-\paragraph{Relation to Separation Logic}
+\subsection{Relation to Separation Logic}
 
 \theoryabbv is similar in spirit to separation logic. Semantically,
 they are closely related: linear types in \theoryabbv denote families
@@ -3207,27 +3184,11 @@ logic for verifying imperative implementations of parsers. This could
 be accomplished by modifying an existing separation logic
 implementation or embedding the logic within \theoryabbv.
 
-%% \paragraph{Linearity with Dependent Types}
-%% \steven{I don't know if it worth discussing the different influences of
-%%   categorical model here? We take Neel's model and add to it as necessary}
+\subsection{Implementation}
+\steven{Moving away from a prototype implementation of \theoryabbv}
+\steven{Mention performance}
 
-% Vakar might be worth citing to discuss different characterizations of the
-% notion of model \cite{vakarSyntaxSemanticsLinear2015}
-
-% \cite{fu2023twolevellineardependenttype} give a compiler for a two-level
-% linear dependent type theory. This could serve as a template for a
-% compiler implementation of \theoryname that is not just inference rules
-% embedded in Agda.
-
-\paragraph{Implementations in Parsing}
-\steven{Talk about future implementation-side work}
-
-\cite{fu2023twolevellineardependenttype} give a compiler for a two-level
-linear dependent type theory. This could serve as a template for a
-compiler implementation of \theoryname that is not just inference rules
-embedded in Agda.
-
-\paragraph{Type Checking and Elaboration}
+\subsection{Type Checking and Elaboration}
 Our focus in this work has been on the verification of parsers for
 grammars over strings, but because \theoryabbv allows for the
 definition of arbitrarily powerful grammars, the system could also be
@@ -3261,26 +3222,13 @@ but families of sets indexed by \emph{abstract syntax trees}.
 % Uniqueness of derivations ~~ unambiguous grammar
 % type elaborator           ~~ semantic actions
 
-\subsection{Semantic Actions}
-
-Our verification has mainly focused on the verification that a parser
-outputs a correct concrete syntax tree for a grammar. However, in
-practice, parsers are combined with a \emph{semantic action} that
-emits an \emph{abstract} syntax tree that omits superflous syntactic
-details that aren't needed in later stages of the overall program. We
-can define a semantic action in \theoryabbv for a linear type $A$ with
-semantic outputs in a non-linear type $X$ to be a function $\ltonl {(A
-  \lto \bigoplus_{\_:X} \top)}$. That is, a semantic action is a
-function that produces a semantic element of $X$ from the concrete
-parses of $A$. In future work, we aim to study the question of
-verifying efficient implementations of parsers with semantic actions.
 
 \bibliographystyle{plain}
 \bibliography{refs.bib}
 
+\pagebreak
+
 \appendix
-
-
 
 \section{Syntax}
 
@@ -3493,9 +3441,7 @@ substitution.
   \caption{Judgmental equality for linear terms}
   \label{fig:jdgeq}
 \end{figure}
-\steven{Do we need inverse for $\ltonl A$ in judgmental equality figure?}
-\steven{Do we need to say anything about the equalizer proofs being unique in
-  judgmental equality figure?}
+\steven{Need to include premises for the judgmental equality rules}
 
 \begin{definition}
   The set of (non-linear) substitutions $\gamma \in
@@ -3587,11 +3533,7 @@ substitution.
   %% substitution mapping each variable to itself. Additionally we can define composition of 
 \end{definition}
 
-\begin{definition}
-  Given any $\Gamma ; \Delta \vdash e : A$ and $\delta \in
-  \Subst(\Delta',\Delta)$, we define the action of the substitution on
-  $e$ as follows, frequently using the inversion principle to split
-  the substitution into constituent components.
+\begin{figure}
   \begin{align*}
     a[e/a] &= e\\
     (e_1,e_2)[\delta_1,\delta_2] &= (e_1[\delta_1], e_2[\delta_2])\\
@@ -3611,6 +3553,17 @@ substitution.
     (\equalizerin{e})[\delta] &= \equalizerin{e[\delta]}\\
     (\equalizerpi{e})[\delta] &= \equalizerpi{e[\delta]}
   \end{align*}
+\caption{Action of substitution on linear terms}
+\label{fig:substact}
+\end{figure}
+\steven{captilizataion should be consistent over all figures. idk if all caps or
+all lowercase is beter?}
+
+\begin{definition}
+  Given any $\Gamma ; \Delta \vdash e : A$ and $\delta \in
+  \Subst(\Delta',\Delta)$, we define the action of the substitution on
+  $e$ in \cref{fig:substact}, frequently using the inversion principle to split
+  the substitution into constituent components.
   By induction on linear term and equality judgments, we establish the
   following admissible rules for $\delta \in \Subst(\Delta',\Delta)$:
   \begin{mathpar}
@@ -4064,10 +4017,12 @@ The $\eta$ law for $\bigamp$ is given by,
   \semg{(\dlamb x {e.\pi~x})} = \semg{e}
 \]
 \begin{proof}
+\begin{align*}
   \semg{(\dlamb x {e.\pi~x})}
   & = (\semg{e.\pi~x})_{x : X} \\
   & = (\pi_x \circ \semg{e})_{x : X} \\
   & = \semg{e}
+\end{align*}
 \end{proof}
 by the universal property of the product.
 
@@ -4193,7 +4148,7 @@ The $\eta$ rule for $\equalizer e f g$ is given as,
 	\arrow["{\semg{e}}", from=2-1, to=1-1]
 	\arrow["{\semg{\equalizerpi e}}"', from=2-1, to=1-2]
 \end{tikzcd}
-\begin{center}
+\end{center}
 \end{proof}
 
 \end{document}
