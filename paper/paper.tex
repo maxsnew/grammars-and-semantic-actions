@@ -1940,32 +1940,62 @@ unambiguous.
 
 Our final example is of a simple grammar of arithmetic expressions
 with an associative operation. Here we take the alphabet to be $\{
-\stringquote{(}, \stringquote{)}, \stringquote{+} \} \cup \{ n | n \in
-\mathbb N \}$ given in \Cref{fig:dyckinductive}. This grammar is
-LR(1), and the corresponding automaton (which is too complex to
-include here) uses the $\&$ to guard transitions with lookahead
-information \max{Probably we should at least try to fit it in or put
-  it in the appendix.}
+\stringquote{(}, \stringquote{)}, \stringquote{+} \stringquote{NUM}
+\}$. In \Cref{fig:binop-inductive} we define it using two mutually
+recursive types, corresponding to the two non-terminals we would use
+in a CFG syntax. The syntactic structure encodes that the binary
+operation is right associative. In the same figure, we define the
+traces of an automaton with one token of lookahead. The automaton has
+four different ``states'', each with access to a natural number
+``stack''. The ``opening'' state $O$ expects either an open paren, in
+which case it increments the stack and stays in the opening state, or
+sees a number and proceeds to the $D$ state. The ``done opening''
+state $D$ is where lookahead is used: if the next token will be a
+right paren, then we proceed to $C$, otherwise we proceed to $M$. Here
+$\mathsf{NotStartsWithRP}$ is defined as $\I \oplus (('(' \oplus '+'
+\oplus \mathsf{NUM}) \otimes \top)$. In the ``closing'' state $C$ if
+we observe a close paren we decrement the count and continue to the
+$D$ state. In the ``multiplying'' state $M$, we succeed if the string
+ends and the count is $0$, and if we see a plus we continue to the $O$
+state. Additionally, since the automaton need also parse all of the
+incorrect strings, we add additional failing cases. It is
+straightforward to implement a parser for this lookahead automaton,
+generalizing the approach for deterministic automata.
 
 \begin{theorem}[\agdalogo]
   We construct a parser for $\mathsf{Exp}$ by showing it is weakly
-  equivalent to a deterministic automaton with lookahead.
+  equivalent to $\mathsf{O}~0~\true$ 
 \end{theorem}
 \begin{figure}
 \begin{lstlisting}
 data Exp : L where
-  num : (*@$\uparrow$@*)(&[ n : Nat ] 'n' (*@$\lto$@*) Exp)
-  parens : (*@$\uparrow$@*)('(' (*@$\lto$@*) Exp (*@$\lto$@*) ('+' (*@$\otimes$@*) Atom *) ')' (*@$\lto$@*) Exp)
+  done : (*@$\uparrow$@*)(Atom (*@$\lto$@*) Exp)
+  add : (*@$\uparrow$@*)(Atom (*@$\lto$@*) '+' (*@$\lto$@*) Exp (*@$\lto$@*) Exp)
+data Atom : L where
+  num : (*@$\uparrow$@*)(NUM (*@$\lto$@*) Atom)
+  parens : (*@$\uparrow$@*)('(' (*@$\lto$@*) Exp (*@$\lto$@*) ')' (*@$\lto$@*) Atom)
+
+data O : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
+  left : (*@$\uparrow$@*)(&[ n ] &[ b ] '(' (*@$\lto$@*) O (n + 1) b (*@$\lto$@*) O n b)
+  num : (*@$\uparrow$@*)(&[ n ] &[ b ] NUM (*@$\lto$@*) DO n b (*@$\lto$@*) O n b)
+  done : (*@$\uparrow$@*)(&[ n ] O n false)
+  unexpected : (*@$\uparrow$@*)(&[ n ] (')' (*@$\oplus$@*) '+') (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) O n false)
+data D : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
+  lookAheadRP  : (*@$\uparrow$@*)(&[ n ] &[ b ] ((')' (*@$\otimes$@*) (*@$\top$@*)) (*@$\&$@*) C n b) (*@$\lto$@*) D n b)
+  lookAheadNot  : (*@$\uparrow$@*)(&[ n ] &[ b ] (NotStartsWithRP (*@$\&$@*) M n b) (*@$\lto$@*) D n b)
+data C : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
+  closeGood : (*@$\uparrow$@*)(&[ n ] &[ b ] ')' (*@$\lto$@*) D n b (*@$\lto$@*) C (n + 1) b)
+  closeBad : (*@$\uparrow$@*)(&[ n ] ')' (*@$\lto$@*) C 0 b)
+  done : (*@$\uparrow$@*)(&[ n ] C n false)
+  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) '+' (*@$\oplus$@*) NUM) (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) C n false)
+data M : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
+  doneGood : (*@$\uparrow$@*)(M 0 true)
+  doneBad : (*@$\uparrow$@*)(&[ n ] M (n + 1) false)
+  add : (*@$\uparrow$@*)(&[ n ] &[ b ] '(' (*@$\lto$@*) O n b (*@$\lto$@*) M n b)
+  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')'(*@$\oplus$@*) NUM) (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) M n false)
 \end{lstlisting}
-%% data Opening : Nat -> Bool -> L where
-%% data Closing : Nat -> Bool -> L where
-%% data Multiplying : Nat -> Bool -> L where
-%%   done : (*@$\uparrow$@*)(Multiplying 0 true)
-%%   times : (*@$\uparrow$@*)(&[ n : Nat ] &[ b : Bool] '*' -o Opening n b -o Multiplying n b)
-%%   unmatched : (*@$\uparrow$@*)(&[ n : Nat ] Multiplying (n + 1) false)
-%%   unexpected
-\caption{Binary operation expressions and a corresponding lookahead automaton}
-\label{fig:dyckinductive}
+\caption{Associative arithmetic expressions and a corresponding lookahead automaton}
+\label{fig:binop-inductive}
 \end{figure}
 % \subsection{LL(1)}
 % %% 4. LL(1) parser
@@ -3239,6 +3269,8 @@ verifying efficient implementations of parsers with semantic actions.
 \bibliography{refs.bib}
 
 \appendix
+
+
 
 \section{Syntax}
 
