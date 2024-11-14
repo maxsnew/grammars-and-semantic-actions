@@ -3601,29 +3601,7 @@ all lowercase is beter?}
 \end{definition}
 
 \section{Denotational Semantics}
-\steven{Define a Kleene, Lambek, and Chomsky category}
-
-Let $\semcat$ be a Chomsky category.
-
-\steven{Finish the denotation of lin types figure for spf, el , map , mu}
-\begin{figure}
-  \begin{align*}
-    \semg{I} &= I \\
-    \semg{A \otimes B} &= \semg{A} \otimes \semg{B} \\
-    \semg{A \lto B}  &= \semg{A} \lto \semg{B} \\
-    \semg{B \tol A} &= \semg{B} \tol \semg{A} \\
-    \semg{\bigoplus_{x:X} A} &= \coprod_{x:X} \semg{A} \\
-    \semg{\bigwith_{x:X} A} &= \prod_{x : X} \semg{A} \\
-    \semg{\uparrow A} &= Hom(I,A) \\
-    \semg{\equalizer{a:A}{f}{g}} &= Eq\left( \semg{f} , \semg{g} \right) \\
-    \sem{L}\gamma &= \semcat_0\\
-    \sem{\SPF\,X}\gamma &= \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)\\
-    \sem{\el(F)}\gamma\,G &= \sem{F}\gamma\,G\\
-    \sem{\map(F)}\gamma\,f &= \sem{F}\gamma\,f\\
-    \sem{\mu A}\gamma &= \mu (\sem{A}\gamma)
-  \end{align*}
-  \caption{Denotation of Linear Types}
-\end{figure}
+Here we extend the denotational semantics from \cref{sec:semantics-and-metatheory} to cover all of \theoryname syntax.
 
 \begin{definition}[Denotation of Linear Contexts]
   The semantics of linear contexts $\Gamma \vdash \Delta \isLinCtx$ is
@@ -3992,7 +3970,7 @@ The $\eta$ rule for $\tol$ is given by,
 \subsubsection{$\bigamp$-Products}
 % Products
 \paragraph{$\bigamp$-Introduction}
-$\semg{\dlamb x e} : \semg{\Delta} \to \LinPiTyLimit {x} {X} {\sem{A}(\gamma , x)}$ is
+$\semg{\dlamb x e} : \semg{\Delta} \to \prod_{x : X} {\sem{A}(\gamma , x)}$ is
 defined by the universal property of the product
 \[
 \semg{\dlamb x e} = \left( \sem{e}(\gamma , x) \right)_{(x : X)}
@@ -4005,7 +3983,7 @@ projection out of the product,
 \begin{center}
 \begin{tikzcd}
   \semg{\Delta} \arrow[r , "\semg{e}"] &
-  \LinPiTyLimit {x} {X} {\sem{A}(\gamma , x)} \arrow[r , "\pi_M"] &
+  \prod_{x : X} {\sem{A}(\gamma , x)} \arrow[r , "\pi_M"] &
   \sem{A}(\gamma , M)
 \end{tikzcd}
 \end{center}
@@ -4050,13 +4028,13 @@ by the universal property of the product.
 \subsubsection{$\bigoplus$-Sums}
 % Sums
 \paragraph{$\bigoplus$-Introduction}
-$\semg{\sigma~M~e} : \semg{\Delta} \to \LinSigTyLimit {x} {X} \sem{A}(\gamma, x)$
+$\semg{\sigma~M~e} : \semg{\Delta} \to \coprod_{x : X} \sem{A}(\gamma, x)$
 
 \begin{center}
 \begin{tikzcd}
   \semg{\Delta} \arrow[r , "\semg{e}"] &
   \sem{A}(\gamma, M) \arrow[r , "i_M"] &
-  \LinPiTyLimit {x} {X} {\sem{A}(\gamma , x)}
+  \coprod_{x : X} {\sem{A}(\gamma , x)}
 \end{tikzcd}
 \end{center}
 
@@ -4068,9 +4046,9 @@ is defined in the diagram
 % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAB124YBbAc2CcAIjAY46AcgD6ARlLDR4+exFjJUgEwBfEFtLpMufIRRzK1es1aIOXXgIVrpcx+K0ACThDw94nu-yCKorq2rr6IBjYeAREcjJUtIwsbJwMMABmOAAU-tyBruoyHl4+fpz5DsFqJewATlh8ABY4AJT+3li+cHn2Qari0mF6BtHGcaQaiZYpNpwAMlhgAMqNACoAnos8uO7AAB4ewAAaRxW8-SHOpHTuiO4AgsoDoVrZnHx0PDy3pO77rR0I0ihhiJhIk2myWstkWK3WWy6uwOR1OezSmRyvR4lycsjeHy+P3cfwBHTKcHYYHcNNp5xxDwJ7E+31+-3anAazTa5K65QCuMGmiZLOJpMB4VGRliKDICQs0NS7HSWVy9KqL2ctU63X8cNWfE222Rhz2aKC+WAjPezKJbIBtS5LQ57B1-MqgtekpBYxlyDkAGYoVYlZaAMIiu3i71RaXgshBhUhuYBAQR3SJGBQPjwIigDJ1CA8JBkEA4CBIORJZMgHhSYA2zWyZ4hVotvFhagMOgAI1EAAVQeMbCqcN6C0XK9Ry0gNEnZrX64VroUtKU+T0sFAQF3ewOhzKQKPx4Xi4g52WK4gAKzzmHZLe83Xq4AwLQut2b7e7vsMQe+kwj0xE9J0QANpyvAA2O82GQbFXwkSNWRJdl3Aoetsn2O53GOCUf33AC2GPYEJzPAAWCCkHA6sFx4AA9YAAFpigw5dmzoRAHjbNjOyPPc-wPQDiIiUikFvS8kAomiYR3Pjf3-OMiOAkjTyQaCJMQAB2LQKC0IA
 \begin{tikzcd}[column sep =large]
 {\semg{\Delta'_1,\Delta,\Delta'_2}} \arrow[r, "{m_{(\Delta'_1,\Delta),\Delta'_2}}"]                                                                                                           & {\semg{\Delta'_1,\Delta} \otimes \semg{\Delta'_2}} \arrow[d, "{m_{\Delta'_1,\Delta}\otimes id}"]                             \\
-{\left( \semg{\Delta'_1} \otimes \LinSigTyLimit {x} {X} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, "d"]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
-{\LinSigTyLimit {x} {X} {\left( \sem{\Delta'_1}(\gamma , x) \otimes
-      \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, "{m^{-1}_{(\Delta'_1,a:A),\Delta'_2}}"] & {\LinSigTyLimit {x} {X} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : X)}}"]     \\
+{\left( \semg{\Delta'_1} \otimes \coprod_{x:X} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, "d"]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
+{\coprod_{x : X} {\left( \sem{\Delta'_1}(\gamma , x) \otimes
+      \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, "{m^{-1}_{(\Delta'_1,a:A),\Delta'_2}}"] & {\coprod_{x : X} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : X)}}"]     \\
 \semg{C}                                                                                                                                                                                      & {\sem{C}(\gamma, x)} \arrow[l]
 \end{tikzcd}
 \end{center}
@@ -4089,19 +4067,21 @@ The $\beta$ rule for $\bigoplus$ is given by,
   & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
   \otimes \semg{\sigma~M~a'}) \otimes id \circ m \otimes id \circ m \\
   & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
-  \otimes i_M \circ \semg{a'}) \otimes id \circ m \otimes id \circ m \\
+  \otimes (i_M \circ \semg{a'})) \otimes id \circ m \otimes id \circ m \\
   & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
-  \otimes i_M \circ \lambda) \otimes id \circ m \otimes id \circ m
+  \otimes (i_M \circ \lambda)) \otimes id \circ m \otimes id \circ m \\
+  & = ? \\
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ i_{M} \\
+  & = \sem{e'}(\gamma , x)
   \end{align*}
-\steven{TODO need to track subscripts on $m$ in the $\bigoplus\beta$ proof, and
-  finish this part of the above part of the proof}
+
+  \steven{How does the distributivity morphism handled? Seems like its a barrier to invoking coherence}
 
   \begin{align*}
     \semg{e'[M/x,a'/a]}
     &= \semg{e'} \circ \semg{M/x,a'/a} \tag{\cref{lem:subst}} \\
-    &= \semg{e'}
+    &= \sem{e'}(\gamma , x)
   \end{align*}
-  \steven{TODO shouldn't the semantics of $e'$ be in context $\gamma,x$ not $x$?}
 \end{proof}
 
 \paragraph{$\bigoplus\eta$}
