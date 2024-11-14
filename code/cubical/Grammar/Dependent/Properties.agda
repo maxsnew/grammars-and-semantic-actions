@@ -5,14 +5,18 @@ module Grammar.Dependent.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
+import Cubical.Data.Empty as Empty
 
 open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
+open import Grammar.Bottom Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.Equivalence.Base Alphabet
+open import Grammar.Equalizer Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Top Alphabet
@@ -80,6 +84,25 @@ module _
   unambiguous⊕ᴰ unambig⊕ a =
     unambiguous'→unambiguous
       (unambiguous'⊕ᴰ (unambiguous→unambiguous' unambig⊕) a)
+
+  module _
+    (unambig⊕ : unambiguous (⊕[ a ∈ A ] h a))
+    (a a' : A)
+    where
+    opaque
+      unfolding _&_ ⊥
+      disjointSummands :
+        (a ≡ a' → Empty.⊥) →
+        disjoint (h a) (h a')
+      disjointSummands a≠a' w (p , p') =
+        a≠a' λ i → unambig⊕ (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂) i w (p , p') .fst
+
+    equalizer→⊥ :
+      (a ≡ a' → Empty.⊥) →
+      equalizer (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂) ⊢ ⊥
+    equalizer→⊥ a≠a' =
+     disjointSummands a≠a'
+     ∘g eq-π (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂)
 
 module _
   {X : Type ℓS} {A : X → Grammar ℓh}

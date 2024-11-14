@@ -19,6 +19,7 @@ open import Grammar.Base Alphabet
 open import Grammar.Top.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Bottom.Base Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Negation Alphabet
@@ -63,6 +64,15 @@ unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
 totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)
 totallyParseable {ℓg = ℓg} g =
   Σ[ g' ∈ Grammar ℓg ] StrongEquivalence (g ⊕ g') ⊤
+
+disjoint : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
+disjoint g h = g & h ⊢ ⊥
+
+open LogicalEquivalence
+module _ (dis : disjoint g h) (g≈k : LogicalEquivalence g k) where
+  disjoint≈ : disjoint k h
+  disjoint≈ = dis ∘g g≈k .inv ,&p id
+
 
 open StrongEquivalence
 
