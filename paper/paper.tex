@@ -3075,7 +3075,6 @@ existing proof assistant.
 \subsection{Typed Approaches to Grammars}
 
 \steven{Talk about Conal Elliott's Automatic and Symbolic differentiation paper}
-\steven{Talk briefly about this recent arxiv paper? https://arxiv.org/abs/2411.06358}
 
 \subsubsection{Lambek Calculus and Categorial Grammar}
 
@@ -3130,27 +3129,66 @@ containment.
 %% 3. Type systems as tree grammars
 
 
-\subsubsection{Kleene Algebra}
-Since the early works in the theory of formal languages, Kleene
-algebras have played an important role in its development. They
-generalize the operations known from regular languages by introducing
-operations generalizing language composition, language union and the
-Kleene star.  More generally, they are defined as inequational theory
-where the inequality is meant to capture language containment.  This
-theory is extremely successful, having found applications in concurrency theory
-\cite{hoare2009concurrent}, software-defined networks \cite{anderson2014netkat},
-theory of programming languages \cite{angus2001kleene}, compiler optimizations
-\cite{kozen2000certification} and more.
+%% \subsubsection{Kleene Algebra}
+%% Since the early works in the theory of formal languages, Kleene
+%% algebras have played an important role in its development. They
+%% generalize the operations known from regular languages by introducing
+%% operations generalizing language composition, language union and the
+%% Kleene star.  More generally, they are defined as inequational theory
+%% where the inequality is meant to capture language containment.  This
+%% theory is extremely successful, having found applications in concurrency theory
+%% \cite{hoare2009concurrent}, software-defined networks \cite{anderson2014netkat},
+%% theory of programming languages \cite{angus2001kleene}, compiler optimizations
+%% \cite{kozen2000certification} and more.
 
-A frequently fruitful research direction is exploring varying
-extensions of Kleene algebras, Kleene algebra with tests (KAT) being
-one of the most notable ones \cite{kozen1997kleene}. Our approach is radically different from
-most extensions, which usually aim at modifying or adding new
-operations to Kleene algebras, but still keeping it as an inequational
-theory. By adopting a category-theoretic treatment and allowing the
-``order structure'' to encode more information than merely
-inequalities, we were able to extend Kleene algebra to reason about
-parsing as well.
+%% A frequently fruitful research direction is exploring varying
+%% extensions of Kleene algebras, Kleene algebra with tests (KAT) being
+%% one of the most notable ones \cite{kozen1997kleene}. Our approach is
+%% radically different from most extensions, which usually aim at
+%% modifying or adding new operations to Kleene algebras, but still
+%% keeping it as an inequational theory. By adopting a category-theoretic
+%% treatment and allowing the ``order structure'' to encode more
+%% information than merely inequalities, we were able to extend Kleene
+%% algebra to reason about parsing as well.
+
+
+%%    - verified imperative implementation: Lambek logic ala separation
+%%      logic?
+\subsection{Relation to Separation Logic}
+
+\theoryabbv is similar in spirit to separation logic
+\cite{reynolds_separation_2002}. Semantically, they are closely
+related: linear types in \theoryabbv denote families of sets indexed
+by a monoid of strings, whereas separation logic formulae typically
+denote families of predicates indexed by an ordered partial
+commutative monoid of worlds \cite{jung_higher-order_2016}. The
+monoidal structure in both cases is are instances of the
+category-theoretic notion of Day convolution monoidal structure
+\cite{day1970construction}. From a separation-logic perspective, our
+notion of memory is very primitive: a memory shape is just a string of
+characters and the state of the memory is never allowed to evolve.
+
+%% Syntactically, our type theory can be viewed as a kind of ``separation
+%% type theory'' in that we care not just about provability of formulae
+%% but the constructive content of our linear terms, as these act as
+%% parsers. The design of \theoryabbv is based on the $\textrm{LNL}_D$
+%% calculus which explicitly was designed to be a dependent
+%% type-theoretic version of separation logic. Many concepts of
+%% separation logic then have direct analogues in our system. The
+%% characters $c$ are analogous to the ``points-to'' formulae $l \mapsto
+%% x$ in separation logic. Our $\otimes,\lto,\tol$ are analogous to the
+%% separating conjunction and magic-wand. The analogue of the persistence
+%% modality $\square$ of separation logic is $\bigoplus_{\_:\uparrow A} I$,
+%% which ``zeros out'' all but the parses from the empty string. If we
+%% think of the portions of the string we are parsing as our notion of
+%% resource, then these make sense as the ``resource-free'' elements of
+%% the type $A$.
+
+This semantic connection to separation logic suggests an avenue of
+future work: to develop a program logic based on non-commutative
+separation logic for verifying imperative implementations of
+parsers. This could be implemented by modifying an existing separation
+logic implementation or embedding the logic within \theoryabbv.
 
 \subsection{Semantic Actions}
 
@@ -3166,58 +3204,31 @@ function that produces a semantic element of $X$ from the concrete
 parses of $A$. In future work, we aim to study the question of
 verifying efficient implementations of parsers with semantic actions.
 
-
-%%    - verified imperative implementation: Lambek logic ala separation
-%%      logic?
-\subsection{Relation to Separation Logic}
-
-\theoryabbv is similar in spirit to separation logic. Semantically,
-they are closely related: linear types in \theoryabbv denote families
-of sets indexed by a monoid of strings, whereas separation logic
-formulae typically denote families of predicates indexed by an ordered
-partial commutative monoid of worlds. The monoidal structure in both
-cases is are instances of the category-theoretic notion of Day
-convolution monoidal structure. From a separation-logic perspective,
-our notion of memory is very primitive: a memory shape is just a
-string of characters and the state of the memory is never allowed to
-evolve.
-
-Syntactically, our type theory can be viewed as a kind of ``separation
-type theory'' in that we care not just about provability of formulae
-but the constructive content of our linear terms, as these act as
-parsers. The design of \theoryabbv is based on the $\textrm{LNL}_D$
-calculus which explicitly was designed to be a dependent
-type-theoretic version of separation logic. Many concepts of
-separation logic then have direct analogues in our system. The
-characters $c$ are analogous to the ``points-to'' formulae $l \mapsto
-x$ in separation logic. Our $\otimes,\lto,\tol$ are analogous to the
-separating conjunction and magic-wand. The analogue of the persistence
-modality $\square$ of separation logic is $\bigoplus_{\_:\uparrow A} I$,
-which ``zeros out'' all but the parses from the empty string. If we
-think of the portions of the string we are parsing as our notion of
-resource, then these make sense as the ``resource-free'' elements of
-the type $A$.
-
-This semantic connection to separation logic also suggests an avenue
-of future work: rather than working with a dependent type theory, we
-could instead make a program logic based on non-commutative separation
-logic for verifying imperative implementations of parsers. This could
-be accomplished by modifying an existing separation logic
-implementation or embedding the logic within \theoryabbv.
-
 \subsection{Implementation}
-\steven{Moving away from a prototype implementation of \theoryabbv}
-\steven{Mention performance}
+
+Our Agda prototype implementation serves as a usefule proof of concept
+for showing what can be implemented in \theoryabbv, but it has
+downsides we aim to address in future work. Firstly, it would be
+preferable to work with the more intuitive type theoretic syntax we
+have used in this work, rather than the combinator-style our shallow
+embedding requires. Additionally, Agda itself does not have a
+high-performance implementation, and so the parsers we implement in
+Agda do not have competitive performance to industry parser
+generators. In future work we aim to study if we can embed a proof of
+the correctness of a parser generator that produces imperative
+programs, and to what extent the correctness of those imperative
+programs can be proven within \theoryabbv.
 
 \subsection{Type Checking and Elaboration}
 Our focus in this work has been on the verification of parsers for
 grammars over strings, but because \theoryabbv allows for the
 definition of arbitrarily powerful grammars, the system could also be
-used for more sophisticated semantic analysis such as scope checking
-or type checking. Alternatively, we could more directly encode type
-type systems as linear types in a modified version of \theoryabbv
-whose semantics is not in families of sets indexed by \emph{strings}
-but families of sets indexed by \emph{abstract syntax trees}.
+used in principle for more sophisticated semantic analysis such as
+scope checking or type checking. Alternatively, we could more directly
+encode type type systems as linear types in a modified version of
+\theoryabbv where linear types are not grammars over strings, but
+\emph{type systems} over trees. This could analogously serve as a
+framework for verified type checking and static analysis.
 
 %% While parsing typically refers to the generation of semantic
 %% objects from string input, many tasks in programming can be
