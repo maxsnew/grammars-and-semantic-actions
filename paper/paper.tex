@@ -3053,21 +3053,21 @@ existing proof assistant.
 
 \section{Discussion and Future Work}
 \label{sec:discussion}
-\subsection{Typed Approaches to Grammars}
-\subsubsection{Lambek Calculus and Categorial Grammar}
-Lambek's original syntactic calculus \cite{lambek58} describes a logical system
-for linguistic derivations, and it can be given semantics inside of a non-commutative biclosed monoidal category
-\cite{lambek1988categorial}. This led to many uses of non-commutative linear logic and lambda calculi in
-linguistics \cite{buszkowskiTypeLogicsGrammar2003} --- including mechanized
-categorial grammar parsers \cite{Guillaume2024,ranta-2011}. This style of grammar
-formalism has gone by the names Lambek calculus or \emph{categorial grammar},
-and it is equal in expressivity to context-free grammars.
-The existing works on categorial grammar
-frequently present logical operations on linear predicates rather than the term
-language given in this paper.
-Additionally, much of the existing work is
-oriented toward computational linguistics, giving functorial semantics to natural language in
-the tradition of Montague \cite{Montague1974-MONFPS}.
+\paragraph{Grammars as (Linear) Types}
+Lambek's original syntactic calculus \cite{lambek58} describes a
+logical system for linguistic derivations, and it can be given
+semantics inside of a non-commutative biclosed monoidal category
+\cite{lambek1988categorial}. This led to many uses of non-commutative
+linear logic and lambda calculi in linguistics
+\cite{buszkowskiTypeLogicsGrammar2003} --- including mechanized
+categorial grammar parsers \cite{Guillaume2024,ranta-2011}. This style
+of grammar formalism has gone by the names Lambek calculus or
+\emph{categorial grammar}, and it is equal in expressivity to
+context-free grammars.  The existing works on categorial grammar are
+different in nature to our approach: they are based on non-commutative
+linear logic, but their terms do not include elimination rules, and so
+can only express parse trees, and so cannot be used to express
+verified parsers.
 
 The most similar prior work to our own is Luo's Lambek calculus with
 dependent types \cite{luo}. Their design differs from our own in
@@ -3126,7 +3126,7 @@ semantic interpretation of regular grammars as type-level predicates on strings.
 
 %%    - verified imperative implementation: Lambek logic ala separation
 %%      logic?
-\subsection{Relation to Separation Logic}
+\paragraph{Relation to Separation Logic}
 
 \theoryabbv is similar in spirit to separation logic
 \cite{reynolds_separation_2002}. Semantically, they are closely
@@ -3162,7 +3162,7 @@ separation logic for verifying imperative implementations of
 parsers. This could be implemented by modifying an existing separation
 logic implementation or embedding the logic within \theoryabbv.
 
-\subsection{Semantic Actions}
+\paragraph{Semantic Actions}
 
 Our verification has mainly focused on the verification that a parser
 outputs a correct concrete syntax tree for a grammar. However, in
@@ -3176,7 +3176,7 @@ function that produces a semantic element of $X$ from the concrete
 parses of $A$. In future work, we aim to study the question of
 verifying efficient implementations of parsers with semantic actions.
 
-\subsection{Implementation}
+\paragraph{Implementation}
 
 Our Agda prototype implementation serves as a usefule proof of concept
 for showing what can be implemented in \theoryabbv, but it has
@@ -3188,10 +3188,10 @@ high-performance implementation, and so the parsers we implement in
 Agda do not have competitive performance to industry parser
 generators. In future work we aim to study if we can embed a proof of
 the correctness of a parser generator that produces imperative
-programs, and to what extent the correctness of those imperative
+programs, and if the correctness of those imperative
 programs can be proven within \theoryabbv.
 
-\subsection{Type Checking and Semantic Analysis}
+\paragraph{Type Checking and Semantic Analysis}
 Our focus in this work has been on the verification of parsers for
 grammars over strings, but because \theoryabbv allows for the
 definition of arbitrarily powerful grammars, the system could also be
