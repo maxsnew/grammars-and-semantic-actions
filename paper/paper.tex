@@ -1245,14 +1245,13 @@ that our framework remains grounded in the
 foundational principles of formal language theory while opening the door to
 compositional formal verification of parsers.
 
-\paragraph{Weak and Strong Equivalence}
+%% \paragraph{Weak and Strong Equivalence}
 In the theory of formal grammars, there are two different notions of
 equivalence: weak generative capacity, meaning just which strings are
 accepted by the grammar, and \emph{strong} generative capacity, when
 the parse trees of the two grammars are isomorphic
 \cite{chom1963}. Using linear types as grammars, we can define both of
 these notions of equivalence in \theoryabbv.
-
 \begin{definition}
   \label{def:weakequiv}
   Grammars $\A$ and $\B$ are \emph{weakly equivalent} if there exists
@@ -1263,11 +1262,11 @@ these notions of equivalence in \theoryabbv.
   the identity, i.e., $\lambda b. f(g(b)) \equiv \lambda b.b$.
 \end{definition}
 
-That is, grammars are weakly equivalent if we can construct a parse
-tree of $B$ from a parse tree of $A$ and vice-versa, whereas they are
-strongly equivalent if these processes are inverse to each other. The
-definition of retract is a useful intermediate notion. In retrospect,
-our axiom about $\String$ says that $\String$ is a retract of $\top$.
+%% That is, grammars are weakly equivalent if we can construct a parse
+%% tree of $B$ from a parse tree of $A$ and vice-versa, whereas they are
+%% strongly equivalent if these processes are inverse to each other. The
+%% definition of retract is a useful intermediate notion. In retrospect,
+%% our axiom about $\String$ says that $\String$ is a retract of $\top$.
 
 %% \newcommand{\lang}{\texttt{Lang}}
 %% A parse transformer $\f : \ltonl{(\A \lto \B)}$ takes as input parses of $\A$ for string
@@ -1288,7 +1287,7 @@ our axiom about $\String$ says that $\String$ is a retract of $\top$.
 %% $\A$-parses of $\w$ and the $\B$-parses of $\w$, thus demonstrating that $\A$
 %% and $\B$ agree in their strong generative capacity.
 
-\paragraph{Ambiguity}
+%% \paragraph{Ambiguity}
 A formal grammar $\A$ is ambiguous if there are multiple parse trees
 for the \emph{same} string $\w$.  For example, $\a \oplus \a$ is
 ambiguous because there are two parses of $\stringquote{a}$,
@@ -1352,7 +1351,7 @@ $\literal c$ are unambiguous as well.
 % In the case that $A$ is parseable with respect to $\neg A$ --- i.e.\
 % there's a map $\top \to A \oplus \neg A$ --- then call $A$ \emph{decidable}.
 
-\paragraph{Partial and Total Parsers}
+%% \paragraph{Partial and Total Parsers}
 
 We now turn to our main task, which is using our linear type system to
 implement verified parsers. Given a grammar defined as a linear type
