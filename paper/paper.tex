@@ -431,15 +431,14 @@ term of type $\A$ in the context $\internalize \w$, where
 $\internalize \w$ is a context with one variable for each character of
 $\w$. For example, to define a parse tree for \stringquote{ab}, we use
 the context $\internalize{\stringquote{ab}} = a : \literal a , b :
-\literal b$. On the left side of \cref{fig:fingram}, we give a typing
-derivation that shows that $\inl(a \otimes b)$ defines a valid parse
-tree for the finite grammar $(\literal a \otimes \literal b) \oplus
-\literal c$. Underneath the derivation in \cref{fig:fingram}, we give
-a linear $\lambda$-term that implements the program given in the
-derivation.\max{reverse the order of these?} \steven{the order of what?}
+\literal b$. In \Cref{fig:fingram}, we give a lambda term and its
+typing derivation to define a parse for a finite grammar.
 
 \begin{figure}
-\begin{mathpar}
+\begin{lstlisting}
+f : (*@$\uparrow$@*)('a' (*@$\otimes$@*) 'b' (*@$\lto$@*) ('a' (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
+f (a , b) = inl (a (*@$\otimes$@*) b)
+\end{lstlisting}\begin{mathpar}
   \inferrule
   {
     \inferrule
@@ -458,10 +457,6 @@ derivation.\max{reverse the order of these?} \steven{the order of what?}
   {a : \literal a , b : \literal b \vdash \texttt{f} := \inl(a \otimes b) :
     (\literal a \otimes \literal b) \oplus \literal c}
 \end{mathpar}
-\begin{lstlisting}
-f : (*@$\uparrow$@*)('a' (*@$\otimes$@*) 'b' (*@$\lto$@*) ('a' (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
-f (a , b) = inl (a (*@$\otimes$@*) b)
-\end{lstlisting}
 \caption{\stringquote{ac} matches
   $(\literal a \oplus \literal b) \otimes \literal c$}
 \label{fig:fingram}
@@ -676,20 +671,16 @@ its transition is labeled with the empty string $\epsilon$. Therefore,
 $\texttt{0to1}$ takes in a trace beginning a state $\1$ and returns a
 trace beginning at state $\0$ corresponding to the same underlying
 string.
-
-Just as \cref{fig:kleenestarderivation} shows the \stringquote{ab} matches
-$({\literal a}^{*} \otimes \literal b) \oplus \literal c$, \cref{fig:nfaderivation} demonstrates that \stringquote{ab} is
-accepted by the NFA representation of this regular expression. In particular, we
-show that \stringquote{ab} matches the grammar $\Trace~0$ since $\0$ is the
-initial state of the NFA.\ If we construct parse transformers from
-$({\literal a}^{*} \otimes \literal b) \oplus \literal c$ to $\Trace~\0$, and vice versa, we would demonstrate that the regular expression
-and the automaton capture the same language --- i.e.\ they recognize the same
-set of strings. As we will see in \cref{sec:applications}, we can indeed define parse
-transformers between regular expressions and their associated automaton.
-Moreover, we prove that these parse transformers define a bijective
-correspondence of parses over every input string. That is, in a strong sense the
-parse of a regular expression and the traces of their associated automata
-capture precisely the same data, i.e., that they are \emph{strongly equivalent} as grammar formalisms.
+%
+Lastly, we give a lambda term that constructs an accepting trace
+starting at the initial state for the string \stringquote{ab}.  Later
+in \Cref{sec:applications}, we will show that we can actually
+construct mutually inverse functions between the regular expression
+$({\literal a}^{*} \otimes \literal b) \oplus \literal c$ and its
+corresponding NFA traces ($\Trace~\0$) demonstrating that the regular
+expression and the automaton capture the same language. Further since
+the functions are mutually inverse, this shows they are \emph{strongly
+equivalent} as grammars.
 
 \begin{figure}
   \begin{tikzpicture}[node distance = 25mm ]
@@ -709,19 +700,13 @@ data Trace : (s : Fin 3) (*@$\to$@*) L where
   1to2 : (*@$\uparrow$@*)('b' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 1)
   0to2 : (*@$\uparrow$@*)('c' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 0)
   0to1 : (*@$\uparrow$@*)(Trace 1 (*@$\lto$@*) Trace 0)
+
+k : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*)  Trace 0)
+k (a , b) = 0to1 (1to1 a (1to2 b stop))
+
 \end{lstlisting}
   \caption{NFA for $(\a^{*} \otimes \b) \oplus \c$ and its corresponding type}
   \label{fig:exampleNFA}
-\end{figure}
-
-\begin{figure}
-\begin{lstlisting}
-k : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*)  Trace 0)
-k (a , b) = 0to1 (1to1 a (1to2 b stop))
-\end{lstlisting}
-\caption{\stringquote{ab} is accepted by the NFA for
-  $({\literal a}^{*} \otimes {\literal b }) \oplus \literal c$}
-\label{fig:nfaderivation}
 \end{figure}
 
 %% 3. Third example: NFA traces to show the indexed inductive types
@@ -835,7 +820,8 @@ linear logic or the persistence modality $\square$ of separation logic
 %%   \caption{Non-linear Types}
 %% \end{figure}
 \begin{figure}
-  \begin{mathpar}
+  \begin{footnotesize}
+    \begin{mathpar}
     \inferrule{}{\Gamma \vdash U \isTy}\and
     \inferrule
     {\Gamma \vdash M : U}
@@ -861,17 +847,18 @@ linear logic or the persistence modality $\square$ of separation logic
     \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash e : \ltonl A}\and
     \inferrule{\Gamma \vdash M : \ltonl A}{\Gamma ; \cdot \vdash M : A} \and
   \end{mathpar}
+  \end{footnotesize}
   \caption{Non-linear types (selection)}
   \label{fig:non-linear-types}
 \end{figure}
 
 \subsection{Linear Typing}
 
-We give an overview of the linear types in \Cref{fig:linear-types} and
-terms in \Cref{fig:linear-terms}. The equational theory for these
-types is straightforward and included in the appendix. First, the
-linear variable rule says that a linear variable can be used if it is
-the \emph{only} variable in the context.
+We give an overview of the linear types and terms in
+\Cref{fig:linear-types-and-terms}. The equational theory for these
+types is straightforward $\beta\eta$ equivalence and included in the
+appendix. First, the linear variable rule says that a linear variable
+can be used if it is the \emph{only} variable in the context.
 
 First, we cover the ``multiplicative'' connectives of non-commutative
 linear logic. The linear unit ($\I$) and tensor product ($\otimes$)
@@ -949,6 +936,7 @@ $a:A(x)$ and an $a': A(x')$ such that $\sigma\,x\,a = \sigma\,x'\,a'$
 is empty.
 
 \begin{figure}
+  \begin{footnotesize}
   \begin{mathpar}
     \inferrule{}{\Gamma \vdash \I \isLinTy}\and
     \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \otimes B \isLinTy}\and
@@ -960,12 +948,7 @@ is empty.
     {\Gamma \vdash f : \ltonl {(A \lto B)} \and \Gamma \vdash g : \ltonl { (A \lto B) }}
     {\Gamma \vdash \equalizer {a}{f}{g} \isLinTy}
   \end{mathpar}
-  \caption{Linear Types (selection)}
-  \label{fig:linear-types}
-\end{figure}
-
-\begin{figure}
-  \begin{mathpar}
+\begin{mathpar}
     \inferrule{~}{\Gamma ; a : A \vdash a : A}
     \and
     \inferrule{\Gamma ; \Delta \vdash e : B \\ \linctxwffjdg \Gamma {A \equiv B}}{\Gamma ; \Delta \vdash e : A}
@@ -1015,9 +998,10 @@ is empty.
     \inferrule
     {\Gamma ; \Delta \vdash e : \equalizer{a}{f}{g}}
     {\Gamma ; \Delta \vdash \equalizerpi {e} : A}
-  \end{mathpar}
-  \caption{Linear terms (selection)}
-  \label{fig:linear-terms}
+  \end{mathpar}    
+  \end{footnotesize}
+  \caption{Linear Types and Terms (selection)}
+  \label{fig:linear-types-and-terms}
 \end{figure}
 
 \subsection{Indexed Inductive Linear Types}
