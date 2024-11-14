@@ -3972,55 +3972,168 @@ $\semg{\apptol {e} {e'}} : \semg{\Delta',\Delta} \to \semg{B}$ defined by the di
 \begin{tikzcd}
   \semg{\Delta',\Delta} \arrow[r , "m_{\Delta',\Delta}"] &
   \semg{\Delta'} \otimes \semg{\Delta} \arrow[r , "\semg{e'} \otimes id"] &
-  \semg{A} \otimes \semg{\Delta} \arrow[r , "\phi^{-1}\left( \semg{e} \right)"] &
+  \semg{A} \otimes \semg{\Delta} \arrow[r , "\psi^{-1}\left( \semg{e} \right)"] &
   \semg{B}
 \end{tikzcd}
 \end{center}
 
 \paragraph{$\tol\beta$}
+The $\beta$ rule for $\tol$ is given by,
+\[
+  \semg{\apptol {(\lambtol {a} {e})} {a'}} = \semg{e[a'/a]}
+\]
+\begin{proof}
+\begin{align*}
+  \semg{\apptol {(\lambtol {a} {e})} {a'}}
+  & = \psi^{{-1}}(\semg{\lambtol {a} {e}}) \circ \semg{a'} \otimes id \circ m_{a:A,\Delta} \\
+  & = \psi^{{-1}}(\semg{\lambtol {a} {e}}) \circ \lambda \otimes id \circ m_{a:A,\Delta} \\
+  & = \psi^{{-1}}(\psi(\semg{e} \circ m^{-1}_{a:A,\Delta} \circ \lambda^{-1} \otimes id)) \circ \lambda \otimes id \circ m_{\Delta',\Delta} \\
+  & = \semg{e} \circ m^{-1}_{a:A,\Delta} \circ \lambda^{-1} \otimes id \circ \lambda \otimes id \circ m_{a:A,\Delta} \\
+  & = \semg{e}
+\end{align*}
+
+\begin{align*}
+  \semg{e[a'/a]}
+  & = \semg{e} \circ \semg{a'/a} \tag{\cref{lem:subst}} \\
+  & = \semg{e} \tag{coherence}
+\end{align*}
+\end{proof}
 
 \paragraph{$\tol\eta$}
+The $\eta$ rule for $\tol$ is given by,
+\[
+  \semg{\lambtol {a} {\apptol e a}} = \semg{e}
+\]
+\begin{proof}
+\begin{align*}
+  \semg{\lambtol {a} {\apptol e a}}
+  & = \phi(\semg{\apptol e a} \circ m^{-1}_{a:A,\Delta} \circ \lambda^{-1} \otimes id) \\
+  & = \phi(\phi^{-1}(\semg{e}) \circ \semg{a} \otimes id \circ m_{a:A,\Delta} \circ m^{-1}_{a:A,\Delta} \circ \lambda^{-1} \otimes id) \\
+  & = \phi(\phi^{-1}(\semg{e}) \circ \lambda \otimes id \circ m_{a:A,\Delta} \circ m^{-1}_{a:A,\Delta} \circ \lambda^{-1} \otimes id) \\
+  & = \phi(\phi^{-1}(\semg{e})) \\
+  & = \semg{e}
+\end{align*}
+\end{proof}
 
+\subsubsection{$\bigamp$-Products}
 % Products
-Product introduction,
+\paragraph{$\bigamp$-Introduction}
 $\semg{\dlamb x e} : \semg{\Delta} \to \LinPiTyLimit {x} {X} {\sem{A}(\gamma , x)}$ is
 defined by the universal property of the product
 \[
 \semg{\dlamb x e} = \left( \sem{e}(\gamma , x) \right)_{(x : X)}
 \]
 
-Product elimination, $\semg{e.\pi~M} : \semg{\Delta} \to \sem{A}(\gamma , M)$
+\paragraph{$\bigamp$-Elimination}
+$\semg{e.\pi~M} : \semg{\Delta} \to \sem{A}(\gamma , M)$ is defined using the
+projection out of the product,
 
+\begin{center}
 \begin{tikzcd}
   \semg{\Delta} \arrow[r , "\semg{e}"] &
   \LinPiTyLimit {x} {X} {\sem{A}(\gamma , x)} \arrow[r , "\pi_M"] &
   \sem{A}(\gamma , M)
 \end{tikzcd}
+\end{center}
 
+\paragraph{$\bigamp\beta$}
+The $\beta$ law for $\bigamp$ is given by,
+\[
+  \sem{(\dlamb x e).\pi~M}(\gamma, x) = \sem{e[M/x]}(\gamma, x)
+\]
+\begin{proof}
+\begin{align*}
+  \semg{(\dlamb x e).\pi~M}
+  & = \pi_{M} \circ \semg{\dlamb x e} \\
+  & = \pi_{M} \circ (\sem{e}(\gamma , x))_{(x : X)} \\
+  & = \sem{e}(\gamma , M)
+\end{align*}
+by the universal property of the product.
+
+
+\begin{align*}
+  \sem{e[M/x]}(\gamma , x)
+  & = \sem{e}(\gamma , x) \circ  \sem{M/x}(\gamma , x) \\
+  & = \sem{e}(\gamma , M)
+\end{align*}
+\end{proof}
+
+\paragraph{$\bigamp\eta$}
+The $\eta$ law for $\bigamp$ is given by,
+\[
+  \semg{(\dlamb x {e.\pi~x})} = \semg{e}
+\]
+\begin{proof}
+  \semg{(\dlamb x {e.\pi~x})}
+  & = (\semg{e.\pi~x})_{x : X} \\
+  & = (\pi_x \circ \semg{e})_{x : X} \\
+  & = \semg{e}
+\end{proof}
+by the universal property of the product.
+
+\subsubsection{$\bigoplus$-Sums}
 % Sums
-Sum introduction,
+\paragraph{$\bigoplus$-Introduction}
 $\semg{\sigma~M~e} : \semg{\Delta} \to \LinSigTyLimit {x} {X} \sem{A}(\gamma, x)$
 
+\begin{center}
 \begin{tikzcd}
   \semg{\Delta} \arrow[r , "\semg{e}"] &
   \sem{A}(\gamma, M) \arrow[r , "i_M"] &
   \LinPiTyLimit {x} {X} {\sem{A}(\gamma , x)}
 \end{tikzcd}
+\end{center}
 
-Sum elimination,
+\paragraph{$\bigoplus$-Elimination}
 $\semg{\letin {\sigma~x~a} {e} {e'}} : \semg{\Delta'_{1},\Delta,\Delta'_{2}} \to \semg{C}$
+is defined in the diagram
 
+\begin{center}
 % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAB124YBbAc2CcAIjAY46AcgD6ARlLDR4+exFjJUgEwBfEFtLpMufIRRzK1es1aIOXXgIVrpcx+K0ACThDw94nu-yCKorq2rr6IBjYeAREcjJUtIwsbJwMMABmOAAU-tyBruoyHl4+fpz5DsFqJewATlh8ABY4AJT+3li+cHn2Qari0mF6BtHGcaQaiZYpNpwAMlhgAMqNACoAnos8uO7AAB4ewAAaRxW8-SHOpHTuiO4AgsoDoVrZnHx0PDy3pO77rR0I0ihhiJhIk2myWstkWK3WWy6uwOR1OezSmRyvR4lycsjeHy+P3cfwBHTKcHYYHcNNp5xxDwJ7E+31+-3anAazTa5K65QCuMGmiZLOJpMB4VGRliKDICQs0NS7HSWVy9KqL2ctU63X8cNWfE222Rhz2aKC+WAjPezKJbIBtS5LQ57B1-MqgtekpBYxlyDkAGYoVYlZaAMIiu3i71RaXgshBhUhuYBAQR3SJGBQPjwIigDJ1CA8JBkEA4CBIORJZMgHhSYA2zWyZ4hVotvFhagMOgAI1EAAVQeMbCqcN6C0XK9Ry0gNEnZrX64VroUtKU+T0sFAQF3ewOhzKQKPx4Xi4g52WK4gAKzzmHZLe83Xq4AwLQut2b7e7vsMQe+kwj0xE9J0QANpyvAA2O82GQbFXwkSNWRJdl3Aoetsn2O53GOCUf33AC2GPYEJzPAAWCCkHA6sFx4AA9YAAFpigw5dmzoRAHjbNjOyPPc-wPQDiIiUikFvS8kAomiYR3Pjf3-OMiOAkjTyQaCJMQAB2LQKC0IA
 \begin{tikzcd}[column sep =large]
 {\semg{\Delta'_1,\Delta,\Delta'_2}} \arrow[r, "{m_{(\Delta'_1,\Delta),\Delta'_2}}"]                                                                                                           & {\semg{\Delta'_1,\Delta} \otimes \semg{\Delta'_2}} \arrow[d, "{m_{\Delta'_1,\Delta}\otimes id}"]                             \\
-{\left( \semg{\Delta'_1} \otimes \LinSigTyLimit {x} {X} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, ""]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
+{\left( \semg{\Delta'_1} \otimes \LinSigTyLimit {x} {X} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, "d"]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
 {\LinSigTyLimit {x} {X} {\left( \sem{\Delta'_1}(\gamma , x) \otimes
       \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, "{m^{-1}_{(\Delta'_1,a:A),\Delta'_2}}"] & {\LinSigTyLimit {x} {X} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : X)}}"]     \\
 \semg{C}                                                                                                                                                                                      & {\sem{C}(\gamma, x)} \arrow[l]
 \end{tikzcd}
+\end{center}
 
+where $d$ is the distributivity morphism, and the last morphism implicitly
+weakens $\sem{C}$.
+
+\paragraph{$\bigoplus\beta$}
+The $\beta$ rule for $\bigoplus$ is given by,
+\[
+  \semg{\letin {\sigma~x~a} {\sigma~M~a'} {e'}} = \semg{e'[M/x,a'/a]}
+\]
+\begin{proof}
+  \begin{align*}
+  \semg{\letin {\sigma~x~a} {\sigma~M~a'} {e'}}
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
+  \otimes \semg{\sigma~M~a'}) \otimes id \circ m \otimes id \circ m \\
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
+  \otimes i_M \circ \semg{a'}) \otimes id \circ m \otimes id \circ m \\
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ m^{-1} \circ d \circ (id
+  \otimes i_M \circ \lambda) \otimes id \circ m \otimes id \circ m
+  \end{align*}
+\steven{TODO need to track subscripts on $m$ in the $\bigoplus\beta$ proof, and
+  finish this part of the above part of the proof}
+
+  \begin{align*}
+    \semg{e'[M/x,a'/a]}
+    &= \semg{e'} \circ \semg{M/x,a'/a} \tag{\cref{lem:subst}} \\
+    &= \semg{e'}
+  \end{align*}
+  \steven{TODO shouldn't the semantics of $e'$ be in context $\gamma,x$ not $x$?}
+\end{proof}
+
+\paragraph{$\bigoplus\eta$}
+\steven{TODO $\eta$ for sums}
+
+\subsubsection{Equalizer}
 %equalizer
-Equalizer introduction,
+\paragraph{Equalizer Introduction}
 $\semg{\equalizerin{e}} : \semg{\Delta} \to \semg{\equalizer e f g}$ where
 $\semg{e} : \semg{\Delta} \to \semg{A}$ and
 $\semg{f} \circ \semg{e} = \semg{g} \circ \semg{e}$. By the universal property
@@ -4028,10 +4141,59 @@ of the equalizer the preceding equality induces a unique morphism
 $\semg{\Delta} \to Eq(\semg{f} , \semg{g}) = \semg{\equalizer e f g}$. Define
 $\semg{\equalizerin{e}}$ to be this map.
 
-Equalizer elimination, $\semg{\equalizerpi e} : \semg{\Delta} \to \semg{A}$
+\paragraph{Equalizer Elimination}
+$\semg{\equalizerpi e} : \semg{\Delta} \to \semg{A}$ is defined using the map
+$\pi_{eq}$ from $Eq(\semg{f} , \semg{g})$ to the domain of $f$ and $g$.
 
 \[
   \semg{\equalizerpi e} = \pi_{eq} \circ \semg{e}
 \]
+
+\paragraph{Equalizer $\beta$}
+The $\beta$ rule for $\equalizer e f g$ is given as,
+\[
+\semg{\equalizerpi {\equalizerin e}} = \semg{e}
+\]
+where $\semg{f} \circ \semg{e} = \semg{g} \circ \semg{e}$.
+\begin{proof}
+  In $\semcat$ the universal property of $Eq(\semg{f}, \semg{g})$ implies that
+  the following diagram commutes, implying the $\beta$ rule.
+
+% https://q.uiver.app/#q=WzAsNCxbMSwwLCJcXHNlbWd7QX0iXSxbMiwwLCJcXHNlbWd7Qn0iXSxbMCwwLCJFcShcXHNlbWd7Zn0sXFxzZW1ne2d9KSJdLFswLDEsIlxcc2VtZ3tcXERlbHRhfSJdLFswLDEsIlxcc2VtZ3tmfSIsMCx7Im9mZnNldCI6LTF9XSxbMCwxLCJcXHNlbWd7Z30iLDEseyJvZmZzZXQiOjF9XSxbMiwwLCJcXHBpX3tlcX0iXSxbMywwLCJcXHNlbWd7ZX0iLDJdLFszLDIsIlxcc2VtZ3tcXGVxdWFsaXplcmluIGV9Il1d
+\begin{center}
+\begin{tikzcd}
+	{Eq(\semg{f},\semg{g})} & {\semg{A}} & {\semg{B}} \\
+	{\semg{\Delta}}
+	\arrow["{\pi_{eq}}", from=1-1, to=1-2]
+	\arrow["{\semg{f}}", shift left, from=1-2, to=1-3]
+	\arrow["{\semg{g}}", shift right, swap, from=1-2, to=1-3]
+	\arrow["{\semg{\equalizerin e}}", from=2-1, to=1-1]
+	\arrow["{\semg{e}}"', from=2-1, to=1-2]
+\end{tikzcd}
+\end{center}
+\end{proof}
+
+\paragraph{Equalizer $\eta$}
+
+The $\eta$ rule for $\equalizer e f g$ is given as,
+\[
+\semg{\equalizerin {\equalizerpi e}} = \semg{e}
+\]
+\begin{proof}
+  Likewise, the universal property of $Eq(\semg{f}, \semg{g})$ implies $\eta$
+  rule via this diagram.
+
+\begin{center}
+\begin{tikzcd}
+	{Eq(\semg{f},\semg{g})} & {\semg{A}} & {\semg{B}} \\
+	{\semg{\Delta}}
+	\arrow["{\pi_{eq}}", from=1-1, to=1-2]
+	\arrow["{\semg{f}}", shift left, from=1-2, to=1-3]
+	\arrow["{\semg{g}}", shift right, swap, from=1-2, to=1-3]
+	\arrow["{\semg{e}}", from=2-1, to=1-1]
+	\arrow["{\semg{\equalizerpi e}}"', from=2-1, to=1-2]
+\end{tikzcd}
+\begin{center}
+\end{proof}
 
 \end{document}
