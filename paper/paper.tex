@@ -3074,7 +3074,6 @@ existing proof assistant.
 \label{sec:discussion}
 \subsection{Typed Approaches to Grammars}
 
-\steven{Talk about Conal Elliott's Automatic and Symbolic differentiation paper}
 
 \subsubsection{Lambek Calculus and Categorial Grammar}
 Lambek's original syntactic calculus \cite{lambek58} describes a logical system
@@ -3095,23 +3094,31 @@ frequently oriented toward giving functorial semantics to natural language in
 the tradition of Montague \cite{Montague1974-MONFPS}. The Abstract Categorial
 Grammar Toolkit \cite{Guillaume2024} and Grammatical Framework \cite{ranta-2011}
 each mechanize aspects of Lambek calculus ; however, to the best of our knowledge,
-\theoryabbv is the first mechanization designed for formal language parsing.
+\theoryabbv is the first mechanization designed for formal language parsing first.
+Moreover, we provide a novel use of inductive and dependent types inside of a
+Lambek calculus.
 
-\steven{Contrast their interpretation of dependent types with ours. How tf do I
-  say idk what they're doing. Perhaps just say that their dependent types take
-  on a different interpreation and no more.}
-Luo \cite{luo} describes a Lambek calculus with dependent types.
+Luo \cite{luo} describes a Lambek calculus with dependent types. However, they
+do not provide an analagous denotational semantics, so it is not clear what
+exactly their semantics are. Further, their contexts of non-linear variables are
+ordered, while ours are not, so they provide a distinct dependent extension
+whose types do not have a one-to-one correspondence with the dependent types in \theoryabbv.
 
-\subsubsection{Other typed approaches}
-\steven{this subsection should be renamed}
-The usage of a simple type system to reason about regular expressions was
-introduced by Frisch and Cardelli in 2004 \cite{frischCardelli}, and later expanded
-by Hengelin and Nielsen in 2011 \cite{henglein_regular_2011} to handle proofs of regular expression
-containment.
+\subsubsection{Typed Grammars}
+The usage of a simple type system to reason about regular expressions up to weak
+equivalence was
+introduced by Frisch and Cardelli \cite{frischCardelli}.  Hengelin and Nielsen
+\cite{henglein_regular_2011} later adapt this approach by providing a type
+system for regular expressions whose semantics were in one-to-one correspondence
+with the set of parse trees.
+Elliott \cite{elliottSymbolicAutomaticDifferentiation2021} gives a similar
+semantic interpretation of grammars as type-level predicates on strings. The type system of \theoryabbv extends these semantic interpretations of to a broader class
+of grammars.
 
-\steven{Mention Neel's typed algebraic approach paper here. Say it is similar at
-  first glance, as its parsing and it has types, but that he actually is representing
-  a system for proving the LL(1) condition }
+Krishnaswami and Yallop \cite{krishnaswami_typed_2019} provide a type system for
+demonstrating that carries proves of the LL(1) condition for context-free
+grammars. Despite being a type system over formal grammars, their interpretation
+of types is very different from the semantics of \theoryabbc.
 
 
 %% 1. More practical: integrating it into a larger verified development
