@@ -192,6 +192,9 @@ frame=single
 \newcommand{\nathan}[1]{\ifdraft{\color{green}[{\bf Nathan says}: #1]}\fi}
 \newcommand{\pipe}{\,|\,}
 
+\newif\ifappendix
+\appendixtrue
+
 \begin{document}
 
 %\pagestyle{plain}
@@ -3241,6 +3244,7 @@ framework for verified type checking and static analysis.
 
 \pagebreak
 
+\ifappendix
 \appendix
 
 \section{Syntax}
@@ -4140,5 +4144,5 @@ The $\eta$ rule for $\equalizer e f g$ is given as,
 \end{tikzcd}
 \end{center}
 \end{proof}
-
+\fi
 \end{document}
