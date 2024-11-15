@@ -677,7 +677,7 @@ in \Cref{sec:applications}, we will show that we can actually
 construct mutually inverse functions between the regular expression
 $({\literal a}^{*} \otimes \literal b) \oplus \literal c$ and its
 corresponding NFA traces ($\Trace~\0$) demonstrating that the regular
-expression and the automaton capture the same language. Further since
+expression and the automaton capture the same language. Further, since
 the functions are mutually inverse, this shows they are \emph{strongly
 equivalent} as grammars.
 
@@ -721,7 +721,7 @@ k (a , b) = 0to1 (1to1 a (1to2 b stop))
 %% 4. Cover indexed inductive linear types
 %% 5. Cover the "axioms" we add
 
-The design of \theoryabbv is based the dependent
+The design of \theoryabbv is based on the dependent
 linear-non-linear calculus (\lnld) and Lambek calculus, also known as
 non-commutative linear logic.
 \cite{krishnaswami_integrating_2015,lambek58}. As in \lnld,
@@ -730,7 +730,7 @@ linear types, which are allowed to depend on the non-linear types, but
 not on other linear types.
 %
 The main point of departure from \lnld's design is that, as in Lambek calculus \cite{lambek58}, the linear
-typing is \emph{non-commutative}, i.e., that exchange is not an
+typing is \emph{non-commutative} --- i.e., that exchange is not an
 admissible structural rule. Furthermore, we add a general-purpose
 indexed inductive linear type connective, as well as an
 \emph{equalizer} type, which we will show allows us to perform
@@ -742,10 +742,10 @@ instead add base types and axioms to the system specifically to model
 formal grammars and parsing.
 
 The formation rules for the judgments of \theoryabbv are shown in
-\Cref{fig:formation}. $\Gamma$ stand for non-linear contexts, $X,Y,Z$
-stand for non-linear types, $M,N$ stand for non-linear terms, these
-act as in an ordinary dependent type theory. $\Delta$ stands for
-linear contexts, $A,B,C$ for linear types and $e,f,g$ for linear
+\Cref{fig:formation}. $\Gamma$ stands for non-linear contexts; $X,Y,Z$
+stand for non-linear types; $M,N$ stand for non-linear terms, these
+act as in an ordinary dependent type theory; $\Delta$ stands for
+linear contexts; $A,B,C$ for linear types; and, $e,f,g$ for linear
 terms. These contexts, types and terms are allowed to depend on an
 ambient non-linear context $\Gamma$, but note that linear types $A$
 cannot depend on any \emph{linear} variables in $\Delta$. We include
@@ -777,7 +777,7 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
 
     \inferrule{\Gamma; \Delta \vdash e : A \and \Gamma;\Delta \vdash f : A}{\Gamma;\Delta\vdash e \equiv f : A}
   \end{mathpar}
-  \caption{Formation Rules}
+  \caption{Formation rules}
   \label{fig:formation}
 \end{figure}
 
@@ -920,7 +920,7 @@ indexed inductive types.
 In addition to these type-theoretic principles, we need two additional
 axioms that do not generally hold in systems based on linear
 logic. First, we need that additive conjunction \emph{distributes}
-over additive disjunction, e.g., in the finitary case that $0 \& A
+over additive disjunction --- e.g., in the finitary case that $0 \& A
 \cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. In its most
 general form, the axiom says that the definable function
 ${\bigoplus\limits_{f : \prod_{x:X}
@@ -1004,7 +1004,7 @@ is empty.
     {\Gamma ; \Delta \vdash \equalizerpi {e} : A}
   \end{mathpar}    
   \end{footnotesize}
-  \caption{Linear Types and Terms (selection)}
+  \caption{Linear types and terms (selection)}
   \label{fig:linear-types-and-terms}
 \end{figure}
 
@@ -1075,7 +1075,7 @@ constructors.
   %%   \to \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}
   %% \end{align*}
   %% \end{footnotesize}
-  \caption{Strictly Positive Functors and Indexed Inductive Linear Types}
+  \caption{Strictly positive functors and indexed inductive linear types}
   \label{fig:iilt}
 \end{figure}
 
@@ -1239,8 +1239,8 @@ compositional formal verification of parsers.
 
 %% \paragraph{Weak and Strong Equivalence}
 In the theory of formal grammars, there are two different notions of
-equivalence: weak generative capacity, meaning just which strings are
-accepted by the grammar, and \emph{strong} generative capacity, when
+equivalence: up to weak generative capacity, meaning just which strings are
+accepted by the grammar; and up to \emph{strong} generative capacity, when
 the parse trees of the two grammars are isomorphic
 \cite{chom1963}. Using linear types as grammars, we can define both of
 these notions of equivalence in \theoryabbv.
@@ -1291,7 +1291,7 @@ clever way:
   \label{def:unambig}
   A grammar $\A$ is \emph{unambiguous} if for every linear type $\B$,
   $\f : \ltonl{(\B \lto \A)}$, and $\g : \ltonl{(\B \lto \A)}$
-  then $\f \equiv \g$
+  then $\f \equiv \g$.
 \end{definition}
 \cref{def:unambig} can be read more intuitively as stating that $\A$
 is unambiguous if there is at most one way to transform parses of any
@@ -1360,9 +1360,9 @@ correct notion of a parser should be one that allows for failure, but
 only in the case that a parse cannot be constructed.
 \begin{definition}
   A parser for a linear type $A$ is a function $\uparrow{(\String \lto
-    A \oplus A_{\neg})}$ where $A_{\neg}$ is a linear type that is
+    A \oplus A_{\neg})}$, where $A_{\neg}$ is a linear type that is
   \emph{disjoint} from $A$ in that we can implement a function
-  $\uparrow{(A \& A_{\neg} \lto 0)}$
+  $\uparrow{(A \& A_{\neg} \lto 0)}$.
 \end{definition}
 Here we replace $\top$ in our partial parser type with a type
 $A_{\neg}$ that we can think of as a negation of $A$. The function
@@ -1568,7 +1568,7 @@ print(*@$_D$@*) s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).nil .s)) = String.nil
 print(*@$_D$@*) s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c (D.(*@$\delta$@*) c .s) b a trace)) =
   String.cons ((*@$\sigma$@*) c a) (print(*@$_D$@*) (D.(*@$\delta$@*) c s) ((*@$\sigma$@*) b trace))
 \end{lstlisting}
-\caption{Parser/Printer for DFA traces}
+\caption{Parser/printer for DFA traces}
 \label{fig:printdfa}
 \end{figure}
 
@@ -1612,7 +1612,6 @@ DFA is unambiguous even if the NFA is not.
   that may begin at any subset of states $\X$ that contains $\s$. $\NtoD$ may then be instantiated at
   $\s = \N.\init$ and $\X = D.\mathsf{init}$ to get the desired
   parse transformer.
-  Vice-versa, 
 
 %% \begin{figure}
 %% \begin{lstlisting}
@@ -2048,7 +2047,7 @@ languages in the Chomsky hierarchy.
 To justify our assertion that \theoryabbv is a syntax for formal
 grammars and parse transformers, we will now define a
 \emph{denotational semantics} that makes this mathematically precise
-by defining a notion of formal grammar and parse transformer and
+by defining a notion of formal grammar and parse transformer then
 showing that our type theory can be soundly interpreted in this
 model. We then discuss how this denotational semantics provides the
 basis for our prototype implementation in Agda.
@@ -2180,10 +2179,10 @@ We now define our denotational semantics.
   And we verify the following conditions:
   \begin{enumerate}
   \item If $\Gamma \vdash X \isSmall$, then $\sem X \gamma$ is a small set.
-  \item If $\Gamma \vdash X \equiv X'$ then for every $\gamma$, $\sem{X}\gamma = \sem{X'}\gamma$
-  \item If $\Gamma \vdash A \equiv A'$ then for every $\gamma$, $\sem{A}\gamma = \sem{A'}\gamma$
-  \item If $\Gamma \vdash M \equiv M' : X$ then for every $\gamma$, $\sem{M}\gamma = \sem{M'}\gamma$
-  \item If $\Gamma;\Delta \vdash e \equiv e' : A$ then for every $\gamma$, $\sem{e}\gamma = \sem{e'}\gamma$
+  \item If $\Gamma \vdash X \equiv X'$ then for every $\gamma$, $\sem{X}\gamma = \sem{X'}\gamma$.
+  \item If $\Gamma \vdash A \equiv A'$ then for every $\gamma$, $\sem{A}\gamma = \sem{A'}\gamma$.
+  \item If $\Gamma \vdash M \equiv M' : X$ then for every $\gamma$, $\sem{M}\gamma = \sem{M'}\gamma$.
+  \item If $\Gamma;\Delta \vdash e \equiv e' : A$ then for every $\gamma$, $\sem{e}\gamma = \sem{e'}\gamma$.
   \end{enumerate}
 \end{definition}
 
@@ -3259,7 +3258,7 @@ framework for verified type checking and static analysis.
     \map(\bigwith\,A)\,f &= \lambda a. \withlamb{y}{\map(A\,y)\,f\,(\withprj y a)}\\
     \map(A \otimes A')\,f &= \lambda b. \letin{(a,a')}{b}{(\map(A)\,f\,a,\map(A')\,f\,a')}
   \end{align*}
-  \caption{Strictly Positive Functors functorial actions}
+  \caption{Strictly positive functors functorial actions}
 \end{figure}
 
 In this section we include the elided syntactic forms, as well as
@@ -3279,7 +3278,7 @@ substitution.
     \and
     \inferrule{\linctxwff \Gamma \Delta \\ \linctxwffjdg \gamma A}{\linctxwff \Gamma {\Delta, a : A}}
   \end{mathpar}
-  \caption{Context Rules}
+  \caption{Context rules}
 \end{figure}
 
 %% \begin{figure}
@@ -3331,7 +3330,7 @@ substitution.
     \and
     \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta', \Delta \vdash \apptol e {e'} : B}
   \end{mathpar}
-  \caption{Linear Terms, extended}
+  \caption{Linear terms (extended)}
 \end{figure}
 
 \begin{figure}
