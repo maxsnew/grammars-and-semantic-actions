@@ -2214,7 +2214,8 @@ $\sem{g}$.
 The universe $L$ of linear types is interpreted as the set of all
 small grammars.
 \begin{figure}
-  \begin{align*}
+  \begin{footnotesize}
+    \begin{align*}
     \sem{c}\gamma\,w &= \{ c | w = c\}\\
     \sem{I}\gamma\,w &= \{ () \pipe w = \varepsilon \}\\
     \sem{A \otimes B}\gamma\,w &= \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
@@ -2230,6 +2231,7 @@ small grammars.
     \sem{\map(F)}\gamma\,f &= \sem{F}\gamma\,f\\
     \sem{\mu A}\gamma &= \mu (\sem{A}\gamma)\\
   \end{align*}
+  \end{footnotesize}
   \caption{Grammar Semantics}
   \label{fig:semantics}
 \end{figure}
