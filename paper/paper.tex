@@ -1129,14 +1129,13 @@ alphabet, we add a corresponding linear type $c$. We can then define a
 non-linear type $\Char$ as the disjunction of all of these characters,
 and define a type $\String$ as the Kleene star of $\Char$, i.e. as an
 inductive linear type.
-\pedro{Should we reference again figure 2 (the inductive type definition of the Kleene star)?}
 Then we add a function $\mathsf{read} :
 \ltonl{(\top\lto \String)}$ that intuitively ``reads'' the input
 string from the input and makes it available. It is important that the
 input type of $\mathsf{read}$ is $\top$, which can control any amount
 of resources, and not $\I$ which controls no resources. Further, we
-add an axiom that $\lambda s. \mathsf{read}(\top) \equiv \lambda
-s. s$, \pedro{overloaded notation: $\top$ and type and $\top$ as term}
+add an axiom that $\lambda s. \mathsf{read}(!(s)) \equiv \lambda
+s. s$ where $!$ is the unique function $\ltonl(\String\lto \top)$,
 i.e., that if we have a string, but then throw it away and read
 it from the input, then in fact that is equivalent to the string we
 were given originally. This ensures that the elements of the $\String$
@@ -1435,7 +1434,7 @@ a verified regex parser.
 A regular expressions in \theoryabbv is a linear type constructed
 using only the connectives $\literal c$, $0$, $\oplus$, $I$,
 $\otimes$, and Kleene star.  In \cref{sec:type-theory-examples}, we
-saw one particular NFA corresponding \pedro{trailing sentence?} and its type of traces. More
+saw one particular NFA and its corresponding type of traces. More
 generally we define the linear type of traces as in
 \Cref{fig:nfatrace}
 
