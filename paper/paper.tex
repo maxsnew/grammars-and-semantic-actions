@@ -951,6 +951,11 @@ $\uparrow(\equalizer{b}{\sigma\,x \circ \pi_1}{\sigma\,x'\circ \pi_2}
 $a:A(x)$ and an $a': A(x')$ such that $\sigma\,x\,a = \sigma\,x'\,a'$
 is empty.
 
+\pedro{imo, since we are providing an Agda implementation, we can
+  be looser with the explanation of the meaning of the disjointness axioms.
+  As it stands, it's a bit hard do follow along. Is there a simpler example
+  we could point to?}
+
 \begin{figure}
   \begin{mathpar}
     \inferrule{}{\Gamma \vdash \I \isLinTy}\and
@@ -1116,20 +1121,22 @@ This definition as an initial algebra is well-understood semantically
 but the $\eta$ principle in particular is somewhat cumbersome to use
 directly in proofs. In dependent type theory, we would have a
 dependent \emph{elimination} principle, which can be used to
-implemetns functions by recursion as well as proofs by
-induction. However since linear types do not support dependency on
+implement functions by recursion as well as proofs by
+induction. Unfortunately, since linear types do not support dependency on
 linear types, we cannot directly adapt this approach. However, if we
 are trying to prove that two morphisms out of a mutually recursive
 type are equal, we can use the \emph{equalizer} type to prove their
 equality by induction. That is, if our goal is to prove two functions
-$f,g : \uparrow(\mu F\,x \lto A\,x)$ are equal, it suffices to
+$f,g : \uparrow(\mu F\,x \lto A\,x)$ equal, it suffices to
 implement a function $\mathsf{ind} : \uparrow(\mu F\,x \lto \equalizer
 {a} f g)$ such that $\textrm{ind}(a) \equiv a$. Then an
 inductive-style proof can be implemented by constructing
 $\mathsf{ind}$ using a $\fold$. This can all be justified using only
 the $\beta\eta$ principles for equalizers and inductive types, and
-this is how our most complex inductive proofs are implemented in Agda
+this is how our most complex inductive proofs are implemented in the Agda
 formalization.
+\pedro{I don't like the inductive proof explanation above, but I
+  don't know how I would phrase it}
 
 \subsection{Grammar-specific Additions}
 
@@ -1140,13 +1147,16 @@ grammar-specific constructions. First for each character in our
 alphabet, we add a corresponding linear type $c$. We can then define a
 non-linear type $\Char$ as the disjunction of all of these characters,
 and define a type $\String$ as the Kleene star of $\Char$, i.e. as an
-inductive linear types. Then we add a function $\mathsf{read} :
+inductive linear type.
+\pedro{Should we reference again figure 2 (the inductive type definition of the Kleene star)?}
+Then we add a function $\mathsf{read} :
 \ltonl{(\top\lto \String)}$ that intuitively ``reads'' the input
 string from the input and makes it available. It is important that the
 input type of $\mathsf{read}$ is $\top$, which can control any amount
 of resources, and not $\I$ which controls no resources. Further, we
 add an axiom that $\lambda s. \mathsf{read}(\top) \equiv \lambda
-s. s$, i.e., that if we have a string, but then throw it away and read
+s. s$, \pedro{overloaded notation: $\top$ and type and $\top$ as term}
+i.e., that if we have a string, but then throw it away and read
 it from the input, then in fact that is equivalent to the string we
 were given originally. This ensures that the elements of the $\String$
 type always stand for the actual input string in our reasoning. In the
@@ -1445,7 +1455,7 @@ a verified regex parser.
 A regular expressions in \theoryabbv is a linear type constructed
 using only the connectives $\literal c$, $0$, $\oplus$, $I$,
 $\otimes$, and Kleene star.  In \cref{sec:type-theory-examples}, we
-saw one particular NFA corresponding and its type of traces. More
+saw one particular NFA corresponding \pedro{trailing sentence?} and its type of traces. More
 generally we define the linear type of traces as in
 \Cref{fig:nfatrace}
 
