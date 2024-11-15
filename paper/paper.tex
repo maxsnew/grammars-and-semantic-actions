@@ -588,7 +588,7 @@ string of literals. In \cref{fig:kleeneabstractproof} we show that every parse
 of the grammar $(A \otimes A)^{*}$ induces a parse of $A^{*}$ for an
 arbitrary grammar $A$. The context $(A \otimes A)^{*}$ does not correspond directly to a string, so it is
 not quite appropriate
-to think of a linear term here as a parse \textit{trees}.
+to think of a linear term here as a parse \textit{tree}.
 The
 context $a : (A \otimes A)^{*}$ does not contain concrete data to be parsed; rather, there may be many choices of string underlying the parse tree captured
 by the variable $a$. Thus, the term $\texttt{h}$ from
@@ -650,7 +650,7 @@ Finite automata are precisely the class of machines that recognize regular
 expressions. \cref{fig:exampleNFA} shows a non-deterministic
 finite automaton (NFA) for the regular expression
 $({\literal a}^{*} \otimes \literal b) \oplus \literal c$, along with a type $\Trace$, an \emph{indexed} inductive linear type of traces through this automaton. Defining an indexed inductive type can be thought
-of as defining a family of mutually recursive inductive types, one for each element of the indexing type. Here $\Trace$ is 
+of as defining a family of mutually recursive inductive types, one for each element of the indexing type. Here $\Trace$ 
 uses an index $\s : \texttt{Fin 3}$ which picks out which
 state in the automaton a trace begins at --- where $\texttt{Fin 3}$ is the
 finite type containing inhabitants $\{\0 , \1 , \2\}$. We can think of this as defining three mutually recursive inductive types $\Trace~\0$,
