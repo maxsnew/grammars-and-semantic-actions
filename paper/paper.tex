@@ -334,7 +334,7 @@ Parsers written in \theoryabbv take on a linear functional style, which makes
 them familiar to write and amenable to compositional verification techniques.
 
 To show the feasibility of our design, we have implemented \theoryabbv
-as a shallowly embedded domain-specific langauge in the Cubical Agda
+as a shallowly embedded domain-specific language in the Cubical Agda
 proof assistant \cite{VezzosiMortbergAbel2019}. We have implemented many example
 grammars and parsers in our system including regular expressions,
 non-deterministic and deterministic automata, as well as some example
@@ -643,7 +643,7 @@ h (cons (a1 (*@$\otimes$@*) a2) as) = cons a1 (cons a2 (h as))
 Regular expressions are a compact formalism for defining a formal grammar,
 but an expression such as
 $({\literal a}^{*} \otimes \literal b) \oplus \literal c$ does not give a very operational perspective of how to parse
-it. For this reason, most parsers are based on compiling a grammar to a corresponding notion of automaton, which is readily implemented. To impleemnt
+it. For this reason, most parsers are based on compiling a grammar to a corresponding notion of automaton, which is readily implemented. To implement
 these algorithms in \theoryabbv, we need a way to represent automata as types in the same way we can represent regular expressions.
 
 Finite automata are precisely the class of machines that recognize regular
@@ -1596,7 +1596,7 @@ DFA is unambiguous even if the NFA is not.
   $\epsilon$-closure of $\N.\init$. Lastly define the transition function
   of $\D$ to send the subset $X$ under the character $\c$ to the
   $\epsilon$-closure of all the states reachable from $X$ via a transition
-  labelled with the character $\c$.
+  labeled with the character $\c$.
 
   We demonstrate the weak equivalence between $Parse_{N}$ and
   $Parse_{D}$ by constructing parse transformers between the two
@@ -1786,7 +1786,7 @@ We use a variant of Thompson's construction
 %%   & \equiv cons~t~true~c~tr \\
 %% \end{align*}
 
-%% The first two equalities are by defintion. The thrid equality holds because
+%% The first two equalities are by defintion. The third equality holds because
 %% $\literal c$ is unambiguous and
 %% $let~a~\otimes~()~=~c~\otimes~fromN_{c}~1~tr~in~a$ and $c$ have type
 %% $\literal c$. The final equality holds because our inductive hypothesis states
@@ -2100,7 +2100,7 @@ interpretation.
 
 Parse transformers can be composed: given two parse transformers $f$ and $g$,
 their composition is defined pointwise, i.e. $(f\circ g)_w = f_w \circ g_w$.
-Furthemore, given a formal grammar $A$, its identity transformer is $id_w =
+Furthermore, given a formal grammar $A$, its identity transformer is $id_w =
 id_{A(w)}$, where $id_{A(w)}$ is the identity function on the set $A(w)$. This
 defines a \emph{category}.
 \begin{definition}
@@ -2254,11 +2254,11 @@ functor} on the category of sets, also sometimes called an
 	    \arrow["{\Pi_g}", from=1-2, to=1-3]
 	    \arrow["{\Sigma_h}", from=1-3, to=1-4]
   \end{tikzcd}\]
-  Where $f^*$ is the pullback functor along $f$; $\Pi_g$ is the depedent
+  Where $f^*$ is the pullback functor along $f$; $\Pi_g$ is the dependent
   product operation and $\Sigma_h$ is the dependent sum operation, which
   are, respectively, the right and left adjoint of their pullback functors
   $g^*$ and $h^*$. A dependent polynomial functor from $I$ to $O$ is a functor $\Set/I
-  \to \Set/O$ that is nautrally isomorphic to the extension of a
+  \to \Set/O$ that is naturally isomorphic to the extension of a
   dependent polynomial from $I$ to $O$.
 \end{definition}
 With this interpretation of $F$ as a polynomial functor, $\el(F)$ and
@@ -3177,7 +3177,7 @@ logic implementation or embedding the logic within \theoryabbv.
 Our verification has mainly focused on the verification that a parser
 outputs a correct concrete syntax tree for a grammar. However, in
 practice, parsers are combined with a \emph{semantic action} that
-emits an \emph{abstract} syntax tree that omits superflous syntactic
+emits an \emph{abstract} syntax tree that omits superfluous syntactic
 details that aren't needed in later stages of the overall program. We
 can define a semantic action in \theoryabbv for a linear type $A$ with
 semantic outputs in a non-linear type $X$ to be a function $\ltonl {(A
@@ -3188,7 +3188,7 @@ verifying efficient implementations of parsers with semantic actions.
 
 \paragraph{Implementation}
 
-Our Agda prototype implementation serves as a usefule proof of concept
+Our Agda prototype implementation serves as a useful proof of concept
 for showing what can be implemented in \theoryabbv, but it has
 downsides we aim to address in future work. Firstly, it would be
 preferable to work with the more intuitive type theoretic syntax we
@@ -3616,7 +3616,7 @@ Here we define denotations of linear terms. Note that the denotations
 interpret typing derivations, not raw terms, as the data of how
 contexts are split is needed in order to construct the correct
 associator functions. Further, we demonstrate that the denotational
-semantics resprects the equational theory of \theoryabbv. The
+semantics respects the equational theory of \theoryabbv. The
 correctness of the equational theory heavily relies on the
 \emph{coherence theorem} for monoidal categories. The coherence
 theorem says that any diagram in a monoidal category constructed using
