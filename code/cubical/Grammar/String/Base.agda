@@ -64,3 +64,4 @@ opaque
   ⌈w⌉→string : ⌈ w ⌉ ⊢ string
   ⌈w⌉→string {[]} = NIL -- nil
   ⌈w⌉→string {c ∷ w} = CONS ∘g ⊕ᴰ-in c ,⊗ ⌈w⌉→string {w}
+
