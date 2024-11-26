@@ -10,30 +10,31 @@ import Cubical.Data.Maybe as Maybe
 open import Cubical.Data.Sigma
 open import Cubical.Relation.Nullary.Base renaming (Dec to NLDec; decRec to nlDecRec)
 
+open import String.ASCII
 open import String.Unicode
-open import Grammar Unicode
-open import Grammar.Inductive.Indexed Unicode
-open import Term Unicode
-open import SemanticAction.Base Unicode
-open import SemanticAction.Monadic Unicode
-open import ParserCombinator.Base Unicode as Parser hiding (pure; char)
+open import Grammar ASCII
+open import Grammar.Inductive.Indexed ASCII
+open import Term ASCII
+open import SemanticAction.Base ASCII
+open import SemanticAction.Monadic ASCII
+open import ParserCombinator.Base ASCII as Parser hiding (pure; char)
 
 module Concrete where
-  parseQuote : WeakParser (literal '"')
-  parseQuote = Parser.char DiscreteUnicodeChar '"'
+  parseQuote : WeakParser (literal DOUBLEQUOTE)
+  parseQuote = Parser.char DiscreteASCIIChar DOUBLEQUOTE
 
-  isQuotedChar : ⟨ Unicode ⟩ → Type ℓ-zero
-  isQuotedChar c = c ≡ '"' → EmptyType
+  isQuotedChar : ⟨ ASCII ⟩ → Type ℓ-zero
+  isQuotedChar c = c ≡ DOUBLEQUOTE → EmptyType
 
   QuotedChar : Grammar ℓ-zero
-  QuotedChar = ⊕[ c ∈ ⟨ Unicode ⟩ ] ⊕[ _ ∈ isQuotedChar c ] literal c
+  QuotedChar = ⊕[ c ∈ ⟨ ASCII ⟩ ] ⊕[ _ ∈ isQuotedChar c ] literal c
 
   parseQuotedChar : WeakParser QuotedChar
   parseQuotedChar = satisfy λ c →
-    nlDecRec (λ p → no λ ¬p → ¬p p) yes (DiscreteUnicodeChar c '"')
+    nlDecRec (λ p → no λ ¬p → ¬p p) yes (DiscreteASCIIChar c DOUBLEQUOTE)
 
   QuotedLit : Grammar ℓ-zero
-  QuotedLit = QuotedChar ⊕ (literal '"' ⊗ literal '"')
+  QuotedLit = QuotedChar ⊕ (literal DOUBLEQUOTE ⊗ literal DOUBLEQUOTE)
 
   parseQuotedLit : WeakParser QuotedLit
   parseQuotedLit = parseQuotedChar <|> (parseQuote <⊗> parseQuote)
@@ -44,14 +45,14 @@ module Concrete where
   parseQuotedField : WeakParser QuotedField
   parseQuotedField = many parseQuotedLit
 
-  isUnquotedChar : ⟨ Unicode ⟩ → Type ℓ-zero
+  isUnquotedChar : ⟨ ASCII ⟩ → Type ℓ-zero
   isUnquotedChar c =
-    (c ≡ ',' → EmptyType)
-    × (c ≡ '"' → EmptyType)
-    × (c ≡ '\n' → EmptyType)
+    (c ≡ COMMA → EmptyType)
+    × (c ≡ DOUBLEQUOTE → EmptyType)
+    × (c ≡ NEWLINE → EmptyType)
 
   UnquotedLit : Grammar ℓ-zero
-  UnquotedLit = ⊕[ c ∈ ⟨ Unicode ⟩ ] ⊕[ _ ∈ isUnquotedChar c ] literal c
+  UnquotedLit = ⊕[ c ∈ ⟨ ASCII ⟩ ] ⊕[ _ ∈ isUnquotedChar c ] literal c
 
   parseUnquotedLit : WeakParser UnquotedLit
   parseUnquotedLit = satisfy λ c →
@@ -59,9 +60,9 @@ module Concrete where
       (λ comma → nlDecRec (λ p → no λ ¬p → ¬p .snd .fst p)
         (λ dblquote → nlDecRec (λ p → no λ ¬p → ¬p .snd .snd p)
           (λ newline → yes (comma , dblquote , newline))
-          (DiscreteUnicodeChar c '\n'))
-        (DiscreteUnicodeChar c '"'))
-      (DiscreteUnicodeChar c ',')
+          (DiscreteASCIIChar c NEWLINE))
+        (DiscreteASCIIChar c DOUBLEQUOTE))
+      (DiscreteASCIIChar c COMMA)
 
   UnquotedField : Grammar ℓ-zero
   UnquotedField = KL* UnquotedLit
@@ -70,7 +71,7 @@ module Concrete where
   parseUnquotedField = many parseUnquotedLit
 
   Field : Grammar ℓ-zero
-  Field = UnquotedField ⊕ (literal '"' ⊗ QuotedField ⊗ literal '"')
+  Field = UnquotedField ⊕ (literal DOUBLEQUOTE ⊗ QuotedField ⊗ literal DOUBLEQUOTE)
 
   parseField : WeakParser Field
   parseField =
@@ -78,16 +79,16 @@ module Concrete where
     <|> parseQuote <⊗> parseQuotedField <⊗> parseQuote
 
   EOL : Grammar ℓ-zero
-  EOL = literal '\n'
+  EOL = literal NEWLINE
 
   parseEOL : WeakParser EOL
-  parseEOL = Parser.char DiscreteUnicodeChar '\n'
+  parseEOL = Parser.char DiscreteASCIIChar NEWLINE
 
   NonemptyLine : Grammar ℓ-zero
-  NonemptyLine = Field ⊗ KL* (literal ',' ⊗ Field)
+  NonemptyLine = Field ⊗ KL* (literal COMMA ⊗ Field)
 
   parseNonemptyLine : WeakParser NonemptyLine
-  parseNonemptyLine = parseField <⊗> many (Parser.char DiscreteUnicodeChar ',' <⊗> parseField)
+  parseNonemptyLine = parseField <⊗> many (Parser.char DiscreteASCIIChar COMMA <⊗> parseField)
 
   Line : Grammar ℓ-zero
   Line = (ε ⊕ NonemptyLine) ⊗ EOL
@@ -103,7 +104,7 @@ concrete-parser = many Concrete.parseLine
 
 module Abstract where
   Field : Type ℓ-zero
-  Field = List UnicodeChar
+  Field = List ASCIIChar
 
   Line : Type ℓ-zero
   Line = List Field
@@ -113,7 +114,7 @@ AST = List Abstract.Line
 
 module Concrete→Abstract where
   quotedLit : SemanticAction Concrete.QuotedLit String
-  quotedLit = semact-⊕ semact-underlying (semact-pure [ '"' ])
+  quotedLit = semact-⊕ semact-underlying (semact-pure [ DOUBLEQUOTE ])
 
   quotedField : SemanticAction Concrete.QuotedField Abstract.Field
   quotedField = semact-map (List.foldl _++_ []) (semact-* quotedLit)
@@ -126,7 +127,7 @@ module Concrete→Abstract where
     semact-map (uncurry _∷_) (semact-concat field'
       (semact-* (semact-right field')))
 
-  nonemptyLine' : SemanticAction (Concrete.Field ⊗ ((literal ',' ⊗ Concrete.Field) *) ⊗ ε) Abstract.Line
+  nonemptyLine' : SemanticAction (Concrete.Field ⊗ ((literal COMMA ⊗ Concrete.Field) *) ⊗ ε) Abstract.Line
   nonemptyLine' = do
     x ← field'
     xs ← semact-* (semact-right field')
@@ -142,20 +143,18 @@ parser : WeakParser (Δ AST)
 parser = Parser.map (⊸-elim-ε Concrete→Abstract.ast) concrete-parser
 
 module Test where
-  open import Test Unicode
+  open import Test ASCII
 
-  open DecodeUnicode Unicode Maybe.just
+  open DecodeUnicode ASCII Unicode→ASCII
 
   s : String
   s = []
 
-  p : Maybe.Maybe (literal '\"' s)
+  p : Maybe.Maybe (literal DOUBLEQUOTE s)
   p = runWeakParser Concrete.parseQuote s
 
   q : Maybe.Maybe (ε s)
   q = runWeakParser {g = ε} (Parser.pure (ε-intro)) s
-
-  r = {!q!}
 
   csv1 : String
   csv1 = mkString "a,b,c\ne,f,g"
@@ -166,3 +165,19 @@ module Test where
   csv1-data : Maybe.Maybe AST
   csv1-data = runWeakParserΔ parser csv1
 
+  opaque
+    unfolding ⊗-unit-r' ⊗-assoc internalize ⌈w⌉→string runWeakParserΔ ⊕ᴰ-distR ⊗-unit-r ⊗-unit-l⁻ ⊤* ⊤ ε ⊗-intro internalize' ⊕-elim runWeakParser literal ⟜-intro ⊸-intro ⟜-app ⊸-app
+    _ : p ≡ Maybe.nothing
+    _ = refl
+
+    εmt : ε []
+    εmt = refl
+
+    _ : q ≡ Maybe.just εmt
+    _ = refl
+
+    _ : csv1 ≡ a^ ∷ COMMA ∷ b^ ∷ COMMA ∷ c^ ∷ NEWLINE ∷ e^ ∷ COMMA ∷ f^ ∷ COMMA ∷ g^ ∷ []
+    _ = refl
+
+    _ : csv1-cst ≡ Maybe.just {!!}
+    _ = {!refl!}
