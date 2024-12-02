@@ -62,29 +62,29 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     DecProp∃ transition (λ t →
       matchesTransition discAlphabet t src' label' dst')
 
-  data Tag (b : Bool) (q : ⟨ Q ⟩) : Type ℓN where
-    stop : b Eq.≡ isAcc q → Tag b q
-    step : ∀ t → (src t Eq.≡ q) → Tag b q
-    stepε : ∀ t → (ε-src t Eq.≡ q) → Tag b q
+  data Tag (q : ⟨ Q ⟩) : Type ℓN where
+    stop : true Eq.≡ isAcc q → Tag q
+    step : ∀ t → (src t Eq.≡ q) → Tag q
+    stepε : ∀ t → (ε-src t Eq.≡ q) → Tag q
 
-  TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
-  TraceTy b q = ⊕e (Tag b q) λ
+  TraceTy : (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
+  TraceTy q = ⊕e (Tag q) λ
     { (stop x) → k ε*
     ; (step t x) → ⊗e (k (literal* (label t))) (Var (dst t))
     ; (stepε t x) → Var (ε-dst t) }
-  Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓN
-  Trace b = μ (TraceTy b)
+  Trace : (q : ⟨ Q ⟩) → Grammar ℓN
+  Trace = μ TraceTy
 
-  STOP : ∀ {q} → ε ⊢ Trace (isAcc q) q
-  STOP = roll ∘g ⊕ᴰ-in (stop Eq.refl) ∘g liftG ∘g liftG
+  STOP : ∀ {q} → true Eq.≡ isAcc q → ε ⊢ Trace q
+  STOP acc = roll ∘g ⊕ᴰ-in (stop acc) ∘g liftG ∘g liftG
 
-  STEP : ∀ {b} t → literal (label t) ⊗ Trace b (dst t) ⊢ Trace b (src t)
+  STEP : ∀ t → literal (label t) ⊗ Trace (dst t) ⊢ Trace (src t)
   STEP t = roll ∘g ⊕ᴰ-in (step _ Eq.refl) ∘g (liftG ∘g liftG) ,⊗ liftG
 
-  STEPε : ∀ {b} t → Trace b (ε-dst t) ⊢ Trace b (ε-src t)
+  STEPε : ∀ t → Trace (ε-dst t) ⊢ Trace (ε-src t)
   STEPε t = roll ∘g ⊕ᴰ-in (stepε t Eq.refl) ∘g liftG
 
   Parse : Grammar _
-  Parse = Trace true init
+  Parse = Trace init
 
-  TraceAlg = Algebra (TraceTy true)
+  TraceAlg = Algebra TraceTy

@@ -29,6 +29,9 @@ opaque
   isLangLiteral : ∀ c → isLang (literal c)
   isLangLiteral c w = isSetString w [ c ]
 
+＂_＂ : ⟨ Alphabet ⟩ → Grammar ℓ-zero
+＂ c ＂ = literal c
+
 isSetGrammarLiteral : ∀ c → isSetGrammar (literal c)
 isSetGrammarLiteral c = isLang→isSetGrammar (isLangLiteral c)
 
