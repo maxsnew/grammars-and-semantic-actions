@@ -34,6 +34,14 @@ module _ where
     ⟦ ⊕e B F ⟧ g = ⊕[ b ∈ B ] ⟦ F b ⟧ g
     ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗ ⟦ F' ⟧ g
 
+  module _ {A : Type ℓ} {ℓ'}  where
+    LiftFunctor : (F : Functor A) → Functor (Lift {j = ℓ'} A)
+    LiftFunctor (k g) = k (LiftG ℓ' g)
+    LiftFunctor (Var a) = Var (lift a)
+    LiftFunctor (&e B F) = &e (Lift {j = ℓ'} B) (λ b → LiftFunctor (F (lower b)))
+    LiftFunctor (⊕e B F) = ⊕e (Lift {j = ℓ'} B) (λ b → LiftFunctor (F (lower b)))
+    LiftFunctor (⊗e F F₁) = ⊗e (LiftFunctor F) (LiftFunctor F₁)
+
   map : ∀ {A : Type ℓ}(F : Functor A) {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}
         → (∀ a → g a ⊢ h a)
         → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
@@ -42,6 +50,7 @@ module _ where
   map (&e B F) f = &ᴰ-intro λ a → map (F a) f ∘g &ᴰ-π a
   map (⊕e B F) f = ⊕ᴰ-elim λ a → ⊕ᴰ-in a ∘g map (F a) f
   map (⊗e F F') f = map F f ,⊗ map F' f
+
 
   module _ {A : Type ℓ} where
     opaque
