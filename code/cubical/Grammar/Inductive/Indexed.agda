@@ -13,6 +13,7 @@ open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 
@@ -34,14 +35,6 @@ module _ where
     ⟦ ⊕e B F ⟧ g = ⊕[ b ∈ B ] ⟦ F b ⟧ g
     ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗ ⟦ F' ⟧ g
 
-  module _ {A : Type ℓ} {ℓ'}  where
-    LiftFunctor : (F : Functor A) → Functor (Lift {j = ℓ'} A)
-    LiftFunctor (k g) = k (LiftG ℓ' g)
-    LiftFunctor (Var a) = Var (lift a)
-    LiftFunctor (&e B F) = &e (Lift {j = ℓ'} B) (λ b → LiftFunctor (F (lower b)))
-    LiftFunctor (⊕e B F) = ⊕e (Lift {j = ℓ'} B) (λ b → LiftFunctor (F (lower b)))
-    LiftFunctor (⊗e F F₁) = ⊗e (LiftFunctor F) (LiftFunctor F₁)
-
   map : ∀ {A : Type ℓ}(F : Functor A) {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}
         → (∀ a → g a ⊢ h a)
         → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
@@ -50,7 +43,6 @@ module _ where
   map (&e B F) f = &ᴰ-intro λ a → map (F a) f ∘g &ᴰ-π a
   map (⊕e B F) f = ⊕ᴰ-elim λ a → ⊕ᴰ-in a ∘g map (F a) f
   map (⊗e F F') f = map F f ,⊗ map F' f
-
 
   module _ {A : Type ℓ} where
     opaque
@@ -146,3 +138,70 @@ module _ where
       alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
       alg a = map (F a) (λ _ → roll)
 
+module _ (A : Type ℓ) {ℓ'} where
+  LiftFunctor : (F : Functor A) → Functor (Lift {j = ℓ'} A)
+  LiftFunctor (k g) = k (LiftG ℓ' g)
+  LiftFunctor (Var a) = Var (lift a)
+  LiftFunctor (&e B F) = &e (Lift {j = ℓ'} B) (λ b → LiftFunctor (F (lower b)))
+  LiftFunctor (⊕e B F) = ⊕e (Lift {j = ℓ'} B) (λ b → LiftFunctor (F (lower b)))
+  LiftFunctor (⊗e F F₁) = ⊗e (LiftFunctor F) (LiftFunctor F₁)
+
+  lowerFunctor :
+    {ℓ''' : Level} →
+    (F : Functor A) → {g : A → Grammar ℓ''}
+    → ⟦ LiftFunctor F ⟧ (λ (lift a) → LiftG ℓ''' (g a)) ⊢ ⟦ F ⟧ g
+  lowerFunctor (k g) = liftG ∘g lowerG ∘g lowerG
+  lowerFunctor (Var a) = liftG ∘g lowerG ∘g lowerG
+  lowerFunctor (&e B F) = &ᴰ-in (λ b → lowerFunctor (F b) ∘g &ᴰ-π (lift b))
+  lowerFunctor (⊕e B F) = ⊕ᴰ-elim (λ (lift b) → ⊕ᴰ-in b ∘g lowerFunctor (F b))
+  lowerFunctor (⊗e F F₁) = lowerFunctor F ,⊗ lowerFunctor F₁
+
+  liftFunctor :
+    {ℓ''' : Level} →
+    (F : Functor A) → {g : A → Grammar ℓ''}
+    → ⟦ F ⟧ g ⊢ ⟦ LiftFunctor F ⟧ (λ (lift a) → LiftG ℓ''' (g a))
+  liftFunctor (k g) = liftG ∘g liftG ∘g lowerG
+  liftFunctor (Var a) = liftG ∘g liftG ∘g lowerG
+  liftFunctor (&e B F) = &ᴰ-in (λ (lift b) → liftFunctor (F b) ∘g &ᴰ-π b)
+  liftFunctor (⊕e B F) = ⊕ᴰ-elim (λ b → ⊕ᴰ-in (lift b) ∘g liftFunctor (F b))
+  liftFunctor (⊗e F F₁) = liftFunctor F ,⊗ liftFunctor F₁
+
+  module _ {F : A → Functor A} where
+    private
+      A' = Lift {j = ℓ'} A
+
+      F' : A' → Functor A'
+      F' (lift a) = LiftFunctor (F a)
+
+    module _ {g : A → Grammar ℓ''} where
+      private
+        L = ℓ-max ℓ'' (ℓ-max ℓ ℓ')
+
+        g' : A' → Grammar L
+        g' (lift a) = LiftG (ℓ-max ℓ ℓ') (g a)
+
+      module _ (the-alg : Algebra F g) where
+        LiftAlg : Algebra F' g'
+        LiftAlg (lift a) = liftG ∘g the-alg a ∘g lowerFunctor (F a)
+      module _ (the-alg : Algebra F' g') where
+        LowerAlg : Algebra F g
+        LowerAlg a = lowerG ∘g the-alg (lift a) ∘g liftFunctor (F a)
+
+    module _ {a : A} where
+      lowerF : μ F' (lift a) ⊢ μ F a
+      lowerF =
+        rec _
+          (λ (lift a') →
+            roll
+            ∘g lowerFunctor {ℓ''' = ℓ-max ℓ ℓ'} (F a')
+            ∘g map (F' (lift a')) (λ _ → liftG))
+          (lift a)
+
+      liftF : μ F a ⊢ μ F' (lift a)
+      liftF =
+        rec _
+          (λ a' →
+            roll
+            ∘g map (F' (lift a')) (λ _ → lowerG)
+            ∘g liftFunctor {ℓ''' = ℓ-max ℓ ℓ'} (F a'))
+          a

@@ -12,7 +12,7 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
-open import Cubical.Data.List hiding (init)
+open import Cubical.Data.List hiding (init ; rec)
 
 open import Grammar Alphabet
 open import Grammar.Inductive.Indexed Alphabet
@@ -88,3 +88,60 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
   Parse = Trace init
 
   TraceAlg = Algebra TraceTy
+
+  module _ {ℓP}(P : Grammar ℓP) where
+    L = ℓ-max ℓP ℓN
+    Q' = Lift {j = L} ⟨ Q ⟩
+
+    Tag' : Q' → Type L
+    Tag' q = Lift {j = L} (Tag (lower q))
+
+    TraceTy' : (q : Q')  → Functor Q'
+    TraceTy' (lift q) = LiftFunctor ⟨ Q ⟩ (TraceTy q)
+
+    PAlgTy : (q : Q') → Functor Q'
+    PAlgTy q = ⊕e (Tag' q) λ
+      { (lift (stop x)) → k (LiftG ℓN P)
+      ; (lift (step t x)) →
+        ⊗e (k (literal* (label t))) (Var (lift (dst t)))
+      ; (lift (stepε t x)) → Var (lift (ε-dst t)) }
+
+    PAlgebra : (g :  Q' → Grammar L) → Type L
+    PAlgebra = Algebra PAlgTy
+
+    initialPAlg : PAlgebra (μ PAlgTy)
+    initialPAlg = initialAlgebra PAlgTy
+
+    module _ (g :  Q' → Grammar L) (pAlg : PAlgebra g) where
+      underlyingAlg : Algebra TraceTy' (λ q → g q ⟜ P)
+      underlyingAlg q = ⊕ᴰ-elim (λ {
+          (lift (stop acc)) →
+            ⟜-intro
+              ((pAlg q
+              ∘g ⊕ᴰ-in (lift (stop acc)))
+              ∘g liftG ∘g liftG
+              ∘g ⊗-unit-l)
+             ∘g lowerG ∘g lowerG ∘g lowerG
+        ; (lift (step t Eq.refl)) →
+          ⟜-intro
+            (pAlg q
+            ∘g ⊕ᴰ-in (lift (step t Eq.refl))
+            ∘g id ,⊗ ⟜-app ∘g ⊗-assoc⁻
+            ∘g ((liftG ∘g liftG) ,⊗ ⟜-mapCod liftG) ,⊗ id)
+            ∘g (lowerG ∘g lowerG ∘g lowerG) ,⊗ lowerG
+        ; (lift (stepε t Eq.refl)) →
+          ⟜-intro (
+            pAlg q
+            ∘g ⊕ᴰ-in (lift (stepε t Eq.refl))
+            ∘g liftG ∘g ⟜-app)
+          ∘g lowerG
+          })
+
+      -- curryPAlg :
+      --   Homomorphism PAlgTy initialPAlg pAlg →
+      --   Homomorphism TraceTy (initialAlgebra TraceTy) underlyingAlg
+      -- curryPAlg e .fst q =
+      --   ⟜-intro (
+      --     e .fst (lift q)
+      --     ∘g {!⟜-intro⁻ (rec _ underlyingAlg q)!})
+      -- curryPAlg e .snd = {!!}
