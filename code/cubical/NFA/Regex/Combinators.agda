@@ -582,271 +582,338 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
 
       the-retN : ∀ q →
         rec _ ⊗Alg (inl q) ∘g N→⊗NFA q ≡ id
-      the-retN q = isoFunInjective ⟜UMP _ _
-        (equalizer-ind (TraceTy N)
-          (λ q → (Trace N q ⊗ Parse N') ⟜ Parse N')
-          (λ q → ⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl q) ∘g N→⊗NFA q))
-          (λ q → ⟜-intro id)
-          (λ q → ⊕ᴰ≡ _ _
-            λ {
-            (stop acc) →
-              isoFunInjective (invIso ⟜UMP) _ _
-                (⟜-intro⁻
-                  (⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl q) ∘g N→⊗NFA q) ∘g
-                   STOP N acc ∘g lowerG ∘g lowerG
-                   )
-                  ≡⟨ (λ i →
-                        ⟜-intro⁻
-                          (⟜-intro-natural
-                            {f = rec _ ⊗Alg (inl q) ∘g N→⊗NFA q}
-                            {f' = STOP N acc ∘g lowerG ∘g lowerG}
-                            i)) ⟩
-                (⟜-intro⁻
-                  (⟜-intro
-                    (rec (TraceTy ⊗NFA) ⊗Alg (inl q)
-                     ∘g N→⊗NFA q
-                     ∘g (STOP N acc ∘g lowerG ∘g lowerG) ,⊗ id
-                    )
-                  )
-                )
-                  ≡⟨ ⟜-β _ ⟩
-                rec (TraceTy ⊗NFA) ⊗Alg (inl q)
-                  ∘g ⟜-intro⁻
-                      (⟜-intro
-                         (STEPε ⊗NFA (N-acc q acc)
-                         ∘g ⊗-unit-l
-                         ∘g (lowerG ∘g lowerG) ,⊗ id)
-                      )
-                  ∘g id ,⊗ rec _ N'Alg (N' .init)
-                  ≡⟨ (λ i →
-                        rec (TraceTy ⊗NFA) ⊗Alg (inl q)
-                        ∘g ⟜-β (STEPε ⊗NFA (N-acc q acc)
-                                ∘g ⊗-unit-l
-                                ∘g (lowerG ∘g lowerG) ,⊗ id) i
-                        ∘g id ,⊗ rec _ N'Alg (N' .init)
-                        ) ⟩
-                STOP N acc ,⊗ id
-                ∘g ⊗-unit-l⁻
-                ∘g lowerG
-                ∘g rec _ ⊗Alg (inr (N' .init))
-                ∘g ⊗-unit-l
-                ∘g id ,⊗ rec _ N'Alg (N' .init)
-                ∘g (lowerG ∘g lowerG) ,⊗ id
-                  ≡⟨ (λ i →
-                       STOP N acc ,⊗ id
-                       ∘g ⊗-unit-l⁻
-                       ∘g lowerG
-                       ∘g rec _ ⊗Alg (inr (N' .init))
-                       ∘g ⊗-unit-l⊗-intro (rec _ N'Alg (N' .init)) (~ i)
-                       ∘g (lowerG ∘g lowerG) ,⊗ id
-                      ) ⟩
-                STOP N acc ,⊗ id
-                ∘g ⊗-unit-l⁻
-                ∘g lowerG
-                ∘g rec _ ⊗Alg (inr (N' .init))
-                ∘g rec _ N'Alg (N' .init)
-                ∘g ⊗-unit-l
-                ∘g (lowerG ∘g lowerG) ,⊗ id
-                  ≡⟨ (λ i →
-                       STOP N acc ,⊗ id
-                       ∘g ⊗-unit-l⁻
-                       ∘g the-retN' (N' .init) i
-                       ∘g ⊗-unit-l
-                       ∘g (lowerG ∘g lowerG) ,⊗ id
-                      ) ⟩
-                STOP N acc ,⊗ id
-                ∘g ⊗-unit-l⁻
-                ∘g ⊗-unit-l
-                ∘g (lowerG ∘g lowerG) ,⊗ id
-                  ≡⟨ (λ i →
-                       STOP N acc ,⊗ id
-                        ∘g ⊗-unit-ll⁻ i
-                        ∘g (lowerG ∘g lowerG) ,⊗ id
-                     ) ⟩
-                (STOP N acc ∘g lowerG ∘g lowerG) ,⊗ id
-                  ≡⟨ sym (⟜-β _) ⟩
-                 ⟜-intro⁻
-                  (⟜-intro
-                    ((STOP N acc ∘g lowerG ∘g lowerG) ,⊗ id))
-                  ≡⟨ (λ i →
-                        ⟜-intro⁻
-                          (⟜-intro-natural
-                            {f = id}
-                            {f' = STOP N acc ∘g lowerG ∘g lowerG}
-                            (~ i))) ⟩
-                 ⟜-intro⁻
-                  (⟜-intro id ∘g
-                   STOP N acc ∘g lowerG ∘g lowerG
-                   )
-                 ∎)
-          ; (step t Eq.refl) →
-              isoFunInjective (invIso ⟜UMP) _ _
-                (⟜-intro⁻
-                  (⟜-intro
-                      (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
-                         ∘g N→⊗NFA (N .src t))
-                  ∘g STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG
-                  )
-                  ≡⟨ (λ i →
-                        ⟜-intro⁻
-                          (⟜-intro-natural
-                            {f = rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t)) ∘g N→⊗NFA (N .src t) }
-                            {f' = STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG }
-                            i)) ⟩
-                ⟜-intro⁻
-                  (⟜-intro
-                      (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
-                         ∘g N→⊗NFA (N .src t)
-                         ∘g (STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG)
-                            ,⊗ id)
-                  )
-                  ≡⟨ ⟜-β _ ⟩
-                rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
-                ∘g ⟜-intro⁻
-                  (⟜-intro
-                  (STEP ⊗NFA (inl t)
-                  ∘g id ,⊗ ⟜-app
-                  ∘g ⊗-assoc⁻
-                  ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id))
-                ∘g ((liftG ∘g liftG) ,⊗ (liftG ∘g rec (TraceTy N) NAlg (N .dst t))) ,⊗ id
-                ∘g (id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
-                ∘g id ,⊗ rec _ N'Alg (N' .init)
-                  ≡⟨
-                    (λ i →
-                      rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
-                      ∘g ⟜-β
-                        (STEP ⊗NFA (inl t)
-                        ∘g id ,⊗ ⟜-app
-                        ∘g ⊗-assoc⁻
-                        ∘g ((lowerG ∘g lowerG {ℓ' = ℓ-max ℓN ℓN'}) ,⊗ lowerG {ℓ' = ℓN}) ,⊗ id)
-                        i
-                      ∘g ((liftG ∘g liftG {ℓ' = ℓN}) ,⊗ (liftG ∘g rec (TraceTy N) NAlg (N .dst t))) ,⊗ id
-                      ∘g (id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
-                      ∘g id ,⊗ rec _ N'Alg (N' .init)
-                    )
-                  ⟩
-                STEP N t ,⊗ id
-                ∘g ⊗-assoc
-                ∘g id ,⊗ (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t)) ∘g N→⊗NFA (N .dst t))
-                ∘g id ,⊗ (eq-π _ _ ,⊗ id)
-                ∘g ⊗-assoc⁻
-                ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
-                  ≡⟨
-                    (λ i →
-                    STEP N t ,⊗ id
-                    ∘g ⊗-assoc
-                    ∘g id ,⊗ eq-π-pf-⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t)) ∘g N→⊗NFA (N .dst t)) id i
-                    ∘g ⊗-assoc⁻
-                    ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
-                  ⟩
-                STEP N t ,⊗ id
-                ∘g ⊗-assoc
-                ∘g ⊗-assoc⁻
-                ∘g (id ,⊗ eq-π _ _) ,⊗ id
-                ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
-                  ≡⟨
-                    (λ i →
-                       STEP N t ,⊗ id
-                       ∘g ⊗-assoc∘⊗-assoc⁻≡id i
-                       ∘g (id ,⊗ eq-π _ _) ,⊗ id
-                       ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
-                    )
-                  ⟩
-                (STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
-                  ≡⟨ sym (⟜-β _) ⟩
-                ⟜-intro⁻
-                  (⟜-intro
-                     ((STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id))
-                  ≡⟨ (λ i →
-                        ⟜-intro⁻
-                          (⟜-intro-natural
-                            {f = id}
-                            {f' = STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG }
-                            (~ i))) ⟩
-                ⟜-intro⁻
-                  (⟜-intro id
-                     ∘g STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG)
-                 ∎)
-          ; (stepε t Eq.refl) →
-              isoFunInjective (invIso ⟜UMP) _ _
-                (
-                ⟜-intro⁻
-                  (⟜-intro
-                      (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t)) ∘g
-                       N→⊗NFA (N .ε-src t))
-                    ∘g STEPε N t ∘g eq-π _ _ ∘g lowerG
-                   )
-                  ≡⟨
-                    (λ i →
-                      ⟜-intro⁻
-                        (⟜-intro-natural
-                          {f = rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t)) ∘g N→⊗NFA (N .ε-src t)}
-                          {f' = STEPε N t ∘g eq-π _ _ ∘g lowerG}
-                          i
-                        )
-                    )
-                  ⟩
-                ⟜-intro⁻
-                  (⟜-intro
-                      (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t)) ∘g
-                       N→⊗NFA (N .ε-src t)
-                      ∘g (STEPε N t ∘g eq-π _ _ ∘g lowerG) ,⊗ id
-                   ))
-                  ≡⟨ ⟜-β _ ⟩
-                rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t))
-                ∘g
-                  ⟜-intro⁻ (⟜-intro
-                    (STEPε ⊗NFA (N-ε-trans t)
-                    ∘g ⟜-app
-                    ∘g lowerG ,⊗ id))
-                ∘g (liftG ∘g rec (TraceTy N) NAlg (N .ε-dst t)) ,⊗ id
-                ∘g (eq-π _ _ ∘g lowerG) ,⊗ id
-                ∘g id ,⊗ rec _ N'Alg (N' .init)
-                  ≡⟨
-                    (λ i →
-                      rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t))
-                      ∘g ⟜-β
-                          (STEPε ⊗NFA (N-ε-trans t)
-                            ∘g ⟜-app
-                            ∘g lowerG {ℓ' = ℓN} ,⊗ id)
-                         i
-                      ∘g (liftG ∘g rec (TraceTy N) NAlg (N .ε-dst t)) ,⊗ id
-                      ∘g (eq-π _ _ ∘g lowerG) ,⊗ id
-                      ∘g id ,⊗ rec _ N'Alg (N' .init)
-                    )
-                   ⟩
-                STEPε N t ,⊗ id
-                ∘g rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-dst t))
-                ∘g N→⊗NFA (N .ε-dst t)
-                ∘g (eq-π _ _ ∘g lowerG) ,⊗ id
-                  ≡⟨
-                    (λ i →
-                      STEPε N t ,⊗ id
-                      ∘g eq-π-pf-⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-dst t)) ∘g N→⊗NFA (N .ε-dst t)) id i
-                      ∘g lowerG ,⊗ id
-                    )
-                  ⟩
-                (STEPε N t ∘g eq-π _ _ ∘g lowerG) ,⊗ id
-                  ≡⟨ sym (⟜-β _) ⟩
-                ⟜-intro⁻ (⟜-intro ((STEPε N t ∘g eq-π _ _ ∘g lowerG) ,⊗ id))
-                  ≡⟨
-                    (λ i →
-                      ⟜-intro⁻
-                        (⟜-intro-natural
-                          {f = id}
-                          {f' = STEPε N t ∘g eq-π _ _ ∘g lowerG}
-                          (~ i)
-                        )
-                    )
-                  ⟩
-                ⟜-intro⁻ (⟜-intro id ∘g STEPε N t ∘g eq-π _ _ ∘g lowerG)
-                 ∎)
-              })
-          q)
+      the-retN q = {!!}
+        -- isoFunInjective ⟜UMP _ _
+        -- (equalizer-ind (TraceTy N)
+        --   (λ q → (Trace N q ⊗ Parse N') ⟜ Parse N')
+        --   (λ q → ⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl q) ∘g N→⊗NFA q))
+        --   (λ q → ⟜-intro id)
+        --   (λ q → ⊕ᴰ≡ _ _
+        --     λ {
+        --     (stop acc) →
+        --       isoFunInjective (invIso ⟜UMP) _ _
+        --         (⟜-intro⁻
+        --           (⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl q) ∘g N→⊗NFA q) ∘g
+        --            STOP N acc ∘g lowerG ∘g lowerG
+        --            )
+        --           ≡⟨ (λ i →
+        --                 ⟜-intro⁻
+        --                   (⟜-intro-natural
+        --                     {f = rec _ ⊗Alg (inl q) ∘g N→⊗NFA q}
+        --                     {f' = STOP N acc ∘g lowerG ∘g lowerG}
+        --                     i)) ⟩
+        --         (⟜-intro⁻
+        --           (⟜-intro
+        --             (rec (TraceTy ⊗NFA) ⊗Alg (inl q)
+        --              ∘g N→⊗NFA q
+        --              ∘g (STOP N acc ∘g lowerG ∘g lowerG) ,⊗ id
+        --             )
+        --           )
+        --         )
+        --           ≡⟨ ⟜-β _ ⟩
+        --         rec (TraceTy ⊗NFA) ⊗Alg (inl q)
+        --           ∘g ⟜-intro⁻
+        --               (⟜-intro
+        --                  (STEPε ⊗NFA (N-acc q acc)
+        --                  ∘g ⊗-unit-l
+        --                  ∘g (lowerG ∘g lowerG) ,⊗ id)
+        --               )
+        --           ∘g id ,⊗ rec _ N'Alg (N' .init)
+        --           ≡⟨ (λ i →
+        --                 rec (TraceTy ⊗NFA) ⊗Alg (inl q)
+        --                 ∘g ⟜-β (STEPε ⊗NFA (N-acc q acc)
+        --                         ∘g ⊗-unit-l
+        --                         ∘g (lowerG ∘g lowerG) ,⊗ id) i
+        --                 ∘g id ,⊗ rec _ N'Alg (N' .init)
+        --                 ) ⟩
+        --         STOP N acc ,⊗ id
+        --         ∘g ⊗-unit-l⁻
+        --         ∘g lowerG
+        --         ∘g rec _ ⊗Alg (inr (N' .init))
+        --         ∘g ⊗-unit-l
+        --         ∘g id ,⊗ rec _ N'Alg (N' .init)
+        --         ∘g (lowerG ∘g lowerG) ,⊗ id
+        --           ≡⟨ (λ i →
+        --                STOP N acc ,⊗ id
+        --                ∘g ⊗-unit-l⁻
+        --                ∘g lowerG
+        --                ∘g rec _ ⊗Alg (inr (N' .init))
+        --                ∘g ⊗-unit-l⊗-intro (rec _ N'Alg (N' .init)) (~ i)
+        --                ∘g (lowerG ∘g lowerG) ,⊗ id
+        --               ) ⟩
+        --         STOP N acc ,⊗ id
+        --         ∘g ⊗-unit-l⁻
+        --         ∘g lowerG
+        --         ∘g rec _ ⊗Alg (inr (N' .init))
+        --         ∘g rec _ N'Alg (N' .init)
+        --         ∘g ⊗-unit-l
+        --         ∘g (lowerG ∘g lowerG) ,⊗ id
+        --           ≡⟨ (λ i →
+        --                STOP N acc ,⊗ id
+        --                ∘g ⊗-unit-l⁻
+        --                ∘g the-retN' (N' .init) i
+        --                ∘g ⊗-unit-l
+        --                ∘g (lowerG ∘g lowerG) ,⊗ id
+        --               ) ⟩
+        --         STOP N acc ,⊗ id
+        --         ∘g ⊗-unit-l⁻
+        --         ∘g ⊗-unit-l
+        --         ∘g (lowerG ∘g lowerG) ,⊗ id
+        --           ≡⟨ (λ i →
+        --                STOP N acc ,⊗ id
+        --                 ∘g ⊗-unit-ll⁻ i
+        --                 ∘g (lowerG ∘g lowerG) ,⊗ id
+        --              ) ⟩
+        --         (STOP N acc ∘g lowerG ∘g lowerG) ,⊗ id
+        --           ≡⟨ sym (⟜-β _) ⟩
+        --          ⟜-intro⁻
+        --           (⟜-intro
+        --             ((STOP N acc ∘g lowerG ∘g lowerG) ,⊗ id))
+        --           ≡⟨ (λ i →
+        --                 ⟜-intro⁻
+        --                   (⟜-intro-natural
+        --                     {f = id}
+        --                     {f' = STOP N acc ∘g lowerG ∘g lowerG}
+        --                     (~ i))) ⟩
+        --          ⟜-intro⁻
+        --           (⟜-intro id ∘g
+        --            STOP N acc ∘g lowerG ∘g lowerG
+        --            )
+        --          ∎)
+        --   ; (step t Eq.refl) →
+        --       isoFunInjective (invIso ⟜UMP) _ _
+        --         (⟜-intro⁻
+        --           (⟜-intro
+        --               (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
+        --                  ∘g N→⊗NFA (N .src t))
+        --           ∘g STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+        --           )
+        --           ≡⟨ (λ i →
+        --                 ⟜-intro⁻
+        --                   (⟜-intro-natural
+        --                     {f = rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t)) ∘g N→⊗NFA (N .src t) }
+        --                     {f' = STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG }
+        --                     i)) ⟩
+        --         ⟜-intro⁻
+        --           (⟜-intro
+        --               (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
+        --                  ∘g N→⊗NFA (N .src t)
+        --                  ∘g (STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG)
+        --                     ,⊗ id)
+        --           )
+        --           ≡⟨ ⟜-β _ ⟩
+        --         rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
+        --         ∘g ⟜-intro⁻
+        --           (⟜-intro
+        --           (STEP ⊗NFA (inl t)
+        --           ∘g id ,⊗ ⟜-app
+        --           ∘g ⊗-assoc⁻
+        --           ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id))
+        --         ∘g ((liftG ∘g liftG) ,⊗ (liftG ∘g rec (TraceTy N) NAlg (N .dst t))) ,⊗ id
+        --         ∘g (id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+        --         ∘g id ,⊗ rec _ N'Alg (N' .init)
+        --           ≡⟨
+        --             (λ i →
+        --               rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
+        --               ∘g ⟜-β
+        --                 (STEP ⊗NFA (inl t)
+        --                 ∘g id ,⊗ ⟜-app
+        --                 ∘g ⊗-assoc⁻
+        --                 ∘g ((lowerG ∘g lowerG {ℓ' = ℓ-max ℓN ℓN'}) ,⊗ lowerG {ℓ' = ℓN}) ,⊗ id)
+        --                 i
+        --               ∘g ((liftG ∘g liftG {ℓ' = ℓN}) ,⊗ (liftG ∘g rec (TraceTy N) NAlg (N .dst t))) ,⊗ id
+        --               ∘g (id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+        --               ∘g id ,⊗ rec _ N'Alg (N' .init)
+        --             )
+        --           ⟩
+        --         STEP N t ,⊗ id
+        --         ∘g ⊗-assoc
+        --         ∘g id ,⊗ (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t)) ∘g N→⊗NFA (N .dst t))
+        --         ∘g id ,⊗ (eq-π _ _ ,⊗ id)
+        --         ∘g ⊗-assoc⁻
+        --         ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+        --           ≡⟨
+        --             (λ i →
+        --             STEP N t ,⊗ id
+        --             ∘g ⊗-assoc
+        --             ∘g id ,⊗ eq-π-pf-⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t)) ∘g N→⊗NFA (N .dst t)) id i
+        --             ∘g ⊗-assoc⁻
+        --             ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
+        --           ⟩
+        --         STEP N t ,⊗ id
+        --         ∘g ⊗-assoc
+        --         ∘g ⊗-assoc⁻
+        --         ∘g (id ,⊗ eq-π _ _) ,⊗ id
+        --         ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+        --           ≡⟨
+        --             (λ i →
+        --                STEP N t ,⊗ id
+        --                ∘g ⊗-assoc∘⊗-assoc⁻≡id i
+        --                ∘g (id ,⊗ eq-π _ _) ,⊗ id
+        --                ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+        --             )
+        --           ⟩
+        --         (STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+        --           ≡⟨ sym (⟜-β _) ⟩
+        --         ⟜-intro⁻
+        --           (⟜-intro
+        --              ((STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id))
+        --           ≡⟨ (λ i →
+        --                 ⟜-intro⁻
+        --                   (⟜-intro-natural
+        --                     {f = id}
+        --                     {f' = STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG }
+        --                     (~ i))) ⟩
+        --         ⟜-intro⁻
+        --           (⟜-intro id
+        --              ∘g STEP N t ∘g id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG)
+        --          ∎)
+        --   ; (stepε t Eq.refl) →
+        --       isoFunInjective (invIso ⟜UMP) _ _
+        --         (
+        --         ⟜-intro⁻
+        --           (⟜-intro
+        --               (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t)) ∘g
+        --                N→⊗NFA (N .ε-src t))
+        --             ∘g STEPε N t ∘g eq-π _ _ ∘g lowerG
+        --            )
+        --           ≡⟨
+        --             (λ i →
+        --               ⟜-intro⁻
+        --                 (⟜-intro-natural
+        --                   {f = rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t)) ∘g N→⊗NFA (N .ε-src t)}
+        --                   {f' = STEPε N t ∘g eq-π _ _ ∘g lowerG}
+        --                   i
+        --                 )
+        --             )
+        --           ⟩
+        --         ⟜-intro⁻
+        --           (⟜-intro
+        --               (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t)) ∘g
+        --                N→⊗NFA (N .ε-src t)
+        --               ∘g (STEPε N t ∘g eq-π _ _ ∘g lowerG) ,⊗ id
+        --            ))
+        --           ≡⟨ ⟜-β _ ⟩
+        --         rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t))
+        --         ∘g
+        --           ⟜-intro⁻ (⟜-intro
+        --             (STEPε ⊗NFA (N-ε-trans t)
+        --             ∘g ⟜-app
+        --             ∘g lowerG ,⊗ id))
+        --         ∘g (liftG ∘g rec (TraceTy N) NAlg (N .ε-dst t)) ,⊗ id
+        --         ∘g (eq-π _ _ ∘g lowerG) ,⊗ id
+        --         ∘g id ,⊗ rec _ N'Alg (N' .init)
+        --           ≡⟨
+        --             (λ i →
+        --               rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t))
+        --               ∘g ⟜-β
+        --                   (STEPε ⊗NFA (N-ε-trans t)
+        --                     ∘g ⟜-app
+        --                     ∘g lowerG {ℓ' = ℓN} ,⊗ id)
+        --                  i
+        --               ∘g (liftG ∘g rec (TraceTy N) NAlg (N .ε-dst t)) ,⊗ id
+        --               ∘g (eq-π _ _ ∘g lowerG) ,⊗ id
+        --               ∘g id ,⊗ rec _ N'Alg (N' .init)
+        --             )
+        --            ⟩
+        --         STEPε N t ,⊗ id
+        --         ∘g rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-dst t))
+        --         ∘g N→⊗NFA (N .ε-dst t)
+        --         ∘g (eq-π _ _ ∘g lowerG) ,⊗ id
+        --           ≡⟨
+        --             (λ i →
+        --               STEPε N t ,⊗ id
+        --               ∘g eq-π-pf-⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-dst t)) ∘g N→⊗NFA (N .ε-dst t)) id i
+        --               ∘g lowerG ,⊗ id
+        --             )
+        --           ⟩
+        --         (STEPε N t ∘g eq-π _ _ ∘g lowerG) ,⊗ id
+        --           ≡⟨ sym (⟜-β _) ⟩
+        --         ⟜-intro⁻ (⟜-intro ((STEPε N t ∘g eq-π _ _ ∘g lowerG) ,⊗ id))
+        --           ≡⟨
+        --             (λ i →
+        --               ⟜-intro⁻
+        --                 (⟜-intro-natural
+        --                   {f = id}
+        --                   {f' = STEPε N t ∘g eq-π _ _ ∘g lowerG}
+        --                   (~ i)
+        --                 )
+        --             )
+        --           ⟩
+        --         ⟜-intro⁻ (⟜-intro id ∘g STEPε N t ∘g eq-π _ _ ∘g lowerG)
+        --          ∎)
+        --       })
+        --   q)
 
-      the-sec : ∀ q →
+      the-secN' : ∀ q' →
+        rec _ N'Alg q' ∘g lowerG ∘g rec _ ⊗Alg (inr q') ≡ id
+      the-secN' q' =
+        equalizer-ind
+          (TraceTy ⊗NFA)
+          (λ {
+            (inl q) → ⊤*
+          ; (inr q') → Trace ⊗NFA (inr q')})
+          (λ {
+            (inl q) → ⊤*-intro
+          ; (inr q') → rec _ N'Alg q' ∘g lowerG ∘g rec _ ⊗Alg (inr q')})
+          (λ {
+            (inl q) → ⊤*-intro
+          ; (inr q') → id})
+          (λ {
+            (inl q) → unambiguous⊤* _ _
+          ; (inr q') →
+              ⊕ᴰ≡ _ _ λ {
+                  (stop acc) → refl
+              ; (step (inr t) Eq.refl) → λ i →
+                  STEP ⊗NFA (inr t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+              ; (stepε (N'-ε-trans t) Eq.refl) → λ i →
+                  STEPε ⊗NFA (N'-ε-trans t) ∘g eq-π-pf _ _ i ∘g lowerG
+              }
+          })
+          (inr q')
+
+      the-secN : ∀ q →
         N→⊗NFA q ∘g rec _ ⊗Alg (inl q) ≡ id
-      the-sec = ?
+      the-secN q =
+        equalizer-ind
+          (TraceTy ⊗NFA)
+          (λ {
+            (inl q) → Trace ⊗NFA (inl q)
+          ; (inr q') → ⊤*
+          })
+          (λ {
+            (inl q) → N→⊗NFA q ∘g rec _ ⊗Alg (inl q)
+          ; (inr q') → ⊤*-intro
+          })
+          (λ {
+            (inl q) → id
+          ; (inr q') → ⊤*-intro
+          })
+          (λ {
+            (inl q) →
+              ⊕ᴰ≡ _ _
+                λ {
+                  (step (inl t) Eq.refl) →
+                    (
+                    ⟜-app
+                    ∘g (rec (TraceTy N) NAlg (N .src t)) ,⊗ id
+                    ∘g id ,⊗ rec _ N'Alg (N' .init)
+                    ∘g rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
+                    ∘g STEP ⊗NFA (inl t)
+                    ∘g id ,⊗ eq-π _ _
+                    ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                      ≡⟨ {!!} ⟩
+                    STEP ⊗NFA (inl t)
+                    ∘g id ,⊗ eq-π _ _
+                    ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                    ∎
+                    )
+                ; (stepε (N-ε-trans t) Eq.refl) → {!!}
+                ; (stepε (N-acc q acc) Eq.refl) → {!!}
+                }
+          ; (inr q') → unambiguous⊤* _ _
+          })
+          (inl q)
 
 
 --       NPAlg' :
