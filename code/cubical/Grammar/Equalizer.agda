@@ -109,3 +109,18 @@ equalizer-ind-unit : (F : Functor Unit) {g : Grammar ℓg}
     ≡ (e' ∘g roll ∘g map F (λ _ → eq-π e e'))
   → e ≡ e'
 equalizer-ind-unit F {g = g} pf = equalizer-ind {A = Unit} (λ _ → F) (λ _ → g) _ _ (λ _ → pf) tt
+
+open import Grammar.LinearFunction Alphabet
+eq-π-pf-⟜-intro :
+  (f f' : g ⊗ h ⊢ l) →
+  f ∘g (eq-π (⟜-intro f) (⟜-intro f') ,⊗ id) ≡ f' ∘g eq-π (⟜-intro f) (⟜-intro f') ,⊗ id
+eq-π-pf-⟜-intro f f' =
+  isoFunInjective ⟜UMP _ _
+    (⟜-intro (f ∘g eq-π (⟜-intro f) (⟜-intro f') ,⊗ id)
+      ≡⟨ sym (⟜-intro-natural {f = f} {f' = eq-π (⟜-intro f) (⟜-intro f')}) ⟩
+    ⟜-intro f ∘g eq-π (⟜-intro f) (⟜-intro f')
+      ≡⟨ eq-π-pf (⟜-intro f) (⟜-intro f') ⟩
+    ⟜-intro f' ∘g eq-π (⟜-intro f) (⟜-intro f')
+      ≡⟨ ⟜-intro-natural {f = f'} {f' = eq-π (⟜-intro f) (⟜-intro f')} ⟩
+     ⟜-intro (f' ∘g eq-π (⟜-intro f) (⟜-intro f') ,⊗ id)
+     ∎)

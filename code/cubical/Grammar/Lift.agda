@@ -20,6 +20,11 @@ private
 LiftG : ∀ ℓ' → Grammar ℓ → Grammar (ℓ-max ℓ ℓ')
 LiftG ℓ' g w = Lift {j = ℓ'} (g w)
 
+open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.Equiv
+LiftG≡ : ∀ ℓ → (g : Grammar ℓ) → g ≡ LiftG ℓ g 
+LiftG≡ ℓ g i w = ua {A = g w} (LiftEquiv {ℓ' = ℓ}) i
+
 liftG : g ⊢ LiftG ℓ' g
 liftG = λ w z → lift z
 

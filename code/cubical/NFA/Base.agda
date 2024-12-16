@@ -12,10 +12,12 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
-open import Cubical.Data.List hiding (init ; rec)
+open import Cubical.Data.List hiding (init ; rec ; map)
 
 open import Grammar Alphabet
+open import Grammar.Equivalence Alphabet
 open import Grammar.Inductive.Indexed Alphabet
+open import Grammar.Inductive.LiftFunctor Alphabet
 import Cubical.Data.Equality as Eq
 open import Term Alphabet
 open import Helper
@@ -89,59 +91,194 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
 
   TraceAlg = Algebra TraceTy
 
-  module _ {ℓP}(P : Grammar ℓP) where
-    L = ℓ-max ℓP ℓN
-    Q' = Lift {j = L} ⟨ Q ⟩
+  -- module _ {ℓP}(P : Grammar ℓP) where
+  --   L = ℓ-max ℓP ℓN
+  --   Q' = Lift {j = L} ⟨ Q ⟩
 
-    Tag' : Q' → Type L
-    Tag' q = Lift {j = L} (Tag (lower q))
+  --   Tag' : Q' → Type L
+  --   Tag' q = Lift {j = L} (Tag (lower q))
 
-    TraceTy' : (q : Q')  → Functor Q'
-    TraceTy' (lift q) = LiftFunctor ⟨ Q ⟩ (TraceTy q)
+  --   TraceTy' : (q : Q')  → Functor Q'
+  --   TraceTy' (lift q) = LiftFunctor ⟨ Q ⟩ (TraceTy q)
 
-    PAlgTy : (q : Q') → Functor Q'
-    PAlgTy q = ⊕e (Tag' q) λ
-      { (lift (stop x)) → k (LiftG ℓN P)
-      ; (lift (step t x)) →
-        ⊗e (k (literal* (label t))) (Var (lift (dst t)))
-      ; (lift (stepε t x)) → Var (lift (ε-dst t)) }
+  --   STOP' : ∀ {q} → true Eq.≡ isAcc q → ε ⊢ μ TraceTy' (lift q)
+  --   STOP' acc =
+  --     roll
+  --     ∘g ⊕ᴰ-in (lift (stop acc))
+  --     ∘g liftG ∘g liftG ∘g liftG
 
-    PAlgebra : (g :  Q' → Grammar L) → Type L
-    PAlgebra = Algebra PAlgTy
+  --   STEP' : ∀ t →
+  --     literal (label t) ⊗ μ TraceTy' (lift (dst t)) ⊢
+  --       μ TraceTy' (lift (src t))
+  --   STEP' t =
+  --     roll
+  --     ∘g ⊕ᴰ-in (lift (step _ Eq.refl))
+  --     ∘g (liftG ∘g liftG ∘g liftG) ,⊗ liftG
 
-    initialPAlg : PAlgebra (μ PAlgTy)
-    initialPAlg = initialAlgebra PAlgTy
+  --   STEPε' : ∀ t →
+  --     μ TraceTy' (lift (ε-dst t)) ⊢ μ TraceTy' (lift (ε-src t))
+  --   STEPε' t = roll ∘g ⊕ᴰ-in (lift (stepε t Eq.refl)) ∘g liftG
 
-    module _ (g :  Q' → Grammar L) (pAlg : PAlgebra g) where
-      underlyingAlg : Algebra TraceTy' (λ q → g q ⟜ P)
-      underlyingAlg q = ⊕ᴰ-elim (λ {
-          (lift (stop acc)) →
-            ⟜-intro
-              ((pAlg q
-              ∘g ⊕ᴰ-in (lift (stop acc)))
-              ∘g liftG ∘g liftG
-              ∘g ⊗-unit-l)
-             ∘g lowerG ∘g lowerG ∘g lowerG
-        ; (lift (step t Eq.refl)) →
-          ⟜-intro
-            (pAlg q
-            ∘g ⊕ᴰ-in (lift (step t Eq.refl))
-            ∘g id ,⊗ ⟜-app ∘g ⊗-assoc⁻
-            ∘g ((liftG ∘g liftG) ,⊗ ⟜-mapCod liftG) ,⊗ id)
-            ∘g (lowerG ∘g lowerG ∘g lowerG) ,⊗ lowerG
-        ; (lift (stepε t Eq.refl)) →
-          ⟜-intro (
-            pAlg q
-            ∘g ⊕ᴰ-in (lift (stepε t Eq.refl))
-            ∘g liftG ∘g ⟜-app)
-          ∘g lowerG
-          })
+  --   PAlgTy : (q : Q') → Functor Q'
+  --   PAlgTy q = ⊕e (Tag' q) λ
+  --     { (lift (stop x)) → k (LiftG ℓN P)
+  --     ; (lift (step t x)) →
+  --       ⊗e (k (literal* (label t))) (Var (lift (dst t)))
+  --     ; (lift (stepε t x)) → Var (lift (ε-dst t)) }
 
-      -- curryPAlg :
-      --   Homomorphism PAlgTy initialPAlg pAlg →
-      --   Homomorphism TraceTy (initialAlgebra TraceTy) underlyingAlg
-      -- curryPAlg e .fst q =
-      --   ⟜-intro (
-      --     e .fst (lift q)
-      --     ∘g {!⟜-intro⁻ (rec _ underlyingAlg q)!})
-      -- curryPAlg e .snd = {!!}
+  --   PAlgebra : (g :  Q' → Grammar L) → Type L
+  --   PAlgebra = Algebra PAlgTy
+
+  --   initialPAlg : PAlgebra (μ PAlgTy)
+  --   initialPAlg = initialAlgebra PAlgTy
+
+  --   initialPAlg' : PAlgebra (λ (lift q) → μ TraceTy' (lift q) ⊗ P)
+  --   initialPAlg' (lift q) = ⊕ᴰ-elim λ {
+  --       (lift (stop acc)) →
+  --         STOP' acc ,⊗ id
+  --           ∘g ⊗-unit-l⁻
+  --         ∘g lowerG ∘g lowerG
+  --     ; (lift (step t Eq.refl)) →
+  --        STEP' t ,⊗ id
+  --        ∘g ⊗-assoc
+  --        ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+  --     ; (lift (stepε t Eq.refl)) →
+  --       STEPε' t ,⊗ id
+  --       ∘g lowerG
+  --     }
+
+  --   module _ (g :  Q' → Grammar L) (pAlg : PAlgebra g) where
+  --     underlyingAlg : Algebra TraceTy' (λ q → g q ⟜ P)
+  --     underlyingAlg q = ⊕ᴰ-elim (λ {
+  --         (lift (stop acc)) →
+  --           ⟜-intro
+  --             ((pAlg q
+  --             ∘g ⊕ᴰ-in (lift (stop acc)))
+  --             ∘g liftG ∘g liftG
+  --             ∘g ⊗-unit-l)
+  --            ∘g lowerG ∘g lowerG ∘g lowerG
+  --       ; (lift (step t Eq.refl)) →
+  --         ⟜-intro
+  --           (pAlg q
+  --           ∘g ⊕ᴰ-in (lift (step t Eq.refl))
+  --           ∘g id ,⊗ ⟜-app ∘g ⊗-assoc⁻
+  --           ∘g ((liftG ∘g liftG) ,⊗ ⟜-mapCod liftG) ,⊗ id)
+  --           ∘g (lowerG ∘g lowerG ∘g lowerG) ,⊗ lowerG
+  --       ; (lift (stepε t Eq.refl)) →
+  --         ⟜-intro (
+  --           pAlg q
+  --           ∘g ⊕ᴰ-in (lift (stepε t Eq.refl))
+  --           ∘g liftG ∘g ⟜-app)
+  --         ∘g lowerG
+  --         })
+
+  --     Prec : ∀ q → μ TraceTy q ⊗ P ⊢ g (lift q)
+  --     Prec q =
+  --       ⟜-intro⁻
+  --         (rec _ underlyingAlg (lift q)
+  --         ∘g liftF ⟨ Q ⟩)
+
+  --     Prec' : ∀ q → μ TraceTy' (lift q) ⊗ P ⊢ g (lift q)
+  --     Prec' q = ⟜-intro⁻ (rec _ underlyingAlg (lift q))
+
+  --   -- open StrongEquivalence
+  --   -- opaque
+  --   --   unfolding ⊗-intro ⊗-unit-l⁻
+  --   --   μP≅μ⊗P :
+  --   --     ∀ q →
+  --   --     StrongEquivalence
+  --   --       (μ PAlgTy (lift q))
+  --   --       (μ TraceTy' (lift q) ⊗ P)
+  --   --   μP≅μ⊗P q .fun = rec _ initialPAlg' (lift q)
+  --   --   μP≅μ⊗P q .inv =
+  --   --     ⟜-intro⁻
+  --   --       (rec _
+  --   --         (underlyingAlg (μ PAlgTy) initialPAlg)
+  --   --         (lift q))
+  --   --   μP≅μ⊗P q .sec = λ i → {!!}
+  --   --   μP≅μ⊗P q .ret =
+  --   --     ind-id'
+  --   --       PAlgTy
+  --   --       (compHomo PAlgTy initialPAlg initialPAlg' initialPAlg
+  --   --         ((λ (lift q) →
+  --   --           ⟜-intro⁻
+  --   --             (rec _
+  --   --               (underlyingAlg (μ PAlgTy) initialPAlg) (lift q))) ,
+  --   --          (λ (lift q) →
+  --   --            ⊕ᴰ≡ _ _ λ {
+  --   --              (lift (stop acc)) →
+  --   --                {!!}
+  --   --            ; (lift (step t Eq.refl)) → {!!}
+  --   --            ; (lift (stepε t Eq.refl)) → {!!}}
+  --   --          ))
+  --   --         (recHomo PAlgTy initialPAlg'))
+  --   --       (lift q)
+
+  --   module _ (g :  Q' → Grammar L) (pAlg : PAlgebra g) where
+  --     opaque
+  --       unfolding ⊗-intro ⊗-unit-l⁻
+  --       ∃PAlgHom :
+  --         Homomorphism
+  --           PAlgTy
+  --           initialPAlg'
+  --           pAlg
+  --       ∃PAlgHom .fst (lift q) = Prec' g pAlg q -- Prec' g pAlg q
+  --       ∃PAlgHom .snd (lift q) =
+  --         ⊕ᴰ≡ _ _
+  --           λ { (lift (stop acc)) →
+  --               (λ i →
+  --                 ⟜-app
+  --                 ∘g (underlyingAlg g pAlg (lift q)
+  --                     ∘g ⊕ᴰ-in (lift (stop acc))
+  --                     )
+  --                     ,⊗ id
+  --                 ∘g (liftG ∘g liftG ∘g liftG) ,⊗ (lowerG ∘g lowerG)
+  --                 ∘g ⊗-unit-l⁻) ∙
+  --               (λ i →
+  --                 (⟜-β (pAlg (lift q)
+  --                   ∘g ⊕ᴰ-in (lift (stop acc))
+  --                   ∘g ⊗-unit-l ∘g id ,⊗ (liftG ∘g liftG)) i ∘g ⊗-unit-l⁻)
+  --                 ∘g lowerG ∘g lowerG) ∙
+  --               (λ i →
+  --                 pAlg (lift q)
+  --                 ∘g ⊕ᴰ-in (lift (stop acc))
+  --                 ∘g ⊗-unit-l⁻l i)
+  --             ; (lift (step t Eq.refl)) →
+  --                 (λ i →
+  --                   ⟜-β
+  --                     (pAlg (lift q)
+  --                     ∘g ⊕ᴰ-in (lift (step t Eq.refl))
+  --                     ∘g id ,⊗ ⟜-app
+  --                     ∘g (liftG ∘g liftG) ,⊗ ⟜-mapCod liftG ,⊗ id
+  --                     ∘g ⊗-assoc⁻) i
+  --                   ∘g (id ,⊗ rec _ (underlyingAlg g pAlg) (lift (dst t))) ,⊗ id
+  --                   ∘g ⊗-assoc
+  --                   ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+  --                 ) ∙
+  --                 (λ i →
+  --                   pAlg (lift q)
+  --                   ∘g ⊕ᴰ-in (lift (step t Eq.refl))
+  --                   ∘g (liftG ∘g liftG) ,⊗ liftG
+  --                   ∘g id ,⊗ {!!}
+  --                   ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+  --                   ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+  --                   -- pAlg (lift q)
+  --                   -- ∘g ⊕ᴰ-in (lift (step t Eq.refl))
+  --                   -- ∘g (liftG ∘g liftG) ,⊗ liftG
+  --                   -- ∘g id ,⊗ Prec' g pAlg (dst t)
+  --                   -- ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+  --                   -- ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+
+  --                 )
+  --             ; (lift (stepε t Eq.refl)) →
+  --               (λ i →
+  --                 ⟜-β
+  --                   (pAlg (lift q)
+  --                   ∘g ⊕ᴰ-in (lift (stepε t Eq.refl))
+  --                   ∘g liftG
+  --                   ∘g ⟜-app
+  --                   ) i
+  --                 ∘g rec _ (underlyingAlg g pAlg) (lift (ε-dst t)) ,⊗ id
+  --                 ∘g lowerG
+  --               )
+  --             }
