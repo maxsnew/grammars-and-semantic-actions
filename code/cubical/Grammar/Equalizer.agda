@@ -124,3 +124,73 @@ eq-π-pf-⟜-intro f f' =
       ≡⟨ ⟜-intro-natural {f = f'} {f' = eq-π (⟜-intro f) (⟜-intro f')} ⟩
      ⟜-intro (f' ∘g eq-π (⟜-intro f) (⟜-intro f') ,⊗ id)
      ∎)
+
+module _ {A : Type ℓ}
+    (tag : A → Type ℓ)
+    (F : ∀ a → tag a → Functor A)
+    where
+
+  private
+    F' : A → Functor A
+    F' a = ⊕e (tag a) (F a)
+
+  module _
+    (g : A → Grammar ℓg)
+    (h : Grammar ℓh)
+    (e e' : ∀ (a : A) → μ (λ a → ⊕e (tag a) (F a)) a ⊗ h ⊢ g a)
+    (pf : ∀ (a : A) (t : tag a) →
+      e a
+      ∘g (roll
+          ∘g map (F' a)
+            (λ a' → eq-π (⟜-intro (e a')) (⟜-intro (e' a')))
+          ∘g ⊕ᴰ-in t) ,⊗ id ≡
+      e' a
+      ∘g (roll
+          ∘g map (F' a)
+            (λ a' → eq-π (⟜-intro (e a')) (⟜-intro (e' a')))
+          ∘g ⊕ᴰ-in t) ,⊗ id)
+    where
+    equalizer-ind-⊗l : ∀ (a : A) → e a ≡ e' a
+    equalizer-ind-⊗l a =
+      isoFunInjective ⟜UMP _ _
+        (equalizer-ind
+          F'
+          (λ a → g a ⟜ h)
+          (λ a → ⟜-intro (e a))
+          (λ a → ⟜-intro (e' a))
+          (λ a →
+            ⊕ᴰ≡ _ _ (λ t →
+              isoInvInjective ⟜UMP _ _
+                (
+                (λ i →
+                  ⟜-intro⁻
+                    (⟜-intro-natural
+                      {f = e a}
+                      {f' =
+                        roll
+                        ∘g map (F' a)
+                            (λ a' →
+                              eq-π (⟜-intro (e a'))
+                                   (⟜-intro (e' a')))
+                        ∘g ⊕ᴰ-in t}
+                      i)
+                ) ∙
+                ⟜-β _ ∙
+                pf a t ∙
+                sym (⟜-β _) ∙
+                (λ i →
+                  ⟜-intro⁻
+                    (⟜-intro-natural
+                      {f = e' a}
+                      {f' =
+                        roll
+                        ∘g map (F' a)
+                            (λ a' →
+                              eq-π (⟜-intro (e a'))
+                                   (⟜-intro (e' a')))
+                        ∘g ⊕ᴰ-in t}
+                      (~ i)))
+                )
+            ))
+          a
+          )
