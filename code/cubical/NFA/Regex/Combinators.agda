@@ -982,6 +982,28 @@ module _ (N : NFA ℓN) where
     from*NFA : ∀ q → Trace *NFA q ⊢ ⟦ q ⟧*
     from*NFA = rec _ *NFAAlg
 
+    nested-induction :
+      ∀ q →
+      rec _ *NFAAlg (inr q)
+      ∘g ⟜-intro⁻ (rec _ NAlg q)
+        ≡
+      id ,⊗ rec _ *NFAAlg (inl _)
+    nested-induction q =
+      -- (μ (TraceTy N) q ⊗ Trace *NFA fzero) ⊢ (Trace N q ⊗ (Parse N *))
+      equalizer-ind-⊗l
+        (Tag N)
+        _
+        (λ q → Trace N q ⊗ (Parse N *))
+        (λ _ → Trace *NFA (inl _))
+        (λ q → rec _ *NFAAlg (inr q) ∘g ⟜-intro⁻ (rec _ NAlg q))
+        (λ q → id ,⊗ rec _ *NFAAlg (inl _))
+        (λ q → λ {
+      -- (LiftG ℓN ε* ⊗ Trace *NFA fzero) w → (Trace N q ⊗ (Parse N *)) w
+            (stop x) → λ i → {!!}
+          ; (step t x) → {!!}
+          ; (stepε t x) → {!!}
+          })
+        q
 
     N*Homo : Homomorphism (*Ty (Parse N)) N*Alg (initialAlgebra (*Ty (Parse N)))
     N*Homo .fst _ = from*NFA (inl _)
@@ -995,7 +1017,22 @@ module _ (N : NFA ℓN) where
           roll ∘g Ind.map (*Ty (Parse N) _) λ _ → from*NFA (inl _)
         is-homo = ⊕ᴰ≡ _ _ λ {
             nil → refl
-          ; cons → {!!}
+          ; cons →
+            CONS
+            ∘g from*NFA (inr (N .init))
+            ∘g ⟜-intro⁻ (rec _ NAlg (N .init))
+            ∘g lowerG ,⊗ lowerG
+              ≡⟨
+                (λ i →
+                  CONS
+                  ∘g nested-induction (N .init) i
+                  ∘g lowerG ,⊗ lowerG
+                )
+              ⟩
+            CONS
+            ∘g id ,⊗ rec _ *NFAAlg (inl _)
+            ∘g lowerG ,⊗ lowerG
+            ∎
           }
 
     to*NFAHomo :
@@ -1071,19 +1108,78 @@ module _ (N : NFA ℓN) where
               ∘g (lowerG ∘g lowerG) ,⊗ lowerG
               ∎
           ; (stepε (cons⟨N⟩ acc) Eq.refl) →
-            {!!}
-          ; (stepε (N-internal t) Eq.refl) → {!!}
+             ⟜-intro⁻ (
+               ⟜-intro
+                 (STEPε *NFA (cons⟨N⟩ acc)
+                 ∘g ⊗-unit-l
+                 ∘g (lowerG ∘g lowerG) ,⊗ id)
+             )
+             ∘g (liftG ∘g liftG) ,⊗ id
+             ∘g id ,⊗ rec _ N*Alg _
+             ∘g ⊗-unit-l⁻
+             ∘g lowerG
+               ≡⟨
+                 (λ i →
+                    ⟜-β
+                        (STEPε *NFA (cons⟨N⟩ acc)
+                        ∘g ⊗-unit-l
+                        ∘g (lowerG {ℓ' = ℓN} ∘g lowerG {ℓ' = ℓN}) ,⊗ id) i
+                    ∘g (liftG ∘g liftG) ,⊗ id
+                    ∘g id ,⊗ rec _ N*Alg _
+                    ∘g ⊗-unit-l⁻
+                    ∘g lowerG
+                 )
+               ⟩
+             STEPε *NFA (cons⟨N⟩ acc)
+             ∘g ⊗-unit-l
+             ∘g ⊗-unit-l⁻
+             ∘g rec _ N*Alg _
+             ∘g lowerG
+               ≡⟨
+                 (λ i →
+                   STEPε *NFA (cons⟨N⟩ acc)
+                   ∘g ⊗-unit-l⁻l i
+                   ∘g rec _ N*Alg _
+                   ∘g lowerG
+                 )
+               ⟩
+             STEPε *NFA (cons⟨N⟩ acc)
+             ∘g to*NFA (inl _)
+             ∘g lowerG
+             ∎
+          ; (stepε (N-internal t) Eq.refl) →
+            ⟜-intro⁻ (
+              ⟜-intro
+                (STEPε *NFA (N-internal t)
+                ∘g ⟜-app
+                ∘g lowerG ,⊗ id
+                )
+            )
+            ∘g liftG ,⊗ id
+            ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
+            ∘g id ,⊗ rec _ N*Alg _
+            ∘g lowerG
+              ≡⟨
+                (λ i →
+                   ⟜-β
+                       (STEPε *NFA (N-internal t)
+                       ∘g ⟜-app
+                       ∘g lowerG {ℓ' = ℓN} ,⊗ id
+                       ) i
+                   ∘g liftG ,⊗ id
+                   ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
+                   ∘g id ,⊗ rec _ N*Alg _
+                   ∘g lowerG
+                )
+              ⟩
+            STEPε *NFA (N-internal t)
+            ∘g to*NFA (inr (N .ε-dst t))
+            ∘g lowerG
+            ∎
           }
     -- (inl _) =
     -- to*NFAHomo .snd (inr q) = {!!}
 
-    -- nested-induction :
-    --   ∀ q →
-    --   rec _ *NFAAlg (inr q)
-    --   ∘g ⟜-intro⁻ (rec _ NAlg q)
-    --     ≡
-    --   id ,⊗ rec _ *NFAAlg (inl _)
-    -- nested-induction = {!!}
 
 
   --Path (InitParse N ⊗ InitParse *NFA ⊢ InitParse N ⊗ KL* (InitParse N))
