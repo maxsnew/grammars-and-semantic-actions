@@ -6,8 +6,7 @@ module Grammar.RegularExpression (Alphabet : hSet ℓ-zero)where
 open import Cubical.Foundations.Structure
 
 open import Helper
-open import Grammar Alphabet hiding (KL*)
-open import Grammar.KleeneStar.Manual Alphabet
+open import Grammar Alphabet
 
 private
   variable ℓG ℓG' : Level
@@ -32,4 +31,3 @@ module _ where
   RegularExpression→Grammar (g ⊕Reg g') =
     RegularExpression→Grammar g ⊕ RegularExpression→Grammar g'
   RegularExpression→Grammar (KL*Reg g) = KL* (RegularExpression→Grammar g)
-

@@ -44,6 +44,7 @@ private
   variable ℓΣ₀ ℓN ℓN' ℓP ℓ : Level
 
 open NFA
+open NFA.Accepting
 
 -- This file constructs NFAs that are strongly equivalent to
 -- regular expressions.

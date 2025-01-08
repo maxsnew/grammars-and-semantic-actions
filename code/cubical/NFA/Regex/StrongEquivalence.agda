@@ -9,7 +9,7 @@ open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.RegularExpression Alphabet
 
-open import NFA.Manual Alphabet
+open import NFA.Base Alphabet
 
 open import Term Alphabet
 
@@ -17,8 +17,9 @@ open import NFA.Regex.Combinators Alphabet
 
 open RegularExpression
 open NFA
+open NFA.Accepting
 
-regex→NFA : RegularExpression → NFA
+regex→NFA : RegularExpression → NFA ℓ-zero
 regex→NFA ε-Reg = εNFA
 regex→NFA ⊥-Reg = ⊥NFA
 regex→NFA (r ⊗Reg r') = ⊗NFA (regex→NFA r) (regex→NFA r')
@@ -29,20 +30,20 @@ regex→NFA (KL*Reg r) = *NFA (regex→NFA r)
 open StrongEquivalence
 regex≅NFA : (r : RegularExpression) →
   StrongEquivalence
-    (InitParse (regex→NFA r))
+    (Parse (regex→NFA r))
     (RegularExpression→Grammar r)
-regex≅NFA ε-Reg = εNFA-strong-equiv
-regex≅NFA ⊥-Reg = emptyNFA-strong-equiv
+regex≅NFA ε-Reg = εNFA≅
+regex≅NFA ⊥-Reg = ⊥NFA≅
 regex≅NFA (r ⊗Reg r') =
   comp-strong-equiv
-    (⊗-strong-equivalence _ _)
+    (⊗NFA≅ _ _)
     (concat-strong-equiv (regex≅NFA r) (regex≅NFA r'))
-regex≅NFA (literalReg c) = litNFA-strong-equiv c
+regex≅NFA (literalReg c) = litNFA≅ c
 regex≅NFA (r ⊕Reg r') =
   comp-strong-equiv
-    (⊕-strong-equivalence _ _)
+    (⊕NFA≅ _ _)
     (disjunct-strong-equiv (regex≅NFA r) (regex≅NFA r'))
 regex≅NFA (KL*Reg r) =
   comp-strong-equiv
-    (*-strong-equivalence (regex→NFA r))
-    (manual-star-strong-equiv (regex≅NFA r))
+    (*NFA≅ (regex→NFA r))
+    (star-strong-equiv (regex≅NFA r))

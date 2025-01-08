@@ -53,6 +53,7 @@ module _
   where
   private
     module N = NFA N
+    module NTrace = NFA.PotentiallyRejecting N
 
   ε-quiver : QuiverOver ⟨ N.Q ⟩ ℓN
   ε-quiver .QuiverOver.mor = ⟨ N.ε-transition ⟩
@@ -327,14 +328,14 @@ module _
       ∣ q , (q∈X , truth→witness (N.isAcc q) acc) ∣₁
 
   NFA→DFA-alg :
-    Algebra (N.TraceTy true)
+    Algebra (NTrace.TraceTy true)
       (λ q →
         &[ X ∈ εClosedℙQ ]
         &[ q∈X ∈ q ∈ε X ] ℙN.Trace true X
       )
   NFA→DFA-alg q =
     ⊕ᴰ-elim (λ {
-        stop → ⊕ᴰ-elim (λ {
+        NTrace.stop → ⊕ᴰ-elim (λ {
           (lift acc) → &ᴰ-in λ X →
             &ᴰ-in (λ q∈X →
               roll ∘g
@@ -342,7 +343,7 @@ module _
               ⊕ᴰ-in (lift (embedAcc q X q∈X acc)) ∘g
               liftG ∘g liftG ∘g lowerG ∘g lowerG
             ) })
-      ; step → ⊕ᴰ-elim (λ { (t , Eq.refl) →
+      ; NTrace.step → ⊕ᴰ-elim (λ { (t , Eq.refl) →
         &ᴰ-in (λ X → &ᴰ-in λ src∈X →
           roll ∘g
           ⊕ᴰ-in ℙN.step ∘g
@@ -355,7 +356,7 @@ module _
           lowerG ,⊗ lowerG
           )
           })
-      ; stepε →
+      ; NTrace.stepε →
         ⊕ᴰ-elim λ { (t , Eq.refl) →
           &ᴰ-in (λ X → &ᴰ-in (λ src∈X →
             &ᴰ-π (ε-closure-transition t X src∈X) ∘g
@@ -367,24 +368,24 @@ module _
     (q' : ⟨ N.Q ⟩) →
     (q∈εX : q ∈ε ε-closure X) →
     (q'-[ε*]→q : Walk' q q') →
-    N.Trace true q ⊢ N.Trace true q'
+    NTrace.Trace true q ⊢ NTrace.Trace true q'
   fold-walk q X q' q∈εX (0 , nil) = id
   fold-walk q X q' q∈εX (n , (cons n-1 e walk)) =
     roll ∘g
-    ⊕ᴰ-in N.stepε ∘g
+    ⊕ᴰ-in NTrace.stepε ∘g
     ⊕ᴰ-in (e , Eq.refl) ∘g
     liftG ∘g
     fold-walk q X (N.ε-dst e) q∈εX (n-1 , walk)
 
   NFA→DFA : ∀ q →
-    N.Trace true q ⊢
+    NTrace.Trace true q ⊢
       &[ X ∈ εClosedℙQ ]
       &[ q∈X ∈ q ∈ε X ] ℙN.Trace true X
-  NFA→DFA q = rec (N.TraceTy true) NFA→DFA-alg q
+  NFA→DFA q = rec (NTrace.TraceTy true) NFA→DFA-alg q
 
   DFA→NFA-alg :
     Algebra (ℙN.TraceTy true)
-      (λ X → ⊕[ q ∈ ⟨ N.Q ⟩ ] ⊕[ q∈X ∈ q ∈ε X ] N.Trace true q)
+      (λ X → ⊕[ q ∈ ⟨ N.Q ⟩ ] ⊕[ q∈X ∈ q ∈ε X ] NTrace.Trace true q)
   DFA→NFA-alg X =
     ⊕ᴰ-elim (λ {
       stop → ⊕ᴰ-elim (λ { (lift accX) →
@@ -394,7 +395,7 @@ module _
         ⊕ᴰ-in q ∘g
         ⊕ᴰ-in q∈X ∘g
         roll ∘g
-        ⊕ᴰ-in N.stop ∘g
+        ⊕ᴰ-in NTrace.stop ∘g
         ⊕ᴰ-in (lift acc) ∘g
         liftG ∘g liftG ∘g lowerG ∘g lowerG
       })
@@ -430,11 +431,11 @@ module _
       (N.label t Eq.≡ c) →
       (N.src t Eq.≡ qt) →
       (N.dst t Eq.≡ q') →
-      (literal c) ⊗ N.Trace true q ⊢ N.Trace true qt
+      (literal c) ⊗ NTrace.Trace true q ⊢ NTrace.Trace true qt
     step-help c q X q∈εlitX q' q'∈litX n walk t qt qt∈x
       Eq.refl Eq.refl Eq.refl =
       roll ∘g
-      ⊕ᴰ-in N.step ∘g
+      ⊕ᴰ-in NTrace.step ∘g
       ⊕ᴰ-in (t , Eq.refl) ∘g
       liftG ,⊗ liftG ∘g
       id ,⊗ fold-walk q (lit-closure c X) q' q∈εlitX (n , walk) ∘g
@@ -443,12 +444,12 @@ module _
   DFA→NFA : ∀ X →
     ℙN.Trace true X ⊢
       ⊕[ q ∈ ⟨ N.Q ⟩ ]
-      ⊕[ q∈X ∈ q ∈ε X ] N.Trace true q
+      ⊕[ q∈X ∈ q ∈ε X ] NTrace.Trace true q
   DFA→NFA X = rec (ℙN.TraceTy true) DFA→NFA-alg X
 
   DFA→NFA-init :
     ℙN.Trace true (ε-closure (SingletonDecℙ {A = N.Q} N.init))
-      ⊢ N.Trace true (N .init)
+      ⊢ NTrace.Trace true (N .init)
   DFA→NFA-init =
     ⊕ᴰ-elim (λ q → ⊕ᴰ-elim (λ q∈εinit →
       let q' , q'∈Singleton , walk = witness-ε q (SingletonDecℙ {A = N.Q} N.init) q∈εinit in
@@ -457,7 +458,7 @@ module _
     DFA→NFA (ε-closure (SingletonDecℙ {A = N.Q} N.init))
 
   NFA≈DFA : isLogicallyEquivalent
-              (N.Trace true N.init)
+              (NTrace.Trace true N.init)
               (ℙN.Trace true (ε-closure (SingletonDecℙ {A = N.Q} N.init)))
   NFA≈DFA .fst = &ᴰ-π (ε-closure-lift-∈ refl) ∘g &ᴰ-π _ ∘g NFA→DFA N.init
   NFA≈DFA .snd = DFA→NFA-init
