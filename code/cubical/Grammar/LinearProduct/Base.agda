@@ -537,23 +537,3 @@ opaque
     sym (invMoveR {f = ⊗-assoc⁻4} {f⁻ = ⊗-assoc4} ⊗-assoc4⊗-assoc⁻4
       (cong ((f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''') ∘g_) ⊗-assoc⁻4⊗-assoc4))
 
-
--- opaque
---   unfolding ⊗-intro ⊗-assoc
---   conjugate-assoc :
---     {g : Grammar ℓg}
---     {h : Grammar ℓh}
---     {k : Grammar ℓk}
---     {l : Grammar ℓl}
---     (e : k ⊢ l)
---     → ⊗-assoc⁻ {g = g} {h = h} {k = l}
---       ∘g id ,⊗ e
---       ∘g ⊗-assoc ≡ id ,⊗ (id ,⊗ e)
---   conjugate-assoc e =
---     {!(λ i → ⊗-assoc⊗-intro i)!}
---     -- ⊗-assoc⁻
---     -- ∘g id ,⊗ e
---     -- ∘g ⊗-assoc
---     --   ≡⟨ {!!} ⟩
---     -- id ,⊗ id ,⊗ e
---     -- ∎
