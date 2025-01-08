@@ -112,6 +112,9 @@ module _ {ℓG} {ℓG'}
   StrongEquivalence→isStrongEquivalence eq
     .isStrongEquivalence.ret = eq .StrongEquivalence.ret
 
+_≅_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
+g ≅ g' = StrongEquivalence g g'
+
 module _ {ℓG} {ℓH}
   {g : Grammar ℓG}
   {h : Grammar ℓH}

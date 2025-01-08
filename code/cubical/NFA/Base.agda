@@ -13,12 +13,11 @@ open import Cubical.Data.FinSet
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
 open import Cubical.Data.List hiding (init ; rec ; map)
+import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.Inductive.Indexed Alphabet
-open import Grammar.Inductive.LiftFunctor Alphabet
-import Cubical.Data.Equality as Eq
 open import Term Alphabet
 open import Helper
 
@@ -90,6 +89,7 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     Parse : Grammar _
     Parse = Trace init
 
+    TraceAlg : (⟨ Q ⟩ → Grammar ℓ) → Type (ℓ-max ℓN ℓ)
     TraceAlg = Algebra TraceTy
 
   module PotentiallyRejecting where
@@ -111,3 +111,5 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     Parse : Grammar _
     Parse = Trace true init
 
+    TraceAlg : Bool → (⟨ Q ⟩ → Grammar ℓ) → Type (ℓ-max ℓN ℓ)
+    TraceAlg b = Algebra (TraceTy b)
