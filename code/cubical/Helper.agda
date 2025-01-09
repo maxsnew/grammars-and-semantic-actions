@@ -138,6 +138,12 @@ isFinOrd⊥ : isFinOrd ⊥
 fst isFinOrd⊥ = 0
 snd isFinOrd⊥ = idEquiv ⊥
 
+isFinOrdUnit : isFinOrd Unit
+isFinOrdUnit =
+  EquivPresIsFinOrd
+    (isContr→Equiv isContrSumFin1 isContrUnit) isFinOrdFin
+
+
 takeFirstFinOrd : ∀ {ℓ} → (A : Type ℓ) →
   (the-ord : isFinOrd A) → 0 Ord.< the-ord .fst → A
 takeFirstFinOrd A (suc n , the-eq) x =

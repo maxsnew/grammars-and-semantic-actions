@@ -44,7 +44,7 @@ private
 open NFA
 open StrongEquivalence
 
-module _
+module Determinization
   (N : NFA ℓN)
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ )
   (isFinOrd-Q : isFinOrd ⟨ N .Q ⟩)
@@ -283,7 +283,7 @@ module _
               (Bool-iso-DecProp' .Isom.Iso.fun (N .isAcc q)))
 
   open DeterministicAutomaton
-  ℙN : DFA (εClosedℙQ , isFinSet-εClosedℙQ)
+  ℙN : DFAOver (εClosedℙQ , isFinSet-εClosedℙQ)
   ℙN .init = ε-closure (SingletonDecℙ {A = N.Q} N.init)
   ℙN .isAcc X = Bool-iso-DecProp' .Isom.Iso.inv (ℙNAcc-DecProp' X)
   ℙN .δ X c = ε-closure (lit-closure c (X .fst))
