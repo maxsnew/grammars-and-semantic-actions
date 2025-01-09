@@ -62,7 +62,7 @@ module _ (N : NFA ℓN) where
     opaque
       unfolding ⊗-intro eq-intro ⊗-unit-r⁻
       the-sec : rec Acc.TraceTy AccAlg q ∘g rec (PR.TraceTy true) PRAlg q ≡ id
-      the-sec = 
+      the-sec =
         equalizer-ind
           (PR.TraceTy true)
           (PR.Trace true)
@@ -96,7 +96,7 @@ module _ (N : NFA ℓN) where
                 ∘g ⊕ᴰ-in PR.Tag.step
                 ∘g ⊕ᴰ-in (t , Eq.refl)
                 ∘g id ,⊗ liftG
-                ∘g id ,⊗ eq-π _ _ 
+                ∘g id ,⊗ eq-π _ _
                 ∘g id ,⊗ lowerG
                 ∎
             }

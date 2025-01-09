@@ -600,7 +600,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
               )
           })
           q
-          
+
       -- Annoying artifact of how equalizer-induction is written:
       -- Need to handle each of the ⊗NFA states, even if the inl
       -- half of this proof is unecessary
@@ -1133,7 +1133,7 @@ module _ (N : NFA ℓN) where
                   ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
                   ∘g eq-π _ _ ,⊗ id
                   ∘g lowerG ,⊗ id
-                    ≡⟨ 
+                    ≡⟨
                       (λ i →
                          rec _ *NFAAlg (inr q)
                          ∘g ⟜-β
