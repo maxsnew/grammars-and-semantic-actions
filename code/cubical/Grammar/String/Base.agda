@@ -64,3 +64,6 @@ opaque
   ⌈w⌉→string : ⌈ w ⌉ ⊢ string
   ⌈w⌉→string {[]} = NIL -- nil
   ⌈w⌉→string {c ∷ w} = CONS ∘g ⊕ᴰ-in c ,⊗ ⌈w⌉→string {w}
+
+  mkstring : (s : String) → string s
+  mkstring s = (⌈w⌉→string {w = s}) s (internalize s)

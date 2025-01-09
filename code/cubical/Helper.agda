@@ -349,6 +349,10 @@ Bool-iso-DecProp'-witness→truth :
   true Eq.≡ b
 Bool-iso-DecProp'-witness→truth true witness = Eq.refl
 
+DecProp→Bool : ∀ {ℓ} → DecProp ℓ → Bool
+DecProp→Bool (_ , yes p) = true
+DecProp→Bool (_ , no ¬p) = false
+
 isFinSetDecProp : ∀ {ℓ} → isFinSet (DecProp ℓ)
 fst isFinSetDecProp = 2
 snd isFinSetDecProp = ∣ the-equiv ∣₁

@@ -123,6 +123,9 @@ module _ (g : Grammar ℓG) where
 _* : Grammar ℓG → Grammar ℓG
 g * = KL* g
 
+_+ : Grammar ℓG → Grammar ℓG
+g + = g ⊗ g *
+
 _⊗[_] : Grammar ℓG → ℕ → Grammar ℓG
 g ⊗[ n ] = repeat' g (lift n)
 

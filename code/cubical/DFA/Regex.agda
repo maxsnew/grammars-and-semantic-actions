@@ -25,9 +25,9 @@ private
   variable
     ℓ : Level
 
-open NFA
+-- open NFA
 
-module _
+module ParseRegex
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
   where
   -- Regex to determinized DFA
@@ -45,10 +45,16 @@ module _
       (isFinOrdTransition regex)
       (isFinOrdεTransition regex)
 
-  module ParseRegex (regex : RegularExpression) where
+  module _ (regex : RegularExpression) where
     private
       dfa = regex→DFA regex
       states = dfa .fst
-      module Aut = DeterministicAutomaton (dfa .snd)
-    parse : string ⊢ &[ q ∈ ⟨ states ⟩ ] ⊕[ b ∈ Bool ] Aut.Trace b q
-    parse = Aut.parse
+
+    module Aut = DeterministicAutomaton (dfa .snd)
+
+    init = Aut.init
+    Trace = Aut.Trace
+    Parse = Aut.Trace true Aut.init
+
+    run : string ⊢ ⊕[ b ∈ Bool ] Aut.Trace b Aut.init
+    run = Aut.parseInit
