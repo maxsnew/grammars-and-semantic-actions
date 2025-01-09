@@ -76,7 +76,7 @@ opaque
   ⊸-app ∘g (⊗-intro (id {g = h}) f)
 
 opaque
-  unfolding _⊸_ _⊗_ ⊗-intro
+  unfolding _⊸_ _⊗_ ⊗-intro ⊗≡
   ⊸-intro∘⊸-intro⁻≡id :
     (e : g ⊢ h ⊸ k) →
     ⊸-intro {g = h}{h = g}{k = k}(⊸-intro⁻ e) ≡ e
@@ -164,7 +164,7 @@ opaque
   ⟜-app ∘g ⊗-intro f (id {g = k})
 
 opaque
-  unfolding _⟜_ ⟜-intro
+  unfolding _⟜_ ⟜-intro ⊗≡
   ⟜-η :
     (e : g ⊢ h ⟜ k) →
     ⟜-intro {g = g}{h = k}{k = h}(⟜-intro⁻ e) ≡ e

@@ -27,32 +27,31 @@ open import Grammar.Maybe ASCII
 open import Grammar.String.Properties ASCII
 open import Grammar.Equivalence ASCII
 open import Grammar.RegularExpression ASCII
+open import NFA.Determinization ASCII
 open import DFA.Base ASCII
 open import DFA.Regex ASCII
 open import Term ASCII
 open import Helper
 
 private
-  module PR = ParseRegex (isFinSetFin {n = 97})
+  module PR = ParseRegex isFinSetASCII
 
 s : String
-s = mkString input
-
-s' : string s
-s' = mkstring s
+s = mkString "0"
+-- input
 
 num : RegularExpression
 num =
   ＂ zero^ ＂r
   ⊕r ＂ one^ ＂r
-  ⊕r ＂ two^ ＂r
-  ⊕r ＂ three^ ＂r
-  ⊕r ＂ four^ ＂r
-  ⊕r ＂ five^ ＂r
-  ⊕r ＂ six^ ＂r
-  ⊕r ＂ seven^ ＂r
-  ⊕r ＂ eight^ ＂r
-  ⊕r ＂ nine^ ＂r
+  -- ⊕r ＂ two^ ＂r
+  -- ⊕r ＂ three^ ＂r
+  -- ⊕r ＂ four^ ＂r
+  -- ⊕r ＂ five^ ＂r
+  -- ⊕r ＂ six^ ＂r
+  -- ⊕r ＂ seven^ ＂r
+  -- ⊕r ＂ eight^ ＂r
+  -- ⊕r ＂ nine^ ＂r
 
 nums : RegularExpression
 nums = num *r
@@ -72,12 +71,22 @@ goal = nums ⊗r ((white ⊗r nums) *r)
 goalDFA : DFA
 goalDFA = PR.regex→DFA goal
 
-p : (⊕[ b ∈ Bool ] PR.Trace goal b (PR.init goal)) s
-p = PR.run goal s s'
+p = PR.run' num s
 
--- TODO : this example takes too long to run
+q = PR.run' (＂ zero^ ＂r) s
+
+opaque
+  unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊗-intro ⊗-in isSetASCII ASCIIChar Determinization.ε-closure Determinization.lit-closure
+  _ : p .fst ≡ true
+  _ = refl
+
+  -- fast
+  _ : q .fst ≡ true
+  _ = refl
+
+-- -- TODO : this example takes too long to run
 -- opaque
---   unfolding mkstring ⊕ᴰ-distR ⊗-intro
---   -- ⌈w⌉→string ⊕ᴰ-distR ⊗-unit-r ⊗-unit-l⁻ ⊤* ⊤ ε ⊗-intro ⊕-elim
+--   unfolding ⊕ᴰ-distR ⊗-intro
+-- --   -- ⌈w⌉→string ⊕ᴰ-distR ⊗-unit-r ⊗-unit-l⁻ ⊤* ⊤ ε ⊗-intro ⊕-elim
 --   _ : p ≡ (true , ?)
 --   _ = refl

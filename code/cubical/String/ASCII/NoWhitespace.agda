@@ -30,7 +30,7 @@ NWSubset c =
   where
   dp : ASCIIChar → ASCIIChar → DecProp ℓ-zero
   dp c c' = negateDecProp
-    (((c ≡ c') , (isSetFin {k = 97}) _ _) , (DiscreteASCIIChar c c'))
+    (((c ≡ c') , isSetASCII _ _) , (DiscreteASCII c c'))
 
 NWCharFun : ASCIIChar → Bool
 NWCharFun c = DecProp→Bool (NWSubset c)

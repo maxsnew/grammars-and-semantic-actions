@@ -27,6 +27,9 @@ private
 char : Grammar ℓ-zero
 char = LinΣ[ c ∈ ⟨ Alphabet ⟩ ] literal c
 
+char-intro : ∀ (c : ⟨ Alphabet ⟩) → char [ c ]
+char-intro c = (⊕ᴰ-in {h = λ c' → ＂ c' ＂} c) [ c ] lit-intro
+
 string : Grammar ℓ-zero
 string = char *
 
@@ -67,3 +70,11 @@ opaque
 
   mkstring : (s : String) → string s
   mkstring s = (⌈w⌉→string {w = s}) s (internalize s)
+
+mkstring' : (s : String) → string s
+mkstring' [] = NIL [] ε-intro
+mkstring' (c ∷ w) =
+  CONS (c ∷ w) (⊗-in (char-intro c) (mkstring' w))
+
+parse-string : {ℓg : Level}{g : Grammar ℓg} → string ⊢ g → (s : String) → g s
+parse-string e s = e s (mkstring' s)

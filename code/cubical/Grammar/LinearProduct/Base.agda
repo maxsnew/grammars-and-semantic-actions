@@ -52,23 +52,40 @@ opaque
   --   → f ≡ ⊗-elim {k = k} (f ∘b ⊗-intro')
   -- ⊗-η f i w x = {!!}
 
+opaque
+  unfolding _⊗_
   -- because ⊗ is opaque,
   -- same-splits and same-parses are needed so that the interface of
   -- ⊗ doesn't leak in the type signature of ⊗PathP
-  same-splits :
-    {g : I → Grammar ℓg}{h : I → Grammar ℓh}
-    {w : I → String}
-    → (p : (g i0 ⊗ h i0) (w i0))
-    → (q : (g i1 ⊗ h i1) (w i1))
-    → Type ℓ-zero
-  same-splits p q = p .fst .fst ≡ q .fst .fst
+  has-split :
+    ∀ (w : String) → (p : (g ⊗ h) w) → (s : Splitting w) → Type ℓ-zero
+  has-split w p s = s ≡ p .fst
+
+  the-split :
+    ∀ (w : String) → (p : (g ⊗ h) w) → Σ[ s ∈ Splitting w ] has-split w p s
+  the-split w p = (p .fst) , refl
+
+same-splits :
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  {k : Grammar ℓk}
+  {l : Grammar ℓl}
+  {w : I → String}
+  → (p : (g ⊗ h) (w i0))
+  → (q : (k ⊗ l) (w i1))
+  → Type ℓ-zero
+same-splits {w = w} p q =
+    (the-split (w i0) p .fst .fst) ≡ (the-split (w i1) q .fst .fst)
+
+opaque
+  unfolding _⊗_ the-split
 
   same-parses :
     {g : I → Grammar ℓg}{h : I → Grammar ℓh}
     {w : I → String}
     → (p : (g i0 ⊗ h i0) (w i0))
     → (q : (g i1 ⊗ h i1) (w i1))
-    → (s≡ : same-splits {g = g}{h = h}{w = w} p q)
+    → (s≡ : same-splits {w = w} p q)
     → Type (ℓ-max ℓg ℓh)
   same-parses {g = g} {h = h} p q s≡ =
     PathP (λ i → g i (s≡ i .fst) × h i (s≡ i .snd)) (p .snd) (q .snd)
@@ -78,18 +95,43 @@ opaque
     {w : I → String}
     → {p : (g i0 ⊗ h i0) (w i0)}
     → {q : (g i1 ⊗ h i1) (w i1)}
-    → (s≡ : same-splits {g = g} {h = h} {w = w} p q)
-    → same-parses p q s≡
+    → (s≡ : same-splits {w = w} p q)
+    → same-parses {g = g} {h = h} {w = w} p q s≡
     → PathP (λ i → (g i ⊗ h i) (w i)) p q
   ⊗PathP s≡ p≡ = ΣPathP (SplittingPathP s≡ , p≡)
 
   ⊗≡ : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{w}
     → (p p' : (g ⊗ h) w)
-    → (s≡ : same-splits {g = λ _ → g}{h = λ _ → h}{w = λ _ → w} p p')
-    → same-parses p p' s≡
+    → (s≡ : same-splits {w = λ _ → w} p p')
+    → same-parses {g = λ _ → g} {h = λ _ → h} {w = λ _ → w} p p' s≡
     → p ≡ p'
   ⊗≡ p p' s≡ p≡ = ⊗PathP s≡ p≡
 
+  opaque
+    unfolding _⊗_
+    ⊗≡' : ∀ {g : Grammar ℓg}{h : Grammar ℓh}
+      → (e f : g ⊗ h ⊢ k ⊗ l)
+      → (se≡ :
+        ∀ (w : String)
+        → (p : (g ⊗ h) w)
+        → same-splits {w = λ _ → w} p (e w p))
+      → (sf≡ :
+        ∀ (w : String)
+        → (p : (g ⊗ h) w)
+        → same-splits {w = λ _ → w} p (f w p))
+      → (p≡ : ∀ (w : String)
+         → (p : (g ⊗ h) w)
+         → same-parses {g = λ _ → k} {h = λ _ → l} {w = λ _ → w} (e w p) (f w p)
+           (sym (se≡ w p) ∙ sf≡ w p))
+      → e ≡ f
+    ⊗≡' e f se≡ sf≡ p≡ = funExt λ w → funExt λ p →
+      ΣPathP (
+        ΣPathP ((sym (se≡ w p) ∙ sf≡ w p) ,
+          isProp→PathP (λ i → isSetString _ _) _ _) ,
+        (p≡ w p))
+
+opaque
+  unfolding _⊗_ the-split
   ⊗-intro :
     g ⊢ h →
     k ⊢ l →
@@ -97,6 +139,14 @@ opaque
   ⊗-intro e e' _ p =
     p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
 
+opaque
+  unfolding _⊗_ the-split
+  ⊗-in : {w w' : String} →
+    g w → h w' → (g ⊗ h) (w ++ w')
+  ⊗-in p q = (_ , refl) , (p , q)
+
+opaque
+  unfolding _⊗_ the-split ⊗-intro ⊗≡
   ⊗-intro⊗-intro
     : ∀ {f : g ⊢ g'}{f' : g'' ⊢ g'''}
         {f'' : g'''' ⊢ g}
@@ -106,7 +156,7 @@ opaque
   ⊗-intro⊗-intro = refl
 
   opaque
-    unfolding ε
+    unfolding ε ⊗≡
     ⊗-unit-r :
       g ⊗ ε ⊢ g
     ⊗-unit-r {g = g} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
@@ -492,7 +542,7 @@ opaque
 -- ⊗-assoc⁻3⊗-intro =
 --   {!!}
 opaque
-  unfolding ⊗-intro
+  unfolding ⊗-intro ⊗-assoc
   ⊗-assoc⁻4⊗-intro :
     ∀ {f f' f'' f''' f''''} →
     (⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''} ∘g (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''')
@@ -500,7 +550,7 @@ opaque
   ⊗-assoc⁻4⊗-intro = refl
 
 opaque
-  unfolding ⊗-intro
+  unfolding ⊗-intro ⊗-assoc
   ⊗-assoc3⊗-assoc⁻3 : ⊗-assoc3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g ⊗-assoc⁻3 ≡ id
   ⊗-assoc3⊗-assoc⁻3 =
     ⊗-assoc ∘g id ,⊗ ⊗-assoc ∘g id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
@@ -536,4 +586,3 @@ opaque
   ⊗-assoc4⊗-intro {f = f}{f' = f'}{f'' = f''}{f''' = f'''}{f'''' = f''''} =
     sym (invMoveR {f = ⊗-assoc⁻4} {f⁻ = ⊗-assoc4} ⊗-assoc4⊗-assoc⁻4
       (cong ((f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''') ∘g_) ⊗-assoc⁻4⊗-assoc4))
-

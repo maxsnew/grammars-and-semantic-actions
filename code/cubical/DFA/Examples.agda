@@ -55,7 +55,7 @@ private
 module examples where
   -- examples are over alphabet drawn from Fin 2
   -- characters are fzero and (fsuc fzero)
-  D : DFA (Fin 3 , isFinSetFin)
+  D : DFAOver (Fin 3 , isFinSetFin)
   D .DeterministicAutomaton.init = fzero
   D .DeterministicAutomaton.isAcc fzero = true
   D .DeterministicAutomaton.isAcc (fsuc x) = false

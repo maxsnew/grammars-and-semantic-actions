@@ -25,19 +25,13 @@ private
   variable
     ℓ : Level
 
--- open NFA
-
 module ParseRegex
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
   where
-  -- Regex to determinized DFA
-  -- States are the ε-closed sets of states in the
-  -- NFA that is equivalent to the regex
-  regex→DFA : RegularExpression → DFA
-  regex→DFA regex = (εClosedℙQ , isFinSet-εClosedℙQ) , ℙN
-    where
-    nfa : NFA ℓ-zero
-    nfa = regex→NFA regex
+  module _ (regex : RegularExpression) where
+    private
+      nfa : NFA ℓ-zero
+      nfa = regex→NFA regex
 
     open Determinization nfa
       isFinSetAlphabet
@@ -45,9 +39,14 @@ module ParseRegex
       (isFinOrdTransition regex)
       (isFinOrdεTransition regex)
 
-  module _ (regex : RegularExpression) where
+    -- Regex to determinized DFA
+    -- States are the ε-closed sets of states in the
+    -- NFA that is equivalent to the regex
+    regex→DFA : DFA
+    regex→DFA = (εClosedℙQ , isFinSet-εClosedℙQ) , ℙN
+
     private
-      dfa = regex→DFA regex
+      dfa = regex→DFA
       states = dfa .fst
 
     module Aut = DeterministicAutomaton (dfa .snd)
@@ -58,3 +57,6 @@ module ParseRegex
 
     run : string ⊢ ⊕[ b ∈ Bool ] Aut.Trace b Aut.init
     run = Aut.parseInit
+
+    run' : (s : String) → (⊕[ b ∈ Bool ] Aut.Trace b Aut.init) s
+    run' = parse-string run
