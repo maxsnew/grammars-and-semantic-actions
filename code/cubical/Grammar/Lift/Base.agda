@@ -21,6 +21,9 @@ LiftG ℓ' g w = Lift {j = ℓ'} (g w)
 
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Equiv
+-- I thought this would be helpful at some point when
+-- fiddling with transports,
+-- but it's almost surely a bad idea to use univalence directly
 LiftG≡ : ∀ ℓ → (g : Grammar ℓ) → g ≡ LiftG ℓ g
 LiftG≡ ℓ g i w = ua {A = g w} (LiftEquiv {ℓ' = ℓ}) i
 
