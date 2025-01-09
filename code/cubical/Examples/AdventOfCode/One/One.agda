@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module AdventOfCode.One.One where
+module Examples.AdventOfCode.One.One where
 
 -- import Agda.Builtin.String as BuiltinStr
 -- import IO.Primitive.Core as Prim
@@ -18,7 +18,7 @@ open import String.ASCII
 open import String.ASCII.NoWhitespace
 open import String.Unicode
 open import String.SubAlphabet
-open import AdventOfCode.One.Input
+open import Examples.AdventOfCode.One.Input
 
 open DecodeUnicode ASCII Unicode→ASCII
 

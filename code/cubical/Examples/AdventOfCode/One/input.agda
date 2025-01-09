@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module AdventOfCode.One.Input where
+module Examples.AdventOfCode.One.Input where
 
 open import String.ASCII
 
