@@ -72,16 +72,6 @@ module _ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} (f f' : g ⊢ h)
     eq-intro (f'' ∘g f) (f'' ∘g f')
       (eq-π f f') (cong (f'' ∘g_) (eq-π-pf f f'))
 
--- module _ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
---   (f f' : g ⊢ h)(f'' : k ⊢ g) where
---   equalizer-cong' : equalizer f f' ⊢ equalizer (f ∘g f'') (f' ∘g f'')
---   equalizer-cong' = eq-intro (f ∘g f'')
---     (f' ∘g f'')
---     {!!}
---     {!eq-π-pf f f'!}
---     -- eq-intro (f ∘g f'') (f' ∘g f'')
---     --   (eq-π f f') (cong (_∘g f'') (eq-π-pf f f'))
-
 open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.Dependent Alphabet
 
