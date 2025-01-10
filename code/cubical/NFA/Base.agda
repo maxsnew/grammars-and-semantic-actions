@@ -12,11 +12,12 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
-open import Cubical.Data.List hiding (init)
+open import Cubical.Data.List hiding (init ; rec ; map)
+import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
+open import Grammar.Equivalence Alphabet
 open import Grammar.Inductive.Indexed Alphabet
-import Cubical.Data.Equality as Eq
 open import Term Alphabet
 open import Helper
 
@@ -62,18 +63,53 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     DecProp∃ transition (λ t →
       matchesTransition discAlphabet t src' label' dst')
 
-  data Tag : Type ℓN where
-    stop step stepε : Tag
+  module Accepting where
+    data Tag (q : ⟨ Q ⟩) : Type ℓN where
+      stop : true Eq.≡ isAcc q → Tag q
+      step : ∀ t → (src t Eq.≡ q) → Tag q
+      stepε : ∀ t → (ε-src t Eq.≡ q) → Tag q
 
-  TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
-  TraceTy b q = ⊕e Tag λ {
-      stop → ⊕e (Lift (b Eq.≡ isAcc q)) (λ
-        (lift acc) → k (LiftG ℓN ε) )
-    ; step → ⊕e (Eq.fiber src q) λ {
-        (t , Eq.refl ) →
-          ⊗e (k (LiftG ℓN (literal (label t)))) (Var (dst t)) }
-    ; stepε → ⊕e (Eq.fiber ε-src q) λ { (t , Eq.refl) → Var (ε-dst t) } }
+    TraceTy : (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
+    TraceTy q = ⊕e (Tag q) λ
+      { (stop x) → k ε*
+      ; (step t x) → ⊗e (k (literal* (label t))) (Var (dst t))
+      ; (stepε t x) → Var (ε-dst t) }
+    Trace : (q : ⟨ Q ⟩) → Grammar ℓN
+    Trace = μ TraceTy
 
-  Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓN
-  Trace b = μ (TraceTy b)
+    STOP : ∀ {q} → true Eq.≡ isAcc q → ε ⊢ Trace q
+    STOP acc = roll ∘g ⊕ᴰ-in (stop acc) ∘g liftG ∘g liftG
 
+    STEP : ∀ t → literal (label t) ⊗ Trace (dst t) ⊢ Trace (src t)
+    STEP t = roll ∘g ⊕ᴰ-in (step _ Eq.refl) ∘g (liftG ∘g liftG) ,⊗ liftG
+
+    STEPε : ∀ t → Trace (ε-dst t) ⊢ Trace (ε-src t)
+    STEPε t = roll ∘g ⊕ᴰ-in (stepε t Eq.refl) ∘g liftG
+
+    Parse : Grammar _
+    Parse = Trace init
+
+    TraceAlg : (⟨ Q ⟩ → Grammar ℓ) → Type (ℓ-max ℓN ℓ)
+    TraceAlg = Algebra TraceTy
+
+  module PotentiallyRejecting where
+    data Tag : Type ℓN where
+        stop step stepε : Tag
+
+    TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
+    TraceTy b q = ⊕e Tag λ {
+        stop → ⊕e (Lift (b Eq.≡ isAcc q)) (λ
+          (lift acc) → k (LiftG ℓN ε) )
+      ; step → ⊕e (Eq.fiber src q) λ {
+          (t , Eq.refl ) →
+            ⊗e (k (LiftG ℓN (literal (label t)))) (Var (dst t)) }
+      ; stepε → ⊕e (Eq.fiber ε-src q) λ { (t , Eq.refl) → Var (ε-dst t) } }
+
+    Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓN
+    Trace b = μ (TraceTy b)
+
+    Parse : Grammar _
+    Parse = Trace true init
+
+    TraceAlg : Bool → (⟨ Q ⟩ → Grammar ℓ) → Type (ℓ-max ℓN ℓ)
+    TraceAlg b = Algebra (TraceTy b)

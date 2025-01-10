@@ -16,63 +16,53 @@ open import Agda.Builtin.Char
 open import Agda.Builtin.String
 
 open import Cubical.Data.Bool
-open import Cubical.Data.Maybe
-open import Cubical.Data.Empty as Empty
-open import Cubical.Data.Sigma
-open import Cubical.Data.FinSet
-open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.FinSet.DecidablePredicate
+open import Cubical.Data.List
+import Cubical.Data.Maybe as Maybe
+import Cubical.Data.Equality as Eq
 
-open import Cubical.HITs.PropositionalTruncation as PT
-
+open import Lexer.Base
 open import Helper
 
 -- Pick out a subalphabet of another alphabet
 module _
-  (Alphabet Alphabet' : hSet ℓ-zero)
-  (embed : ⟨ Alphabet ⟩ ↪ ⟨ Alphabet' ⟩)
+  (Alphabet : hSet ℓ-zero)
+  (charFun : ⟨ Alphabet ⟩ → Bool)
   where
+
   SubAlphabet' : Type ℓ-zero
-  SubAlphabet' = Σ[ c ∈ ⟨ Alphabet' ⟩ ] fiber (embed .fst) c
+  SubAlphabet' = Σ[ c ∈ ⟨ Alphabet ⟩ ] charFun c ≡ true
 
-  SubAlphabetIso :
-    Iso ⟨ Alphabet ⟩ (Σ ⟨ Alphabet' ⟩ (λ v → fiber (λ z → embed .fst z) v))
-  SubAlphabetIso =
-     iso
-       (λ x → (embed .fst x) , (x , refl))
-       (λ x → x .snd .fst)
-       (λ b →
-         Σ≡Prop (λ x → isEmbedding→hasPropFibers (embed .snd) x)
-           (b .snd .snd))
-       (λ _ → refl)
-
-  open Iso
-  isSetSubAlphabet : isSet SubAlphabet'
-  isSetSubAlphabet =
-    isSetRetract (SubAlphabetIso .inv) (SubAlphabetIso .fun)
-      (SubAlphabetIso .rightInv) (Alphabet .snd)
+  opaque
+    isSetSubAlphabet : isSet SubAlphabet'
+    isSetSubAlphabet =
+      isSetΣ
+        (Alphabet .snd)
+        λ _ → isSet→isGroupoid isSetBool _ _
 
   SubAlphabet : hSet ℓ-zero
   SubAlphabet .fst = SubAlphabet'
   SubAlphabet .snd = isSetSubAlphabet
 
-  module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
-    isFinSetSubAlphabet : isFinSet SubAlphabet'
-    isFinSetSubAlphabet =
-      EquivPresIsFinSet (isoToEquiv SubAlphabetIso) isFinSetAlphabet
+  SubAlphabet→Alphabet : Lexer SubAlphabet Alphabet
+  SubAlphabet→Alphabet [] = Maybe.just []
+  SubAlphabet→Alphabet (c ∷ w) =
+    Maybe.map-Maybe
+      (c .fst ∷_)
+      (SubAlphabet→Alphabet w)
 
-    module _ (DiscreteAlphabet' : Discrete ⟨ Alphabet' ⟩) where
-      maybe-SubAlphabet : ⟨ Alphabet' ⟩ → Maybe ⟨ SubAlphabet ⟩
-      maybe-SubAlphabet c' =
-        decRec
-          (λ ∣in-image∣ →
-            just
-              (c' ,
-              (PT.rec (isEmbedding→hasPropFibers (embed .snd) c')
-                (λ in-image → in-image) ∣in-image∣)))
-          (λ ¬|in-image∣ → nothing)
-          (DecProp∃
-            (_ , isFinSetAlphabet)
-            (λ c → (_ , Alphabet' .snd _ _) ,
-                   (DiscreteAlphabet' (embed .fst c) c'))
-            .snd )
+  Alphabet→SubAlphabet : Lexer Alphabet SubAlphabet
+  Alphabet→SubAlphabet [] = Maybe.just []
+  Alphabet→SubAlphabet (c ∷ w) =
+    decRec
+      (λ is-true → Maybe.map-Maybe ((c , is-true) ∷_) (Alphabet→SubAlphabet w))
+      (λ _ → Maybe.nothing)
+      (charFun c ≟ true)
+
+  Alphabet→SubAlphabet' :
+    List ⟨ Alphabet ⟩ → List ⟨ SubAlphabet ⟩
+  Alphabet→SubAlphabet' [] = []
+  Alphabet→SubAlphabet' (c ∷ w) =
+    decRec
+      (λ is-true → (c , is-true) ∷ Alphabet→SubAlphabet' w)
+      (λ _ → Alphabet→SubAlphabet' w)
+      (charFun c ≟ true)

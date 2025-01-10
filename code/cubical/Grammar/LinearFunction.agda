@@ -76,7 +76,7 @@ opaque
   ⊸-app ∘g (⊗-intro (id {g = h}) f)
 
 opaque
-  unfolding _⊸_ _⊗_ ⊗-intro
+  unfolding _⊸_ _⊗_ ⊗-intro ⊗≡
   ⊸-intro∘⊸-intro⁻≡id :
     (e : g ⊢ h ⊸ k) →
     ⊸-intro {g = h}{h = g}{k = k}(⊸-intro⁻ e) ≡ e
@@ -120,7 +120,15 @@ opaque
   ⊸-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
     (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
 
+⊸UMP : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
+  → Iso (g ⊗ h ⊢ k) (h ⊢ g ⊸ k)
+⊸UMP {k = k} =
+  iso ⊸-intro ⊸-intro⁻
+    (λ b → sym (⊸-η b))
+    ⊸-β
 
+opaque
+  unfolding _⟜_ _⊗_ ⊗-intro
   ⟜-intro :
     g ⊗ h ⊢  k →
     g ⊢ k ⟜ h
@@ -156,7 +164,7 @@ opaque
   ⟜-app ∘g ⊗-intro f (id {g = k})
 
 opaque
-  unfolding _⟜_ ⟜-intro
+  unfolding _⟜_ ⟜-intro ⊗≡
   ⟜-η :
     (e : g ⊢ h ⟜ k) →
     ⟜-intro {g = g}{h = k}{k = h}(⟜-intro⁻ e) ≡ e
@@ -292,6 +300,15 @@ opaque
   sym (⟜-η f)
   ∙ cong ⟜-intro p
   ∙ ⟜-η f'
+
+⊸≡ : ∀ (f f' : g ⊢ k ⊸ h)
+  → ⊸-app ∘g (id ,⊗ f) ≡ ⊸-app ∘g (id ,⊗ f')
+  → f ≡ f'
+⊸≡ f f' p =
+  ⊸-η f
+  ∙ cong ⊸-intro p
+  ∙ sym (⊸-η f')
+
 opaque
   unfolding ⊗-intro
   ⟜-intro-natural :
@@ -300,8 +317,19 @@ opaque
     ((λ i → ⟜-β f i ∘g (f' ,⊗ id))
     ∙ sym (⟜-β _) )
 
+  ⊸-intro-natural :
+    ⊸-intro f ∘g f' ≡ ⊸-intro (f ∘g id ,⊗ f')
+  ⊸-intro-natural {f = f}{f' = f'} =
+    ⊸≡ _ _
+      ((λ i → ⊸-β f i ∘g (id ,⊗ f'))
+      ∙ sym (⊸-β _))
 
 opaque
   unfolding _⟜_
   isSetGrammar⟜ : isSetGrammar h → isSetGrammar (h ⟜ g)
   isSetGrammar⟜ isSetH w = isSetΠ (λ w' → isSet→ (isSetH _))
+
+opaque
+  unfolding _⊸_
+  isSetGrammar⊸ : isSetGrammar g → isSetGrammar (h ⊸ g)
+  isSetGrammar⊸ isSetG w = isSetΠ (λ w' → isSet→ (isSetG _))

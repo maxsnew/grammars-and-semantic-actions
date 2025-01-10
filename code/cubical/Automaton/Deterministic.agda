@@ -57,6 +57,9 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   parse : string ⊢ &[ q ∈ Q ] ⊕[ b ∈ Bool ] Trace b q
   parse = rec (*Ty char) parseAlg _
 
+  parseInit : string ⊢ ⊕[ b ∈ Bool ] Trace b init
+  parseInit = &ᴰ-π init ∘g parse
+
   printAlg : ∀ b → Algebra (TraceTy b) (λ _ → string)
   printAlg b q = ⊕ᴰ-elim λ {
       stop → ⊕ᴰ-elim (λ { (lift Eq.refl) → NIL ∘g lowerG ∘g lowerG })

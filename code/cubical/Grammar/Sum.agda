@@ -233,3 +233,46 @@ isMono-⊕-inr {h = h}{g = g}{k = k} e e' inr∘e≡inr∘e' =
 
   r : (id {g = k} ,& e) ≡ (id ,& e')
   r = isMono-distiso∘inr (id ,& e) (id ,& e') q
+
+module Inductive (g : Grammar ℓg) (h : Grammar ℓh) where
+  open import Grammar.Inductive.Indexed Alphabet as Inductive
+  open import Grammar.Dependent.Base Alphabet
+  open import Grammar.Lift Alphabet
+  open import Cubical.Data.Unit
+
+  data ⊕IndTag : Type (ℓ-max ℓg ℓh) where
+    L R : ⊕IndTag
+
+  ⊕IndTy : Unit* {ℓ-max ℓg ℓh} → Functor Unit*
+  ⊕IndTy _ = ⊕e ⊕IndTag λ {
+      L → Inductive.k (LiftG ℓh g)
+    ; R → Inductive.k (LiftG ℓg h)}
+
+  ⊕Ind : Grammar (ℓ-max ℓg ℓh)
+  ⊕Ind = μ ⊕IndTy _
+
+  ⊕Ind→⊕Alg : Algebra ⊕IndTy λ _ → g ⊕ h
+  ⊕Ind→⊕Alg _ = ⊕ᴰ-elim (λ {
+      L → ⊕-inl ∘g lowerG ∘g lowerG
+    ; R → ⊕-inr ∘g lowerG ∘g lowerG })
+
+  ⊕Ind→⊕ : ⊕Ind ⊢ g ⊕ h
+  ⊕Ind→⊕ = Inductive.rec ⊕IndTy ⊕Ind→⊕Alg _
+
+  opaque
+    unfolding _⊕_ ⊕-elim
+    ⊕≅⊕Ind : StrongEquivalence (g ⊕ h) ⊕Ind
+    ⊕≅⊕Ind =
+      mkStrEq
+        (⊕-elim
+          (roll ∘g ⊕ᴰ-in L ∘g liftG ∘g liftG)
+          (roll ∘g ⊕ᴰ-in R ∘g liftG ∘g liftG)
+        )
+        ⊕Ind→⊕
+        (ind' ⊕IndTy (initialAlgebra ⊕IndTy)
+          (_ ,
+          λ _ → ⊕ᴰ≡ _ _
+            λ { L → refl ; R → refl})
+          (idHomo ⊕IndTy _)
+          _)
+        (⊕≡ _ _ refl refl)

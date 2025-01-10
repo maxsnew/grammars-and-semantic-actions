@@ -1,3 +1,4 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
@@ -13,34 +14,37 @@ open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 import      Cubical.Data.Equality as Eq
-open import Cubical.Data.List hiding (init)
+open import Cubical.Data.List hiding (init ; rec ; map)
 open import Cubical.Data.FinSet
+open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.FinSet.More
-open import Cubical.Data.Sum as Sum
+open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
+open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
 open import Cubical.Data.SumFin hiding (fsuc)
 open import Cubical.Data.Unit
-open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 
-open import Grammar Alphabet hiding (KL* ; NIL ; CONS)
-open import Grammar.KleeneStar.Manual Alphabet
+open import Grammar Alphabet
+open import Grammar.Inductive.Indexed Alphabet as Ind
+open import Grammar.Inductive.LiftFunctor Alphabet
+open import Grammar.Equalizer Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.RegularExpression Alphabet
+open import Grammar.Lift.Properties Alphabet
 
-open import NFA.Manual Alphabet
+open import NFA.Base Alphabet
 
 open import Helper
 open import Term Alphabet
+
+open StrongEquivalence
 
 private
   variable ℓΣ₀ ℓN ℓN' ℓP ℓ : Level
 
 open NFA
-open Algebra
-open AlgebraHom
-open PAlgebra
-open PAlgebraHom
+open NFA.Accepting
 
 -- This file constructs NFAs that are strongly equivalent to
 -- regular expressions.
@@ -77,79 +81,85 @@ module _ (c : ⟨ Alphabet ⟩) where
   isDiscSTATE : Discrete STATE
   isDiscSTATE = isoPresDiscrete (invIso STATE≅Fin2) discreteFin
 
-  literalNFA : NFA {ℓ-zero}
+  literalNFA : NFA ℓ-zero
   literalNFA .Q = STATE , 2 , ∣ isoToEquiv STATE≅Fin2 ∣₁
   literalNFA .init = c-st
-  literalNFA .isAcc q =
-    ( (q Eq.≡ ε-st)
-    , isOfHLevelRetractFromIso 1 (invIso Eq.PathIsoEq) (isSetSTATE _ _))
-    , EquivPresDec (isoToEquiv Eq.PathIsoEq) (isDiscSTATE _ _)
+  literalNFA .isAcc c-st = false
+  literalNFA .isAcc ε-st = true
   literalNFA .transition = Unit , isFinSetUnit
   literalNFA .src _ = c-st
   literalNFA .dst _ = ε-st
   literalNFA .label _ = c
   literalNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  opaque
-    unfolding AlgebraHom-seq ∃AlgebraHom
-    litNFA-strong-equiv : StrongEquivalence (InitParse literalNFA) (literal c)
-    litNFA-strong-equiv = mkStrEq
-      (recInit _ litAlg)
-      the-inv
-      ⊗-unit-r⁻r
-      (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ litAlg) (record
-        { f = λ { c-st → the-inv ; ε-st → nil Eq.refl }
-        ; on-nil = λ { Eq.refl → refl }
-        ; on-cons = λ _ → λ i →
-          cons _
-          ∘g (⊗-intro id (nil Eq.refl))
-          ∘g ⊗-unit-rr⁻ i
-        ; on-ε-cons = Empty.elim })))
-      where
-        the-inv : literal c ⊢ InitParse literalNFA
-        the-inv =
-          cons _
-          ∘g ⊗-intro id (nil Eq.refl)
-          ∘g ⊗-unit-r⁻
+  litNFA≅ : StrongEquivalence (Trace literalNFA c-st) (literal c)
+  litNFA≅ =
+    mkStrEq
+      (rec (TraceTy literalNFA) litAlg c-st)
+      (toNFA c-st)
+      the-ret
+      (the-sections c-st)
+    where
+    ⟦_⟧st : ⟨ literalNFA .Q ⟩ → Grammar ℓ-zero
+    ⟦ c-st ⟧st = literal c
+    ⟦ ε-st ⟧st = ε
 
-        litAlg : Algebra literalNFA
-        litAlg .the-ℓs _ = ℓ-zero
-        litAlg .G c-st = literal c
-        litAlg .G ε-st = ε
-        litAlg .nil-case Eq.refl = id
-        litAlg .cons-case _ = ⊗-unit-r
+    litAlg : Algebra (TraceTy literalNFA) ⟦_⟧st
+    litAlg c-st = ⊕ᴰ-elim (λ { (step t _) →
+      ⊗-unit-r ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      })
+    litAlg ε-st = ⊕ᴰ-elim (λ { (stop _) → lowerG ∘g lowerG })
+
+    fromNFA = rec (TraceTy literalNFA) litAlg
+
+    toNFA : ∀ q → ⟦ q ⟧st ⊢ Trace literalNFA q
+    toNFA c-st = STEP literalNFA _ ∘g id ,⊗ STOP literalNFA Eq.refl ∘g ⊗-unit-r⁻
+    toNFA ε-st = STOP literalNFA Eq.refl
+
+    opaque
+      unfolding ⊗-intro ⊗-unit-r⁻
+      the-ret : rec (TraceTy literalNFA) litAlg c-st ∘g toNFA c-st ≡ id
+      the-ret = ⊗-unit-r⁻r
+
+      the-sections :
+        ∀ q → toNFA q ∘g fromNFA q ≡ id
+      the-sections = equalizer-ind (TraceTy literalNFA) (Trace literalNFA)
+                      (λ q → toNFA q ∘g fromNFA q) (λ q → id)
+       λ { c-st → ⊕ᴰ≡ _ _ λ { (step tt Eq.refl) →
+           (λ i → STEP literalNFA tt ∘g id ,⊗ toNFA ε-st
+            ∘g ⊗-unit-rr⁻ i
+            ∘g id ,⊗ fromNFA ε-st
+            ∘g (lowerG ∘g lowerG) ,⊗ (eq-π (toNFA _ ∘g fromNFA _) id ∘g lowerG))
+           ∙ (λ i → STEP literalNFA tt
+            ∘g id ,⊗ (eq-π-pf (toNFA _ ∘g fromNFA _) id i)
+            ∘g (lowerG ∘g lowerG) ,⊗ lowerG)
+         }
+         ; ε-st → ⊕ᴰ≡ _ _ λ { (stop Eq.refl) → refl } }
 
 -- Nullary Disjunction
 module _ where
-  ⊥NFA : NFA {ℓ-zero}
+  ⊥NFA : NFA ℓ-zero
   ⊥NFA .Q = Unit , isFinSetUnit
   ⊥NFA .init = tt
-  ⊥NFA .isAcc _ = (Empty.⊥ , isProp⊥) , no (λ z → z) -- todo: upstream this def
+  ⊥NFA .isAcc _ = false
   ⊥NFA .transition = Empty.⊥ , isFinSet⊥
   ⊥NFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  opaque
-    unfolding AlgebraHom-seq ∃AlgebraHom
-    emptyNFA-strong-equiv :
-      StrongEquivalence (InitParse ⊥NFA) ⊥
-    emptyNFA-strong-equiv = mkStrEq
-      (recInit _ ⊥Alg)
-      ⊥-elim
-      (⊥-η _ _)
-      (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ ⊥Alg)
-        (record { f = λ _ → ⊥-elim
-                ; on-nil = Empty.elim
-                ; on-cons = Empty.elim
-                ; on-ε-cons = Empty.elim })))
-      where
-        ⊥Alg : Algebra ⊥NFA
-        ⊥Alg .the-ℓs = _
-        ⊥Alg .G _ = ⊥
+  ⊥NFA≅ : StrongEquivalence (Parse ⊥NFA) ⊥
+  ⊥NFA≅ = mkStrEq
+    (rec _ ⊥Alg _)
+    ⊥-elim
+    (⊥-η _ _)
+    (equalizer-ind-unit (TraceTy ⊥NFA _)
+      (⊕ᴰ≡ _ _ λ { (stop ()) }))
+    where
+      ⊥Alg : TraceAlg ⊥NFA λ _ → ⊥
+      ⊥Alg tt = ⊕ᴰ-elim λ { (stop ()) }
 
 -- Binary Disjunction
 -- Given two NFAs N and N', accepts a string if and only if
 -- the string is accept by N or by N'
-module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
+module _ (N : NFA ℓN) (N' : NFA ℓN') where
   data ⊕State : Type (ℓ-max ℓN ℓN') where
     start : ⊕State
     inl   : ⟨ N .Q ⟩  → ⊕State
@@ -192,13 +202,13 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     ; (inr (inr (inl t))) → refl
     ; (inr (inr (inr t'))) → refl }))
 
-  ⊕NFA : NFA
+  ⊕NFA : NFA (ℓ-max ℓN ℓN')
   ⊕NFA .Q = ⊕State , EquivPresIsFinSet (invEquiv ⊕State-rep)
     (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSet⊎ (N .Q) (N' .Q)))
   ⊕NFA .init = start
-  ⊕NFA .isAcc = λ { start → (Empty.⊥* , isProp⊥*) , (no lower)
-    ; (inl q) → LiftDecProp'' {ℓN} {ℓN'} (N .isAcc q)
-    ; (inr q') → LiftDecProp'' {ℓN'} {ℓN} (N' .isAcc q') }
+  ⊕NFA .isAcc start = false
+  ⊕NFA .isAcc (inl q) = N .isAcc q
+  ⊕NFA .isAcc (inr q') = N' .isAcc q'
   ⊕NFA .transition = ⊕Trans
   ⊕NFA .src = λ { (inl t) → inl (N .src t) ; (inr t') → inr (N' .src t') }
   ⊕NFA .dst = λ { (inl t) → inl (N .dst t) ; (inr t') → inr (N' .dst t') }
@@ -219,115 +229,148 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
     ; (N'-ε-trans t') → inr (N' .ε-dst t')
     }
 
-  opaque
-    unfolding _⊕_ ⊕-inr ⊕-inl AlgebraHom-seq ∃AlgebraHom
-    ⊕-strong-equivalence :
-      StrongEquivalence (InitParse ⊕NFA) (InitParse N ⊕ InitParse N')
-    ⊕-strong-equivalence = mkStrEq
-      (recInit _ ⊕Alg)
-      inj-parse
-      (⊕≡ _ _
-        (λ i → ⊕-inl ∘g N-retr i)
-        λ i → ⊕-inr ∘g N'-retr i)
-      (algebra-η ⊕NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊕Alg) (record
-        { f = λ { start → inj-parse
-                ; (inl x) → recTrace _ NAlg
-                ; (inr x) → recTrace _ N'Alg }
-        ; on-nil = λ { {start} → Empty.elim*
-                     ; {inl x} → λ _ → refl
-                     ; {inr x} → λ _ → refl }
-        ; on-cons = λ { (inl x) → refl ; (inr x) → refl }
-        ; on-ε-cons = λ { pick-inl → refl
-          ; pick-inr → refl
-          ; (N-ε-trans x) → refl
-          ; (N'-ε-trans x) → refl
-          } })))
-      where
-        ⊕Alg : Algebra ⊕NFA
-        ⊕Alg .the-ℓs start = (ℓ-max ℓN ℓN')
-        ⊕Alg .the-ℓs (inl _) = ℓN
-        ⊕Alg .the-ℓs (inr _) = ℓN'
-        ⊕Alg .G start = InitParse N ⊕ InitParse N'
-        ⊕Alg .G (inl q)  = Parse N q
-        ⊕Alg .G (inr q') = Parse N' q'
-        ⊕Alg .nil-case {start} ()
-        ⊕Alg .nil-case {inl x} acc  = nil (lower acc)
-        ⊕Alg .nil-case {inr x} acc' = nil (lower acc')
-        ⊕Alg .cons-case (inl t)  = cons t
-        ⊕Alg .cons-case (inr t') = cons t'
-        ⊕Alg .ε-cons-case pick-inl = ⊕-inl
-        ⊕Alg .ε-cons-case pick-inr = ⊕-inr
-        ⊕Alg .ε-cons-case (N-ε-trans t) = ε-cons t
-        ⊕Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
+  ⊕NFA≅ : StrongEquivalence (Parse ⊕NFA) (Parse N ⊕ Parse N')
+  ⊕NFA≅ =
+    mkStrEq
+      (fromNFA start)
+      (toNFA start)
+      (the-ret start)
+      (the-sec start)
+    where
+    ⟦_⟧⊕ : ⟨ ⊕NFA .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
+    ⟦ start ⟧⊕ = Parse N  ⊕ Parse N'
+    ⟦ inl q ⟧⊕ = LiftG ℓN' (Trace N q)
+    ⟦ inr q' ⟧⊕ = LiftG ℓN (Trace N' q')
 
-        NAlg : Algebra N
-        NAlg .the-ℓs = _
-        NAlg .G q = Parse ⊕NFA (inl q)
-        NAlg .nil-case acc = nil (lift acc)
-        NAlg .cons-case t = cons (inl t)
-        NAlg .ε-cons-case t = ε-cons (N-ε-trans t)
+    ⊕Alg : Algebra (TraceTy ⊕NFA) ⟦_⟧⊕
+    ⊕Alg start =
+      ⊕ᴰ-elim (λ {
+        (step (inl t) ())
+      ; (step (inr t) ())
+      ; (stepε pick-inl Eq.refl) → ⊕-inl ∘g lowerG ∘g lowerG
+      ; (stepε pick-inr Eq.refl) → ⊕-inr ∘g lowerG ∘g lowerG})
+    ⊕Alg (inl q) = ⊕ᴰ-elim λ {
+        (stop acc) → liftG ∘g STOP N acc ∘g lowerG ∘g lowerG
+      ; (step (inl t) Eq.refl) → liftG ∘g STEP N t ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
+      ; (stepε (N-ε-trans t) Eq.refl) → liftG ∘g STEPε N t ∘g lowerG ∘g lowerG }
+    ⊕Alg (inr q') =
+      ⊕ᴰ-elim (λ {
+        (stop acc) → liftG ∘g STOP N' acc ∘g lowerG ∘g lowerG
+      ; (step (inr t) Eq.refl) → liftG ∘g STEP N' t ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
+      ; (stepε (N'-ε-trans t) Eq.refl) → liftG ∘g STEPε N' t ∘g lowerG ∘g lowerG})
 
-        N'Alg : Algebra N'
-        N'Alg .the-ℓs = _
-        N'Alg .G q = Parse ⊕NFA (inr q)
-        N'Alg .nil-case acc' = nil (lift acc')
-        N'Alg .cons-case t' = cons (inr t')
-        N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
+    fromNFA = rec (TraceTy ⊕NFA) ⊕Alg
 
-        inj-parse : Term (InitParse N ⊕ InitParse N') (Parse ⊕NFA start)
-        inj-parse = (⊕-elim
-          (ε-cons pick-inl ∘g recInit _ NAlg)
-          (ε-cons pick-inr ∘g recInit _ N'Alg))
+    ⟦_⟧N : ⟨ N .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
+    ⟦ q ⟧N = Trace ⊕NFA (inl q)
 
-        N-retr : recTrace _ ⊕Alg ∘g recInit _ NAlg ≡ id
-        N-retr = algebra-η N (AlgebraHom-seq _ (∃AlgebraHom _ NAlg) (record
-          { f = λ q → recTrace _ ⊕Alg
-          ; on-nil = λ _ → refl
-          ; on-cons = λ _ → refl
-          ; on-ε-cons = λ _ → refl }))
-        N'-retr : recTrace _ ⊕Alg ∘g recInit _ N'Alg ≡ id
-        N'-retr = algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
-          { f = λ q → recTrace _ ⊕Alg
-          ; on-nil = λ _ → refl
-          ; on-cons = λ _ → refl
-          ; on-ε-cons = λ _ → refl
-          }))
+    ⟦_⟧N' : ⟨ N' .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
+    ⟦ q' ⟧N' = Trace ⊕NFA (inr q')
+
+    NAlg : Algebra (TraceTy N) ⟦_⟧N
+    NAlg q =
+      ⊕ᴰ-elim (λ {
+        (stop acc) → STOP ⊕NFA acc ∘g lowerG ∘g lowerG
+      ; (step t Eq.refl) → STEP ⊕NFA (inl t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      ; (stepε t Eq.refl) → STEPε ⊕NFA (N-ε-trans t) ∘g lowerG })
+
+    N→⊕NFA = rec (TraceTy N) NAlg
+
+    N'Alg : Algebra (TraceTy N') ⟦_⟧N'
+    N'Alg q' =
+      ⊕ᴰ-elim (λ {
+        (stop acc) → STOP ⊕NFA acc ∘g lowerG ∘g lowerG
+      ; (step t Eq.refl) → STEP ⊕NFA (inr t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      ; (stepε t Eq.refl) → STEPε ⊕NFA (N'-ε-trans t) ∘g lowerG })
+
+    N'→⊕NFA = rec (TraceTy N') N'Alg
+
+    toNFA : ∀ q → ⟦ q ⟧⊕ ⊢ Trace ⊕NFA q
+    toNFA start =
+      ⊕-elim
+        (STEPε ⊕NFA pick-inl ∘g N→⊕NFA (N .init))
+        (STEPε ⊕NFA pick-inr ∘g N'→⊕NFA (N' .init))
+    toNFA (inl q) = N→⊕NFA q ∘g lowerG
+    toNFA (inr q') = N'→⊕NFA q' ∘g lowerG
+
+    opaque
+      unfolding ⊗-intro ⊗-unit-r⁻ ⊕-elim eq-intro
+      the-retN : ∀ q → lowerG ∘g fromNFA (inl q) ∘g toNFA (inl q) ∘g liftG ≡ id
+      the-retN =
+        equalizer-ind (TraceTy N) _ _ _
+          λ q → ⊕ᴰ≡ _ _ (λ {
+            (stop x) → refl
+          ; (step t Eq.refl) → λ i →
+              STEP N t ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+          ; (stepε t Eq.refl) → λ i →
+              STEPε N t ∘g eq-π-pf _ _ i ∘g lowerG })
+
+      the-retN' : ∀ q' → lowerG ∘g fromNFA (inr q') ∘g toNFA (inr q') ∘g liftG ≡ id
+      the-retN' =
+        equalizer-ind (TraceTy N') _ _ _
+          λ q' → ⊕ᴰ≡ _ _ (λ {
+            (stop x) → refl
+          ; (step t Eq.refl) → λ i →
+              STEP N' t ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+          ; (stepε t Eq.refl) → λ i →
+              STEPε N' t ∘g eq-π-pf _ _ i ∘g lowerG })
+
+      the-ret : ∀ q → fromNFA q ∘g toNFA q  ≡ id
+      the-ret start =
+        ⊕≡ _ _
+          (λ i → ⊕-inl ∘g the-retN (N .init) i)
+          (λ i → ⊕-inr ∘g the-retN' (N' .init) i)
+      the-ret (inl q) i = liftG ∘g the-retN q i ∘g lowerG
+      the-ret (inr q') i = liftG ∘g the-retN' q' i ∘g lowerG
+
+      the-sec : ∀ q → toNFA q ∘g fromNFA q ≡ id
+      the-sec = equalizer-ind _ _ _ _
+        λ { start → ⊕ᴰ≡ _ _ (λ {
+             (step (inl t) ())
+           ; (step (inr t) ())
+           ; (stepε pick-inl Eq.refl) → λ i →
+             STEPε ⊕NFA pick-inl ∘g eq-π-pf _ _ i ∘g lowerG
+           ; (stepε pick-inr Eq.refl) → λ i →
+             STEPε ⊕NFA pick-inr ∘g eq-π-pf _ _ i ∘g lowerG})
+         ; (inl q) → ⊕ᴰ≡ _ _ λ {
+             (stop x) → refl
+           ; (step (inl t) Eq.refl) → λ i →
+             STEP ⊕NFA (inl t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+           ; (stepε (N-ε-trans t) Eq.refl) → λ i →
+             STEPε ⊕NFA (N-ε-trans t) ∘g eq-π-pf _ _ i ∘g lowerG }
+         ; (inr q') → ⊕ᴰ≡ _ _ λ {
+             (stop x) → refl
+           ; (step (inr t) Eq.refl) → λ i →
+             STEP ⊕NFA (inr t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+           ; (stepε (N'-ε-trans t) Eq.refl) → λ i →
+             STEPε ⊕NFA (N'-ε-trans t) ∘g eq-π-pf _ _ i ∘g lowerG }}
 
 -- Epsilon, the nullary sequencing
 module _ where
   -- an NFA with one state,
   -- no transitions,
   -- and the single state is both initial and accepting
-  εNFA : NFA {ℓ-zero}
+  εNFA : NFA ℓ-zero
   εNFA .Q = Unit , isFinSetUnit
   εNFA .init = tt
-  εNFA .isAcc = λ x → (Unit , isPropUnit) , (yes _)
+  εNFA .isAcc _ = true
   εNFA .transition = Empty.⊥ , isFinSet⊥
   εNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  opaque
-    unfolding AlgebraHom-seq ∃AlgebraHom
-    εNFA-strong-equiv :
-      StrongEquivalence (InitParse εNFA) ε
-    εNFA-strong-equiv = mkStrEq
-      (recInit _ εAlg)
-      (nil _)
-      refl
-      (algebra-η _ (AlgebraHom-seq _ (∃AlgebraHom _ εAlg) (record
-        { f = λ _ → nil _
-        ; on-nil = λ _ → refl
-        ; on-cons = Empty.elim
-        ; on-ε-cons = Empty.elim })))
-      where
-        εAlg : Algebra εNFA
-        εAlg .the-ℓs = _
-        εAlg .G = λ _ → ε
-        εAlg .nil-case = λ _ → id
+  εNFA≅ : StrongEquivalence (Parse εNFA) ε
+  εNFA≅ = mkStrEq
+    (rec _ εAlg _)
+    (STOP εNFA Eq.refl)
+    refl
+    (equalizer-ind-unit (TraceTy εNFA _) (⊕ᴰ≡ _ _ (λ { (stop Eq.refl) → refl })))
+    where
+      εAlg : TraceAlg εNFA λ _ → ε
+      εAlg tt = ⊕ᴰ-elim (λ { (stop Eq.refl) → lowerG ∘g lowerG})
 
 -- Concatenation
 -- Given two NFAs N and N', accepts a string w if and only if
 -- w ≡ w₁ ++ w₂ where w₁ is accepted by N and w₂ accepted by N'
-module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
+module _ (N : NFA ℓN) (N' : NFA ℓN') where
   ⊗State : FinSet (ℓ-max ℓN ℓN')
   ⊗State .fst = ⟨ N .Q ⟩ ⊎ ⟨ N' .Q ⟩
   ⊗State .snd = isFinSet⊎ (N .Q) (N' .Q)
@@ -337,12 +380,12 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
   ⊗Trans .snd = isFinSet⊎ (N .transition) (N' .transition)
 
   data ⊗εTrans : Type (ℓ-max ℓN ℓN') where
-    N-acc : ∀ q → (N .isAcc q .fst .fst) → ⊗εTrans
+    N-acc : ∀ q → (true Eq.≡ N .isAcc q) → ⊗εTrans
     N-ε-trans  : ⟨ N .ε-transition ⟩ → ⊗εTrans
     N'-ε-trans  : ⟨ N' .ε-transition ⟩ → ⊗εTrans
 
   ⊗εTrans-rep :
-    (Σ[ q ∈ ⟨ N .Q ⟩ ] (N .isAcc q .fst .fst)) ⊎
+    (Σ[ q ∈ ⟨ N .Q ⟩ ] (true Eq.≡ N .isAcc q)) ⊎
       (⟨ N .ε-transition ⟩ ⊎ ⟨ N' .ε-transition ⟩)
       ≃ ⊗εTrans
   ⊗εTrans-rep = isoToEquiv (iso
@@ -359,23 +402,25 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
        ; (inr (inl _)) → refl
        ; (inr (inr _)) → refl }))
 
-  ⊗NFA : NFA
+  ⊗NFA : NFA (ℓ-max ℓN ℓN')
   ⊗NFA .Q = ⊗State
   ⊗NFA .init = inl (N .init)
-  ⊗NFA .isAcc = λ { (inl q) → (Empty.⊥* , isProp⊥*) , (no lower)
-                  ; (inr q') → LiftDecProp'' {ℓN'}{ℓN} (N' .isAcc q')}
+  ⊗NFA .isAcc = λ { (inl q) → false
+                  ; (inr q') → N' .isAcc q' }
   ⊗NFA .transition = ⊗Trans
   ⊗NFA .src = λ { (inl t) → inl (N .src t) ; (inr t') → inr (N' .src t') }
   ⊗NFA .dst = λ { (inl t) → inl (N .dst t) ; (inr t') → inr (N' .dst t') }
   ⊗NFA .label = λ { (inl t) → N .label t ; (inr t') → N' .label t' }
-  ⊗NFA .ε-transition =
-    ⊗εTrans ,
+  ⊗NFA .ε-transition .fst = ⊗εTrans
+  ⊗NFA .ε-transition .snd =
     EquivPresIsFinSet ⊗εTrans-rep
       (isFinSet⊎
-        (_ , isFinSetΣ (N .Q)
-          (λ q → _ ,
-            isDecProp→isFinSet (N .isAcc q .fst .snd) (N .isAcc q .snd)))
+        ((_ , isFinSetΣ (N .Q)
+          (λ q → _ , isDecProp→isFinSet (the-dec-prop q .fst .snd) (the-dec-prop q .snd))))
         (_ , isFinSet⊎ (N .ε-transition) (N' .ε-transition)))
+    where
+      the-dec-prop : ⟨ N .Q ⟩ → Σ (hProp ℓ-zero) (λ P → Dec (P .fst))
+      the-dec-prop q =  isFinSet→DecProp-Eq≡ isFinSetBool true (N .isAcc q)
   ⊗NFA .ε-src = λ { (N-acc q qAcc) → inl q
                   ; (N-ε-trans t) → inl (N .ε-src t)
                   ; (N'-ε-trans t') → inr (N' .ε-src t') }
@@ -383,189 +428,425 @@ module _ (N : NFA {ℓN}) (N' : NFA {ℓN'}) where
                   ; (N-ε-trans t) → inl (N .ε-dst t)
                   ; (N'-ε-trans t') → inr (N' .ε-dst t') }
 
-  opaque
-    unfolding AlgebraHom-seq ∃AlgebraHom recTrace P-initial !PAlgebraHom' P-idAlgebraHom
-    ⊗-strong-equivalence :
-      StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
-    ⊗-strong-equivalence = mkStrEq
-      (recInit _ ⊗Alg)
-      (P-recInit _ _ NPAlg)
-      (!PAlgebraHom' _ _ NPAlg' Prec (P-idAlgebraHom _ _ _) _)
-      (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) ⊗Alg→initial))
-      where
-        ⊗Alg : Algebra ⊗NFA
-        ⊗Alg .the-ℓs (inl q) = _
-        ⊗Alg .the-ℓs (inr q') = _
-        ⊗Alg .G (inl q) = Parse N q ⊗ InitParse N'
-        ⊗Alg .G (inr q') = Parse N' q'
-        ⊗Alg .nil-case {inr q'} acc = nil (lower acc)
-        ⊗Alg .cons-case (inl t) =
-          ⊗-intro (cons t) id
-          ∘g ⊗-assoc
-        ⊗Alg .cons-case (inr t') = cons t'
-        ⊗Alg .ε-cons-case (N-acc q acc) =
-          ⊗-intro (nil acc) id
+  ⊗NFA≅ : StrongEquivalence (Parse ⊗NFA) (Parse N ⊗ Parse N')
+  ⊗NFA≅ =
+    mkStrEq
+      (rec _ ⊗Alg (⊗NFA .init))
+      (N→⊗NFA (N .init))
+      (the-retN (N .init))
+      (the-secN (N .init))
+    where
+    ⟦_⟧⊗ : ⟨ ⊗NFA .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
+    ⟦ inl q ⟧⊗ = Trace N q ⊗ Parse N'
+    ⟦ inr q' ⟧⊗ = LiftG ℓN (Trace N' q')
+
+    ⟦_⟧N : ⟨ N .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
+    ⟦ q ⟧N = Trace ⊗NFA (inl q) ⟜ Trace ⊗NFA (inr (N' .init))
+
+    ⟦_⟧N' : ⟨ N' .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
+    ⟦ q' ⟧N' = Trace ⊗NFA (inr q')
+
+    ⊗Alg : Algebra (TraceTy ⊗NFA) ⟦_⟧⊗
+    ⊗Alg (inl q) = ⊕ᴰ-elim (λ {
+        (step (inl t) Eq.refl) →
+          (STEP N t ,⊗ id
+          ∘g ⊗-assoc)
+          ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      ; (stepε (N-acc q acc) Eq.refl) →
+          STOP N acc ,⊗ id
           ∘g ⊗-unit-l⁻
-        ⊗Alg .ε-cons-case (N-ε-trans t) =
-          ⊗-intro (ε-cons t) id
-        ⊗Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
+          ∘g lowerG ∘g lowerG
+      ; (stepε (N-ε-trans t) Eq.refl) →
+         STEPε N t ,⊗ id
+         ∘g lowerG })
+    ⊗Alg (inr q') = ⊕ᴰ-elim (λ {
+        (stop acc) → liftG ∘g STOP N' acc ∘g lowerG ∘g lowerG
+      ; (step (inr t) Eq.refl) →
+        liftG ∘g STEP N' t
+        ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
+      ; (stepε (N'-ε-trans t) Eq.refl) →
+        liftG ∘g STEPε N' t ∘g lowerG ∘g lowerG})
 
-        N'Alg : Algebra N'
-        N'Alg .the-ℓs = _
-        N'Alg .G q' = Parse ⊗NFA (inr q')
-        N'Alg .nil-case acc' = nil (lift acc')
-        N'Alg .cons-case t' = cons (inr t')
-        N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
+    N'Alg : Algebra (TraceTy N') ⟦_⟧N'
+    N'Alg q =
+      ⊕ᴰ-elim λ {
+        (stop acc) → STOP ⊗NFA acc ∘g lowerG ∘g lowerG
+      ; (step t Eq.refl) → STEP ⊗NFA (inr t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      ; (stepε t Eq.refl) → STEPε ⊗NFA (N'-ε-trans t) ∘g lowerG}
 
-        NPAlg : PAlgebra N (InitParse N')
-        NPAlg .the-ℓs = _
-        NPAlg .G q = Parse ⊗NFA (inl q)
-        NPAlg .nil-case acc = ε-cons (N-acc _ acc) ∘g recInit _ N'Alg
-        NPAlg .cons-case t = cons (inl t)
-        NPAlg .ε-cons-case t = ε-cons (N-ε-trans t)
+    NAlg : Algebra (TraceTy N) ⟦_⟧N
+    NAlg q = ⊕ᴰ-elim λ {
+         (stop acc) →
+           ⟜-intro
+             (STEPε ⊗NFA (N-acc q acc)
+             ∘g ⊗-unit-l
+             ∘g (lowerG ∘g lowerG) ,⊗ id)
+       ; (step t Eq.refl) →
+           ⟜-intro
+             (STEP ⊗NFA (inl t)
+             ∘g id ,⊗ ⟜-app
+             ∘g ⊗-assoc⁻
+             ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
+       ; (stepε t Eq.refl) →
+           ⟜-intro
+             (STEPε ⊗NFA (N-ε-trans t)
+             ∘g ⟜-app
+             ∘g lowerG ,⊗ id)
+       }
 
-        NPAlg' : PAlgebra N (InitParse N')
-        NPAlg' .the-ℓs = _
-        NPAlg' .G q = Parse N q ⊗ InitParse N'
-        NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
-        NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-        NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
+    N→⊗NFA : ∀ q → Trace N q ⊗ Parse N' ⊢ Trace ⊗NFA (inl q)
+    N→⊗NFA q =
+      ⟜-intro⁻ (rec (TraceTy N) NAlg q)
+      ∘g id ,⊗ rec _ N'Alg (N' .init)
 
-        N'≅⊗NFA⟨inr⟩ : recTrace _ ⊗Alg ∘g recInit _ N'Alg ≡ id
-        N'≅⊗NFA⟨inr⟩ =
-          algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
-            { f = λ q → recTrace _ ⊗Alg
-            ; on-nil = λ _ → refl
-            ; on-cons = λ _ → refl
-            ; on-ε-cons = λ _ → refl }))
+    opaque
+      unfolding ⊗-intro ⊗-unit-r⁻ ⊕-elim eq-intro
+      the-retN' : ∀ q' →
+        lowerG ∘g rec _ ⊗Alg (inr q') ∘g rec _ N'Alg q' ≡ id
+      the-retN' =
+        equalizer-ind (TraceTy N') _ _ _
+          (λ q' → ⊕ᴰ≡ _ _ λ {
+            (stop acc) → refl
+          ; (step t Eq.refl) → λ i →
+            STEP N' t
+            ∘g id ,⊗ eq-π-pf _ _ i
+            ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+          ; (stepε t Eq.refl) → λ i →
+            STEPε N' t
+            ∘g eq-π-pf _ _ i
+            ∘g lowerG
+          } )
 
-        ⊗Alg→initial : AlgebraHom ⊗NFA ⊗Alg (initial ⊗NFA)
-        ⊗Alg→initial .f (inl q) = P-recTrace _ _ NPAlg
-        ⊗Alg→initial .f (inr q') = recTrace _ N'Alg
-        ⊗Alg→initial .on-nil {inr q'} _ = refl
-        ⊗Alg→initial .on-cons (inl t) =
-           (λ i → ⟜-β ((cons (inl t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)) i ∘g
-             ⊗-intro (⊗-intro id (recTrace _ (underlyingAlg _ _ NPAlg))) id ∘g
-               ⊗-assoc) ∙
-            (λ i → cons (inl t) ∘g ⊗-intro id (P-recTrace _ _ NPAlg) ∘g
-              ⊗-assoc⁻∘⊗-assoc≡id i)
-        ⊗Alg→initial .on-cons (inr t) = refl
-        ⊗Alg→initial .on-ε-cons (N-acc _ acc) =
-          ((λ i →
-             ⟜-β (ε-cons (N-acc _ acc) ∘g
-               recInit _ N'Alg ∘g
-                 ⊗-unit-l) i ∘g
-                 ⊗-unit-l⁻) ∙
-          (λ i → ε-cons (N-acc _ acc) ∘g
-          recInit _ N'Alg ∘g ⊗-unit-l⁻l i))
-        ⊗Alg→initial .on-ε-cons (N-ε-trans t) =
-          (λ i → ⟜-β (ε-cons (N-ε-trans t) ∘g ⟜-app) i ∘g
-             ⊗-intro (recTrace _ (underlyingAlg _ _ NPAlg)) id)
-        ⊗Alg→initial .on-ε-cons (N'-ε-trans t') = refl
+      the-retN : ∀ q →
+        rec _ ⊗Alg (inl q) ∘g N→⊗NFA q ≡ id
+      the-retN q =
+        equalizer-ind-⊗l
+          (Tag N)
+          _
+          (λ q → Trace N q ⊗ Parse N')
+          (λ _ → Parse N')
+          (λ q → rec _ ⊗Alg (inl q) ∘g N→⊗NFA q)
+          (λ q → id)
+          (λ q → λ {
+            (stop acc) →
+              (λ i →
+               rec (TraceTy ⊗NFA) ⊗Alg (inl q)
+               ∘g ⟜-β (STEPε ⊗NFA (N-acc q acc)
+                       ∘g ⊗-unit-l
+                       ∘g (lowerG ∘g lowerG) ,⊗ id) i
+               ∘g id ,⊗ rec _ N'Alg (N' .init)
+               ) ∙
+              (λ i →
+              STOP N acc ,⊗ id
+              ∘g ⊗-unit-l⁻
+              ∘g lowerG
+              ∘g rec _ ⊗Alg (inr (N' .init))
+              ∘g ⊗-unit-l⊗-intro (rec _ N'Alg (N' .init)) (~ i)
+              ∘g (lowerG ∘g lowerG) ,⊗ id
+             ) ∙
+            (λ i →
+              STOP N acc ,⊗ id
+              ∘g ⊗-unit-l⁻
+              ∘g the-retN' (N' .init) i
+              ∘g ⊗-unit-l
+              ∘g (lowerG ∘g lowerG) ,⊗ id
+             ) ∙
+             (λ i →
+               STOP N acc ,⊗ id
+                ∘g ⊗-unit-ll⁻ i
+                ∘g (lowerG ∘g lowerG) ,⊗ id
+               )
+          ; (step t Eq.refl) →
+            (λ i →
+              rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
+              ∘g ⟜-β
+                (STEP ⊗NFA (inl t)
+                ∘g id ,⊗ ⟜-app
+                ∘g ⊗-assoc⁻
+                ∘g ((lowerG ∘g lowerG {ℓ' = ℓ-max ℓN ℓN'}) ,⊗ lowerG {ℓ' = ℓN}) ,⊗ id)
+                i
+              ∘g ((liftG ∘g liftG {ℓ' = ℓN}) ,⊗ (liftG ∘g rec (TraceTy N) NAlg (N .dst t))) ,⊗ id
+              ∘g (id ,⊗ eq-π _ _ ∘g (lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+              ∘g id ,⊗ rec _ N'Alg (N' .init)
+            ) ∙
+            (λ i →
+            STEP N t ,⊗ id
+            ∘g ⊗-assoc
+            ∘g id ,⊗ eq-π-pf-⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t)) ∘g N→⊗NFA (N .dst t)) id i
+            ∘g ⊗-assoc⁻
+            ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id) ∙
+            (λ i →
+               STEP N t ,⊗ id
+               ∘g ⊗-assoc∘⊗-assoc⁻≡id i
+               ∘g (id ,⊗ eq-π _ _) ,⊗ id
+               ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+            )
+          ; (stepε t Eq.refl) →
+              (λ i →
+                rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t))
+                ∘g ⟜-β
+                    (STEPε ⊗NFA (N-ε-trans t)
+                      ∘g ⟜-app
+                      ∘g lowerG {ℓ' = ℓN} ,⊗ id)
+                   i
+                ∘g (liftG ∘g rec (TraceTy N) NAlg (N .ε-dst t)) ,⊗ id
+                ∘g (eq-π _ _ ∘g lowerG) ,⊗ id
+                ∘g id ,⊗ rec _ N'Alg (N' .init)
+              ) ∙
+              (λ i →
+                STEPε N t ,⊗ id
+                ∘g eq-π-pf-⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-dst t)) ∘g N→⊗NFA (N .ε-dst t)) id i
+                ∘g lowerG ,⊗ id
+              )
+          })
+          q
 
-        Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
-        Prec .f q =
-          recTrace ⊗NFA ⊗Alg ∘g
-          P-recTrace _ _ NPAlg
-        Prec .on-nil qAcc =
-          (λ i → recTrace _ ⊗Alg ∘g (⟜-β
-              ((ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg) ∘g ⊗-unit-l) i) ∘g
-               ⊗-unit-l⁻) ∙
-          (λ i → recTrace _ ⊗Alg ∘g
-            ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg ∘g ⊗-unit-l⁻l i) ∙
-          (λ i → ⊗-intro (nil qAcc) id ∘g ⊗-unit-l⁻ ∘g N'≅⊗NFA⟨inr⟩ i)
-        Prec .on-cons t =
-          (λ i → recTrace _ ⊗Alg ∘g
-            ⊗Alg→initial .on-cons (inl t) i)
-        Prec .on-ε-cons t =
-          (λ i → recTrace _ ⊗Alg ∘g
-            ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
+      -- Annoying artifact of how equalizer-induction is written:
+      -- Need to handle each of the ⊗NFA states, even if the inl
+      -- half of this proof is unecessary
+      -- To handle this, map the inl terms to ⊤* so the
+      -- equations are trivial to prove
+      the-secN' : ∀ q' →
+        rec _ N'Alg q' ∘g lowerG ∘g rec _ ⊗Alg (inr q') ≡ id
+      the-secN' q' =
+        equalizer-ind
+          (TraceTy ⊗NFA)
+          (λ {
+            (inl q) → ⊤*
+          ; (inr q') → Trace ⊗NFA (inr q')})
+          (λ {
+            (inl q) → ⊤*-intro
+          ; (inr q') → rec _ N'Alg q' ∘g lowerG ∘g rec _ ⊗Alg (inr q')})
+          (λ {
+            (inl q) → ⊤*-intro
+          ; (inr q') → id})
+          (λ {
+            (inl q) → unambiguous⊤* _ _
+          ; (inr q') →
+              ⊕ᴰ≡ _ _ λ {
+                  (stop acc) → refl
+              ; (step (inr t) Eq.refl) → λ i →
+                  STEP ⊗NFA (inr t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+              ; (stepε (N'-ε-trans t) Eq.refl) → λ i →
+                  STEPε ⊗NFA (N'-ε-trans t) ∘g eq-π-pf _ _ i ∘g lowerG
+              }
+          })
+          (inr q')
 
-    ⊗-strong-equivalence' :
-      StrongEquivalence (InitParse ⊗NFA) (InitParse N ⊗ InitParse N')
-    ⊗-strong-equivalence' = mkStrEq
-      (recInit _ ⊗Alg)
-      (P-recInit' _ _ NPAlg)
-      (!PAlgebraHom' _ _ NPAlg' Prec (P-idAlgebraHom _ _ _) _)
-      (algebra-η ⊗NFA (AlgebraHom-seq _ (∃AlgebraHom _ ⊗Alg) ⊗Alg→initial))
-      where
-        ⊗Alg : Algebra ⊗NFA
-        ⊗Alg .the-ℓs (inl q) = _
-        ⊗Alg .the-ℓs (inr q') = _
-        ⊗Alg .G (inl q) = Parse N q ⊗ InitParse N'
-        ⊗Alg .G (inr q') = Parse N' q'
-        ⊗Alg .nil-case {inr q'} acc = nil (lower acc)
-        ⊗Alg .cons-case (inl t) =
-          ⊗-intro (cons t) id
-          ∘g ⊗-assoc
-        ⊗Alg .cons-case (inr t') = cons t'
-        ⊗Alg .ε-cons-case (N-acc q acc) =
-          ⊗-intro (nil acc) id
-          ∘g ⊗-unit-l⁻
-        ⊗Alg .ε-cons-case (N-ε-trans t) =
-          ⊗-intro (ε-cons t) id
-        ⊗Alg .ε-cons-case (N'-ε-trans t') = ε-cons t'
+      the-secN : ∀ q →
+        N→⊗NFA q ∘g rec _ ⊗Alg (inl q) ≡ id
+      the-secN q =
+        equalizer-ind
+          (TraceTy ⊗NFA)
+          (λ {
+            (inl q) → Trace ⊗NFA (inl q)
+          ; (inr q') → ⊤*
+          })
+          (λ {
+            (inl q) → N→⊗NFA q ∘g rec _ ⊗Alg (inl q)
+          ; (inr q') → ⊤*-intro
+          })
+          (λ {
+            (inl q) → id
+          ; (inr q') → ⊤*-intro
+          })
+          (λ {
+            (inl q) →
+              ⊕ᴰ≡ _ _
+                λ {
+                  (step (inl t) Eq.refl) →
+                    (
+                    ⟜-intro⁻ (⟜-intro
+                        (STEP ⊗NFA (inl t)
+                        ∘g id ,⊗ ⟜-app
+                        ∘g ⊗-assoc⁻
+                        ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id))
+                    ∘g ((liftG ∘g liftG) ,⊗ liftG) ,⊗ id
+                    ∘g (id ,⊗ rec (TraceTy N) NAlg (N .dst t)) ,⊗ id
+                    ∘g id ,⊗ rec _ N'Alg (N' .init)
+                    ∘g ⊗-assoc
+                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                    ∘g id ,⊗ eq-π _ _
+                    ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                      ≡⟨ (λ i →
+                          ⟜-β
+                            (STEP ⊗NFA (inl t)
+                              ∘g id ,⊗ ⟜-app
+                              ∘g ⊗-assoc⁻
+                              ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id) i
+                          ∘g ((liftG {ℓ' = ℓ-max ℓN ℓN'}
+                                ∘g liftG {ℓ' = ℓN}) ,⊗ liftG {ℓ' = ℓN}) ,⊗ id
+                          ∘g (id ,⊗ rec (TraceTy N) NAlg (N .dst t)) ,⊗ id
+                          ∘g id ,⊗ rec _ N'Alg (N' .init)
+                          ∘g ⊗-assoc
+                          ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                          ∘g id ,⊗ eq-π _ _
+                          ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                        )
+                      ⟩
+                    STEP ⊗NFA (inl t)
+                    ∘g id ,⊗ ⟜-app
+                    ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
+                    ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
+                    ∘g ⊗-assoc⁻
+                    ∘g ⊗-assoc
+                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                    ∘g id ,⊗ eq-π _ _
+                    ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                      ≡⟨ (λ i →
+                         STEP ⊗NFA (inl t)
+                         ∘g id ,⊗ ⟜-app
+                         ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
+                         ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
+                         ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+                         ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                         ∘g id ,⊗ eq-π _ _
+                         ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                         )
+                      ⟩
+                    STEP ⊗NFA (inl t)
+                    ∘g id ,⊗ ⟜-app
+                    ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
+                    ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
+                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                    ∘g id ,⊗ eq-π _ _
+                    ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                      ≡⟨ (λ i →
+                          STEP ⊗NFA (inl t)
+                          ∘g id ,⊗ eq-π-pf _ _ i
+                          ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                         )
+                      ⟩
+                    STEP ⊗NFA (inl t)
+                    ∘g id ,⊗ eq-π _ _
+                    ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
+                    ∎
+                    )
+                ; (stepε (N-ε-trans t) Eq.refl) →
+                    (
+                    ⟜-intro⁻ (⟜-intro
+                         (STEPε ⊗NFA (N-ε-trans t)
+                         ∘g ⟜-app
+                         ∘g lowerG ,⊗ id))
+                    ∘g liftG ,⊗ id
+                    ∘g rec (TraceTy N) NAlg (N .ε-dst t) ,⊗ id
+                    ∘g id ,⊗ rec _ N'Alg (N' .init)
+                    ∘g rec _ ⊗Alg (inl (N .ε-dst t))
+                    ∘g eq-π _ _
+                    ∘g lowerG
+                      ≡⟨ (λ i →
+                          ⟜-β
+                            (STEPε ⊗NFA (N-ε-trans t)
+                            ∘g ⟜-app
+                            ∘g lowerG {ℓ' = ℓN} ,⊗ id)
+                            i
+                          ∘g liftG ,⊗ id
+                          ∘g rec (TraceTy N) NAlg (N .ε-dst t) ,⊗ id
+                          ∘g id ,⊗ rec _ N'Alg (N' .init)
+                          ∘g rec _ ⊗Alg (inl (N .ε-dst t))
+                          ∘g eq-π _ _
+                          ∘g lowerG
+                          )
+                      ⟩
+                    STEPε ⊗NFA (N-ε-trans t)
+                    ∘g ⟜-app
+                    ∘g rec (TraceTy N) NAlg (N .ε-dst t) ,⊗ id
+                    ∘g id ,⊗ rec _ N'Alg (N' .init)
+                    ∘g rec _ ⊗Alg (inl (N .ε-dst t))
+                    ∘g eq-π _ _
+                    ∘g lowerG
+                      ≡⟨  (λ i →
+                          STEPε ⊗NFA (N-ε-trans t)
+                          ∘g eq-π-pf _ _ i
+                          ∘g lowerG
+                          )
+                      ⟩
+                    STEPε ⊗NFA (N-ε-trans t)
+                    ∘g eq-π _ _
+                    ∘g lowerG
+                    ∎
+                    )
+                ; (stepε (N-acc q acc) Eq.refl) →
+                    (
+                    ⟜-app
+                    ∘g ⟜-intro
+                        (STEPε ⊗NFA (N-acc q acc)
+                        ∘g ⊗-unit-l
+                        ∘g (lowerG ∘g lowerG) ,⊗ id) ,⊗ id
+                    ∘g (liftG ∘g liftG) ,⊗ id
+                    ∘g id ,⊗ rec _ N'Alg (N' .init)
+                    ∘g ⊗-unit-l⁻
+                    ∘g lowerG
+                    ∘g rec _ ⊗Alg (inr (N' .init))
+                    ∘g eq-π _ _
+                    ∘g lowerG
+                      ≡⟨ (λ i →
+                          ⟜-β
+                          (STEPε ⊗NFA (N-acc q acc)
+                            ∘g ⊗-unit-l
+                            ∘g (lowerG {ℓ' = ℓN}
+                                  ∘g lowerG {ℓ' = ℓ-max ℓN ℓN'}) ,⊗ id) i
+                          ∘g (liftG ∘g liftG) ,⊗ id
+                          ∘g id ,⊗ rec _ N'Alg (N' .init)
+                          ∘g ⊗-unit-l⁻
+                          ∘g lowerG
+                          ∘g rec _ ⊗Alg (inr (N' .init))
+                          ∘g eq-π _ _
+                          ∘g lowerG
+                        )
+                      ⟩
+                    STEPε ⊗NFA (N-acc q acc)
+                    ∘g ⊗-unit-l
+                    ∘g ⊗-unit-l⁻
+                    ∘g rec _ N'Alg (N' .init)
+                    ∘g lowerG
+                    ∘g rec _ ⊗Alg (inr (N' .init))
+                    ∘g eq-π _ _
+                    ∘g lowerG
+                      ≡⟨ (λ i →
+                          STEPε ⊗NFA (N-acc q acc)
+                          ∘g ⊗-unit-l⁻l i
+                          ∘g rec _ N'Alg (N' .init)
+                          ∘g lowerG
+                          ∘g rec _ ⊗Alg (inr (N' .init))
+                          ∘g eq-π _ _
+                          ∘g lowerG
+                         )
+                      ⟩
+                    STEPε ⊗NFA (N-acc q acc)
+                    ∘g rec _ N'Alg (N' .init)
+                    ∘g lowerG
+                    ∘g rec _ ⊗Alg (inr (N' .init))
+                    ∘g eq-π _ _
+                    ∘g lowerG
+                      ≡⟨
+                        (λ i →
+                          STEPε ⊗NFA (N-acc q acc)
+                          ∘g the-secN' (N' .init) i
+                          ∘g eq-π _ _
+                          ∘g lowerG
+                        )
+                      ⟩
+                    STEPε ⊗NFA (N-acc q acc)
+                    ∘g eq-π _ _
+                    ∘g lowerG
+                    ∎
+                    )
+                }
+          ; (inr q') → unambiguous⊤* _ _
+          })
+          (inl q)
 
-        N'Alg : Algebra N'
-        N'Alg .the-ℓs = _
-        N'Alg .G q' = Parse ⊗NFA (inr q')
-        N'Alg .nil-case acc' = nil (lift acc')
-        N'Alg .cons-case t' = cons (inr t')
-        N'Alg .ε-cons-case t' = ε-cons (N'-ε-trans t')
-
-        NPAlg : PAlgebra N (InitParse N')
-        NPAlg .the-ℓs = _
-        NPAlg .G q = Parse ⊗NFA (inl q)
-        NPAlg .nil-case acc = ε-cons (N-acc _ acc) ∘g recInit _ N'Alg
-        NPAlg .cons-case t = cons (inl t)
-        NPAlg .ε-cons-case t = ε-cons (N-ε-trans t)
-
-        NPAlg' : PAlgebra N (InitParse N')
-        NPAlg' .the-ℓs = _
-        NPAlg' .G q = Parse N q ⊗ InitParse N'
-        NPAlg' .nil-case acc = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
-        NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-        NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
-        N'≅⊗NFA⟨inr⟩ : recTrace _ ⊗Alg ∘g recInit _ N'Alg ≡ id
-        N'≅⊗NFA⟨inr⟩ =
-          algebra-η N' (AlgebraHom-seq _ (∃AlgebraHom _ N'Alg) (record
-            { f = λ q → recTrace _ ⊗Alg
-            ; on-nil = λ _ → refl
-            ; on-cons = λ _ → refl
-            ; on-ε-cons = λ _ → refl }))
-        ⊗Alg→initial : AlgebraHom ⊗NFA ⊗Alg (initial ⊗NFA)
-        ⊗Alg→initial .f (inl q) = P-recTrace' _ _ NPAlg
-        ⊗Alg→initial .f (inr q') = recTrace _ N'Alg
-        ⊗Alg→initial .on-nil {inr q'} _ = refl
-        ⊗Alg→initial .on-cons (inl t) =
-          λ i → cons (inl t) ∘g ⊗-intro id (P-recTrace' _ _ NPAlg) ∘g
-            ⊗-assoc⁻∘⊗-assoc≡id i
-        ⊗Alg→initial .on-cons (inr t) = refl
-        ⊗Alg→initial .on-ε-cons (N-acc q x) =
-          λ i → ε-cons (N-acc q x) ∘g recTrace _ N'Alg ∘g ⊗-unit-l⁻l i
-        ⊗Alg→initial .on-ε-cons (N-ε-trans x) = refl
-        ⊗Alg→initial .on-ε-cons (N'-ε-trans x) = refl
-
-        Prec : PAlgebraHom _ _ (P-initial N (InitParse N')) NPAlg'
-        Prec .f q = recTrace _ ⊗Alg ∘g P-recTrace' _ _ NPAlg
-        Prec .on-nil qAcc =
-          (λ i → recTrace _ ⊗Alg ∘g
-            ε-cons (N-acc _ qAcc) ∘g recInit _ N'Alg ∘g ⊗-unit-l⁻l i) ∙
-          (λ i → ⊗-intro (nil qAcc) id ∘g ⊗-unit-l⁻ ∘g N'≅⊗NFA⟨inr⟩ i)
-        Prec .on-cons t =
-          (λ i → recTrace _ ⊗Alg ∘g ⊗Alg→initial .on-cons (inl t) i)
-        Prec .on-ε-cons t =
-          (λ i → recTrace _ ⊗Alg ∘g ⊗Alg→initial .on-ε-cons (N-ε-trans t) i)
 
 -- Kleene Star
-module _ (N : NFA {ℓN}) where
+module _ (N : NFA ℓN) where
   data *εTrans : Type ℓN where
     inr : *εTrans
-    cons⟨N⟩ : ∀ {q} → ⟨ N .isAcc q .fst ⟩ → *εTrans
+    cons⟨N⟩ : ∀ {q} → true Eq.≡ N .isAcc q  → *εTrans
     N-internal : ⟨ N .ε-transition ⟩ → *εTrans
 
   *εTrans-rep :
-    (Unit ⊎ ((Σ[ q ∈ _ ] ⟨ N .isAcc q .fst ⟩) ⊎ ⟨ N .ε-transition ⟩)) ≃ *εTrans
+    (Unit ⊎ ((Σ[ q ∈ _ ] (true Eq.≡ N .isAcc q)) ⊎ ⟨ N .ε-transition ⟩)) ≃ *εTrans
   *εTrans-rep = isoToEquiv
     (iso
       (λ { (inl x) → inr
@@ -577,11 +858,11 @@ module _ (N : NFA {ℓN}) where
       (λ { inr → refl ; (cons⟨N⟩ x) → refl ; (N-internal x) → refl })
       λ { (inl x) → refl ; (inr (inl x)) → refl ; (inr (inr x)) → refl })
 
-  *NFA : NFA {ℓN}
+  *NFA : NFA ℓN
   *NFA .Q = Unit ⊎ N .Q .fst , isFinSet⊎ (_ , isFinSetUnit) (N .Q)
   *NFA .init = inl _
-  *NFA .isAcc (inl _) = (Unit* , isPropUnit*) , (yes _)
-  *NFA .isAcc (inr q) = (Empty.⊥* , isProp⊥*) , no lower
+  *NFA .isAcc (inl _) = true
+  *NFA .isAcc (inr q) = false
   *NFA .transition = N .transition
   *NFA .src = inr ∘ N .src
   *NFA .dst = inr ∘ N .dst
@@ -589,8 +870,11 @@ module _ (N : NFA {ℓN}) where
   *NFA .ε-transition = *εTrans , EquivPresIsFinSet *εTrans-rep
     (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSet⊎ (_ ,
       isFinSetΣ (N .Q) (λ q → _ ,
-       isDecProp→isFinSet
-       (N .isAcc q .fst .snd) (N .isAcc q .snd))) (N .ε-transition)))
+       isDecProp→isFinSet (the-dec-prop q .fst .snd) (the-dec-prop q .snd)
+       )) (N .ε-transition)))
+    where
+      the-dec-prop : ⟨ N .Q ⟩ → Σ (hProp ℓ-zero) (λ P → Dec (P .fst))
+      the-dec-prop q =  isFinSet→DecProp-Eq≡ isFinSetBool true (N .isAcc q)
   *NFA .ε-src inr = inl _
   *NFA .ε-dst inr = inr (N .init)
   *NFA .ε-src (cons⟨N⟩ {q} _) = inr q
@@ -598,101 +882,461 @@ module _ (N : NFA {ℓN}) where
   *NFA .ε-src (N-internal t) = inr (N .ε-src t)
   *NFA .ε-dst (N-internal t) = inr (N .ε-dst t)
 
-  opaque
-    unfolding ⊗-unit-l⁻ ⊗-unit-l *r-initial KL*r-elim id*r-AlgebraHom AlgebraHom-seq ∃AlgebraHom recTrace P-initial !PAlgebraHom' P-idAlgebraHom
-    *-strong-equivalence :
-      StrongEquivalence (InitParse *NFA) (KL* (InitParse N))
-    *-strong-equivalence = mkStrEq
-      (recInit *NFA *Alg)
-      (foldKL*r (InitParse N) the-KL*-alg)
-      (!*r-AlgebraHom (InitParse N) (*r-initial (InitParse N))
-        (record { f = recInit *NFA *Alg ∘g foldKL*r (InitParse N) the-KL*-alg
-                ; on-nil = refl
-                ; on-cons = (λ i → KL*.cons ∘g
-                  nested-induction-lemma i ∘g ⊗-intro id (foldKL*r _ the-KL*-alg))
-        })
-        (id*r-AlgebraHom _ _))
-      (algebra-η *NFA (AlgebraHom-seq _ (∃AlgebraHom _ *Alg)
-        (record { f = λ {
-                    (inl _) → foldKL*r _ the-KL*-alg
-                  ; (inr q) → P-recTrace' _ _ NPAlg ∘g
-                              ⊗-intro id (foldKL*r _ the-KL*-alg) }
-                ; on-nil = λ { {inl _} acc → refl }
-                ; on-cons = λ { t → λ i → cons t ∘g ⊗-intro id
-               (P-recTrace' N (InitParse *NFA) NPAlg ∘g
-                 ⊗-intro id (foldKL*r (InitParse N) the-KL*-alg))
-                 ∘g ⊗-assoc⁻∘⊗-assoc≡id i }
-                ; on-ε-cons = λ {
-                    inr → refl
-                  ; (cons⟨N⟩ x) →
-                    λ i → ε-cons (cons⟨N⟩ x) ∘g
-                      ⊗-unit-l⁻l i ∘g foldKL*r (InitParse N) the-KL*-alg
-                  ; (N-internal x) → refl } })))
+  *NFA≅ : StrongEquivalence (Parse *NFA) (Parse N *)
+  *NFA≅ =
+    mkStrEq
+      (from*NFA (inl _))
+      (to*NFA (inl _))
+      (ind-id'
+        (*Ty (Parse N))
+        (compHomo
+          (*Ty (Parse N))
+          _
+          N*Alg
+          (initialAlgebra (*Ty (Parse N)))
+          N*Homo
+          (recHomo _ N*Alg))
+        _
+      )
+      (ind-id'
+        (TraceTy *NFA)
+        (compHomo
+          (TraceTy *NFA)
+          _
+          *NFAAlg
+          (initialAlgebra (TraceTy *NFA))
+          to*NFAHomo
+          (recHomo _ *NFAAlg))
+        (inl _)
+      )
+    where
+    ⟦_⟧* : ⟨ *NFA .Q ⟩ → Grammar ℓN
+    ⟦ inl _ ⟧* = Parse N *
+    ⟦ inr q ⟧* = Trace N q ⊗ (Parse N *)
+
+    ⟦_⟧N : ⟨ N .Q ⟩ → Grammar ℓN
+    ⟦ q ⟧N = Trace *NFA (inr q) ⟜ Trace *NFA (inl _)
+
+    *NFAAlg : Algebra (TraceTy *NFA) ⟦_⟧*
+    *NFAAlg (inl _) = ⊕ᴰ-elim (λ {
+        (stop Eq.refl) →
+          NIL
+          ∘g lowerG
+          ∘g lowerG
+      ; (stepε inr Eq.refl) →
+          CONS
+          ∘g lowerG
+      })
+    *NFAAlg (inr q) = ⊕ᴰ-elim (λ {
+        (step t Eq.refl) →
+          STEP N t ,⊗ id
+          ∘g ⊗-assoc
+          ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      ; (stepε (cons⟨N⟩ acc) Eq.refl) →
+          STOP N acc ,⊗ id
+          ∘g ⊗-unit-l⁻
+          ∘g lowerG
+      ; (stepε (N-internal t) Eq.refl) →
+          STEPε N t ,⊗ id
+          ∘g lowerG
+      })
+
+    NAlg : Algebra (TraceTy N) ⟦_⟧N
+    NAlg q = ⊕ᴰ-elim (λ {
+        (stop acc) →
+          ⟜-intro
+            (STEPε *NFA (cons⟨N⟩ acc)
+            ∘g ⊗-unit-l
+            ∘g (lowerG ∘g lowerG) ,⊗ id)
+      ; (step t Eq.refl) →
+         ⟜-intro
+           (STEP *NFA t
+           ∘g id ,⊗ ⟜-app
+           ∘g ⊗-assoc⁻
+           ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
+      ; (stepε t Eq.refl) →
+         ⟜-intro
+           (STEPε *NFA (N-internal t)
+           ∘g ⟜-app
+           ∘g lowerG ,⊗ id
+           )
+      })
+
+    N*Alg : Algebra (*Ty (Parse N)) (λ _ → Parse *NFA)
+    N*Alg _ = ⊕ᴰ-elim (λ {
+        nil →
+          STOP *NFA Eq.refl
+          ∘g lowerG ∘g lowerG
+      ; cons →
+          STEPε *NFA inr
+          ∘g ⟜-app
+          ∘g rec _ NAlg (N .init) ,⊗ id
+          ∘g lowerG ,⊗ lowerG
+      })
+
+    to*NFA : ∀ q → ⟦ q ⟧* ⊢ Trace *NFA q
+    to*NFA (inl _) = rec _ N*Alg _
+    to*NFA (inr q) =
+      ⟜-intro⁻ (rec _ NAlg q)
+      ∘g id ,⊗ rec _ N*Alg _
+
+    from*NFA : ∀ q → Trace *NFA q ⊢ ⟦ q ⟧*
+    from*NFA = rec _ *NFAAlg
+
+    -- This lemma is the key to the proof
+    -- Like the previous iteration of this code with the old version of NFAs,
+    -- I end up invoking the uniqueness principle of homomorphisms out of
+    -- initial algebras
+    -- I suspect this lemma could also be used for a proof involving equalizers,
+    -- but this unqiue principle suffices
+    nested-induction :
+      ∀ q →
+      rec _ *NFAAlg (inr q)
+      ∘g ⟜-intro⁻ (rec _ NAlg q)
+        ≡
+      id ,⊗ rec _ *NFAAlg (inl _)
+    nested-induction = nested-induction'
       where
-        *Alg : Algebra *NFA
-        *Alg .the-ℓs (inl _) = _
-        *Alg .the-ℓs (inr q) = _
-        *Alg .G (inl _) = KL* (InitParse N)
-        *Alg .G (inr q) = Parse N q ⊗ KL* (InitParse N)
-        *Alg .nil-case {q = inl x} _ = KL*.nil
-        *Alg .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-        *Alg .ε-cons-case inr = KL*.cons
-        *Alg .ε-cons-case (cons⟨N⟩ acc) = ⊗-intro (nil acc) id ∘g ⊗-unit-l⁻
-        *Alg .ε-cons-case (N-internal t) = ⊗-intro (ε-cons t) id
-
-        -- given a parse starting at q in N and a *NFA parse, make a
-        -- *NFA parse starting at q.
-        NPAlg : PAlgebra N (InitParse *NFA)
-        NPAlg .the-ℓs = _
-        NPAlg .G q = Parse *NFA (inr q)
-        NPAlg .nil-case acc = ε-cons (cons⟨N⟩ acc)
-        NPAlg .cons-case t = cons t
-        NPAlg .ε-cons-case t = ε-cons (N-internal t)
-
-        open *r-Algebra
-        -- NOTE : this is not an algebra for NFAs, rather for Kleene star
-        -- and is used to prove the uniqueness of the foldKL*r term
-        the-KL*-alg : *r-Algebra (InitParse N)
-        the-KL*-alg .the-ℓ = _
-        the-KL*-alg .G = InitParse *NFA
-        the-KL*-alg .nil-case = nil _
-        the-KL*-alg .cons-case = ε-cons inr ∘g P-recInit' _ _ NPAlg
-
-        NPAlg' : PAlgebra N (InitParse *NFA)
-        NPAlg' .the-ℓs = _
-        NPAlg' .G q = Parse N q ⊗ KL* (InitParse N)
-        NPAlg' .nil-case acc = ⊗-intro (nil acc) (recInit _ *Alg) ∘g ⊗-unit-l⁻
-        NPAlg' .cons-case t = ⊗-intro (cons t) id ∘g ⊗-assoc
-        NPAlg' .ε-cons-case t = ⊗-intro (ε-cons t) id
-
-        nested-induction-lemma :
-          Path (InitParse N ⊗ InitParse *NFA ⊢ InitParse N ⊗ KL* (InitParse N))
-            (recTrace *NFA *Alg ∘g P-recInit' _ _ NPAlg)
-            (⊗-intro id (recInit *NFA *Alg))
-        nested-induction-lemma =
-          !PAlgebraHom' _ _ NPAlg'
-            rec*Alg∘recInitNPAlgHom
-            recInit*AlgHom
+      opaque
+        unfolding ⊗-intro ⊗-unit-r⁻
+        nested-induction' :
+          ∀ q →
+          rec _ *NFAAlg (inr q)
+          ∘g ⟜-intro⁻ (rec _ NAlg q)
+            ≡
+          id ,⊗ rec _ *NFAAlg (inl _)
+        nested-induction' q =
+            equalizer-ind-⊗l
+            (Tag N)
             _
-          where
-            rec*Alg∘recInitNPAlgHom : PAlgebraHom N (InitParse *NFA)
-              (P-initial N (InitParse *NFA))
-              NPAlg'
-            rec*Alg∘recInitNPAlgHom .f q =
-              recTrace *NFA *Alg ∘g P-recTrace' _ _ NPAlg
-            rec*Alg∘recInitNPAlgHom .on-nil acc =
-              λ i → ⊗-intro (nil acc) (recInit *NFA *Alg) ∘g
-                ⊗-unit-ll⁻ i ∘g ⊗-unit-l⁻
-            rec*Alg∘recInitNPAlgHom .on-cons t =
-              λ i → (⊗-intro (cons t) id ∘g ⊗-assoc) ∘g
-                ⊗-intro id (recTrace *NFA *Alg ∘g
-                  P-recTrace' N (InitParse *NFA) NPAlg) ∘g ⊗-assoc⁻∘⊗-assoc≡id i
-            rec*Alg∘recInitNPAlgHom .on-ε-cons t = refl
+            (λ q → Trace N q ⊗ (Parse N *))
+            (λ _ → Trace *NFA (inl _))
+            (λ q → rec _ *NFAAlg (inr q) ∘g ⟜-intro⁻ (rec _ NAlg q))
+            (λ q → id ,⊗ rec _ *NFAAlg (inl _))
+            (λ q → λ {
+                (stop acc) →
+                  rec _ *NFAAlg (inr q)
+                  ∘g ⟜-intro⁻ (
+                      ⟜-intro
+                        (STEPε *NFA (cons⟨N⟩ acc)
+                        ∘g ⊗-unit-l
+                        ∘g (lowerG ∘g lowerG) ,⊗ id)
+                     )
+                  ∘g (liftG ∘g liftG) ,⊗ id
+                  ∘g (lowerG ∘g lowerG) ,⊗ id
+                    ≡⟨
+                      (λ i →
+                         rec _ *NFAAlg (inr q)
+                         ∘g ⟜-β
+                               (STEPε *NFA (cons⟨N⟩ acc)
+                               ∘g ⊗-unit-l
+                               ∘g (lowerG ∘g lowerG {ℓ' = ℓN}) ,⊗ id) i
+                         ∘g (liftG ∘g liftG {ℓ' = ℓN}) ,⊗ id
+                         ∘g (lowerG ∘g lowerG) ,⊗ id
+                             )
+                    ⟩
+                  STOP N acc ,⊗ id
+                  ∘g id ,⊗ rec _ *NFAAlg (inl _)
+                  ∘g ⊗-unit-l⁻
+                  ∘g ⊗-unit-l
+                  ∘g (lowerG ∘g lowerG) ,⊗ id
+                    ≡⟨
+                      (λ i →
+                         STOP N acc ,⊗ id
+                         ∘g id ,⊗ rec _ *NFAAlg (inl _)
+                         ∘g ⊗-unit-ll⁻ i
+                         ∘g (lowerG ∘g lowerG) ,⊗ id
+                      )
+                    ⟩
+                  id ,⊗ rec _ *NFAAlg (inl _)
+                  ∘g STOP N acc ,⊗ id
+                  ∘g (lowerG ∘g lowerG) ,⊗ id
+                  ∎
+              ; (step t Eq.refl) →
+                  rec _ *NFAAlg (inr q)
+                  ∘g ⟜-intro⁻ (
+                     ⟜-intro
+                       (STEP *NFA t
+                       ∘g id ,⊗ ⟜-app
+                       ∘g ⊗-assoc⁻
+                       ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
+                  )
+                  ∘g ((liftG ∘g liftG) ,⊗ liftG) ,⊗ id
+                  ∘g (id ,⊗ rec _ NAlg (N .dst t)) ,⊗ id
+                  ∘g (id ,⊗ eq-π _ _) ,⊗ id
+                  ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+                    ≡⟨
+                      (λ i →
+                         rec _ *NFAAlg (inr q)
+                         ∘g ⟜-β (
+                              STEP *NFA t
+                              ∘g id ,⊗ ⟜-app
+                              ∘g ⊗-assoc⁻
+                              ∘g ((lowerG ∘g lowerG {ℓ' = ℓN}) ,⊗ lowerG {ℓ' = ℓN}) ,⊗ id) i
+                         ∘g ((liftG ∘g liftG {ℓ' = ℓN}) ,⊗ liftG) ,⊗ id
+                         ∘g (id ,⊗ rec _ NAlg (N .dst t)) ,⊗ id
+                         ∘g (id ,⊗ eq-π _ _) ,⊗ id
+                         ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+                      )
+                    ⟩
+                  STEP N t ,⊗ id
+                  ∘g ⊗-assoc
+                  ∘g id ,⊗ rec _ *NFAAlg (inr (N .dst t))
+                  ∘g id ,⊗ ⟜-app
+                  ∘g id ,⊗ (rec _ NAlg (N .dst t) ,⊗ id)
+                  ∘g id ,⊗ (eq-π _ _ ,⊗ id)
+                  ∘g ⊗-assoc⁻
+                  ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+                    ≡⟨
+                      (λ i →
+                         STEP N t ,⊗ id
+                         ∘g ⊗-assoc
+                         ∘g id ,⊗ eq-π-pf-⟜-intro
+                                    (rec _ *NFAAlg (inr (N .dst t))
+                                    ∘g ⟜-intro⁻ (rec _ NAlg (N .dst t)))
+                                    (id ,⊗ rec _ *NFAAlg (inl _))
+                                    i
+                         ∘g ⊗-assoc⁻
+                         ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+                      )
+                    ⟩
+                  STEP N t ,⊗ id
+                  ∘g ⊗-assoc
+                  ∘g ⊗-assoc⁻
+                  ∘g id ,⊗ rec _ *NFAAlg (inl _)
+                  ∘g (id ,⊗ eq-π _ _) ,⊗ id
+                  ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+                    ≡⟨
+                      (λ i →
+                         STEP N t ,⊗ id
+                         ∘g ⊗-assoc∘⊗-assoc⁻≡id i
+                         ∘g id ,⊗ rec _ *NFAAlg (inl _)
+                         ∘g (id ,⊗ eq-π _ _) ,⊗ id
+                         ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+                      )
+                    ⟩
+                  id ,⊗ rec _ *NFAAlg (inl _)
+                  ∘g STEP N t ,⊗ id
+                  ∘g (id ,⊗ eq-π _ _) ,⊗ id
+                  ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+                  ∎
+              ; (stepε t Eq.refl) →
+                  rec _ *NFAAlg (inr q)
+                  ∘g ⟜-intro⁻ (
+                       ⟜-intro
+                         (STEPε *NFA (N-internal t)
+                         ∘g ⟜-app
+                         ∘g lowerG ,⊗ id
+                         )
+                  )
+                  ∘g liftG ,⊗ id
+                  ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
+                  ∘g eq-π _ _ ,⊗ id
+                  ∘g lowerG ,⊗ id
+                    ≡⟨
+                      (λ i →
+                         rec _ *NFAAlg (inr q)
+                         ∘g ⟜-β
+                                (STEPε *NFA (N-internal t)
+                                ∘g ⟜-app
+                                ∘g lowerG {ℓ' = ℓN} ,⊗ id
+                                ) i
+                         ∘g liftG ,⊗ id
+                         ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
+                         ∘g eq-π _ _ ,⊗ id
+                         ∘g lowerG ,⊗ id
+                      )
+                    ⟩
+                  STEPε N t ,⊗ id
+                  ∘g rec _ *NFAAlg (inr (N .ε-dst t))
+                  ∘g ⟜-app
+                  ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
+                  ∘g eq-π _ _ ,⊗ id
+                  ∘g lowerG ,⊗ id
+                    ≡⟨
+                      (λ i →
+                         STEPε N t ,⊗ id
+                         ∘g eq-π-pf-⟜-intro _ _ i
+                         ∘g lowerG ,⊗ id
+                      )
+                    ⟩
+                  id ,⊗ rec _ *NFAAlg (inl _)
+                  ∘g STEPε N t ,⊗ id
+                  ∘g eq-π _ _ ,⊗ id
+                  ∘g lowerG ,⊗ id
+                  ∎
+              })
+            q
 
-            recInit*AlgHom :
-              PAlgebraHom N
-                (InitParse *NFA) (P-initial N (InitParse *NFA)) NPAlg'
-            recInit*AlgHom .f q = ⊗-intro id (recTrace _ *Alg)
-            recInit*AlgHom .on-nil acc = refl
-            recInit*AlgHom .on-cons t = refl
-            recInit*AlgHom .on-ε-cons t = refl
+    N*Homo : Homomorphism (*Ty (Parse N)) N*Alg (initialAlgebra (*Ty (Parse N)))
+    N*Homo .fst _ = from*NFA (inl _)
+    N*Homo .snd _ = is-homo
+      where
+      opaque
+        unfolding ⊗-intro ⊗-unit-r⁻
+        is-homo :
+          from*NFA (inl _) ∘g N*Alg _
+          ≡
+          roll ∘g Ind.map (*Ty (Parse N) _) λ _ → from*NFA (inl _)
+        is-homo = ⊕ᴰ≡ _ _ λ {
+            nil → refl
+          ; cons →
+            CONS
+            ∘g from*NFA (inr (N .init))
+            ∘g ⟜-intro⁻ (rec _ NAlg (N .init))
+            ∘g lowerG ,⊗ lowerG
+              ≡⟨
+                (λ i →
+                  CONS
+                  ∘g nested-induction (N .init) i
+                  ∘g lowerG ,⊗ lowerG
+                )
+              ⟩
+            CONS
+            ∘g id ,⊗ rec _ *NFAAlg (inl _)
+            ∘g lowerG ,⊗ lowerG
+            ∎
+          }
+
+    to*NFAHomo :
+      Homomorphism
+        (TraceTy *NFA)
+        *NFAAlg
+        (initialAlgebra (TraceTy *NFA))
+    to*NFAHomo .fst = to*NFA
+    to*NFAHomo .snd = is-homo
+      where
+      opaque
+        unfolding ⊗-intro ⊗-unit-r⁻
+        is-homo :
+          ∀ q →
+          to*NFA q ∘g *NFAAlg q
+          ≡
+          roll
+          ∘g Ind.map (TraceTy *NFA q) (to*NFA)
+        is-homo (inl _) =
+          ⊕ᴰ≡ _ _
+            λ {
+            (stop Eq.refl) → refl
+          ; (stepε inr Eq.refl) → refl
+           }
+        is-homo (inr q) =
+          ⊕ᴰ≡ _ _
+            λ {
+            (step t Eq.refl) →
+              ⟜-app
+              ∘g ⟜-intro
+                   (STEP *NFA t
+                   ∘g id ,⊗ ⟜-app
+                   ∘g ⊗-assoc⁻
+                   ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id) ,⊗ id
+              ∘g ((liftG ∘g liftG) ,⊗ liftG) ,⊗ id
+              ∘g (id ,⊗ rec _ NAlg (N .dst t)) ,⊗ id
+              ∘g id ,⊗ rec _ N*Alg _
+              ∘g ⊗-assoc
+              ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+                ≡⟨
+                  (λ i →
+                     ⟜-β
+                          (STEP *NFA t
+                          ∘g id ,⊗ ⟜-app
+                          ∘g ⊗-assoc⁻
+                          ∘g ((lowerG ∘g lowerG {ℓ' = ℓN}) ,⊗ lowerG {ℓ' = ℓN}) ,⊗ id) i
+                     ∘g ((liftG ∘g liftG {ℓ' = ℓN}) ,⊗ liftG) ,⊗ id
+                     ∘g (id ,⊗ rec _ NAlg (N .dst t)) ,⊗ id
+                     ∘g id ,⊗ rec _ N*Alg _
+                     ∘g ⊗-assoc
+                     ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+                  )
+                ⟩
+              STEP *NFA t
+              ∘g id ,⊗ ⟜-app
+              ∘g id ,⊗ (rec _ NAlg (N .dst t) ,⊗ id)
+              ∘g id ,⊗ (id ,⊗ rec _ N*Alg _)
+              ∘g ⊗-assoc⁻
+              ∘g ⊗-assoc
+              ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+                ≡⟨
+                  (λ i →
+                     STEP *NFA t
+                     ∘g id ,⊗ ⟜-app
+                     ∘g id ,⊗ (rec _ NAlg (N .dst t) ,⊗ id)
+                     ∘g id ,⊗ (id ,⊗ rec _ N*Alg _)
+                     ∘g ⊗-assoc⁻∘⊗-assoc≡id i
+                     ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+                  )
+                ⟩
+              STEP *NFA t
+              ∘g id ,⊗ to*NFA (inr (N .dst t))
+              ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+              ∎
+          ; (stepε (cons⟨N⟩ acc) Eq.refl) →
+             ⟜-intro⁻ (
+               ⟜-intro
+                 (STEPε *NFA (cons⟨N⟩ acc)
+                 ∘g ⊗-unit-l
+                 ∘g (lowerG ∘g lowerG) ,⊗ id)
+             )
+             ∘g (liftG ∘g liftG) ,⊗ id
+             ∘g id ,⊗ rec _ N*Alg _
+             ∘g ⊗-unit-l⁻
+             ∘g lowerG
+               ≡⟨
+                 (λ i →
+                    ⟜-β
+                        (STEPε *NFA (cons⟨N⟩ acc)
+                        ∘g ⊗-unit-l
+                        ∘g (lowerG {ℓ' = ℓN} ∘g lowerG {ℓ' = ℓN}) ,⊗ id) i
+                    ∘g (liftG ∘g liftG) ,⊗ id
+                    ∘g id ,⊗ rec _ N*Alg _
+                    ∘g ⊗-unit-l⁻
+                    ∘g lowerG
+                 )
+               ⟩
+             STEPε *NFA (cons⟨N⟩ acc)
+             ∘g ⊗-unit-l
+             ∘g ⊗-unit-l⁻
+             ∘g rec _ N*Alg _
+             ∘g lowerG
+               ≡⟨
+                 (λ i →
+                   STEPε *NFA (cons⟨N⟩ acc)
+                   ∘g ⊗-unit-l⁻l i
+                   ∘g rec _ N*Alg _
+                   ∘g lowerG
+                 )
+               ⟩
+             STEPε *NFA (cons⟨N⟩ acc)
+             ∘g to*NFA (inl _)
+             ∘g lowerG
+             ∎
+          ; (stepε (N-internal t) Eq.refl) →
+            ⟜-intro⁻ (
+              ⟜-intro
+                (STEPε *NFA (N-internal t)
+                ∘g ⟜-app
+                ∘g lowerG ,⊗ id
+                )
+            )
+            ∘g liftG ,⊗ id
+            ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
+            ∘g id ,⊗ rec _ N*Alg _
+            ∘g lowerG
+              ≡⟨
+                (λ i →
+                   ⟜-β
+                       (STEPε *NFA (N-internal t)
+                       ∘g ⟜-app
+                       ∘g lowerG {ℓ' = ℓN} ,⊗ id
+                       ) i
+                   ∘g liftG ,⊗ id
+                   ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
+                   ∘g id ,⊗ rec _ N*Alg _
+                   ∘g lowerG
+                )
+              ⟩
+            STEPε *NFA (N-internal t)
+            ∘g to*NFA (inr (N .ε-dst t))
+            ∘g lowerG
+            ∎
+          }

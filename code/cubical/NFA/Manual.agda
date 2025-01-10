@@ -263,7 +263,7 @@ module _ (N : NFA {ℓN}) where
       P-recInit = P-recTrace
 
       opaque
-        unfolding ∃AlgebraHom P-initial
+        unfolding ∃AlgebraHom P-initial ⊗-assoc
         ∃PAlgebraHom : PAlgebraHom P-initial the-p-alg
         ∃PAlgebraHom .f q = P-recTrace
         ∃PAlgebraHom .on-nil qAcc =
