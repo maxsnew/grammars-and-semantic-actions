@@ -58,7 +58,7 @@ opaque
   Combinators.ηα G (_ , isSetG) (_ , isSetG')
 
 opaque
-  unfolding ⊗-intro
+  unfolding ⊗-intro ⊗-assoc
   ⊗-unit-l⊗-assoc :
     {g g' : Grammar ℓ-zero}
     → isSetGrammar g
