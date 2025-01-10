@@ -19,7 +19,7 @@ open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
-open import Grammar.Dependent Alphabet
+open import Grammar.Dependent.Base Alphabet
 
 open import Term.Base Alphabet
 open import Term.Bilinear Alphabet
