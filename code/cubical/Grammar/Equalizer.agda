@@ -18,6 +18,9 @@ open import Cubical.Data.Nat
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Epsilon Alphabet
+open import Grammar.Inductive.Indexed Alphabet hiding (k)
+open import Grammar.Dependent Alphabet
+
 open import Term.Base Alphabet
 open import Term.Bilinear Alphabet
 
@@ -71,9 +74,6 @@ module _ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} (f f' : g ⊢ h)
   equalizer-cong =
     eq-intro (f'' ∘g f) (f'' ∘g f')
       (eq-π f f') (cong (f'' ∘g_) (eq-π-pf f f'))
-
-open import Grammar.Inductive.Indexed Alphabet
-open import Grammar.Dependent Alphabet
 
 module _ {A : Type ℓ} (F : A → Functor A) (g : A → Grammar ℓg)
   (e e' : ∀ (a : A) → μ F a ⊢ g a)

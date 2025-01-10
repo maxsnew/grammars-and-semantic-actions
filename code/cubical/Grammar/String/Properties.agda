@@ -75,7 +75,7 @@ module EXTERNAL where
 
 -- TODO fix unambiguity for strings
 opaque
-  unfolding ε literal _⊗_ 
+  unfolding ε literal _⊗_
   propParses-string : EXTERNAL.propParses string
   propParses-string = ?
 --   propParses-string [] (roll .[] (nil , x)) (roll .[] (cons , y)) = {!!}
