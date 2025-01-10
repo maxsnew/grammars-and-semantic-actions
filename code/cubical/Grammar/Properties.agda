@@ -16,6 +16,7 @@ open import Cubical.Data.Empty as Empty hiding (⊥;⊥*)
 open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet
 open import Grammar.Top.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Bottom.Base Alphabet

@@ -11,6 +11,7 @@ open import Cubical.Data.FinSet
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 
 open import Grammar.Base Alphabet
+open import Grammar.HLevels Alphabet hiding (⟨_⟩)
 open import Grammar.Properties Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Top Alphabet
@@ -36,18 +37,15 @@ private
 -- These definitions should not be used for abstract grammars, but can prove
 -- useful for showing unambiguity for things like literals, ε, and string
 module EXTERNAL where
-  propParses : Grammar ℓg → Type ℓg
-  propParses g = ∀ w → isProp (g w)
-
-  propParses→unambiguous' : propParses g → unambiguous' g
-  propParses→unambiguous' {g = g} unambig' e e' _ =
+  isLang→unambiguous' : isLang g → unambiguous' g
+  isLang→unambiguous' {g = g} unambig' e e' _ =
     funExt (λ w → funExt (λ x → unambig' w (e w x) (e' w x)))
 
   module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     opaque
       unfolding uniquely-supported-⌈w⌉ internalize ⊤
-      unambiguous'→propParses : unambiguous' g → propParses g
-      unambiguous'→propParses {g = g} unambig w pg pg' =
+      unambiguous'→isLang : unambiguous' g → isLang g
+      unambiguous'→isLang {g = g} unambig w pg pg' =
         isMono→injective unambig w pg pg' refl
         where
         pick-parse : ∀ w' (h : Grammar ℓh) → h w' → ⌈ w' ⌉ ⊢ h
@@ -65,49 +63,49 @@ module EXTERNAL where
           cong (λ a → transp (λ i → h (a i)) i0 p') (isSetString _ w _ refl) ∙
           transportRefl p'
 
-    unambigous→propParses : unambiguous g → propParses g
-    unambigous→propParses unambig =
-      unambiguous'→propParses (unambiguous→unambiguous' unambig)
+    unambiguous→isLang : unambiguous g → isLang g
+    unambiguous→isLang unambig =
+      unambiguous'→isLang (unambiguous→unambiguous' unambig)
 
-    propParses→unambiguous : propParses g → unambiguous g
-    propParses→unambiguous ppg =
-      unambiguous'→unambiguous (propParses→unambiguous' ppg)
+    isLang→unambiguous : isLang g → unambiguous g
+    isLang→unambiguous ppg =
+      unambiguous'→unambiguous (isLang→unambiguous' ppg)
 
 -- TODO fix unambiguity for strings
 opaque
   unfolding ε literal _⊗_
-  propParses-string : EXTERNAL.propParses string
-  propParses-string = ?
---   propParses-string [] (roll .[] (nil , x)) (roll .[] (cons , y)) = {!!}
---   propParses-string [] (roll .[] (nil , x)) (roll .[] (nil , y)) =
+  isLang-string : isLang string
+  isLang-string = {!!}
+--   isLang-string [] (roll .[] (nil , x)) (roll .[] (cons , y)) = {!!}
+--   isLang-string [] (roll .[] (nil , x)) (roll .[] (nil , y)) =
 --     cong (λ z → roll [] (nil , z)) (cong (λ z → lift (lift z)) (isSetString _ _ _ _))
---   propParses-string [] (roll .[] (cons , x)) (roll .[] (cons , y)) = {!!}
---   propParses-string [] (roll .[] (cons , x)) (roll .[] (nil , y)) = {!!}
---   propParses-string (c ∷ w) (roll .(c ∷ w) (nil , x)) (roll .(c ∷ w) (cons , y)) = {!!}
---   propParses-string (c ∷ w) (roll .(c ∷ w) (nil , x)) (roll .(c ∷ w) (nil , y)) = {!!}
---   propParses-string (c ∷ w) (roll .(c ∷ w) (cons , x)) (roll .(c ∷ w) (cons , y)) = {!!}
---   propParses-string (c ∷ w) (roll .(c ∷ w) (cons , x)) (roll .(c ∷ w) (nil , y)) = {!!}
---   propParses-string [] (nil .[] x) (nil .[] y) =
+--   isLang-string [] (roll .[] (cons , x)) (roll .[] (cons , y)) = {!!}
+--   isLang-string [] (roll .[] (cons , x)) (roll .[] (nil , y)) = {!!}
+--   isLang-string (c ∷ w) (roll .(c ∷ w) (nil , x)) (roll .(c ∷ w) (cons , y)) = {!!}
+--   isLang-string (c ∷ w) (roll .(c ∷ w) (nil , x)) (roll .(c ∷ w) (nil , y)) = {!!}
+--   isLang-string (c ∷ w) (roll .(c ∷ w) (cons , x)) (roll .(c ∷ w) (cons , y)) = {!!}
+--   isLang-string (c ∷ w) (roll .(c ∷ w) (cons , x)) (roll .(c ∷ w) (nil , y)) = {!!}
+--   isLang-string [] (nil .[] x) (nil .[] y) =
 --     cong (nil []) (isSetString _ _ _ _)
---   propParses-string [] (nil .[] _) (cons .[] x) =
+--   isLang-string [] (nil .[] _) (cons .[] x) =
 --     Empty.rec
 --       (¬nil≡cons
 --         (x .fst .snd ∙
 --           cong (_++ x .fst .fst .snd)
 --             (x .snd .fst .snd)))
---   propParses-string [] (cons .[] x) _ =
+--   isLang-string [] (cons .[] x) _ =
 --     Empty.rec
 --       (¬nil≡cons
 --         (x .fst .snd ∙
 --           cong (_++ x .fst .fst .snd)
 --             (x .snd .fst .snd)))
---   propParses-string (c ∷ w) (nil .(c ∷ w) x) (nil .(c ∷ w) y) =
+--   isLang-string (c ∷ w) (nil .(c ∷ w) x) (nil .(c ∷ w) y) =
 --     Empty.rec (¬nil≡cons (sym x))
---   propParses-string (c ∷ w) (nil .(c ∷ w) x) (cons .(c ∷ w) y) =
+--   isLang-string (c ∷ w) (nil .(c ∷ w) x) (cons .(c ∷ w) y) =
 --     Empty.rec (¬nil≡cons (sym x))
---   propParses-string (c ∷ w) (cons .(c ∷ w) x) (nil .(c ∷ w) y) =
+--   isLang-string (c ∷ w) (cons .(c ∷ w) x) (nil .(c ∷ w) y) =
 --     Empty.rec (¬nil≡cons (sym y))
---   propParses-string (c ∷ w) (cons .(c ∷ w) x) (cons .(c ∷ w) y) =
+--   isLang-string (c ∷ w) (cons .(c ∷ w) x) (cons .(c ∷ w) y) =
 --     cong (cons (c ∷ w))
 --       (⊗≡ x y
 --         (≡-× (x .snd .fst .snd ∙
@@ -149,7 +147,7 @@ opaque
 --         ((λ i₁ → w≡x₁₁₂ (~ i₁)) ∙ w≡y₁₁₂) i .snd))
 
 --       isProp-at-w : isProp (KL* char w)
---       isProp-at-w = propParses-string w
+--       isProp-at-w = isLang-string w
 
 --       -- There has to be a nicer way to extract this goal out
 --       -- from isProp (KL* char w) because w is equal to each of
@@ -164,7 +162,7 @@ opaque
 --         isProp-at-w
 
 unambiguous'-string : unambiguous' string
-unambiguous'-string = EXTERNAL.propParses→unambiguous' propParses-string
+unambiguous'-string = EXTERNAL.isLang→unambiguous' isLang-string
 
 unambiguous-string : unambiguous string
 unambiguous-string = unambiguous'→unambiguous unambiguous'-string

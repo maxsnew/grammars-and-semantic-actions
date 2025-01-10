@@ -75,6 +75,9 @@ is-initial-⊥&g g .snd e = p ∙ cong (⊕-elim f e ∘g_) inl≡inr-⊥&g ∙ 
 
 open isStrongEquivalence
 
+uninhabited : (g : Grammar ℓg) → Type ℓg
+uninhabited g = g ⊢ ⊥
+
 opaque
   unfolding _&_ &-intro
   -- Every map into ⊥ is a strong equivalence
@@ -97,7 +100,7 @@ opaque
 
   -- Any g with a map into ⊥ is iso to ⊥, so it is also initial
   g⊢⊥→is-initial :
-    g ⊢ ⊥ →
+    uninhabited g →
     is-initial g
   g⊢⊥→is-initial e {h = h} .fst = ⊥-elim {g = h} ∘g e
   g⊢⊥→is-initial e {h = h} .snd e' =
@@ -116,5 +119,5 @@ unambiguous'⊥ : unambiguous' ⊥
 unambiguous'⊥ {k = k} e e' !∘e≡!∘e' =
   is-initial→propHoms (g⊢⊥→is-initial e) _ _
 
-unambigious⊥ : unambiguous ⊥
-unambigious⊥ = unambiguous'→unambiguous unambiguous'⊥
+unambiguous⊥ : unambiguous ⊥
+unambiguous⊥ = unambiguous'→unambiguous unambiguous'⊥

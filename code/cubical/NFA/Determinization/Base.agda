@@ -51,6 +51,8 @@ module Determinization
   (isFinOrd-transition : isFinOrd ⟨ N .transition ⟩)
   (isFinOrd-ε-transition : isFinOrd ⟨ N .ε-transition ⟩)
   where
+  open DecidablePowerset
+  open DecidableFinitePowerset
   private
     module N = NFA N
     module NTrace = NFA.PotentiallyRejecting N
@@ -136,7 +138,7 @@ module Determinization
 
     ε-closure-lift-∈ :
       {A : Decℙ ⟨ N.Q ⟩} {a : ⟨ N.Q ⟩} →
-      _∈-FinSetDecℙ_ {A = N.Q} a A → a ∈ε (ε-closure A)
+      _∈-FinSetDecℙ_ N.Q a A → a ∈ε (ε-closure A)
     ε-closure-lift-∈ a∈A = ∣ _ , (a∈A , (Reachable-is-reflexive _)) ∣₁
 
     ε-closure-transition :
@@ -284,7 +286,7 @@ module Determinization
 
   open DeterministicAutomaton
   ℙN : DFAOver (εClosedℙQ , isFinSet-εClosedℙQ)
-  ℙN .init = ε-closure (SingletonDecℙ {A = N.Q} N.init)
+  ℙN .init = ε-closure (SingletonDecℙ N.Q N.init)
   ℙN .isAcc X = Bool-iso-DecProp' .Isom.Iso.inv (ℙNAcc-DecProp' X)
   ℙN .δ X c = ε-closure (lit-closure c (X .fst))
 
@@ -448,17 +450,17 @@ module Determinization
   DFA→NFA X = rec (ℙN.TraceTy true) DFA→NFA-alg X
 
   DFA→NFA-init :
-    ℙN.Trace true (ε-closure (SingletonDecℙ {A = N.Q} N.init))
+    ℙN.Trace true (ε-closure (SingletonDecℙ N.Q N.init))
       ⊢ NTrace.Trace true (N .init)
   DFA→NFA-init =
     ⊕ᴰ-elim (λ q → ⊕ᴰ-elim (λ q∈εinit →
-      let q' , q'∈Singleton , walk = witness-ε q (SingletonDecℙ {A = N.Q} N.init) q∈εinit in
-      fold-walk q (SingletonDecℙ {A = N.Q} N.init) N.init q∈εinit
+      let q' , q'∈Singleton , walk = witness-ε q (SingletonDecℙ N.Q N.init) q∈εinit in
+      fold-walk q (SingletonDecℙ N.Q N.init) N.init q∈εinit
       (subst (Walk' q) q'∈Singleton walk))) ∘g
-    DFA→NFA (ε-closure (SingletonDecℙ {A = N.Q} N.init))
+    DFA→NFA (ε-closure (SingletonDecℙ N.Q N.init))
 
   NFA≈DFA : isLogicallyEquivalent
               (NTrace.Trace true N.init)
-              (ℙN.Trace true (ε-closure (SingletonDecℙ {A = N.Q} N.init)))
+              (ℙN.Trace true (ε-closure (SingletonDecℙ N.Q N.init)))
   NFA≈DFA .fst = &ᴰ-π (ε-closure-lift-∈ refl) ∘g &ᴰ-π _ ∘g NFA→DFA N.init
   NFA≈DFA .snd = DFA→NFA-init
