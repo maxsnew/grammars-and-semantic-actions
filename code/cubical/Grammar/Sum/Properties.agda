@@ -6,8 +6,10 @@ module Grammar.Sum.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sum as Sum
 open import Cubical.Data.FinSet
+import Cubical.Data.Empty as Empty
 
 open import Grammar.Base Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Properties Alphabet
@@ -36,10 +38,15 @@ module _ {g : Grammar ℓg} {h : Grammar ℓh}
   unambiguous-⊕Ind' =
     mkUnambiguous⊕ᴰ
       (λ {
-        L R → {!!}
-      ; L L → {!!}
-      ; R L → {!!}
-      ; R R → {!!}
+        L R → λ L≢R →
+          disjoint-summands
+          ∘g (lowerG ∘g lowerG) ,&p (lowerG ∘g lowerG)
+      ; L L → λ p → Empty.rec (p refl)
+      ; R L → λ R≢L →
+          disjoint-summands
+          ∘g &-swap
+          ∘g (lowerG ∘g lowerG) ,&p (lowerG ∘g lowerG)
+      ; R R → λ p → Empty.rec (p refl)
       })
       (λ {
         ⊕IndTag.L →
@@ -55,4 +62,10 @@ module _ {g : Grammar ℓg} {h : Grammar ℓh}
       (isFinSet→Discrete isFinSet⊕IndTag)
 
   unambiguous⊕ : unambiguous (g ⊕ h)
-  unambiguous⊕ = {!!}
+  unambiguous⊕ =
+    unambiguous≅
+    (comp-strong-equiv
+      (sym-strong-equivalence unroll⊕Ind≅)
+      (sym-strong-equivalence ⊕≅⊕Ind)
+    )
+    unambiguous-⊕Ind'

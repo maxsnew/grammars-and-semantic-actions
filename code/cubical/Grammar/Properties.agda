@@ -17,6 +17,7 @@ open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
+open import Grammar.Lift Alphabet
 open import Grammar.Top.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Bottom.Base Alphabet
@@ -73,7 +74,6 @@ open LogicalEquivalence
 module _ (dis : disjoint g h) (g≈k : LogicalEquivalence g k) where
   disjoint≈ : disjoint k h
   disjoint≈ = dis ∘g g≈k .inv ,&p id
-
 
 open StrongEquivalence
 
