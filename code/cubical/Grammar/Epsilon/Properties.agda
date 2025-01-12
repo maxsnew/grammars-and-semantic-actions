@@ -25,5 +25,5 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     opaque
       unfolding ε
       ans : unambiguous ε
-      ans = EXTERNAL.propParses→unambiguous isFinSetAlphabet
+      ans = EXTERNAL.isLang→unambiguous isFinSetAlphabet
         λ w → isSetString w []
