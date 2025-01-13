@@ -129,6 +129,8 @@ module _ {ℓG} {ℓH}
   sym-strong-equivalence .sec = g≅h .ret
   sym-strong-equivalence .ret = g≅h .sec
 
+  sym≅ = sym-strong-equivalence
+
 module _ {ℓG} {ℓH} {ℓK}
   {g : Grammar ℓG}
   {h : Grammar ℓH}
@@ -148,6 +150,9 @@ module _ {ℓG} {ℓH} {ℓK}
   comp-strong-equiv .ret =
     (λ i → g≅h .inv ∘g h≅k .ret i ∘g g≅h .fun) ∙
     g≅h .ret
+
+_≅∙_ : g ≅ h → h ≅ k → g ≅ k
+_≅∙_ = comp-strong-equiv
 
 hasRetraction→isMono :
   (e : g ⊢ h) →

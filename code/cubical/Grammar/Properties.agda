@@ -63,6 +63,7 @@ unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
 
 -- A third notion of unambiguity in String.Properties
 
+-- rename to "unambiguously parseable?"
 totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)
 totallyParseable {ℓg = ℓg} g =
   Σ[ g' ∈ Grammar ℓg ] StrongEquivalence (g ⊕ g') ⊤
@@ -92,12 +93,12 @@ totallyParseable→unambiguous :
 totallyParseable→unambiguous parseable =
   unambiguous'→unambiguous (totallyParseable→unambiguous' parseable)
 
-decidable : Grammar ℓg → Type ℓg
-decidable g = StrongEquivalence (g ⊕ (¬ g)) ⊤
+parser : Grammar ℓg → Type (ℓ-suc ℓg)
+parser {ℓg = ℓg} g =
+  Σ[ g' ∈ Grammar ℓg ] (disjoint g g' × (⊤ ⊢ g ⊕ g'))
 
-decidable→totallyParseable :
-  decidable g → totallyParseable g
-decidable→totallyParseable dec-g = _ , dec-g
+decidable : Grammar ℓg → Type ℓg
+decidable g = ⊤ ⊢ g ⊕ ¬ g
 
 isUnambiguousRetract :
   ∀ (f : g ⊢ h) (f' : h ⊢ g)

@@ -5,6 +5,7 @@ open import Cubical.Foundations.Structure
 module Grammar.Bottom.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
+open import Cubical.Data.Sum
 
 open import Grammar.Base Alphabet
 open import Grammar.Properties Alphabet
@@ -109,6 +110,7 @@ opaque
     p : ⊥-elim ≡ e' ∘g ⊥-elim
     p = is-initial→propHoms is-initial-⊥ _ _
 
+
 opaque
   unfolding ⊥*
   is-initial-⊥* : is-initial (⊥* {ℓg})
@@ -121,3 +123,21 @@ unambiguous'⊥ {k = k} e e' !∘e≡!∘e' =
 
 unambiguous⊥ : unambiguous ⊥
 unambiguous⊥ = unambiguous'→unambiguous unambiguous'⊥
+
+isProp-uninhabited : ∀ {g : Grammar ℓg} → isProp (uninhabited g)
+isProp-uninhabited = unambiguous⊥
+
+module _ (g : Grammar ℓg) where
+  open StrongEquivalence
+  ⊥⊕≅ : (⊥ ⊕ g) ≅ g
+  ⊥⊕≅ .fun = ⊕-elim ⊥-elim id
+  ⊥⊕≅ .inv = ⊕-inr 
+  ⊥⊕≅ .sec = ⊕-βr ⊥-elim id
+  ⊥⊕≅ .ret = the-ret
+    where
+    opaque
+      unfolding ⊕-elim ⊥
+      the-ret : ⊥⊕≅ .inv ∘g ⊥⊕≅ .fun ≡ id
+      the-ret = funExt λ w → funExt λ {
+        (inr x) → refl
+        }

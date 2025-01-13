@@ -1,14 +1,22 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Isomorphism
 
 module Grammar.KleeneStar.Inductive (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sum hiding (rec)
 open import Cubical.Data.Unit
 open import Cubical.Data.Nat
+open import Cubical.Data.FinSet
 
 open import Grammar.Base Alphabet
+open import Grammar.Properties Alphabet
+open import Grammar.Product Alphabet
+open import Grammar.Bottom Alphabet
 open import Grammar.Dependent Alphabet
+open import Grammar.Sum Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
@@ -16,6 +24,7 @@ open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Equalizer Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Inductive.Indexed Alphabet
+open import Grammar.Inductive.Properties Alphabet
 open import Term.Base Alphabet
 
 private
@@ -29,6 +38,17 @@ module _ (g : Grammar ℓG) where
 
   *Ty : Unit* {ℓG} → Functor Unit*
   *Ty _ = ⊕e *Tag (λ { nil → k ε* ; cons → ⊗e (k g) (Var _)})
+
+  isFinSet*Tag : isFinSet *Tag
+  isFinSet*Tag =
+    EquivPresIsFinSet
+      (isoToEquiv (iso
+        (λ { (inl tt) → nil ; (inr (inl tt)) → cons})
+        (λ { nil → inl tt ; cons → inr (inl tt)})
+        (λ { nil → refl ; cons → refl})
+        λ { (inl tt) → refl ; (inr (inl tt)) → refl}
+        ))
+      (isFinSetFin {n = 2})
 
   KL* : Grammar ℓG
   KL* = μ *Ty _
@@ -46,7 +66,6 @@ module _ (g : Grammar ℓG) where
   open StrongEquivalence
 
   repeat = ⊕[ n ∈ (Lift ℕ) ] repeat' n
-
 
   gradeAlg : Algebra *Ty λ _ → repeat
   gradeAlg _ = ⊕ᴰ-elim (λ {
@@ -106,6 +125,11 @@ module _ (g : Grammar ℓG) where
               ; cons → refl }))
           (recHomo *Ty gradeAlg)) _
 
+  unrolled* = ⟦ *Ty _ ⟧ (μ *Ty)
+
+  *≅unrolled* : KL* ≅ unrolled*
+  *≅unrolled* = unroll≅ *Ty _
+
   data *TagL : Type ℓG where
     nil snoc : *TagL
 
@@ -134,3 +158,12 @@ NIL = roll ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG
 
 CONS : ∀ {g : Grammar ℓG} → g ⊗ g * ⊢ g *
 CONS = roll ∘g ⊕ᴰ-in cons ∘g liftG ,⊗ liftG
+
++→* : (g : Grammar ℓG) → g + ⊢ g *
++→* g = CONS
+
++-singleton : (g : Grammar ℓG) → g ⊢ g +
++-singleton g = id ,⊗ NIL ∘g ⊗-unit-r⁻
+
+*-singleton : (g : Grammar ℓG) → g ⊢ g *
+*-singleton g = CONS ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻

@@ -128,3 +128,10 @@ FinSetDecℙ∃ :
   ⟨ FinSetDecℙ A ⟩ →
   (⟨ A ⟩ → ⟨ FinSetDecℙ B ⟩) → ⟨ FinSetDecℙ B ⟩
 FinSetDecℙ∃ A B ℙA f b = DecProp∃ A (λ a → DecProp× (ℙA a) (f a b))
+
+open import Cubical.Foundations.Powerset
+module _ {A : Type ℓ} (X : ℙ A)
+  (decidable : ∀ (a : A) → Dec (X a .fst))
+  where
+  toDecℙ : Decℙ A
+  toDecℙ a = X a , decidable a

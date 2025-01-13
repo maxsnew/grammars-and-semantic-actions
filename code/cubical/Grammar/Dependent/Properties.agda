@@ -25,15 +25,15 @@ open import Grammar.Literal Alphabet
 
 private
   variable
-    ℓg ℓh ℓS : Level
+    ℓg ℓh ℓS ℓS' : Level
 
+open StrongEquivalence
 module _ {A : Type ℓS} (h : A → Grammar ℓh) where
   disjointSummands : Type (ℓ-max ℓS ℓh)
   disjointSummands = ∀ a a' → (a ≡ a' → Empty.⊥) → disjoint (h a) (h a')
 
 module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
 
-  open StrongEquivalence
   opaque
     unfolding _⊗_
     ⊕ᴰ-distL :
@@ -61,6 +61,26 @@ module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
     &ᴰ-strengthR :
         g ⊗ (&[ a ∈ A ] h a) ⊢ &[ a ∈ A ] (g ⊗ h a)
     &ᴰ-strengthR w (s , pg , f) a = s , (pg , f a)
+
+module _
+  {A : Type ℓS}
+  {B : A → Type ℓS'}
+  {h : Σ[ a ∈ A ] B a → Grammar ℓh}
+  where
+  &ᴰ⊕ᴰ-dist :
+    (&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b))) ⊢ ⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a)
+  &ᴰ⊕ᴰ-dist w x = (λ a → x a .fst) , λ a → x a .snd
+
+  &ᴰ⊕ᴰ-dist⁻ :
+    ⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a) ⊢ (&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b)))
+  &ᴰ⊕ᴰ-dist⁻ = ⊕ᴰ-elim λ f → &ᴰ-in λ a → λ w x → (f a) , (x a)
+
+  &ᴰ⊕ᴰ-dist≅  :
+    ((&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b)))) ≅ (⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a))
+  &ᴰ⊕ᴰ-dist≅ .fun = &ᴰ⊕ᴰ-dist
+  &ᴰ⊕ᴰ-dist≅ .inv = &ᴰ⊕ᴰ-dist⁻
+  &ᴰ⊕ᴰ-dist≅ .sec = refl
+  &ᴰ⊕ᴰ-dist≅ .ret = refl
 
 module _
   {X : Type ℓS} {A : X → Grammar ℓh}

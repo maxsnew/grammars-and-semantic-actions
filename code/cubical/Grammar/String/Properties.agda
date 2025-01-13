@@ -11,8 +11,11 @@ open import Cubical.Data.FinSet
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 
 open import Grammar.Base Alphabet
+open import Grammar.Equalizer Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.HLevels Alphabet hiding (⟨_⟩)
 open import Grammar.Properties Alphabet
+open import Grammar.Dependent.Base Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Literal Alphabet
@@ -21,6 +24,7 @@ open import Grammar.KleeneStar Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet
+open import Grammar.Inductive.Properties Alphabet
 
 open import Term.Base Alphabet
 open import Helper
@@ -71,111 +75,11 @@ module EXTERNAL where
     isLang→unambiguous ppg =
       unambiguous'→unambiguous (isLang→unambiguous' ppg)
 
--- TODO fix unambiguity for strings
 opaque
-  unfolding ε literal _⊗_
-  isLang-string : isLang string
-  isLang-string = {!!}
---   isLang-string [] (roll .[] (nil , x)) (roll .[] (cons , y)) = {!!}
---   isLang-string [] (roll .[] (nil , x)) (roll .[] (nil , y)) =
---     cong (λ z → roll [] (nil , z)) (cong (λ z → lift (lift z)) (isSetString _ _ _ _))
---   isLang-string [] (roll .[] (cons , x)) (roll .[] (cons , y)) = {!!}
---   isLang-string [] (roll .[] (cons , x)) (roll .[] (nil , y)) = {!!}
---   isLang-string (c ∷ w) (roll .(c ∷ w) (nil , x)) (roll .(c ∷ w) (cons , y)) = {!!}
---   isLang-string (c ∷ w) (roll .(c ∷ w) (nil , x)) (roll .(c ∷ w) (nil , y)) = {!!}
---   isLang-string (c ∷ w) (roll .(c ∷ w) (cons , x)) (roll .(c ∷ w) (cons , y)) = {!!}
---   isLang-string (c ∷ w) (roll .(c ∷ w) (cons , x)) (roll .(c ∷ w) (nil , y)) = {!!}
---   isLang-string [] (nil .[] x) (nil .[] y) =
---     cong (nil []) (isSetString _ _ _ _)
---   isLang-string [] (nil .[] _) (cons .[] x) =
---     Empty.rec
---       (¬nil≡cons
---         (x .fst .snd ∙
---           cong (_++ x .fst .fst .snd)
---             (x .snd .fst .snd)))
---   isLang-string [] (cons .[] x) _ =
---     Empty.rec
---       (¬nil≡cons
---         (x .fst .snd ∙
---           cong (_++ x .fst .fst .snd)
---             (x .snd .fst .snd)))
---   isLang-string (c ∷ w) (nil .(c ∷ w) x) (nil .(c ∷ w) y) =
---     Empty.rec (¬nil≡cons (sym x))
---   isLang-string (c ∷ w) (nil .(c ∷ w) x) (cons .(c ∷ w) y) =
---     Empty.rec (¬nil≡cons (sym x))
---   isLang-string (c ∷ w) (cons .(c ∷ w) x) (nil .(c ∷ w) y) =
---     Empty.rec (¬nil≡cons (sym y))
---   isLang-string (c ∷ w) (cons .(c ∷ w) x) (cons .(c ∷ w) y) =
---     cong (cons (c ∷ w))
---       (⊗≡ x y
---         (≡-× (x .snd .fst .snd ∙
---              cong ([_]) (sym c≡x₂₁₁ ∙ c≡y₂₁₁) ∙
---              sym (y .snd .fst .snd))
---              (sym w≡x₁₁₂ ∙ w≡y₁₁₂))
---         (ΣPathP ((ΣPathP
---           ((sym c≡x₂₁₁ ∙ c≡y₂₁₁) ,
---           isProp→PathP (λ i → isSetString _ _) _ _)) ,
---           isProp→PathP
---             (λ i → isProp-at-w'i i)
---             (x .snd .snd) (y .snd .snd))))
---     where
---       c≡x₂₁₁ : c ≡ x .snd .fst .fst
---       c≡x₂₁₁ =
---         cons-inj₁
---             (x .fst .snd ∙ cong (_++ x .fst .fst .snd) (x .snd .fst .snd))
-
---       c≡y₂₁₁ : c ≡ y .snd .fst .fst
---       c≡y₂₁₁ =
---         cons-inj₁
---             (y .fst .snd ∙ cong (_++ y .fst .fst .snd) (y .snd .fst .snd))
-
---       w≡x₁₁₂ : w ≡ x .fst .fst .snd
---       w≡x₁₁₂ =
---         cons-inj₂ (x .fst .snd ∙ (cong (_++ x .fst .fst .snd) (x .snd .fst .snd)) )
-
---       w≡y₁₁₂ : w ≡ y .fst .fst .snd
---       w≡y₁₁₂ =
---         cons-inj₂ (y .fst .snd ∙ (cong (_++ y .fst .fst .snd) (y .snd .fst .snd)) )
-
---       w' : x .fst .fst .snd ≡ y .fst .fst .snd
---       w' =
---         (λ i →
---         (≡-×
---         (x .snd .fst .snd ∙
---          (λ i₁ → [ ((λ i₂ → c≡x₂₁₁ (~ i₂)) ∙ c≡y₂₁₁) i₁ ]) ∙
---          (λ i₁ → y .snd .fst .snd (~ i₁)))
---         ((λ i₁ → w≡x₁₁₂ (~ i₁)) ∙ w≡y₁₁₂) i .snd))
-
---       isProp-at-w : isProp (KL* char w)
---       isProp-at-w = isLang-string w
-
---       -- There has to be a nicer way to extract this goal out
---       -- from isProp (KL* char w) because w is equal to each of
---       -- the endpoints of w'
---       -- I guessed at what the path variables need to be below
---       -- and somehow it worked
---       isProp-at-w'i : (i : I) → isProp (KL* char (w' i))
---       isProp-at-w'i i =
---         transport
---         (cong (λ z → isProp (KL* char z))
---           (w≡x₁₁₂ ∙ (λ j → (w') (i ∧ j))))
---         isProp-at-w
-
-unambiguous'-string : unambiguous' string
-unambiguous'-string = EXTERNAL.isLang→unambiguous' isLang-string
-
-unambiguous-string : unambiguous string
-unambiguous-string = unambiguous'→unambiguous unambiguous'-string
-
-⊤→string : ⊤ ⊢ string
-⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
-
-⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string
-⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)
-
-open StrongEquivalence
-string≅⊤ : StrongEquivalence string ⊤
-string≅⊤ .fun = ⊤-intro
-string≅⊤ .inv = ⊤→string
-string≅⊤ .sec = unambiguous⊤ _ _
-string≅⊤ .ret = unambiguous-string _ _
+  unfolding _&_ _⊗_ ε literal
+  disjoint-ε-char+ : disjoint ε (char +)
+  disjoint-ε-char+ [] (pε , s , (c , pc) , p*) =
+    Empty.rec
+      (¬cons≡nil (sym (s .snd ∙ cong (_++ s .fst .snd) pc)))
+  disjoint-ε-char+ (x ∷ w) (pε , s , pg , p*) =
+    Empty.rec (¬cons≡nil pε)

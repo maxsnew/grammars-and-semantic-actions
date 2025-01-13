@@ -26,4 +26,14 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
       unfolding ε
       ans : unambiguous ε
       ans = EXTERNAL.isLang→unambiguous isFinSetAlphabet
-        λ w → isSetString w []
+        isLangε
+
+  unambiguousε* : ∀ {ℓ} → unambiguous (ε* {ℓ})
+  unambiguousε* {ℓ = ℓ} = ans
+    where
+    opaque
+      unfolding ε
+      ans : unambiguous (ε* {ℓ})
+      ans = EXTERNAL.isLang→unambiguous isFinSetAlphabet
+        λ w → isPropLift (isLangε w)
+
