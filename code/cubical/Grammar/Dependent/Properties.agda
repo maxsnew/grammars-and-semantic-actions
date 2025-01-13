@@ -1,5 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Transport
 
 module Grammar.Dependent.Properties (Alphabet : hSet ℓ-zero) where
 
@@ -11,7 +13,9 @@ open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
+open import Grammar.Lift Alphabet
 open import Grammar.Bottom Alphabet
+open import Grammar.Function Alphabet
 open import Grammar.Product Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
@@ -81,6 +85,57 @@ module _
   &ᴰ⊕ᴰ-dist≅ .inv = &ᴰ⊕ᴰ-dist⁻
   &ᴰ⊕ᴰ-dist≅ .sec = refl
   &ᴰ⊕ᴰ-dist≅ .ret = refl
+
+module _
+  {A : Type ℓS}
+  {g : A → Grammar ℓg}
+  {h : A → Grammar ℓh}
+  (g≅h : ∀ (a : A) → g a ≅ h a)
+  where
+
+  &ᴰ≅ : (&[ a ∈ A ] g a) ≅ &[ a ∈ A ] h a
+  &ᴰ≅ .fun = map&ᴰ λ a → g≅h a .fun
+  &ᴰ≅ .inv = map&ᴰ λ a → g≅h a .inv
+  &ᴰ≅ .sec = &ᴰ≡ _ _ λ a → cong (_∘g &ᴰ-π a) (g≅h a .sec)
+  &ᴰ≅ .ret = &ᴰ≡ _ _ λ a → cong (_∘g &ᴰ-π a) (g≅h a .ret)
+
+  ⊕ᴰ≅ : (⊕[ a ∈ A ] g a) ≅ ⊕[ a ∈ A ] h a
+  ⊕ᴰ≅ .fun = map⊕ᴰ λ a → g≅h a .fun
+  ⊕ᴰ≅ .inv = map⊕ᴰ λ a → g≅h a .inv
+  ⊕ᴰ≅ .sec = ⊕ᴰ≡ _ _ λ a → cong (⊕ᴰ-in a ∘g_) (g≅h a .sec)
+  ⊕ᴰ≅ .ret = ⊕ᴰ≡ _ _ λ a → cong (⊕ᴰ-in a ∘g_) (g≅h a .ret)
+
+module _
+  {A : Type ℓS}
+  {g : A → Grammar ℓg}
+  {h : Grammar ℓg}
+  where
+
+  private
+    the-fun : (⊕[ a ∈ A ] g a) & h ⊢ ⊕[ a ∈ A ] (g a & h)
+    the-fun = ⇒-intro⁻ (⊕ᴰ-elim (λ a → ⇒-intro (⊕ᴰ-in a)))
+
+    the-inv : ⊕[ a ∈ A ] (g a & h) ⊢ (⊕[ a ∈ A ] g a) & h
+    the-inv = ⊕ᴰ-elim λ a → ⊕ᴰ-in a ,&p id
+
+    opaque
+      unfolding ⇒-intro &-intro
+      the-sec : the-fun ∘g the-inv ≡ id
+      the-sec = refl
+
+      the-ret : the-inv ∘g the-fun ≡ id
+      the-ret = refl
+
+  &⊕ᴰ-distL≅ :
+    (⊕[ a ∈ A ] g a) & h ≅ ⊕[ a ∈ A ] (g a & h)
+  &⊕ᴰ-distL≅ = mkStrEq the-fun the-inv the-sec the-ret
+
+  &⊕ᴰ-distR≅ :
+    h & (⊕[ a ∈ A ] g a) ≅ ⊕[ a ∈ A ] (h & g a)
+  &⊕ᴰ-distR≅ =
+    &-swap≅
+    ≅∙ &⊕ᴰ-distL≅
+    ≅∙ ⊕ᴰ≅ λ a → &-swap≅
 
 module _
   {X : Type ℓS} {A : X → Grammar ℓh}

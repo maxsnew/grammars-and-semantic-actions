@@ -18,9 +18,11 @@ open import Grammar.Properties Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Top Alphabet
+open import Grammar.Sum Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.KleeneStar Alphabet
+-- open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet
@@ -83,3 +85,6 @@ opaque
       (¬cons≡nil (sym (s .snd ∙ cong (_++ s .fst .snd) pc)))
   disjoint-ε-char+ (x ∷ w) (pε , s , pg , p*) =
     Empty.rec (¬cons≡nil pε)
+
+string≅ε⊕char⊗string : string ≅ (ε ⊕ char ⊗ string)
+string≅ε⊕char⊗string = {!*≅ε⊕g⊗g*!}

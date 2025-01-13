@@ -165,5 +165,8 @@ CONS = roll ∘g ⊕ᴰ-in cons ∘g liftG ,⊗ liftG
 +-singleton : (g : Grammar ℓG) → g ⊢ g +
 +-singleton g = id ,⊗ NIL ∘g ⊗-unit-r⁻
 
++-cons : (g : Grammar ℓG) → g ⊗ g + ⊢ g +
++-cons g = id ,⊗ +→* g
+
 *-singleton : (g : Grammar ℓG) → g ⊢ g *
 *-singleton g = CONS ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻

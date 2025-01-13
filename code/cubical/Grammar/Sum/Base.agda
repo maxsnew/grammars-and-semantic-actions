@@ -88,6 +88,24 @@ opaque
   ⊕-η e i _ (inl x) = e _ (inl x)
   ⊕-η e i _ (inr x) = e _ (inr x)
 
+_,⊕p_ :
+  g ⊢ h →
+  k ⊢ l →
+  g ⊕ k ⊢ h ⊕ l
+e ,⊕p f = ⊕-elim (⊕-inl ∘g e) (⊕-inr ∘g f)
+
+⊕-swap : g ⊕ h ⊢ h ⊕ g
+⊕-swap = ⊕-elim ⊕-inr ⊕-inl
+
+module _
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  where
+  opaque
+    unfolding ⊕-elim
+    ⊕-swap-invol : ⊕-swap ∘g ⊕-swap {g = g}{h = h} ≡ id
+    ⊕-swap-invol = ⊕≡ _ _ refl refl
+
 ⊗⊕-distL :
   g ⊗ (h ⊕ k) ⊢ (g ⊗ h) ⊕ (g ⊗ k)
 ⊗⊕-distL {g = g}{h = h}{k = k} =
@@ -296,3 +314,44 @@ module InductiveSum (g : Grammar ℓg) (h : Grammar ℓh) where
           (idHomo ⊕IndTy _)
           _)
         (⊕≡ _ _ refl refl)
+
+module _
+  {g : Grammar ℓg} {h : Grammar ℓh}
+  {k : Grammar ℓk} {l : Grammar ℓl}
+  (g≅h : g ≅ h)
+  (k≅l : k ≅ l)
+  where
+
+  private
+    the-fun : g ⊕ k ⊢ h ⊕ l
+    the-fun = g≅h .fun ,⊕p k≅l .fun
+
+    the-inv : h ⊕ l ⊢ g ⊕ k
+    the-inv = g≅h .inv ,⊕p k≅l .inv
+    opaque
+      unfolding _⊕_ ⊕-elim
+      the-sec : the-fun ∘g the-inv ≡ id
+      the-sec =
+        ⊕≡ _ _
+          (cong (⊕-inl ∘g_) (g≅h .sec))
+          (cong (⊕-inr ∘g_) (k≅l .sec))
+      the-ret : the-inv ∘g the-fun ≡ id
+      the-ret =
+        ⊕≡ _ _
+          (cong (⊕-inl ∘g_) (g≅h .ret))
+          (cong (⊕-inr ∘g_) (k≅l .ret))
+
+  ⊕≅ : (g ⊕ k) ≅ (h ⊕ l)
+  ⊕≅ .fun = the-fun
+  ⊕≅ .inv = the-inv
+  ⊕≅ .sec = the-sec
+  ⊕≅ .ret = the-ret
+
+module _
+  {g : Grammar ℓg} {h : Grammar ℓh}
+  where
+  ⊕-swap≅ : (g ⊕ h) ≅ (h ⊕ g)
+  ⊕-swap≅ .fun = ⊕-swap
+  ⊕-swap≅ .inv = ⊕-swap
+  ⊕-swap≅ .sec = ⊕-swap-invol
+  ⊕-swap≅ .ret = ⊕-swap-invol

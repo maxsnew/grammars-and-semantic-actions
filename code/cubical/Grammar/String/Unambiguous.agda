@@ -16,12 +16,12 @@ open import Grammar.HLevels Alphabet hiding (⟨_⟩)
 open import Grammar.Properties Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Epsilon Alphabet
-open import Grammar.Epsilon.Properties Alphabet
+-- open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.KleeneStar Alphabet
-open import Grammar.KleeneStar.Properties Alphabet
+-- open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Sum.Properties Alphabet
@@ -42,15 +42,15 @@ private
 -- oh no this won't work either
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   unambiguous-string : unambiguous string
-  unambiguous-string =
-    unambiguous≅
-      (sym-strong-equivalence (*≅ε⊕g⊗g* char))
-      (unambiguous⊕
-        disjoint-ε-char+
-        (unambiguousε isFinSetAlphabet)
-        {!!}
-        isFinSetAlphabet
-      )
+  unambiguous-string = ?
+    -- unambiguous≅
+    --   (sym-strong-equivalence (*≅ε⊕g⊗g* char))
+    --   (unambiguous⊕
+    --     disjoint-ε-char+
+    --     (unambiguousε isFinSetAlphabet)
+    --     {!!}
+    --     isFinSetAlphabet
+    --   )
 
 
 ⊤→string : ⊤ ⊢ string
