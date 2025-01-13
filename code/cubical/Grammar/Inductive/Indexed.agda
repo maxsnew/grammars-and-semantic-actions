@@ -16,55 +16,13 @@ open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 
+open import Grammar.Inductive.Functor Alphabet public
+
 private
   variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
 
 module _ where
-  data Functor (A : Type ℓ) : Type (ℓ-suc ℓ) where
-    k : (g : Grammar ℓ) → Functor A
-    Var : (a : A) → Functor A -- reference one of the mutually inductive types being defined
-    &e ⊕e : ∀ (B : Type ℓ) → (F : B → Functor A) → Functor A
-    ⊗e : (F : Functor A) → (F' : Functor A) → Functor A
-
-  module _ {A : Type ℓ}{ℓ'} where
-    ⟦_⟧ : Functor A → (A → Grammar ℓ') → Grammar (ℓ-max ℓ ℓ')
-    ⟦ k h ⟧ g = LiftG ℓ' h
-    ⟦ Var a ⟧ g = LiftG ℓ (g a)
-    ⟦ &e B F ⟧ g = &[ b ∈ B ] ⟦ F b ⟧ g
-    ⟦ ⊕e B F ⟧ g = ⊕[ b ∈ B ] ⟦ F b ⟧ g
-    ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗ ⟦ F' ⟧ g
-
-  map : ∀ {A : Type ℓ}(F : Functor A) {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}
-        → (∀ a → g a ⊢ h a)
-        → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
-  map (k g) f = liftG ∘g lowerG
-  map (Var a) f = liftG ∘g f a ∘g lowerG
-  map (&e B F) f = &ᴰ-intro λ a → map (F a) f ∘g &ᴰ-π a
-  map (⊕e B F) f = ⊕ᴰ-elim λ a → ⊕ᴰ-in a ∘g map (F a) f
-  map (⊗e F F') f = map F f ,⊗ map F' f
-
   module _ {A : Type ℓ} where
-    opaque
-      unfolding _⊗_ ⊗-intro
-
-      map-id : ∀ (F : Functor A) {g : A → Grammar ℓ'} →
-        map F (λ a → id {g = g a}) ≡ id
-      map-id (k g) i = id
-      map-id (Var a) i = id
-      map-id (&e B F) i = &ᴰ-intro (λ a → map-id (F a) i ∘g &ᴰ-π a)
-      map-id (⊕e B F) i = ⊕ᴰ-elim (λ a → ⊕ᴰ-in a ∘g map-id (F a) i)
-      map-id (⊗e F F') i = map-id F i ,⊗ map-id F' i
-
-      map-∘ :  ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}{k : A → Grammar ℓ'''}
-        (F : Functor A)
-        (f : ∀ a → h a  ⊢ k a)(f' : ∀ a → g a ⊢ h a)
-        → map F (λ a → f a ∘g f' a) ≡ map F f ∘g map F f'
-      map-∘ (k g) f f' i = liftG ∘g lowerG
-      map-∘ (Var a) f f' i = liftG ∘g f a ∘g f' a ∘g lowerG
-      map-∘ (&e B F) f f' i = &ᴰ-intro (λ a → map-∘ (F a) f f' i ∘g &ᴰ-π a)
-      map-∘ (⊕e B F) f f' i = ⊕ᴰ-elim (λ a → ⊕ᴰ-in a ∘g map-∘ (F a) f f' i)
-      map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
-
     -- NOTE: this is only needed because ⊗ is opaque. If it's not
     -- opaque this passes the positivity check.
     -- https://github.com/agda/agda/issues/6970
@@ -136,4 +94,3 @@ module _ where
     unroll' = rec {g = λ a → ⟦ F a ⟧ (μ F)} alg where
       alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
       alg a = map (F a) (λ _ → roll)
-
