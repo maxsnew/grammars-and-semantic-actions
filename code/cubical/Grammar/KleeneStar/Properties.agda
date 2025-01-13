@@ -59,7 +59,6 @@ module _ (g : Grammar ℓG) where
   *≅ε⊕g⊗g* : (g *) ≅ (ε ⊕ g ⊗ (g *))
   *≅ε⊕g⊗g* = comp-strong-equiv (*≅unrolled* g) unrolled*≅ε⊕g⊗g*
 
-  -- Oh wait, this doesn't even work
   -- module _
   --   (not-nullable : g & ε ⊢ ⊥) where
   --   not-nullable-g+ : (g +) & ε ⊢ ⊥
