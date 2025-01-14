@@ -13,6 +13,7 @@ open import Cubical.Data.Empty as Empty
 open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
+open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.Epsilon Alphabet
@@ -23,6 +24,7 @@ open import Term.Base Alphabet
 private
   variable
     w : String
+    ℓh : Level
 
 char : Grammar ℓ-zero
 char = LinΣ[ c ∈ ⟨ Alphabet ⟩ ] literal c
@@ -37,26 +39,31 @@ string = char *
 ⌈ [] ⌉ = ε
 ⌈ c ∷ w ⌉ = literal c ⊗ ⌈ w ⌉
 
-module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
-  opaque
-    unfolding ε literal _⊗_
-    uniquely-supported-⌈w⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
-    uniquely-supported-⌈w⌉ [] [] p = refl
-    uniquely-supported-⌈w⌉ [] (c' ∷ w') p =
-      Empty.rec (¬cons≡nil p)
-    uniquely-supported-⌈w⌉ (c ∷ w) [] p =
-      Empty.rec
-        (¬nil≡cons (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst)))
-    uniquely-supported-⌈w⌉ (c ∷ w) (c' ∷ w') p =
-      decRec
-        (λ c≡c' → cong₂ _∷_ c≡c'
-          (uniquely-supported-⌈w⌉ w w'
-            (subst (⌈ w ⌉) (sym (cons-inj₂ (p .fst .snd ∙
-              cong (_++ p .fst .fst .snd) (p .snd .fst)))) (p .snd .snd))))
-        (λ ¬c≡c → Empty.rec
-          (¬c≡c (sym (cons-inj₁
-            (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst))))))
-        (DiscreteAlphabet isFinSetAlphabet c c')
+opaque
+  unfolding ⊗-intro
+  mk⌈⌉ : ∀ w → ⌈ w ⌉ w
+  mk⌈⌉ [] = ε-intro
+  mk⌈⌉ (c ∷ w) = (_ , refl) , (lit-intro , (mk⌈⌉ w))
+
+opaque
+  unfolding ε _⊗_ literal
+  uniquely-supported-⌈⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
+  uniquely-supported-⌈⌉ [] [] p = refl
+  uniquely-supported-⌈⌉ [] (x ∷ w') p =
+    Empty.rec (¬cons≡nil p)
+  uniquely-supported-⌈⌉ (x ∷ w) [] p =
+    Empty.rec (¬nil≡cons (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst)))
+  uniquely-supported-⌈⌉ (x ∷ w) (y ∷ w') p =
+    cong₂ _∷_
+      (cons-inj₁ w≡)
+      (uniquely-supported-⌈⌉ w (p .fst .fst .snd) (p .snd .snd) ∙
+        cons-inj₂ w≡)
+    where
+    w≡ : x ∷ p .fst .fst .snd ≡ y ∷ w'
+    w≡ = ( (sym (cong (_++ p .fst .fst .snd) (p .snd .fst))) ∙ sym (p .fst .snd))
+
+pick-parse : ∀ (w : String) → (h : Grammar ℓh) → h w → ⌈ w ⌉ ⊢ h
+pick-parse w h ph w' p⌈⌉ = subst h (uniquely-supported-⌈⌉ w w' p⌈⌉) ph
 
 opaque
   unfolding ε literal _⊗_
@@ -65,7 +72,7 @@ opaque
   internalize (c ∷ w) = (([ c ] , w) , refl) , refl , internalize w
 
   ⌈w⌉→string : ⌈ w ⌉ ⊢ string
-  ⌈w⌉→string {[]} = NIL -- nil
+  ⌈w⌉→string {[]} = NIL
   ⌈w⌉→string {c ∷ w} = CONS ∘g ⊕ᴰ-in c ,⊗ ⌈w⌉→string {w}
 
   mkstring : (s : String) → string s

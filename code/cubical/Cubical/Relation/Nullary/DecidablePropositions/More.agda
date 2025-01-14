@@ -26,7 +26,7 @@ open import Cubical.Data.Nat
 
 open import Cubical.HITs.PropositionalTruncation as PT
 
-open import Cubical.Foundations.HLevels.More
+open import Cubical.Foundations.HLevels.MoreMore
 open import Cubical.Data.FinSet.More
 
 private

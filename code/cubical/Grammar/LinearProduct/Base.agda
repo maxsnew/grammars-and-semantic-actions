@@ -61,6 +61,9 @@ opaque
     ∀ (w : String) → (p : (g ⊗ h) w) → (s : Splitting w) → Type ℓ-zero
   has-split w p s = s ≡ p .fst
 
+  isProp-has-split : ∀ (w : String) (p : (g ⊗ h) w) → (s : Splitting w) → isProp (has-split w p s)
+  isProp-has-split w p s = isSetSplitting w _ _
+
   the-split :
     ∀ (w : String) → (p : (g ⊗ h) w) → Σ[ s ∈ Splitting w ] has-split w p s
   the-split w p = (p .fst) , refl

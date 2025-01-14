@@ -8,7 +8,7 @@ open import Cubical.Data.List
 open import Cubical.Data.FinSet
 
 open import Grammar Alphabet
-open import Grammar.String.Properties Alphabet
+open import Grammar.HLevels.Properties Alphabet
 open import Term Alphabet
 open import Helper
 

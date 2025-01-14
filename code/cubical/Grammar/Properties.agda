@@ -26,7 +26,6 @@ open import Grammar.Literal Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Negation Alphabet
 open import Grammar.LinearProduct Alphabet
--- open import Grammar.String.Base Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet

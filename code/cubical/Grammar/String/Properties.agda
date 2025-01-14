@@ -8,21 +8,29 @@ module Grammar.String.Properties (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
+open import Cubical.Data.Nat
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 
 open import Grammar.Base Alphabet
 open import Grammar.Equalizer Alphabet
 open import Grammar.Product Alphabet
 open import Grammar.HLevels Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Dependent.Base Alphabet
+open import Grammar.Dependent.Properties Alphabet
+open import Grammar.Dependent.Unambiguous Alphabet
 open import Grammar.Epsilon Alphabet
+open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Sum Alphabet
+open import Grammar.Lift Alphabet
+open import Grammar.Lift.Properties Alphabet
 open import Grammar.Literal Alphabet
+open import Grammar.Literal.Properties Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.KleeneStar Alphabet
--- open import Grammar.KleeneStar.Properties Alphabet
+open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet
@@ -37,46 +45,207 @@ private
     g : Grammar ℓg
     h : Grammar ℓh
 
--- This is the definition of unambiguity you'd expect in the grammar model of the
--- theory, that each string has at most one parse (up to paths bw parses)
---
--- These definitions should not be used for abstract grammars, but can prove
--- useful for showing unambiguity for things like literals, ε, and string
-module EXTERNAL where
-  isLang→unambiguous' : isLang g → unambiguous' g
-  isLang→unambiguous' {g = g} unambig' e e' _ =
-    funExt (λ w → funExt (λ x → unambig' w (e w x) (e' w x)))
 
-  module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
+opaque
+  unfolding literal
+  char-length1 : ∀  w → char w → length w ≡ 1
+  char-length1 [] (c , p) = Empty.rec (¬nil≡cons p)
+  char-length1 (x ∷ []) (c , p) = refl
+  char-length1 (x ∷ x₁ ∷ w) (c , p) = Empty.rec (¬cons≡nil (cons-inj₂ p))
+
+module _ (c : ⟨ Alphabet ⟩) where
+  opaque
+    unfolding literal
+    literal→char : ＂ c ＂ ⊢ char
+    literal→char = ⊕ᴰ-in c
+opaque
+  unfolding literal
+  isLang-char : isLang char
+  isLang-char w (c , p) (c' , p') =
+    ΣPathP
+      (cons-inj₁ ((sym p) ∙ p') ,
+      isProp→PathP (λ i → isLangLiteral _ _) p p')
+
+opaque
+  unfolding the-split _⊗_ literal
+  unique-splitting-charL :
+    (w : String) →
+    (p q : (char ⊗ g) w) →
+    same-splits {w = λ _ → w} p q
+  unique-splitting-charL {g = g} w (s , (c , p) , q) (s' , (c' , p') , q') =
+    ≡-×
+      (p ∙ cong (_∷ []) (cons-inj₁ w≡) ∙ sym p')
+      (cons-inj₂ w≡)
+    where
+    w≡ : [ c ] ++ s .fst .snd ≡ [ c' ] ++ s' .fst .snd
+    w≡ = sym (s .snd ∙ cong (_++ s. fst .snd) p) ∙ s' .snd ∙ cong (_++ s' .fst .snd) p'
+
+  opaque
+    unfolding ⊗-intro
+    unique-splitting-literalL :
+      {c : ⟨ Alphabet ⟩} →
+      (w : String) →
+      (p q : (＂ c ＂ ⊗ g) w) →
+      same-splits {w = λ _ → w} p q
+    unique-splitting-literalL {g = g} {c = c} w p q =
+      unique-splitting-charL w ((literal→char c  ,⊗ id) w p ) ((literal→char c ,⊗ id) w q)
+
+  unique-splitting-charR :
+    (w : String) →
+    (p q : (g ⊗ char) w) →
+    same-splits {w = λ _ → w} p q
+  unique-splitting-charR {g = g} w (s , p , (c , q)) (s' , p' , (c' , q')) =
+    ≡-×
+      (snoc-inj₁ w≡)
+      (q ∙ cong (_∷ []) (snoc-inj₂ w≡) ∙ sym q')
+    where
+    w≡ : s .fst .fst ++ [ c ] ≡ s' .fst .fst ++ [ c' ]
+    w≡ = sym (s .snd ∙ cong (s .fst .fst ++_) q) ∙ s' .snd ∙ cong (s' .fst .fst ++_) q'
+
+  opaque
+    unfolding ⊗-intro
+    unique-splitting-literalR :
+      {c : ⟨ Alphabet ⟩} →
+      (w : String) →
+      (p q : (g ⊗ ＂ c ＂) w) →
+      same-splits {w = λ _ → w} p q
+    unique-splitting-literalR {g = g} {c = c} w p q =
+      unique-splitting-charR w ((id ,⊗ literal→char c) w p ) ((id ,⊗ literal→char c) w q)
+
+module _
+  {g : Grammar ℓg}
+  (isLang-g : isLang g)
+  where
+  module _ {c : ⟨ Alphabet ⟩} where
     opaque
-      unfolding uniquely-supported-⌈w⌉ internalize ⊤
-      unambiguous'→isLang : unambiguous' g → isLang g
-      unambiguous'→isLang {g = g} unambig w pg pg' =
-        isMono→injective unambig w pg pg' refl
-        where
-        pick-parse : ∀ w' (h : Grammar ℓh) → h w' → ⌈ w' ⌉ ⊢ h
-        pick-parse w' h p w'' x =
-          subst h (uniquely-supported-⌈w⌉ isFinSetAlphabet w' w'' x) p
+      unfolding _⊗_ the-split
+      isLang-lit⊗lang : isLang (＂ c ＂ ⊗ g)
+      isLang-lit⊗lang w x y =
+        Σ≡Prop
+          (λ s → isProp× (isLangLiteral c (s .fst .fst)) (isLang-g (s .fst .snd)))
+          (Splitting≡ (unique-splitting-literalL w x y))
 
-        isMono→injective : {e : h ⊢ ⊤} →
-          isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
-        isMono→injective {h = h}{e = e} mono-e w p p' ewp≡ewp' =
-          sym (transportRefl p) ∙
-          cong (λ a → transp (λ i → h (a i)) i0 p) (isSetString _ w refl _) ∙
-          funExt⁻
-            (funExt⁻ (mono-e (pick-parse w h p) (pick-parse w h p') refl) w)
-              (internalize w) ∙
-          cong (λ a → transp (λ i → h (a i)) i0 p') (isSetString _ w _ refl) ∙
-          transportRefl p'
+      isLang-lang⊗lit : isLang (g ⊗ ＂ c ＂)
+      isLang-lang⊗lit w x y =
+        Σ≡Prop
+          (λ s → isProp× (isLang-g (s .fst .fst)) (isLangLiteral c (s .fst .snd)))
+          (Splitting≡ (unique-splitting-literalR w x y))
+  opaque
+    unfolding _⊗_ the-split
+    isLang-char⊗lang : isLang (char ⊗ g)
+    isLang-char⊗lang w x y =
+      Σ≡Prop
+        (λ s → isProp× (isLang-char (s .fst .fst)) (isLang-g (s .fst .snd)))
+        (Splitting≡ (unique-splitting-charL w x y))
 
-    unambiguous→isLang : unambiguous g → isLang g
-    unambiguous→isLang unambig =
-      unambiguous'→isLang (unambiguous→unambiguous' unambig)
+    isLang-lang⊗char : isLang (g ⊗ char)
+    isLang-lang⊗char w x y =
+      Σ≡Prop
+        (λ s → isProp× (isLang-g (s .fst .fst)) (isLang-char (s .fst .snd)))
+        (Splitting≡ (unique-splitting-charR w x y))
 
-    isLang→unambiguous : isLang g → unambiguous g
-    isLang→unambiguous ppg =
-      unambiguous'→unambiguous (isLang→unambiguous' ppg)
+opaque
+  unfolding ⊗-intro
+  length-repeat'-char : ∀ n w → (repeat' char n) w → length w ≡ (lower n)
+  length-repeat'-char (lift zero) w (roll .w (lift (lift pε))) = ε-length0 w pε
+  length-repeat'-char (lift (suc n)) w (roll .w (s , (lift p) , (lift x))) =
+    cong length (s .snd)
+    ∙ length++ (s .fst .fst) (s .fst .snd)
+    ∙ cong₂ _+_ ∣s₁₁∣ ∣s₁₂∣
+    where
+    ∣s₁₁∣ : length (s .fst .fst) ≡ 1
+    ∣s₁₁∣ = char-length1 (s .fst .fst) p
 
+    ∣s₁₂∣ : length (s .fst .snd) ≡ n
+    ∣s₁₂∣ = length-repeat'-char (lift n) (s .fst .snd) x
+
+
+isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
+isLang⌈⌉ [] = isLangε
+isLang⌈⌉ (c ∷ w) = isLang-lit⊗lang (isLang⌈⌉ w)
+
+⌈w⌉→string' : ∀ w → ⌈ w ⌉ ⊢ string
+⌈w⌉→string' [] = NIL
+⌈w⌉→string' (c ∷ w) = CONS ∘g literal→char c ,⊗ ⌈w⌉→string' w
+
+isLang-repeat'-char : ∀ n → isLang (repeat' char n)
+isLang-repeat'-char (lift zero) =
+  isLang≅
+    (LiftG≅2 _ _ _ ≅∙ sym≅ (unroll≅ _ _))
+    isLangε
+isLang-repeat'-char (lift (suc n)) =
+  isLang≅
+    (LiftG⊗LiftG≅ _ _ _ _  ≅∙ sym≅ (unroll≅ _ _))
+    (isLang-char⊗lang (isLang-repeat'-char (lift n)))
+
+opaque
+  unfolding _&_
+  disjoint-summands-repeat'-char : disjointSummands (repeat' char)
+  disjoint-summands-repeat'-char (lift n) (lift m) n≢m w (pn , pm) =
+    Empty.rec (n≢m (cong lift (sym (length-repeat'-char (lift n) w pn) ∙ length-repeat'-char (lift m) w pm)))
+
+isLang-repeat-char : isLang (repeat char)
+isLang-repeat-char =
+  mkIsLang⊕ᴰ
+    disjoint-summands-repeat'-char
+    isLang-repeat'-char
+    (discreteLift discreteℕ)
+
+isLang-string : isLang string
+isLang-string =
+  isLang≅
+    (sym≅ (*continuous char))
+    isLang-repeat-char
+
+module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
+  unambiguous-char : unambiguous char
+  unambiguous-char = {!!}
+
+  unambiguous-repeat'-char : ∀ n → unambiguous (repeat' char n)
+  unambiguous-repeat'-char = {!!}
+
+⊤→string : ⊤ ⊢ string
+⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
+
+⊤→string' : ⊤ ⊢ string
+⊤→string' w _ = mkstring' w
+
+⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string
+⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)
+
+string-intro : ∀ {ℓg} {g : Grammar ℓg} → g ⊢ string
+string-intro = ⊤→string ∘g ⊤-intro
+
+open StrongEquivalence
+string≅⊤ : StrongEquivalence string ⊤
+string≅⊤ .fun = ⊤-intro
+string≅⊤ .inv = ⊤→string'
+string≅⊤ .sec = unambiguous⊤ _ _
+string≅⊤ .ret = the-ret
+  where
+  opaque
+    unfolding ⊗-in ε-intro lit-intro
+    the-ret : ⊤→string' ∘g ⊤-intro ≡ id
+    the-ret = funExt λ {
+        [] → funExt λ {
+          (roll .[] (nil , (lift (lift x)))) →
+            λ i → roll [] (nil , lift (lift {!!}))
+        ; (roll .[] (cons , (s , x , y))) → {!!}
+          }
+      ; (c ∷ w) → {!!}
+      }
+      -- equalizer-ind
+      -- _
+      -- _
+      -- _
+      -- _
+      -- (λ _ → ⊕ᴰ≡ _ _
+      --   λ {
+      --   nil → {!!}
+      -- ; cons → {!!}
+      -- }
+      -- )
+      -- _
 opaque
   unfolding _&_ _⊗_ ε literal
   disjoint-ε-char+ : disjoint ε (char +)
@@ -87,4 +256,7 @@ opaque
     Empty.rec (¬cons≡nil pε)
 
 string≅ε⊕char⊗string : string ≅ (ε ⊕ char ⊗ string)
-string≅ε⊕char⊗string = {!*≅ε⊕g⊗g*!}
+string≅ε⊕char⊗string = *≅ε⊕g⊗g* char
+
+unambiguous-string : unambiguous string
+unambiguous-string = {!!}

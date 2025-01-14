@@ -15,9 +15,9 @@ open import Grammar Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.KleeneStar.Properties Alphabet
-open import Grammar.String.Unambiguous Alphabet
 open import Grammar.Literal.Properties Alphabet
 open import Grammar.Epsilon.Properties Alphabet
+open import Grammar.String.Properties Alphabet
 open import Grammar.RegularExpression.Base Alphabet
 open import Term Alphabet
 open import Helper

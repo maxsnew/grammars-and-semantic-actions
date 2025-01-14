@@ -1,4 +1,4 @@
-module Cubical.Foundations.HLevels.More where
+module Cubical.Foundations.HLevels.MoreMore where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels

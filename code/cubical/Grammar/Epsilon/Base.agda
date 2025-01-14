@@ -4,6 +4,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.Epsilon.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
+import Cubical.Data.Empty as Empty
 
 open import Helper
 open import Grammar.Base Alphabet
@@ -59,6 +60,10 @@ opaque
 
   isSetGrammarε : isSetGrammar ε
   isSetGrammarε = isLang→isSetGrammar isLangε
+
+  ε-length0 : ∀ w → ε w → length w ≡ 0
+  ε-length0 [] p = refl
+  ε-length0 (x ∷ w) p = Empty.rec (¬cons≡nil p)
 
 ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε

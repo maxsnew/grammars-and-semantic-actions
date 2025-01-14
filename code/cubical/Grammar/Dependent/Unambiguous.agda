@@ -14,7 +14,8 @@ open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Grammar.Base Alphabet
--- open import Grammar.HLevels Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Bottom Alphabet
 open import Grammar.Product Alphabet
 open import Grammar.LinearProduct Alphabet
@@ -24,7 +25,6 @@ open import Grammar.Equalizer Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Dependent.Properties Alphabet
-open import Grammar.String.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Term.Base Alphabet
 open import Grammar.Literal Alphabet
@@ -80,29 +80,31 @@ module _
 
 module _ {A : Type ℓS} {h : A → Grammar ℓh}
   (disjoint-summands : disjointSummands h)
+  (isLang-summands : ∀ a → isLang (h a))
+  (discA : Discrete A)
+  where
+
+  opaque
+    unfolding ⊥ _&_
+    mkIsLang⊕ᴰ : isLang (⊕[ a ∈ A ] h a)
+    mkIsLang⊕ᴰ w x y =
+      decRec
+        (λ x₁≡y₁ → Σ≡Prop (λ a → isLang-summands a w) x₁≡y₁)
+        (λ ¬x₁≡y₁ →
+          Empty.rec (disjoint-summands (x .fst) (y .fst) ¬x₁≡y₁ w (x .snd , y .snd))
+        )
+        (discA (x .fst) (y .fst))
+
+module _ {A : Type ℓS} {h : A → Grammar ℓh}
+  (disjoint-summands : disjointSummands h)
   (unambig-summands : ∀ a → unambiguous (h a))
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
   (discA : Discrete A)
   where
 
   mkUnambiguous⊕ᴰ : unambiguous (⊕[ a ∈ A ] h a)
-  mkUnambiguous⊕ᴰ = ans
-    where
-    opaque
-      unfolding ⊥ _&_
-      ans : unambiguous (⊕[ a ∈ A ] h a)
-      ans = EXTERNAL.isLang→unambiguous
-            isFinSetAlphabet
-            λ w x y →
-              decRec
-                (λ x₁≡y₁ → Σ≡Prop (λ a →
-                  EXTERNAL.unambiguous→isLang
-                    isFinSetAlphabet (unambig-summands a) w) x₁≡y₁
-                )
-                (λ ¬x₁≡y₁ →
-                  Empty.rec
-                    (disjoint-summands (x .fst) (y .fst) ¬x₁≡y₁ w
-                    ((x .snd) , (y .snd))
-                    )
-                )
-                (discA (x .fst) (y .fst))
+  mkUnambiguous⊕ᴰ =
+    EXTERNAL.isLang→unambiguous isFinSetAlphabet
+      (mkIsLang⊕ᴰ disjoint-summands
+        (λ a → EXTERNAL.unambiguous→isLang isFinSetAlphabet
+          (unambig-summands a)) discA)
