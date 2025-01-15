@@ -299,6 +299,12 @@ totallyParseable' {ℓg = ℓg} g =
 disjoint-ε-char+' : disjoint ε (char +)
 disjoint-ε-char+' = unambig-⊕-is-disjoint unambiguous-unrolled-string
 
+disjoint-ε-char : disjoint ε char
+disjoint-ε-char = disjoint-ε-char+' ∘g id ,&p +-singleton char
+
+disjoint-ε-literal : ∀ c → disjoint ε ＂ c ＂
+disjoint-ε-literal c = disjoint-ε-char ∘g id ,&p (literal→char c)
+
 unambiguous-char+ : unambiguous (char +)
 unambiguous-char+ = summand-R-is-unambig unambiguous-unrolled-string
 

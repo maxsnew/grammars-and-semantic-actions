@@ -42,11 +42,26 @@ snd (negateDecProp A) =
     (λ ¬a → yes ¬a)
     (A .snd)
 
+¬DecProp_ : ∀ {ℓ} → DecProp ℓ → DecProp ℓ
+¬DecProp_ = negateDecProp
+
+⟨_⟩DecProp : ∀ {ℓ} → (A : DecProp ℓ) → Type ℓ
+⟨ A ⟩DecProp = A .fst .fst
+
+DecProp⊥* : ∀ {ℓ} → DecProp ℓ
+DecProp⊥* = (⊥* , isProp⊥*) , no lower
+
 doubleNegDecProp' :
   ∀ {ℓ} (A : DecProp ℓ) →
   negateDecProp (negateDecProp A) .fst .fst →
   A .fst .fst
 doubleNegDecProp' A x = Dec→Stable (A .snd) x
+
+¬¬elimDecProp :
+  ∀ {ℓ} (A : DecProp ℓ) →
+  negateDecProp (negateDecProp A) .fst .fst →
+  A .fst .fst
+¬¬elimDecProp A a  = doubleNegDecProp' A a
 
 DecLift :
   {L L' : Level} →
