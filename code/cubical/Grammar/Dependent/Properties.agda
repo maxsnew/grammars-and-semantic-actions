@@ -33,8 +33,8 @@ private
 
 open StrongEquivalence
 module _ {A : Type ℓS} (h : A → Grammar ℓh) where
-  disjointSummands : Type (ℓ-max ℓS ℓh)
-  disjointSummands = ∀ a a' → (a ≡ a' → Empty.⊥) → disjoint (h a) (h a')
+  disjointSummands⊕ᴰ : Type (ℓ-max ℓS ℓh)
+  disjointSummands⊕ᴰ = ∀ a a' → (a ≡ a' → Empty.⊥) → disjoint (h a) (h a')
 
 module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
 

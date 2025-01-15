@@ -7,6 +7,7 @@ module Grammar.String.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sum
 open import Cubical.Data.FinSet
 open import Cubical.Data.Nat
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
@@ -24,6 +25,7 @@ open import Grammar.Epsilon Alphabet
 open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Sum Alphabet
+open import Grammar.Sum.Properties Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Lift.Properties Alphabet
 open import Grammar.Literal Alphabet
@@ -45,6 +47,7 @@ private
     g : Grammar ℓg
     h : Grammar ℓh
 
+open StrongEquivalence
 
 opaque
   unfolding literal
@@ -180,7 +183,7 @@ isLang-repeat'-char (lift (suc n)) =
 
 opaque
   unfolding _&_
-  disjoint-summands-repeat'-char : disjointSummands (repeat' char)
+  disjoint-summands-repeat'-char : disjointSummands⊕ᴰ (repeat' char)
   disjoint-summands-repeat'-char (lift n) (lift m) n≢m w (pn , pm) =
     Empty.rec (n≢m (cong lift (sym (length-repeat'-char (lift n) w pn) ∙ length-repeat'-char (lift m) w pm)))
 
@@ -197,12 +200,60 @@ isLang-string =
     (sym≅ (*continuous char))
     isLang-repeat-char
 
-module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
+opaque
   unambiguous-char : unambiguous char
-  unambiguous-char = {!!}
+  unambiguous-char = EXTERNAL.isLang→unambiguous isLang-char
 
   unambiguous-repeat'-char : ∀ n → unambiguous (repeat' char n)
-  unambiguous-repeat'-char = {!!}
+  unambiguous-repeat'-char n = EXTERNAL.isLang→unambiguous (isLang-repeat'-char n)
+
+  unambiguous-repeat-char : unambiguous (repeat char)
+  unambiguous-repeat-char = EXTERNAL.isLang→unambiguous isLang-repeat-char
+
+  unambiguous-string : unambiguous string
+  unambiguous-string = EXTERNAL.isLang→unambiguous isLang-string
+
+char-⊗⊕-distL⁻ : (char ⊗ g) ⊕ (char ⊗ h) ⊢ char ⊗ (g ⊕ h)
+char-⊗⊕-distL⁻ = ⊕-elim (id ,⊗ ⊕-inl) (id ,⊗ ⊕-inr)
+
+char-⊗⊕-distR⁻ : (g ⊗ char) ⊕ (h ⊗ char) ⊢ (g ⊕ h) ⊗ char
+char-⊗⊕-distR⁻ = ⊕-elim (⊕-inl ,⊗ id) (⊕-inr ,⊗ id)
+
+char-⊗⊕-distL≅ : char ⊗ (g ⊕ h) ≅ (char ⊗ g) ⊕ (char ⊗ h)
+char-⊗⊕-distL≅ .fun = ⊗⊕-distL
+char-⊗⊕-distL≅ .inv = char-⊗⊕-distL⁻
+char-⊗⊕-distL≅ {g = g} {h = h} .sec = the-sec
+  where
+  opaque
+    unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_
+    the-sec : char-⊗⊕-distL≅ {g = g} {h = h} .fun ∘g char-⊗⊕-distL≅ .inv ≡ id
+    the-sec i w (inl p) = inl p
+    the-sec i w (inr p) = inr p
+char-⊗⊕-distL≅ .ret = the-ret
+  where
+  opaque
+    unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_ _⊗_
+    the-ret : char-⊗⊕-distL≅ {g = g} {h = h} .inv ∘g char-⊗⊕-distL≅ .fun ≡ id
+    the-ret i w (s , p , inl q) = s , p , inl q
+    the-ret i w (s , p , inr q) = s , p , inr q
+
+char-⊗⊕-distR≅ : (g ⊕ h) ⊗ char ≅ (g ⊗ char) ⊕ (h ⊗ char)
+char-⊗⊕-distR≅ .fun = ⊗⊕-distR
+char-⊗⊕-distR≅ .inv = char-⊗⊕-distR⁻
+char-⊗⊕-distR≅ {g = g} {h = h} .sec = the-sec
+  where
+  opaque
+    unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_
+    the-sec : char-⊗⊕-distR≅ {g = g} {h = h} .fun ∘g char-⊗⊕-distR≅ .inv ≡ id
+    the-sec i w (inl p) = inl p
+    the-sec i w (inr p) = inr p
+char-⊗⊕-distR≅ .ret = the-ret
+  where
+  opaque
+    unfolding ⊗-intro ⊕-elim ⊗⊕-distR _⊕_ _⊗_
+    the-ret : char-⊗⊕-distR≅ {g = g} {h = h} .inv ∘g char-⊗⊕-distR≅ .fun ≡ id
+    the-ret i w (s , inl p , q) = s , inl p , q
+    the-ret i w (s , inr p , q) = s , inr p , q
 
 ⊤→string : ⊤ ⊢ string
 ⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
@@ -216,36 +267,12 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
 string-intro : ∀ {ℓg} {g : Grammar ℓg} → g ⊢ string
 string-intro = ⊤→string ∘g ⊤-intro
 
-open StrongEquivalence
 string≅⊤ : StrongEquivalence string ⊤
 string≅⊤ .fun = ⊤-intro
 string≅⊤ .inv = ⊤→string'
 string≅⊤ .sec = unambiguous⊤ _ _
-string≅⊤ .ret = the-ret
-  where
-  opaque
-    unfolding ⊗-in ε-intro lit-intro
-    the-ret : ⊤→string' ∘g ⊤-intro ≡ id
-    the-ret = funExt λ {
-        [] → funExt λ {
-          (roll .[] (nil , (lift (lift x)))) →
-            λ i → roll [] (nil , lift (lift {!!}))
-        ; (roll .[] (cons , (s , x , y))) → {!!}
-          }
-      ; (c ∷ w) → {!!}
-      }
-      -- equalizer-ind
-      -- _
-      -- _
-      -- _
-      -- _
-      -- (λ _ → ⊕ᴰ≡ _ _
-      --   λ {
-      --   nil → {!!}
-      -- ; cons → {!!}
-      -- }
-      -- )
-      -- _
+string≅⊤ .ret = unambiguous-string _ _
+
 opaque
   unfolding _&_ _⊗_ ε literal
   disjoint-ε-char+ : disjoint ε (char +)
@@ -255,8 +282,35 @@ opaque
   disjoint-ε-char+ (x ∷ w) (pε , s , pg , p*) =
     Empty.rec (¬cons≡nil pε)
 
-string≅ε⊕char⊗string : string ≅ (ε ⊕ char ⊗ string)
-string≅ε⊕char⊗string = *≅ε⊕g⊗g* char
+unrolled-string : Grammar ℓ-zero
+unrolled-string = ε ⊕ char ⊗ string
 
-unambiguous-string : unambiguous string
-unambiguous-string = {!!}
+unroll-string≅ : string ≅ unrolled-string
+unroll-string≅ = *≅ε⊕g⊗g* char
+
+unambiguous-unrolled-string : unambiguous unrolled-string
+unambiguous-unrolled-string =
+    unambiguous≅ unroll-string≅ unambiguous-string
+
+totallyParseable' : Grammar ℓg → Type (ℓ-suc ℓg)
+totallyParseable' {ℓg = ℓg} g =
+  Σ[ g' ∈ Grammar ℓg ] StrongEquivalence (g ⊕ g') string
+
+disjoint-ε-char+' : disjoint ε (char +)
+disjoint-ε-char+' = unambig-⊕-is-disjoint unambiguous-unrolled-string
+
+unambiguous-char+ : unambiguous (char +)
+unambiguous-char+ = summand-R-is-unambig unambiguous-unrolled-string
+
+unroll-char+≅ : (char +) ≅ (char ⊕ (char ⊗ char +))
+unroll-char+≅ =
+  ⊗≅ id≅ unroll-string≅
+  ≅∙ char-⊗⊕-distL≅
+  ≅∙ ⊕≅ (sym≅ εr≅) id≅
+
+unambiguous-char⊗char+ : unambiguous (char ⊗ char +)
+unambiguous-char⊗char+ =
+  summand-R-is-unambig (unambiguous≅ unroll-char+≅ unambiguous-char+)
+
+disjoint-char-char⊗char+ : disjoint char (char ⊗ char +)
+disjoint-char-char⊗char+ = unambig-⊕-is-disjoint (unambiguous≅ unroll-char+≅ unambiguous-char+)

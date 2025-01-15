@@ -114,7 +114,7 @@ module _ {ℓG} {ℓG'}
 
 _≅_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
 g ≅ g' = StrongEquivalence g g'
-infix 5 _≅_
+infix 4 _≅_
 
 module _ {ℓG} {ℓH}
   {g : Grammar ℓG}
@@ -155,6 +155,10 @@ module _ {ℓG} {ℓH} {ℓK}
 _≅∙_ : g ≅ h → h ≅ k → g ≅ k
 _≅∙_ = comp-strong-equiv
 infixr 10 _≅∙_
+
+module _ {g : Grammar ℓg} where
+  id≅ : g ≅ g
+  id≅ = mkStrEq id id refl refl
 
 hasRetraction→isMono :
   (e : g ⊢ h) →

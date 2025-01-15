@@ -70,10 +70,34 @@ totallyParseable {ℓg = ℓg} g =
 disjoint : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
 disjoint g h = g & h ⊢ ⊥
 
+
+module _ (dis : disjoint g h) (e : k ⊢ g) where
+  disjoint⊢ : disjoint k h
+  disjoint⊢ = dis ∘g e ,&p id
+
+  module _ (f : l ⊢ h) where
+    disjoint⊢2 : disjoint k l
+    disjoint⊢2 = disjoint⊢ ∘g id ,&p f
+
 open LogicalEquivalence
 module _ (dis : disjoint g h) (g≈k : LogicalEquivalence g k) where
   disjoint≈ : disjoint k h
-  disjoint≈ = dis ∘g g≈k .inv ,&p id
+  disjoint≈ = disjoint⊢ dis (g≈k .inv)
+
+open StrongEquivalence
+module _ (dis : disjoint g h) (g≅k : g ≅ k) where
+  disjoint≅ : disjoint k h
+  disjoint≅ = disjoint⊢ dis (g≅k .inv)
+
+  module _ (h≅l : h ≅ l) where
+    disjoint≅2 : disjoint k l
+    disjoint≅2 = disjoint≅ ∘g id ,&p h≅l .inv
+
+disjoint⊕l : disjoint (g ⊕ h) k → disjoint g k
+disjoint⊕l dis = disjoint⊢ dis ⊕-inl
+
+disjoint⊕r : disjoint (g ⊕ h) k → disjoint h k
+disjoint⊕r dis = disjoint⊢ dis ⊕-inr
 
 open StrongEquivalence
 

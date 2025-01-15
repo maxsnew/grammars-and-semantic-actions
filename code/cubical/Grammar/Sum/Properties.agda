@@ -29,7 +29,6 @@ module _ {g : Grammar ℓg} {h : Grammar ℓh}
   (disjoint-summands : disjoint g h)
   (unambig-g : unambiguous g)
   (unambig-h : unambiguous h)
-  (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
   where
 
   open InductiveSum g h
@@ -58,7 +57,6 @@ module _ {g : Grammar ℓg} {h : Grammar ℓh}
             (comp-strong-equiv (LiftG≅ ℓg h) (LiftG≅ (ℓ-max ℓg ℓh) (LiftG ℓg h)))
             unambig-h
        })
-      isFinSetAlphabet
       (isFinSet→Discrete isFinSet⊕IndTag)
 
   unambiguous⊕ : unambiguous (g ⊕ h)
@@ -69,3 +67,35 @@ module _ {g : Grammar ℓg} {h : Grammar ℓh}
       (sym-strong-equivalence ⊕≅⊕Ind)
     )
     unambiguous-⊕Ind'
+
+module _ (unambig⊕ : unambiguous (g ⊕ h)) where
+  open InductiveSum g h
+  unambig-⊕-is-disjoint : disjoint g h
+  unambig-⊕-is-disjoint =
+    disjoint≅2
+      (hasDisjointSummands⊕ᴰ
+        (isFinSet→isSet isFinSet⊕IndTag)
+        (unambiguous≅ (⊕≅⊕Ind ≅∙ unroll⊕Ind≅) unambig⊕)
+        L
+        R
+        L≢R)
+      (sym≅ (LiftG≅2 _ _ _))
+      (sym≅ (LiftG≅2 _ _ _))
+
+  summand-L-is-unambig : unambiguous g
+  summand-L-is-unambig =
+    unambiguous≅
+      (sym≅ (LiftG≅2 _ _ _))
+      (unambiguous⊕ᴰ
+        (isFinSet→isSet isFinSet⊕IndTag)
+        (unambiguous≅ (⊕≅⊕Ind ≅∙ unroll⊕Ind≅) unambig⊕)
+        L)
+
+  summand-R-is-unambig : unambiguous h
+  summand-R-is-unambig =
+    unambiguous≅
+      (sym≅ (LiftG≅2 _ _ _))
+      (unambiguous⊕ᴰ
+        (isFinSet→isSet isFinSet⊕IndTag)
+        (unambiguous≅ (⊕≅⊕Ind ≅∙ unroll⊕Ind≅) unambig⊕)
+        R)

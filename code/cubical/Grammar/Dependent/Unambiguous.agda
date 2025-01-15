@@ -66,8 +66,8 @@ module _
     where
     opaque
       unfolding _&_ ⊥
-      hasDisjointSummands : disjointSummands h
-      hasDisjointSummands a a' a≠a' w (p , p') =
+      hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ h
+      hasDisjointSummands⊕ᴰ a a' a≠a' w (p , p') =
         a≠a' λ i → unambig⊕ (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂) i w (p , p') .fst
 
     equalizer→⊥ :
@@ -75,11 +75,11 @@ module _
       (a ≡ a' → Empty.⊥) →
       equalizer (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂) ⊢ ⊥
     equalizer→⊥ a a' a≠a' =
-     hasDisjointSummands a a' a≠a'
+     hasDisjointSummands⊕ᴰ a a' a≠a'
      ∘g eq-π (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂)
 
 module _ {A : Type ℓS} {h : A → Grammar ℓh}
-  (disjoint-summands : disjointSummands h)
+  (disjoint-summands : disjointSummands⊕ᴰ h)
   (isLang-summands : ∀ a → isLang (h a))
   (discA : Discrete A)
   where
@@ -96,15 +96,14 @@ module _ {A : Type ℓS} {h : A → Grammar ℓh}
         (discA (x .fst) (y .fst))
 
 module _ {A : Type ℓS} {h : A → Grammar ℓh}
-  (disjoint-summands : disjointSummands h)
+  (disjoint-summands : disjointSummands⊕ᴰ h)
   (unambig-summands : ∀ a → unambiguous (h a))
-  (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
   (discA : Discrete A)
   where
 
   mkUnambiguous⊕ᴰ : unambiguous (⊕[ a ∈ A ] h a)
   mkUnambiguous⊕ᴰ =
-    EXTERNAL.isLang→unambiguous isFinSetAlphabet
+    EXTERNAL.isLang→unambiguous
       (mkIsLang⊕ᴰ disjoint-summands
-        (λ a → EXTERNAL.unambiguous→isLang isFinSetAlphabet
+        (λ a → EXTERNAL.unambiguous→isLang
           (unambig-summands a)) discA)

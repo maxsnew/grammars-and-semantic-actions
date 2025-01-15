@@ -7,6 +7,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.HLevels Alphabet
 open import Grammar.Epsilon Alphabet
@@ -590,3 +591,42 @@ opaque
     sym (invMoveR {f = ⊗-assoc⁻4} {f⁻ = ⊗-assoc4} ⊗-assoc4⊗-assoc⁻4
       (cong ((f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''') ∘g_) ⊗-assoc⁻4⊗-assoc4))
 
+open StrongEquivalence
+module _
+  {g : Grammar ℓg} {h : Grammar ℓh}
+  {k : Grammar ℓk} {l : Grammar ℓl}
+  (g≅h : g ≅ h)
+  (k≅l : k ≅ l)
+  where
+
+  private
+    the-fun : g ⊗ k ⊢ h ⊗ l
+    the-fun = g≅h .fun ,⊗ k≅l .fun
+
+    the-inv : h ⊗ l ⊢ g ⊗ k
+    the-inv = g≅h .inv ,⊗ k≅l .inv
+    opaque
+      unfolding ⊗-intro
+      the-sec : the-fun ∘g the-inv ≡ id
+      the-sec i = g≅h .sec i ,⊗ k≅l .sec i
+
+      the-ret : the-inv ∘g the-fun ≡ id
+      the-ret i = g≅h .ret i ,⊗ k≅l .ret i
+
+  ⊗≅ : (g ⊗ k) ≅ (h ⊗ l)
+  ⊗≅ .fun = the-fun
+  ⊗≅ .inv = the-inv
+  ⊗≅ .sec = the-sec
+  ⊗≅ .ret = the-ret
+
+εr≅ : g ≅ g ⊗ ε
+εr≅ .fun = ⊗-unit-r⁻
+εr≅ .inv = ⊗-unit-r
+εr≅ .sec = ⊗-unit-rr⁻
+εr≅ .ret = ⊗-unit-r⁻r
+
+εl≅ : g ≅ ε ⊗ g
+εl≅ .fun = ⊗-unit-l⁻
+εl≅ .inv = ⊗-unit-l
+εl≅ .sec = ⊗-unit-ll⁻
+εl≅ .ret = ⊗-unit-l⁻l

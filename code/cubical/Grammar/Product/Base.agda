@@ -105,6 +105,9 @@ id& f = &-π₁ ,& (f ∘g &-π₂)
   g & h ⊢ h & g
 &-swap = &-intro &-π₂ &-π₁
 
+&-Δ : g ⊢ g & g
+&-Δ = id ,& id
+
 module _
   {g : Grammar ℓg}
   {h : Grammar ℓh}

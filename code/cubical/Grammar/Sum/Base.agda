@@ -5,6 +5,11 @@ open import Cubical.Foundations.Isomorphism
 module Grammar.Sum.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sum as Sum
+open import Cubical.Data.SumFin
+import Cubical.Data.Empty as Empty
+
+open import Cubical.Relation.Nullary.Base hiding (¬_)
+open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
@@ -106,20 +111,17 @@ module _
     ⊕-swap-invol : ⊕-swap ∘g ⊕-swap {g = g}{h = h} ≡ id
     ⊕-swap-invol = ⊕≡ _ _ refl refl
 
-⊗⊕-distL :
-  g ⊗ (h ⊕ k) ⊢ (g ⊗ h) ⊕ (g ⊗ k)
-⊗⊕-distL {g = g}{h = h}{k = k} =
-  ⊸-intro⁻ {g = h ⊕ k}{h = g}{k = (g ⊗ h) ⊕ (g ⊗ k)}
-    (⊕-elim {g = h}{h = g ⊸ ((g ⊗ h) ⊕ (g ⊗ k))}{k = k}
-      (⊸-intro {g = g}{h = h}{k = (g ⊗ h) ⊕ (g ⊗ k)} ⊕-inl)
-      (⊸-intro {g = g}{h = k}{k = (g ⊗ h) ⊕ (g ⊗ k)} ⊕-inr))
+opaque
+  unfolding _⊗_ _⊕_
+  ⊗⊕-distL :
+    g ⊗ (h ⊕ k) ⊢ (g ⊗ h) ⊕ (g ⊗ k)
+  ⊗⊕-distL {g = g} {h = h} {k = k} w (s , p , inl q) = inl (s , p , q)
+  ⊗⊕-distL {g = g} {h = h} {k = k} w (s , p , inr q) = inr (s , p , q)
 
-⊗⊕-distR :
-  (g ⊕ h) ⊗ k ⊢ (g ⊗ k) ⊕ (h ⊗ k)
-⊗⊕-distR {g = g}{h = h}{k = k} =
-  ⟜-intro⁻
-    (⊕-elim (⟜-intro (⊕-inl {h = h ⊗ k}))
-    (⟜-intro (⊕-inr {h = g ⊗ k})))
+  ⊗⊕-distR :
+    (g ⊕ h) ⊗ k ⊢ (g ⊗ k) ⊕ (h ⊗ k)
+  ⊗⊕-distR {g = g} {h = h} {k = k} w (s , inl p , q) = inl (s , p , q)
+  ⊗⊕-distR {g = g} {h = h} {k = k} w (s , inr p , q) = inr (s , p , q)
 
 &⊕-distR :
   (g ⊕ h) & k ⊢ (g & k) ⊕ (h & k)
@@ -263,16 +265,24 @@ module InductiveSum (g : Grammar ℓg) (h : Grammar ℓh) where
   data ⊕IndTag : Type (ℓ-max ℓg ℓh) where
     L R : ⊕IndTag
 
-  isFinSet⊕IndTag : isFinSet ⊕IndTag
-  isFinSet⊕IndTag =
-    EquivPresIsFinSet
-      (isoToEquiv (iso
+  ⊕IndTagRep : Iso (Fin 2) ⊕IndTag
+  ⊕IndTagRep =
+      (iso
         (λ { (inl tt) → L ; (inr (inl tt)) → R})
         (λ { L → inl tt ; R → inr (inl tt)})
         (λ { L → refl ; R → refl})
         λ { (inl tt) → refl ; (inr (inl tt)) → refl}
-        ))
+        )
+
+  isFinSet⊕IndTag : isFinSet ⊕IndTag
+  isFinSet⊕IndTag =
+    EquivPresIsFinSet
+      (isoToEquiv ⊕IndTagRep)
       (isFinSetFin {n = 2})
+
+  open Iso
+  L≢R : L ≡ R → Empty.⊥
+  L≢R L≡R = fzero≠fone (cong (⊕IndTagRep .inv) L≡R)
 
   ⊕IndTy : Unit* {ℓ-max ℓg ℓh} → Functor Unit*
   ⊕IndTy _ = ⊕e ⊕IndTag λ {
@@ -355,3 +365,27 @@ module _
   ⊕-swap≅ .inv = ⊕-swap
   ⊕-swap≅ .sec = ⊕-swap-invol
   ⊕-swap≅ .ret = ⊕-swap-invol
+
+module _
+  {g : Grammar ℓg} {h : Grammar ℓh} {k : Grammar ℓk}
+  where
+
+  ⊕-assoc : (g ⊕ h) ⊕ k ⊢ g ⊕ (h ⊕ k)
+  ⊕-assoc = ⊕-elim (⊕-elim ⊕-inl (⊕-inr ∘g ⊕-inl)) (⊕-inr ∘g ⊕-inr)
+
+  ⊕-assoc⁻ : g ⊕ (h ⊕ k) ⊢ (g ⊕ h) ⊕ k
+  ⊕-assoc⁻ = ⊕-elim (⊕-inl ∘g ⊕-inl) (⊕-elim (⊕-inl ∘g ⊕-inr) ⊕-inr)
+
+  private
+    opaque
+      unfolding _⊕_ ⊕-elim
+      the-sec : ⊕-assoc ∘g ⊕-assoc⁻ ≡ id
+      the-sec = ⊕≡ _ _ refl (⊕≡ _ _ refl refl)
+      the-ret : ⊕-assoc⁻ ∘g ⊕-assoc ≡ id
+      the-ret = ⊕≡ _ _ (⊕≡ _ _ refl refl) refl
+
+  ⊕-assoc≅ : (g ⊕ h) ⊕ k ≅ g ⊕ (h ⊕ k)
+  ⊕-assoc≅ .fun = ⊕-assoc
+  ⊕-assoc≅ .inv = ⊕-assoc⁻
+  ⊕-assoc≅ .sec = the-sec 
+  ⊕-assoc≅ .ret = the-ret

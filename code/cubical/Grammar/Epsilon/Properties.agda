@@ -18,22 +18,19 @@ private
     g : Grammar ℓG
     h : Grammar ℓH
 
-module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
-  unambiguousε : unambiguous ε
-  unambiguousε = ans
-    where
-    opaque
-      unfolding ε
-      ans : unambiguous ε
-      ans = EXTERNAL.isLang→unambiguous isFinSetAlphabet
-        isLangε
+unambiguousε : unambiguous ε
+unambiguousε = ans
+  where
+  opaque
+    unfolding ε
+    ans : unambiguous ε
+    ans = EXTERNAL.isLang→unambiguous isLangε
 
-  unambiguousε* : ∀ {ℓ} → unambiguous (ε* {ℓ})
-  unambiguousε* {ℓ = ℓ} = ans
-    where
-    opaque
-      unfolding ε
-      ans : unambiguous (ε* {ℓ})
-      ans = EXTERNAL.isLang→unambiguous isFinSetAlphabet
-        λ w → isPropLift (isLangε w)
-
+unambiguousε* : ∀ {ℓ} → unambiguous (ε* {ℓ})
+unambiguousε* {ℓ = ℓ} = ans
+  where
+  opaque
+    unfolding ε
+    ans : unambiguous (ε* {ℓ})
+    ans = EXTERNAL.isLang→unambiguous
+      λ w → isPropLift (isLangε w)

@@ -21,6 +21,6 @@ module _ (c : ⟨ Alphabet ⟩) where
         c≡c' : c ≡ c'
         c≡c' = cons-inj₁ ((sym p) ∙ p')
 
-module _ (c : ⟨ Alphabet ⟩) (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
+module _ (c : ⟨ Alphabet ⟩) where
   unambiguous-literal : unambiguous ＂ c ＂
-  unambiguous-literal = EXTERNAL.isLang→unambiguous isFinSetAlphabet (isLangLiteral c)
+  unambiguous-literal = EXTERNAL.isLang→unambiguous (isLangLiteral c)

@@ -69,6 +69,13 @@ module DecidablePowerset (A : Type ℓ) where
   (X ∩ℙ Y) x = DecProp× (X x) (Y x)
   infixr 30 _∩ℙ_
 
+  ¬ℙ_ : Decℙ → Decℙ
+  (¬ℙ X) x = negateDecProp (X x)
+  infix 31 ¬ℙ_
+
+  _∈ℙ_ : A → Decℙ → Type ℓ
+  x ∈ℙ X = X x .fst .fst
+
 module DecidableFinitePowerset ((A , isFinSetA) : FinSet ℓ) where
   open DecidablePowerset A
   SingletonDecℙ : (a : A) → Decℙ
