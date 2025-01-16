@@ -9,7 +9,9 @@ open import Cubical.Data.FinSet
 import Cubical.Data.Empty as Empty
 
 open import Grammar.Base Alphabet
+open import Grammar.Function Alphabet
 open import Grammar.Product Alphabet
+open import Grammar.Bottom Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Properties Alphabet
@@ -99,3 +101,28 @@ module _ (unambig⊕ : unambiguous (g ⊕ h)) where
         (isFinSet→isSet isFinSet⊕IndTag)
         (unambiguous≅ (⊕≅⊕Ind ≅∙ unroll⊕Ind≅) unambig⊕)
         R)
+
+open StrongEquivalence
+open LogicalEquivalence
+module _
+  {g : Grammar ℓg} {h : Grammar ℓh} {k : Grammar ℓk} {l : Grammar ℓl}
+  (g≈h : g ≈ h)
+  (dis-gk : disjoint g k)
+  (dis-hl : disjoint h l)
+  (g⊕k≅h⊕l : (g ⊕ k) ≈ (h ⊕ l))
+  where
+  disjoint⊕≈ : k ≈ l
+  disjoint⊕≈ .fun =
+    ⊕-elim
+      (⊥-elim ∘g dis-gk ∘g g≈h .inv ,&p id)
+      &-π₁
+    ∘g &⊕-distR
+    ∘g (g⊕k≅h⊕l .fun ∘g ⊕-inr) ,&p id
+    ∘g &-Δ
+  disjoint⊕≈ .inv =
+    ⊕-elim
+      (⊥-elim ∘g dis-hl ∘g g≈h .fun ,&p id)
+      &-π₁
+    ∘g &⊕-distR
+    ∘g (g⊕k≅h⊕l .inv ∘g ⊕-inr) ,&p id
+    ∘g &-Δ

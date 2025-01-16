@@ -121,7 +121,7 @@ parser {ℓg = ℓg} g =
   Σ[ g' ∈ Grammar ℓg ] (disjoint g g' × (⊤ ⊢ g ⊕ g'))
 
 decidable : Grammar ℓg → Type ℓg
-decidable g = ⊤ ⊢ g ⊕ ¬ g
+decidable g = ⊤ ⊢ g ⊕ ¬G g
 
 isUnambiguousRetract :
   ∀ (f : g ⊢ h) (f' : h ⊢ g)
@@ -152,3 +152,44 @@ unambiguousRetract→StrongEquivalence
   → StrongEquivalence g h
 unambiguousRetract→StrongEquivalence f f' ret unambH
   = unambiguous→StrongEquivalence (isUnambiguousRetract f f' ret unambH) unambH f f'
+
+module _ {g : Grammar ℓg} where
+  &⊤≅ : g ≅ g & ⊤
+  &⊤≅ .fun = id ,& ⊤-intro
+  &⊤≅ .inv = &-π₁
+  &⊤≅ .sec = the-sec
+    where
+    opaque
+      unfolding &-intro ⊤-intro
+      the-sec : &⊤≅ .fun ∘g &⊤≅ .inv ≡ id
+      the-sec = refl
+  &⊤≅ .ret = the-ret
+    where
+    opaque
+      unfolding &-intro ⊤-intro
+      the-ret : &⊤≅ .inv ∘g &⊤≅ .fun ≡ id
+      the-ret = refl
+
+module _
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  (unambig-g : unambiguous g)
+  (unambig-h : unambiguous h)
+  (g≈h : g ≈ h)
+  where
+
+  ≈→≅ : g ≅ h
+  ≈→≅ .fun = g≈h .fun
+  ≈→≅ .inv = g≈h .inv
+  ≈→≅ .sec = unambig-h _ _
+  ≈→≅ .ret = unambig-g _ _
+
+module _
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  (g≅h : g ≅ h)
+  where
+
+  ≅→≈ : g ≈ h
+  ≅→≈ .fun = g≅h .fun
+  ≅→≈ .inv = g≅h .inv

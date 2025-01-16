@@ -116,6 +116,10 @@ _≅_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
 g ≅ g' = StrongEquivalence g g'
 infix 4 _≅_
 
+_≈_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
+g ≈ g' = LogicalEquivalence g g'
+infix 4 _≈_
+
 module _ {ℓG} {ℓH}
   {g : Grammar ℓG}
   {h : Grammar ℓH}

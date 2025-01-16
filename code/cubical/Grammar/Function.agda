@@ -5,6 +5,8 @@ module Grammar.Function (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.Product Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
 open import Grammar.Top.Base Alphabet
 open import Term.Base Alphabet
 
@@ -47,6 +49,9 @@ opaque
     (e : g ⊢ h ⇒ k) →
     ⇒-intro (⇒-intro⁻ e) ≡ e
   ⇒-η e = refl
+
+⇒-mapDom : g ⊢ h → h ⇒ k ⊢ g ⇒ k
+⇒-mapDom e = ⇒-intro (⇒-app ∘g id ,&p e)
 
 ⇒-comp :
   (g ⇒ h) & (h ⇒ k) ⊢ g ⇒ k

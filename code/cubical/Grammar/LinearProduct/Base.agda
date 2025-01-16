@@ -619,6 +619,17 @@ module _
   ⊗≅ .sec = the-sec
   ⊗≅ .ret = the-ret
 
+module _
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  {k : Grammar ℓk}
+  where
+  ⊗-assoc≅ : g ⊗ (h ⊗ k) ≅ (g ⊗ h) ⊗ k
+  ⊗-assoc≅ .fun = ⊗-assoc
+  ⊗-assoc≅ .inv = ⊗-assoc⁻
+  ⊗-assoc≅ .sec = ⊗-assoc∘⊗-assoc⁻≡id
+  ⊗-assoc≅ .ret = ⊗-assoc⁻∘⊗-assoc≡id
+
 εr≅ : g ≅ g ⊗ ε
 εr≅ .fun = ⊗-unit-r⁻
 εr≅ .inv = ⊗-unit-r

@@ -182,6 +182,9 @@ opaque
 ⟜-mapCod : k ⊢ l → k ⟜ g ⊢ l ⟜ g
 ⟜-mapCod f = ⟜-intro (f ∘g ⟜-app)
 
+⊸-mapCod : k ⊢ l → g ⊸ k ⊢ g ⊸ l
+⊸-mapCod f = ⊸-intro (f ∘g ⊸-app)
+
 opaque
   unfolding ⟜-intro
 

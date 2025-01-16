@@ -7,9 +7,10 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Sigma
 
 open import Cubical.Relation.Nullary.Base
--- open import Cubical.Relation.Nullary.Properties
+open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
@@ -74,7 +75,15 @@ module DecidablePowerset (A : Type ℓ) where
   infix 31 ¬ℙ_
 
   _∈ℙ_ : A → Decℙ → Type ℓ
-  x ∈ℙ X = X x .fst .fst
+  x ∈ℙ X = inDecℙ x X
+
+  -- ≡ℙ : {X Y : Decℙ} →
+  --   (∀ x → ⟨ X x ⟩DecProp → ⟨ Y x ⟩DecProp) →
+  --   (∀ x → ⟨ Y x ⟩DecProp → ⟨ X x ⟩DecProp) →
+  --   X ≡ Y
+  -- ≡ℙ f g = funExt (λ x → Σ≡Prop (λ the-prop →
+  --   isPropDec (the-prop .snd))
+  --   {!!})
 
 module DecidableFinitePowerset ((A , isFinSetA) : FinSet ℓ) where
   open DecidablePowerset A

@@ -35,6 +35,9 @@ char-intro c = (⊕ᴰ-in {h = λ c' → ＂ c' ＂} c) [ c ] lit-intro
 string : Grammar ℓ-zero
 string = char *
 
+stringL : Grammar ℓ-zero
+stringL = *L char
+
 ⌈_⌉ : String → Grammar ℓ-zero
 ⌈ [] ⌉ = ε
 ⌈ c ∷ w ⌉ = literal c ⊗ ⌈ w ⌉

@@ -11,6 +11,8 @@ open import Grammar.Base Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom.Base Alphabet
 open import Grammar.Product Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
 open import Grammar.Function Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Equivalence.Base Alphabet
@@ -141,3 +143,9 @@ module _ (g : Grammar ℓg) where
       the-ret = funExt λ w → funExt λ {
         (inr x) → refl
         }
+
+⊗⊥ : g ⊗ ⊥ ⊢ ⊥
+⊗⊥ = ⊸-app ∘g id ,⊗ ⊥-elim
+
+⊥⊗ : ⊥ ⊗ g ⊢ ⊥
+⊥⊗ = ⟜-app ∘g ⊥-elim ,⊗ id

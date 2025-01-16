@@ -56,44 +56,29 @@ module _ (g : Grammar ℓG) where
         ; cons → refl
         })
 
+    unrolled*L≅ε⊕g*L⊗g : unrolled*L g ≅ (ε ⊕ (*L g ⊗ g))
+    unrolled*L≅ε⊕g*L⊗g =
+      mkStrEq
+        (⊕ᴰ-elim (λ {
+          nil → ⊕-inl ∘g lowerG ∘g lowerG
+        ; snoc → ⊕-inr ∘g (lowerG ,⊗ lowerG)
+        }))
+        (⊕-elim
+          (⊕ᴰ-in nil ∘g liftG ∘g liftG)
+          (⊕ᴰ-in snoc ∘g (liftG ,⊗ liftG))
+        )
+        (⊕≡ _ _ refl refl)
+        (⊕ᴰ≡ _ _ λ {
+          nil → refl
+        ; snoc → refl
+        })
+
   *≅ε⊕g⊗g* : (g *) ≅ (ε ⊕ g ⊗ (g *))
   *≅ε⊕g⊗g* = comp-strong-equiv (*≅unrolled* g) unrolled*≅ε⊕g⊗g*
 
-  -- module _
-  --   (not-nullable : g & ε ⊢ ⊥) where
-  --   not-nullable-g+ : (g +) & ε ⊢ ⊥
-  --   not-nullable-g+ =
-  --     {!!}
-  --     ∘g {!!}
-  --     ∘g {!? ,&p ?!}
-
-
-  -- module _
-  --   (unambig-g : unambiguous g)
-  --   (not-nullable : g & ε ⊢ ⊥)
-  --   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
-  --   opaque
-  --     unfolding ⊗-intro
-  --     unambig-unrolled* : unambiguous (unrolled* g)
-  --     unambig-unrolled* =
-  --       mkUnambiguous⊕ᴰ
-  --       (λ {
-  --         nil nil → λ x → Empty.rec (x refl)
-  --       ; nil cons → λ nil≢cons →
-  --         (not-nullable-g+ not-nullable ∘g &-swap)
-  --         ∘g ((lowerG ∘g lowerG) ,&p lowerG ,⊗ lowerG)
-  --       ; cons nil → λ cons≢nil →
-  --         not-nullable-g+ not-nullable
-  --         ∘g (lowerG ,⊗ lowerG) ,&p (lowerG ∘g lowerG)
-  --       ; cons cons → λ x → Empty.rec (x refl)
-  --       })
-  --       (λ {
-  --         nil → unambiguous≅ (LiftG≅ ℓG ε*) (unambiguousε* isFinSetAlphabet)
-  --       ; cons → unambiguous≅
-  --         (mkStrEq
-  --           ((liftG ,⊗ liftG))
-  --           (lowerG ,⊗ lowerG) refl refl)
-  --         {!!}
-  --       })
-  --       isFinSetAlphabet
-  --       (isFinSet→Discrete (isFinSet*Tag g))
+  *≅ε⊕g*⊗g : (g *) ≅ (ε ⊕ (g * ⊗ g))
+  *≅ε⊕g*⊗g =
+    *≅*L g
+    ≅∙ *L≅unrolled*L g
+    ≅∙ unrolled*L≅ε⊕g*L⊗g
+    ≅∙ ⊕≅ id≅ (⊗≅ (sym≅ (*≅*L g)) id≅)

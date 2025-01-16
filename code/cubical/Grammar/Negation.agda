@@ -13,5 +13,5 @@ private
     ℓg : Level
     g : Grammar ℓg
 
-¬_ : Grammar ℓg → Grammar ℓg
-¬ g = g ⇒ ⊥
+¬G_ : Grammar ℓg → Grammar ℓg
+¬G g = g ⇒ ⊥
