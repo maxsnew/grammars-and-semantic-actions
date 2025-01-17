@@ -77,14 +77,6 @@ module DecidablePowerset (A : Type ℓ) where
   _∈ℙ_ : A → Decℙ → Type ℓ
   x ∈ℙ X = inDecℙ x X
 
-  -- ≡ℙ : {X Y : Decℙ} →
-  --   (∀ x → ⟨ X x ⟩DecProp → ⟨ Y x ⟩DecProp) →
-  --   (∀ x → ⟨ Y x ⟩DecProp → ⟨ X x ⟩DecProp) →
-  --   X ≡ Y
-  -- ≡ℙ f g = funExt (λ x → Σ≡Prop (λ the-prop →
-  --   isPropDec (the-prop .snd))
-  --   {!!})
-
 module DecidableFinitePowerset ((A , isFinSetA) : FinSet ℓ) where
   open DecidablePowerset A
   SingletonDecℙ : (a : A) → Decℙ

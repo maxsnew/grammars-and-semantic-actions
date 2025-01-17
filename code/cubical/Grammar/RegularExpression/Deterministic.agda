@@ -6,6 +6,8 @@ module Grammar.RegularExpression.Deterministic (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Foundations.Structure
 
+open import Cubical.Functions.Logic renaming (⊥ to ⊥P)
+
 open import Cubical.Data.FinSet
 open import Cubical.Data.List hiding (rec)
 open import Cubical.Data.Sigma
@@ -89,61 +91,12 @@ NullableG g = ε & g
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   ∉First⊗l' : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ string) ⟩
   ∉First⊗l' {g = g} {c = c} ¬nullg c∉Fg =
-    -- ⇒-intro⁻ (⊸-intro⁻ (rec _ the-alg _))
-    -- where
-    -- the-alg : Algebra (*Ty char) (λ _ → ＂ c ＂ ⊸ (¬G (g ⊗ string)))
-    -- the-alg _ = ⊕ᴰ-elim λ {
-    --     nil → {!!}
-    --   ; cons →
-    --     {!!}
-    --     ∘g lowerG ,⊗ lowerG
-    --   }
-    -- ⇒-intro⁻ (⊸-intro⁻ (rec _ the-alg _ ∘g string≅stringL .fun))
     {!!}
-    ∘g id ,&p id ,⊗ string≅stringL .fun
-    ∘g &-swap
-    where
-    the-alg : Algebra (*LTy char) (λ _ → ＂ c ＂ ⊸ ((g ⊗ stringL) ⇒ ⊥))
-    the-alg _ = ⊕ᴰ-elim λ {
-        nil →
-        {!!}
-          -- ⊸-mapCod (⇒-mapDom (id ,⊗ string≅stringL .inv))
-          -- ∘g ⊸-intro-ε (⇒-intro (c∉Fg ∘g &-swap))
-          -- ∘g lowerG ∘g lowerG
-      ; snoc →
-        ?
-        ∘g lowerG ,⊗ lowerG
-        -- ⊸-intro
-        --   (⇒-intro
-        --     {!!}
-        --     -- (
-        --     -- {!!}
-        --     -- -- ∘g &⊕-distR
-        --     -- -- ∘g ⊗⊕-distL ,&p id
-        --     -- )
-        --   ∘g ⊸-app ,⊗ id
-        --   ∘g ⊗-assoc)
-        -- ∘g (lowerG ,⊗ lowerG)
-      }
-
 
   ∉First⊗l : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ h) ⟩
   ∉First⊗l {g = g} {c = c} {h = h} ¬nullg c∉Fg =
-    {!!}
-    where
-    the-alg : Algebra (*LTy char) (λ _ → ＂ c ＂ ⊸ ((g ⊗ h) ⇒ ⊥))
-    the-alg _ = ⊕ᴰ-elim λ {
-        nil →
-        {!!}
-          -- ⊸-mapCod (⇒-mapDom (id ,⊗ string≅stringL .inv))
-          -- ∘g ⊸-intro-ε (⇒-intro (c∉Fg ∘g &-swap))
-          -- ∘g lowerG ∘g lowerG
-      ; snoc →
-        {!!}
-        ∘g lowerG ,⊗ lowerG
-      }
-    -- ∉First⊗l' ¬nullg c∉Fg
-    -- ∘g id ,&p (id ,⊗ string-intro)
+    ∉First⊗l' ¬nullg c∉Fg
+    ∘g id ,&p (id ,⊗ string-intro)
 
   open DecidablePowerset ⟨ Alphabet ⟩
   open DecidableFinitePowerset (⟨ Alphabet ⟩ , isFinSetAlphabet)
@@ -333,13 +286,20 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     ∘g same-first c' c
     ∘g &-swap
   witness¬First (r ⊗DR-null[ x ] r') c c∉F =
+    ∉First⊗l (witness¬Nullable r) (witness¬First r c c∉F)
+  witness¬First (r ⊗DR-notnull[ x ] r') c c∉F =
+    ∉First⊗l (witness¬Nullable r) (witness¬First r c c∉F)
+  witness¬First (r ⊕DR-ft[ x ] r') c c∉F =
+    ⊕-elim
+      (witness¬First r c {!c∉F !})
+      (witness¬First r' c {!!})
+    ∘g &⊕-distL
+  witness¬First (r ⊕DR-tf[ x ] r') c c∉F =
     {!!}
-    -- witness¬First r c c∉F
-  witness¬First (r ⊗DR-notnull[ x ] r') c c∉F = {!!}
-  witness¬First (r ⊕DR-ft[ x ] r') c c∉F = {!!}
-  witness¬First (r ⊕DR-tf[ x ] r') c c∉F = {!!}
-  witness¬First (r ⊕DR-ff[ x ] r') c c∉F = {!!}
-  witness¬First (r *DR) c c∉F = {!!}
+  witness¬First (r ⊕DR-ff[ x ] r') c c∉F =
+    {!!}
+  witness¬First (r *DR) c c∉F =
+    {!!}
 
   decidable¬First = {!!}
 

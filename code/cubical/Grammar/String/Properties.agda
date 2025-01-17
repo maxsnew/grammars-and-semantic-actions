@@ -362,11 +362,23 @@ unrolled-string = ε ⊕ char ⊗ string
 unrolled-string' : Grammar ℓ-zero
 unrolled-string' = ε ⊕ (string ⊗ char)
 
+unrolled-stringL : Grammar ℓ-zero
+unrolled-stringL = ε ⊕ (stringL ⊗ char)
+
 unroll-string≅ : string ≅ unrolled-string
 unroll-string≅ = *≅ε⊕g⊗g* char
 
 unroll-string≅' : string ≅ unrolled-string'
 unroll-string≅' = *≅ε⊕g*⊗g char
+
+string≅unrolled-stringL : string ≅ unrolled-stringL
+string≅unrolled-stringL =
+  unroll-string≅'
+  ≅∙ ⊕≅ id≅ (⊗≅ string≅stringL id≅)
+
+unroll-stringL≅ : stringL ≅ unrolled-stringL
+unroll-stringL≅ = sym≅ string≅stringL ≅∙ string≅unrolled-stringL
+
 
 unambiguous-unrolled-string : unambiguous unrolled-string
 unambiguous-unrolled-string =
