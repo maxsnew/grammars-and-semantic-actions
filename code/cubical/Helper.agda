@@ -47,7 +47,7 @@ private
   variable ℓ ℓ' : Level
 
 open import Cubical.Relation.Nullary.DecidablePropositions.More public
-open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base public
+open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base
 open import Cubical.Foundations.HLevels.MoreMore public
 open import Cubical.Data.FinSet.More public
 

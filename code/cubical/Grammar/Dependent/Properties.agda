@@ -108,7 +108,7 @@ module _
 module _
   {A : Type ℓS}
   {g : A → Grammar ℓg}
-  {h : Grammar ℓg}
+  {h : Grammar ℓh}
   where
 
   private
