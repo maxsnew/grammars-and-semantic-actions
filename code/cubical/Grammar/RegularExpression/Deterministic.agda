@@ -1,3 +1,15 @@
+{--
+-- Deterministic Regular Expressions
+--
+-- Roadmap is to
+-- 1. Prove that the sets attached to the parameters of the DetReg type
+--    actually match the first and follow sets (We are here rn)
+-- 2. Build automata for these and prove them equivalent to the
+--    deterministic regexes. Try to reuse the building blocks
+--    from the Thompson proofs if possible
+-- 3. Use these automata as a parser, and likely as a proof of unambiguity.
+--    Although we might be able to prove unambiguity directly?
+--}
 {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -128,31 +140,6 @@ disjoint¬Firsts→disjoint disjFsts ¬nullg =
 
 data DetReg : ℙ → ℙ → Bool → Type (ℓ-suc ℓ-zero)
 
--- Dec¬FirstLit : ∀ c c' → Dec ⟨ c' ∉First ＂ c ＂ ⟩
--- Dec¬FirstLit c c' =
---   decRec
---     (λ c≡c' →
---       no (λ e →
---         get⊥
---           ((e ∘g ((id ,⊗ string-intro ∘g ⊗-unit-r⁻) ∘g transportG (cong literal c≡c')) ,&p id ∘g &-Δ)
---             _ (lit-intro {c}) )))
---     (λ c≢c' → yes
---       (⊕-elim
---         (⊕ᴰ-elim (λ c≡c' → Empty.rec (c≢c' c≡c')) ∘g same-literal c c' ∘g &-swap)
---         (disjoint-char-char⊗char+ ∘g literal→char c ,&p literal→char c' ,⊗ id ∘g &-swap)
---       ∘g &⊕-distR
---       ∘g ((⊗-unit-r ,⊕p id) ∘g ⊗⊕-distL ∘g id ,⊗ (unroll-string≅ .fun)) ,&p id
---       )
---     )
---     (DiscreteAlphabet isFinSetAlphabet c c')
-
--- ¬FirstLit-Decℙ : ⟨ Alphabet ⟩ → Decℙ
--- ¬FirstLit-Decℙ c c' .fst = c' ∉First ＂ c ＂
--- ¬FirstLit-Decℙ c c' .snd = Dec¬FirstLit c c'
-
--- FirstLit-Decℙ : ⟨ Alphabet ⟩ → Decℙ
--- FirstLit-Decℙ c = ¬ℙ (¬FirstLit-Decℙ c)
-
 DetReg→Regex : ∀ {FL F} {b} → DetReg FL F b → Regex
 
 DetReg→Grammar : ∀ {FL F} {b} → DetReg FL F b → Grammar ℓ-zero
@@ -229,7 +216,6 @@ data DetReg where
   _⊗DR-null[_]_ :
     ∀ {FL FL' F F' : ℙ} →
     (r : DetReg FL F false) →
-    -- (x : FL ∩ℙ F' ≡ ∅ℙ) →
     (FL∩F'mt :
       ∀ (c : ⟨ Alphabet ⟩) →
         (c ∉ FL) ⊎ (c ∉ F')
@@ -242,7 +228,6 @@ data DetReg where
   _⊗DR-notnull[_]_ :
     ∀ {FL FL' F F' : ℙ} →
     (r : DetReg FL F false) →
-    -- (x : FL ∩ℙ F' ≡ ∅ℙ) →
     (FL∩F'mt :
       ∀ (c : ⟨ Alphabet ⟩) →
         (c ∉ FL) ⊎ (c ∉ F')
@@ -255,7 +240,6 @@ data DetReg where
   _⊕DR-ft[_]_ :
     ∀ {FL FL' F F' : ℙ} →
     (r : DetReg FL F false) →
-    -- (x : F ∩ℙ F' ≡ ∅ℙ) →
     (F∩F'mt :
       ∀ (c : ⟨ Alphabet ⟩) →
         (c ∉ F) ⊎ (c ∉ F')
@@ -281,7 +265,6 @@ data DetReg where
   _⊕DR-ff[_]_ :
     ∀ {FL FL' F F' : ℙ} →
     (r : DetReg FL F false) →
-    -- (x : F ∩ℙ F' ≡ ∅ℙ) →
     (F∩F'mt :
       ∀ (c : ⟨ Alphabet ⟩) →
         (c ∉ F) ⊎ (c ∉ F')
