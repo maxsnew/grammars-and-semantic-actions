@@ -52,16 +52,15 @@ open StrongEquivalence
 
 opaque
   unfolding literal
-  char-length1 : ∀  w → char w → length w ≡ 1
+  char-length1 : ∀ w → char w → length w ≡ 1
   char-length1 [] (c , p) = Empty.rec (¬nil≡cons p)
   char-length1 (x ∷ []) (c , p) = refl
   char-length1 (x ∷ x₁ ∷ w) (c , p) = Empty.rec (¬cons≡nil (cons-inj₂ p))
 
 module _ (c : ⟨ Alphabet ⟩) where
-  opaque
-    unfolding literal
-    literal→char : ＂ c ＂ ⊢ char
-    literal→char = ⊕ᴰ-in c
+  literal→char : ＂ c ＂ ⊢ char
+  literal→char = ⊕ᴰ-in c
+
 opaque
   unfolding literal
   isLang-char : isLang char
@@ -378,7 +377,6 @@ string≅unrolled-stringL =
 
 unroll-stringL≅ : stringL ≅ unrolled-stringL
 unroll-stringL≅ = sym≅ string≅stringL ≅∙ string≅unrolled-stringL
-
 
 unambiguous-unrolled-string : unambiguous unrolled-string
 unambiguous-unrolled-string =

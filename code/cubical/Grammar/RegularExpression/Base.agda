@@ -12,42 +12,34 @@ private
   variable ℓG ℓG' : Level
 
 data RegularExpression  : Type ℓ-zero where
-  ε-Reg : RegularExpression
-  ⊥-Reg : RegularExpression
-  _⊗Reg_ : RegularExpression → RegularExpression → RegularExpression
-  literalReg : ⟨ Alphabet ⟩ → RegularExpression
-  _⊕Reg_ : RegularExpression → RegularExpression → RegularExpression
-  KL*Reg : RegularExpression → RegularExpression
+  εr : RegularExpression
+  ⊥r : RegularExpression
+  _⊗r_ : RegularExpression → RegularExpression → RegularExpression
+  ＂_＂r : ⟨ Alphabet ⟩ → RegularExpression
+  _⊕r_ : RegularExpression → RegularExpression → RegularExpression
+  _*r : RegularExpression → RegularExpression
 
 Regex = RegularExpression
 
 RegularExpression→Grammar : RegularExpression → Grammar ℓ-zero
-RegularExpression→Grammar  ε-Reg = ε
-RegularExpression→Grammar  ⊥-Reg = ⊥
-RegularExpression→Grammar (g ⊗Reg g') =
+RegularExpression→Grammar  εr = ε
+RegularExpression→Grammar  ⊥r = ⊥
+RegularExpression→Grammar (g ⊗r g') =
   (RegularExpression→Grammar g) ⊗ (RegularExpression→Grammar g')
-RegularExpression→Grammar (literalReg c) = literal c
-RegularExpression→Grammar (g ⊕Reg g') =
+RegularExpression→Grammar (＂ c ＂r) = literal c
+RegularExpression→Grammar (g ⊕r g') =
   RegularExpression→Grammar g ⊕ RegularExpression→Grammar g'
-RegularExpression→Grammar (KL*Reg g) = KL* (RegularExpression→Grammar g)
+RegularExpression→Grammar (g *r) = (RegularExpression→Grammar g) *
 
 ⟦_⟧r : RegularExpression → Grammar ℓ-zero
 ⟦_⟧r = RegularExpression→Grammar
 
-＂_＂r : ⟨ Alphabet ⟩ → RegularExpression
-＂ c ＂r = literalReg c
 infix 30 ＂_＂r
 
-_⊗r_ : RegularExpression → RegularExpression → RegularExpression
-r ⊗r r' = r ⊗Reg r'
 infixr 20 _⊗r_
 
-_⊕r_ : RegularExpression → RegularExpression → RegularExpression
-r ⊕r r' = r ⊕Reg r'
 infixr 20 _⊕r_
 
-_*r : RegularExpression → RegularExpression
-r *r = KL*Reg r
 infix 30 _*r
 
 _+r : RegularExpression → RegularExpression

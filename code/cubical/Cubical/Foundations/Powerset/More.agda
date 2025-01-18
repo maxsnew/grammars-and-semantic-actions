@@ -6,7 +6,7 @@ open import Cubical.Data.Empty
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
-open import Cubical.Foundations.Powerset renaming (ℙ to ℙ')
+open import Cubical.Foundations.Powerset renaming (ℙ to ℙ' ; _∈_ to _∈'_)
 
 open import Cubical.Functions.Logic hiding (⊥ ; ⊤)
 
@@ -18,8 +18,11 @@ module Powerset (A : Type ℓ) where
   ℙ : Type (ℓ-suc ℓ)
   ℙ = ℙ' A
 
-  ∅ℙ : ℙ
-  ∅ℙ a = ⊥* , isProp⊥*
+  ⊥ℙ : ℙ
+  ⊥ℙ a = ⊥* , isProp⊥*
+
+  ⊤ℙ : ℙ
+  ⊤ℙ a = Unit* , isPropUnit*
 
   _∪ℙ_ : ℙ → ℙ → ℙ
   (X ∪ℙ Y) a = X a ⊔ Y a
@@ -32,6 +35,9 @@ module Powerset (A : Type ℓ) where
   ¬ℙ : ℙ → ℙ
   ¬ℙ X x .fst = X x .fst → ⊥
   ¬ℙ X x .snd = isProp→ isProp⊥
+
+  _∈_ : A → ℙ → Type ℓ
+  x ∈ X = ⟨ X x ⟩
 
   _∉_ : A → ℙ → Type ℓ
   x ∉ X = ⟨ X x ⟩ → ⊥

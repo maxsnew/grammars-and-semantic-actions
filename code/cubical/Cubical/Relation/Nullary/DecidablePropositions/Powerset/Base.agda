@@ -70,9 +70,8 @@ module DecidablePowerset (A : Type ℓ) where
   (X ∩ℙ Y) x = DecProp× (X x) (Y x)
   infixr 30 _∩ℙ_
 
-  ¬ℙ_ : Decℙ → Decℙ
+  ¬ℙ : Decℙ → Decℙ
   (¬ℙ X) x = negateDecProp (X x)
-  infix 31 ¬ℙ_
 
   _∈ℙ_ : A → Decℙ → Type ℓ
   x ∈ℙ X = inDecℙ x X

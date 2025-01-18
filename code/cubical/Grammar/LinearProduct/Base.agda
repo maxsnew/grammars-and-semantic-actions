@@ -135,7 +135,7 @@ opaque
         (p≡ w p))
 
 opaque
-  unfolding _⊗_ the-split
+  unfolding _⊗_
   ⊗-intro :
     g ⊢ h →
     k ⊢ l →
@@ -144,7 +144,7 @@ opaque
     p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
 
 opaque
-  unfolding _⊗_ the-split
+  unfolding _⊗_
   ⊗-in : {w w' : String} →
     g w → h w' → (g ⊗ h) (w ++ w')
   ⊗-in p q = (_ , refl) , (p , q)

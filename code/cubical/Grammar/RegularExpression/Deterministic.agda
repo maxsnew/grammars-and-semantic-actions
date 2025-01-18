@@ -61,9 +61,10 @@ open StrongEquivalence
 
 open Powerset ⟨ Alphabet ⟩
 open PowersetOverSet (Alphabet .snd)
+
 -- TODO migrate over decidable stuff to ordinary powersets
 -- the cubical library absolutely sucks for this sort of thing
-open DecidablePowerset ⟨ Alphabet ⟩ hiding (∅ℙ ; _∩ℙ_ ; _∪ℙ_)
+-- open DecidablePowerset ⟨ Alphabet ⟩ hiding (∅ℙ ; _∩ℙ_ ; _∪ℙ_ ; ¬ℙ)
 
 FollowLastG : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
 FollowLastG g c = (g ⊗ ＂ c ＂ ⊗ string) & g
@@ -72,8 +73,11 @@ _∉FollowLast_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
 (c ∉FollowLast g) .fst = uninhabited (FollowLastG g c)
 (c ∉FollowLast g) .snd = isProp-uninhabited
 
-¬FollowLast : Grammar ℓg → Type ℓg
-¬FollowLast g = Σ[ c ∈ ⟨ Alphabet ⟩ ] ⟨ c ∉FollowLast g ⟩
+-- It might be nice to have a version of this
+-- at an arbitrary level, but I don't
+-- want to refactor the powerset code rn
+¬FollowLast : Grammar ℓ-zero → ℙ
+¬FollowLast g c = c ∉FollowLast g
 
 FirstG : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
 FirstG g c = (＂ c ＂ ⊗ string) & g
@@ -82,8 +86,8 @@ _∉First_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
 (c ∉First g) .fst = uninhabited (FirstG g c)
 (c ∉First g) .snd = isProp-uninhabited
 
-¬First : Grammar ℓg → Type ℓg
-¬First g = Σ[ c ∈ ⟨ Alphabet ⟩ ] ⟨ c ∉First g ⟩
+¬First : Grammar ℓ-zero → ℙ
+¬First g c = c ∉First g
 
 NullableG : Grammar ℓg → Grammar ℓg
 NullableG g = ε & g
@@ -138,240 +142,205 @@ disjoint¬Firsts→disjoint disjFsts ¬nullg =
     ∘g id ,&p ⊕ᴰ-distL .fun)
   ∘g &string-split≅ .fun
 
-data DetReg : ℙ → ℙ → Bool → Type (ℓ-suc ℓ-zero)
+data DetReg : RegularExpression → ℙ → ℙ → Bool → Type (ℓ-suc ℓ-zero)
 
-DetReg→Regex : ∀ {FL F} {b} → DetReg FL F b → Regex
-
-DetReg→Grammar : ∀ {FL F} {b} → DetReg FL F b → Grammar ℓ-zero
-
-⟦_⟧DR : ∀ {FL F} {b} → DetReg FL F b → Grammar ℓ-zero
-
-witness¬¬Nullable :
-  ∀ {FL F : ℙ} →
-  (r : DetReg FL F true) →
-  ⟨ ¬Nullable ⟦ r ⟧DR ⟩ →
-  Empty.⊥
-
-witness¬Nullable :
-  ∀ {FL F : ℙ} →
-  (r : DetReg FL F false) →
-  ⟨ ¬Nullable ⟦ r ⟧DR ⟩
+sound¬Nullable :
+  ∀ {r : RegularExpression} →
+  {¬FL ¬F : ℙ} →
+  {b : Bool} →
+  (dr : DetReg r ¬FL ¬F b) →
+  if b then
+  ⟨ ¬Nullable ⟦ r ⟧r ⟩ else
+  (⟨ ¬Nullable ⟦ r ⟧r ⟩ → Empty.⊥)
 
 decidable¬Nullable :
-  ∀ {FL F : ℙ} →
+  ∀ {r : RegularExpression} →
+  {¬FL ¬F : ℙ} →
   {b : Bool} →
-  (r : DetReg FL F b) →
-  Dec ⟨ ¬Nullable ⟦ r ⟧DR ⟩
+  (dr : DetReg r ¬FL ¬F b) →
+  Dec ⟨ ¬Nullable ⟦ r ⟧r ⟩
 
-¬NullableDecProp :
-  ∀ {FL F : ℙ} →
+sound¬First :
+  ∀ {r : RegularExpression} →
+  {¬FL ¬F : ℙ} →
   {b : Bool} →
-  (r : DetReg FL F b) →
-  DecProp ℓ-zero
-
-decidable¬First :
-  ∀ {FL F : ℙ} →
-  {b : Bool} →
-  (r : DetReg FL F b) →
+  (dr : DetReg r ¬FL ¬F b) →
   (c : ⟨ Alphabet ⟩) →
-  Dec ⟨ c ∉First ⟦ r ⟧DR ⟩
+  c ∈ ¬F →
+  ⟨ c ∉First ⟦ r ⟧r ⟩
 
-witness¬First :
-  ∀ {FL F : ℙ} →
+sound¬FollowLast :
+  ∀ {r : RegularExpression} →
+  {¬FL ¬F : ℙ} →
   {b : Bool} →
-  (r : DetReg FL F b) →
+  (dr : DetReg r ¬FL ¬F b) →
   (c : ⟨ Alphabet ⟩) →
-  c ∉ F →
-  ⟨ c ∉First ⟦ r ⟧DR ⟩
-
-decidable¬FollowLast :
-  ∀ {FL F : ℙ} →
-  {b : Bool} →
-  (r : DetReg FL F b) →
-  (c : ⟨ Alphabet ⟩) →
-  Dec ⟨ c ∉FollowLast ⟦ r ⟧DR ⟩
-
-witness¬FollowLast :
-  ∀ {FL F : ℙ} →
-  {b : Bool} →
-  (r : DetReg FL F b) →
-  (c : ⟨ Alphabet ⟩) →
-  c ∉ FL →
-  ⟨ c ∉FollowLast ⟦ r ⟧DR ⟩
+  c ∈ ¬FL →
+  ⟨ c ∉FollowLast ⟦ r ⟧r ⟩
 
 unambiguousDR :
-  ∀ {FL F : ℙ} →
+  ∀ {r : RegularExpression} →
+  {¬FL ¬F : ℙ} →
   {b : Bool} →
-  (r : DetReg FL F b) →
-  unambiguous ⟦ r ⟧DR
+  (dr : DetReg r ¬FL ¬F b) →
+  unambiguous ⟦ r ⟧r
 
 -- A deterministic regular expression is parametrized
--- by its follow last set, first last set, and nullability
+-- a regular expression r and
+-- the complement of its follow last set,
+-- the complement of its first last set,
+-- and the negation of its nullability.
+-- By negating each of these, the indices are prop valued,
+-- whereas if we used the nonnegated versions it would not
+-- be prop valued
 data DetReg where
-  εDR : DetReg ∅ℙ ∅ℙ true
-  ⊥DR : DetReg ∅ℙ ∅ℙ false
-  literalDR :
+  εdr : DetReg εr ⊤ℙ ⊤ℙ false
+  ⊥dr : DetReg ⊥r ⊤ℙ ⊤ℙ true
+  ＂_＂dr :
     (c : ⟨ Alphabet ⟩) →
-    DetReg ∅ℙ ⟦ c ⟧ℙ false
-  _⊗DR-null[_]_ :
-    ∀ {FL FL' F F' : ℙ} →
-    (r : DetReg FL F false) →
+    DetReg (＂ c ＂r) ⊤ℙ (¬ℙ ⟦ c ⟧ℙ) true
+  _⊗DR[_]_ :
+    ∀ {r r' : RegularExpression} →
+    {¬FL ¬FL' ¬F ¬F' : ℙ} →
+    {b' : Bool} →
+    (dr : DetReg r ¬FL ¬F true) →
     (FL∩F'mt :
       ∀ (c : ⟨ Alphabet ⟩) →
-        (c ∉ FL) ⊎ (c ∉ F')
+        (c ∈ ¬FL) ⊎ (c ∈ ¬F')
     ) →
-    (r' : DetReg FL' F' true) →
+    (dr' : DetReg r' ¬FL' ¬F' b') →
     DetReg
-      (FL ∪ℙ F' ∪ℙ FL')
-      F
-      false
-  _⊗DR-notnull[_]_ :
-    ∀ {FL FL' F F' : ℙ} →
-    (r : DetReg FL F false) →
-    (FL∩F'mt :
-      ∀ (c : ⟨ Alphabet ⟩) →
-        (c ∉ FL) ⊎ (c ∉ F')
-    ) →
-    (r' : DetReg FL' F' false) →
-    DetReg
-      (FL ∪ℙ F' ∪ℙ FL')
-      F
-      false
-  _⊕DR-ft[_]_ :
-    ∀ {FL FL' F F' : ℙ} →
-    (r : DetReg FL F false) →
-    (F∩F'mt :
-      ∀ (c : ⟨ Alphabet ⟩) →
-        (c ∉ F) ⊎ (c ∉ F')
-    ) →
-    (r' : DetReg FL' F' true) →
-    DetReg
-      (FL ∪ℙ FL')
-      (F ∪ℙ F')
+      (r ⊗r r')
+      (if b' then ¬FL' else ¬FL ∩ℙ ¬F' ∩ℙ ¬FL') -- maybe wrong
+      ¬F
       true
-  _⊕DR-tf[_]_ :
-    ∀ {FL FL' F F' : ℙ} →
-    (r : DetReg FL F true) →
-    -- (x : F ∩ℙ F' ≡ ∅ℙ) →
+  _⊕DR[_]_ :
+    ∀ {r r' : RegularExpression} →
+    {¬FL ¬FL' ¬F ¬F' : ℙ} →
+    {b b' : Bool} →
+    {notBothNull : b or b' Eq.≡ true} →
+    (dr : DetReg r ¬FL ¬F b) →
     (F∩F'mt :
       ∀ (c : ⟨ Alphabet ⟩) →
-        (c ∉ F) ⊎ (c ∉ F')
+        (c ∈ ¬F) ⊎ (c ∈ ¬F')
     ) →
-    (r' : DetReg FL' F' false) →
+    (dr' : DetReg r' ¬FL' ¬F' b') →
     DetReg
-      (FL ∪ℙ FL')
-      (F ∪ℙ F')
-      true
-  _⊕DR-ff[_]_ :
-    ∀ {FL FL' F F' : ℙ} →
-    (r : DetReg FL F false) →
-    (F∩F'mt :
-      ∀ (c : ⟨ Alphabet ⟩) →
-        (c ∉ F) ⊎ (c ∉ F')
-    ) →
-    (r' : DetReg FL' F' false) →
-    DetReg
-      (FL ∪ℙ FL')
-      (F ∪ℙ F')
-      false
+      (r ⊕r r')
+      (¬FL ∩ℙ ¬FL')
+      (¬F ∩ℙ ¬F')
+      (b and b')
   _*DR :
-    ∀ {FL F : ℙ} →
-    (r : DetReg FL F false) →
+    ∀ {r : RegularExpression} →
+    {¬FL ¬F : ℙ} →
+    (dr : DetReg r ¬FL ¬F true) →
     DetReg
-      (F ∪ℙ FL)
-      F
-      true
+      (r *r)
+      (¬F ∩ℙ ¬FL)
+      ¬F
+      false
 
-DetReg→Regex εDR = ε-Reg
-DetReg→Regex ⊥DR = ⊥-Reg
-DetReg→Regex (literalDR c) = literalReg c
-DetReg→Regex (r ⊗DR-null[ x ] r') =
-  (DetReg→Regex r) ⊗Reg (DetReg→Regex r')
-DetReg→Regex (r ⊗DR-notnull[ x ] r') =
-  (DetReg→Regex r) ⊗Reg (DetReg→Regex r')
-DetReg→Regex (r ⊕DR-ft[ x ] r') =
-  (DetReg→Regex r) ⊕Reg (DetReg→Regex r')
-DetReg→Regex (r ⊕DR-tf[ x ] r') =
-  (DetReg→Regex r) ⊕Reg (DetReg→Regex r')
-DetReg→Regex (r ⊕DR-ff[ x ] r') =
-  (DetReg→Regex r) ⊕Reg (DetReg→Regex r')
-DetReg→Regex (r *DR) = KL*Reg (DetReg→Regex r)
+record ¬NullablePf (g : Grammar ℓ-zero) : Type ℓ-zero where
+  field
+    ¬nullpf : ⟨ ¬Nullable g ⟩
 
-DetReg→Grammar r = ⟦ DetReg→Regex r ⟧r
+record ¬¬NullablePf (g : Grammar ℓ-zero) : Type ℓ-zero where
+  field
+    ¬¬nullpf : ⟨ ¬Nullable g ⟩ → Empty.⊥
 
-⟦_⟧DR = DetReg→Grammar
+open ¬NullablePf {{...}}
+open ¬¬NullablePf {{...}}
 
-¬NullableDecProp r .fst = ¬Nullable ⟦ r ⟧DR
-¬NullableDecProp r .snd = decidable¬Nullable r
+instance
+  ¬Nullable⊥ : ¬NullablePf ⊥
+  ¬Nullable⊥ .¬nullpf = &-π₂
 
-witness¬Nullable ⊥DR = &-π₂
-witness¬Nullable (literalDR c) = disjoint-ε-literal c
-witness¬Nullable (r ⊗DR-null[ x ] r') =
-  ¬Nullable⊗l (witness¬Nullable r)
-witness¬Nullable (r ⊗DR-notnull[ x ] r') =
-  ¬Nullable⊗l (witness¬Nullable r)
-witness¬Nullable (r ⊕DR-ff[ x ] r') =
-  ⊕-elim (witness¬Nullable r) (witness¬Nullable r')
+  ¬NullableLit : ∀ {c} → ¬NullablePf (＂ c ＂)
+  ¬NullableLit {c} .¬nullpf = disjoint-ε-literal c
+
+instance
+  ¬¬Nullableε : ¬¬NullablePf ε
+  ¬¬Nullableε .¬¬nullpf e = get⊥ ((e ∘g &-Δ) _ ε-intro)
+
+  ¬¬Nullable* : {g : Grammar ℓ-zero} → ¬¬NullablePf (g *)
+  ¬¬Nullable* .¬¬nullpf e =
+    get⊥ ((e ∘g id ,&p NIL ∘g &-Δ) _ ε-intro)
+
+sound¬Nullable εdr = ¬¬nullpf
+sound¬Nullable ⊥dr = ¬nullpf
+sound¬Nullable ＂ c ＂dr = ¬nullpf
+sound¬Nullable (dr ⊗DR[ FL∩F'mt ] dr') =
+  ¬Nullable⊗l (sound¬Nullable dr)
+sound¬Nullable (_⊕DR[_]_ {b = false} {b' = true}
+  dr disjointFsts dr') e =
+  sound¬Nullable dr (e ∘g id ,&p ⊕-inl)
+sound¬Nullable (_⊕DR[_]_ {b = true} {b' = false}
+  dr disjointFsts dr') e =
+  sound¬Nullable dr' (e ∘g id ,&p ⊕-inr)
+sound¬Nullable (_⊕DR[_]_ {b = true} {b' = true}
+  dr disjointFsts dr') =
+  ⊕-elim
+    (sound¬Nullable dr)
+    (sound¬Nullable dr')
   ∘g &⊕-distL
+sound¬Nullable {b = b} (dr *DR) = ¬¬nullpf
 
-witness¬¬Nullable εDR e = get⊥ ((e ∘g &-Δ) _ ε-intro)
-witness¬¬Nullable (r ⊕DR-ft[ x ] r') e =
-  witness¬¬Nullable r' (e ∘g id ,&p ⊕-inr)
-witness¬¬Nullable (r ⊕DR-tf[ x ] r') e =
-  witness¬¬Nullable r (e ∘g id ,&p ⊕-inl)
-witness¬¬Nullable (r *DR) e =
-  get⊥ ((e ∘g id ,&p NIL ∘g &-Δ) _ ε-intro)
+decidable¬Nullable {b = false} r = no (sound¬Nullable r)
+decidable¬Nullable {b = true} r = yes (sound¬Nullable r)
 
-decidable¬Nullable {b = false} r = yes (witness¬Nullable r)
-decidable¬Nullable {b = true} r = no (witness¬¬Nullable r)
-
-witness¬First εDR c c∉F =
+sound¬First εdr c c∈¬F =
   disjoint-ε-char+
   ∘g id ,&p literal→char c ,⊗ string-intro
   ∘g &-swap
-witness¬First ⊥DR c c∉F = &-π₂
-witness¬First (literalDR c') c c∉F =
-  ⊕ᴰ-elim (λ c'≡c → Empty.rec (c∉F c'≡c))
-  ∘g same-first c' c
+sound¬First ⊥dr c c∈¬F = &-π₂
+sound¬First ＂ c' ＂dr c c∈¬F =
+  ⊕ᴰ-elim (λ c'≡c → Empty.rec (c∈¬F c'≡c))
+  ∘g same-first c' c 
   ∘g &-swap
-witness¬First (r ⊗DR-null[ x ] r') c c∉F =
-  ∉First⊗l (witness¬Nullable r) (witness¬First r c c∉F)
-witness¬First (r ⊗DR-notnull[ x ] r') c c∉F =
-  ∉First⊗l (witness¬Nullable r) (witness¬First r c c∉F)
-witness¬First (r ⊕DR-ft[ x ] r') c c∉F =
-  -- TODO need to inductively prove that these sets are
-  -- actually decidable then write a DeMorgan rule for
-  -- decidable subsets to get that
-  -- c∉Fr and c∉Fr'
-  -- or maybe i can use x and c∉F to infer both of what I need
+sound¬First (dr ⊗DR[ FL∩F'mt ] dr₁) c c∈¬F =
+  ∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F)
+sound¬First (dr ⊕DR[ _ ] dr') c c∈¬F =
   ⊕-elim
-    (witness¬First r c {!x c!})
-    (witness¬First r' c {!!})
+    (sound¬First dr c (c∈¬F .fst))
+    (sound¬First dr' c (c∈¬F .snd))
   ∘g &⊕-distL
-witness¬First (r ⊕DR-tf[ x ] r') c c∉F =
-  {!!}
-witness¬First (r ⊕DR-ff[ x ] r') c c∉F =
-  {!!}
-witness¬First (r *DR) c c∉F =
+sound¬First (dr *DR) c c∈¬F =
   ⊕-elim
     (disjoint-ε-char+
      ∘g &-swap
      ∘g (literal→char c ,⊗ id) ,&p id)
-    (∉First⊗l (witness¬Nullable r) (witness¬First r c c∉F))
+    (∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F))
   ∘g &⊕-distL
-  ∘g id ,&p *≅ε⊕g⊗g* _ .fun 
+  ∘g id ,&p *≅ε⊕g⊗g* _ .fun
 
-decidable¬First = {!!}
+sound¬FollowLast εdr c _ =
+  disjoint-ε-char+
+  ∘g &-swap
+  ∘g (literal→char c ,⊗ id ∘g ⊗-unit-l) ,&p id
+sound¬FollowLast ⊥dr c _ = &-π₂
+sound¬FollowLast ＂ c' ＂dr c _ =
+  disjoint-char-char⊗char+
+  ∘g &-swap
+  ∘g (literal→char c' ,⊗ literal→char c ,⊗ id) ,&p literal→char c'
+sound¬FollowLast (_⊗DR[_]_ {b' = false} dr FL∩F'mt dr')
+  c (c∈¬FL , c∈¬F' , c∈¬FL') =
+  {!!}
+sound¬FollowLast (_⊗DR[_]_ {b' = true} dr FL∩F'mt dr')
+  c c∈¬FL' =
+  {!!}
+sound¬FollowLast (dr ⊕DR[ F∩F'mt ] dr') c (c∈¬FL , c∈¬FL') =
+  {!!}
+sound¬FollowLast (dr *DR) c (c∈¬F , c∈¬FL) =
+  {!!}
 
-witness¬FollowLast = {!!}
-decidable¬FollowLast = {!!}
+unambiguousDR dr = ?
 
-unambiguousDR εDR = unambiguousε
-unambiguousDR ⊥DR = unambiguous⊥
-unambiguousDR (literalDR c) = unambiguous-literal c
-unambiguousDR (r ⊗DR-null[ x ] r') = {!!}
-unambiguousDR (r ⊗DR-notnull[ x ] r') = {!!}
-unambiguousDR (r ⊕DR-ft[ x ] r') = {!!}
-unambiguousDR (r ⊕DR-tf[ x ] r') = {!!}
-unambiguousDR (r ⊕DR-ff[ x ] r') = {!!}
-unambiguousDR (r *DR) = {!!}
+-- -- unambiguousDR εDR = unambiguousε
+-- -- unambiguousDR ⊥DR = unambiguous⊥
+-- -- unambiguousDR (literalDR c) = unambiguous-literal c
+-- -- unambiguousDR (r ⊗DR-null[ x ] r') = {!!}
+-- -- unambiguousDR (r ⊗DR-notnull[ x ] r') = {!!}
+-- -- unambiguousDR (r ⊕DR-ft[ x ] r') = {!!}
+-- -- unambiguousDR (r ⊕DR-tf[ x ] r') = {!!}
+-- -- unambiguousDR (r ⊕DR-ff[ x ] r') = {!!}
+-- -- unambiguousDR (r *DR) = {!!}
