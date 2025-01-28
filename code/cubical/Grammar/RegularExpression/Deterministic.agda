@@ -18,10 +18,8 @@ module Grammar.RegularExpression.Deterministic (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Foundations.Structure
 
-open import Cubical.Functions.Logic renaming (⊥ to ⊥P)
-
 open import Cubical.Data.FinSet
-open import Cubical.Data.List hiding (rec)
+open import Cubical.Data.List as List hiding (rec)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.Bool hiding (_⊕_)
@@ -42,7 +40,7 @@ open import Grammar.Sum.Properties Alphabet
 open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.Literal.Properties Alphabet
 open import Grammar.Literal.Parseable Alphabet
-open import Grammar.Inductive.Indexed Alphabet
+open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.RegularExpression.Base Alphabet
@@ -52,7 +50,7 @@ open import Helper
 
 private
   variable
-    ℓg ℓh : Level
+    ℓg ℓh ℓk ℓl : Level
     g : Grammar ℓg
     h : Grammar ℓh
     c : ⟨ Alphabet ⟩
@@ -76,6 +74,7 @@ _∉FollowLast_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
 -- It might be nice to have a version of this
 -- at an arbitrary level, but I don't
 -- want to refactor the powerset code rn
+-- or use explicit lifts
 ¬FollowLast : Grammar ℓ-zero → ℙ
 ¬FollowLast g c = c ∉FollowLast g
 
@@ -118,12 +117,104 @@ NullableG g = ε & g
 
 ∉First⊗l' : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ string) ⟩
 ∉First⊗l' {g = g} {c = c} ¬nullg c∉Fg =
-  {!!}
+  ⊕-elim
+    (⊥⊗ ∘g (¬nullg ∘g &-swap) ,⊗ id ∘g &-π₂)
+    (⊕ᴰ-elim (λ c' →
+      ⊕ᴰ-elim (λ c≡c' →
+        (⊥⊗ ∘g (c∉Fg ∘g (transportG (cong literal (sym c≡c')) ,⊗ id) ,&p id ∘g &-swap) ,⊗ id) ∘g &-π₂ ∘g &-π₁
+      )
+      ∘g &⊕ᴰ-distR≅ .fun
+      ∘g id ,&
+        (same-first' c c' ∘g
+        (id ,&p ((id ,⊗ string-intro ∘g ⊗-assoc⁻) ∘g &-π₂ ,⊗ id)))
+    )
+    ∘g &⊕ᴰ-distR≅ .fun
+    ∘g id ,&p ⊕ᴰ-distL .fun
+    )
+  ∘g &⊕-distL
+  ∘g id ,&p (⊗⊕-distR ∘g (firstChar≅ .fun ,⊗ id))
 
 ∉First⊗l : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ h) ⟩
 ∉First⊗l {g = g} {c = c} {h = h} ¬nullg c∉Fg =
   ∉First⊗l' ¬nullg c∉Fg
   ∘g id ,&p (id ,⊗ string-intro)
+
+
+sequentiallyUnambiguous :
+  Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
+sequentiallyUnambiguous g h =
+  ∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉FollowLast g ⟩ ⊎ ⟨ c ∉First h ⟩
+
+module _
+  (g : Grammar ℓg)
+  (h : Grammar ℓh)
+  (seq-unambig : sequentiallyUnambiguous g h)
+  where
+  opaque
+    unfolding ⊗-intro the-split
+    sequentiallyUnambiguous→unique-splitting :
+      (w : String) →
+      (p q : (g ⊗ h) w) →
+      same-splits {w = λ _ → w} p q
+    sequentiallyUnambiguous→unique-splitting
+      w (s , p , q) (s' , p' , q') =
+      ?
+      -- {!!}
+      -- -- List.elim
+      -- --   {B = λ _ →
+      -- --     same-splits {g = g} {h = h} {k = g} {l = h}
+      -- --       {w = λ _ → w} (s , p , q) (s' , p' , q')}
+      -- --   {!!}
+      -- --   {!!}
+      -- --   (the-Split++ .fst)
+      where
+      the-Split++ :
+        Σ[ w' ∈ String ]
+          (
+          (Split++
+            (s .fst .fst)
+            (s .fst .snd)
+            (s' .fst .fst)
+            (s' .fst .snd)
+            w')
+          ⊎
+          (Split++
+            (s' .fst .fst)
+            (s' .fst .snd)
+            (s .fst .fst)
+            (s .fst .snd)
+            w')
+          )
+      the-Split++ =
+        split++
+          (s .fst .fst)
+          (s .fst .snd)
+          (s' .fst .fst)
+          (s' .fst .snd)
+          (sym (s .snd) ∙ (s' .snd))
+
+
+open Inverse
+
+opaque
+  unfolding ⊗-intro _&_
+  sequentiallyUnambiguous→⊗&-distL-inv :
+    (g : Grammar ℓg) →
+    (h : Grammar ℓh) →
+    (k : Grammar ℓk) →
+    (l : Grammar ℓl) →
+    sequentiallyUnambiguous g h →
+    Inverse (⊗&-distL {g = g} {h = h ⊗ k} {k = h ⊗ l})
+  sequentiallyUnambiguous→⊗&-distL-inv g h k l sequnambig
+    .inv w ((s , pg , ph , pk) , (s' , pg' , ph' , pl)) =
+    {!!} ,
+    {!!}
+  sequentiallyUnambiguous→⊗&-distL-inv g h k l sequnambig
+    .is-left-inv =
+    {!!}
+  sequentiallyUnambiguous→⊗&-distL-inv g h k l sequnambig
+    .is-right-inv =
+    {!!}
 
 disjoint¬Firsts→disjoint :
   (∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉First g ⟩ ⊎ ⟨ c ∉First h ⟩) →
@@ -327,20 +418,38 @@ sound¬FollowLast (_⊗DR[_]_ {b' = false} dr FL∩F'mt dr')
   {!!}
 sound¬FollowLast (_⊗DR[_]_ {b' = true} dr FL∩F'mt dr')
   c c∈¬FL' =
-  {!!}
+  {!sound¬FollowLast dr' c c∈¬FL'!}
 sound¬FollowLast (dr ⊕DR[ F∩F'mt ] dr') c (c∈¬FL , c∈¬FL') =
   {!!}
-sound¬FollowLast (dr *DR) c (c∈¬F , c∈¬FL) =
+sound¬FollowLast (_*DR {r = r} dr) c (c∈¬F , c∈¬FL) =
   {!!}
+  -- ⊕-elim
+  --   (sound¬First (dr *DR) c c∈¬F
+  --   ∘g ⊗-unit-l ,&p id)
+  --   (⊕-elim
+  --     (disjoint-ε-char+
+  --     ∘g &-swap
+  --     ∘g (char+⊗r→char+ ∘g string-intro ,⊗ literal→char c ,⊗ id) ,&p id
+  --     )
+  --     {!!}
+  --   ∘g &⊕-distL
+  --   ∘g id ,&p *≅ε⊕g⊗g* ⟦ r ⟧r .fun)
+  -- ∘g &⊕-distR
+  -- ∘g (⊗⊕-distR ∘g *≅ε⊕g⊗g* ⟦ r ⟧r .fun ,⊗ id) ,&p id
 
-unambiguousDR dr = ?
+unambiguousDR εdr = unambiguousε
+unambiguousDR ⊥dr = unambiguous⊥
+unambiguousDR ＂ c ＂dr = unambiguous-literal c
+unambiguousDR (dr ⊗DR[ FL∩F'mt ] dr') = {!!}
+unambiguousDR (dr ⊕DR[ F∩F'mt ] dr') = {!!}
+unambiguousDR (dr *DR) = {!!}
 
--- -- unambiguousDR εDR = unambiguousε
--- -- unambiguousDR ⊥DR = unambiguous⊥
--- -- unambiguousDR (literalDR c) = unambiguous-literal c
--- -- unambiguousDR (r ⊗DR-null[ x ] r') = {!!}
--- -- unambiguousDR (r ⊗DR-notnull[ x ] r') = {!!}
--- -- unambiguousDR (r ⊕DR-ft[ x ] r') = {!!}
--- -- unambiguousDR (r ⊕DR-tf[ x ] r') = {!!}
--- -- unambiguousDR (r ⊕DR-ff[ x ] r') = {!!}
--- -- unambiguousDR (r *DR) = {!!}
+-- unambiguousDR εDR = unambiguousε
+-- unambiguousDR ⊥DR = unambiguous⊥
+-- unambiguousDR (literalDR c) = unambiguous-literal c
+-- unambiguousDR (r ⊗DR-null[ x ] r') = {!!}
+-- unambiguousDR (r ⊗DR-notnull[ x ] r') = {!!}
+-- unambiguousDR (r ⊕DR-ft[ x ] r') = {!!}
+-- unambiguousDR (r ⊕DR-tf[ x ] r') = {!!}
+-- unambiguousDR (r ⊕DR-ff[ x ] r') = {!!}
+-- unambiguousDR (r *DR) = {!!}

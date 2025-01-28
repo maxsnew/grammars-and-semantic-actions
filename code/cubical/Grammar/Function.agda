@@ -79,3 +79,4 @@ id⇒ = term⇒ id
   h ⊢ g ⇒ k
   → g & h ⊢ k
 ⇐-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₂) &-π₁
+

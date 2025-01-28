@@ -60,8 +60,6 @@ unambiguous'→unambiguous unambig e e' =
 unambiguous→unambiguous' : unambiguous g → unambiguous' g
 unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
 
--- A third notion of unambiguity in String.Properties
-
 -- rename to "unambiguously parseable?"
 totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)
 totallyParseable {ℓg = ℓg} g =

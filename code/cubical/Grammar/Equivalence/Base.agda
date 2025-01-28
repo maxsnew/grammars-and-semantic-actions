@@ -120,6 +120,20 @@ _≈_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
 g ≈ g' = LogicalEquivalence g g'
 infix 4 _≈_
 
+module _
+  (g : Grammar ℓg)
+  (h : Grammar ℓh)
+  (pwIso : ∀ w → Iso (g w) (h w))
+  where
+  open StrongEquivalence
+  open Iso
+
+  pointwiseIso→≅ : g ≅ h
+  pointwiseIso→≅ .fun w = pwIso w .fun
+  pointwiseIso→≅ .inv w = pwIso w .inv
+  pointwiseIso→≅ .sec = funExt λ w → funExt (pwIso w .rightInv)
+  pointwiseIso→≅ .ret = funExt λ w → funExt (pwIso w .leftInv)
+
 module _ {ℓG} {ℓH}
   {g : Grammar ℓG}
   {h : Grammar ℓH}

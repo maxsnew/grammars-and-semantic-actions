@@ -17,6 +17,7 @@ open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.Epsilon Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.KleeneStar Alphabet
 open import Term.Base Alphabet
@@ -80,6 +81,21 @@ opaque
 
   mkstring : (s : String) → string s
   mkstring s = (⌈w⌉→string {w = s}) s (internalize s)
+
+opaque
+  unfolding _&_
+  mk&⌈⌉ :
+    ∀ {ℓg}
+    (g : Grammar ℓg) →
+    {w : String} →
+    (p : g w) →
+    (g & ⌈ w ⌉) w
+  mk&⌈⌉ g {w = w} p =
+    p , (mk⌈⌉ w)
+
+⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
+⌈⌉→≡ = uniquely-supported-⌈⌉
+
 
 mkstring' : (s : String) → string s
 mkstring' [] = NIL [] ε-intro
