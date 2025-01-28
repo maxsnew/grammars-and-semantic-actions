@@ -14,6 +14,7 @@ open import Cubical.Data.List.More
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sigma.MoreMore
 open import Cubical.Data.Sum as Sum hiding (rec)
+open import Cubical.Data.Sum.More
 open import Cubical.Data.FinSet
 open import Cubical.Data.Nat
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
@@ -1158,12 +1159,12 @@ module _
       Iso
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
-         Σ[ x ∈ secondPrefix w s s' ]
-           splittingTrichotomyG w s' s (inr (inl x))
+         Σ[ x ∈ splittingPrefix w s' s ]
+           splittingTrichotomyG w s s' (inr (inl x))
          )
         (secondPrefixG w)
     splittingTrichotomyG-inr-inl≅ ww .fun
-      (s , s' , ((c ∷ v , notmt) , split++) , p) =
+      (s' , s , ((c ∷ v , notmt) , split++) , p) =
         s' .fst .fst , s' .fst .snd ,
         s .fst .fst , s .fst .snd ,
         ((c ∷ v , notmt)) ,
@@ -1181,38 +1182,38 @@ module _
       Empty.rec (notmt refl)
     splittingTrichotomyG-inr-inl≅ ww .inv
       (w , x , y , z , (c ∷ v , notmt) ,
-      (s , (pk , (t , pw , pv)) , pl) ,
-      (s' , pg , (ph , (t' , pv' , pz)))
+      (s' , (pk , (t , pw , pv)) , pl) ,
+      (s , pg , (ph , (t' , pv' , pz)))
       ) =
       s , s' ,
       ((c ∷ v , notmt) ,
-        s11≡ ,
-        s'12≡) ,
+        s'11≡ ,
+        s12≡) ,
       pg .fst ,
       ph .fst ,
       pk .fst ,
       pl .fst ,
-      s11≡ ,
-      s'12≡
+      s'11≡ ,
+      s12≡
       where
-      s'11≡t11 : s' .fst .fst ≡ t .fst .fst
-      s'11≡t11 =
-        sym (⌈⌉→≡ w (s' .fst .fst) (pg .snd))
+      s11≡t11 : s .fst .fst ≡ t .fst .fst
+      s11≡t11 =
+        sym (⌈⌉→≡ w (s .fst .fst) (pg .snd))
         ∙ (⌈⌉→≡ w (t .fst .fst) pw)
 
       cv≡t12 : c ∷ v ≡ t .fst .snd
       cv≡t12 = ⌈⌉→≡ (c ∷ v) (t .fst .snd) pv
 
-      s11≡ : s' .fst .fst ++ c ∷ v ≡ s .fst .fst
-      s11≡ = cong₂ _++_ s'11≡t11 cv≡t12 ∙ sym (t .snd)
+      s'11≡ : s .fst .fst ++ c ∷ v ≡ s' .fst .fst
+      s'11≡ = cong₂ _++_ s11≡t11 cv≡t12 ∙ sym (t .snd)
 
-      s'12≡ : s' .fst .snd ≡ c ∷ v ++ s .fst .snd
-      s'12≡ =
+      s12≡ : s .fst .snd ≡ c ∷ v ++ s' .fst .snd
+      s12≡ =
         t' .snd
         ∙ cong₂ _++_
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ z (t' .fst .snd) pz)
-            ∙ (⌈⌉→≡ z (s .fst .snd) (pl .snd)))
+            ∙ (⌈⌉→≡ z (s' .fst .snd) (pl .snd)))
     splittingTrichotomyG-inr-inl≅ ww .rightInv
       (w , x , y , z , ([] , notmt) ,
       (s , (pk , (t , pw , pv)) , pl) ,
@@ -1342,359 +1343,280 @@ module _
         )
       )
 
-    -- nvnv : (w : String) →
-    --   Iso
-    --     (Σ[ s ∈ Splitting w ]
-    --      Σ[ s' ∈ Splitting w ]
-    --      Σ[ st ∈ splittingTrichotomyTy' w s s' ]
-    --        splittingTrichotomyG w s s' st
-    --      )
-    --     (
-    --     (
-    --      ((g & k) ⊗ (h & l)) w)
-    --      ⊎
-    --      (
-    --      (
-    --      Σ[ ww ∈ String ]
-    --      Σ[ x ∈ String ]
-    --      Σ[ y ∈ String ]
-    --      Σ[ z ∈ String ]
-    --      Σ[ v ∈ NonEmptyString ]
-    --        ((
-    --        (((g & ⌈ ww ⌉) & ((k & ⌈ y ⌉) ⊗ ⌈ v .fst ⌉)) ⊗ (h & ⌈ x ⌉)) &
-    --        ((k & ⌈ y ⌉) ⊗ ((l & ⌈ z ⌉) & (⌈ v .fst ⌉ ⊗ (h & ⌈ x ⌉))))
-    --        ) w)
-    --      )
-    --      ⊎
-    --      (
-    --      Σ[ ww ∈ String ]
-    --      Σ[ x ∈ String ]
-    --      Σ[ y ∈ String ]
-    --      Σ[ z ∈ String ]
-    --      Σ[ v ∈ NonEmptyString ]
-    --        ((
-    --        (((k & ⌈ y ⌉) & ((g & ⌈ ww ⌉) ⊗ ⌈ v .fst ⌉)) ⊗ (l & ⌈ z ⌉)) &
-    --        ((g & ⌈ ww ⌉) ⊗ ((h & ⌈ x ⌉) & (⌈ v .fst ⌉ ⊗ (l & ⌈ z ⌉))))
-    --        ) w)
-    --      )
-    --      )
-    --     )
-    -- nvnv = {!!}
-    -- nvnv w .fun (s , s' , inl x , p) =
-    --   inl
-    --     (s ,
-    --     (((p .fst .fst) , (p .fst .snd)) ,
-    --     ((p .snd .fst) , (p .snd .snd))))
-    -- nvnv w .fun (s , s' , inr (inl ((c ∷ v , notmt) , x)) , p) =
-    --   inr (inr
-    --     (s .fst .fst ,
-    --     s .fst .snd ,
-    --     s' .fst .fst ,
-    --     s' .fst .snd ,
-    --     (c ∷ v , notmt) ,
-    --     (s' ,
-    --       ((((p .snd .snd .fst) , (internalize (s' .fst .fst))) ,
-    --       ((_ , sym (p .snd .snd .snd .snd .fst)) ,
-    --         (((p .fst) , (internalize (s .fst .fst))) , (internalize (c ∷ v))))) ,
-    --         ((p .snd .snd .snd .fst) , (internalize (s' .fst .snd))))) ,
-    --     s , (((p .fst) , (internalize (s .fst .fst))) ,
-    --       (((p .snd .fst) , (internalize (s .fst .snd))) ,
-    --         ((_ , p .snd .snd .snd .snd .snd ) , (internalize (c ∷ v) ,
-    --           (p .snd .snd .snd .fst) , (internalize (s' .fst .snd))))))
-    --     )
-    --     )
-    -- nvnv w .fun (s , s' , inr (inr ((c ∷ v , notmt) , x)) , p) =
-    --   inr (inl (
-    --     s .fst .fst ,
-    --     s .fst .snd ,
-    --     s' .fst .fst ,
-    --     s' .fst .snd ,
-    --     (c ∷ v , notmt) ,
-    --     (s , ((((p .fst) , (internalize (s .fst .fst))) ,
-    --       ((_ , (sym (p .snd .snd .snd .snd .fst))) ,
-    --       (((p .snd .snd .fst) , (internalize (s' .fst .fst))) ,
-    --       (internalize (c ∷ v))))) ,
-    --       ((p .snd .fst) , (internalize (s .fst .snd))))) ,
-    --     s' , (((p .snd .snd .fst) , (internalize (s' .fst .fst))) ,
-    --     (((p .snd .snd .snd .fst) , (internalize (s' .fst .snd))) ,
-    --     ((_ , p .snd .snd .snd .snd .snd) , ((internalize (c ∷ v)) , ((p .snd .fst) , (internalize (s .fst .snd)))))))
-    --   ))
-    -- nvnv w .inv (inl (s , pgk , phl)) =
-    --   s , (s , ((inl (refl , refl)) , pgk , phl))
-    -- nvnv w .inv (inr (inl (ww , x , y , z , ([] , notmt) , p))) =
-    --   Empty.rec (notmt refl)
-    -- nvnv w .inv (inr (inl (ww , x , y , z ,
-    --   (c ∷ v , notmt) ,
-    --   ((s , (pg , (t , pk , cv)) , ph) ,
-    --   (s' , pk' , (pl , (t' , cv' , ph'))))))) =
-    --   s ,
-    --   s' ,
-    --   inr (inr ((c ∷ v , notmt) ,
-    --     (s'11++cv≡s11 ,
-    --      s'12≡cv++s12))) ,
-    --   pg .fst ,
-    --   ph .fst ,
-    --   subst k (sym s'11≡t11) (pk .fst) ,
-    --   pl .fst ,
-    --   s'11++cv≡s11 ,
-    --   s'12≡cv++s12
-    --   where
-    --   s'11≡t11 : s' .fst .fst ≡ t .fst .fst
-    --   s'11≡t11 =
-    --     sym (uniquely-supported-⌈⌉ y (s' .fst .fst) (pk' .snd))
-    --     ∙ uniquely-supported-⌈⌉ y (t .fst .fst) (pk .snd)
+    splittingTrichotomyG-inr-inr≅ :
+      (w : String) →
+      Iso
+        (Σ[ s ∈ Splitting w ]
+         Σ[ s' ∈ Splitting w ]
+         Σ[ x ∈ splittingPrefix w s s' ]
+           splittingTrichotomyG w s s' (inr (inr x))
+         )
+        (firstPrefixG w)
+    splittingTrichotomyG-inr-inr≅ ww .fun
+      (s' , s , ((c ∷ v , notmt) , split++) , p) =
+      s' .fst .fst , s' .fst .snd ,
+      s .fst .fst , s .fst .snd ,
+      ((c ∷ v , notmt)) ,
+      (s' , ((mk&⌈⌉ g (p .fst) ,
+        (_ , (sym (split++ .fst))) , ((mk⌈⌉ (s .fst .fst)) , (mk⌈⌉ (c ∷ v)))) ,
+        mk&⌈⌉ h (p .snd .fst))) ,
+      (s , ((mk&⌈⌉ k (p .snd .snd .fst)) ,
+        ((mk&⌈⌉ l (p .snd .snd .snd .fst)) ,
+        ((_ , split++ .snd) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s' .fst .snd)))))))
+    splittingTrichotomyG-inr-inr≅ ww .inv
+      (w , x , y , z , ([] , notmt) ,
+      (s , (pg , (t , py , pv)) , ph) ,
+      (s' , pk , (pl , (t' , pv' , px)))
+      ) =
+      Empty.rec (notmt refl)
+    splittingTrichotomyG-inr-inr≅ ww .inv
+      (w , x , y , z , (c ∷ v , notmt) ,
+      (s' , (pg , (t , py , pv)) , ph) ,
+      (s , pk , (pl , (t' , pv' , px)))
+      ) =
+      s' ,
+      s ,
+      ((c ∷ v , notmt) ,
+        s'11≡ ,
+        s12≡) ,
+      pg .fst ,
+      ph .fst ,
+      pk .fst ,
+      pl .fst ,
+      s'11≡ ,
+      s12≡
+      where
+      s11≡t11 : s .fst .fst ≡ t .fst .fst
+      s11≡t11 =
+        sym (⌈⌉→≡ y (s .fst .fst) (pk .snd))
+        ∙ (⌈⌉→≡ y (t .fst .fst) py)
 
-    --   cv≡t12 : c ∷ v ≡ t .fst .snd
-    --   cv≡t12 = uniquely-supported-⌈⌉ (c ∷ v) (t .fst .snd) cv
+      cv≡t12 : c ∷ v ≡ t .fst .snd
+      cv≡t12 = ⌈⌉→≡ (c ∷ v) (t .fst .snd) pv
 
-    --   s'11++cv≡s11 : s' .fst .fst ++ c ∷ v ≡ s .fst .fst
-    --   s'11++cv≡s11 =
-    --     cong₂ _++_ s'11≡t11 cv≡t12
-    --     ∙ sym (t .snd)
+      s'11≡ : s .fst .fst ++ c ∷ v ≡ s' .fst .fst
+      s'11≡ = cong₂ _++_ s11≡t11 cv≡t12 ∙ sym (t .snd)
 
-    --   s'12≡cv++s12 : s' .fst .snd ≡ c ∷ v ++ s .fst .snd
-    --   s'12≡cv++s12 =
-    --     t' .snd
-    --     ∙ cong₂ _++_
-    --       (sym (uniquely-supported-⌈⌉ (c ∷ v) (t' .fst .fst) cv'))
-    --       (sym (uniquely-supported-⌈⌉ x (t' .fst .snd) (ph' .snd)) ∙
-    --         uniquely-supported-⌈⌉ x (s .fst .snd) (ph .snd))
-    -- nvnv w .inv (inr (inr (ww , x , y , z , ([] , notmt) , p))) =
-    --   Empty.rec (notmt refl)
-    -- nvnv w .inv (inr (inr (ww , x , y , z , (c ∷ v , notmt) ,
-    --   ((s , (pk , (t , pg , cv)) , pl) ,
-    --   (s' , pg' , (ph , (t' , cv' , pl'))))))) =
-    --   s' ,
-    --   s ,
-    --   inr (inl ((c ∷ v , notmt) , (
-    --     s'11++cv≡s11 ,
-    --     s'12≡cv++s12))) ,
-    --   subst g (sym s'11≡t11) (pg .fst) ,
-    --   ph .fst ,
-    --   pk .fst ,
-    --   pl .fst ,
-    --   s'11++cv≡s11 ,
-    --   s'12≡cv++s12
-    --   where
-    --   s'11≡t11 : s' .fst .fst ≡ t .fst .fst
-    --   s'11≡t11 =
-    --     sym (uniquely-supported-⌈⌉ ww (s' .fst .fst) (pg' .snd))
-    --     ∙ uniquely-supported-⌈⌉ ww (t .fst .fst) (pg .snd)
+      s12≡ : s .fst .snd ≡ c ∷ v ++ s' .fst .snd
+      s12≡ =
+        t' .snd
+        ∙ cong₂ _++_
+          (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
+          (sym (⌈⌉→≡ x (t' .fst .snd) px)
+            ∙ (⌈⌉→≡ x (s' .fst .snd) (ph .snd)))
+    splittingTrichotomyG-inr-inr≅ ww .rightInv
+      (w , x , y , z , ([] , notmt) ,
+      (s , (pk , (t , pw , pv)) , pl) ,
+      (s' , pg , (ph , (t' , pv' , pz)))) =
+      Empty.rec (notmt refl)
+    splittingTrichotomyG-inr-inr≅ ww .rightInv
+      (w , x , y , z , (c ∷ v , notmt) ,
+      (s , (pg , (t , py , pv)) , ph) ,
+      (s' , pk , (pl , (t' , pv' , px)))) =
+      ΣPathP5 (
+        sym (⌈⌉→≡ _ _ (pg .snd)) ,
+        sym (⌈⌉→≡ _ _ (ph .snd)) ,
+        sym (⌈⌉→≡ _ _ (pk .snd)) ,
+        sym (⌈⌉→≡ _ _ (pl .snd)) ,
+        refl ,
+        ΣPathP5 (
+          ΣPathP2 (
+            refl ,
+            ΣPathP3 (
+              ΣPathPProp (λ _ → isLang⌈⌉ w (s .fst .fst)) refl ,
+              Splitting≡
+                (≡-×
+                  (sym (⌈⌉→≡ y (s' .fst .fst) (pk .snd))
+                    ∙ ⌈⌉→≡ y (t .fst .fst) py)
+                  (⌈⌉→≡ _ _ pv)
+                ) ,
+              isProp→PathP
+                (λ i →
+                  isLang⌈⌉
+                  (⌈⌉→≡ y (s' .fst .fst) (pk .snd) (~ i) )
+                  (Splitting≡ {s = _ , sym s11≡} {s' = t}
+                    (≡-×
+                     ((λ i₁ → ⌈⌉→≡ y (s' .fst .fst) (pk .snd) (~ i₁)) ∙
+                      ⌈⌉→≡ y (t .fst .fst) py)
+                     (⌈⌉→≡ (c ∷ v) (t .fst .snd) pv))
+                    i .fst .fst)
+                  )
+                (mk⌈⌉ (s' .fst .fst))
+                py ,
+              isProp→PathP
+                (λ i →
+                  isLang⌈⌉
+                  (c ∷ v)
+                  (Splitting≡ {s = _ , sym s11≡} {s' = t}
+                    (≡-×
+                     ((λ i₁ → ⌈⌉→≡ y (s' .fst .fst) (pk .snd) (~ i₁)) ∙
+                      ⌈⌉→≡ y (t .fst .fst) py)
+                     (⌈⌉→≡ (c ∷ v) (t .fst .snd) pv))
+                    i .fst .snd)
+                  )
+                (mk⌈⌉ (c ∷ v))
+                pv
+              ) ,
+            ΣPathPProp (λ _ → isLang⌈⌉ x (s .fst .snd)) refl
+            ) ,
+          refl ,
+          ΣPathPProp (λ _ → isLang⌈⌉ y (s' .fst .fst)) refl ,
+          ΣPathPProp (λ _ → isLang⌈⌉ z (s' .fst .snd)) refl ,
+          Splitting≡
+            (≡-×
+              (⌈⌉→≡ _ _ pv')
+              (sym (⌈⌉→≡ x _ (ph .snd)) ∙ ⌈⌉→≡ x _ px)
+            ) ,
+          ΣPathP (
+            isProp→PathP
+                (λ i →
+                  isLang⌈⌉
+                  (c ∷ v)
+                  (Splitting≡ {s = _ , s'12≡} {s' = t'}
+                   (≡-× (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv')
+                    ((λ i₁ → ⌈⌉→≡ x (s .fst .snd) (ph .snd) (~ i₁)) ∙
+                     ⌈⌉→≡ x (t' .fst .snd) px))
+                   i .fst .fst)
+                )
+                (mk⌈⌉ (c ∷ v))
+                pv' ,
+            isProp→PathP
+                (λ i →
+                  isLang⌈⌉
+                  (⌈⌉→≡ x (s .fst .snd) (ph .snd) (~ i))
+                  (Splitting≡ {s = _ , s'12≡} {s' = t'}
+                   (≡-× (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv')
+                    ((λ i₁ → ⌈⌉→≡ x (s .fst .snd) (ph .snd) (~ i₁)) ∙
+                     ⌈⌉→≡ x (t' .fst .snd) px))
+                   i .fst .snd)
+                )
+                (mk⌈⌉ (s .fst .snd))
+                px
+          ))
+        )
+      where
+      s'11≡t11 : s' .fst .fst ≡ t .fst .fst
+      s'11≡t11 =
+        sym (⌈⌉→≡ y (s' .fst .fst) (pk .snd))
+        ∙ (⌈⌉→≡ y (t .fst .fst) py)
 
-    --   cv≡t12 : c ∷ v ≡ t .fst .snd
-    --   cv≡t12 = uniquely-supported-⌈⌉ (c ∷ v) (t .fst .snd) cv
+      cv≡t12 : c ∷ v ≡ t .fst .snd
+      cv≡t12 = ⌈⌉→≡ (c ∷ v) (t .fst .snd) pv
 
-    --   s'11++cv≡s11 : s' .fst .fst ++ c ∷ v ≡ s .fst .fst
-    --   s'11++cv≡s11 =
-    --     cong₂ _++_ s'11≡t11 cv≡t12
-    --     ∙ sym (t .snd)
+      s11≡ : s' .fst .fst ++ c ∷ v ≡ s .fst .fst
+      s11≡ = cong₂ _++_ s'11≡t11 cv≡t12 ∙ sym (t .snd)
 
-    --   s'12≡cv++s12 : s' .fst .snd ≡ c ∷ v ++ s .fst .snd
-    --   s'12≡cv++s12 =
-    --     t' .snd
-    --     ∙ cong₂ _++_
-    --       (sym (uniquely-supported-⌈⌉ (c ∷ v) (t' .fst .fst) cv'))
-    --       (sym (uniquely-supported-⌈⌉ z (t' .fst .snd) (pl' .snd)) ∙
-    --         uniquely-supported-⌈⌉ z (s .fst .snd) (pl .snd))
+      s'12≡ : s' .fst .snd ≡ c ∷ v ++ s .fst .snd
+      s'12≡ =
+        t' .snd
+        ∙ cong₂ _++_
+          (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
+          (sym (⌈⌉→≡ x (t' .fst .snd) px)
+            ∙ (⌈⌉→≡ x (s .fst .snd) (ph .snd)))
+    splittingTrichotomyG-inr-inr≅ ww .leftInv
+      (s , s' , ((c ∷ v , notmt) , split++) , p) =
+      ΣPathP3 (
+        refl ,
+        refl ,
+        ΣPathP2 (
+          refl ,
+          isSetString _ _ _ _ ,
+          isSetString _ _ _ _
+        ) ,
+        ΣPathP5 (
+          refl ,
+          refl ,
+          refl ,
+          refl ,
+          isSetString _ _ _ _ ,
+          isSetString _ _ _ _
+        )
+      )
 
-    -- nvnv w .rightInv (inl (s , pgk , phl)) =
-    --   refl
-    -- nvnv w .rightInv (inr (inl (ww , x , y , z , ([] , notmt) , p))) =
-    --   Empty.rec (notmt refl)
-    -- nvnv w .rightInv (inr (inl (ww , x , y , z ,
-    --   (c ∷ v , notmt) ,
-    --   ((s , (pg , (t , pk , cv)) , ph) ,
-    --   (s' , pk' , (pl , (t' , cv' , ph'))))))) =
-    --   cong inr (cong inl
-    --     (ΣPathP (
-    --       sym (uniquely-supported-⌈⌉ ww (s .fst .fst) (pg .snd)) ,
-    --       (ΣPathP (
-    --         sym (uniquely-supported-⌈⌉ x (s .fst .snd) (ph .snd)) ,
-    --         (ΣPathP (
-    --           sym (uniquely-supported-⌈⌉ y (s' .fst .fst) (pk' .snd)) ,
-    --           (ΣPathP (
-    --             sym (uniquely-supported-⌈⌉ z (s' .fst .snd) (pl .snd)) ,
-    --             ΣPathP (
-    --               refl ,
-    --               (ΣPathP (
-    --                 (ΣPathP (
-    --                   refl ,
-    --                   (ΣPathP (
-    --                     ΣPathP (
-    --                       ΣPathPProp (λ _ → isLang⌈⌉ ww (s .fst .fst)) refl ,
-    --                       ΣPathP (
-    --                         (SplittingPathP (
-    --                           ≡-×
-    --                           s'11≡t11
-    --                           cv≡t12)) ,
-    --                         (ΣPathP (
-    --                           ΣPathPProp
-    --                             (λ _ → isLang⌈⌉ y (t .fst .fst))
-    --                             (symP (subst-filler k (sym s'11≡t11) (pk .fst))) ,
-    --                           isProp→PathP
-    --                             (λ i → isLang⌈⌉ (c ∷ v) (cv≡t12 i)) (internalize (c ∷ v)) cv
-    --                         ))
-    --                       )
-    --                     ) ,
-    --                     ΣPathPProp (λ _ → isLang⌈⌉ x (s .fst .snd)) refl
-    --                     ))
-    --                 )) ,
-    --                 ΣPathP (
-    --                   refl ,
-    --                   ΣPathP (
-    --                     ΣPathPProp
-    --                       (λ _ → isLang⌈⌉ y (s' .fst .fst))
-    --                       {!!} ,
-    --                     {!!}
-    --                   )
-    --                   )
-    --               ))
-    --             )))
-    --           ))
-    --       ))
-    --     ))
-    --   )
-    --   where
-    --   s'11≡t11 : s' .fst .fst ≡ t .fst .fst
-    --   s'11≡t11 =
-    --     sym (uniquely-supported-⌈⌉ y (s' .fst .fst) (pk' .snd))
-    --     ∙ uniquely-supported-⌈⌉ y (t .fst .fst) (pk .snd)
+    splittingTrichotomyGΣ≅ :
+      (w : String) →
+      Iso
+        (
+        Σ[ s ∈ Splitting w ]
+        Σ[ s' ∈ Splitting w ]
+        Σ[ x ∈ splittingTrichotomyTy' w s s' ]
+           splittingTrichotomyG w s s' x
+         )
+        (
+        sameSplittingG w ⊎
+        (secondPrefixG w ⊎ firstPrefixG w)
+        )
+    splittingTrichotomyGΣ≅ w =
+      compIso
+        (invIso Σ-assoc-Iso)
+        (compIso
+          (Σ-cong-iso-snd (λ _ →
+            Σ⊎Iso
+          ))
+          (compIso
+            (ΣDistR⊎Iso _ _ _)
+            (⊎Iso
+              (compIso Σ-assoc-Iso (splittingTrichotomyG-inl≅ w))
+              (compIso
+                (Σ-cong-iso-snd (λ _ →
+                  Σ⊎Iso
+                ))
+                (compIso
+                  (ΣDistR⊎Iso _ _ _)
+                  (⊎Iso
+                    (compIso Σ-assoc-Iso (splittingTrichotomyG-inr-inl≅ w))
+                    (compIso Σ-assoc-Iso (splittingTrichotomyG-inr-inr≅ w))
+                  )
+                )
+              )
+            )
+          )
+        )
 
-    --   cv≡t12 : c ∷ v ≡ t .fst .snd
-    --   cv≡t12 = uniquely-supported-⌈⌉ (c ∷ v) (t .fst .snd) cv
+    ⊗&⊗parse≅ :
+      (w : String) →
+      Iso
+        (((g ⊗ h) & (k ⊗ l)) w)
+        (Σ[ s ∈ Splitting w ]
+         Σ[ s' ∈ Splitting w ]
+          (g (s .fst .fst) ×
+           h (s .fst .snd) ×
+           k (s' .fst .fst) ×
+           l (s' .fst .snd)))
+    ⊗&⊗parse≅ w .fun ((s , pg , ph) , (s' , pk , pl)) =
+      s , s' , pg , ph , pk , pl
+    ⊗&⊗parse≅ w .inv (s , s' , pg , ph , pk , pl) =
+      (s , pg , ph) , (s' , pk , pl)
+    ⊗&⊗parse≅ w .rightInv _ = refl
+    ⊗&⊗parse≅ w .leftInv _ = refl
 
-    --   s'11++cv≡s11 : s' .fst .fst ++ c ∷ v ≡ s .fst .fst
-    --   s'11++cv≡s11 =
-    --     cong₂ _++_ s'11≡t11 cv≡t12
-    --     ∙ sym (t .snd)
-
-    --   s'12≡cv++s12 : s' .fst .snd ≡ c ∷ v ++ s .fst .snd
-    --   s'12≡cv++s12 =
-    --     t' .snd
-    --     ∙ cong₂ _++_
-    --       (sym (uniquely-supported-⌈⌉ (c ∷ v) (t' .fst .fst) cv'))
-    --       (sym (uniquely-supported-⌈⌉ x (t' .fst .snd) (ph' .snd)) ∙
-    --         uniquely-supported-⌈⌉ x (s .fst .snd) (ph .snd))
-    -- nvnv w .rightInv (inr (inr (ww , x , y , z , ([] , notmt) , p))) =
-    --   Empty.rec (notmt refl)
-    -- nvnv w .rightInv (inr (inr (ww , x , y , z , (c ∷ v , notmt) ,
-    --   ((s , (pk , (t , pg , cv)) , pl) ,
-    --   (s' , pg' , (ph , (t' , cv' , pl'))))))) =
-    --   {!!}
-    -- nvnv w .leftInv (s , s' , inl x , p) =
-    --   ΣPathP (refl , (ΣPathP ((Splitting≡ (≡-× (x .fst) (x .snd))) ,
-    --     ΣPathP (
-    --       congP (λ _ → inl) (ΣPathP
-    --         (isProp→PathP (λ _ → isSetString _ _) refl (x .fst) ,
-    --         isProp→PathP (λ _ → isSetString _ _) refl (x .snd)
-    --         )) ,
-    --       refl
-    --     ))))
-    -- nvnv w .leftInv (s , s' , inr (inl ((c ∷ v , notmt) , x)) , p) =
-    --   ΣPathP (refl , (ΣPathP (refl ,
-    --     (ΣPathP ((cong inr (cong inl
-    --       (ΣPathP (refl ,
-    --        (ΣPathP ((isSetString _ _ _ _) , isSetString _ _ _ _))))
-    --     )) ,
-    --     ΣPathP (
-    --       sym (cong (λ z → transport (λ i → g (z i)) (p .fst))
-    --         (isSetString _ _ _ _))
-    --       ∙ transportRefl (p .fst) ,
-    --       ΣPathP (refl , (ΣPathP (refl , (ΣPathP (refl ,
-    --         (ΣPathP ((isSetString _ _ _ _) , (isSetString _ _ _ _))))))))
-    --       )))
-    --       )))
-    -- nvnv w .leftInv (s , s' , inr (inr ((c ∷ v , notmt) , x)) , p) = {!!}
-
---     nvnv w .fun (s , s' , inr (inl ((c ∷ v , notmt) , x)) , p) =
---       inr (inl (c , (v ,
---         (s' ,
---          ((p .snd .snd .fst) ,
---          ((_ , (sym (x .fst))) , ((p .fst) , (internalize (c ∷ v))))) ,
---          (p .snd .snd .snd .fst)) ,
---         (s ,
---         (p .fst) ,
---         (((_ , (x .snd)) , (internalize (c ∷ v) , p .snd .snd .snd .fst)) ,
---         p .snd .fst))
---       )))
---     nvnv w .fun (s , s' , inr (inr ((c ∷ v , notmt) , x)) , p) =
---       inr (inr ((c , (v ,
---         (s ,
---           (((p .fst) ,
---           ((_ , sym (x .fst)) , ((p .snd .snd .fst) , (internalize (c ∷ v))))) ,
---           (p .snd .fst))) ,
---         (s' ,
---         ((p .snd .snd .fst) ,
---         (((_ , (x .snd)) , ((internalize (c ∷ v)) , (p .snd .fst))) , (p .snd .snd .snd .fst))))
---       ))))
---     nvnv w .inv (inl x) =
---       (x .fst) , ((x .fst) , ((inl (refl , refl)) ,
---       (x .snd .fst , x .snd .snd)))
---     nvnv w .inv (inr (inl
---       (c , v , (s , (pk , t , pg , cv) , pl) ,
---       (s' , pg' , ((t' , cv' , pl') , ph))))) =
---       s' ,
---       s ,
---       inr (inl (((c ∷ v) , ¬cons≡nil) ,
---           ({!cong₂ _++_ ? (uniquely-supported-⌈⌉ (c ∷ v) (t .fst .snd) cv)!} ∙ sym (t .snd) ,
---            {!!}))) ,
---       pg' ,
---       ph ,
---       pk ,
---       pl ,
---       {!!} ,
---       {!!}
---     nvnv w .inv (inr (inr x)) = {!!}
---     nvnv w .rightInv = {!!}
---     nvnv w .leftInv = {!!}
-
---   -- open Iso
---   -- opaque
---   --   unfolding parseIso ⊗-intro _&_
---     -- qwer :
---     --   (w : String) →
---     --   Iso
---     --     (((g ⊗ h) & (k ⊗ l)) w)
---     --     (Σ[ s ∈ Splitting w ] Σ[ s' ∈ Splitting w ]
---     --      Σ[ st ∈ splittingTrichotomyTy' w s s' ]
---     --      splittingTrichotomyG w s s' st)
---     -- qwer w .fun p =
---     --   (p .fst .fst) , ((p .snd .fst) ,
---     --   (st ,
---     --   parseIso w (p .fst .fst) (p .snd .fst) st .fun
---     --     ((p .fst .snd .fst) , ((p .fst .snd .snd) ,
---     --     ((p .snd .snd .fst) , (p .snd .snd .snd))))
---     --   ))
---     --   where
---     --   st : splittingTrichotomyTy' w (p .fst .fst) (p .snd .fst)
---     --   st = splittingTrichotomy' w (p .fst .fst) (p .snd .fst)
---     -- qwer w .inv (s , s' , inl x , p) =
---     --   (s , ((p .fst .fst) , (p .snd .fst))) ,
---     --   (s , ((p .fst .snd) , (p .snd .snd)))
---     -- qwer w .inv (s , s' , inr (inl (([] , notmt) , x)) , p) =
---     --   Empty.rec (notmt refl)
---     -- qwer w .inv (s , s' , inr (inl ((c ∷ v , notmt) , x)) , p) =
---     --   (s , (p .fst , p .snd .fst)) ,
---     --   (s' , (p .snd .snd .fst , p .snd .snd .snd .fst))
---     -- qwer w .inv (s , s' , inr (inr (([] , notmt) , x)) , p) =
---     --   Empty.rec (notmt refl)
---     -- qwer w .inv (s , s' , inr (inr ((c ∷ v , notmt) , x)) , p) =
---     --   (s , (p .fst , p .snd .fst)) ,
---     --   (s' , (p .snd .snd .fst , p .snd .snd .snd .fst))
---     -- qwer w .rightInv (s , s' , inl x , p) =
---     --   ΣPathP
---     --     (refl , (ΣPathP (
---     --       (Splitting≡ (≡-× (x .fst) (x .snd))) ,
---     --       ΣPathP (
---     --         isProp→PathP (λ i → isPropSplittingTrichotomyTy' w s (Splitting≡ (≡-× (x .fst) (x .snd)) i)) _ _ ,
---     --         toPathP {!!}
---     --       )
---     --     )))
---     -- qwer w .rightInv (s , s' , inr (inl (([] , notmt) , x)) , p) = {!k!}
---     -- qwer w .rightInv (s , s' , inr (inl ((c ∷ v , notmt) , x)) , p) = {!!}
---     -- qwer w .rightInv (s , s' , inr (inr (([] , notmt) , x)) , p) = {!!}
---     -- qwer w .rightInv (s , s' , inr (inr ((c ∷ v , notmt) , x)) , p) = {!!}
---     -- qwer w .leftInv = {!!}
+    opaque
+      unfolding _⊕_
+      rtrt :
+        (g ⊗ h) & (k ⊗ l)
+        ≅
+        sameSplittingG
+        ⊕ (secondPrefixG ⊕ firstPrefixG)
+      rtrt = pointwiseIso→≅ _ _
+        (λ w →
+          compIso
+            (compIso
+              (⊗&⊗parse≅ w)
+              (compIso
+                (wert w)
+                (compIso
+                  (invIso Σ-assoc-Iso)
+                  (compIso
+                    (Σ-cong-iso-snd (λ (s , s') →
+                      invIso (Σ-contractFstIso
+                        ((splittingTrichotomy' w s s') ,
+                        (isPropSplittingTrichotomyTy' w s s' _)))
+                    ))
+                    Σ-assoc-Iso
+                  ))
+              ))
+            (splittingTrichotomyGΣ≅ w)
+        )
 
 --   hjkl :
 --     (g ⊗ h) & (k ⊗ l)

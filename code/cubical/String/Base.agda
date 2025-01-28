@@ -109,11 +109,11 @@ firstPrefix w s s' =
       v
     )
 
-secondPrefix :
+splittingPrefix :
   (w : String) →
   (s s' : Splitting w) →
   Type ℓ-zero
-secondPrefix w s s' =
+splittingPrefix w s s' =
   Σ[ (v , _) ∈ NonEmptyString ]
     (Split++
       (s' .fst .fst)
@@ -123,7 +123,6 @@ secondPrefix w s s' =
       v
     )
 
-
 splittingTrichotomyTy' :
   (w : String) →
   (s s' : Splitting w) →
@@ -131,9 +130,9 @@ splittingTrichotomyTy' :
 splittingTrichotomyTy' w s s' =
   sameSplitting w s s' ⊎
   (
-  firstPrefix w s s'
+  splittingPrefix w s' s
     ⊎
-  secondPrefix w s s'
+  splittingPrefix w s s'
   )
 
 open Iso
