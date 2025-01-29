@@ -24,6 +24,30 @@ LiftListDist [] w' = refl
 LiftListDist (x ∷ w) w' = cong (lift x ∷_) (LiftListDist w w')
 
 module _ {ℓ : Level} {A : Type ℓ} where
+  revLength : (xs : List A) → length xs ≡ length (rev xs)
+  revLength [] = refl
+  revLength (x ∷ xs) =
+    cong suc (revLength xs)
+    ∙ cong suc (sym (+-zero (length (rev xs))))
+    ∙ sym (+-suc (length (rev xs)) 0)
+    ∙ sym (length++ (rev xs) ([ x ]))
+
+  dropBack : ℕ → List A → List A
+  dropBack n xs = rev (drop n (rev xs))
+
+  dropBackLength++ :
+    (xs ys : List A) →
+    dropBack (length ys) (xs ++ ys) ≡ xs
+  dropBackLength++ xs ys =
+    cong (λ z → rev (drop (length ys) z))
+      (rev-++ xs ys)
+    ∙ cong (λ z → rev (drop z (rev ys ++ rev xs))) (revLength ys)
+    ∙ cong rev (dropLength++ (rev ys)) 
+    ∙ rev-rev xs
+
+  dropBackLength : (xs : List A) → dropBack (length xs) xs ≡ []
+  dropBackLength xs = dropBackLength++ [] xs
+
   nonEmptyList : Type ℓ
   nonEmptyList = Σ[ xs ∈ List A ] (xs ≡ [] → ⊥)
 

@@ -39,6 +39,7 @@ open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.Literal.Properties Alphabet
+open import Grammar.LinearProduct.SplittingTrichotomy Alphabet
 open import Grammar.Literal.Parseable Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Epsilon.Properties Alphabet
@@ -59,10 +60,6 @@ open StrongEquivalence
 
 open Powerset ⟨ Alphabet ⟩
 open PowersetOverSet (Alphabet .snd)
-
--- TODO migrate over decidable stuff to ordinary powersets
--- the cubical library absolutely sucks for this sort of thing
--- open DecidablePowerset ⟨ Alphabet ⟩ hiding (∅ℙ ; _∩ℙ_ ; _∪ℙ_ ; ¬ℙ)
 
 FollowLastG : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
 FollowLastG g c = (g ⊗ ＂ c ＂ ⊗ string) & g
@@ -139,7 +136,6 @@ NullableG g = ε & g
   ∉First⊗l' ¬nullg c∉Fg
   ∘g id ,&p (id ,⊗ string-intro)
 
-
 sequentiallyUnambiguous :
   Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
 sequentiallyUnambiguous g h =
@@ -150,71 +146,161 @@ module _
   (h : Grammar ℓh)
   (seq-unambig : sequentiallyUnambiguous g h)
   where
-  opaque
-    unfolding ⊗-intro the-split
-    sequentiallyUnambiguous→unique-splitting :
-      (w : String) →
-      (p q : (g ⊗ h) w) →
-      same-splits {w = λ _ → w} p q
-    sequentiallyUnambiguous→unique-splitting
-      w (s , p , q) (s' , p' , q') =
-      ?
-      -- {!!}
-      -- -- List.elim
-      -- --   {B = λ _ →
-      -- --     same-splits {g = g} {h = h} {k = g} {l = h}
-      -- --       {w = λ _ → w} (s , p , q) (s' , p' , q')}
-      -- --   {!!}
-      -- --   {!!}
-      -- --   (the-Split++ .fst)
-      where
-      the-Split++ :
-        Σ[ w' ∈ String ]
-          (
-          (Split++
-            (s .fst .fst)
-            (s .fst .snd)
-            (s' .fst .fst)
-            (s' .fst .snd)
-            w')
-          ⊎
-          (Split++
-            (s' .fst .fst)
-            (s' .fst .snd)
-            (s .fst .fst)
-            (s .fst .snd)
-            w')
-          )
-      the-Split++ =
-        split++
-          (s .fst .fst)
-          (s .fst .snd)
-          (s' .fst .fst)
-          (s' .fst .snd)
-          (sym (s .snd) ∙ (s' .snd))
 
+  private
+    uninhabitedFirstPrefixG :
+      firstPrefixG g h g h ⊢ ⊥
+    uninhabitedFirstPrefixG =
+      ⊕ᴰ-elim (λ w →
+      ⊕ᴰ-elim (λ x →
+      ⊕ᴰ-elim (λ y →
+      ⊕ᴰ-elim (λ z →
+      ⊕ᴰ-elim (λ {
+          ([] , notmt) → Empty.rec (notmt refl)
+        ; (c ∷ v , notmt) →
+          Sum.rec
+            (λ c∉Flg →
+              ⊥⊗
+              ∘g (c∉Flg ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
+              ∘g ⌈⌉-⊗&-distR⁻ {w = x}
+              ∘g id ,&p ⊗-assoc
+              ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
+            )
+            (λ c∉Fh →
+              ⊗⊥
+              ∘g id ,⊗ (c∉Fh ∘g &-swap)
+              ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
+              ∘g &-π₂
+            )
+            (seq-unambig c)
+        })))))
 
-open Inverse
+    uninhabitedSecondPrefixG :
+      secondPrefixG g h g h ⊢ ⊥
+    uninhabitedSecondPrefixG =
+      ⊕ᴰ-elim (λ y →
+      ⊕ᴰ-elim (λ z →
+      ⊕ᴰ-elim (λ w →
+      ⊕ᴰ-elim (λ x →
+      ⊕ᴰ-elim (λ {
+          ([] , notmt) → Empty.rec (notmt refl)
+        ; (c ∷ v , notmt) →
+          Sum.rec
+            (λ c∉Flg →
+              ⊥⊗
+              ∘g (c∉Flg ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
+              ∘g ⌈⌉-⊗&-distR⁻ {w = x}
+              ∘g id ,&p ⊗-assoc
+              ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
+            )
+            (λ c∉Fh →
+              ⊗⊥
+              ∘g id ,⊗ (c∉Fh ∘g &-swap)
+              ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
+              ∘g &-π₂
+            )
+            (seq-unambig c)
+        })))))
 
-opaque
-  unfolding ⊗-intro _&_
-  sequentiallyUnambiguous→⊗&-distL-inv :
-    (g : Grammar ℓg) →
-    (h : Grammar ℓh) →
-    (k : Grammar ℓk) →
-    (l : Grammar ℓl) →
-    sequentiallyUnambiguous g h →
-    Inverse (⊗&-distL {g = g} {h = h ⊗ k} {k = h ⊗ l})
-  sequentiallyUnambiguous→⊗&-distL-inv g h k l sequnambig
-    .inv w ((s , pg , ph , pk) , (s' , pg' , ph' , pl)) =
-    {!!} ,
-    {!!}
-  sequentiallyUnambiguous→⊗&-distL-inv g h k l sequnambig
-    .is-left-inv =
-    {!!}
-  sequentiallyUnambiguous→⊗&-distL-inv g h k l sequnambig
-    .is-right-inv =
-    {!!}
+  sequentiallyUnambiguous⊗≅ :
+    (g ⊗ h) & (g ⊗ h)
+    ≅
+    (g & g) ⊗ (h & h)
+  sequentiallyUnambiguous⊗≅ =
+    ⊗&-split g h g h
+    ≅∙ ⊕≅
+      id≅
+      (
+      (⊕≅
+        (uninhabited→≅⊥ uninhabitedSecondPrefixG)
+        (uninhabited→≅⊥ uninhabitedFirstPrefixG)
+      )
+      ≅∙ ⊥⊕≅ ⊥
+      )
+    ≅∙ ⊕-swap≅
+    ≅∙ ⊥⊕≅ (g & g ⊗ h & h)
+
+module _
+  (g : Grammar ℓg)
+  (h : Grammar ℓh)
+  (k : Grammar ℓk)
+  (l : Grammar ℓl)
+  (seq-unambig : sequentiallyUnambiguous g h)
+  (¬nullh : ⟨ ¬Nullable h ⟩)
+  where
+
+  private
+    uninhabitedFirstPrefixG :
+      firstPrefixG g (h ⊗ k) g (h ⊗ l) ⊢ ⊥
+    uninhabitedFirstPrefixG =
+      ⊕ᴰ-elim (λ w →
+      ⊕ᴰ-elim (λ x →
+      ⊕ᴰ-elim (λ y →
+      ⊕ᴰ-elim (λ z →
+      ⊕ᴰ-elim (λ {
+          ([] , notmt) → Empty.rec (notmt refl)
+        ; (c ∷ v , notmt) →
+          Sum.rec
+            (λ c∉Flg →
+              ⊥⊗
+              ∘g (c∉Flg ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
+              ∘g ⌈⌉-⊗&-distR⁻ {w = x}
+              ∘g id ,&p ⊗-assoc
+              ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
+            )
+            (λ c∉Fh →
+              ⊗⊥
+              ∘g id ,⊗ (∉First⊗l ¬nullh c∉Fh ∘g &-swap)
+              ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
+              ∘g &-π₂
+            )
+            (seq-unambig c)
+        })))))
+
+    uninhabitedSecondPrefixG :
+      secondPrefixG g (h ⊗ k) g (h ⊗ l) ⊢ ⊥
+    uninhabitedSecondPrefixG =
+      ⊕ᴰ-elim (λ y →
+      ⊕ᴰ-elim (λ z →
+      ⊕ᴰ-elim (λ w →
+      ⊕ᴰ-elim (λ x →
+      ⊕ᴰ-elim (λ {
+          ([] , notmt) → Empty.rec (notmt refl)
+        ; (c ∷ v , notmt) →
+          Sum.rec
+            (λ c∉Flg →
+              ⊥⊗
+              ∘g (c∉Flg ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
+              ∘g ⌈⌉-⊗&-distR⁻ {w = x}
+              ∘g id ,&p ⊗-assoc
+              ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
+            )
+            (λ c∉Fh →
+              ⊗⊥
+              ∘g id ,⊗ (∉First⊗l ¬nullh c∉Fh ∘g &-swap)
+              ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
+              ∘g &-π₂
+            )
+            (seq-unambig c)
+        })))))
+
+  sequentiallyUnambiguous≅ :
+    (g ⊗ h ⊗ k) & (g ⊗ h ⊗ l)
+    ≅
+    (g & g) ⊗ ((h ⊗ k) & (h ⊗ l))
+  sequentiallyUnambiguous≅ =
+    ⊗&-split g (h ⊗ k) g (h ⊗ l)
+    ≅∙ ⊕≅
+      id≅
+      (
+      (⊕≅
+        (uninhabited→≅⊥ uninhabitedSecondPrefixG)
+        (uninhabited→≅⊥ uninhabitedFirstPrefixG)
+      )
+      ≅∙ ⊥⊕≅ ⊥
+      )
+    ≅∙ ⊕-swap≅
+    ≅∙ ⊥⊕≅ _
 
 disjoint¬Firsts→disjoint :
   (∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉First g ⟩ ⊎ ⟨ c ∉First h ⟩) →
@@ -233,223 +319,273 @@ disjoint¬Firsts→disjoint disjFsts ¬nullg =
     ∘g id ,&p ⊕ᴰ-distL .fun)
   ∘g &string-split≅ .fun
 
-data DetReg : RegularExpression → ℙ → ℙ → Bool → Type (ℓ-suc ℓ-zero)
+module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
+  data DetReg : RegularExpression → ℙ → ℙ → Bool → Type (ℓ-suc ℓ-zero)
 
-sound¬Nullable :
-  ∀ {r : RegularExpression} →
-  {¬FL ¬F : ℙ} →
-  {b : Bool} →
-  (dr : DetReg r ¬FL ¬F b) →
-  if b then
-  ⟨ ¬Nullable ⟦ r ⟧r ⟩ else
-  (⟨ ¬Nullable ⟦ r ⟧r ⟩ → Empty.⊥)
-
-decidable¬Nullable :
-  ∀ {r : RegularExpression} →
-  {¬FL ¬F : ℙ} →
-  {b : Bool} →
-  (dr : DetReg r ¬FL ¬F b) →
-  Dec ⟨ ¬Nullable ⟦ r ⟧r ⟩
-
-sound¬First :
-  ∀ {r : RegularExpression} →
-  {¬FL ¬F : ℙ} →
-  {b : Bool} →
-  (dr : DetReg r ¬FL ¬F b) →
-  (c : ⟨ Alphabet ⟩) →
-  c ∈ ¬F →
-  ⟨ c ∉First ⟦ r ⟧r ⟩
-
-sound¬FollowLast :
-  ∀ {r : RegularExpression} →
-  {¬FL ¬F : ℙ} →
-  {b : Bool} →
-  (dr : DetReg r ¬FL ¬F b) →
-  (c : ⟨ Alphabet ⟩) →
-  c ∈ ¬FL →
-  ⟨ c ∉FollowLast ⟦ r ⟧r ⟩
-
-unambiguousDR :
-  ∀ {r : RegularExpression} →
-  {¬FL ¬F : ℙ} →
-  {b : Bool} →
-  (dr : DetReg r ¬FL ¬F b) →
-  unambiguous ⟦ r ⟧r
-
--- A deterministic regular expression is parametrized
--- a regular expression r and
--- the complement of its follow last set,
--- the complement of its first last set,
--- and the negation of its nullability.
--- By negating each of these, the indices are prop valued,
--- whereas if we used the nonnegated versions it would not
--- be prop valued
-data DetReg where
-  εdr : DetReg εr ⊤ℙ ⊤ℙ false
-  ⊥dr : DetReg ⊥r ⊤ℙ ⊤ℙ true
-  ＂_＂dr :
-    (c : ⟨ Alphabet ⟩) →
-    DetReg (＂ c ＂r) ⊤ℙ (¬ℙ ⟦ c ⟧ℙ) true
-  _⊗DR[_]_ :
-    ∀ {r r' : RegularExpression} →
-    {¬FL ¬FL' ¬F ¬F' : ℙ} →
-    {b' : Bool} →
-    (dr : DetReg r ¬FL ¬F true) →
-    (FL∩F'mt :
-      ∀ (c : ⟨ Alphabet ⟩) →
-        (c ∈ ¬FL) ⊎ (c ∈ ¬F')
-    ) →
-    (dr' : DetReg r' ¬FL' ¬F' b') →
-    DetReg
-      (r ⊗r r')
-      (if b' then ¬FL' else ¬FL ∩ℙ ¬F' ∩ℙ ¬FL') -- maybe wrong
-      ¬F
-      true
-  _⊕DR[_]_ :
-    ∀ {r r' : RegularExpression} →
-    {¬FL ¬FL' ¬F ¬F' : ℙ} →
-    {b b' : Bool} →
-    {notBothNull : b or b' Eq.≡ true} →
-    (dr : DetReg r ¬FL ¬F b) →
-    (F∩F'mt :
-      ∀ (c : ⟨ Alphabet ⟩) →
-        (c ∈ ¬F) ⊎ (c ∈ ¬F')
-    ) →
-    (dr' : DetReg r' ¬FL' ¬F' b') →
-    DetReg
-      (r ⊕r r')
-      (¬FL ∩ℙ ¬FL')
-      (¬F ∩ℙ ¬F')
-      (b and b')
-  _*DR :
+  sound¬Nullable :
     ∀ {r : RegularExpression} →
     {¬FL ¬F : ℙ} →
-    (dr : DetReg r ¬FL ¬F true) →
-    DetReg
-      (r *r)
-      (¬F ∩ℙ ¬FL)
-      ¬F
-      false
+    {b : Bool} →
+    (dr : DetReg r ¬FL ¬F b) →
+    if b then
+    ⟨ ¬Nullable ⟦ r ⟧r ⟩ else
+    (⟨ ¬Nullable ⟦ r ⟧r ⟩ → Empty.⊥)
 
-record ¬NullablePf (g : Grammar ℓ-zero) : Type ℓ-zero where
-  field
-    ¬nullpf : ⟨ ¬Nullable g ⟩
+  decidable¬Nullable :
+    ∀ {r : RegularExpression} →
+    {¬FL ¬F : ℙ} →
+    {b : Bool} →
+    (dr : DetReg r ¬FL ¬F b) →
+    Dec ⟨ ¬Nullable ⟦ r ⟧r ⟩
 
-record ¬¬NullablePf (g : Grammar ℓ-zero) : Type ℓ-zero where
-  field
-    ¬¬nullpf : ⟨ ¬Nullable g ⟩ → Empty.⊥
+  sound¬First :
+    ∀ {r : RegularExpression} →
+    {¬FL ¬F : ℙ} →
+    {b : Bool} →
+    (dr : DetReg r ¬FL ¬F b) →
+    (c : ⟨ Alphabet ⟩) →
+    c ∈ ¬F →
+    ⟨ c ∉First ⟦ r ⟧r ⟩
 
-open ¬NullablePf {{...}}
-open ¬¬NullablePf {{...}}
+  sound¬FollowLast :
+    ∀ {r : RegularExpression} →
+    {¬FL ¬F : ℙ} →
+    {b : Bool} →
+    (dr : DetReg r ¬FL ¬F b) →
+    (c : ⟨ Alphabet ⟩) →
+    c ∈ ¬FL →
+    ⟨ c ∉FollowLast ⟦ r ⟧r ⟩
 
-instance
-  ¬Nullable⊥ : ¬NullablePf ⊥
-  ¬Nullable⊥ .¬nullpf = &-π₂
+  unambiguousDR :
+    ∀ {r : RegularExpression} →
+    {¬FL ¬F : ℙ} →
+    {b : Bool} →
+    (dr : DetReg r ¬FL ¬F b) →
+    unambiguous ⟦ r ⟧r
 
-  ¬NullableLit : ∀ {c} → ¬NullablePf (＂ c ＂)
-  ¬NullableLit {c} .¬nullpf = disjoint-ε-literal c
+  -- A deterministic regular expression is parametrized
+  -- a regular expression r and
+  -- the complement of its follow last set,
+  -- the complement of its first last set,
+  -- and the negation of its nullability.
+  -- By negating each of these, the indices are prop valued,
+  -- whereas if we used the nonnegated versions it would not
+  -- be prop valued
+  data DetReg where
+    εdr : DetReg εr ⊤ℙ ⊤ℙ false
+    ⊥dr : DetReg ⊥r ⊤ℙ ⊤ℙ true
+    ＂_＂dr :
+      (c : ⟨ Alphabet ⟩) →
+      DetReg (＂ c ＂r) ⊤ℙ (¬ℙ ⟦ c ⟧ℙ) true
+    _⊗DR[_]_ :
+      ∀ {r r' : RegularExpression} →
+      {¬FL ¬FL' ¬F ¬F' : ℙ} →
+      {b' : Bool} →
+      (dr : DetReg r ¬FL ¬F true) →
+      (FL∩F'mt :
+        ∀ (c : ⟨ Alphabet ⟩) →
+          (c ∈ ¬FL) ⊎ (c ∈ ¬F')
+      ) →
+      (dr' : DetReg r' ¬FL' ¬F' b') →
+      DetReg
+        (r ⊗r r')
+        (if b' then ¬FL' else ¬FL ∩ℙ ¬F' ∩ℙ ¬FL') -- maybe wrong
+        ¬F
+        true
+    _⊕DR[_]_ :
+      ∀ {r r' : RegularExpression} →
+      {¬FL ¬FL' ¬F ¬F' : ℙ} →
+      {b b' : Bool} →
+      {notBothNull : b or b' Eq.≡ true} →
+      (dr : DetReg r ¬FL ¬F b) →
+      (F∩F'mt :
+        ∀ (c : ⟨ Alphabet ⟩) →
+          (c ∈ ¬F) ⊎ (c ∈ ¬F')
+      ) →
+      (dr' : DetReg r' ¬FL' ¬F' b') →
+      DetReg
+        (r ⊕r r')
+        (¬FL ∩ℙ ¬FL')
+        (¬F ∩ℙ ¬F')
+        (b and b')
+    _*DR[_] :
+      ∀ {r : RegularExpression} →
+      {¬FL ¬F : ℙ} →
+      (dr : DetReg r ¬FL ¬F true) →
+      (F∩FLmt :
+        ∀ (c : ⟨ Alphabet ⟩) →
+          (c ∈ ¬F) ⊎ (c ∈ ¬FL)
+      ) →
+      DetReg
+        (r *r)
+        (¬F ∩ℙ ¬FL)
+        ¬F
+        false
 
-instance
-  ¬¬Nullableε : ¬¬NullablePf ε
-  ¬¬Nullableε .¬¬nullpf e = get⊥ ((e ∘g &-Δ) _ ε-intro)
+  record ¬NullablePf (g : Grammar ℓ-zero) : Type ℓ-zero where
+    field
+      ¬nullpf : ⟨ ¬Nullable g ⟩
 
-  ¬¬Nullable* : {g : Grammar ℓ-zero} → ¬¬NullablePf (g *)
-  ¬¬Nullable* .¬¬nullpf e =
-    get⊥ ((e ∘g id ,&p NIL ∘g &-Δ) _ ε-intro)
+  record ¬¬NullablePf (g : Grammar ℓ-zero) : Type ℓ-zero where
+    field
+      ¬¬nullpf : ⟨ ¬Nullable g ⟩ → Empty.⊥
 
-sound¬Nullable εdr = ¬¬nullpf
-sound¬Nullable ⊥dr = ¬nullpf
-sound¬Nullable ＂ c ＂dr = ¬nullpf
-sound¬Nullable (dr ⊗DR[ FL∩F'mt ] dr') =
-  ¬Nullable⊗l (sound¬Nullable dr)
-sound¬Nullable (_⊕DR[_]_ {b = false} {b' = true}
-  dr disjointFsts dr') e =
-  sound¬Nullable dr (e ∘g id ,&p ⊕-inl)
-sound¬Nullable (_⊕DR[_]_ {b = true} {b' = false}
-  dr disjointFsts dr') e =
-  sound¬Nullable dr' (e ∘g id ,&p ⊕-inr)
-sound¬Nullable (_⊕DR[_]_ {b = true} {b' = true}
-  dr disjointFsts dr') =
-  ⊕-elim
-    (sound¬Nullable dr)
-    (sound¬Nullable dr')
-  ∘g &⊕-distL
-sound¬Nullable {b = b} (dr *DR) = ¬¬nullpf
+  open ¬NullablePf {{...}}
+  open ¬¬NullablePf {{...}}
 
-decidable¬Nullable {b = false} r = no (sound¬Nullable r)
-decidable¬Nullable {b = true} r = yes (sound¬Nullable r)
+  instance
+    ¬Nullable⊥ : ¬NullablePf ⊥
+    ¬Nullable⊥ .¬nullpf = &-π₂
 
-sound¬First εdr c c∈¬F =
-  disjoint-ε-char+
-  ∘g id ,&p literal→char c ,⊗ string-intro
-  ∘g &-swap
-sound¬First ⊥dr c c∈¬F = &-π₂
-sound¬First ＂ c' ＂dr c c∈¬F =
-  ⊕ᴰ-elim (λ c'≡c → Empty.rec (c∈¬F c'≡c))
-  ∘g same-first c' c 
-  ∘g &-swap
-sound¬First (dr ⊗DR[ FL∩F'mt ] dr₁) c c∈¬F =
-  ∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F)
-sound¬First (dr ⊕DR[ _ ] dr') c c∈¬F =
-  ⊕-elim
-    (sound¬First dr c (c∈¬F .fst))
-    (sound¬First dr' c (c∈¬F .snd))
-  ∘g &⊕-distL
-sound¬First (dr *DR) c c∈¬F =
-  ⊕-elim
-    (disjoint-ε-char+
-     ∘g &-swap
-     ∘g (literal→char c ,⊗ id) ,&p id)
-    (∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F))
-  ∘g &⊕-distL
-  ∘g id ,&p *≅ε⊕g⊗g* _ .fun
+    ¬NullableLit : ∀ {c} → ¬NullablePf (＂ c ＂)
+    ¬NullableLit {c} .¬nullpf = disjoint-ε-literal c
 
-sound¬FollowLast εdr c _ =
-  disjoint-ε-char+
-  ∘g &-swap
-  ∘g (literal→char c ,⊗ id ∘g ⊗-unit-l) ,&p id
-sound¬FollowLast ⊥dr c _ = &-π₂
-sound¬FollowLast ＂ c' ＂dr c _ =
-  disjoint-char-char⊗char+
-  ∘g &-swap
-  ∘g (literal→char c' ,⊗ literal→char c ,⊗ id) ,&p literal→char c'
-sound¬FollowLast (_⊗DR[_]_ {b' = false} dr FL∩F'mt dr')
-  c (c∈¬FL , c∈¬F' , c∈¬FL') =
-  {!!}
-sound¬FollowLast (_⊗DR[_]_ {b' = true} dr FL∩F'mt dr')
-  c c∈¬FL' =
-  {!sound¬FollowLast dr' c c∈¬FL'!}
-sound¬FollowLast (dr ⊕DR[ F∩F'mt ] dr') c (c∈¬FL , c∈¬FL') =
-  {!!}
-sound¬FollowLast (_*DR {r = r} dr) c (c∈¬F , c∈¬FL) =
-  {!!}
-  -- ⊕-elim
-  --   (sound¬First (dr *DR) c c∈¬F
-  --   ∘g ⊗-unit-l ,&p id)
-  --   (⊕-elim
-  --     (disjoint-ε-char+
-  --     ∘g &-swap
-  --     ∘g (char+⊗r→char+ ∘g string-intro ,⊗ literal→char c ,⊗ id) ,&p id
-  --     )
-  --     {!!}
-  --   ∘g &⊕-distL
-  --   ∘g id ,&p *≅ε⊕g⊗g* ⟦ r ⟧r .fun)
-  -- ∘g &⊕-distR
-  -- ∘g (⊗⊕-distR ∘g *≅ε⊕g⊗g* ⟦ r ⟧r .fun ,⊗ id) ,&p id
+  instance
+    ¬¬Nullableε : ¬¬NullablePf ε
+    ¬¬Nullableε .¬¬nullpf e = get⊥ ((e ∘g &-Δ) _ ε-intro)
 
-unambiguousDR εdr = unambiguousε
-unambiguousDR ⊥dr = unambiguous⊥
-unambiguousDR ＂ c ＂dr = unambiguous-literal c
-unambiguousDR (dr ⊗DR[ FL∩F'mt ] dr') = {!!}
-unambiguousDR (dr ⊕DR[ F∩F'mt ] dr') = {!!}
-unambiguousDR (dr *DR) = {!!}
+    ¬¬Nullable* : {g : Grammar ℓ-zero} → ¬¬NullablePf (g *)
+    ¬¬Nullable* .¬¬nullpf e =
+      get⊥ ((e ∘g id ,&p NIL ∘g &-Δ) _ ε-intro)
 
--- unambiguousDR εDR = unambiguousε
--- unambiguousDR ⊥DR = unambiguous⊥
--- unambiguousDR (literalDR c) = unambiguous-literal c
--- unambiguousDR (r ⊗DR-null[ x ] r') = {!!}
--- unambiguousDR (r ⊗DR-notnull[ x ] r') = {!!}
--- unambiguousDR (r ⊕DR-ft[ x ] r') = {!!}
--- unambiguousDR (r ⊕DR-tf[ x ] r') = {!!}
--- unambiguousDR (r ⊕DR-ff[ x ] r') = {!!}
--- unambiguousDR (r *DR) = {!!}
+  sound¬Nullable εdr = ¬¬nullpf
+  sound¬Nullable ⊥dr = ¬nullpf
+  sound¬Nullable ＂ c ＂dr = ¬nullpf
+  sound¬Nullable (dr ⊗DR[ FL∩F'mt ] dr') =
+    ¬Nullable⊗l (sound¬Nullable dr)
+  sound¬Nullable (_⊕DR[_]_ {b = false} {b' = true}
+    dr disjointFsts dr') e =
+    sound¬Nullable dr (e ∘g id ,&p ⊕-inl)
+  sound¬Nullable (_⊕DR[_]_ {b = true} {b' = false}
+    dr disjointFsts dr') e =
+    sound¬Nullable dr' (e ∘g id ,&p ⊕-inr)
+  sound¬Nullable (_⊕DR[_]_ {b = true} {b' = true}
+    dr disjointFsts dr') =
+    ⊕-elim
+      (sound¬Nullable dr)
+      (sound¬Nullable dr')
+    ∘g &⊕-distL
+  sound¬Nullable {b = b} (dr *DR[ _ ]) = ¬¬nullpf
+
+  decidable¬Nullable {b = false} r = no (sound¬Nullable r)
+  decidable¬Nullable {b = true} r = yes (sound¬Nullable r)
+
+  sound¬First εdr c c∈¬F =
+    disjoint-ε-char+
+    ∘g id ,&p literal→char c ,⊗ string-intro
+    ∘g &-swap
+  sound¬First ⊥dr c c∈¬F = &-π₂
+  sound¬First ＂ c' ＂dr c c∈¬F =
+    ⊕ᴰ-elim (λ c'≡c → Empty.rec (c∈¬F c'≡c))
+    ∘g same-first c' c
+    ∘g &-swap
+  sound¬First (dr ⊗DR[ FL∩F'mt ] dr₁) c c∈¬F =
+    ∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F)
+  sound¬First (dr ⊕DR[ _ ] dr') c c∈¬F =
+    ⊕-elim
+      (sound¬First dr c (c∈¬F .fst))
+      (sound¬First dr' c (c∈¬F .snd))
+    ∘g &⊕-distL
+  sound¬First (dr *DR[ _ ]) c c∈¬F =
+    ⊕-elim
+      (disjoint-ε-char+
+       ∘g &-swap
+       ∘g (literal→char c ,⊗ id) ,&p id)
+      (∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F))
+    ∘g &⊕-distL
+    ∘g id ,&p *≅ε⊕g⊗g* _ .fun
+
+  sound¬FollowLast εdr c _ =
+    disjoint-ε-char+
+    ∘g &-swap
+    ∘g (literal→char c ,⊗ id ∘g ⊗-unit-l) ,&p id
+  sound¬FollowLast ⊥dr c _ = &-π₂
+  sound¬FollowLast ＂ c' ＂dr c _ =
+    disjoint-char-char⊗char+
+    ∘g &-swap
+    ∘g (literal→char c' ,⊗ literal→char c ,⊗ id) ,&p literal→char c'
+  sound¬FollowLast (_⊗DR[_]_ {b' = false} dr FL∩F'mt dr')
+    c (c∈¬FL , c∈¬F' , c∈¬FL') =
+    {!!}
+    ∘g {!!}
+    ∘g {!!}
+    ∘g {!? ,&p ?!}
+  sound¬FollowLast (_⊗DR[_]_ {r = r} {r' = r'} {b' = true} dr FL∩F'mt dr')
+    c c∈¬FL' =
+    ⊗⊥
+    ∘g id ,⊗
+      (sound¬FollowLast dr' c c∈¬FL'
+       ∘g id ,&p ⊗-unit-r
+       ∘g &-swap)
+    ∘g sequentiallyUnambiguous≅
+          ⟦ r ⟧r ⟦ r' ⟧r ε (＂ c ＂ ⊗ string)
+          (λ c →
+            Sum.map
+              (sound¬FollowLast dr c)
+              (sound¬First dr' c)
+              (FL∩F'mt c)
+          )
+          (sound¬Nullable dr')
+          .fun
+    ∘g (⊗-assoc⁻ ∘g ⊗-unit-r⁻) ,&p ⊗-assoc⁻
+    ∘g &-swap
+    where
+    c∉Flr' = sound¬FollowLast dr' c c∈¬FL'
+  sound¬FollowLast (_⊕DR[_]_ {b = false} {b' = true}
+    dr F∩F'mt dr') c (c∈¬FL , c∈¬FL') =
+    {!!}
+  sound¬FollowLast (_⊕DR[_]_ {b = true} {b' = false}
+    dr F∩F'mt dr') c (c∈¬FL , c∈¬FL') =
+    {!!}
+  sound¬FollowLast (_⊕DR[_]_ {b = true} {b' = true}
+    dr F∩F'mt dr') c (c∈¬FL , c∈¬FL') =
+    {!!}
+    -- ⊕-elim
+    --   (⊕-elim
+    --     (sound¬FollowLast dr c c∈¬FL)
+    --     {!!}
+    --   )
+    --   (⊕-elim
+    --     {!!}
+    --     (sound¬FollowLast dr' c c∈¬FL')
+    --   )
+    -- ∘g (&⊕-distR ,⊕p &⊕-distR)
+    -- ∘g &⊕-distL
+    -- ∘g ⊗⊕-distR ,&p id
+  sound¬FollowLast (_*DR[_] {r = r} dr F∩FLmt) c (c∈¬F , c∈¬FL) =
+    ⊕-elim
+      (⊕-elim
+        (disjoint-ε-char+
+        ∘g &-swap
+        ∘g (literal→char c ,⊗ id) ,&p id
+        ∘g ⊗-unit-l ,&p id
+        )
+        (¬Nullable⊗l (¬Nullable⊗l (sound¬Nullable dr))
+        ∘g &-swap)
+      )
+      (⊕-elim
+        (∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F)
+        ∘g ⊗-unit-l ,&p id
+        )
+        {!!}
+      )
+    ∘g (&⊕-distR ,⊕p &⊕-distR)
+    ∘g &⊕-distL
+    ∘g (⊗⊕-distR ∘g *≅ε⊕g⊗g* ⟦ r ⟧r .fun ,⊗ id) ,&p (*≅ε⊕g⊗g* ⟦ r ⟧r .fun)
+
+  unambiguousDR εdr = unambiguousε
+  unambiguousDR ⊥dr = unambiguous⊥
+  unambiguousDR ＂ c ＂dr = unambiguous-literal c
+  unambiguousDR (dr ⊗DR[ FL∩F'mt ] dr') = {!!}
+  unambiguousDR (dr ⊕DR[ F∩F'mt ] dr') = {!!}
+  unambiguousDR (dr *DR[ _ ]) = {!!}
+
+  -- unambiguousDR εDR = unambiguousε
+  -- unambiguousDR ⊥DR = unambiguous⊥
+  -- unambiguousDR (literalDR c) = unambiguous-literal c
+  -- unambiguousDR (r ⊗DR-null[ x ] r') = {!!}
+  -- unambiguousDR (r ⊗DR-notnull[ x ] r') = {!!}
+  -- unambiguousDR (r ⊕DR-ft[ x ] r') = {!!}
+  -- unambiguousDR (r ⊕DR-tf[ x ] r') = {!!}
+  -- unambiguousDR (r ⊕DR-ff[ x ] r') = {!!}
+  -- unambiguousDR (r *DR) = {!!}

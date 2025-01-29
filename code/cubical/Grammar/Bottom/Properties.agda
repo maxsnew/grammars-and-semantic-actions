@@ -119,6 +119,15 @@ opaque
   is-initial-⊥* =
     ⊥*-elim , (λ e → funExt λ x → funExt λ p → Empty.rec (lower p))
 
+uninhabited→≅⊥ :
+  g ⊢ ⊥ →
+  g ≅ ⊥
+uninhabited→≅⊥ e =
+  mkStrEq e (x .inv) (x .sec) (x .ret)
+  where
+  x : isStrongEquivalence _ _ e
+  x = is-strict-initial-⊥ e
+
 unambiguous'⊥ : unambiguous' ⊥
 unambiguous'⊥ {k = k} e e' !∘e≡!∘e' =
   is-initial→propHoms (g⊢⊥→is-initial e) _ _
