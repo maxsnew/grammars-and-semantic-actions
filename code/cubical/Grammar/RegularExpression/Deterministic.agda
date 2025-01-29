@@ -144,12 +144,14 @@ sequentiallyUnambiguous g h =
 module _
   (g : Grammar ℓg)
   (h : Grammar ℓh)
-  (seq-unambig : sequentiallyUnambiguous g h)
+  (k : Grammar ℓh)
+  (seq-unambig-h : sequentiallyUnambiguous g h)
+  (seq-unambig-k : sequentiallyUnambiguous g k)
   where
 
   private
     uninhabitedFirstPrefixG :
-      firstPrefixG g h g h ⊢ ⊥
+      firstPrefixG g h g k ⊢ ⊥
     uninhabitedFirstPrefixG =
       ⊕ᴰ-elim (λ w →
       ⊕ᴰ-elim (λ x →
@@ -166,17 +168,17 @@ module _
               ∘g id ,&p ⊗-assoc
               ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
             )
-            (λ c∉Fh →
+            (λ c∉Fk →
               ⊗⊥
-              ∘g id ,⊗ (c∉Fh ∘g &-swap)
+              ∘g id ,⊗ (c∉Fk ∘g &-swap)
               ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
               ∘g &-π₂
             )
-            (seq-unambig c)
+            (seq-unambig-k c)
         })))))
 
     uninhabitedSecondPrefixG :
-      secondPrefixG g h g h ⊢ ⊥
+      secondPrefixG g h g k ⊢ ⊥
     uninhabitedSecondPrefixG =
       ⊕ᴰ-elim (λ y →
       ⊕ᴰ-elim (λ z →
@@ -199,15 +201,15 @@ module _
               ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
               ∘g &-π₂
             )
-            (seq-unambig c)
+            (seq-unambig-h c)
         })))))
 
   sequentiallyUnambiguous⊗≅ :
-    (g ⊗ h) & (g ⊗ h)
+    (g ⊗ h) & (g ⊗ k)
     ≅
-    (g & g) ⊗ (h & h)
+    (g & g) ⊗ (h & k)
   sequentiallyUnambiguous⊗≅ =
-    ⊗&-split g h g h
+    ⊗&-split g h g k
     ≅∙ ⊕≅
       id≅
       (
@@ -218,7 +220,39 @@ module _
       ≅∙ ⊥⊕≅ ⊥
       )
     ≅∙ ⊕-swap≅
-    ≅∙ ⊥⊕≅ (g & g ⊗ h & h)
+    ≅∙ ⊥⊕≅ (g & g ⊗ h & k)
+
+module _
+  (g : Grammar ℓg)
+  (h : Grammar ℓh)
+  (seq-unambig : sequentiallyUnambiguous g h)
+  where
+
+  module _ (¬nullh : ⟨ ¬Nullable h ⟩) where
+    disjoint-g-g⊗h⊗⊤ : disjoint g (g ⊗ h ⊗ ⊤)
+    disjoint-g-g⊗h⊗⊤ =
+      ⊕ᴰ-elim (λ c →
+        Sum.rec
+          (λ c∉FL →
+            c∉FL
+            ∘g &-swap
+            ∘g id ,&p (id ,⊗ (id ,⊗ string-intro ∘g ⊗-assoc⁻ ∘g &-π₂ ,⊗ id))
+          )
+          (λ c∉Fh →
+            ⊗⊥
+            ∘g id ,⊗ (⊥⊗ ∘g (c∉Fh ∘g &-swap) ,⊗ id)
+            ∘g &-π₂
+          )
+          (seq-unambig c)
+      )
+      ∘g &⊕ᴰ-distR≅ .fun
+      ∘g id ,&p
+        (⊕ᴰ-distR .fun
+        ∘g id ,⊗
+          (⊕ᴰ-distL .fun
+          ∘g (⊥⊕≅ _ .fun
+              ∘g ((¬nullh ∘g &-swap) ,⊕p id)
+              ∘g firstChar≅ .fun) ,⊗ id))
 
 module _
   (g : Grammar ℓg)
@@ -504,12 +538,67 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     disjoint-char-char⊗char+
     ∘g &-swap
     ∘g (literal→char c' ,⊗ literal→char c ,⊗ id) ,&p literal→char c'
-  sound¬FollowLast (_⊗DR[_]_ {b' = false} dr FL∩F'mt dr')
+  sound¬FollowLast (_⊗DR[_]_ {r = r} {r' = r'} {b' = false} dr FL∩F'mt dr')
     c (c∈¬FL , c∈¬F' , c∈¬FL') =
-    {!!}
-    ∘g {!!}
-    ∘g {!!}
-    ∘g {!? ,&p ?!}
+    ⊕-elim
+      (⊕-elim
+        (sound¬FollowLast dr c c∈¬FL
+        ∘g ((⊗-unit-r ∘g id ,⊗ &-π₂ ) ,⊗ id) ,&p (⊗-unit-r ∘g id ,⊗ &-π₂))
+        (⊗⊥
+        ∘g id ,⊗ (sound¬First dr' c c∈¬F' ∘g (id ,&p &-π₁))
+        ∘g sequentiallyUnambiguous⊗≅ ⟦ r ⟧r (＂ c ＂ ⊗ string) (⟦ r' ⟧r & char +)
+            (λ c' →
+              decRec
+                (λ c≡c' →
+                  inl (subst (λ z → ⟨ z ∉FollowLast ⟦ r ⟧r ⟩) c≡c' (sound¬FollowLast dr c c∈¬FL))
+                )
+                (λ c≢c' →
+                  inr
+                    (⊕ᴰ-elim (λ c'≡c → Empty.rec (c≢c' (sym c'≡c))) ∘g same-first' c' c)
+                )
+                (DiscreteAlphabet isFinSetAlphabet c c')
+            )
+            (λ c' →
+              Sum.rec
+                (λ c'∈¬FL → inl (sound¬FollowLast dr c' c'∈¬FL))
+                (λ c'∈¬F' → inr (sound¬First dr' c' c'∈¬F' ∘g id ,&p &-π₁))
+                (FL∩F'mt c')
+            )
+            .fun
+        ∘g ((⊗-unit-r ∘g id ,⊗ &-π₂) ,⊗ id) ,&p id
+        )
+      ∘g &⊕-distL≅ .fun)
+      (⊕-elim
+        (disjoint-g-g⊗h⊗⊤ ⟦ r ⟧r (⟦ r' ⟧r & (char +))
+          (λ c' →
+            Sum.rec
+              (λ c'∈¬FL → inl (sound¬FollowLast dr c' c'∈¬FL))
+              (λ c'∈¬F' → inr (sound¬First dr' c' c'∈¬F' ∘g id ,&p &-π₁))
+              (FL∩F'mt c')
+          )
+          (disjoint-ε-char+ ∘g id ,&p &-π₂)
+        ∘g &-swap
+        ∘g (⊗-assoc⁻ ∘g id ,⊗ ⊤-intro) ,&p (⊗-unit-r ∘g id ,⊗ &-π₂))
+        (⊗⊥
+        ∘g id ,⊗ (sound¬FollowLast dr' c c∈¬FL' ∘g ((&-π₁ ,⊗ id) ,&p (&-π₁ ∘g ⊗-unit-r)))
+        ∘g sequentiallyUnambiguous≅
+            ⟦ r ⟧r
+            (⟦ r' ⟧r & char +)
+            (＂ c ＂ ⊗ string)
+            ε
+            (λ c' →
+              Sum.rec
+                (λ c'∈¬FL → inl (sound¬FollowLast dr c' c'∈¬FL))
+                (λ c'∈¬F' → inr (sound¬First dr' c' c'∈¬F' ∘g id ,&p &-π₁))
+                (FL∩F'mt c')
+            )
+            (disjoint-ε-char+ ∘g id ,&p &-π₂)
+            .fun
+        ∘g ⊗-assoc⁻ ,&p (⊗-assoc⁻ ∘g ⊗-unit-r⁻)
+        )
+      ∘g &⊕-distL≅ .fun)
+    ∘g &⊕-distR≅ .fun
+    ∘g (⊗⊕-distR ∘g (⊗⊕-distL ∘g id ,⊗ &string-split≅ .fun) ,⊗ id) ,&p (⊗⊕-distL ∘g (id ,⊗ &string-split≅ .fun))
   sound¬FollowLast (_⊗DR[_]_ {r = r} {r' = r'} {b' = true} dr FL∩F'mt dr')
     c c∈¬FL' =
     ⊗⊥

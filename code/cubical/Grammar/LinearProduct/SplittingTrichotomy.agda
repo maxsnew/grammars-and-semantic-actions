@@ -122,20 +122,23 @@ module _
       ((g & ⌈ w ⌉) ⊗ ((h & ⌈ x ⌉) & (⌈ v .fst ⌉ ⊗ ⌈ z ⌉)))
       )
 
+  splittingTrichotomyG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓg ℓh) ℓk) ℓl)
+  splittingTrichotomyG = sameSplittingG ⊕ (secondPrefixG ⊕ firstPrefixG)
+
   module _ (w : String) (s s' : Splitting w) where
-    splittingTrichotomyG : splittingTrichotomyTy' w s s' → Type _
-    splittingTrichotomyG (inl x) =
+    splittingTrichotomyGTy : splittingTrichotomyTy' w s s' → Type _
+    splittingTrichotomyGTy (inl x) =
       (g & k) (s .fst .fst) × (h & l) (s .fst .snd)
-    splittingTrichotomyG (inr (inl (([] , notmt) , x))) = Empty.⊥*
-    splittingTrichotomyG (inr (inl ((c ∷ v , notmt) , x))) =
+    splittingTrichotomyGTy (inr (inl (([] , notmt) , x))) = Empty.⊥*
+    splittingTrichotomyGTy (inr (inl ((c ∷ v , notmt) , x))) =
       g (s .fst .fst) ×
       h (s .fst .snd) ×
       k (s' .fst .fst) ×
       l (s' .fst .snd) ×
       (s .fst .fst ++ c ∷ v ≡ s' .fst .fst) ×
       (s .fst .snd ≡ c ∷ v ++ s' .fst .snd)
-    splittingTrichotomyG (inr (inr (([] , notmt) , x))) = Empty.⊥*
-    splittingTrichotomyG (inr (inr ((c ∷ v , notmt) , x))) =
+    splittingTrichotomyGTy (inr (inr (([] , notmt) , x))) = Empty.⊥*
+    splittingTrichotomyGTy (inr (inr ((c ∷ v , notmt) , x))) =
       g (s .fst .fst) ×
       h (s .fst .snd) ×
       k (s' .fst .fst) ×
@@ -153,7 +156,7 @@ module _
            h (s .fst .snd) ×
            k (s' .fst .fst) ×
            l (s' .fst .snd))
-          (splittingTrichotomyG st)
+          (splittingTrichotomyGTy st)
       toTrichotomyIso (inl x) .fun y =
         (y .fst  , subst k (sym (x .fst)) (y .snd .snd .fst)) ,
         (y .snd .fst , subst l (sym (x .snd)) (y .snd .snd .snd))
@@ -228,7 +231,7 @@ module _
            l (s' .fst .snd)))
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
-           splittingTrichotomyG w s s' (splittingTrichotomy' w s s')
+           splittingTrichotomyGTy w s s' (splittingTrichotomy' w s s')
          )
     toTrichotomyIso' w .fun (s , s' , p) =
       s , (s' , toTrichotomyIso w s s' (splittingTrichotomy' w s s') .fun p)
@@ -243,21 +246,21 @@ module _
         toTrichotomyIso w s s' (splittingTrichotomy' w s s') .leftInv p
       )))
 
-    splittingTrichotomyG-inl≅ :
+    splittingTrichotomyGTy-inl≅ :
       (w : String) →
       Iso
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
          Σ[ x ∈ sameSplitting w s s' ]
-           splittingTrichotomyG w s s' (inl x)
+           splittingTrichotomyGTy w s s' (inl x)
          )
         (sameSplittingG w)
-    splittingTrichotomyG-inl≅ w .fun (s , s' , x , p) =
+    splittingTrichotomyGTy-inl≅ w .fun (s , s' , x , p) =
       s , ((p .fst) , (p .snd))
-    splittingTrichotomyG-inl≅ w .inv (s , pgk , phl) =
+    splittingTrichotomyGTy-inl≅ w .inv (s , pgk , phl) =
       s , s , (refl , refl) , pgk , phl
-    splittingTrichotomyG-inl≅ w .rightInv (s , pgk , phl) = refl
-    splittingTrichotomyG-inl≅ w .leftInv (s , s' , x , p) =
+    splittingTrichotomyGTy-inl≅ w .rightInv (s , pgk , phl) = refl
+    splittingTrichotomyGTy-inl≅ w .leftInv (s , s' , x , p) =
       ΣPathP (refl , (ΣPathP ((Splitting≡ (≡-× (x .fst) (x .snd))) ,
         (ΣPathP ((ΣPathP (
           isProp→PathP (λ _ → isSetString _ _) refl (x .fst) ,
@@ -265,16 +268,16 @@ module _
           )) ,
           refl)))))
 
-    splittingTrichotomyG-inr-inl≅ :
+    splittingTrichotomyGTy-inr-inl≅ :
       (w : String) →
       Iso
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
          Σ[ x ∈ splittingPrefix w s' s ]
-           splittingTrichotomyG w s s' (inr (inl x))
+           splittingTrichotomyGTy w s s' (inr (inl x))
          )
         (secondPrefixG w)
-    splittingTrichotomyG-inr-inl≅ ww .fun
+    splittingTrichotomyGTy-inr-inl≅ ww .fun
       (s' , s , ((c ∷ v , notmt) , split++) , p) =
         s' .fst .fst , s' .fst .snd ,
         s .fst .fst , s .fst .snd ,
@@ -285,13 +288,13 @@ module _
         s' , ((mk&⌈⌉ g(p .fst)) ,
           ((mk&⌈⌉ h (p .snd .fst)) ,
           ((_ , split++ .snd) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s .fst .snd))))))
-    splittingTrichotomyG-inr-inl≅ ww .inv
+    splittingTrichotomyGTy-inr-inl≅ ww .inv
       (w , x , y , z , ([] , notmt) ,
       (s , (pg , (t , py , pv)) , ph) ,
       (s' , pk , (pl , (t' , pv' , px)))
       ) =
       Empty.rec (notmt refl)
-    splittingTrichotomyG-inr-inl≅ ww .inv
+    splittingTrichotomyGTy-inr-inl≅ ww .inv
       (w , x , y , z , (c ∷ v , notmt) ,
       (s' , (pk , (t , pw , pv)) , pl) ,
       (s , pg , (ph , (t' , pv' , pz)))
@@ -325,12 +328,12 @@ module _
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ z (t' .fst .snd) pz)
             ∙ (⌈⌉→≡ z (s' .fst .snd) (pl .snd)))
-    splittingTrichotomyG-inr-inl≅ ww .rightInv
+    splittingTrichotomyGTy-inr-inl≅ ww .rightInv
       (w , x , y , z , ([] , notmt) ,
       (s , (pk , (t , pw , pv)) , pl) ,
       (s' , pg , (ph , (t' , pv' , pz)))) =
       Empty.rec (notmt refl)
-    splittingTrichotomyG-inr-inl≅ ww .rightInv
+    splittingTrichotomyGTy-inr-inl≅ ww .rightInv
       (w , x , y , z , (c ∷ v , notmt) ,
       (s , (pk , (t , pw , pv)) , pl) ,
       (s' , pg , (ph , (t' , pv' , pz)))) =
@@ -434,7 +437,7 @@ module _
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ z (t' .fst .snd) pz)
             ∙ (⌈⌉→≡ z (s .fst .snd) (pl .snd)))
-    splittingTrichotomyG-inr-inl≅ ww .leftInv
+    splittingTrichotomyGTy-inr-inl≅ ww .leftInv
       (s , s' , ((c ∷ v , notmt) , split++) , p) =
       ΣPathP3 (
         refl ,
@@ -454,16 +457,16 @@ module _
         )
       )
 
-    splittingTrichotomyG-inr-inr≅ :
+    splittingTrichotomyGTy-inr-inr≅ :
       (w : String) →
       Iso
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
          Σ[ x ∈ splittingPrefix w s s' ]
-           splittingTrichotomyG w s s' (inr (inr x))
+           splittingTrichotomyGTy w s s' (inr (inr x))
          )
         (firstPrefixG w)
-    splittingTrichotomyG-inr-inr≅ ww .fun
+    splittingTrichotomyGTy-inr-inr≅ ww .fun
       (s' , s , ((c ∷ v , notmt) , split++) , p) =
       s' .fst .fst , s' .fst .snd ,
       s .fst .fst , s .fst .snd ,
@@ -474,13 +477,13 @@ module _
       (s , ((mk&⌈⌉ k (p .snd .snd .fst)) ,
         ((mk&⌈⌉ l (p .snd .snd .snd .fst)) ,
         ((_ , split++ .snd) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s' .fst .snd)))))))
-    splittingTrichotomyG-inr-inr≅ ww .inv
+    splittingTrichotomyGTy-inr-inr≅ ww .inv
       (w , x , y , z , ([] , notmt) ,
       (s , (pg , (t , py , pv)) , ph) ,
       (s' , pk , (pl , (t' , pv' , px)))
       ) =
       Empty.rec (notmt refl)
-    splittingTrichotomyG-inr-inr≅ ww .inv
+    splittingTrichotomyGTy-inr-inr≅ ww .inv
       (w , x , y , z , (c ∷ v , notmt) ,
       (s' , (pg , (t , py , pv)) , ph) ,
       (s , pk , (pl , (t' , pv' , px)))
@@ -515,12 +518,12 @@ module _
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ x (t' .fst .snd) px)
             ∙ (⌈⌉→≡ x (s' .fst .snd) (ph .snd)))
-    splittingTrichotomyG-inr-inr≅ ww .rightInv
+    splittingTrichotomyGTy-inr-inr≅ ww .rightInv
       (w , x , y , z , ([] , notmt) ,
       (s , (pk , (t , pw , pv)) , pl) ,
       (s' , pg , (ph , (t' , pv' , pz)))) =
       Empty.rec (notmt refl)
-    splittingTrichotomyG-inr-inr≅ ww .rightInv
+    splittingTrichotomyGTy-inr-inr≅ ww .rightInv
       (w , x , y , z , (c ∷ v , notmt) ,
       (s , (pg , (t , py , pv)) , ph) ,
       (s' , pk , (pl , (t' , pv' , px)))) =
@@ -624,7 +627,7 @@ module _
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ x (t' .fst .snd) px)
             ∙ (⌈⌉→≡ x (s .fst .snd) (ph .snd)))
-    splittingTrichotomyG-inr-inr≅ ww .leftInv
+    splittingTrichotomyGTy-inr-inr≅ ww .leftInv
       (s , s' , ((c ∷ v , notmt) , split++) , p) =
       ΣPathP3 (
         refl ,
@@ -644,20 +647,20 @@ module _
         )
       )
 
-    splittingTrichotomyGΣ≅ :
+    splittingTrichotomyGTyΣ≅ :
       (w : String) →
       Iso
         (
         Σ[ s ∈ Splitting w ]
         Σ[ s' ∈ Splitting w ]
         Σ[ x ∈ splittingTrichotomyTy' w s s' ]
-           splittingTrichotomyG w s s' x
+           splittingTrichotomyGTy w s s' x
          )
         (
         sameSplittingG w ⊎
         (secondPrefixG w ⊎ firstPrefixG w)
         )
-    splittingTrichotomyGΣ≅ w =
+    splittingTrichotomyGTyΣ≅ w =
       compIso
         (invIso Σ-assoc-Iso)
         (compIso
@@ -667,7 +670,7 @@ module _
           (compIso
             (ΣDistR⊎Iso _ _ _)
             (⊎Iso
-              (compIso Σ-assoc-Iso (splittingTrichotomyG-inl≅ w))
+              (compIso Σ-assoc-Iso (splittingTrichotomyGTy-inl≅ w))
               (compIso
                 (Σ-cong-iso-snd (λ _ →
                   Σ⊎Iso
@@ -675,8 +678,8 @@ module _
                 (compIso
                   (ΣDistR⊎Iso _ _ _)
                   (⊎Iso
-                    (compIso Σ-assoc-Iso (splittingTrichotomyG-inr-inl≅ w))
-                    (compIso Σ-assoc-Iso (splittingTrichotomyG-inr-inr≅ w))
+                    (compIso Σ-assoc-Iso (splittingTrichotomyGTy-inr-inl≅ w))
+                    (compIso Σ-assoc-Iso (splittingTrichotomyGTy-inr-inr≅ w))
                   )
                 )
               )
@@ -706,8 +709,7 @@ module _
       splittingTrichotomy≅ :
         (g ⊗ h) & (k ⊗ l)
         ≅
-        sameSplittingG
-        ⊕ (secondPrefixG ⊕ firstPrefixG)
+        splittingTrichotomyG
       splittingTrichotomy≅ = pointwiseIso→≅ _ _
         (λ w →
           compIso
@@ -726,7 +728,7 @@ module _
                     Σ-assoc-Iso
                   ))
               ))
-            (splittingTrichotomyGΣ≅ w)
+            (splittingTrichotomyGTyΣ≅ w)
         )
 
   ⊗&-split :
@@ -762,3 +764,4 @@ module _
     )
     )
   ⊗&-split = splittingTrichotomy≅
+
