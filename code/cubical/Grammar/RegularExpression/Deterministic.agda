@@ -21,6 +21,7 @@ open import Cubical.Foundations.Structure
 open import Cubical.Data.FinSet
 open import Cubical.Data.List as List hiding (rec)
 open import Cubical.Data.Sigma
+open import Cubical.Data.Nat
 open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.Bool hiding (_⊕_)
 import Cubical.Data.Empty as Empty
@@ -54,6 +55,7 @@ private
     ℓg ℓh ℓk ℓl : Level
     g : Grammar ℓg
     h : Grammar ℓh
+    k : Grammar ℓk
     c : ⟨ Alphabet ⟩
 
 open StrongEquivalence
@@ -222,6 +224,30 @@ module _
     ≅∙ ⊕-swap≅
     ≅∙ ⊥⊕≅ (g & g ⊗ h & k)
 
+seq-unambig-εL : sequentiallyUnambiguous ε g
+seq-unambig-εL c = inl ((disjoint-ε-char+ ∘g id ,&p (literal→char c ,⊗ id ∘g ⊗-unit-l)) ∘g &-swap)
+
+seq-unambig-εR : sequentiallyUnambiguous g ε
+seq-unambig-εR c = inr (disjoint-ε-char+ ∘g id ,&p literal→char c ,⊗ id ∘g &-swap)
+
+seq-unambig-≅L : sequentiallyUnambiguous g h → g ≅ k → sequentiallyUnambiguous k h
+seq-unambig-≅L seq-unambig g≅k c =
+  Sum.map (λ c∉FLg → c∉FLg ∘g (g≅k .inv ,⊗ id) ,&p g≅k .inv) (λ x → x) (seq-unambig c)
+
+seq-unambig-≅R : sequentiallyUnambiguous g h → h ≅ k → sequentiallyUnambiguous g k
+seq-unambig-≅R seq-unambig h≅k c =
+  Sum.map (λ x → x) (λ c∉Fh → c∉Fh ∘g id ,&p h≅k .inv) (seq-unambig c)
+
+module _
+  (g : Grammar ℓg)
+  (seq-unambig : sequentiallyUnambiguous g g)
+  where
+
+  sequentiallyUnambiguousIteratedTensor : ∀ n → sequentiallyUnambiguous g (iterated-tensor g n)
+  sequentiallyUnambiguousIteratedTensor zero = seq-unambig-≅R seq-unambig-εR (LiftG≅ ℓg ε)
+  sequentiallyUnambiguousIteratedTensor (suc n) = {!!}
+
+
 module _
   (g : Grammar ℓg)
   (h : Grammar ℓh)
@@ -352,6 +378,19 @@ disjoint¬Firsts→disjoint disjFsts ¬nullg =
     ∘g &⊕ᴰ-distR≅ .fun
     ∘g id ,&p ⊕ᴰ-distL .fun)
   ∘g &string-split≅ .fun
+
+module _
+  (g : Grammar ℓg)
+  (h : Grammar ℓh)
+  (seq-unambig : sequentiallyUnambiguous g h)
+  where
+
+  -- TODO I really need better naming
+  -- seqUnambig⊗⇒ : g ⊗ ¬G h ⊢ ¬G (g ⊗ h)
+  -- seqUnambig⊗⇒ =
+  --   ⇒-intro
+  --     ({!!}
+  --     ∘g {!!})
 
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   data DetReg : RegularExpression → ℙ → ℙ → Bool → Type (ℓ-suc ℓ-zero)
@@ -628,39 +667,54 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     {!!}
   sound¬FollowLast (_⊕DR[_]_ {b = true} {b' = true}
     dr F∩F'mt dr') c (c∈¬FL , c∈¬FL') =
-    {!!}
-    -- ⊕-elim
-    --   (⊕-elim
-    --     (sound¬FollowLast dr c c∈¬FL)
-    --     {!!}
-    --   )
-    --   (⊕-elim
-    --     {!!}
-    --     (sound¬FollowLast dr' c c∈¬FL')
-    --   )
-    -- ∘g (&⊕-distR ,⊕p &⊕-distR)
-    -- ∘g &⊕-distL
-    -- ∘g ⊗⊕-distR ,&p id
-  sound¬FollowLast (_*DR[_] {r = r} dr F∩FLmt) c (c∈¬F , c∈¬FL) =
     ⊕-elim
       (⊕-elim
-        (disjoint-ε-char+
-        ∘g &-swap
-        ∘g (literal→char c ,⊗ id) ,&p id
-        ∘g ⊗-unit-l ,&p id
-        )
-        (¬Nullable⊗l (¬Nullable⊗l (sound¬Nullable dr))
-        ∘g &-swap)
+        (sound¬FollowLast dr c c∈¬FL)
+        (⊕-elim
+          (disjoint-ε-char+ ∘g id ,&p (¬Nullable→char+ (sound¬Nullable dr) ∘g &-π₂) ∘g &-swap)
+          (⊕ᴰ-elim (λ c' →
+            Sum.rec
+              (λ c'∈¬F → sound¬First dr c' c'∈¬F ∘g &-π₂ ,& (&-π₂ ∘g &-π₁))
+              (λ c'∈¬F' → ∉First⊗l (sound¬Nullable dr') (sound¬First dr' c' c'∈¬F') ∘g &-π₂ ,& (&-π₁ ∘g &-π₁))
+              (F∩F'mt c')
+          ))
+        ∘g firstChar≅ .fun )
       )
       (⊕-elim
-        (∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F)
-        ∘g ⊗-unit-l ,&p id
-        )
-        {!!}
+        (⊕-elim
+          (disjoint-ε-char+ ∘g id ,&p (¬Nullable→char+ (sound¬Nullable dr') ∘g &-π₂) ∘g &-swap)
+          (⊕ᴰ-elim (λ c' →
+            Sum.rec
+              (λ c'∈¬F → ∉First⊗l (sound¬Nullable dr) (sound¬First dr c' c'∈¬F) ∘g &-π₂ ,& (&-π₁ ∘g &-π₁))
+              (λ c'∈¬F' → sound¬First dr' c' c'∈¬F' ∘g &-π₂ ,& (&-π₂ ∘g &-π₁))
+              (F∩F'mt c')))
+        ∘g firstChar≅ .fun)
+        (sound¬FollowLast dr' c c∈¬FL')
       )
     ∘g (&⊕-distR ,⊕p &⊕-distR)
     ∘g &⊕-distL
-    ∘g (⊗⊕-distR ∘g *≅ε⊕g⊗g* ⟦ r ⟧r .fun ,⊗ id) ,&p (*≅ε⊕g⊗g* ⟦ r ⟧r .fun)
+    ∘g ⊗⊕-distR ,&p id
+  sound¬FollowLast (_*DR[_] {r = r} dr F∩FLmt) c (c∈¬F , c∈¬FL) =
+    {!!}
+    -- ⊕-elim
+    --   (⊕-elim
+    --     (disjoint-ε-char+
+    --     ∘g &-swap
+    --     ∘g (literal→char c ,⊗ id) ,&p id
+    --     ∘g ⊗-unit-l ,&p id
+    --     )
+    --     (¬Nullable⊗l (¬Nullable⊗l (sound¬Nullable dr))
+    --     ∘g &-swap)
+    --   )
+    --   (⊕-elim
+    --     (∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F)
+    --     ∘g ⊗-unit-l ,&p id
+    --     )
+    --     {!!}
+    --   )
+    -- ∘g (&⊕-distR ,⊕p &⊕-distR)
+    -- ∘g &⊕-distL
+    -- ∘g (⊗⊕-distR ∘g *≅ε⊕g⊗g* ⟦ r ⟧r .fun ,⊗ id) ,&p (*≅ε⊕g⊗g* ⟦ r ⟧r .fun)
 
   unambiguousDR εdr = unambiguousε
   unambiguousDR ⊥dr = unambiguous⊥

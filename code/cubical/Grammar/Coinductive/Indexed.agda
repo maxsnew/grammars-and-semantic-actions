@@ -16,7 +16,7 @@ open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 
-open import Grammar.Inductive.Functor Alphabet public
+open import Grammar.Inductive.Functor Alphabet
 
 private
   variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level

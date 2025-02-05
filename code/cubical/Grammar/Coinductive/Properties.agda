@@ -11,6 +11,7 @@ open import Cubical.Data.Unit
 open import Grammar.Equalizer Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Coinductive.Indexed Alphabet
+open import Grammar.Inductive.Functor Alphabet
 open import Term.Base Alphabet
 
 private
