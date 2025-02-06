@@ -7,19 +7,13 @@ open import Cubical.Foundations.Equiv
 
 module Grammar.Subgrammar.Base (Alphabet : hSet ℓ-zero) where
 
-open import Cubical.Data.List hiding (rec ; map)
 open import Cubical.Data.Sigma
-open import Cubical.Data.Nat
 open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
 
 open import Grammar Alphabet
+open import Grammar.HLevels Alphabet hiding (⟨_⟩)
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
--- open import Grammar.Base Alphabet
--- open import Grammar.LinearProduct Alphabet
--- open import Grammar.Epsilon Alphabet
--- open import Grammar.Inductive.Indexed Alphabet hiding (k)
--- open import Grammar.Dependent.Base Alphabet
 
 open import Term Alphabet
 
@@ -34,6 +28,12 @@ private
 
 Ω : Grammar (ℓ-suc ℓ)
 Ω {ℓ = ℓ} w = hProp ℓ
+
+isSetGrammar-Ω : isSetGrammar (Ω {ℓ = ℓ})
+isSetGrammar-Ω w = isSetHProp
+
+isSet⊢Ω : isSet (g ⊢ Ω {ℓ = ℓ})
+isSet⊢Ω = isSetΠ (λ w → isSet→ (isSetGrammar-Ω w))
 
 opaque
   unfolding ⊤
@@ -71,7 +71,7 @@ opaque
 --      with the character c
 --      -  which would be the subgrammar over the proposition
 --         that g & (＂ c ＂ ⊗ ⊤) ⊢ ⊥
-module _ {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
+module Subgrammar {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
   opaque
     unfolding ⊤ true
     subgrammar : Grammar (ℓ-max ℓg ℓ)
@@ -89,17 +89,31 @@ module _ {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
           λ _ → x .snd)
       )
 
+  module _ (f : h ⊢ g) (pf : ∀ w x → ⟨ p w (f w x) ⟩) where
+    opaque
+      unfolding true ⊤
+      insert-pf : p ∘g f ≡ true ∘g ⊤-intro
+      insert-pf = funExt λ w → funExt λ x →
+        Σ≡Prop
+          (λ _ → isPropIsProp)
+          (hPropExt (p w (f w x) .snd) isPropUnit* _ λ _ → pf w x)
+
   module _
     (f : h ⊢ g)
     (ph : p ∘g f ≡ true ∘g ⊤-intro) where
     opaque
       unfolding subgrammar
-      sub-intro : h ⊢ subgrammar
-      sub-intro w x .fst = f w x
-      sub-intro w x .snd =
+      extract-pf :
+        ∀ (w : String) → (x : h w) →
+        ⟨ p w (f w x) ⟩
+      extract-pf w x =
         transport
           (sym (cong fst (funExt⁻ (funExt⁻ ph w) x)))
           tt*
+
+      sub-intro : h ⊢ subgrammar
+      sub-intro w x .fst = f w x
+      sub-intro w x .snd = extract-pf w x
 
       sub-β : sub-π ∘g sub-intro ≡ f
       sub-β = refl
@@ -137,9 +151,12 @@ module _ {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
     ∙ cong (_∘g f) sub-π-pf
     ∙ cong (true ∘g_) (unambiguous⊤ _ _)
 
+open Subgrammar
+
 module _
+  {ℓ'}
   {A : Type ℓ} (F : A → Functor A) (g : A → Grammar ℓg)
-  (p : ∀ (a : A) → μ F a ⊢ Ω {ℓ = ℓ})
+  (p : ∀ (a : A) → μ F a ⊢ Ω {ℓ = ℓ'})
   (pf : ∀ (a : A) →
     p a ∘g roll ∘g map (F a) (λ a' → sub-π (p a'))
       ≡
