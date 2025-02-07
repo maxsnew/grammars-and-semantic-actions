@@ -7,6 +7,8 @@ open import Cubical.Foundations.Equiv
 
 module Grammar.Subgrammar.Base (Alphabet : hSet ℓ-zero) where
 
+open import Cubical.Functions.Embedding
+
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
@@ -207,3 +209,16 @@ module _
         )
         a
       )
+
+module _
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  (f : h ⊢ g)
+  (p : g ⊢ Ω {ℓ = ℓ})
+  where
+
+  preimage : Grammar (ℓ-max ℓh ℓ)
+  preimage = subgrammar (p ∘g f)
+
+  preimage-map : preimage ⊢ subgrammar p
+  preimage-map = sub-intro p (f ∘g sub-π (p ∘g f)) (sub-π-pf (p ∘g f))

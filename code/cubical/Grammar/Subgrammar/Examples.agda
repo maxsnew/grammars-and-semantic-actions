@@ -54,11 +54,20 @@ module _
   startsWith' : Grammar ℓg
   startsWith' = g & (＂ c ＂ ⊗ ⊤)
 
+  startsWith'' : Grammar ℓg
+  startsWith'' = preimage {ℓ = ℓg} (&-π₁ {g = g}{h = ＂ c ＂ ⊗ ⊤} ) (true ∘g ⊤-intro)
+
   -- _ : startsWith ⊢ startsWith'
   -- _ = {!!}
 
   _ : startsWith' ⊢ startsWith
   _ = sub-intro p &-π₁ (insert-pf p &-π₁ (λ w x → ∣ x , refl ∣₁))
+
+  _ : startsWith'' ⊢ startsWith'
+  _ = sub-π (true ∘g ⊤-intro ∘g &-π₁)
+
+  _ : startsWith' ⊢ startsWith''
+  _ = sub-intro (true ∘g ⊤-intro ∘g &-π₁) id (cong (true ∘g_) (unambiguous⊤ _ _))
 
 
 -- Does not start with c
@@ -102,4 +111,16 @@ module _
       test : {h : Grammar ℓh} → h ⊢ notFL → h & ((g & (char +)) ⊗ ＂ c ＂ ⊗ string) ⊢ ⊥
       test f =
         {!!}
-        ∘g ({!extract-pf p (sub-π p) (sub-π-pf p)!} ∘g f) ,&p id
+        ∘g ((p ∘g sub-π p) ∘g f) ,&p id
+
+module _ {g : Grammar ℓg} {h : Grammar ℓh}
+  (f : h ⊢ g)
+  (isMono-f : isMono f)
+  where
+  private
+    p : g ⊢ Ω
+    p w x .fst = Σ[ y ∈ h w ] f w y ≡ x
+    p w x .snd = {!!} -- prove the monos have propFibers
+
+  mono→subgrammar : Grammar (ℓ-max ℓg ℓh)
+  mono→subgrammar = subgrammar p

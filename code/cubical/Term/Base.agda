@@ -3,6 +3,8 @@ open import Cubical.Foundations.HLevels
 
 module Term.Base (Alphabet : hSet ℓ-zero) where
 
+open import Cubical.Functions.Embedding
+
 open import Grammar.Base Alphabet
 open import Helper
 
