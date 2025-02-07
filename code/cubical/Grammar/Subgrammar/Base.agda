@@ -58,6 +58,11 @@ opaque
 --
 -- It isn't clear to me how to best expose this syntactically in
 -- the language
+--
+-- Even if these aren't exposed in the language itself, it gives
+-- a nice interface to easily axiomatize a
+-- selection of propositions
+--
 -- We could just add in constructs to the language like we did
 -- with equalizers, although I'm not sure if we'd need to restrict
 -- the type of propositions of not
@@ -80,6 +85,7 @@ module Subgrammar {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
     sub-π : subgrammar ⊢ g
     sub-π w = fst
 
+    -- p holds for the image of sub-π
     sub-π-pf : p ∘g sub-π ≡ true ∘g ⊤-intro
     sub-π-pf = funExt (λ w → funExt λ x →
       Σ≡Prop
@@ -184,6 +190,7 @@ module _
         initialAlgebra F a ∘g map (F a) (λ a' → sub-π (p a'))
       is-homo = refl
 
+  -- p holds over all of μ F a, for all a
   subgrammar-ind : ∀ (a : A) → p a ≡ true ∘g ⊤-intro
   subgrammar-ind a =
     subgrammar-section

@@ -47,6 +47,8 @@ open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.RegularExpression.Base Alphabet
 
+open import Grammar.Subgrammar.Base Alphabet renaming (true to trueG ; false to falseG)
+
 open import Term Alphabet
 open import Helper
 
@@ -518,6 +520,24 @@ module _
     ∘g &⊕-distL
     ∘g (⊗⊕-distR ∘g &⊕-distR ,⊗ id) ,&p id
 
+
+module _
+  (g : Grammar ℓg)
+  (c : ⟨ Alphabet ⟩)
+  (c∉Fg : ⟨ c ∉First g ⟩)
+  (c∉FLg : ⟨ c ∉FollowLast g ⟩)
+  (¬nullg : ⟨ ¬Nullable g ⟩)
+  (seq-unambig : sequentiallyUnambiguous g g)
+  where
+  private
+    p : g * ⊢ Ω
+    p w x .fst = {!!}
+    p w x .snd = {!!}
+
+    
+  ∉FollowLast-* : ⟨ c ∉FollowLast (g *) ⟩
+  ∉FollowLast-* = {!!}
+
 module _
   (g : Grammar ℓg)
   (h : Grammar ℓh)
@@ -626,7 +646,7 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
       (dr : DetReg r ¬FL ¬F true) →
       (F∩FLmt :
         ∀ (c : ⟨ Alphabet ⟩) →
-          (c ∈ ¬F) ⊎ (c ∈ ¬FL)
+          (c ∈ ¬FL) ⊎ (c ∈ ¬F)
       ) →
       DetReg
         (r *r)
@@ -873,8 +893,17 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     -- ∘g (&⊕-distR ,⊕p &⊕-distR)
     -- ∘g &⊕-distL
     -- ∘g ⊗⊕-distR ,&p id
-  sound¬FollowLast (_*DR[_] {r = r} dr F∩FLmt) c (c∈¬F , c∈¬FL) =
-    {!!}
+  sound¬FollowLast (dr *DR[ F∩FLmt ]) c (c∉F , c∉FL) =
+    ∉FollowLast-* _ c
+      (sound¬First dr c c∉F)
+      (sound¬FollowLast dr c c∉FL)
+      (sound¬Nullable dr)
+      (λ c' →
+        Sum.map
+          (λ c'∉FL → sound¬FollowLast dr c' c'∉FL)
+          (λ c'∉F → sound¬First dr c' c'∉F)
+          (F∩FLmt c')
+      )
     -- ⊕-elim
     --   (⊕-elim
     --     (disjoint-ε-char+
