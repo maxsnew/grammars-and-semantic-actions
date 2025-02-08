@@ -529,14 +529,29 @@ module _
   (¬nullg : ⟨ ¬Nullable g ⟩)
   (seq-unambig : sequentiallyUnambiguous g g)
   where
-  private
-    p : g * ⊢ Ω
-    p w x .fst = {!!}
-    p w x .snd = {!!}
 
-    
+  open Subgrammar
+
+  private
+    π = &-π₁ {g = g *} {h = ¬G FollowLastG (g *) c}
+    so-true : (g *) ⊢ Ω {ℓ = ℓg}
+    so-true = trueG ∘g ⊤-intro
+
+    notFL : Grammar ℓg
+    notFL = preimage {ℓ = ℓg} π so-true
+
+    total' : g * ⊢ notFL
+    total' = {!!}
+
+    total : {!!}
+    total = subgrammar-ind (*Ty g) (λ _ → {!so-true ∘g π!}) (λ _ → {!!}) (λ _ → {!!}) _
+
   ∉FollowLast-* : ⟨ c ∉FollowLast (g *) ⟩
-  ∉FollowLast-* = {!!}
+  ∉FollowLast-* =
+    {!extrac!}
+    -- ⇒-app
+    -- ∘g (&-π₂ ∘g &-π₂) ,& &-π₁ ,& (&-π₁ ∘g &-π₂)
+    -- ∘g id ,&p (sub-π (so-true ∘g π) ∘g total)
 
 module _
   (g : Grammar ℓg)

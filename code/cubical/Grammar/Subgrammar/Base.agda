@@ -15,6 +15,7 @@ import Cubical.Data.Empty as Empty
 
 open import Grammar Alphabet
 open import Grammar.HLevels Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.MonoInjective Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
 
 open import Term Alphabet
@@ -159,6 +160,15 @@ module Subgrammar {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
     ∙ cong (_∘g f) sub-π-pf
     ∙ cong (true ∘g_) (unambiguous⊤ _ _)
 
+  opaque
+    unfolding sub-π
+    isMono-sub-π : isMono sub-π
+    isMono-sub-π e e' π≡ = funExt λ w → funExt λ x →
+      ΣPathP (
+        (funExt⁻ (funExt⁻ π≡ w) x) ,
+        (isProp→PathP (λ i → p w _ .snd) _ _)
+      )
+
 open Subgrammar
 
 module _
@@ -222,3 +232,15 @@ module _
 
   preimage-map : preimage ⊢ subgrammar p
   preimage-map = sub-intro p (f ∘g sub-π (p ∘g f)) (sub-π-pf (p ∘g f))
+
+module _ {g : Grammar ℓg} {h : Grammar ℓh}
+  (f : h ⊢ g)
+  (isSet-g : isSetGrammar g)
+  (isMono-f : isMono f)
+  where
+  mono-prop : g ⊢ Ω
+  mono-prop w x .fst = Σ[ y ∈ h w ] f w y ≡ x
+  mono-prop w x .snd = isMono→hasPropFibers isSet-g isMono-f w x
+
+  mono→subgrammar : Grammar (ℓ-max ℓg ℓh)
+  mono→subgrammar = subgrammar mono-prop

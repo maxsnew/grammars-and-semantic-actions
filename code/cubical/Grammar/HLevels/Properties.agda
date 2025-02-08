@@ -1,10 +1,14 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Equiv
 
 module Grammar.HLevels.Properties (Alphabet : hSet ℓ-zero) where
 
+open import Cubical.Functions.Embedding
+
 open import Cubical.Data.FinSet
+open import Cubical.Data.Unit
 
 open import Grammar Alphabet
 open import Term Alphabet
@@ -28,9 +32,9 @@ module EXTERNAL where
 
   opaque
     unfolding ⊤
-    isMono→injective : {e : h ⊢ ⊤} →
+    isMono⊤→injective : {e : h ⊢ ⊤} →
       isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
-    isMono→injective {h = h}{e = e} mono-e w p p' ewp≡ =
+    isMono⊤→injective {h = h}{e = e} mono-e w p p' ewp≡ =
       sym (transportRefl p)
       ∙ cong (λ a → transp (λ i → h (a i)) i0 p) (isSetString _ w refl _)
       ∙ funExt⁻ (funExt⁻ (mono-e (pick-parse w h p) (pick-parse w h p') refl) w) (internalize w)
@@ -41,7 +45,7 @@ module EXTERNAL where
     unfolding ⊤
     unambiguous'→isLang : unambiguous' g → isLang g
     unambiguous'→isLang {g = g} unambig w pg pg' =
-      isMono→injective {e = ⊤-intro} unambig w pg pg' refl
+      isMono⊤→injective {e = ⊤-intro} unambig w pg pg' refl
 
     unambiguous→isLang : unambiguous g → isLang g
     unambiguous→isLang unambig =

@@ -15,6 +15,7 @@ open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.HLevels Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet
+open import Grammar.HLevels.MonoInjective Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
 
 open import Grammar.Subgrammar.Base Alphabet
@@ -42,43 +43,19 @@ module _
   (g : Grammar ℓg)
   (c : ⟨ Alphabet ⟩)
   where
-  private
-    p : g ⊢ Ω
-    p w x .fst = ∃[ y ∈ (g & (＂ c ＂ ⊗ ⊤)) w ] &-π₁ w y ≡ x
-    p w x .snd = isPropPropTrunc
-    -- Don't need the PropTrunc if g unambiguous and a SetGrammar
-
   startsWith : Grammar ℓg
-  startsWith = subgrammar p
+  startsWith = g & (＂ c ＂ ⊗ ⊤)
 
   startsWith' : Grammar ℓg
-  startsWith' = g & (＂ c ＂ ⊗ ⊤)
-
-  startsWith'' : Grammar ℓg
-  startsWith'' = preimage {ℓ = ℓg} (&-π₁ {g = g}{h = ＂ c ＂ ⊗ ⊤} ) (true ∘g ⊤-intro)
-
-  -- _ : startsWith ⊢ startsWith'
-  -- _ = {!!}
+  startsWith' = preimage {ℓ = ℓg} (&-π₁ {g = g}{h = ＂ c ＂ ⊗ ⊤} ) (true ∘g ⊤-intro)
 
   _ : startsWith' ⊢ startsWith
-  _ = sub-intro p &-π₁ (insert-pf p &-π₁ (λ w x → ∣ x , refl ∣₁))
-
-  _ : startsWith'' ⊢ startsWith'
   _ = sub-π (true ∘g ⊤-intro ∘g &-π₁)
 
-  _ : startsWith' ⊢ startsWith''
+  _ : startsWith ⊢ startsWith'
   _ = sub-intro (true ∘g ⊤-intro ∘g &-π₁) id (cong (true ∘g_) (unambiguous⊤ _ _))
 
 
--- Does not start with c
-module _
-  (g : Grammar ℓg)
-  (c : ⟨ Alphabet ⟩)
-  where
-  private
-    p : g ⊢ Ω
-    p w x .fst = ∃[ y ∈ (g & ¬G (＂ c ＂ ⊗ ⊤)) w ] &-π₁ w y ≡ x
-    p w x .snd = isPropPropTrunc
 
 -- Does not witness a follow last with c as the following
 -- character
@@ -88,39 +65,20 @@ module _
   (isSetGrammar-g : isSetGrammar g)
   (c : ⟨ Alphabet ⟩)
   where
-  private
-    opaque
-      unfolding _&_ _⇒_
-      p : g ⊢ Ω {ℓ = ℓg}
-      p w x .fst =
-        Σ[ y ∈ (g & (¬G ((g & (char +)) ⊗ ＂ c ＂ ⊗ string))) w ]
-          &-π₁ {g = g}{h = ¬G ((g & (char +)) ⊗ ＂ c ＂ ⊗ string)} w y ≡ x
-      p w x .snd =
-        isPropΣ
-          (isProp×
-            (EXTERNAL.unambiguous→isLang unambig w)
-            (isProp→ (EXTERNAL.unambiguous→isLang unambiguous⊥ w))
-          )
-          (λ y → isSetGrammar-g w (&-π₁{g = g}{h = ¬G ((g & (char +)) ⊗ ＂ c ＂ ⊗ string)} w y) x)
 
-      notFL : Grammar ℓg
-      notFL = subgrammar p
+  FLG : Grammar ℓg
+  FLG = g & (char +) ⊗ ＂ c ＂ ⊗ string
 
-      -- this is what I'd need for the Kleene star pf
-      -- assuming f is built via induction
-      test : {h : Grammar ℓh} → h ⊢ notFL → h & ((g & (char +)) ⊗ ＂ c ＂ ⊗ string) ⊢ ⊥
-      test f =
-        {!!}
-        ∘g ((p ∘g sub-π p) ∘g f) ,&p id
+  notFL' : Grammar ℓg
+  notFL' = g & ¬G FLG
 
-module _ {g : Grammar ℓg} {h : Grammar ℓh}
-  (f : h ⊢ g)
-  (isMono-f : isMono f)
-  where
-  private
-    p : g ⊢ Ω
-    p w x .fst = Σ[ y ∈ h w ] f w y ≡ x
-    p w x .snd = {!!} -- prove the monos have propFibers
+  notFL : Grammar ℓg
+  notFL = preimage {ℓ = ℓg} (&-π₁ {g = g}{h = ¬G FLG}) (true ∘g ⊤-intro)
 
-  mono→subgrammar : Grammar (ℓ-max ℓg ℓh)
-  mono→subgrammar = subgrammar p
+  _ : {h : Grammar ℓh} → h ⊢ notFL → h & FLG ⊢ ⊥
+  _ = λ f →
+    ⇒-app
+    ∘g &-π₂
+    ∘g &-assoc⁻
+    ∘g (sub-π (true ∘g ⊤-intro ∘g &-π₁ {g = g}{h = ¬G FLG}) ∘g f) ,&p id
+
