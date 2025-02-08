@@ -14,7 +14,8 @@ open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
 
 open import Grammar Alphabet
-open import Grammar.HLevels Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Properties Alphabet
 open import Grammar.HLevels.MonoInjective Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
 
@@ -202,12 +203,15 @@ module _
         initialAlgebra F a ∘g map (F a) (λ a' → sub-π (p a'))
       is-homo = refl
 
+  subgrammar-ind' : ∀ (a : A) → μ F a ⊢ subgrammar (p a)
+  subgrammar-ind' = rec F subgrammar-ind-alg
+
   -- p holds over all of μ F a, for all a
   subgrammar-ind : ∀ (a : A) → p a ≡ true ∘g ⊤-intro
   subgrammar-ind a =
     subgrammar-section
       (p a)
-      (rec F subgrammar-ind-alg a)
+      (subgrammar-ind' a)
       (ind-id'
         F
         (compHomo F
@@ -244,3 +248,16 @@ module _ {g : Grammar ℓg} {h : Grammar ℓh}
 
   mono→subgrammar : Grammar (ℓ-max ℓg ℓh)
   mono→subgrammar = subgrammar mono-prop
+
+module _
+  {g : Grammar ℓg}
+  (unambig-g : unambiguous g)
+  (h : Grammar ℓh)
+  where
+  unambiguous-prop : h ⊢ Ω
+  unambiguous-prop w x .fst = g w
+  unambiguous-prop w x .snd =
+    EXTERNAL.unambiguous→isLang unambig-g w
+
+  unambiguous→subgrammar : Grammar (ℓ-max ℓg ℓh)
+  unambiguous→subgrammar = subgrammar unambiguous-prop

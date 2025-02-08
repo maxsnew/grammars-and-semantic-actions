@@ -38,6 +38,7 @@ import Cubical.HITs.PropositionalTruncation as PT
 open import Grammar Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
+open import Grammar.Negation.Properties Alphabet
 open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.Literal.Properties Alphabet
 open import Grammar.LinearProduct.SplittingTrichotomy Alphabet
@@ -46,6 +47,7 @@ open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.RegularExpression.Base Alphabet
+open import Grammar.PropositionalTruncation.Base Alphabet
 
 open import Grammar.Subgrammar.Base Alphabet renaming (true to trueG ; false to falseG)
 
@@ -89,6 +91,9 @@ FollowLast'G g c = (g ⊗ ＂ c ＂ ⊗ string) & g
 
 FollowLastG : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
 FollowLastG g c = ((g & char +) ⊗ ＂ c ＂ ⊗ string) & g
+
+FollowLastG++ : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
+FollowLastG++ g c = ((g & char +) ⊗ ＂ c ＂ ⊗ string) & (g & char +)
 
 FollowLastG⊢FollowLast'G : FollowLastG g c ⊢ FollowLast'G g c
 FollowLastG⊢FollowLast'G = (&-π₁ ,⊗ id) ,&p id
@@ -137,6 +142,20 @@ _∉First_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
 ¬Nullable⊗r : ⟨ ¬Nullable g ⟩ → ⟨ ¬Nullable (h ⊗ g) ⟩
 ¬Nullable⊗r notnull =
   ⊢char+→¬Nullable (char+⊗r→char+ ∘g id ,⊗ ¬Nullable→char+ notnull)
+
+FollowLastG++≅ :
+  Grammar ℓg → ⟨ Alphabet ⟩ →
+  FollowLastG g c ≅ FollowLastG++ g c
+FollowLastG++≅ g c =
+  &≅ id≅ &string-split≅
+  ≅∙ &⊕-distL≅
+  ≅∙ ⊕≅
+    (uninhabited→≅⊥
+      (disjoint-ε-char+
+      ∘g &-swap
+      ∘g ¬Nullable→char+ (¬Nullable⊗l (disjoint-ε-char+ ∘g id ,&p &-π₂)) ,&p &-π₂))
+    id≅
+  ≅∙ ⊥⊕≅ _
 
 ∉First⊗l' : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ string) ⟩
 ∉First⊗l' {g = g} {c = c} ¬nullg c∉Fg =
@@ -530,28 +549,93 @@ module _
   (seq-unambig : sequentiallyUnambiguous g g)
   where
 
-  open Subgrammar
-
   private
-    π = &-π₁ {g = g *} {h = ¬G FollowLastG (g *) c}
-    so-true : (g *) ⊢ Ω {ℓ = ℓg}
-    so-true = trueG ∘g ⊤-intro
+    nonmt-* : (g *) & (char +) ≅ g ⊗ (g *)
+    nonmt-* =
+      &≅ (*≅ε⊕g⊗g* g) id≅
+      ≅∙ &⊕-distR≅
+      ≅∙ ⊕≅ (uninhabited→≅⊥ disjoint-ε-char+) id≅
+      ≅∙ ⊕≅
+        (sym≅
+          (uninhabited→≅⊥
+            (disjoint-ε-char+
+            ∘g id ,&p ¬Nullable→char+ (¬Nullable⊗l ¬nullg)
+            ∘g &-swap
+            )
+          )
+        )
+        id≅
+      ≅∙ sym≅ &string-split≅
 
+    -- the subgrammar of g* such that there does
+    -- not exist a parse of FollowLastG (g *) c over the
+    -- same word
     notFL : Grammar ℓg
-    notFL = preimage {ℓ = ℓg} π so-true
+    notFL = ∃subgrammar (g *) (¬G FollowLastG (g *) c)
 
-    total' : g * ⊢ notFL
-    total' = {!!}
+    open Subgrammar (∃-prop (g *) (¬G FollowLastG (g *) c))
 
-    total : {!!}
-    total = subgrammar-ind (*Ty g) (λ _ → {!so-true ∘g π!}) (λ _ → {!!}) (λ _ → {!!}) _
+    nil-pf' : ε ⊢ ¬G FollowLastG (g *) c
+    nil-pf' =
+      ⇒-intro
+        (disjoint-ε-char+
+         ∘g id ,&p ((char+⊗l→char+ ∘g &-π₂ ,⊗ string-intro) ∘g &-π₁))
+
+    nil-pf : ε ⊢ ∥ ¬G FollowLastG (g *) c ∥
+    nil-pf = trunc ∘g nil-pf'
+
+    cons-pf' : g ⊗ notFL ⊢ ¬G FollowLastG (g *) c
+    cons-pf' =
+      ⇒-intro
+        ({!!}
+        ∘g {!!}
+        ∘g {!!}
+        ∘g {!!}
+        -- ∘g id ,&p
+        --   (sequentiallyUnambiguous≅ g (g *) g (＂ c ＂ ⊗ string)
+        --         {!!}
+        --         ¬nullg
+        --         {!!}
+        --         .fun
+        --   ∘g {!!}
+        --   ∘g (nonmt-* .fun ,⊗ id) ,&p nonmt-* .fun
+        --   ∘g FollowLastG++≅ (g *) c .fun
+        --   )
+        -- ∘g id ,&p ((nonmt-* .fun ,⊗ id) ,&p &string-split≅ .fun)
+        )
+
+    cons-pf : g ⊗ notFL ⊢ ∥ ¬G FollowLastG (g *) c ∥
+    cons-pf = trunc ∘g cons-pf'
+
+    total : g * ⊢ notFL
+    total =
+      subgrammar-ind'
+        (*Ty g)
+        (λ _ → g *)
+        (λ _ → unambiguous-prop unambiguous∥∥ (g *))
+        (λ _ →
+          ⊕ᴰ≡ _ _
+            λ {
+               nil →
+                 insert-pf
+                   (NIL ∘g lowerG ∘g lowerG)
+                   (nil-pf
+                    ∘g lowerG ∘g lowerG)
+                 ∙ cong (trueG ∘g_) (unambiguous⊤ _ _)
+             ; cons →
+                 insert-pf
+                   (CONS ∘g id ,⊗ sub-π ∘g lowerG ,⊗ lowerG)
+                   (cons-pf ∘g lowerG ,⊗ lowerG)
+                 ∙ cong (trueG ∘g_) (unambiguous⊤ _ _)
+            }
+        )
+        _
 
   ∉FollowLast-* : ⟨ c ∉FollowLast (g *) ⟩
   ∉FollowLast-* =
-    {!extrac!}
-    -- ⇒-app
-    -- ∘g (&-π₂ ∘g &-π₂) ,& &-π₁ ,& (&-π₁ ∘g &-π₂)
-    -- ∘g id ,&p (sub-π (so-true ∘g π) ∘g total)
+    ⇒-app
+    ∘g (&-π₁ ∘g &-π₂) ,& &-π₁ ,& (&-π₂ ∘g &-π₂)
+    ∘g id ,&p ((∥∥idem unambiguous¬G .inv ∘g witness∃ _ _ ∘g total) ,&p id ∘g &-Δ)
 
 module _
   (g : Grammar ℓg)
