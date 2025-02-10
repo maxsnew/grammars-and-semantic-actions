@@ -587,21 +587,17 @@ module _
     cons-pf' : g ⊗ notFL ⊢ ¬G FollowLastG (g *) c
     cons-pf' =
       ⇒-intro
-        ({!!}
-        ∘g {!!}
-        ∘g {!!}
-        ∘g {!!}
-        -- ∘g id ,&p
-        --   (sequentiallyUnambiguous≅ g (g *) g (＂ c ＂ ⊗ string)
-        --         {!!}
-        --         ¬nullg
-        --         {!!}
-        --         .fun
-        --   ∘g {!!}
-        --   ∘g (nonmt-* .fun ,⊗ id) ,&p nonmt-* .fun
-        --   ∘g FollowLastG++≅ (g *) c .fun
-        --   )
-        -- ∘g id ,&p ((nonmt-* .fun ,⊗ id) ,&p &string-split≅ .fun)
+        (⊕-elim
+          (disjoint-ε-char+
+          ∘g &-swap
+          ∘g ¬Nullable→char+ (¬Nullable⊗l ¬nullg) ,&p (&-π₂ ∘g &-π₂)
+          )
+          ({!!}
+          ∘g {!!}
+          ∘g {!!}
+          ∘g id ,&p id ,&p nonmt-* .fun)
+        ∘g &⊕-distL
+        ∘g id ,&p (&⊕-distL ∘g (⊗-assoc⁻ ∘g nonmt-* .fun ,⊗ id) ,&p &string-split≅ .fun)
         )
 
     cons-pf : g ⊗ notFL ⊢ ∥ ¬G FollowLastG (g *) c ∥
@@ -636,19 +632,6 @@ module _
     ⇒-app
     ∘g (&-π₁ ∘g &-π₂) ,& &-π₁ ,& (&-π₂ ∘g &-π₂)
     ∘g id ,&p ((∥∥idem unambiguous¬G .inv ∘g witness∃ _ _ ∘g total) ,&p id ∘g &-Δ)
-
-module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (seq-unambig : sequentiallyUnambiguous' g h)
-  where
-
-  -- TODO I really need better naming
-  -- seqUnambig⊗⇒ : g ⊗ ¬G h ⊢ ¬G (g ⊗ h)
-  -- seqUnambig⊗⇒ =
-  --   ⇒-intro
-  --     ({!!}
-  --     ∘g {!!})
 
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   data DetReg : RegularExpression → ℙ → ℙ → Bool → Type (ℓ-suc ℓ-zero)
@@ -1027,7 +1010,14 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   unambiguousDR ⊥dr = unambiguous⊥
   unambiguousDR ＂ c ＂dr = unambiguous-literal c
   unambiguousDR (dr ⊗DR[ FL∩F'mt ] dr') = {!!}
+    -- due to sequential uambiguity, can
+    -- show that its unambiguous by
+    -- (r ⊗ r') & (r ⊗ r')
+    -- ≅ (r & r) ⊗ (r' & r')
+    -- ≅ r ⊗ r'
   unambiguousDR (dr ⊕DR[ F∩F'mt ] dr') = {!!}
+    -- can prove that r and r' are disjoint, and thus
+    -- have an unambiguous sum
   unambiguousDR (dr *DR[ _ ]) = {!!}
 
   -- unambiguousDR εDR = unambiguousε
