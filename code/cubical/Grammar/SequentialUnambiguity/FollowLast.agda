@@ -24,32 +24,37 @@ open StrongEquivalence
 open Powerset ⟨ Alphabet ⟩
 
 
-FollowLast'G : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
-FollowLast'G g c = (g ⊗ ＂ c ＂ ⊗ string) & g
-
 FollowLastG : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
-FollowLastG g c = ((g & char +) ⊗ ＂ c ＂ ⊗ string) & g
+FollowLastG g c = (g ⊗ startsWith c) & g
 
-FollowLastG++ : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
-FollowLastG++ g c = ((g & char +) ⊗ ＂ c ＂ ⊗ string) & (g & char +)
+FollowLastG+ : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
+FollowLastG+ g c = (g ⊗ startsWith c) & (g & char +)
 
-FollowLastG⊢FollowLast'G : FollowLastG g c ⊢ FollowLast'G g c
-FollowLastG⊢FollowLast'G = (&-π₁ ,⊗ id) ,&p id
+-- This is the version of FollowLast defined by Bruggemann-Klein and Wood, and
+-- further used in Krishnaswami and Yallop
+FollowLastG' : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
+FollowLastG' g c = ((g & char +) ⊗ startsWith c) & g
+
+FollowLastG'+ : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
+FollowLastG'+ g c = ((g & char +) ⊗ startsWith c) & (g & char +)
+
+FollowLastG'⊢FollowLastG : FollowLastG' g c ⊢ FollowLastG g c
+FollowLastG'⊢FollowLastG = (&-π₁ ,⊗ id) ,&p id
 
 _∉FollowLast'_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
-(c ∉FollowLast' g) .fst = uninhabited (FollowLast'G g c)
+(c ∉FollowLast' g) .fst = uninhabited (FollowLastG' g c)
 (c ∉FollowLast' g) .snd = isProp-uninhabited
 
 _∉FollowLast_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
 (c ∉FollowLast g) .fst = uninhabited (FollowLastG g c)
 (c ∉FollowLast g) .snd = isProp-uninhabited
 
-¬FollowLast'→¬FollowLast : ⟨ c ∉FollowLast' g ⟩ → ⟨ c ∉FollowLast g ⟩
-¬FollowLast'→¬FollowLast c∉FL' = c∉FL' ∘g FollowLastG⊢FollowLast'G
+¬FollowLast→¬FollowLast' : ⟨ c ∉FollowLast g ⟩ → ⟨ c ∉FollowLast' g ⟩
+¬FollowLast→¬FollowLast' c∉FL' = c∉FL' ∘g FollowLastG'⊢FollowLastG
 
-¬FollowLast→¬FollowLast' :
-  ⟨ ¬Nullable g ⟩ → ⟨ c ∉FollowLast g ⟩ → ⟨ c ∉FollowLast' g ⟩
-¬FollowLast→¬FollowLast' ¬nullg c∉FL =
+¬FollowLast'→¬FollowLast :
+  ⟨ ¬Nullable g ⟩ → ⟨ c ∉FollowLast' g ⟩ → ⟨ c ∉FollowLast g ⟩
+¬FollowLast'→¬FollowLast ¬nullg c∉FL =
   c∉FL ∘g ((id ,&p ¬Nullable→char+ ¬nullg ∘g &-Δ) ,⊗ id) ,&p id
 
 -- It might be nice to have a version of this
@@ -62,16 +67,16 @@ _∉FollowLast_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
 ¬FollowLast : Grammar ℓ-zero → ℙ
 ¬FollowLast g c = c ∉FollowLast g
 
-FollowLastG++≅ :
+FollowLastG+≅ :
   Grammar ℓg → ⟨ Alphabet ⟩ →
-  FollowLastG g c ≅ FollowLastG++ g c
-FollowLastG++≅ g c =
+  FollowLastG g c ≅ FollowLastG+ g c
+FollowLastG+≅ g c =
   &≅ id≅ &string-split≅
   ≅∙ &⊕-distL≅
   ≅∙ ⊕≅
-    (uninhabited→≅⊥
-      (disjoint-ε-char+
-      ∘g &-swap
-      ∘g ¬Nullable→char+ (¬Nullable⊗l (disjoint-ε-char+ ∘g id ,&p &-π₂)) ,&p &-π₂))
-    id≅
+      (uninhabited→≅⊥ (disjoint-ε-char+ ∘g &-swap ∘g (char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ,&p &-π₂))
+      id≅
   ≅∙ ⊥⊕≅ _
+
+¬FollowLast∘g : (f : g ⊢ h) → ⟨ c ∉FollowLast h ⟩ → ⟨ c ∉FollowLast g ⟩
+¬FollowLast∘g f c∉FLh = c∉FLh ∘g (f ,⊗ id) ,&p f

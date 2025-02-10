@@ -29,15 +29,30 @@ NullableG g = ε & g
     &-π₂
   ∘g &string-split≅ .fun
 
-⊢char+→¬Nullable : g ⊢ char + → ⟨ ¬Nullable g ⟩
-⊢char+→¬Nullable e =
+¬Nullable&char+≅ : ⟨ ¬Nullable g ⟩ → (g ≅ (g & (char +)))
+¬Nullable&char+≅ ¬nullg =
+  &string-split≅
+  ≅∙ ⊕≅ (uninhabited→≅⊥ (¬nullg ∘g &-swap)) id≅
+  ≅∙ ⊥⊕≅ _
+
+char+→¬Nullable : g ⊢ char + → ⟨ ¬Nullable g ⟩
+char+→¬Nullable e =
   disjoint-ε-char+'
   ∘g id ,&p e
 
+¬Nullable∘g : (f : g ⊢ h) → ⟨ ¬Nullable h ⟩ → ⟨ ¬Nullable g ⟩
+¬Nullable∘g f ¬nullh = ¬nullh ∘g id ,&p f
+
+¬Nullable-char+ : ⟨ ¬Nullable (char +) ⟩
+¬Nullable-char+ = disjoint-ε-char+
+
+¬Nullable-&char+ : ⟨ ¬Nullable (g & (char +)) ⟩
+¬Nullable-&char+ = ¬Nullable∘g &-π₂ ¬Nullable-char+
+
 ¬Nullable⊗l : ⟨ ¬Nullable g ⟩ → ⟨ ¬Nullable (g ⊗ h) ⟩
 ¬Nullable⊗l notnull =
-  ⊢char+→¬Nullable (char+⊗l→char+ ∘g ¬Nullable→char+ notnull ,⊗ id)
+  char+→¬Nullable (char+⊗l→char+ ∘g ¬Nullable→char+ notnull ,⊗ id)
 
 ¬Nullable⊗r : ⟨ ¬Nullable g ⟩ → ⟨ ¬Nullable (h ⊗ g) ⟩
 ¬Nullable⊗r notnull =
-  ⊢char+→¬Nullable (char+⊗r→char+ ∘g id ,⊗ ¬Nullable→char+ notnull)
+  char+→¬Nullable (char+⊗r→char+ ∘g id ,⊗ ¬Nullable→char+ notnull)

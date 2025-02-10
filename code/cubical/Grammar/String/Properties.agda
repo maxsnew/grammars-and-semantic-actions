@@ -606,9 +606,14 @@ char+⊗r→char+ =
   ∘g char+L⊗r→char+L
   ∘g id ,⊗ char+≅char+L .fun
 
+module _ {c : ⟨ Alphabet ⟩}
+  where
+  startsWith→char+ : startsWith c ⊢ char +
+  startsWith→char+ = literal→char c ,⊗ id
+
 module _ (c c' : ⟨ Alphabet ⟩) where
   same-first :
-    ＂ c ＂ & (＂ c' ＂ ⊗ string) ⊢ ⊕[ x ∈ (c ≡ c') ] ＂ c ＂
+    ＂ c ＂ & startsWith c' ⊢ ⊕[ x ∈ (c ≡ c') ] ＂ c ＂
   same-first =
     ⊕-elim
       (same-literal c c')
@@ -626,8 +631,8 @@ module _ (c c' : ⟨ Alphabet ⟩) where
   opaque
     unfolding literal _⊗_ _&_
     same-first' :
-      (＂ c ＂ ⊗ string) & (＂ c' ＂ ⊗ string) ⊢
-        ⊕[ x ∈ (c ≡ c') ] (＂ c ＂ ⊗ string)
+      startsWith c & startsWith c' ⊢
+        ⊕[ x ∈ (c ≡ c') ] startsWith c
     same-first' w ((s , pc , str) , (s' , pc' , str')) =
       c≡c' , s , (pc , str)
       where
@@ -639,7 +644,7 @@ module _ (c c' : ⟨ Alphabet ⟩) where
         ∙ (s' .snd))
         ∙ cong (_++ s' .fst .snd) pc')
 
-firstChar≅ : g ≅ (g & ε) ⊕ ⊕[ c ∈ ⟨ Alphabet ⟩ ] (g & (＂ c ＂ ⊗ string))
+firstChar≅ : g ≅ (g & ε) ⊕ ⊕[ c ∈ ⟨ Alphabet ⟩ ] (g & startsWith c)
 firstChar≅ =
   &string-split≅
   ≅∙ ⊕≅ id≅ (&≅ id≅ ⊕ᴰ-distL ≅∙ &⊕ᴰ-distR≅)
