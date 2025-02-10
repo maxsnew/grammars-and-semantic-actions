@@ -339,8 +339,53 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     -- ∘g &-swap
     -- where
     -- c∉Flr' = sound¬FollowLast dr' c c∈¬FL'
-  sound¬FollowLast (dr ⊕DR[ F∩F'mt ] dr') c (c∉FL , c∉FL') =
-    {!!}
+  sound¬FollowLast (_⊕DR[_]_ {r = r} {r' = r'} {b = b}{b' = b'} {notBothNull = notBothNull} dr F∩F'mt dr') c (c∉FL , c∉FL') =
+    ∉FollowLast-⊕ _ _ c
+      (sound¬FollowLast dr c c∉FL)
+      (sound¬FollowLast dr' c c∉FL')
+      ¬nullr'∨c∉F
+      ¬nullr∨c∉F'
+      (λ c' →
+        Sum.map
+          (sound¬First dr c')
+          (sound¬First dr' c')
+          (F∩F'mt c')
+      )
+    where
+    case-bool : {x y : Bool} → x or y Eq.≡ true →
+      ((x Eq.≡ true) × (y Eq.≡ false)) ⊎
+      (((x Eq.≡ false) × (y Eq.≡ true)) ⊎
+      ((x Eq.≡ true) × (y Eq.≡ true)))
+    case-bool {false} {true} _ = inr (inl (Eq.refl , Eq.refl))
+    case-bool {true} {false} _ = inl (Eq.refl , Eq.refl)
+    case-bool {true} {true} _ = inr (inr (Eq.refl , Eq.refl))
+
+    elim-if : ∀ {ℓ} → {A B : Type ℓ} {b : Bool} →
+      b Eq.≡ true →
+      if b then A else B →
+      A
+    elim-if {b = true} Eq.refl the-if = the-if
+
+    elim-if' : ∀ {ℓ} → {A B : Type ℓ} {b : Bool} →
+      b Eq.≡ false →
+      if b then A else B →
+      B
+    elim-if' {b = false} Eq.refl the-if = the-if
+
+    ¬nullr'∨c∉F : ⟨ ¬Nullable ⟦ r' ⟧r ⟩ ⊎ ⟨ c ∉First ⟦ r ⟧r ⟩
+    ¬nullr'∨c∉F =
+      {!!}
+      -- Sum.rec
+      --   (λ rnotnull∧r'null → inl (elim-if (rnotnull∧r'null .fst) (sound¬Nullable dr)))
+      --   (Sum.rec
+      --     (λ rnull∧r'notnull → inr (sound¬FollowLast dr c c∉FL ∘g (elim-if' (rnull∧r'notnull .fst) (sound¬Nullable dr) ,⊗ id ∘g ⊗-unit-l⁻) ,&p id))
+      --     (λ rnotnull∧r'notnull → inl (elim-if (rnotnull∧r'notnull .fst) (sound¬Nullable dr)))
+      --   )
+      --   (case-bool notBothNull)
+
+    ¬nullr∨c∉F' : ⟨ ¬Nullable ⟦ r ⟧r ⟩ ⊎ ⟨ c ∉First ⟦ r' ⟧r ⟩
+    ¬nullr∨c∉F' = {!!}
+
     -- ∉FollowLast-⊕ _ _ c
     --   (sound¬FollowLast dr c c∉FL)
     --   (sound¬FollowLast dr' c c∉FL')
