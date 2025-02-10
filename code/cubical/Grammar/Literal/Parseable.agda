@@ -16,7 +16,6 @@ import Cubical.Data.Empty as Empty
 
 open import Grammar Alphabet
 open import Grammar.Literal.Properties Alphabet
-open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet

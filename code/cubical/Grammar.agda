@@ -4,6 +4,7 @@ open import Cubical.Foundations.HLevels
 module Grammar Alphabet where
 
 open import Grammar.Base Alphabet public
+open import Grammar.Equivalence.Base Alphabet public
 open import Grammar.Properties Alphabet public
 open import Grammar.Bottom Alphabet public
 open import Grammar.Dependent Alphabet public

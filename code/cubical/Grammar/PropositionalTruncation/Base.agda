@@ -8,7 +8,6 @@ import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.Data.Sigma
 
 open import Grammar Alphabet
-open import Grammar.Equivalence.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
 open import Grammar.HLevels.Properties Alphabet
 
