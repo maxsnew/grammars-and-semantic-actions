@@ -6,6 +6,7 @@ open import Cubical.Foundations.Structure
 module Grammar.SequentialUnambiguity.Base (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Data.Sum as Sum
+open import Cubical.Data.Sigma
 open import Cubical.Data.List
 import Cubical.Data.Empty as Empty
 

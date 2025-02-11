@@ -4,6 +4,9 @@ open import Cubical.Foundations.Structure
 
 module Grammar.SequentialUnambiguity.FollowLast (Alphabet : hSet ℓ-zero)where
 
+open import Cubical.Data.Sum
+open import Cubical.Data.Sigma
+
 open import Grammar Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.SequentialUnambiguity.Nullable Alphabet
@@ -80,3 +83,27 @@ FollowLastG+≅ g c =
 
 ¬FollowLast∘g : (f : g ⊢ h) → ⟨ c ∉FollowLast h ⟩ → ⟨ c ∉FollowLast g ⟩
 ¬FollowLast∘g f c∉FLh = c∉FLh ∘g (f ,⊗ id) ,&p f
+
+module _
+  (g : Grammar ℓg)
+  (c : ⟨ Alphabet ⟩)
+  (null : ε ⊢ g)
+  (c∉FL : ⟨ c ∉FollowLast g ⟩)
+  where
+
+  ∉FollowLast→∉First : ⟨ c ∉First g ⟩
+  ∉FollowLast→∉First =
+    c∉FL ∘g (null ,⊗ id ∘g ⊗-unit-l⁻) ,&p id
+
+-- module _
+--   (g : Grammar ℓg)
+--   (h : Grammar ℓh)
+--   (c : ⟨ Alphabet ⟩)
+--   (null : (ε ⊢ g) ⊎ (ε ⊢ h))
+--   (c∉FLg : ⟨ c ∉FollowLast g ⟩)
+--   (c∉FLh : ⟨ c ∉FollowLast h ⟩)
+--   where
+
+--   ∉FollowLast→∉First-⊕ : ⟨ c ∉First g ⟩ × ⟨ c ∉First h ⟩
+--   ∉FollowLast→∉First-⊕ .fst = {!!}
+--   ∉FollowLast→∉First-⊕ .snd = {!!}
