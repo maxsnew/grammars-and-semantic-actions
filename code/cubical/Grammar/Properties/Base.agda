@@ -38,6 +38,7 @@ private
     l : Grammar ℓl
 
 open isStrongEquivalence
+open StrongEquivalence
 
 -- A grammar is unambiguous if there is at most one term from any
 -- other fixed grammar into it
@@ -58,6 +59,45 @@ unambiguous'→unambiguous unambig e e' =
 
 unambiguous→unambiguous' : unambiguous g → unambiguous' g
 unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
+
+-- A grammar is unambiguous if Δ : g ⊢ g & g is a strong equivalence
+module _ {g : Grammar ℓg} where
+  private
+    π₁ = &-π₁ {g = g} {h = g}
+    π₂ = &-π₂ {g = g} {h = g}
+    Δ = &-Δ {g = g}
+
+  module _ (π≡ : π₁ ≡ π₂) where
+    π≡→unambiguous : unambiguous g
+    π≡→unambiguous e e' =
+      sym (&-β₁ e e')
+      ∙ cong (_∘g e ,& e') π≡
+      ∙ &-β₂ e e'
+
+  module _ (Δ≅ : isStrongEquivalence _ _ Δ) where
+    private
+      π≡ : π₁ ≡ π₂
+      π≡ =
+        cong (π₁ ∘g_) (sym (Δ≅ .sec))
+        ∙ cong (_∘g Δ≅ .inv) (&-β₁ id id)
+        ∙ cong (_∘g Δ≅ .inv) (sym (&-β₂ id id))
+        ∙ cong (π₂ ∘g_) (Δ≅ .sec)
+
+    Δ≅→unambiguous : unambiguous g
+    Δ≅→unambiguous = π≡→unambiguous π≡
+
+  module _ (unambig : unambiguous g) where
+    private
+      π≡ : π₁ ≡ π₂
+      π≡ = unambig π₁ π₂
+    unambiguous→Δ≅ : isStrongEquivalence _ _ Δ
+    unambiguous→Δ≅ .inv = π₁
+    unambiguous→Δ≅ .sec =
+      &≡ _ _
+        (cong (_∘g π₁) (&-β₁ id id))
+        (cong (_∘g π₁) (&-β₂ id id)
+        ∙ π≡)
+    unambiguous→Δ≅ .ret = &-β₁ id id
 
 -- rename to "unambiguously parseable?"
 totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)

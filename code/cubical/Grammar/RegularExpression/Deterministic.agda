@@ -1,15 +1,4 @@
-{--
--- Deterministic Regular Expressions
---
--- Roadmap is to
--- 1. Prove that the sets attached to the parameters of the DetReg type
---    actually match the first and follow sets (We are here rn)
--- 2. Build automata for these and prove them equivalent to the
---    deterministic regexes. Try to reuse the building blocks
---    from the Thompson proofs if possible
--- 3. Use these automata as a parser, and likely as a proof of unambiguity.
---    Although we might be able to prove unambiguity directly?
---}
+{-- Deterministic Regular Expressions --}
 {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -67,7 +56,6 @@ open StrongEquivalence
 open Powerset ⟨ Alphabet ⟩
 open PowersetOverSet (Alphabet .snd)
 
-
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   data DetReg : RegularExpression → ℙ → ℙ → Bool → Type (ℓ-suc ℓ-zero)
 
@@ -78,15 +66,7 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     (dr : DetReg r ¬FL ¬F b) →
     if b then
     ⟨ ¬Nullable ⟦ r ⟧r ⟩ else
-    -- (⟨ ¬Nullable ⟦ r ⟧r ⟩ → Empty.⊥)
     ε ⊢ ⟦ r ⟧r
-
-  decidable¬Nullable :
-    ∀ {r : RegularExpression} →
-    {¬FL ¬F : ℙ} →
-    {b : Bool} →
-    (dr : DetReg r ¬FL ¬F b) →
-    Dec ⟨ ¬Nullable ⟦ r ⟧r ⟩
 
   sound¬First :
     ∀ {r : RegularExpression} →
@@ -192,10 +172,6 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     ∘g &⊕-distL
   sound¬Nullable {b = b} (dr *DR[ _ ]) = NIL
 
-  decidable¬Nullable {b = false} r =
-    no λ x → get⊥ ((x ∘g id ,&p sound¬Nullable r ∘g &-Δ) [] ε-intro)
-  decidable¬Nullable {b = true} r = yes (sound¬Nullable r)
-
   sound¬First εdr c c∈¬F =
     disjoint-ε-char+
     ∘g id ,&p literal→char c ,⊗ string-intro
@@ -205,21 +181,14 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     ⊕ᴰ-elim (λ c'≡c → Empty.rec (c∈¬F c'≡c))
     ∘g same-first c' c
     ∘g &-swap
-  sound¬First (dr ⊗DR[ FL∩F'mt ] dr₁) c c∈¬F =
-    ∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F)
-  sound¬First (dr ⊕DR[ _ ] dr') c c∈¬F =
-    ⊕-elim
-      (sound¬First dr c (c∈¬F .fst))
-      (sound¬First dr' c (c∈¬F .snd))
-    ∘g &⊕-distL
-  sound¬First (dr *DR[ _ ]) c c∈¬F =
-    ⊕-elim
-      (disjoint-ε-char+
-       ∘g &-swap
-       ∘g (literal→char c ,⊗ id) ,&p id)
-      (∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F))
-    ∘g &⊕-distL
-    ∘g id ,&p *≅ε⊕g⊗g* _ .fun
+  sound¬First (dr ⊗DR[ _ ] _) c c∉F =
+    ∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∉F)
+  sound¬First (dr ⊕DR[ _ ] dr') c c∉F =
+    ∉First-⊕
+      (sound¬First dr c (c∉F .fst))
+      (sound¬First dr' c (c∉F .snd))
+  sound¬First (dr *DR[ _ ]) c c∉F =
+    ∉First* (sound¬First dr c c∉F)
 
   sound¬FollowLast εdr c _ =
     disjoint-ε-char+
@@ -235,9 +204,9 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     ∉FollowLast-⊗null _ _
       (sound¬Nullable dr)
       (λ c' →
-         Sum.rec
-           (λ c'∉FL → inl (sound¬FollowLast dr c' c'∉FL))
-           (λ c'∉F' → inr (sound¬First dr' c' c'∉F'))
+         Sum.map
+           (sound¬FollowLast dr c')
+           (sound¬First dr' c')
            (seq-unambig c')
       )
       c
@@ -256,25 +225,6 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
       )
       c
       (sound¬FollowLast dr' c c∉FL')
-    -- ⊗⊥
-    -- ∘g id ,⊗
-    --   (sound¬FollowLast dr' c c∈¬FL'
-    --    ∘g id ,&p ⊗-unit-r
-    --    ∘g &-swap)
-    -- ∘g sequentiallyUnambiguous'≅
-    --       ⟦ r ⟧r ⟦ r' ⟧r ε (＂ c ＂ ⊗ string)
-    --       (λ c →
-    --         Sum.map
-    --           (sound¬FollowLast dr c)
-    --           (sound¬First dr' c)
-    --           (FL∩F'mt c)
-    --       )
-    --       (sound¬Nullable dr')
-    --       .fun
-    -- ∘g (⊗-assoc⁻ ∘g ⊗-unit-r⁻) ,&p ⊗-assoc⁻
-    -- ∘g &-swap
-    -- where
-    -- c∉Flr' = sound¬FollowLast dr' c c∈¬FL'
   sound¬FollowLast (_⊕DR[_]_ {r = r} {r' = r'} {b = b}{b' = b'} {notBothNull = notBothNull} dr sep dr')
     c (c∉FL , c∉FL' , c∉Firsts?) =
     ∉FollowLast-⊕ _ _ c
@@ -351,48 +301,67 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
         )
         (sep c)
   sound¬FollowLast (dr *DR[ seq-unambig ]) c (c∉F , c∉FL) =
-    {!!}
-    -- ∉FollowLast-* _ c
-    --   (sound¬First dr c c∉F)
-    --   (sound¬FollowLast dr c c∉FL)
-    --   (sound¬Nullable dr)
-    --   (λ c' →
-    --     Sum.map
-    --       (λ c'∉FL → sound¬FollowLast dr c' c'∉FL)
-    --       (λ c'∉F → sound¬First dr c' c'∉F)
-    --       (F∩FLmt c')
-    --   )
-    -- ⊕-elim
-    --   (⊕-elim
-    --     (disjoint-ε-char+
-    --     ∘g &-swap
-    --     ∘g (literal→char c ,⊗ id) ,&p id
-    --     ∘g ⊗-unit-l ,&p id
-    --     )
-    --     (¬Nullable⊗l (¬Nullable⊗l (sound¬Nullable dr))
-    --     ∘g &-swap)
-    --   )
-    --   (⊕-elim
-    --     (∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∈¬F)
-    --     ∘g ⊗-unit-l ,&p id
-    --     )
-    --     {!!}
-    --   )
-    -- ∘g (&⊕-distR ,⊕p &⊕-distR)
-    -- ∘g &⊕-distL
-    -- ∘g (⊗⊕-distR ∘g *≅ε⊕g⊗g* ⟦ r ⟧r .fun ,⊗ id) ,&p (*≅ε⊕g⊗g* ⟦ r ⟧r .fun)
+    ∉FollowLast-* _ c
+      (sound¬First dr c c∉F)
+      (sound¬FollowLast dr c c∉FL)
+      (sound¬Nullable dr)
+      (λ c' →
+        Sum.map
+          (sound¬FollowLast dr c')
+          (sound¬First dr c')
+          (seq-unambig c')
+      )
+      (DiscreteAlphabet isFinSetAlphabet)
 
   unambiguousDR εdr = unambiguousε
   unambiguousDR ⊥dr = unambiguous⊥
   unambiguousDR ＂ c ＂dr = unambiguous-literal c
-  unambiguousDR (dr ⊗DR[ seq-unambig ] dr') = {!!}
-    -- due to sequential uambiguity, can
-    -- show that its unambiguous by
-    -- (r ⊗ r') & (r ⊗ r')
-    -- ≅ (r & r) ⊗ (r' & r')
-    -- ≅ r ⊗ r'
-  unambiguousDR (dr ⊕DR[ F∩F'mt ] dr') = {!!}
-    -- can prove that r and r' are disjoint, and thus
-    -- have an unambiguous sum
-  unambiguousDR (dr *DR[ _ ]) = {!!}
+  unambiguousDR (dr ⊗DR[ seq-unambig ] dr') =
+    unambiguous-⊗
+      (sound¬Nullable dr)
+      (λ c →
+        Sum.map
+          (sound¬FollowLast dr c)
+          (sound¬First dr' c)
+          (seq-unambig c))
+      (unambiguousDR dr)
+      (unambiguousDR dr')
+  unambiguousDR (_⊕DR[_]_ {b = b}{b' = b'}{notBothNull = notBothNull} dr sep dr') =
+    unambiguous⊕
+      (#→disjoint
+        (λ c →
+           Sum.map
+             (sound¬First dr c)
+             (sound¬First dr' c)
+             (sep c))
+        ¬null
+      )
+      (unambiguousDR dr)
+      (unambiguousDR dr')
+    where
+    case-bool : {x y : Bool} → x or y Eq.≡ true →
+      ((x Eq.≡ true) × (y Eq.≡ false)) ⊎
+      (((x Eq.≡ false) × (y Eq.≡ true)) ⊎
+      ((x Eq.≡ true) × (y Eq.≡ true)))
+    case-bool {false} {true} _ = inr (inl (Eq.refl , Eq.refl))
+    case-bool {true} {false} _ = inl (Eq.refl , Eq.refl)
+    case-bool {true} {true} _ = inr (inr (Eq.refl , Eq.refl))
 
+    ¬null =
+      Sum.rec
+        (λ { (Eq.refl , Eq.refl) → inl (sound¬Nullable dr)})
+        (
+        Sum.rec
+          (λ { (Eq.refl , Eq.refl) → inr (sound¬Nullable dr')})
+          (λ { (Eq.refl , Eq.refl) → inl (sound¬Nullable dr)})
+        )
+        (case-bool {x = b}{y = b'} notBothNull)
+  unambiguousDR (dr *DR[ seq-unambig ]) =
+    unambiguous-*
+      (sound¬Nullable dr)
+      (λ c →
+         Sum.map
+           (sound¬FollowLast dr c)
+           (sound¬First dr c)
+           (seq-unambig c))
+      (unambiguousDR dr)

@@ -95,20 +95,6 @@ sameSplitting :
 sameSplitting w s s' =
   (s .fst .fst ≡ s' .fst .fst) × (s .fst .snd ≡ s' .fst .snd)
 
-firstPrefix :
-  (w : String) →
-  (s s' : Splitting w) →
-  Type ℓ-zero
-firstPrefix w s s' =
-  Σ[ (v , _) ∈ NonEmptyString ]
-    (Split++
-      (s .fst .fst)
-      (s .fst .snd)
-      (s' .fst .fst)
-      (s' .fst .snd)
-      v
-    )
-
 splittingPrefix :
   (w : String) →
   (s s' : Splitting w) →

@@ -81,8 +81,8 @@ FollowLastG+≅ g c =
       id≅
   ≅∙ ⊥⊕≅ _
 
-¬FollowLast∘g : (f : g ⊢ h) → ⟨ c ∉FollowLast h ⟩ → ⟨ c ∉FollowLast g ⟩
-¬FollowLast∘g f c∉FLh = c∉FLh ∘g (f ,⊗ id) ,&p f
+∉FollowLast∘g : (f : g ⊢ h) → ⟨ c ∉FollowLast h ⟩ → ⟨ c ∉FollowLast g ⟩
+∉FollowLast∘g f c∉FLh = c∉FLh ∘g (f ,⊗ id) ,&p f
 
 module _
   (g : Grammar ℓg)
@@ -95,15 +95,3 @@ module _
   ∉FollowLast→∉First =
     c∉FL ∘g (null ,⊗ id ∘g ⊗-unit-l⁻) ,&p id
 
--- module _
---   (g : Grammar ℓg)
---   (h : Grammar ℓh)
---   (c : ⟨ Alphabet ⟩)
---   (null : (ε ⊢ g) ⊎ (ε ⊢ h))
---   (c∉FLg : ⟨ c ∉FollowLast g ⟩)
---   (c∉FLh : ⟨ c ∉FollowLast h ⟩)
---   where
-
---   ∉FollowLast→∉First-⊕ : ⟨ c ∉First g ⟩ × ⟨ c ∉First h ⟩
---   ∉FollowLast→∉First-⊕ .fst = {!!}
---   ∉FollowLast→∉First-⊕ .snd = {!!}

@@ -4,10 +4,12 @@ open import Cubical.Foundations.Structure
 
 module Grammar.SequentialUnambiguity.First (Alphabet : hSet ℓ-zero)where
 
-open import Cubical.Data.Sum as Sum
+open import Cubical.Data.Sum as Sum hiding (rec)
 
 open import Grammar Alphabet
 open import Grammar.String.Properties Alphabet
+open import Grammar.Inductive.Indexed Alphabet hiding (k)
+open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.SequentialUnambiguity.Nullable Alphabet
 open import Term Alphabet
 
@@ -38,8 +40,8 @@ _∉First_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
 ¬First g c = c ∉First g
 
 private
-  ∉First⊗l' : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ string) ⟩
-  ∉First⊗l' {g = g} {c = c} ¬nullg c∉Fg =
+  ∉First⊗l-string : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ string) ⟩
+  ∉First⊗l-string {g = g} {c = c} ¬nullg c∉Fg =
     ⊕-elim
       (⊥⊗ ∘g (¬nullg ∘g &-swap) ,⊗ id ∘g &-π₂)
       (⊕ᴰ-elim (λ c' →
@@ -63,11 +65,54 @@ private
 
 ∉First⊗l : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ h) ⟩
 ∉First⊗l {g = g} {c = c} {h = h} ¬nullg c∉Fg =
-  ∉First⊗l' ¬nullg c∉Fg
+  ∉First⊗l-string ¬nullg c∉Fg
   ∘g id ,&p (id ,⊗ string-intro)
 
 ∉First∘g : (f : h ⊢ g) → ⟨ c ∉First g ⟩ → ⟨ c ∉First h ⟩
 ∉First∘g f c∉Fg = c∉Fg ∘g id ,&p f
+
+∉First⊗ : ⟨ c ∉First g ⟩ → ⟨ c ∉First h ⟩ → ⟨ c ∉First (g ⊗ h) ⟩
+∉First⊗ {g = g} {h = h} c∉Fg c∉Fh =
+  ⊕-elim
+    (c∉Fh
+    ∘g id ,&p (⊗-unit-l ∘g &-π₂ ,⊗ id))
+    (∉First⊗l ¬Nullable-&char+ (∉First∘g &-π₁ c∉Fg))
+  ∘g &⊕-distL
+  ∘g id ,&p (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id)
+
+
+∉First-⊕ : ⟨ c ∉First g ⟩ → ⟨ c ∉First h ⟩ → ⟨ c ∉First (g ⊕ h) ⟩
+∉First-⊕ c∉Fg c∉Fh =
+  ⊕-elim c∉Fg c∉Fh
+  ∘g &⊕-distL
+
+∉First*-notnull : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g *) ⟩
+∉First*-notnull ¬nullg c∉F =
+  ⊕-elim
+    (¬Nullable-startsWith ∘g &-swap)
+    (∉First⊗l ¬nullg c∉F)
+  ∘g &⊕-distL
+  ∘g id ,&p *≅ε⊕g⊗g* _ .fun
+
+∉First* : ⟨ c ∉First g ⟩ → ⟨ c ∉First (g *) ⟩
+∉First* {c = c}{g = g} c∉F =
+  ⇒-app
+  ∘g &-swap
+  ∘g id ,&p rec _ the-alg _
+  where
+  the-alg : Algebra (*Ty g) λ _ → ¬G (startsWith c)
+  the-alg _ = ⊕ᴰ-elim λ {
+      nil → ⇒-intro ¬Nullable-startsWith ∘g lowerG ∘g lowerG
+    ; cons →
+      ⇒-intro
+        (⊕-elim
+          (⇒-app
+          ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id)
+          (∉First⊗l ¬Nullable-&char+ (∉First∘g &-π₁ c∉F) ∘g &-swap)
+        ∘g &⊕-distR
+        ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id)
+      ∘g lowerG ,⊗ lowerG
+    }
 
 _#_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
 g # h = ∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉First g ⟩ ⊎ ⟨ c ∉First h ⟩
@@ -87,11 +132,14 @@ sym# sep c = Sum.rec inr inl (sep c)
 
 #→disjoint :
   g # h →
-  ⟨ ¬Nullable g ⟩ →
+  (⟨ ¬Nullable g ⟩ ⊎ ⟨ ¬Nullable h ⟩) →
   disjoint g h
-#→disjoint sep ¬nullg =
+#→disjoint sep ¬null =
   ⊕-elim
-    (¬nullg ∘g id ,&p &-π₁ ∘g &-swap)
+    (Sum.rec
+      (λ ¬nullg → ¬nullg ∘g id ,&p &-π₁ ∘g &-swap)
+      (λ ¬nullh → ¬nullh ∘g id ,&p &-π₂ ∘g &-swap)
+      ¬null)
     (⊕ᴰ-elim (λ c →
       Sum.rec
         (λ c∉Fg → c∉Fg ∘g &-swap ∘g &-π₁ ,&p id)

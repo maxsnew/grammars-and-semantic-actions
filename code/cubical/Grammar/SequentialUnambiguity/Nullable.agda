@@ -12,6 +12,7 @@ private
   variable
     ℓg ℓh : Level
     g h : Grammar ℓg
+    c : ⟨ Alphabet ⟩
 
 open StrongEquivalence
 
@@ -48,6 +49,9 @@ char+→¬Nullable e =
 
 ¬Nullable-&char+ : ⟨ ¬Nullable (g & (char +)) ⟩
 ¬Nullable-&char+ = ¬Nullable∘g &-π₂ ¬Nullable-char+
+
+¬Nullable-startsWith : ⟨ ¬Nullable (startsWith c) ⟩
+¬Nullable-startsWith = ¬Nullable∘g startsWith→char+ ¬Nullable-char+
 
 ¬Nullable⊗l : ⟨ ¬Nullable g ⟩ → ⟨ ¬Nullable (g ⊗ h) ⟩
 ¬Nullable⊗l notnull =

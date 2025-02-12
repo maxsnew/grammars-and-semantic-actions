@@ -47,7 +47,7 @@ open StrongEquivalence
       (sym (PT.propTruncIdempotent
              (EXTERNAL.unambiguous→isLang unambig-g w))))
 
-module _ (g : Grammar ℓg) (h : Grammar ℓh) where
+module ∃Subgrammar (g : Grammar ℓg) (h : Grammar ℓh) where
   -- The subgrammar of g such that there exists an h parse
   -- over the same word
   ∃subgrammar : Grammar (ℓ-max ℓg ℓh)
@@ -56,7 +56,10 @@ module _ (g : Grammar ℓg) (h : Grammar ℓh) where
   ∃-prop : g ⊢ Ω
   ∃-prop = unambiguous-prop (unambiguous∥∥ {g = h}) g
 
-  open Subgrammar ∃-prop
+  open Subgrammar ∃-prop public
 
   witness∃ : ∃subgrammar ⊢ ∥ h ∥
   witness∃ = extract-pf sub-π sub-π-pf
+
+  witness∃' : ∃subgrammar ⊢ g & ∥ h ∥
+  witness∃' = sub-π ,& witness∃
