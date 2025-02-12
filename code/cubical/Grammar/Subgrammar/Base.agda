@@ -13,11 +13,10 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (k)
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet
 open import Grammar.HLevels.MonoInjective Alphabet
-open import Grammar.Inductive.Indexed Alphabet hiding (k)
 
 open import Term Alphabet
 

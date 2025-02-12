@@ -18,18 +18,15 @@ open import Cubical.Data.List hiding (init ; rec ; map)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.FinSet.More
-open import Cubical.Data.Sum as Sum hiding (rec)
+import Cubical.Data.Sum as Sum
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
 open import Cubical.Data.SumFin hiding (fsuc)
 open import Cubical.Data.Unit
-open import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
+import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 
 open import Grammar Alphabet
-open import Grammar.Inductive.Indexed Alphabet as Ind
-open import Grammar.Inductive.LiftFunctor Alphabet
 open import Grammar.Equalizer Alphabet
-open import Grammar.Equivalence Alphabet
 open import Grammar.RegularExpression Alphabet
 open import Grammar.Lift.Properties Alphabet
 
@@ -82,7 +79,7 @@ module _ (c : ⟨ Alphabet ⟩) where
   isDiscSTATE = isoPresDiscrete (invIso STATE≅Fin2) discreteFin
 
   literalNFA : NFA ℓ-zero
-  literalNFA .Q = STATE , 2 , ∣ isoToEquiv STATE≅Fin2 ∣₁
+  literalNFA .Q = STATE , 2 , PT.∣ isoToEquiv STATE≅Fin2 ∣₁
   literalNFA .init = c-st
   literalNFA .isAcc c-st = false
   literalNFA .isAcc ε-st = true
@@ -1177,7 +1174,7 @@ module _ (N : NFA ℓN) where
         is-homo :
           from*NFA (inl _) ∘g N*Alg _
           ≡
-          roll ∘g Ind.map (*Ty (Parse N) _) λ _ → from*NFA (inl _)
+          roll ∘g map (*Ty (Parse N) _) λ _ → from*NFA (inl _)
         is-homo = ⊕ᴰ≡ _ _ λ {
             nil → refl
           ; cons →
@@ -1213,7 +1210,7 @@ module _ (N : NFA ℓN) where
           to*NFA q ∘g *NFAAlg q
           ≡
           roll
-          ∘g Ind.map (TraceTy *NFA q) (to*NFA)
+          ∘g map (TraceTy *NFA q) (to*NFA)
         is-homo (inl _) =
           ⊕ᴰ≡ _ _
             λ {

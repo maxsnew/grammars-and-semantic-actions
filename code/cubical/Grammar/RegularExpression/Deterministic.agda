@@ -6,6 +6,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.RegularExpression.Deterministic (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Powerset.More
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.List as List hiding (rec)
@@ -16,22 +17,18 @@ open import Cubical.Data.Bool hiding (_⊕_)
 import Cubical.Data.Empty as Empty
 import Cubical.Data.Equality as Eq
 
-open import Cubical.Relation.Nullary.Base
-open import Cubical.Relation.Nullary.DecidablePropositions
-
-open import Cubical.Foundations.Powerset.More
-open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base
-
 import Cubical.HITs.PropositionalTruncation as PT
 
-open import Grammar Alphabet
+open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Nullary.DecidablePropositions
+open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base
+
+open import Grammar Alphabet hiding (k)
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.Negation.Properties Alphabet
 open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.Literal.Properties Alphabet
 open import Grammar.LinearProduct.SplittingTrichotomy Alphabet
-open import Grammar.Literal.Parseable Alphabet
-open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.RegularExpression.Base Alphabet

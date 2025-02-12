@@ -10,6 +10,7 @@ import Cubical.Foundations.Isomorphism as Isom
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
+open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base
 
 open import Cubical.Data.Empty as Empty hiding (rec)
 import Cubical.Data.FinData as FD
@@ -27,8 +28,6 @@ open import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 
 open import Grammar Alphabet
-open import Grammar.Equivalence Alphabet
-open import Grammar.Inductive.Indexed Alphabet as Idx
 open import Term Alphabet
 open import NFA.Base Alphabet
 open import DFA Alphabet

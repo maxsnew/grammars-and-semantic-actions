@@ -10,9 +10,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.List
 import Cubical.Data.Empty as Empty
 
--- open import Cubical.Relation.Nullary.Base
-
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (k)
 open import Grammar.String.Properties Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet
@@ -121,6 +119,8 @@ module
   (unambig-h : unambiguous h)
   where
 
+  -- TODO ideally this proof would happen internally rather than appealing
+  -- to the fact that this forms a language
   opaque
     unfolding &-intro ⊗-intro the-split
     private

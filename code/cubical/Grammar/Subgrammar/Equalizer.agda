@@ -2,9 +2,8 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 module Grammar.Subgrammar.Equalizer (Alphabet : hSet ℓ-zero) where
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (k)
 open import Grammar.HLevels Alphabet
-open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Subgrammar.Base Alphabet
 
 open import Term Alphabet

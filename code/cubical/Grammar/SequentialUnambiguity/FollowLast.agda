@@ -7,7 +7,7 @@ module Grammar.SequentialUnambiguity.FollowLast (Alphabet : hSet ℓ-zero)where
 open import Cubical.Data.Sum
 open import Cubical.Data.Sigma
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (k)
 open import Grammar.String.Properties Alphabet
 open import Grammar.SequentialUnambiguity.Nullable Alphabet
 open import Grammar.SequentialUnambiguity.First Alphabet

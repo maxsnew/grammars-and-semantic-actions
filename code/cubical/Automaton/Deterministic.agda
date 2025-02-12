@@ -9,22 +9,17 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.Bool
+import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.Dependent.Unambiguous Alphabet
-open import Grammar.Inductive.Indexed Alphabet
-open import Grammar.Coinductive.Indexed Alphabet
-open import Grammar.Equivalence.Base Alphabet
-import Cubical.Data.Equality as Eq
 open import Term Alphabet
 open import Helper
 
 private
   variable
     ℓ : Level
-
-
 
 record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   field

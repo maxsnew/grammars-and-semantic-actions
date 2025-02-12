@@ -6,9 +6,8 @@ module Grammar.SequentialUnambiguity.First (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Data.Sum as Sum hiding (rec)
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (k)
 open import Grammar.String.Properties Alphabet
-open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.SequentialUnambiguity.Nullable Alphabet
 open import Term Alphabet

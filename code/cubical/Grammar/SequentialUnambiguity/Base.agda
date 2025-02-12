@@ -11,7 +11,7 @@ import Cubical.Data.Empty as Empty
 
 open import Cubical.Relation.Nullary.Base
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (k)
 open import Grammar.String.Properties Alphabet
 open import Grammar.KleeneStar.Properties Alphabet
 open import Grammar.Negation.Properties Alphabet
