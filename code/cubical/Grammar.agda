@@ -20,3 +20,4 @@ open import Grammar.Product Alphabet public
 open import Grammar.Sum Alphabet public
 open import Grammar.Top Alphabet public
 open import Grammar.String Alphabet public
+open import Grammar.Inductive.Indexed Alphabet public
