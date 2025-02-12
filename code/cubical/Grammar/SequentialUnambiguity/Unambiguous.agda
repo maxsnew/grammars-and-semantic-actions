@@ -34,80 +34,81 @@ private
 open isStrongEquivalence
 open StrongEquivalence
 
-module
-  _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  (seq-unambig : g ⊛ h)
-  where
-  opaque
-    unfolding the-split _⊗_ ⊗-intro _&_ literal
-    ⊛→unique-splitting :
-      (w : String) →
-      (p : (g ⊗ h) w) →
-      (q : (g ⊗ h) w) →
-      same-splits {w = λ _ → w} p q
-    ⊛→unique-splitting w (ps , pg , ph) (qs , qg , qh) =
-      Sum.rec
-        (λ sameSplit → ΣPathP ((sameSplit .fst) , (sameSplit .snd)))
-        (Sum.rec
-          (λ {
-            (([] , notmt ), _ , _) → Empty.rec (notmt refl)
-          ; ((c ∷ w' , _ ), ps11++cw'≡qs11 , ps12≡cw'++qs12) →
-            Sum.rec
-              (λ c∉FLg →
-                Empty.rec (
-                  get⊥
-                    (c∉FLg (qs .fst .fst)
-                    (((_ , (sym ps11++cw'≡qs11)) ,
-                      (pg , ((([ c ] , w') , refl) , (lit-intro  , (string-intro {g = ⌈ w' ⌉}) w' (mk⌈⌉ w'))))) , qg)
+private
+  module
+    _
+    {g : Grammar ℓg}
+    {h : Grammar ℓh}
+    (seq-unambig : g ⊛ h)
+    where
+    opaque
+      unfolding the-split _⊗_ ⊗-intro _&_ literal
+      ⊛→unique-splitting :
+        (w : String) →
+        (p : (g ⊗ h) w) →
+        (q : (g ⊗ h) w) →
+        same-splits {w = λ _ → w} p q
+      ⊛→unique-splitting w (ps , pg , ph) (qs , qg , qh) =
+        Sum.rec
+          (λ sameSplit → ΣPathP ((sameSplit .fst) , (sameSplit .snd)))
+          (Sum.rec
+            (λ {
+              (([] , notmt ), _ , _) → Empty.rec (notmt refl)
+            ; ((c ∷ w' , _ ), ps11++cw'≡qs11 , ps12≡cw'++qs12) →
+              Sum.rec
+                (λ c∉FLg →
+                  Empty.rec (
+                    get⊥
+                      (c∉FLg (qs .fst .fst)
+                      (((_ , (sym ps11++cw'≡qs11)) ,
+                        (pg , ((([ c ] , w') , refl) , (lit-intro  , (string-intro {g = ⌈ w' ⌉}) w' (mk⌈⌉ w'))))) , qg)
+                    )
                   )
                 )
-              )
-              (λ c∉Fh →
-                Empty.rec (
-                  get⊥
-                    (c∉Fh (ps .fst .snd)
-                      (((_ , ps12≡cw'++qs12) ,
-                        (lit-intro , ((
-                          string-intro {g = ⌈ w' ++ qs .fst .snd ⌉})
-                            (w' ++ qs .fst .snd) (mk⌈⌉ (w' ++ qs .fst .snd))))) , ph)
+                (λ c∉Fh →
+                  Empty.rec (
+                    get⊥
+                      (c∉Fh (ps .fst .snd)
+                        (((_ , ps12≡cw'++qs12) ,
+                          (lit-intro , ((
+                            string-intro {g = ⌈ w' ++ qs .fst .snd ⌉})
+                              (w' ++ qs .fst .snd) (mk⌈⌉ (w' ++ qs .fst .snd))))) , ph)
+                    )
                   )
                 )
-              )
-              (seq-unambig c)
-            })
-          (λ {
-            (([] , notmt ), _ , _) → Empty.rec (notmt refl)
-          ; ((c ∷ w' , _ ), qs11++cw'≡ps11 , qs12≡cw'++ps12) →
-            Sum.rec
-              (λ c∉FLg →
-                Empty.rec (
-                  get⊥
-                    (c∉FLg (ps .fst .fst)
-                    (((_ , (sym qs11++cw'≡ps11)) ,
-                      (qg , ((([ c ] , w') , refl) , (lit-intro  , (string-intro {g = ⌈ w' ⌉}) w' (mk⌈⌉ w'))))) , pg)
+                (seq-unambig c)
+              })
+            (λ {
+              (([] , notmt ), _ , _) → Empty.rec (notmt refl)
+            ; ((c ∷ w' , _ ), qs11++cw'≡ps11 , qs12≡cw'++ps12) →
+              Sum.rec
+                (λ c∉FLg →
+                  Empty.rec (
+                    get⊥
+                      (c∉FLg (ps .fst .fst)
+                      (((_ , (sym qs11++cw'≡ps11)) ,
+                        (qg , ((([ c ] , w') , refl) , (lit-intro  , (string-intro {g = ⌈ w' ⌉}) w' (mk⌈⌉ w'))))) , pg)
+                    )
                   )
                 )
-              )
-              (λ c∉Fh →
-                Empty.rec (
-                  get⊥
-                    (c∉Fh (qs .fst .snd)
-                      (((_ , qs12≡cw'++ps12) ,
-                        (lit-intro , ((
-                          string-intro {g = ⌈ w' ++ ps .fst .snd ⌉})
-                            (w' ++ ps .fst .snd) (mk⌈⌉ (w' ++ ps .fst .snd))))) , qh)
+                (λ c∉Fh →
+                  Empty.rec (
+                    get⊥
+                      (c∉Fh (qs .fst .snd)
+                        (((_ , qs12≡cw'++ps12) ,
+                          (lit-intro , ((
+                            string-intro {g = ⌈ w' ++ ps .fst .snd ⌉})
+                              (w' ++ ps .fst .snd) (mk⌈⌉ (w' ++ ps .fst .snd))))) , qh)
+                    )
                   )
                 )
-              )
-              (seq-unambig c)
-            })
-        )
-        (splittingTrichotomy' w ps qs)
-      where
-      w≡ : ps .fst .fst ++ ps .fst .snd ≡ qs .fst .fst ++ qs .fst .snd
-      w≡ = sym (ps .snd) ∙ qs .snd
+                (seq-unambig c)
+              })
+          )
+          (splittingTrichotomy' w ps qs)
+        where
+        w≡ : ps .fst .fst ++ ps .fst .snd ≡ qs .fst .fst ++ qs .fst .snd
+        w≡ = sym (ps .snd) ∙ qs .snd
 
 
 module
@@ -119,18 +120,6 @@ module
   (unambig-g : unambiguous g)
   (unambig-h : unambiguous h)
   where
-
-  private
-    α : (g ⊗ h) & (g ⊗ h) ≅ (g & g) ⊗ (h & h)
-    α = ⊗&-distL≅ _ _ _ seq-unambig seq-unambig
-
-    Δ = &-Δ {g = g ⊗ h}
-
-    Δg : isStrongEquivalence _ _ (&-Δ {g = g})
-    Δg = unambiguous→Δ≅ unambig-g
-
-    Δh : isStrongEquivalence _ _ (&-Δ {g = h})
-    Δh = unambiguous→Δ≅ unambig-h
 
   opaque
     unfolding &-intro ⊗-intro the-split
