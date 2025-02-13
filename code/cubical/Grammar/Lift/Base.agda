@@ -44,7 +44,7 @@ module _ ℓ (g : Grammar ℓg) where
 module _ ℓ ℓ' (g : Grammar ℓg) where
     LiftG≅2 : g ≅ (LiftG ℓ' (LiftG ℓ g))
     LiftG≅2 =
-      LiftG≅ ℓ g 
+      LiftG≅ ℓ g
       ≅∙ LiftG≅ ℓ' (LiftG ℓ g)
 
 isLangLift : isLang g → isLang (LiftG ℓ' g)

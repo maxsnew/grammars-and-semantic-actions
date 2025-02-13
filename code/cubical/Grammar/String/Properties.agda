@@ -656,7 +656,7 @@ hasUniqueSplit :
   (g : Grammar ℓg) →
   (h : Grammar ℓh) →
   Type (ℓ-max ℓg ℓh)
-hasUniqueSplit g h = 
+hasUniqueSplit g h =
   ∀ (w w' v v' : String) →
     ((g & ⌈ w ⌉) ⊗ (h & ⌈ w' ⌉))
       & ((g & ⌈ v ⌉) ⊗ (h & ⌈ v' ⌉))

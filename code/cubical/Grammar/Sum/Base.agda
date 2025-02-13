@@ -387,6 +387,6 @@ module _
   ⊕-assoc≅ : (g ⊕ h) ⊕ k ≅ g ⊕ (h ⊕ k)
   ⊕-assoc≅ .fun = ⊕-assoc
   ⊕-assoc≅ .inv = ⊕-assoc⁻
-  ⊕-assoc≅ .sec = the-sec 
+  ⊕-assoc≅ .sec = the-sec
   ⊕-assoc≅ .ret = the-ret
 

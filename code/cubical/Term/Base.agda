@@ -63,7 +63,7 @@ record Inverse
   (e : g ⊢ h) : Type (ℓ-max ℓg ℓh) where
   field
     inv : h ⊢ g
-    is-left-inv : inv ∘g e ≡ id 
+    is-left-inv : inv ∘g e ≡ id
     is-right-inv : e ∘g inv ≡ id
 
 isMono :

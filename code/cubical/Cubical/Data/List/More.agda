@@ -42,7 +42,7 @@ module _ {ℓ : Level} {A : Type ℓ} where
     cong (λ z → rev (drop (length ys) z))
       (rev-++ xs ys)
     ∙ cong (λ z → rev (drop z (rev ys ++ rev xs))) (revLength ys)
-    ∙ cong rev (dropLength++ (rev ys)) 
+    ∙ cong rev (dropLength++ (rev ys))
     ∙ rev-rev xs
 
   dropBackLength : (xs : List A) → dropBack (length xs) xs ≡ []
@@ -185,4 +185,4 @@ module _ {ℓ : Level} {A : Type ℓ} where
         )
         (the-split .snd)
       where the-split = split++ xs ys zs ws p
-      
+

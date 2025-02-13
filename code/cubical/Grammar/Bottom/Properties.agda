@@ -142,7 +142,7 @@ module _ (g : Grammar ℓg) where
   open StrongEquivalence
   ⊥⊕≅ : (⊥ ⊕ g) ≅ g
   ⊥⊕≅ .fun = ⊕-elim ⊥-elim id
-  ⊥⊕≅ .inv = ⊕-inr 
+  ⊥⊕≅ .inv = ⊕-inr
   ⊥⊕≅ .sec = ⊕-βr ⊥-elim id
   ⊥⊕≅ .ret = the-ret
     where
