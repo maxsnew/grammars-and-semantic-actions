@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module DFA.Regex (Alphabet : hSet ℓ-zero) where
+module DFA.Determinization (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 

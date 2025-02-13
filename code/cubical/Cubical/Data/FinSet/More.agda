@@ -23,8 +23,10 @@ import Cubical.Data.Nat.Order.Recursive as Ord
 import Cubical.Data.Fin as Fin
 open import Cubical.Data.SumFin
 open import Cubical.Data.Sum
+open import Cubical.Data.Maybe
 open import Cubical.Data.Sum.Properties
 open import Cubical.Data.FinSet.Base
+open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.FinSet.Properties
 
 private
@@ -70,3 +72,9 @@ takeFirstFinOrd A (suc n , the-eq) x =
 
 isFinSet⊤ : isFinSet ⊤
 isFinSet⊤ = 1 , ∣ invEquiv ⊎-IdR-⊥-≃ ∣₁
+
+isFinSetMaybe : ∀ {ℓ} → {A : Type ℓ} →
+  isFinSet A → isFinSet (Maybe A)
+isFinSetMaybe isFinSetA =
+  EquivPresIsFinSet (pathToEquiv (sym Maybe≡SumUnit))
+    (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSetA))

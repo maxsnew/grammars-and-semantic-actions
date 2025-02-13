@@ -9,6 +9,9 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.Bool
+open import Cubical.Data.Unit
+open import Cubical.Data.Sum hiding (rec)
+open import Cubical.Data.Maybe as Maybe hiding (rec)
 import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
@@ -106,3 +109,33 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   unambiguous-Trace : ∀ b q → unambiguous (Trace b q)
   unambiguous-Trace b q = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace q) b
+
+-- Automata with a transition function given partially such
+-- that unspecified transitions implicitly map to a fail state
+-- Further, these have a freely added initial state such that
+-- there are no back edges to the initial state
+record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
+  constructor mkImplicitAut
+  field
+    acc : Q → Bool
+    null : Bool
+    δ₀ : Unit ⊎ Q → ⟨ Alphabet ⟩ → Maybe Q
+
+  open DeterministicAutomaton
+
+  -- Because Maybe Q ≅ Unit ⊎ Q
+  -- I could write Unit ⊎ Qalso as "Maybe Q", but I think
+  -- this style makes it easier to see that we should treat
+  -- these two instances of the maybe monad differently
+  --
+  -- That is, we freely add an initial state so we
+  -- make that addition explicit with ⊎. However, we
+  -- use "Maybe" to reflect the partiality of δ
+
+  Aut : DeterministicAutomaton (Maybe (Unit ⊎ Q))
+  Aut .init = just (inl _)
+  Aut .isAcc nothing = false
+  Aut .isAcc (just (inl _)) = null
+  Aut .isAcc (just (inr q)) = acc q
+  Aut .δ nothing c = nothing
+  Aut .δ (just q) c = map-Maybe inr (δ₀ q c)

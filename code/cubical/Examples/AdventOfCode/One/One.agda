@@ -23,7 +23,7 @@ open import Grammar.Equivalence ASCII
 open import Grammar.RegularExpression ASCII
 open import NFA.Determinization ASCII
 open import DFA.Base ASCII
-open import DFA.Regex ASCII
+open import DFA.Determinization ASCII
 open import Term ASCII
 open import Helper
 
