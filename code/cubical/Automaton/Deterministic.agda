@@ -10,7 +10,7 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Data.FinSet
 open import Cubical.Data.Bool
 open import Cubical.Data.Unit
-open import Cubical.Data.Sum hiding (rec)
+open import Cubical.Data.Sum hiding (rec; map)
 open import Cubical.Data.Maybe as Maybe hiding (rec)
 import Cubical.Data.Equality as Eq
 
@@ -40,6 +40,9 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   Trace : Bool → (q : Q) → Grammar ℓ
   Trace b = μ (TraceTy b)
+
+  TraceAlg : (Q → Grammar ℓ) → Type ℓ
+  TraceAlg g = Algebra (TraceTy true) g
 
   open StrongEquivalence
   parseAlg : Algebra (*Ty char) λ _ → &[ q ∈ Q ] ⊕[ b ∈ Bool ] Trace b q
@@ -139,3 +142,27 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   Aut .isAcc (just (inr q)) = acc q
   Aut .δ nothing c = nothing
   Aut .δ (just q) c = map-Maybe inr (δ₀ q c)
+
+  open StrongEquivalence
+
+  -- TraceAlgNothing' :
+  --   (g : Maybe (Unit ⊎ Q) → Grammar ℓ) →
+  --   (Alg : TraceAlg Aut g) →
+  --   ⟦ TraceTy Aut true nothing ⟧ g ≅ ⊥
+  -- TraceAlgNothing' g Alg .fun =
+  --   ⊕ᴰ-elim (λ {
+  --     stop → ⊕ᴰ-elim (λ {()})
+  --   ; step → ⊕ᴰ-elim (λ {(lift c) → {!g nothing!}})
+  --   })
+  -- TraceAlgNothing' g Alg .inv = {!!}
+  -- TraceAlgNothing' g Alg .sec = {!!}
+  -- TraceAlgNothing' g Alg .ret = {!!}
+
+
+  -- -- TraceAlg : (Q → Grammar ℓ) → Type ℓ
+  -- -- TraceAlg g = Algebra (TraceTy true) g
+  -- TraceAlgNothing :
+  --   (g : Maybe (Unit ⊎ Q) → Grammar ℓ) →
+  --   (Alg : TraceAlg Aut g) →
+  --   Alg nothing ≡ ⊥-elim ∘g {!!}
+  -- TraceAlgNothing = {!!}

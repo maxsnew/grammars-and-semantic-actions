@@ -35,6 +35,7 @@ private
   mkFinSet isFinSetA .snd = isFinSetMaybe (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSetA))
 
 open ImplicitDeterministicAutomaton
+open LogicalEquivalence
 
 module _
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
@@ -47,6 +48,21 @@ module _
 
   ⊥DFA : DFAOver (mkFinSet isFinSet⊥)
   ⊥DFA = Aut ⊥Aut
+
+  ⊥DFA≅ : Trace ⊥DFA true nothing ≅ ⊥
+  ⊥DFA≅ =
+    ≈→≅
+      (unambiguous-Trace ⊥DFA true nothing)
+      unambiguous⊥
+      (mkLogEq
+        {!!}
+        ⊥-elim
+      )
+    where
+    ⊥Alg : {!TraceAlg ⊥DFA (λ _ → ⊥)!}
+    ⊥Alg nothing = {!!}
+    -- ⊕ᴰ-elim λ { stop → ⊕ᴰ-elim λ {()} ; step → {!!}}
+    ⊥Alg (just x) = {!!}
 
   εAut : ImplicitDeterministicAutomaton Empty.⊥
   εAut .acc ()
