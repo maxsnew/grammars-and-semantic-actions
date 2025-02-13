@@ -8,6 +8,7 @@ open import Cubical.Foundations.Isomorphism
 open import Grammar.Base Alphabet
 open import Grammar.Lift.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
 private
@@ -40,3 +41,21 @@ opaque
   LiftDom⊗Iso ℓ ℓ' .inv e = e ∘g liftG ,⊗ liftG
   LiftDom⊗Iso ℓ ℓ' .rightInv e = refl
   LiftDom⊗Iso ℓ ℓ' .leftInv e = refl
+
+open StrongEquivalence
+module _ ℓ ℓ' (g : Grammar ℓg) (h : Grammar ℓg) where
+  LiftG⊗LiftG≅ : (g ⊗ h) ≅ (LiftG ℓ g ⊗ LiftG ℓ' h)
+  LiftG⊗LiftG≅ .fun = liftG ,⊗ liftG
+  LiftG⊗LiftG≅ .inv = lowerG ,⊗ lowerG
+  LiftG⊗LiftG≅ .sec = the-sec
+    where
+    opaque
+      unfolding ⊗-intro
+      the-sec : LiftG⊗LiftG≅ .fun ∘g LiftG⊗LiftG≅ .inv ≡ id
+      the-sec = refl
+  LiftG⊗LiftG≅ .ret = the-ret
+    where
+    opaque
+      unfolding ⊗-intro
+      the-ret : LiftG⊗LiftG≅ .inv ∘g LiftG⊗LiftG≅ .fun ≡ id
+      the-ret = refl

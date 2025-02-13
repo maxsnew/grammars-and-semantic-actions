@@ -9,9 +9,7 @@ import Cubical.Data.Equality as Eq
 
 open import NFA.Base Alphabet
 open import Grammar Alphabet
-open import Grammar.Equivalence Alphabet
 open import Grammar.Equalizer Alphabet
-open import Grammar.Inductive.Indexed Alphabet
 open import Term Alphabet
 open import Helper
 

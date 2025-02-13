@@ -15,7 +15,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Bool
 open import Cubical.Data.List hiding (init)
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (Algebra)
 open import Grammar.Lift Alphabet
 import Cubical.Data.Equality as Eq
 open import Term Alphabet

@@ -1,5 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Transport
 
 module Grammar.Dependent.Properties (Alphabet : hSet ℓ-zero) where
 
@@ -11,7 +13,9 @@ open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
+open import Grammar.Lift Alphabet
 open import Grammar.Bottom Alphabet
+open import Grammar.Function Alphabet
 open import Grammar.Product Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
@@ -25,10 +29,15 @@ open import Grammar.Literal Alphabet
 
 private
   variable
-    ℓg ℓh ℓS : Level
+    ℓg ℓh ℓS ℓS' : Level
+
+open StrongEquivalence
+module _ {A : Type ℓS} (h : A → Grammar ℓh) where
+  disjointSummands⊕ᴰ : Type (ℓ-max ℓS ℓh)
+  disjointSummands⊕ᴰ = ∀ a a' → (a ≡ a' → Empty.⊥) → disjoint (h a) (h a')
 
 module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
-  open StrongEquivalence
+
   opaque
     unfolding _⊗_
     ⊕ᴰ-distL :
@@ -58,51 +67,75 @@ module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
     &ᴰ-strengthR w (s , pg , f) a = s , (pg , f a)
 
 module _
-  {A : Type ℓS} {h : A → Grammar ℓh}
-  (isSetA : isSet A)
+  {A : Type ℓS}
+  {B : A → Type ℓS'}
+  {h : Σ[ a ∈ A ] B a → Grammar ℓh}
+  where
+  &ᴰ⊕ᴰ-dist :
+    (&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b))) ⊢ ⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a)
+  &ᴰ⊕ᴰ-dist w x = (λ a → x a .fst) , λ a → x a .snd
+
+  &ᴰ⊕ᴰ-dist⁻ :
+    ⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a) ⊢ (&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b)))
+  &ᴰ⊕ᴰ-dist⁻ = ⊕ᴰ-elim λ f → &ᴰ-in λ a → λ w x → (f a) , (x a)
+
+  &ᴰ⊕ᴰ-dist≅  :
+    ((&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b)))) ≅ (⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a))
+  &ᴰ⊕ᴰ-dist≅ .fun = &ᴰ⊕ᴰ-dist
+  &ᴰ⊕ᴰ-dist≅ .inv = &ᴰ⊕ᴰ-dist⁻
+  &ᴰ⊕ᴰ-dist≅ .sec = refl
+  &ᴰ⊕ᴰ-dist≅ .ret = refl
+
+module _
+  {A : Type ℓS}
+  {g : A → Grammar ℓg}
+  {h : A → Grammar ℓh}
+  (g≅h : ∀ (a : A) → g a ≅ h a)
   where
 
-  isMono-⊕ᴰ-in : (a : A) → isMono (⊕ᴰ-in {h = h} a)
-  isMono-⊕ᴰ-in a e e' !∘e=!∘e' =
-    funExt λ w → funExt λ p →
-      sym (transportRefl (e w p)) ∙
-      Σ-contractFst (refl , (isSetA _ _ _)) .fst
-        (PathΣ→ΣPathTransport _ _ (funExt⁻ (funExt⁻ !∘e=!∘e' w) p))
+  &ᴰ≅ : (&[ a ∈ A ] g a) ≅ &[ a ∈ A ] h a
+  &ᴰ≅ .fun = map&ᴰ λ a → g≅h a .fun
+  &ᴰ≅ .inv = map&ᴰ λ a → g≅h a .inv
+  &ᴰ≅ .sec = &ᴰ≡ _ _ λ a → cong (_∘g &ᴰ-π a) (g≅h a .sec)
+  &ᴰ≅ .ret = &ᴰ≡ _ _ λ a → cong (_∘g &ᴰ-π a) (g≅h a .ret)
 
-  unambiguous'⊕ᴰ :
-    unambiguous' (⊕[ a ∈ A ] h a) →
-      (a : A)  → unambiguous' (h a)
-  unambiguous'⊕ᴰ unambig⊕ a f f' !≡ =
-    isMono-⊕ᴰ-in a f f'
-      (unambig⊕ (LinΣ-intro a ∘g f) (LinΣ-intro a ∘g f')
-        -- Need to change the endpoints of !≡ to line up with the
-        -- ⊤-intro at the proper domain
-        (unambiguous⊤ _ _ ∙ !≡ ∙ sym (unambiguous⊤ _ _)))
+  ⊕ᴰ≅ : (⊕[ a ∈ A ] g a) ≅ ⊕[ a ∈ A ] h a
+  ⊕ᴰ≅ .fun = map⊕ᴰ λ a → g≅h a .fun
+  ⊕ᴰ≅ .inv = map⊕ᴰ λ a → g≅h a .inv
+  ⊕ᴰ≅ .sec = ⊕ᴰ≡ _ _ λ a → cong (⊕ᴰ-in a ∘g_) (g≅h a .sec)
+  ⊕ᴰ≅ .ret = ⊕ᴰ≡ _ _ λ a → cong (⊕ᴰ-in a ∘g_) (g≅h a .ret)
 
-  unambiguous⊕ᴰ : unambiguous (⊕[ a ∈ A ] h a) → (a : A) →
-    unambiguous (h a)
-  unambiguous⊕ᴰ unambig⊕ a =
-    unambiguous'→unambiguous
-      (unambiguous'⊕ᴰ (unambiguous→unambiguous' unambig⊕) a)
+module _
+  {A : Type ℓS}
+  {g : A → Grammar ℓg}
+  {h : Grammar ℓh}
+  where
 
-  module _
-    (unambig⊕ : unambiguous (⊕[ a ∈ A ] h a))
-    (a a' : A)
-    where
+  private
+    the-fun : (⊕[ a ∈ A ] g a) & h ⊢ ⊕[ a ∈ A ] (g a & h)
+    the-fun = ⇒-intro⁻ (⊕ᴰ-elim (λ a → ⇒-intro (⊕ᴰ-in a)))
+
+    the-inv : ⊕[ a ∈ A ] (g a & h) ⊢ (⊕[ a ∈ A ] g a) & h
+    the-inv = ⊕ᴰ-elim λ a → ⊕ᴰ-in a ,&p id
+
     opaque
-      unfolding _&_ ⊥
-      disjointSummands :
-        (a ≡ a' → Empty.⊥) →
-        disjoint (h a) (h a')
-      disjointSummands a≠a' w (p , p') =
-        a≠a' λ i → unambig⊕ (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂) i w (p , p') .fst
+      unfolding ⇒-intro &-intro
+      the-sec : the-fun ∘g the-inv ≡ id
+      the-sec = refl
 
-    equalizer→⊥ :
-      (a ≡ a' → Empty.⊥) →
-      equalizer (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂) ⊢ ⊥
-    equalizer→⊥ a≠a' =
-     disjointSummands a≠a'
-     ∘g eq-π (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂)
+      the-ret : the-inv ∘g the-fun ≡ id
+      the-ret = refl
+
+  &⊕ᴰ-distL≅ :
+    (⊕[ a ∈ A ] g a) & h ≅ ⊕[ a ∈ A ] (g a & h)
+  &⊕ᴰ-distL≅ = mkStrEq the-fun the-inv the-sec the-ret
+
+  &⊕ᴰ-distR≅ :
+    h & (⊕[ a ∈ A ] g a) ≅ ⊕[ a ∈ A ] (h & g a)
+  &⊕ᴰ-distR≅ =
+    &-swap≅
+    ≅∙ &⊕ᴰ-distL≅
+    ≅∙ ⊕ᴰ≅ λ a → &-swap≅
 
 module _
   {X : Type ℓS} {A : X → Grammar ℓh}

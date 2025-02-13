@@ -17,7 +17,6 @@ import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.Inductive.Indexed Alphabet
 open import Term Alphabet
 open import Helper
 

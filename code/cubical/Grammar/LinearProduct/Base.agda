@@ -7,6 +7,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.HLevels Alphabet
 open import Grammar.Epsilon Alphabet
@@ -60,6 +61,9 @@ opaque
   has-split :
     ∀ (w : String) → (p : (g ⊗ h) w) → (s : Splitting w) → Type ℓ-zero
   has-split w p s = s ≡ p .fst
+
+  isProp-has-split : ∀ (w : String) (p : (g ⊗ h) w) → (s : Splitting w) → isProp (has-split w p s)
+  isProp-has-split w p s = isSetSplitting w _ _
 
   the-split :
     ∀ (w : String) → (p : (g ⊗ h) w) → Σ[ s ∈ Splitting w ] has-split w p s
@@ -131,7 +135,7 @@ opaque
         (p≡ w p))
 
 opaque
-  unfolding _⊗_ the-split
+  unfolding _⊗_
   ⊗-intro :
     g ⊢ h →
     k ⊢ l →
@@ -140,7 +144,7 @@ opaque
     p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
 
 opaque
-  unfolding _⊗_ the-split
+  unfolding _⊗_
   ⊗-in : {w w' : String} →
     g w → h w' → (g ⊗ h) (w ++ w')
   ⊗-in p q = (_ , refl) , (p , q)
@@ -586,3 +590,54 @@ opaque
   ⊗-assoc4⊗-intro {f = f}{f' = f'}{f'' = f''}{f''' = f'''}{f'''' = f''''} =
     sym (invMoveR {f = ⊗-assoc⁻4} {f⁻ = ⊗-assoc4} ⊗-assoc4⊗-assoc⁻4
       (cong ((f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''') ∘g_) ⊗-assoc⁻4⊗-assoc4))
+
+open StrongEquivalence
+module _
+  {g : Grammar ℓg} {h : Grammar ℓh}
+  {k : Grammar ℓk} {l : Grammar ℓl}
+  (g≅h : g ≅ h)
+  (k≅l : k ≅ l)
+  where
+
+  private
+    the-fun : g ⊗ k ⊢ h ⊗ l
+    the-fun = g≅h .fun ,⊗ k≅l .fun
+
+    the-inv : h ⊗ l ⊢ g ⊗ k
+    the-inv = g≅h .inv ,⊗ k≅l .inv
+    opaque
+      unfolding ⊗-intro
+      the-sec : the-fun ∘g the-inv ≡ id
+      the-sec i = g≅h .sec i ,⊗ k≅l .sec i
+
+      the-ret : the-inv ∘g the-fun ≡ id
+      the-ret i = g≅h .ret i ,⊗ k≅l .ret i
+
+  ⊗≅ : (g ⊗ k) ≅ (h ⊗ l)
+  ⊗≅ .fun = the-fun
+  ⊗≅ .inv = the-inv
+  ⊗≅ .sec = the-sec
+  ⊗≅ .ret = the-ret
+
+module _
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  {k : Grammar ℓk}
+  where
+  ⊗-assoc≅ : g ⊗ (h ⊗ k) ≅ (g ⊗ h) ⊗ k
+  ⊗-assoc≅ .fun = ⊗-assoc
+  ⊗-assoc≅ .inv = ⊗-assoc⁻
+  ⊗-assoc≅ .sec = ⊗-assoc∘⊗-assoc⁻≡id
+  ⊗-assoc≅ .ret = ⊗-assoc⁻∘⊗-assoc≡id
+
+εr≅ : g ≅ g ⊗ ε
+εr≅ .fun = ⊗-unit-r⁻
+εr≅ .inv = ⊗-unit-r
+εr≅ .sec = ⊗-unit-rr⁻
+εr≅ .ret = ⊗-unit-r⁻r
+
+εl≅ : g ≅ ε ⊗ g
+εl≅ .fun = ⊗-unit-l⁻
+εl≅ .inv = ⊗-unit-l
+εl≅ .sec = ⊗-unit-ll⁻
+εl≅ .ret = ⊗-unit-l⁻l

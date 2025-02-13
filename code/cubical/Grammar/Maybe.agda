@@ -3,7 +3,7 @@ open import Cubical.Foundations.HLevels
 
 module Grammar.Maybe (Alphabet : hSet ℓ-zero) where
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (k ; μ)
 open import Term Alphabet
 
 private

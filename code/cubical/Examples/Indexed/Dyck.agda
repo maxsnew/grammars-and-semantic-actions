@@ -44,9 +44,8 @@ Alphabet = (Bracket , isSetBracket)
 
 open import Grammar Alphabet renaming (NIL to *NIL)
 open import Grammar.String.Properties Alphabet
-open import Grammar.Equivalence Alphabet
+open import Grammar.Dependent.Unambiguous Alphabet
 open import Grammar.Equalizer Alphabet
-open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.Inductive.HLevels Alphabet
 open import Grammar.HLevels Alphabet
 open import Grammar.Coherence Alphabet

@@ -26,7 +26,6 @@ Alphabet : hSet ℓ-zero
 Alphabet = (Alph , isSetAlph)
 
 open import Grammar Alphabet
-open import Grammar.Equivalence Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
 open import Helper

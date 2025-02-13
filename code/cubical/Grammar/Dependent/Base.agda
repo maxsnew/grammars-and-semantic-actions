@@ -76,10 +76,22 @@ module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
     → f ≡ f'
   &ᴰ≡ f f' f≡ i w x a = f≡ a i w x
 
-
 ⊕ᴰ-elim∘g :
   ∀ {A : Type ℓ}{g : Grammar ℓ'}{h : A → Grammar ℓ''}{k : Grammar ℓ'''}
   → {f' : ∀ a → h a ⊢ g}
   → {f : g ⊢ k}
   → f ∘g ⊕ᴰ-elim f' ≡ ⊕ᴰ-elim (λ a → f ∘g f' a)
 ⊕ᴰ-elim∘g = ⊕ᴰ≡ _ _ (λ a → refl)
+
+module _
+  {A : Type ℓS}
+  {g : A → Grammar ℓG}
+  {h : A → Grammar ℓH}
+  (e : (a : A) → g a ⊢ h a)
+  where
+
+  map⊕ᴰ : ⊕[ a ∈ A ] g a ⊢ ⊕[ a ∈ A ] h a
+  map⊕ᴰ = ⊕ᴰ-elim (λ a → ⊕ᴰ-in a ∘g e a)
+
+  map&ᴰ : &[ a ∈ A ] g a ⊢ &[ a ∈ A ] h a
+  map&ᴰ = &ᴰ-in λ a → e a ∘g &ᴰ-π a

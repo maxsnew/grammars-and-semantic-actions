@@ -3,12 +3,6 @@ open import Cubical.Foundations.HLevels
 
 module Examples.AdventOfCode.One.One where
 
--- import Agda.Builtin.String as BuiltinStr
--- import IO.Primitive.Core as Prim
--- import Data.Unit.Base as Unit'
--- open import IO
--- open import IO.Finite
-
 open import Cubical.Data.List
 open import Cubical.Data.FinSet
 open import Cubical.Data.Bool hiding (_⊕_)
@@ -80,13 +74,6 @@ opaque
   _ : p .fst ≡ true
   _ = refl
 
-  -- fast
   _ : q .fst ≡ true
   _ = refl
 
--- -- TODO : this example takes too long to run
--- opaque
---   unfolding ⊕ᴰ-distR ⊗-intro
--- --   -- ⌈w⌉→string ⊕ᴰ-distR ⊗-unit-r ⊗-unit-l⁻ ⊤* ⊤ ε ⊗-intro ⊕-elim
---   _ : p ≡ (true , ?)
---   _ = refl
