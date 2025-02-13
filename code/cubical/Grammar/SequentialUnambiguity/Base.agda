@@ -396,6 +396,50 @@ module _
   (disc : Discrete ⟨ Alphabet ⟩)
   where
 
+-- Goal: show that g * & (g * ⊗ c ⊗ ⊤) ⊢ ⊥ assuming
+-- - g & (g ⊗ c ⊗ ⊤) ⊢ ⊥
+--   - c not in follow last of g
+-- - g & (c ⊗ ⊤) ⊢ ⊥
+--   - c not in first set of g
+-- - For all c', either g & (c' ⊗ ⊤) ⊢ ⊥ or g & (g ⊗ c' ⊗ ⊤) ⊢ ⊥
+--   - g is sequentially unambiguous with itself, which we may write as g ⊛ g.
+--
+-- The proof below goes rough as follows
+--
+-- Build a term g * ⊢ ¬(g * ⊗ c ⊗ ⊤) & (g *)
+--
+-- Here the ε case is easy.
+-- Then inductively show that g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *)) ⊢ ¬(g * ⊗ c ⊗ ⊤) & (g *)
+--
+-- Constructing the g * on the right is straightforward so it suffices to show
+--   g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *)) ⊢ ¬(g * ⊗ c ⊗ ⊤)
+--
+-- This proceeds roughly as
+--
+-- g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *)) ⊢ ¬(g * ⊗ c ⊗ ⊤)
+-- iff
+-- (g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *))) & (g * ⊗ c ⊗ ⊤) ⊢ ⊥
+--
+-- (g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *))) & (g * ⊗ c ⊗ ⊤) ⊢ ⊥
+--
+-- Reason if the right g * is empty or not,
+-- and conclude it can't be because that would put c in the first set of g
+-- which we've assumed is not the case.
+--
+-- Thus the rightmost g * is really a (g *) & (char +), which is isomorphic to g ⊗ g*
+--
+-- So we show
+-- (g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *))) & (g ⊗ g * ⊗ c ⊗ ⊤) ⊢ ⊥
+-- by noting that g and (¬(g * ⊗ c ⊗ ⊤) & (g *)) are sequentially unambiguous,
+-- so are g and (g * ⊗ c ⊗ ⊤)
+-- Thus we factor as
+--
+-- (g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *))) & (g ⊗ g * ⊗ c ⊗ ⊤)
+-- ≅ (g & g) ⊗ ((¬(g * ⊗ c ⊗ ⊤) & (g *)) & (g * ⊗ c ⊗ ⊤))
+--
+-- From which we can look at the right side of the tensor,
+-- project out the ¬(g * ⊗ c ⊗ ⊤) and apply it reach the desired contradiction
+
   private
     nonmt-* : (g *) & (char +) ≅ g ⊗ (g *)
     nonmt-* =
