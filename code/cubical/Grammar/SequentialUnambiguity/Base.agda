@@ -22,8 +22,6 @@ open import Grammar.SequentialUnambiguity.FollowLast Alphabet
 open import Grammar.PropositionalTruncation.Base Alphabet
 open import Term Alphabet
 
-open import Grammar.Subgrammar.Base Alphabet renaming (true to trueG ; false to falseG)
-
 open import Cubical.Foundations.Powerset.More
 
 private
@@ -416,88 +414,17 @@ module _
         id≅
       ≅∙ sym≅ &string-split≅
 
-    open ∃Subgrammar (g *) (¬G FollowLastG (g *) c)
-
-    -- the subgrammar of (g *) such that there does
-    -- not exist a parse of FollowLastG (g *) c over the
-    -- same word
-    notFL : Grammar ℓg
-    notFL = ∃subgrammar
-
-    nil-pf' : ε ⊢ ¬G FollowLastG (g *) c
-    nil-pf' =
+    nil-pf : ε ⊢ ¬G FollowLastG (g *) c
+    nil-pf =
       ⇒-intro
         (disjoint-ε-char+
          ∘g id ,&p ((char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ∘g &-π₁))
 
-    nil-pf : ε ⊢ ∥ ¬G FollowLastG (g *) c ∥
-    nil-pf = trunc ∘g nil-pf'
-
-    cons-pf' : g ⊗ notFL ⊢ ¬G FollowLastG (g *) c
-    cons-pf' =
-      ⇒-intro
-        (⊕-elim
-          (&-π₂
-          ∘g id ,&p (∉First⊗l ¬nullg c∉Fg ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p nonmt-* .fun))
-          (⊗⊥
-          ∘g id ,⊗ (⇒-app ∘g &-π₂ ,&p id)
-          ∘g ⊗&-distL≅ _ _ _
-              (⊛-& _ _ _ (⊛-* _ _ seq-unambig))
-              (⊛∘g-r (⊛-* _ _ seq-unambig) &-π₂)
-              .fun
-          ∘g id ,&p
-              (
-              &-π₁ ,⊗ id
-              ∘g ⊗&-distL≅ _ _ _
-                  (⊛-⊗ _ _ _ (⊛-* _ _ seq-unambig) (∉FollowLast→⊛ _ _ c∉FLg disc))
-                  (⊛-* g g seq-unambig)
-                  .fun
-              ∘g (⊗-assoc⁻ ∘g nonmt-* .fun ,⊗ id) ,&p nonmt-* .fun)
-          )
-        ∘g &⊕-distL
-        ∘g id ,&p (&⊕-distR ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id ∘g FollowLastG+≅ g c .fun)
-        )
-      ∘g id ,⊗ (id ,&p ∥∥idem unambiguous¬G .inv ∘g witness∃')
-
-    cons-pf : g ⊗ notFL ⊢ ∥ ¬G FollowLastG (g *) c ∥
-    cons-pf = trunc ∘g cons-pf'
-
-    total : g * ⊢ notFL
-    total =
-      subgrammar-ind'
-        (*Ty g)
-        (λ _ → g *)
-        (λ _ → unambiguous-prop unambiguous∥∥ (g *))
-        (λ _ →
-          ⊕ᴰ≡ _ _
-            λ {
-               nil →
-                 insert-pf
-                   (NIL ∘g lowerG ∘g lowerG)
-                   (nil-pf
-                    ∘g lowerG ∘g lowerG)
-                 ∙ cong (trueG ∘g_) (unambiguous⊤ _ _)
-             ; cons →
-                 insert-pf
-                   (CONS ∘g id ,⊗ sub-π ∘g lowerG ,⊗ lowerG)
-                   (cons-pf ∘g lowerG ,⊗ lowerG)
-                 ∙ cong (trueG ∘g_) (unambiguous⊤ _ _)
-            }
-        )
-        _
-
-  ∉FollowLast-* : ⟨ c ∉FollowLast (g *) ⟩
-  ∉FollowLast-* =
-    ⇒-app
-    ∘g (&-π₁ ∘g &-π₂) ,& &-π₁ ,& (&-π₂ ∘g &-π₂)
-    ∘g id ,&p ((∥∥idem unambiguous¬G .inv ∘g witness∃ ∘g total) ,&p id ∘g &-Δ)
-
-  private
     the-alg : Algebra (*Ty g) (λ _ → (¬G FollowLastG (g *) c) & (g *))
     the-alg _ =
       ⊕ᴰ-elim λ {
           nil →
-            nil-pf' ,& NIL
+            nil-pf ,& NIL
             ∘g lowerG ∘g lowerG
         ; cons →
            the-cons-pf ,& (CONS ∘g id ,⊗ &-π₂)
@@ -536,8 +463,8 @@ module _
          ∘g id ,&p (&⊕-distR ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id)
          )
 
-  ∉FollowLast-*' : ⟨ c ∉FollowLast (g *) ⟩
-  ∉FollowLast-*' =
+  ∉FollowLast-* : ⟨ c ∉FollowLast (g *) ⟩
+  ∉FollowLast-* =
     ⇒-app
     ∘g (&-π₁ ∘g &-π₂) ,& (id ,&p &-π₂)
     ∘g id ,&p rec _ the-alg _
