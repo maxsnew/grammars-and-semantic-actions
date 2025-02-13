@@ -4,9 +4,9 @@ open import Cubical.Foundations.Structure
 
 module Grammar.SequentialUnambiguity.Base (Alphabet : hSet ℓ-zero)where
 
-open import Cubical.Data.Sum as Sum
+open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.Sigma
-open import Cubical.Data.List
+open import Cubical.Data.List hiding (rec)
 import Cubical.Data.Empty as Empty
 
 open import Cubical.Relation.Nullary.Base
@@ -75,8 +75,8 @@ module _
   (seq-unambig-h : g ⊛ h)
   (seq-unambig-k : g ⊛ k)
   where
-  ⊛-⊗l' : g ⊛ (h ⊗ k)
-  ⊛-⊗l' c =
+  ⊛-⊗ : g ⊛ (h ⊗ k)
+  ⊛-⊗ c =
     Sum.rec
       (λ x → inl x)
       (λ c∉Fh →
@@ -449,7 +449,7 @@ module _
               (
               &-π₁ ,⊗ id
               ∘g ⊗&-distL≅ _ _ _
-                  (⊛-⊗l' _ _ _ (⊛-* _ _ seq-unambig) (∉FollowLast→⊛ _ _ c∉FLg disc))
+                  (⊛-⊗ _ _ _ (⊛-* _ _ seq-unambig) (∉FollowLast→⊛ _ _ c∉FLg disc))
                   (⊛-* g g seq-unambig)
                   .fun
               ∘g (⊗-assoc⁻ ∘g nonmt-* .fun ,⊗ id) ,&p nonmt-* .fun)
@@ -491,3 +491,53 @@ module _
     ⇒-app
     ∘g (&-π₁ ∘g &-π₂) ,& &-π₁ ,& (&-π₂ ∘g &-π₂)
     ∘g id ,&p ((∥∥idem unambiguous¬G .inv ∘g witness∃ ∘g total) ,&p id ∘g &-Δ)
+
+  private
+    the-alg : Algebra (*Ty g) (λ _ → (¬G FollowLastG (g *) c) & (g *))
+    the-alg _ =
+      ⊕ᴰ-elim λ {
+          nil →
+            nil-pf' ,& NIL
+            ∘g lowerG ∘g lowerG
+        ; cons →
+           the-cons-pf ,& (CONS ∘g id ,⊗ &-π₂)
+           ∘g lowerG ,⊗ lowerG
+      }
+      where
+      the-⊛-* : g ⊛ (g *)
+      the-⊛-* = ⊛-* g g seq-unambig
+
+      the-cons-pf : g ⊗ ¬G FollowLastG (g *) c & (g *) ⊢ (¬G FollowLastG (g *) c)
+      the-cons-pf =
+        ⇒-intro
+         (⊕-elim
+           (&-π₂
+           ∘g id ,&p (∉First* c∉Fg ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id))
+           (⊕-elim
+             (¬Nullable-char+
+             ∘g (&-π₂ ∘g &-π₂) ,& ((char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ∘g &-π₂ ∘g &-π₁))
+             (⊗⊥
+             ∘g id ,⊗ (⇒-app ∘g (&-π₁ ∘g &-π₁ ∘g &-π₁) ,& (&-π₂ ,&p id))
+             ∘g ⊗&-distL≅ _ _ _
+                  (⊛∘g-r the-⊛-* (&-π₂ ∘g &-π₁))
+                  the-⊛-*
+                  .fun
+             ∘g (&-π₁ ,⊗ id ∘g
+                 ⊗&-distL≅ _ _ _
+                  (⊛∘g-r the-⊛-* &-π₂)
+                  (⊛-⊗ g (g *) (startsWith c) the-⊛-* (∉FollowLast→⊛ _ _ c∉FLg disc)) .fun
+                  ∘g id ,&p ⊗-assoc⁻) ,&p nonmt-* .fun
+             )
+           ∘g &⊕-distL
+           ∘g id ,&p &string-split≅ .fun
+           ∘g &-assoc
+           ∘g id ,&p ((nonmt-* .fun ,⊗ id) ,&p id))
+         ∘g &⊕-distL
+         ∘g id ,&p (&⊕-distR ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id)
+         )
+
+  ∉FollowLast-*' : ⟨ c ∉FollowLast (g *) ⟩
+  ∉FollowLast-*' =
+    ⇒-app
+    ∘g (&-π₁ ∘g &-π₂) ,& (id ,&p &-π₂)
+    ∘g id ,&p rec _ the-alg _
