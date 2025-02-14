@@ -7,6 +7,7 @@ open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 
 open import Grammar.Base Alphabet
 open import Grammar.Product Alphabet
+open import Grammar.Lift Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Function Alphabet
 open import Grammar.Equivalence.Base Alphabet
@@ -22,16 +23,9 @@ opaque
   ⊥ : Grammar ℓ-zero
   ⊥ _ = Empty.⊥
 
-  ⊥* : Grammar ℓg
-  ⊥* _ = Empty.⊥*
-
   ⊥-elim :
     ⊥ ⊢ g
   ⊥-elim _ = Empty.elim
-
-  ⊥*-elim :
-    ⊥* {ℓg} ⊢ g
-  ⊥*-elim _ x = Empty.elim (lower x)
 
   ⊥-η : ∀ (f f' : ⊥ ⊢ g)
     → f ≡ f'
@@ -39,3 +33,10 @@ opaque
 
   get⊥ : ∀ {w} → ⊥ w → Empty.⊥
   get⊥ p = p
+
+⊥* : ∀ {ℓ : Level} → Grammar ℓ
+⊥* {ℓ = ℓ} = LiftG ℓ ⊥
+
+⊥*-elim :
+  ⊥* {ℓg} ⊢ g
+⊥*-elim = ⊥-elim ∘g lowerG

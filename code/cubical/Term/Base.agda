@@ -103,3 +103,14 @@ invMoveR {f = f}{f⁻}{f'}{f''} retr p =
   f' ≡⟨ cong (_∘g f') (sym retr) ⟩
   f⁻ ∘g f ∘g f' ≡⟨ cong (f⁻ ∘g_) p ⟩
   f⁻ ∘g f'' ∎
+
+module _
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  (f : g ⊢ h)
+  where
+  dom : Grammar ℓg
+  dom = g
+
+  cod : Grammar ℓh
+  cod = h

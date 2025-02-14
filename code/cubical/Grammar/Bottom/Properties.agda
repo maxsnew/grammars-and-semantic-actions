@@ -114,7 +114,7 @@ opaque
 
 
 opaque
-  unfolding ⊥*
+  unfolding ⊥
   is-initial-⊥* : is-initial (⊥* {ℓg})
   is-initial-⊥* =
     ⊥*-elim , (λ e → funExt λ x → funExt λ p → Empty.rec (lower p))

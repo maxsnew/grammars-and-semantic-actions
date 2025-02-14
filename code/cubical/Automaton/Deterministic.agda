@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -40,6 +41,23 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   Trace : Bool → (q : Q) → Grammar ℓ
   Trace b = μ (TraceTy b)
+
+  STOP : ∀ {q} → ε ⊢ Trace (isAcc q) q
+  STOP =
+    roll
+    ∘g ⊕ᴰ-in stop
+    ∘g ⊕ᴰ-in (lift (Eq.refl))
+    ∘g liftG ∘g liftG
+
+  STEP :
+    ∀ {b : Bool} →
+    {q : Q} →
+    (c : ⟨ Alphabet ⟩) →
+    ＂ c ＂ ⊗ Trace b (δ q c) ⊢ Trace b q
+  STEP c = roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in (lift c) ∘g (liftG ∘g liftG) ,⊗ liftG
+
+  Parse : Grammar _
+  Parse = Trace true init
 
   TraceAlg : (Q → Grammar ℓ) → Type ℓ
   TraceAlg g = Algebra (TraceTy true) g
@@ -145,24 +163,22 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   open StrongEquivalence
 
-  -- TraceAlgNothing' :
-  --   (g : Maybe (Unit ⊎ Q) → Grammar ℓ) →
-  --   (Alg : TraceAlg Aut g) →
-  --   ⟦ TraceTy Aut true nothing ⟧ g ≅ ⊥
-  -- TraceAlgNothing' g Alg .fun =
-  --   ⊕ᴰ-elim (λ {
-  --     stop → ⊕ᴰ-elim (λ {()})
-  --   ; step → ⊕ᴰ-elim (λ {(lift c) → {!g nothing!}})
-  --   })
-  -- TraceAlgNothing' g Alg .inv = {!!}
-  -- TraceAlgNothing' g Alg .sec = {!!}
-  -- TraceAlgNothing' g Alg .ret = {!!}
+  implicitFailCarrier :
+    (g : (Unit ⊎ Q) → Grammar ℓ) →
+    Maybe (Unit ⊎ Q) → Grammar ℓ
+  implicitFailCarrier g nothing = ⊥*
+  implicitFailCarrier g (just q) = g q
 
+  AutAlg :
+    (g : (Unit ⊎ Q) → Grammar ℓ) →
+    Type ℓ
+  AutAlg g = TraceAlg Aut (implicitFailCarrier g)
 
-  -- -- TraceAlg : (Q → Grammar ℓ) → Type ℓ
-  -- -- TraceAlg g = Algebra (TraceTy true) g
-  -- TraceAlgNothing :
-  --   (g : Maybe (Unit ⊎ Q) → Grammar ℓ) →
-  --   (Alg : TraceAlg Aut g) →
-  --   Alg nothing ≡ ⊥-elim ∘g {!!}
-  -- TraceAlgNothing = {!!}
+  AutAlg-nothing :
+    {g : (Unit ⊎ Q) → Grammar ℓ} →
+    ⟦ TraceTy Aut true nothing ⟧ (implicitFailCarrier g) ⊢ ⊥
+  AutAlg-nothing =
+    ⊕ᴰ-elim (λ {
+      stop → ⊕ᴰ-elim λ {()}
+    ; step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (lowerG ∘g lowerG))
+    })

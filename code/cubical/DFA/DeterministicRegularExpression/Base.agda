@@ -19,8 +19,11 @@ open import Cubical.Data.Maybe.PartialFunction
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
+open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 open import Grammar Alphabet
+open import Grammar.Epsilon.Properties Alphabet
+open import Grammar.Literal.Properties Alphabet
 open import DFA.Base Alphabet public
 open import Term Alphabet
 
@@ -49,20 +52,23 @@ module _
   ⊥DFA : DFAOver (mkFinSet isFinSet⊥)
   ⊥DFA = Aut ⊥Aut
 
-  ⊥DFA≅ : Trace ⊥DFA true nothing ≅ ⊥
+  ⊥DFA≅ : Parse ⊥DFA ≅ ⊥
   ⊥DFA≅ =
     ≈→≅
-      (unambiguous-Trace ⊥DFA true nothing)
+      (unambiguous-Trace ⊥DFA true _)
       unambiguous⊥
       (mkLogEq
-        {!!}
+        (rec _ ⊥Alg _)
         ⊥-elim
       )
     where
-    ⊥Alg : {!TraceAlg ⊥DFA (λ _ → ⊥)!}
-    ⊥Alg nothing = {!!}
-    -- ⊕ᴰ-elim λ { stop → ⊕ᴰ-elim λ {()} ; step → {!!}}
-    ⊥Alg (just x) = {!!}
+    ⊥Alg : AutAlg ⊥Aut (λ _ → ⊥)
+    ⊥Alg nothing = ⊥-elim ∘g AutAlg-nothing ⊥Aut
+    ⊥Alg (just (inl tt)) =
+      ⊕ᴰ-elim (λ {
+        stop → ⊕ᴰ-elim λ { (lift ())}
+      ; step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (lowerG ∘g lowerG))
+      })
 
   εAut : ImplicitDeterministicAutomaton Empty.⊥
   εAut .acc ()
@@ -72,18 +78,112 @@ module _
   εDFA : DFAOver (mkFinSet isFinSet⊥)
   εDFA = Aut εAut
 
-  litAut : ⟨ Alphabet ⟩ → ImplicitDeterministicAutomaton Unit
-  litAut c .acc _ = true
-  litAut c .null = false
-  litAut c .δ₀ (inl _) c' =
-    decRec
-      (λ _ → just _)
-      (λ _ → nothing)
-      (DiscreteAlphabet isFinSetAlphabet c c')
-  litAut c .δ₀ (inr q) _ = nothing
+  εDFA≅ : Parse εDFA ≅ ε
+  εDFA≅ =
+    ≈→≅
+      (unambiguous-Trace εDFA true _)
+      unambiguousε
+      (mkLogEq
+        (rec _ εAlg _)
+        (STOP εDFA)
+      )
+    where
+    εAlg : AutAlg εAut (λ _ → ε)
+    εAlg nothing = ⊥-elim ∘g AutAlg-nothing εAut
+    εAlg (just (inl tt)) =
+      ⊕ᴰ-elim (λ {
+        stop → ⊕ᴰ-elim λ _ → lowerG ∘g lowerG
+      ; step → ⊕ᴰ-elim (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ (lowerG ∘g lowerG))
+      })
 
-  litDFA : ⟨ Alphabet ⟩ → DFAOver (mkFinSet isFinSetUnit)
-  litDFA c = Aut (litAut c)
+  module _ (c : ⟨ Alphabet ⟩) where
+    private
+      module _ (c' : ⟨ Alphabet ⟩) where
+        open ElimDecRec
+          (DecProp≡ (DiscreteAlphabet isFinSetAlphabet) c c')
+          (Maybe Unit)
+          (λ _ → just _)
+          (λ _ → nothing)
+          -- (λ _ → λ { (inl _) → just _ ; (inr _) → nothing })
+          -- (λ _ _ → nothing)
+
+        mkδ₀ : Maybe Unit
+        mkδ₀ = the-dec-rec
+
+        module _
+          {C : Maybe Unit → Type ℓ}
+          where
+          elim-≡ : c ≡ c' → C (just _) → C mkδ₀
+          elim-≡ = decRecYes {C = C}
+
+          elim-≢ : ¬ (c ≡ c') → C nothing → C mkδ₀
+          elim-≢ = decRecNo {C = C}
+
+          c≡c'? = decRecMap {C = C}
+
+    litAut : ImplicitDeterministicAutomaton Unit
+    litAut .acc _ = true
+    litAut .null = false
+    litAut .δ₀ (inl _) c' = mkδ₀ c'
+    litAut .δ₀ (inr _) _ = nothing
+    -- litAut .δ₀ (inl _) c' =
+      -- decRec
+      --   (λ _ → just _)
+      --   (λ _ → nothing)
+      --   (DiscreteAlphabet isFinSetAlphabet c c')
+    -- litAut .δ₀ (inr q) _ = nothing
+
+    litDFA : DFAOver (mkFinSet isFinSetUnit)
+    litDFA = Aut litAut
+
+    litDFA≅ : Parse litDFA ≅ ＂ c ＂
+    litDFA≅ =
+      ≈→≅
+        (unambiguous-Trace litDFA true _)
+        (unambiguous-literal c)
+        (mkLogEq
+          (rec _ litAlg _)
+          (toDFA (inl tt))
+        )
+      where
+      ⟦_⟧st : Unit ⊎ Unit → Grammar ℓ-zero
+      ⟦ inl _ ⟧st = ＂ c ＂
+      ⟦ inr _ ⟧st = ε
+
+      litAlg : AutAlg litAut ⟦_⟧st
+      litAlg nothing = ⊥-elim ∘g AutAlg-nothing litAut
+      litAlg (just (inl _)) =
+        ⊕ᴰ-elim (λ {
+          stop → ⊕ᴰ-elim λ {()}
+        ; step →
+          ⊕ᴰ-elim λ {
+            (lift c') →
+              c≡c'? c'
+                {C = λ x →
+                  ＂ c' ＂ ⊗ implicitFailCarrier litAut ⟦_⟧st (map-Maybe inr x) ⊢ ＂ c ＂
+                }
+                (λ c≡c' → transportG (cong ＂_＂ (sym c≡c')) ∘g ⊗-unit-r)
+                (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ lowerG)
+              ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+            }
+        })
+      litAlg (just (inr _)) =
+        ⊕ᴰ-elim (λ {
+          stop → ⊕ᴰ-elim λ _ → lowerG ∘g lowerG
+        ; step → ⊕ᴰ-elim (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ (lowerG ∘g lowerG))
+        })
+
+      toDFA : ∀ q → ⟦ q ⟧st ⊢ Trace litDFA true (just q)
+      toDFA (inl _) =
+        STEP litDFA {q = just (inl _)} c
+        ∘g id ,⊗
+          transportG
+            (cong (λ z → Trace litDFA true z)
+              (elim-≡ c {C = λ x → just (inr tt) ≡ map-Maybe inr x} refl refl)
+            )
+        ∘g id ,⊗ STOP litDFA {q = just (inr _)}
+        ∘g ⊗-unit-r⁻
+      toDFA (inr _) = STOP litDFA
 
   module _
     {Q : FinSet ℓ}

@@ -31,7 +31,7 @@ open import Cubical.Data.FinSet.More
 
 private
   variable
-    ℓ ℓ' : Level
+    ℓ ℓ' ℓ'' : Level
 
 negateDecProp : ∀ {ℓ} → DecProp ℓ → DecProp ℓ
 fst (fst (negateDecProp A)) = ¬ A .fst .fst
@@ -407,3 +407,58 @@ DecProp→isFinOrd A =
         (λ a → A .fst .snd _ _)))
     (λ ¬a → 0 , uninhabEquiv ¬a (λ x → x))
     (A .snd)
+
+module ElimDecRec
+  (A : DecProp ℓ)
+  (B : Type ℓ')
+  (p : ⟨ A ⟩DecProp → B)
+  (¬p : ¬ ⟨ A ⟩DecProp → B)
+  where
+
+  ifyes : ⟨ A ⟩DecProp → B
+  ifyes = p
+
+  ifno : ¬ ⟨ A ⟩DecProp → B
+  ifno = ¬p
+
+  the-dec-rec : B
+  the-dec-rec = decRec p ¬p (A .snd)
+
+  decRecYes≡ :
+    (a : ⟨ A ⟩DecProp) →
+    the-dec-rec ≡ p a
+  decRecYes≡ a =
+    cong (decRec p ¬p)
+      (isPropDec (A .fst .snd) (A .snd) (yes a))
+
+  decRecNo≡ :
+    (¬a : ¬ ⟨ A ⟩DecProp) →
+    the-dec-rec ≡ ¬p ¬a
+  decRecNo≡ ¬a =
+    cong (decRec p ¬p)
+      (isPropDec (A .fst .snd) (A .snd) (no ¬a))
+
+  module _
+    {C : B → Type ℓ''}
+    where
+    decRecYes :
+      (a : ⟨ A ⟩DecProp) →
+      C (p a) →
+      C the-dec-rec
+    decRecYes a = subst C (sym (decRecYes≡ a))
+
+    decRecNo :
+      (¬a : ¬ ⟨ A ⟩DecProp) →
+      C (¬p ¬a) →
+      C the-dec-rec
+    decRecNo ¬a = subst C (sym (decRecNo≡ ¬a))
+
+    decRecMap :
+      ((a : ⟨ A ⟩DecProp) → C (p a)) →
+      ((¬a : ¬ ⟨ A ⟩DecProp) → C (¬p ¬a)) →
+      C the-dec-rec
+    decRecMap yay nay =
+      decRec
+        (λ a → decRecYes a (yay a))
+        (λ ¬a → decRecNo ¬a (nay ¬a))
+        (A .snd)
