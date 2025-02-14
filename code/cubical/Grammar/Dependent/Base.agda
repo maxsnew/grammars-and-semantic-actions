@@ -95,3 +95,14 @@ module _
 
   map&ᴰ : &[ a ∈ A ] g a ⊢ &[ a ∈ A ] h a
   map&ᴰ = &ᴰ-in λ a → e a ∘g &ᴰ-π a
+
+module _
+  {A : Type ℓS}
+  {g : Grammar ℓG}
+  {h : A → Grammar ℓH}
+  (a a' : A)
+  (e : g ⊢ h a)
+  (f : g ⊢ h a')
+  where
+  ⊕ᴰ-fst≡ : ⊕ᴰ-in a ∘g e ≡ ⊕ᴰ-in a' ∘g f → g ⊢ ⊕[ x ∈ a ≡ a' ] g
+  ⊕ᴰ-fst≡ the-⊕ᴰ≡ w x = cong fst (funExt⁻ (funExt⁻ the-⊕ᴰ≡ w) x) , x

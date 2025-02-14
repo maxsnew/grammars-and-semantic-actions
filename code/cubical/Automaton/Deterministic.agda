@@ -5,6 +5,7 @@ open import Cubical.Foundations.HLevels
 module Automaton.Deterministic (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Relation.Nullary.DecidablePropositions
 
@@ -14,10 +15,15 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Sum hiding (rec; map)
 open import Cubical.Data.Maybe as Maybe hiding (rec)
 import Cubical.Data.Equality as Eq
+import Cubical.Data.Empty as Empty
 
 open import Grammar Alphabet
+open import Grammar.Equalizer Alphabet
 open import Grammar.String.Properties Alphabet
+open import Grammar.Epsilon.Properties Alphabet
+open import Grammar.Product.Properties Alphabet
 open import Grammar.Dependent.Unambiguous Alphabet
+open import Grammar.SequentialUnambiguity Alphabet
 open import Term Alphabet
 open import Helper
 
@@ -131,6 +137,42 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   unambiguous-Trace : ∀ b q → unambiguous (Trace b q)
   unambiguous-Trace b q = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace q) b
 
+  ε-parse-unique :
+    ∀ q →
+    (e : ε ⊢ ⊕[ b ∈ Bool ] Trace b q) →
+    e ≡ ⊕ᴰ-in (isAcc q) ∘g STOP
+  ε-parse-unique q e =
+    unambiguous-⊕Trace q e (⊕ᴰ-in (isAcc q) ∘g STOP)
+
+  Parse&Trace :
+    ∀ b → Parse & Trace b init ⊢ ⊕[ x ∈ b ≡ true ] Parse
+  Parse&Trace b =
+    map⊕ᴰ (λ _ → &-π₁)
+    ∘g ⊕ᴰ-fst≡ _ _ _ _ (sym e≡f)
+    where
+    e f : Parse & Trace b init ⊢ ⊕[ b' ∈ Bool ] Trace b' init
+    e = ⊕ᴰ-in true ∘g &-π₁
+    f = ⊕ᴰ-in b ∘g &-π₂
+
+    e≡f : e ≡ f
+    e≡f = unambiguous-⊕Trace init e f
+
+data FreeInitial (Q : Type ℓ) : Type ℓ where
+  initial : FreeInitial Q
+  ↑_ : Q → FreeInitial Q
+
+module _ (Q : Type ℓ) where
+  open Iso
+  FreeInitial≅Unit⊎ : Iso (FreeInitial Q) (Unit ⊎ Q)
+  FreeInitial≅Unit⊎ .fun initial = inl _
+  FreeInitial≅Unit⊎ .fun (↑ q) = inr q
+  FreeInitial≅Unit⊎ .inv (inl _) = initial
+  FreeInitial≅Unit⊎ .inv (inr q) = ↑ q
+  FreeInitial≅Unit⊎ .rightInv (inl _) = refl
+  FreeInitial≅Unit⊎ .rightInv (inr _) = refl
+  FreeInitial≅Unit⊎ .leftInv initial = refl
+  FreeInitial≅Unit⊎ .leftInv (↑ _) = refl
+
 -- Automata with a transition function given partially such
 -- that unspecified transitions implicitly map to a fail state
 -- Further, these have a freely added initial state such that
@@ -140,45 +182,71 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   field
     acc : Q → Bool
     null : Bool
-    δ₀ : Unit ⊎ Q → ⟨ Alphabet ⟩ → Maybe Q
+    δ₀ : FreeInitial Q → ⟨ Alphabet ⟩ → Maybe Q
 
   open DeterministicAutomaton
 
-  -- Because Maybe Q ≅ Unit ⊎ Q
-  -- I could write Unit ⊎ Qalso as "Maybe Q", but I think
-  -- this style makes it easier to see that we should treat
-  -- these two instances of the maybe monad differently
-  --
-  -- That is, we freely add an initial state so we
-  -- make that addition explicit with ⊎. However, we
-  -- use "Maybe" to reflect the partiality of δ
-
-  Aut : DeterministicAutomaton (Maybe (Unit ⊎ Q))
-  Aut .init = just (inl _)
+  Aut : DeterministicAutomaton (Maybe (FreeInitial Q))
+  Aut .init = just initial
   Aut .isAcc nothing = false
-  Aut .isAcc (just (inl _)) = null
-  Aut .isAcc (just (inr q)) = acc q
+  Aut .isAcc (just initial) = null
+  Aut .isAcc (just (↑ q)) = acc q
   Aut .δ nothing c = nothing
-  Aut .δ (just q) c = map-Maybe inr (δ₀ q c)
+  Aut .δ (just q) c = map-Maybe ↑_ (δ₀ q c)
 
   open StrongEquivalence
 
   implicitFailCarrier :
-    (g : (Unit ⊎ Q) → Grammar ℓ) →
-    Maybe (Unit ⊎ Q) → Grammar ℓ
+    (g : (FreeInitial Q) → Grammar ℓ) →
+    Maybe (FreeInitial Q) → Grammar ℓ
   implicitFailCarrier g nothing = ⊥*
   implicitFailCarrier g (just q) = g q
 
   AutAlg :
-    (g : (Unit ⊎ Q) → Grammar ℓ) →
+    (g : FreeInitial Q → Grammar ℓ) →
     Type ℓ
   AutAlg g = TraceAlg Aut (implicitFailCarrier g)
 
   AutAlg-nothing :
-    {g : (Unit ⊎ Q) → Grammar ℓ} →
+    {g : FreeInitial Q → Grammar ℓ} →
     ⟦ TraceTy Aut true nothing ⟧ (implicitFailCarrier g) ⊢ ⊥
   AutAlg-nothing =
     ⊕ᴰ-elim (λ {
       stop → ⊕ᴰ-elim λ {()}
     ; step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (lowerG ∘g lowerG))
     })
+
+  null≡initAcc :
+    null ≡ Aut .isAcc (just initial)
+  null≡initAcc = refl
+
+  noMapsIntoInit :
+    ∀ (q : Maybe (FreeInitial Q)) →
+    (c : ⟨ Alphabet ⟩) →
+    (Σ[ q' ∈ Q ] Aut .δ q c ≡ just (↑ q')) ⊎
+    (Aut .δ q c ≡ nothing)
+  noMapsIntoInit nothing c = inr refl
+  noMapsIntoInit (just q) c =
+    Maybe.elim
+      (λ x →
+        (Σ[ q' ∈ Q ] map-Maybe ↑_ x ≡ just (↑ q')) ⊎
+        (map-Maybe ↑_ x ≡ nothing)
+      )
+      (inr refl)
+      (λ x → inl (x , refl))
+      (δ₀ q c)
+
+  init&ε→nullable :
+    Parse Aut & ε ⊢ ⊕[ x ∈ Aut .isAcc (just initial) ≡ true ] ⊤
+  init&ε→nullable =
+    map⊕ᴰ (λ _ → ⊤-intro)
+    ∘g Parse&Trace Aut (isAcc Aut (init Aut))
+    ∘g id ,&p STOP Aut
+
+  soundNull :
+    null ≡ false →
+    ⟨ ¬Nullable Parse Aut ⟩
+  soundNull ¬null =
+    ⊕ᴰ-elim (λ null → Empty.rec (true≢false (sym null ∙ ¬null)))
+    ∘g init&ε→nullable
+    ∘g &-swap
