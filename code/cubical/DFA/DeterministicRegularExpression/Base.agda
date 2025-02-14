@@ -15,7 +15,7 @@ open import Cubical.Data.Bool.More
 open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
 import Cubical.Data.Equality as Eq
-open import Cubical.Data.Sum hiding (rec)
+open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Maybe.PartialFunction
 
@@ -203,8 +203,13 @@ module _
       disjointParses : disjoint (Parse MDFA) (Parse M'DFA)
       disjointParses =
         #→disjoint
-          {!!}
-          {!!}
+          (λ c →
+            Sum.map
+              (λ init∉Dom → ¬FirstAut M c {!!})
+              (λ init∉Dom → ¬FirstAut M' c {!!})
+              (disjoint-firsts c)
+          )
+          (Sum.map (¬NullAut M) (¬NullAut M') notBothNull)
 
     ⊕Aut : ImplicitDeterministicAutomaton (⟨ Q ⟩ ⊎ ⟨ Q' ⟩)
     ⊕Aut .acc (inl q) = M .acc q
@@ -229,7 +234,53 @@ module _
           (unambiguous-Trace MDFA true _)
           (unambiguous-Trace M'DFA true _)
         )
-        {!!}
+        (mkLogEq
+          {!!}
+          {!!}
+        )
+      where
+      ⟦_⟧⊕ : FreeInitial (⟨ Q ⟩ ⊎ ⟨ Q' ⟩) → Grammar (ℓ-max ℓ ℓ')
+      ⟦ initial ⟧⊕ = Parse MDFA ⊕ Parse M'DFA
+      ⟦ ↑ (inl q) ⟧⊕ = LiftG ℓ' (Trace MDFA true (just (↑ q)))
+      ⟦ ↑ (inr q') ⟧⊕ = LiftG ℓ (Trace M'DFA true (just (↑ q')))
+
+      ⟦_⟧M : FreeInitial ⟨ Q ⟩ → Grammar (ℓ-max ℓ ℓ')
+      ⟦ initial ⟧M = Trace ⊕DFA true (just initial)
+      ⟦ ↑ q ⟧M = Trace ⊕DFA true (just (↑ inl q))
+
+      ⟦_⟧M' : FreeInitial ⟨ Q' ⟩ → Grammar (ℓ-max ℓ ℓ')
+      ⟦ initial ⟧M' = Trace ⊕DFA true (just initial)
+      ⟦ ↑ q' ⟧M' = Trace ⊕DFA true (just (↑ inr q'))
+
+      ⊕Alg : AutAlg ⊕Aut ⟦_⟧⊕
+      ⊕Alg nothing = ⊥-elim ∘g AutAlg-nothing ⊕Aut
+      ⊕Alg (just initial) = {!!}
+      ⊕Alg (just (↑ (inl q))) = {!!}
+      ⊕Alg (just (↑ (inr q'))) = {!!}
+
+      MAlg : AutAlg M ⟦_⟧M
+      MAlg nothing = ⊥-elim ∘g AutAlg-nothing M
+      MAlg (just initial) = {!!}
+      MAlg (just (↑ q)) = {!!}
+
+      M'Alg : AutAlg M' ⟦_⟧M'
+      M'Alg nothing = ⊥-elim ∘g AutAlg-nothing M'
+      M'Alg (just initial) = {!!}
+      M'Alg (just (↑ q)) = {!!}
+
+      -- toDFA : ∀ q → ⟦ q ⟧st ⊢ Trace litDFA true (just q)
+      -- toDFA initial =
+      --   STEP litDFA {q = just initial} c
+      --   ∘g id ,⊗
+      --     transportG
+      --       (cong (λ z → Trace litDFA true z)
+      --         (elim-≡ c {C = λ x → just (↑ _) ≡ map-Maybe ↑_ x} refl refl)
+      --       )
+      --   ∘g id ,⊗ STOP litDFA {q = just (↑ _)}
+      --   ∘g ⊗-unit-r⁻
+      -- toDFA (↑ _) = STOP litDFA
+
+
 
   module _
     {Q : FinSet ℓ}

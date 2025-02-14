@@ -29,7 +29,7 @@ open import Helper
 
 private
   variable
-    ℓ : Level
+    ℓ ℓ' : Level
 
 record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   field
@@ -65,8 +65,8 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   Parse : Grammar _
   Parse = Trace true init
 
-  TraceAlg : (Q → Grammar ℓ) → Type ℓ
-  TraceAlg g = Algebra (TraceTy true) g
+  ParseAlg : (Q → Grammar ℓ') → Type (ℓ-max ℓ ℓ')
+  ParseAlg g = Algebra (TraceTy true) g
 
   open StrongEquivalence
   parseAlg : Algebra (*Ty char) λ _ → &[ q ∈ Q ] ⊕[ b ∈ Bool ] Trace b q
@@ -197,18 +197,18 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   open StrongEquivalence
 
   implicitFailCarrier :
-    (g : (FreeInitial Q) → Grammar ℓ) →
-    Maybe (FreeInitial Q) → Grammar ℓ
+    (g : (FreeInitial Q) → Grammar ℓ') →
+    Maybe (FreeInitial Q) → Grammar ℓ'
   implicitFailCarrier g nothing = ⊥*
   implicitFailCarrier g (just q) = g q
 
   AutAlg :
-    (g : FreeInitial Q → Grammar ℓ) →
-    Type ℓ
-  AutAlg g = TraceAlg Aut (implicitFailCarrier g)
+    (g : FreeInitial Q → Grammar ℓ') →
+    Type {!ℓ-max ℓ ℓ'!}
+  AutAlg g = ParseAlg Aut (implicitFailCarrier g)
 
   AutAlg-nothing :
-    {g : FreeInitial Q → Grammar ℓ} →
+    {g : FreeInitial Q → Grammar ℓ'} →
     ⟦ TraceTy Aut true nothing ⟧ (implicitFailCarrier g) ⊢ ⊥
   AutAlg-nothing =
     ⊕ᴰ-elim (λ {
@@ -243,10 +243,37 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
     ∘g Parse&Trace Aut (isAcc Aut (init Aut))
     ∘g id ,&p STOP Aut
 
-  soundNull :
+  ¬NullAut :
     null ≡ false →
     ⟨ ¬Nullable Parse Aut ⟩
-  soundNull ¬null =
+  ¬NullAut ¬null =
     ⊕ᴰ-elim (λ null → Empty.rec (true≢false (sym null ∙ ¬null)))
     ∘g init&ε→nullable
+    ∘g &-swap
+
+  Parse&startsWith→initialTransitionIsJust :
+    (c : ⟨ Alphabet ⟩) →
+    Parse Aut & startsWith c ⊢
+      ⊕[ x ∈ (Σ[ q ∈ Q ] δ₀ initial c ≡ just q) ] ⊤
+  Parse&startsWith→initialTransitionIsJust c =
+    ⇒-intro⁻ (rec _ the-alg (init Aut))
+    where
+    the-alg :
+      AutAlg (λ q → startsWith c ⇒
+        (⊕[ x ∈ (Σ[ q ∈ Q ] δ₀ initial c ≡ just q) ] ⊤)
+      )
+    the-alg nothing = ⊥-elim ∘g AutAlg-nothing
+    the-alg (just initial) =
+      {!!}
+    the-alg (just (↑ q)) =
+      {!!}
+
+  ¬FirstAut :
+    (c : ⟨ Alphabet ⟩) →
+    δ₀ initial c ≡ nothing →
+    ⟨ c ∉First Parse Aut ⟩
+  ¬FirstAut c initialTransition =
+    ⊕ᴰ-elim (λ (q , δ₀≡) →
+      Empty.rec (¬nothing≡just (sym initialTransition ∙ δ₀≡)))
+    ∘g Parse&startsWith→initialTransitionIsJust c
     ∘g &-swap
