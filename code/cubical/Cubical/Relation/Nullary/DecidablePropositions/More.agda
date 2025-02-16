@@ -51,6 +51,15 @@ snd (negateDecProp A) =
 DecProp⊥* : ∀ {ℓ} → DecProp ℓ
 DecProp⊥* = (⊥* , isProp⊥*) , no lower
 
+DecPropUnit* : ∀ {ℓ} → DecProp ℓ
+DecPropUnit* = (Unit* , isPropUnit*) , yes _
+
+DecProp⊥*≢DecPropUnit* :
+  ∀ {ℓ} →
+  DecProp⊥* {ℓ} ≡ DecPropUnit* {ℓ} → ⊥
+DecProp⊥*≢DecPropUnit* x =
+  ⊥.rec (lower (transport (sym (cong (fst ∘ fst) x)) _))
+
 doubleNegDecProp' :
   ∀ {ℓ} (A : DecProp ℓ) →
   negateDecProp (negateDecProp A) .fst .fst →

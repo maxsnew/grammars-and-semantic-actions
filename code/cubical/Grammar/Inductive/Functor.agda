@@ -16,24 +16,25 @@ open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 
 private
-  variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
+  variable ℓG ℓG' ℓB ℓA ℓg ℓ ℓ' ℓ'' ℓ''' ℓ'''' : Level
 
 module _ where
-  data Functor (A : Type ℓ) : Type (ℓ-suc ℓ) where
-    k : (g : Grammar ℓ) → Functor A
-    Var : (a : A) → Functor A -- reference one of the mutually inductive types being defined
-    &e ⊕e : ∀ (B : Type ℓ) → (F : B → Functor A) → Functor A
-    ⊗e : (F : Functor A) → (F' : Functor A) → Functor A
+  data Functor (A : Type ℓA) : Level → Typeω where
+    k : (g : Grammar ℓg) → Functor A ℓg
+    Var : (a : A) → Functor A ℓA -- reference one of the mutually inductive types being defined
+    &e ⊕e : ∀ {ℓ} (B : Type ℓB) → (F : B → Functor A ℓ) → Functor A (ℓ-max ℓB ℓ)
+    ⊗e : ∀ {ℓ}{ℓ'} → (F : Functor A ℓ) → (F' : Functor A ℓ') → Functor A (ℓ-max ℓ ℓ')
 
-  module _ {A : Type ℓ}{ℓ'} where
-    ⟦_⟧ : Functor A → (A → Grammar ℓ') → Grammar (ℓ-max ℓ ℓ')
-    ⟦ k h ⟧ g = LiftG ℓ' h
-    ⟦ Var a ⟧ g = LiftG ℓ (g a)
+  module _ {A : Type ℓA} where
+    ⟦_⟧ : ∀ {ℓ}{ℓ'} → Functor A ℓ → (A → Grammar ℓ') → Grammar (ℓ-max ℓ ℓ')
+    ⟦_⟧ {ℓ' = ℓ'} (k h) g = LiftG ℓ' h
+    ⟦ Var a ⟧ g = LiftG ℓA (g a)
     ⟦ &e B F ⟧ g = &[ b ∈ B ] ⟦ F b ⟧ g
     ⟦ ⊕e B F ⟧ g = ⊕[ b ∈ B ] ⟦ F b ⟧ g
     ⟦ ⊗e F F' ⟧ g = ⟦ F ⟧ g ⊗ ⟦ F' ⟧ g
 
-  map : ∀ {A : Type ℓ}(F : Functor A) {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}
+  map : ∀ {A : Type ℓ}{ℓ'}(F : Functor A ℓ')
+          {g : A → Grammar ℓ''}{h : A → Grammar ℓ'''}
         → (∀ a → g a ⊢ h a)
         → ⟦ F ⟧ g ⊢ ⟦ F ⟧ h
   map (k g) f = liftG ∘g lowerG
@@ -46,7 +47,7 @@ module _ where
     opaque
       unfolding _⊗_ ⊗-intro
 
-      map-id : ∀ (F : Functor A) {g : A → Grammar ℓ'} →
+      map-id : ∀ {ℓ'} (F : Functor A ℓ') {g : A → Grammar ℓ''} →
         map F (λ a → id {g = g a}) ≡ id
       map-id (k g) i = id
       map-id (Var a) i = id
@@ -54,8 +55,8 @@ module _ where
       map-id (⊕e B F) i = ⊕ᴰ-elim (λ a → ⊕ᴰ-in a ∘g map-id (F a) i)
       map-id (⊗e F F') i = map-id F i ,⊗ map-id F' i
 
-      map-∘ :  ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}{k : A → Grammar ℓ'''}
-        (F : Functor A)
+      map-∘ :  ∀ {ℓ'} {g : A → Grammar ℓ''}{h : A → Grammar ℓ'''}{k : A → Grammar ℓ''''}
+        (F : Functor A ℓ')
         (f : ∀ a → h a  ⊢ k a)(f' : ∀ a → g a ⊢ h a)
         → map F (λ a → f a ∘g f' a) ≡ map F f ∘g map F f'
       map-∘ (k g) f f' i = liftG ∘g lowerG

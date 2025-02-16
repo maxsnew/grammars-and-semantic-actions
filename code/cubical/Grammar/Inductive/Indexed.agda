@@ -19,33 +19,33 @@ open import Term.Base Alphabet
 open import Grammar.Inductive.Functor Alphabet public
 
 private
-  variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
+  variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' ℓ'''' : Level
 
 module _ where
-  module _ {A : Type ℓ} where
+  module _ {A : Type ℓ}{ℓ'} where
     -- NOTE: this is only needed because ⊗ is opaque. If it's not
     -- opaque this passes the positivity check.
     -- https://github.com/agda/agda/issues/6970
     {-# NO_POSITIVITY_CHECK #-}
-    data μ (F : A → Functor A) a : Grammar ℓ where
+    data μ (F : A → Functor A ℓ') a : Grammar (ℓ-max ℓ ℓ') where
       roll : ⟦ F a ⟧ (μ F) ⊢ μ F a
 
-  module _ {A : Type ℓ} (F : A → Functor A) where
-    Algebra : (A → Grammar ℓ') → Type (ℓ-max ℓ ℓ')
+  module _ {A : Type ℓ}{ℓ'} (F : A → Functor A ℓ') where
+    Algebra : (A → Grammar ℓ'') → Type (ℓ-max ℓ (ℓ-max ℓ' ℓ''))
     Algebra g = ∀ a → ⟦ F a ⟧ g ⊢ g a
 
     initialAlgebra : Algebra (μ F)
     initialAlgebra = λ a → roll
 
-    Homomorphism : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''} → Algebra g → Algebra h → Type _
+    Homomorphism : ∀ {g : A → Grammar ℓ''}{h : A → Grammar ℓ'''} → Algebra g → Algebra h → Type _
     Homomorphism {g = g}{h} α β =
       Σ[ ϕ ∈ (∀ a → g a ⊢ h a) ]
       (∀ a → ϕ a ∘g α a ≡ β a ∘g map (F a) ϕ)
 
-    idHomo : ∀ {g : A → Grammar ℓ'} → (α : Algebra g) → Homomorphism α α
+    idHomo : ∀ {g : A → Grammar ℓ''} → (α : Algebra g) → Homomorphism α α
     idHomo α = (λ a → id) , λ a → cong (α a ∘g_) (sym (map-id (F a)))
 
-    compHomo : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}{k : A → Grammar ℓ'''}
+    compHomo : ∀ {g : A → Grammar ℓ''}{h : A → Grammar ℓ'''}{k : A → Grammar ℓ''''}
       (α : Algebra g)(β : Algebra h)(η : Algebra k)
       → Homomorphism β η → Homomorphism α β → Homomorphism α η
     compHomo α β η ϕ ψ .fst a = ϕ .fst a ∘g ψ .fst a
@@ -54,7 +54,7 @@ module _ where
       ∙ cong (_∘g map (F a) (ψ .fst)) (ϕ .snd a)
       ∙ cong (η a ∘g_) (sym (map-∘ (F a) (ϕ .fst) (ψ .fst)))
 
-    module _ {g : A → Grammar ℓ'} (α : Algebra g) where
+    module _ {g : A → Grammar ℓ''} (α : Algebra g) where
       {-# TERMINATING #-}
       recHomo : Homomorphism initialAlgebra α
       recHomo .fst a w (roll ._ x) =

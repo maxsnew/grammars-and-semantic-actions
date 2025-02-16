@@ -75,7 +75,7 @@ module _ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} (f f' : g ⊢ h)
     eq-intro (f'' ∘g f) (f'' ∘g f')
       (eq-π f f') (cong (f'' ∘g_) (eq-π-pf f f'))
 
-module _ {A : Type ℓ} (F : A → Functor A) (g : A → Grammar ℓg)
+module _ {A : Type ℓ}{ℓ'} (F : A → Functor A ℓ') (g : A → Grammar ℓg)
   (e e' : ∀ (a : A) → μ F a ⊢ g a)
   (pf : ∀ (a : A) →
     e  a ∘g roll ∘g map (F a) (λ a' → eq-π (e a') (e' a')) ≡
@@ -105,7 +105,7 @@ module _ {A : Type ℓ} (F : A → Functor A) (g : A → Grammar ℓg)
           roll ∘g map (F a) λ a' → eq-π (e a') (e' a')
       eq-π-is-homo a = refl
 
-equalizer-ind-unit : (F : Functor Unit) {g : Grammar ℓg}
+equalizer-ind-unit : (F : Functor Unit ℓ-zero) {g : Grammar ℓg}
   {e e' : μ (λ _ → F) tt ⊢ g}
   → (e ∘g roll ∘g map F (λ _ → eq-π e e'))
     ≡ (e' ∘g roll ∘g map F (λ _ → eq-π e e'))
@@ -129,11 +129,11 @@ eq-π-pf-⟜-intro f f' =
 
 module _ {A : Type ℓ}
     (tag : A → Type ℓ)
-    (F : ∀ a → tag a → Functor A)
+    (F : ∀ a → tag a → Functor A ℓ)
     where
 
   private
-    F' : A → Functor A
+    F' : A → Functor A ℓ
     F' a = ⊕e (tag a) (F a)
 
   module _

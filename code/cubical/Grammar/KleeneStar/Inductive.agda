@@ -36,7 +36,7 @@ module _ (g : Grammar ℓG) where
   data *Tag : Type ℓG where
     nil cons : *Tag
 
-  *Ty : Unit* {ℓG} → Functor Unit*
+  *Ty : Unit → Functor Unit ℓG
   *Ty _ = ⊕e *Tag (λ { nil → k ε* ; cons → ⊗e (k g) (Var _)})
 
   isFinSet*Tag : isFinSet *Tag
@@ -56,22 +56,22 @@ module _ (g : Grammar ℓG) where
   fold*r : Algebra *Ty (λ _ → h) → KL* ⊢ h
   fold*r alg = rec *Ty alg _
 
-  repeatTy : Lift {j = ℓG} ℕ → Functor (Lift ℕ)
-  repeatTy (lift zero) = k ε*
-  repeatTy (lift (suc n)) = ⊗e (k g) (Var (lift n))
+  repeatTy : ℕ → Functor ℕ ℓG
+  repeatTy (zero) = k ε*
+  repeatTy (suc n) = ⊗e (k g) (Var n)
 
-  repeat' : Lift ℕ → Grammar ℓG
+  repeat' : ℕ → Grammar ℓG
   repeat' n = μ repeatTy n
 
   open StrongEquivalence
 
-  repeat = ⊕[ n ∈ (Lift ℕ) ] repeat' n
+  repeat = ⊕[ n ∈ ℕ ] repeat' n
 
   gradeAlg : Algebra *Ty λ _ → repeat
   gradeAlg _ = ⊕ᴰ-elim (λ {
-      nil → ⊕ᴰ-in (lift 0) ∘g roll
+      nil → ⊕ᴰ-in 0 ∘g roll
     ; cons →
-        ⊕ᴰ-elim (λ (lift n) → ⊕ᴰ-in (lift (suc n)) ∘g roll ∘g liftG ,⊗ liftG)
+        ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n) ∘g roll ∘g liftG ,⊗ liftG)
         ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG
     })
 
@@ -79,8 +79,8 @@ module _ (g : Grammar ℓG) where
   grade = rec *Ty gradeAlg _
 
   ungradeAlg : Algebra repeatTy λ n → KL*
-  ungradeAlg (lift zero) = roll ∘g ⊕ᴰ-in nil
-  ungradeAlg (lift (suc a)) = roll ∘g ⊕ᴰ-in cons
+  ungradeAlg zero = roll ∘g ⊕ᴰ-in nil
+  ungradeAlg (suc a) = roll ∘g ⊕ᴰ-in cons
 
   ungrade' : ∀ n → repeat' n ⊢ KL*
   ungrade' n = rec repeatTy ungradeAlg n
@@ -93,16 +93,16 @@ module _ (g : Grammar ℓG) where
       unfolding ⊕ᴰ-distR ⊗-intro eq-π
       the-sec-alg-snd :
         ∀ n →
-        (LiftG ℓG g) ⊗ (LiftG ℓG (equalizer (grade ∘g ungrade' (lift n)) (⊕ᴰ-in (lift n))))
+        (LiftG ℓG g) ⊗ (LiftG ℓ-zero (equalizer (grade ∘g ungrade' n) (⊕ᴰ-in n)))
         ⊢
-        equalizer (grade ∘g ungrade' (lift (suc n))) (⊕ᴰ-in (lift (suc n)))
+        equalizer (grade ∘g ungrade' (suc n)) (⊕ᴰ-in (suc n))
       the-sec-alg-snd n = eq-intro _ _
           (roll ∘g id ,⊗ (liftG ∘g eq-π _ _ ∘g lowerG))
-          (λ i → ⊕ᴰ-elim (λ (lift m) → ⊕ᴰ-in (lift (suc m)) ∘g roll ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun ∘g
+          (λ i → ⊕ᴰ-elim (λ m → ⊕ᴰ-in (suc m) ∘g roll ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun ∘g
                  id ,⊗ eq-π-pf _ _ i ∘g lowerG ,⊗ lowerG )
   secAlg : Algebra repeatTy (λ n → equalizer (grade ∘g ungrade' n) (⊕ᴰ-in n))
-  secAlg (lift zero) = eq-intro _ _ roll refl
-  secAlg (lift (suc n)) = the-sec-alg-snd n
+  secAlg zero = eq-intro _ _ roll refl
+  secAlg (suc n) = the-sec-alg-snd n
 
   *continuous : StrongEquivalence KL* repeat
   *continuous .fun = grade
@@ -122,7 +122,7 @@ module _ (g : Grammar ℓG) where
                 secAlg
                 (initialAlgebra repeatTy)
                 ((λ m → eq-π _ _) ,
-                λ { (lift zero) → refl ; (lift (suc m)) → refl })
+                λ { zero → refl ; (suc m) → refl })
                 (recHomo repeatTy secAlg))
               n))
   *continuous .ret = the-ret
@@ -147,7 +147,7 @@ module _ (g : Grammar ℓG) where
   data *TagL : Type ℓG where
     nil snoc : *TagL
 
-  *LTy : Unit* {ℓG} → Functor Unit*
+  *LTy : Unit → Functor Unit ℓG
   *LTy _ = ⊕e *TagL (λ { nil → k ε* ; snoc → ⊗e (Var _) (k g)})
 
   *LAlg→*Alg : Algebra *LTy (λ _ → h)  → Algebra *Ty (λ _ → h ⊸ h)
@@ -166,11 +166,11 @@ module _ (g : Grammar ℓG) where
   *L≅unrolled*L : *L ≅ unrolled*L
   *L≅unrolled*L = unroll≅ *LTy _
 
-  repeatTyL : Lift {j = ℓG} ℕ → Functor (Lift ℕ)
-  repeatTyL (lift zero) = k ε*
-  repeatTyL (lift (suc n)) = ⊗e (Var (lift n)) (k g)
+  repeatTyL : ℕ → Functor ℕ ℓG
+  repeatTyL zero = k ε*
+  repeatTyL (suc n) = ⊗e (Var n) (k g)
 
-  repeat'L : Lift ℕ → Grammar ℓG
+  repeat'L : ℕ → Grammar ℓG
   repeat'L n = μ repeatTyL n
 
   iterated-tensor : ∀ (n : ℕ) → Grammar ℓG
@@ -181,22 +181,22 @@ module _ (g : Grammar ℓG) where
   iterated-tensorL zero = ε*
   iterated-tensorL (suc n) = iterated-tensorL n ⊗ g
 
-  repeat'0≅ε : repeat' (lift 0) ≅ ε
-  repeat'0≅ε = unroll≅ repeatTy (lift 0) ≅∙ sym≅ (LiftG≅2 _ _ _)
+  repeat'0≅ε : repeat' 0 ≅ ε
+  repeat'0≅ε = unroll≅ repeatTy 0 ≅∙ sym≅ (LiftG≅2 _ _ _)
 
-  repeat'L0≅ε : repeat'L (lift 0) ≅ ε
-  repeat'L0≅ε = unroll≅ repeatTyL (lift 0) ≅∙ sym≅ (LiftG≅2 _ _ _)
+  repeat'L0≅ε : repeat'L 0 ≅ ε
+  repeat'L0≅ε = unroll≅ repeatTyL 0 ≅∙ sym≅ (LiftG≅2 _ _ _)
 
-  repeat≅iter : ∀ n → repeat' (lift n) ≅ iterated-tensor n
-  repeat≅iter zero = unroll≅ repeatTy (lift 0) ≅∙ sym≅ (LiftG≅ _ _)
+  repeat≅iter : ∀ n → repeat' n ≅ iterated-tensor n
+  repeat≅iter zero = unroll≅ repeatTy 0 ≅∙ sym≅ (LiftG≅ _ _)
   repeat≅iter (suc n) =
-    unroll≅ repeatTy (lift (suc n))
+    unroll≅ repeatTy (suc n)
     ≅∙ ⊗≅ (sym≅ (LiftG≅ _ _)) (sym≅ (LiftG≅ _ _) ≅∙ repeat≅iter n)
 
-  repeatL≅iterL : ∀ n → repeat'L (lift n) ≅ iterated-tensorL n
-  repeatL≅iterL zero = unroll≅ repeatTyL (lift 0) ≅∙ sym≅ (LiftG≅ _ _)
+  repeatL≅iterL : ∀ n → repeat'L n ≅ iterated-tensorL n
+  repeatL≅iterL zero = unroll≅ repeatTyL 0 ≅∙ sym≅ (LiftG≅ _ _)
   repeatL≅iterL (suc n) =
-    unroll≅ repeatTyL (lift (suc n))
+    unroll≅ repeatTyL (suc n)
     ≅∙ ⊗≅
       (sym≅ (LiftG≅ _ _) ≅∙ repeatL≅iterL n)
       (sym≅ (LiftG≅ _ _))
@@ -214,25 +214,25 @@ module _ (g : Grammar ℓG) where
     ≅∙ ⊗≅ (⊗≅ id≅ (sym≅ (iter≅iterL n))) id≅
     ≅∙ ⊗≅ (iter≅iterL (suc n)) id≅
 
-  repeat'≅repeat'L : ∀ n → repeat' (lift n) ≅ repeat'L (lift n)
+  repeat'≅repeat'L : ∀ n → repeat' n ≅ repeat'L n
   repeat'≅repeat'L n =
     repeat≅iter n
     ≅∙ iter≅iterL n
     ≅∙ sym≅ (repeatL≅iterL n)
 
-  repeatL = ⊕[ n ∈ (Lift ℕ) ] repeat'L n
+  repeatL = ⊕[ n ∈ ℕ ] repeat'L n
 
   repeat≅repeatL : repeat ≅ repeatL
-  repeat≅repeatL = ⊕ᴰ≅ (λ (lift n) → repeat'≅repeat'L n)
+  repeat≅repeatL = ⊕ᴰ≅ (λ n → repeat'≅repeat'L n)
 
   *≅repeatL : KL* ≅ repeatL
   *≅repeatL = *continuous ≅∙ repeat≅repeatL
 
   gradeLAlg : Algebra *LTy λ _ → repeatL
   gradeLAlg _ = ⊕ᴰ-elim (λ {
-      nil → ⊕ᴰ-in (lift 0) ∘g roll
+      nil → ⊕ᴰ-in 0 ∘g roll
     ; snoc →
-      ⊕ᴰ-elim (λ (lift n) → ⊕ᴰ-in (lift (suc n)) ∘g roll ∘g liftG ,⊗ liftG)
+      ⊕ᴰ-elim (λ n → ⊕ᴰ-in (suc n) ∘g roll ∘g liftG ,⊗ liftG)
       ∘g ⊕ᴰ-distL .fun ∘g lowerG ,⊗ lowerG
     }
     )
@@ -241,8 +241,8 @@ module _ (g : Grammar ℓG) where
   gradeL = rec *LTy gradeLAlg _
 
   ungradeAlgL : Algebra repeatTyL λ n → *L
-  ungradeAlgL (lift zero) = roll ∘g ⊕ᴰ-in nil
-  ungradeAlgL (lift (suc n)) = roll ∘g ⊕ᴰ-in snoc
+  ungradeAlgL zero = roll ∘g ⊕ᴰ-in nil
+  ungradeAlgL (suc n) = roll ∘g ⊕ᴰ-in snoc
 
   ungrade'L : ∀ n → repeat'L n ⊢ *L
   ungrade'L n = rec repeatTyL ungradeAlgL n
@@ -255,21 +255,21 @@ module _ (g : Grammar ℓG) where
       unfolding ⊕ᴰ-distL ⊗-intro eq-π
       the-sec-alg-sndL :
         ∀ n →
-        (LiftG ℓG (equalizer (gradeL ∘g ungrade'L (lift n)) (⊕ᴰ-in (lift n))))
+        (LiftG ℓ-zero (equalizer (gradeL ∘g ungrade'L n) (⊕ᴰ-in n)))
         ⊗
         (LiftG ℓG g)
         ⊢
-        equalizer (gradeL ∘g ungrade'L (lift (suc n))) (⊕ᴰ-in (lift (suc n)))
+        equalizer (gradeL ∘g ungrade'L (suc n)) (⊕ᴰ-in (suc n))
       the-sec-alg-sndL n = eq-intro _ _
           (roll ∘g (liftG ∘g eq-π _ _ ∘g lowerG) ,⊗ id)
           (λ i →
-            ⊕ᴰ-elim (λ (lift m) → ⊕ᴰ-in (lift (suc m))
+            ⊕ᴰ-elim (λ m → ⊕ᴰ-in (suc m)
             ∘g roll ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distL .fun ∘g
                  eq-π-pf _ _ i ,⊗ id ∘g lowerG ,⊗ lowerG )
   secAlgL :
     Algebra repeatTyL (λ n → equalizer (gradeL ∘g ungrade'L n) (⊕ᴰ-in n))
-  secAlgL (lift zero) = eq-intro _ _ roll refl
-  secAlgL (lift (suc n)) = the-sec-alg-sndL n
+  secAlgL zero = eq-intro _ _ roll refl
+  secAlgL (suc n) = the-sec-alg-sndL n
 
   *continuousL : *L ≅ repeatL
   *continuousL .fun = gradeL
@@ -289,7 +289,7 @@ module _ (g : Grammar ℓG) where
                 secAlgL
                 (initialAlgebra repeatTyL)
                 ((λ m → eq-π _ _) ,
-                λ { (lift zero) → refl ; (lift (suc m)) → refl })
+                λ { zero → refl ; (suc m) → refl })
                 (recHomo repeatTyL secAlgL))
               n))
   *continuousL .ret = the-ret
@@ -319,7 +319,7 @@ _+L : Grammar ℓG → Grammar ℓG
 g +L = g * ⊗ g
 
 _⊗[_] : Grammar ℓG → ℕ → Grammar ℓG
-g ⊗[ n ] = repeat' g (lift n)
+g ⊗[ n ] = repeat' g n
 
 NIL : ∀ {g : Grammar ℓG} → ε ⊢ g *
 NIL = roll ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG

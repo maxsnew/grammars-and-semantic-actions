@@ -173,7 +173,7 @@ open Subgrammar
 
 module _
   {ℓ'}
-  {A : Type ℓ} (F : A → Functor A) (g : A → Grammar ℓg)
+  {A : Type ℓ}{ℓ''} (F : A → Functor A ℓ'') (g : A → Grammar ℓg)
   (p : ∀ (a : A) → μ F a ⊢ Ω {ℓ = ℓ'})
   (pf : ∀ (a : A) →
     p a ∘g roll ∘g map (F a) (λ a' → sub-π (p a'))

@@ -193,7 +193,7 @@ module _
     {Q' : FinSet ℓ'}
     (M : ImplicitDeterministicAutomaton ⟨ Q ⟩)
     (M' : ImplicitDeterministicAutomaton ⟨ Q' ⟩)
-    (notBothNull : (M .null ≡ false) ⊎ (M' .null ≡ false))
+    (notBothNull : (M .null Eq.≡ false) ⊎ (M' .null Eq.≡ false))
     (disjoint-firsts : disjointDomains (M .δ₀ initial) (M' .δ₀ initial))
     where
     MDFA = Aut M
@@ -209,7 +209,7 @@ module _
               (λ init∉Dom → ¬FirstAut M' c {!!})
               (disjoint-firsts c)
           )
-          (Sum.map (¬NullAut M) (¬NullAut M') notBothNull)
+          (Sum.map (¬NullAut M) (¬NullAut M') {!!})
 
     ⊕Aut : ImplicitDeterministicAutomaton (⟨ Q ⟩ ⊎ ⟨ Q' ⟩)
     ⊕Aut .acc (inl q) = M .acc q
@@ -252,16 +252,74 @@ module _
       ⟦ initial ⟧M' = Trace ⊕DFA true (just initial)
       ⟦ ↑ q' ⟧M' = Trace ⊕DFA true (just (↑ inr q'))
 
+        -- ⊕ᴰ-elim λ {
+        --     stop → ?
+        --   ; step → ?
+        -- }
       ⊕Alg : AutAlg ⊕Aut ⟦_⟧⊕
       ⊕Alg nothing = ⊥-elim ∘g AutAlg-nothing ⊕Aut
-      ⊕Alg (just initial) = {!!}
+      ⊕Alg (just initial) =
+        ⊕ᴰ-elim λ {
+            stop →
+              Sum.rec
+                (λ {Eq.refl →
+                  ⊕ᴰ-elim λ {
+                    (lift Eq.refl) →
+                      ⊕-inr
+                      ∘g STOP M'DFA
+                      ∘g lowerG ∘g lowerG
+                  }
+                })
+                (λ {Eq.refl →
+                  ⊕ᴰ-elim λ {(lift x) →
+                    {!!}
+                    ∘g lowerG ∘g lowerG
+                  }
+                })
+                notBothNull
+              -- ⊕ᴰ-elim λ {
+              --   (lift (atLeastOneNull)) →
+              --     Sum.rec
+              --       (λ {Eq.refl →
+              --           {!!}
+              --           })
+              --       (λ {Eq.refl → {!!}})
+              --       notBothNull
+              --     ∘g lowerG ∘g lowerG
+              -- }
+          ; step → {!!}
+        }
       ⊕Alg (just (↑ (inl q))) = {!!}
+        -- ⊕ᴰ-elim λ {
+        --     stop → ?
+        --   ; step → ?
+        -- }
       ⊕Alg (just (↑ (inr q'))) = {!!}
+        -- ⊕ᴰ-elim λ {
+        --     stop → ?
+        --   ; step → ?
+        -- }
 
       MAlg : AutAlg M ⟦_⟧M
       MAlg nothing = ⊥-elim ∘g AutAlg-nothing M
-      MAlg (just initial) = {!!}
-      MAlg (just (↑ q)) = {!!}
+      MAlg (just initial) =
+        ⊕ᴰ-elim λ {
+            stop → ⊕ᴰ-elim λ {
+              (lift Eq.refl) →
+                STOP ⊕DFA
+                ∘g lowerG ∘g lowerG
+            }
+          ; step → ⊕ᴰ-elim λ {
+              (lift c) →
+                {!!}
+                ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+            }
+        }
+      MAlg (just (↑ q)) =
+        ⊕ᴰ-elim λ {
+            stop → {!!}
+          ; step → {!!}
+        }
 
       M'Alg : AutAlg M' ⟦_⟧M'
       M'Alg nothing = ⊥-elim ∘g AutAlg-nothing M'

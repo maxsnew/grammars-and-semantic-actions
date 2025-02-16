@@ -208,9 +208,9 @@ module _
 
 opaque
   unfolding ⊗-intro
-  length-repeat'-char : ∀ n w → (repeat' char n) w → length w ≡ (lower n)
-  length-repeat'-char (lift zero) w (roll .w (lift (lift pε))) = ε-length0 w pε
-  length-repeat'-char (lift (suc n)) w (roll .w (s , (lift p) , (lift x))) =
+  length-repeat'-char : ∀ n w → (repeat' char n) w → length w ≡ n
+  length-repeat'-char zero w (roll .w (lift (lift pε))) = ε-length0 w pε
+  length-repeat'-char (suc n) w (roll .w (s , (lift p) , (lift x))) =
     cong length (s .snd)
     ∙ length++ (s .fst .fst) (s .fst .snd)
     ∙ cong₂ _+_ ∣s₁₁∣ ∣s₁₂∣
@@ -219,7 +219,7 @@ opaque
     ∣s₁₁∣ = char-length1 (s .fst .fst) p
 
     ∣s₁₂∣ : length (s .fst .snd) ≡ n
-    ∣s₁₂∣ = length-repeat'-char (lift n) (s .fst .snd) x
+    ∣s₁₂∣ = length-repeat'-char n (s .fst .snd) x
 
 
 isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
@@ -231,27 +231,27 @@ isLang⌈⌉ (c ∷ w) = isLang-lit⊗lang (isLang⌈⌉ w)
 ⌈w⌉→string' (c ∷ w) = CONS ∘g literal→char c ,⊗ ⌈w⌉→string' w
 
 isLang-repeat'-char : ∀ n → isLang (repeat' char n)
-isLang-repeat'-char (lift zero) =
+isLang-repeat'-char zero =
   isLang≅
     (LiftG≅2 _ _ _ ≅∙ sym≅ (unroll≅ _ _))
     isLangε
-isLang-repeat'-char (lift (suc n)) =
+isLang-repeat'-char (suc n) =
   isLang≅
     (LiftG⊗LiftG≅ _ _ _ _  ≅∙ sym≅ (unroll≅ _ _))
-    (isLang-char⊗lang (isLang-repeat'-char (lift n)))
+    (isLang-char⊗lang (isLang-repeat'-char n))
 
 opaque
   unfolding _&_
   disjoint-summands-repeat'-char : disjointSummands⊕ᴰ (repeat' char)
-  disjoint-summands-repeat'-char (lift n) (lift m) n≢m w (pn , pm) =
-    Empty.rec (n≢m (cong lift (sym (length-repeat'-char (lift n) w pn) ∙ length-repeat'-char (lift m) w pm)))
+  disjoint-summands-repeat'-char n m n≢m w (pn , pm) =
+    Empty.rec (n≢m (sym (length-repeat'-char n w pn) ∙ length-repeat'-char m w pm))
 
 isLang-repeat-char : isLang (repeat char)
 isLang-repeat-char =
   mkIsLang⊕ᴰ
     disjoint-summands-repeat'-char
     isLang-repeat'-char
-    (discreteLift discreteℕ)
+    discreteℕ
 
 isLang-string : isLang string
 isLang-string =
