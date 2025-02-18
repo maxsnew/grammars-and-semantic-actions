@@ -6,6 +6,9 @@ module DFA.DeterministicRegularExpression.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Function
+
+open import Cubical.Functions.Embedding
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.Constructors
@@ -17,6 +20,7 @@ import Cubical.Data.Empty as Empty
 import Cubical.Data.Equality as Eq
 open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.Maybe as Maybe hiding (rec)
+open import Cubical.Data.Maybe.More
 open import Cubical.Data.Maybe.PartialFunction
 
 open import Cubical.Relation.Nullary.Base
@@ -75,7 +79,7 @@ module _
     ⊥Alg nothing = ⊥-elim ∘g AutAlg-nothing ⊥Aut
     ⊥Alg (just initial) =
       ⊕ᴰ-elim (λ {
-        stop → ⊕ᴰ-elim λ { (lift ())}
+        stop → ⊕ᴰ-elim λ { ()}
       ; step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (lowerG ∘g lowerG))
       })
 
@@ -160,14 +164,14 @@ module _
           stop → ⊕ᴰ-elim λ {()}
         ; step →
           ⊕ᴰ-elim λ {
-            (lift c') →
+            c' →
               c≡c'? c'
                 {C = λ x →
                   ＂ c' ＂ ⊗ implicitFailCarrier litAut ⟦_⟧st (map-Maybe ↑_ x) ⊢ ＂ c ＂
                 }
                 (λ c≡c' → transportG (cong ＂_＂ (sym c≡c')) ∘g ⊗-unit-r)
                 (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ lowerG)
-              ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+              ∘g lowerG ,⊗ lowerG
             }
         })
       litAlg (just (↑ _)) =
@@ -196,20 +200,28 @@ module _
     (notBothNull : (M .null Eq.≡ false) ⊎ (M' .null Eq.≡ false))
     (disjoint-firsts : disjointDomains (M .δ₀ initial) (M' .δ₀ initial))
     where
-    MDFA = Aut M
-    M'DFA = Aut M'
-
     private
+      MDFA = Aut M
+      M'DFA = Aut M'
+
+      Q⊕ : FinSet (ℓ-max ℓ ℓ')
+      Q⊕ .fst = ⟨ Q ⟩ ⊎ ⟨ Q' ⟩
+      Q⊕ .snd = isFinSet⊎ Q Q'
+
       disjointParses : disjoint (Parse MDFA) (Parse M'DFA)
       disjointParses =
         #→disjoint
           (λ c →
             Sum.map
-              (λ init∉Dom → ¬FirstAut M c {!!})
-              (λ init∉Dom → ¬FirstAut M' c {!!})
+              (¬FirstAut M c)
+              (¬FirstAut M' c)
               (disjoint-firsts c)
           )
-          (Sum.map (¬NullAut M) (¬NullAut M') {!!})
+          (Sum.map
+            (¬NullAut M ∘ Eq.eqToPath)
+            (¬NullAut M' ∘ Eq.eqToPath)
+            notBothNull
+            )
 
     ⊕Aut : ImplicitDeterministicAutomaton (⟨ Q ⟩ ⊎ ⟨ Q' ⟩)
     ⊕Aut .acc (inl q) = M .acc q
@@ -239,155 +251,225 @@ module _
           {!!}
         )
       where
+      -- ⟦_⟧⊕ : ⟨ mkFinSet (Q⊕ .snd) ⟩ → Bool → Grammar (ℓ-max ℓ ℓ')
+      -- ⟦ nothing ⟧⊕ b = ⊤*
+      -- ⟦ just initial ⟧⊕ b = Trace MDFA b (just initial) ⊕ Trace M'DFA b (just initial)
+      -- ⟦ just (↑ inl q) ⟧⊕ b = LiftG ℓ' (Trace MDFA b (just (↑ q)))
+      -- ⟦ just (↑ inr q') ⟧⊕ b = LiftG ℓ (Trace M'DFA b (just (↑ q')))
+
+      -- ⊕Alg : {!TraceAlg ⊕DFA !}
+      -- ⊕Alg = {!!}
+
       ⟦_⟧⊕ : FreeInitial (⟨ Q ⟩ ⊎ ⟨ Q' ⟩) → Grammar (ℓ-max ℓ ℓ')
       ⟦ initial ⟧⊕ = Parse MDFA ⊕ Parse M'DFA
       ⟦ ↑ (inl q) ⟧⊕ = LiftG ℓ' (Trace MDFA true (just (↑ q)))
       ⟦ ↑ (inr q') ⟧⊕ = LiftG ℓ (Trace M'DFA true (just (↑ q')))
 
       ⟦_⟧M : FreeInitial ⟨ Q ⟩ → Grammar (ℓ-max ℓ ℓ')
-      ⟦ initial ⟧M = Trace ⊕DFA true (just initial)
+      ⟦ initial ⟧M = Parse ⊕DFA
       ⟦ ↑ q ⟧M = Trace ⊕DFA true (just (↑ inl q))
 
       ⟦_⟧M' : FreeInitial ⟨ Q' ⟩ → Grammar (ℓ-max ℓ ℓ')
-      ⟦ initial ⟧M' = Trace ⊕DFA true (just initial)
+      ⟦ initial ⟧M' = Parse ⊕DFA
       ⟦ ↑ q' ⟧M' = Trace ⊕DFA true (just (↑ inr q'))
 
-        -- ⊕ᴰ-elim λ {
-        --     stop → ?
-        --   ; step → ?
-        -- }
-      ⊕Alg : AutAlg ⊕Aut ⟦_⟧⊕
-      ⊕Alg nothing = ⊥-elim ∘g AutAlg-nothing ⊕Aut
-      ⊕Alg (just initial) =
-        ⊕ᴰ-elim λ {
-            stop →
-              Sum.rec
-                (λ {Eq.refl →
-                  ⊕ᴰ-elim λ {
-                    (lift Eq.refl) →
-                      ⊕-inr
-                      ∘g STOP M'DFA
-                      ∘g lowerG ∘g lowerG
-                  }
-                })
-                (λ {Eq.refl →
-                  ⊕ᴰ-elim λ {(lift x) →
-                    {!!}
-                    ∘g lowerG ∘g lowerG
-                  }
-                })
-                notBothNull
-              -- ⊕ᴰ-elim λ {
-              --   (lift (atLeastOneNull)) →
-              --     Sum.rec
-              --       (λ {Eq.refl →
-              --           {!!}
-              --           })
-              --       (λ {Eq.refl → {!!}})
-              --       notBothNull
-              --     ∘g lowerG ∘g lowerG
-              -- }
-          ; step → {!!}
-        }
-      ⊕Alg (just (↑ (inl q))) = {!!}
-        -- ⊕ᴰ-elim λ {
-        --     stop → ?
-        --   ; step → ?
-        -- }
-      ⊕Alg (just (↑ (inr q'))) = {!!}
-        -- ⊕ᴰ-elim λ {
-        --     stop → ?
-        --   ; step → ?
-        -- }
+      initialStep : (c : ⟨ Alphabet ⟩) →
+        ＂ c ＂ ⊗ _ ⊢ Parse MDFA ⊕ Parse M'DFA
+      initialStep c with union⊎ (M .δ₀ initial) (M' .δ₀ initial) disjoint-firsts c in eq
+      initialStep c | nothing =
+        ⊥-elim
+        ∘g ⊗⊥
+        ∘g id ,⊗
+            (lowerG
+            ∘g transportG
+              (cong (λ z → implicitFailCarrier ⊕Aut ⟦_⟧⊕ (map-Maybe ↑_ z))
+              (Eq.eqToPath eq)))
+      initialStep c | just (inl q) with
+        {!isEmbedding→Inj
+          isEmbedding-just
+          q
 
-      MAlg : AutAlg M ⟦_⟧M
-      MAlg nothing = ⊥-elim ∘g AutAlg-nothing M
-      MAlg (just initial) =
-        ⊕ᴰ-elim λ {
-            stop → ⊕ᴰ-elim λ {
-              (lift Eq.refl) →
-                STOP ⊕DFA
-                ∘g lowerG ∘g lowerG
-            }
-          ; step → ⊕ᴰ-elim λ {
-              (lift c) →
-                {!!}
-                ∘g (lowerG ∘g lowerG) ,⊗ lowerG
-            }
-        }
-      MAlg (just (↑ q)) =
-        ⊕ᴰ-elim λ {
-            stop → {!!}
-          ; step → {!!}
-        }
+          !}
+        in eq'
+        -- with mkFiber-f _ _ disjoint-firsts c
+        --   (q , (sym (Eq.eqToPath eq))) in eq'
+      initialStep c | just (inl q) | x =
+        ⊕-inl
+        ∘g STEP (Aut M) c
+        ∘g id ,⊗ {!x!}
+        -- ∘g id ,⊗
+        --     (transportG
+        --       (cong (λ z → Trace MDFA true (map-Maybe ↑_ z))
+        --       {!!}))
+        ∘g id ,⊗
+            (lowerG
+            ∘g transportG
+              (cong (λ z → implicitFailCarrier ⊕Aut ⟦_⟧⊕ (map-Maybe ↑_ z))
+              (Eq.eqToPath eq)))
+      initialStep c | just (inr q') =
+        {!!}
+        ∘g {!!}
 
-      M'Alg : AutAlg M' ⟦_⟧M'
-      M'Alg nothing = ⊥-elim ∘g AutAlg-nothing M'
-      M'Alg (just initial) = {!!}
-      M'Alg (just (↑ q)) = {!!}
+  --     ⊕Alg : AutAlg ⊕Aut ⟦_⟧⊕
+  --     ⊕Alg nothing = ⊥-elim ∘g AutAlg-nothing ⊕Aut
+  --     ⊕Alg (just initial) =
+  --       ⊕ᴰ-elim λ {
+  --           stop →
+  --             Sum.rec
+  --               (λ {Eq.refl →
+  --                 ⊕ᴰ-elim λ {
+  --                   Eq.refl →
+  --                     ⊕-inr
+  --                     ∘g STOP M'DFA
+  --                     ∘g lowerG ∘g lowerG
+  --                 }
+  --               })
+  --               (λ {Eq.refl →
+  --                 ⊕ᴰ-elim λ {x →
+  --                   ⊕-inl
+  --                   ∘g
+  --                     Eq.transport
+  --                       (λ b → ε ⊢ Trace MDFA b (just initial))
+  --                       (Eq.sym (x Eq.∙ or-false))
+  --                       (STOP MDFA {q = just initial})
+  --                   ∘g lowerG ∘g lowerG
+  --                 }
+  --               })
+  --               notBothNull
+  --         ; step → ⊕ᴰ-elim (λ c →
+  --           initialStep c
+  --           -- Sum.rec
+  --           --   (λ {
+  --           --     (inl q , x) →
+  --           --       ⊕-inl
+  --           --       ∘g STEP MDFA c
+  --           --       ∘g id ,⊗ transportG (cong (Trace MDFA true)
+  --           --                  {!union⊎-map-fiber ? ? ? ?
+  --           --                  (map-Maybe-fiber {f = ↑_} _ (_ , sym x)) !}
+  --           --                  )
+  --           --       ∘g id ,⊗ lowerG
+  --           --       ∘g id ,⊗ transportG (cong (implicitFailCarrier ⊕Aut ⟦_⟧⊕) x)
+  --           --   ; (inr q' , x) → {!!}
+  --           --   })
+  --           --   (λ x →
+  --           --     ⊥-elim
+  --           --     ∘g ⊗⊥
+  --           --     ∘g id ,⊗ lowerG
+  --           --     ∘g id ,⊗ transportG (cong (implicitFailCarrier ⊕Aut ⟦_⟧⊕) x)
+  --           --   )
+  --           --   (noMapsIntoInit ⊕Aut (just initial) c)
+  --           ∘g lowerG ,⊗ lowerG
+  --         )
+  --       }
+  --     ⊕Alg (just (↑ (inl q))) =
+  --       ⊕ᴰ-elim λ {
+  --           stop → ⊕ᴰ-elim (λ {acc →
+  --             liftG
+  --             ∘g Eq.transport (λ b → ε ⊢ Trace MDFA b (just (↑ q)))
+  --                   (Eq.sym acc)
+  --                   (STOP MDFA)
+  --             ∘g lowerG ∘g lowerG
+  --           })
+  --         ; step → ⊕ᴰ-elim (λ c →
+  --           liftG
+  --           ∘g {!!}
+  --           ∘g lowerG ,⊗ lowerG
+  --         )
+  --       }
+  --     ⊕Alg (just (↑ (inr q'))) = {!!}
+  --       -- ⊕ᴰ-elim λ {
+  --       --     stop → ?
+  --       --   ; step → ?
+  --       -- }
 
-      -- toDFA : ∀ q → ⟦ q ⟧st ⊢ Trace litDFA true (just q)
-      -- toDFA initial =
-      --   STEP litDFA {q = just initial} c
-      --   ∘g id ,⊗
-      --     transportG
-      --       (cong (λ z → Trace litDFA true z)
-      --         (elim-≡ c {C = λ x → just (↑ _) ≡ map-Maybe ↑_ x} refl refl)
-      --       )
-      --   ∘g id ,⊗ STOP litDFA {q = just (↑ _)}
-      --   ∘g ⊗-unit-r⁻
-      -- toDFA (↑ _) = STOP litDFA
+  --     MAlg : AutAlg M ⟦_⟧M
+  --     MAlg nothing = ⊥-elim ∘g AutAlg-nothing M
+  --     MAlg (just initial) =
+  --       ⊕ᴰ-elim λ {
+  --           stop → ⊕ᴰ-elim λ {
+  --             Eq.refl →
+  --               STOP ⊕DFA
+  --               ∘g lowerG ∘g lowerG
+  --           }
+  --         ; step → ⊕ᴰ-elim λ {
+  --             c →
+  --               {!!}
+  --               ∘g lowerG ,⊗ lowerG
+  --           }
+  --       }
+  --     MAlg (just (↑ q)) =
+  --       ⊕ᴰ-elim λ {
+  --           stop → {!!}
+  --         ; step → {!!}
+  --       }
+
+  -- --     M'Alg : AutAlg M' ⟦_⟧M'
+  -- --     M'Alg nothing = ⊥-elim ∘g AutAlg-nothing M'
+  -- --     M'Alg (just initial) = {!!}
+  -- --     M'Alg (just (↑ q)) = {!!}
+
+  -- --     -- toDFA : ∀ q → ⟦ q ⟧st ⊢ Trace litDFA true (just q)
+  -- --     -- toDFA initial =
+  -- --     --   STEP litDFA {q = just initial} c
+  -- --     --   ∘g id ,⊗
+  -- --     --     transportG
+  -- --     --       (cong (λ z → Trace litDFA true z)
+  -- --     --         (elim-≡ c {C = λ x → just (↑ _) ≡ map-Maybe ↑_ x} refl refl)
+  -- --     --       )
+  -- --     --   ∘g id ,⊗ STOP litDFA {q = just (↑ _)}
+  -- --     --   ∘g ⊗-unit-r⁻
+  -- --     -- toDFA (↑ _) = STOP litDFA
 
 
 
-  module _
-    {Q : FinSet ℓ}
-    {Q' : FinSet ℓ'}
-    (M : ImplicitDeterministicAutomaton ⟨ Q ⟩)
-    (M' : ImplicitDeterministicAutomaton ⟨ Q' ⟩)
-    (notNullM : M .null ≡ false)
-    (seq-unambig :
-      ∀ (q : ⟨ Q ⟩) →
-      M .acc q ≡ true →
-      disjointDomains (M .δ₀ (↑ q)) (M' .δ₀ initial))
-    where
+  -- -- module _
+  -- --   {Q : FinSet ℓ}
+  -- --   {Q' : FinSet ℓ'}
+  -- --   (M : ImplicitDeterministicAutomaton ⟨ Q ⟩)
+  -- --   (M' : ImplicitDeterministicAutomaton ⟨ Q' ⟩)
+  -- --   (notNullM : M .null ≡ false)
+  -- --   (seq-unambig :
+  -- --     ∀ (q : ⟨ Q ⟩) →
+  -- --     M .acc q ≡ true →
+  -- --     disjointDomains (M .δ₀ (↑ q)) (M' .δ₀ initial))
+  -- --   where
 
-    ⊗Aut : ImplicitDeterministicAutomaton (⟨ Q ⟩ ⊎ ⟨ Q' ⟩)
-    ⊗Aut .acc (inl q) = if M' .null then M .acc q else false
-    ⊗Aut .acc (inr q') = M' .acc q'
-    ⊗Aut .null = false
-    ⊗Aut .δ₀ initial c = map-Maybe inl (M .δ₀ initial c)
-    ⊗Aut .δ₀ (↑ (inl q)) =
-      if' M .acc q then
-        (λ qIsAcc → union⊎ (M .δ₀ (↑ q)) (M' .δ₀ initial) (seq-unambig q qIsAcc))
-        else
-        (λ _ →
-          (λ c → map-Maybe inl (M .δ₀ (↑ q) c))
-        )
-    ⊗Aut .δ₀ (↑ (inr q')) c = map-Maybe inr (M' .δ₀ (↑ q') c)
+  -- --   ⊗Aut : ImplicitDeterministicAutomaton (⟨ Q ⟩ ⊎ ⟨ Q' ⟩)
+  -- --   ⊗Aut .acc (inl q) = if M' .null then M .acc q else false
+  -- --   ⊗Aut .acc (inr q') = M' .acc q'
+  -- --   ⊗Aut .null = false
+  -- --   ⊗Aut .δ₀ initial c = map-Maybe inl (M .δ₀ initial c)
+  -- --   ⊗Aut .δ₀ (↑ (inl q)) =
+  -- --     if' M .acc q then
+  -- --       (λ qIsAcc → union⊎ (M .δ₀ (↑ q)) (M' .δ₀ initial) (seq-unambig q qIsAcc))
+  -- --       else
+  -- --       (λ _ →
+  -- --         (λ c → map-Maybe inl (M .δ₀ (↑ q) c))
+  -- --       )
+  -- --   ⊗Aut .δ₀ (↑ (inr q')) c = map-Maybe inr (M' .δ₀ (↑ q') c)
 
-    ⊗DFA : DFAOver (mkFinSet (isFinSet⊎ Q Q'))
-    ⊗DFA = Aut ⊗Aut
+  -- --   ⊗DFA : DFAOver (mkFinSet (isFinSet⊎ Q Q'))
+  -- --   ⊗DFA = Aut ⊗Aut
 
-  module _
-    {Q : FinSet ℓ}
-    (M : ImplicitDeterministicAutomaton ⟨ Q ⟩)
-    (notNullM : M .null ≡ false)
-    (seq-unambig :
-      ∀ (q : ⟨ Q ⟩) →
-      M .acc q ≡ true →
-      disjointDomains (M .δ₀ (↑ q)) (M .δ₀ initial))
-    where
+  -- -- module _
+  -- --   {Q : FinSet ℓ}
+  -- --   (M : ImplicitDeterministicAutomaton ⟨ Q ⟩)
+  -- --   (notNullM : M .null ≡ false)
+  -- --   (seq-unambig :
+  -- --     ∀ (q : ⟨ Q ⟩) →
+  -- --     M .acc q ≡ true →
+  -- --     disjointDomains (M .δ₀ (↑ q)) (M .δ₀ initial))
+  -- --   where
 
-    *Aut : ImplicitDeterministicAutomaton ⟨ Q ⟩
-    *Aut .acc = M .acc
-    *Aut .null = true
-    *Aut .δ₀ initial = M .δ₀ initial
-    *Aut .δ₀ (↑ q) =
-      if' M .acc q then
-        (λ qIsAcc → union (M .δ₀ (↑ q)) (M .δ₀ initial) (seq-unambig q qIsAcc))
-        else
-        (λ _ → M .δ₀ (↑ q))
+  -- --   *Aut : ImplicitDeterministicAutomaton ⟨ Q ⟩
+  -- --   *Aut .acc = M .acc
+  -- --   *Aut .null = true
+  -- --   *Aut .δ₀ initial = M .δ₀ initial
+  -- --   *Aut .δ₀ (↑ q) =
+  -- --     if' M .acc q then
+  -- --       (λ qIsAcc → union (M .δ₀ (↑ q)) (M .δ₀ initial) (seq-unambig q qIsAcc))
+  -- --       else
+  -- --       (λ _ → M .δ₀ (↑ q))
 
-    *DFA : DFAOver (mkFinSet (Q .snd))
-    *DFA = Aut *Aut
+  -- --   *DFA : DFAOver (mkFinSet (Q .snd))
+  -- --   *DFA = Aut *Aut

@@ -40,10 +40,10 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   data Tag : Type ℓ where
     stop step : Tag
 
-  TraceTy : Bool → (q : Q) → Functor Q
+  TraceTy : Bool → (q : Q) → Functor Q ℓ
   TraceTy b q = ⊕e Tag λ {
-      stop → ⊕e (Lift (b Eq.≡ isAcc q)) λ { (lift acc) → k ε* }
-      ; step → ⊕e (Lift ⟨ Alphabet ⟩) (λ { (lift c) → ⊗e (k (literal* c)) (Var (δ q c)) }) }
+      stop → ⊕e (b Eq.≡ isAcc q) λ { acc → k ε* }
+      ; step → ⊕e ⟨ Alphabet ⟩ (λ { c → ⊗e (k (＂ c ＂)) (Var (δ q c)) }) }
 
   Trace : Bool → (q : Q) → Grammar ℓ
   Trace b = μ (TraceTy b)
@@ -52,7 +52,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   STOP =
     roll
     ∘g ⊕ᴰ-in stop
-    ∘g ⊕ᴰ-in (lift (Eq.refl))
+    ∘g ⊕ᴰ-in (Eq.refl)
     ∘g liftG ∘g liftG
 
   STEP :
@@ -60,7 +60,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
     {q : Q} →
     (c : ⟨ Alphabet ⟩) →
     ＂ c ＂ ⊗ Trace b (δ q c) ⊢ Trace b q
-  STEP c = roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in (lift c) ∘g (liftG ∘g liftG) ,⊗ liftG
+  STEP c = roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in c ∘g liftG ,⊗ liftG
 
   Parse : Grammar _
   Parse = Trace true init
@@ -68,16 +68,19 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   ParseAlg : (Q → Grammar ℓ') → Type (ℓ-max ℓ ℓ')
   ParseAlg g = Algebra (TraceTy true) g
 
+  TraceAlg : (Q → Grammar ℓ') → Bool → Type (ℓ-max ℓ ℓ')
+  TraceAlg g b = Algebra (TraceTy b) g
+
   open StrongEquivalence
   parseAlg : Algebra (*Ty char) λ _ → &[ q ∈ Q ] ⊕[ b ∈ Bool ] Trace b q
   parseAlg _ = ⊕ᴰ-elim (λ {
     nil → &ᴰ-in (λ q →
       ⊕ᴰ-in (isAcc q) ∘g
-      roll ∘g ⊕ᴰ-in stop ∘g ⊕ᴰ-in (lift Eq.refl) ∘g
+      roll ∘g ⊕ᴰ-in stop ∘g ⊕ᴰ-in Eq.refl ∘g
       liftG ∘g liftG ∘g lowerG ∘g lowerG)
     ; cons → &ᴰ-in (λ q → (
       ⊕ᴰ-elim (λ c →
-        ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in (lift c) ∘g (liftG ∘g liftG) ,⊗ liftG)
+        ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in c ∘g liftG ,⊗ liftG)
           ∘g ⊕ᴰ-distR .fun
           ∘g id ,⊗ &ᴰ-π (δ q c))
       ∘g ⊕ᴰ-distL .fun)
@@ -91,18 +94,18 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   printAlg : ∀ b → Algebra (TraceTy b) (λ _ → string)
   printAlg b q = ⊕ᴰ-elim λ {
-      stop → ⊕ᴰ-elim (λ { (lift Eq.refl) → NIL ∘g lowerG ∘g lowerG })
-    ; step → CONS ∘g ⊕ᴰ-elim (λ { (lift c) → ⊕ᴰ-in c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG }) }
+      stop → ⊕ᴰ-elim (λ { Eq.refl → NIL ∘g lowerG ∘g lowerG })
+    ; step → CONS ∘g ⊕ᴰ-elim (λ { c → ⊕ᴰ-in c ,⊗ id ∘g lowerG ,⊗ lowerG }) }
 
   print : ∀ b → (q : Q) → Trace b q ⊢ string
   print b q = rec (TraceTy b) (printAlg b) q
 
   ⊕ᴰAlg : ∀ b → Algebra (TraceTy b) (λ q → ⊕[ b ∈ Bool ] Trace b q)
   ⊕ᴰAlg b q = ⊕ᴰ-elim (λ {
-      stop → ⊕ᴰ-elim (λ { (lift Eq.refl) → ⊕ᴰ-in b ∘g roll ∘g ⊕ᴰ-in stop ∘g ⊕ᴰ-in (lift Eq.refl) })
+      stop → ⊕ᴰ-elim (λ { Eq.refl → ⊕ᴰ-in b ∘g roll ∘g ⊕ᴰ-in stop ∘g ⊕ᴰ-in Eq.refl })
     ; step → ⊕ᴰ-elim (λ c →
-        ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in c ∘g (liftG ∘g liftG) ,⊗ liftG)
-          ∘g ⊕ᴰ-distR .fun ∘g (lowerG ∘g lowerG) ,⊗ lowerG) })
+        ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g roll ∘g ⊕ᴰ-in step ∘g ⊕ᴰ-in c ∘g liftG ,⊗ liftG)
+          ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG) })
 
   Trace≅string : (q : Q) → StrongEquivalence (⊕[ b ∈ Bool ] Trace b q) string
   Trace≅string q .fun = ⊕ᴰ-elim (λ b → print b q)
@@ -120,13 +123,13 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
           ((λ q'  → &ᴰ-π q' ∘g parse ∘g print b q') ,
           λ q' → ⊕ᴰ≡ _ _ (λ {
             stop → funExt λ w → funExt λ {
-              ((lift Eq.refl) , p) → refl}
-          ; step → ⊕ᴰ≡ _ _ (λ { (lift c) → refl })
+              (Eq.refl , p) → refl}
+          ; step → ⊕ᴰ≡ _ _ (λ { c → refl })
           }))
           ((λ q' → ⊕ᴰ-in b) ,
           λ q' → ⊕ᴰ≡ _ _ λ {
             stop → funExt (λ w → funExt λ {
-              ((lift Eq.refl) , p) → refl})
+              (Eq.refl , p) → refl})
           ; step → refl })
           q
 

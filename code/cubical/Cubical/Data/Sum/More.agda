@@ -8,7 +8,7 @@ open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Functions.Embedding
 
-open import Cubical.Data.Sum.Base as ⊎
+open import Cubical.Data.Sum
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Sigma
@@ -21,8 +21,7 @@ private
   variable
     ℓa ℓb ℓc ℓd ℓe : Level
     A : Type ℓa
-    B : A → Type ℓb
-    C : A → Type ℓc
+    B : Type ℓb
 
 module _
   (A : Type ℓa)
@@ -41,3 +40,7 @@ module _
   ΣDistR⊎Iso .rightInv (inr (a , c)) = refl
   ΣDistR⊎Iso .leftInv (a , inl b) = refl
   ΣDistR⊎Iso .leftInv (a , inr c) = refl
+
+inl≢inr : {a : A} {b : B} → inl a ≡ inr b → ⊥
+inl≢inr {a = a} {b = b} ⊎≡ =
+  lower (⊎Path.encode (inl a) (inr b) ⊎≡)
