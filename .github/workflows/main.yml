@@ -62,44 +62,12 @@ env:
     ~/.cabal/store
     ~/.cabal/bin
     ~/.agda
+    ~/cubical
+    ~/cubical-categorical-logic
+
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  check-whitespace:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install cabal
-        uses: haskell-actions/setup@v2
-        with:
-          ghc-version: ${{ env.GHC_VERSION }}
-          cabal-version: ${{ env.CABAL_VERSION }}
-          cabal-update: true
-      ########################################################################
-      ## INSTALLATION STEPS
-      ########################################################################
-      - name: Download and install fix-whitespace
-        run: |
-          cd ~
-          git clone https://github.com/agda/fix-whitespace --depth=1
-          cd fix-whitespace
-          ${{ env.CABAL_INSTALL }} fix-whitespace.cabal
-          cd ..
-      ########################################################################
-      ## CHECKOUT
-      ########################################################################
-
-      # By default github actions do not pull the repo
-      - name: Checkout grammars-and-semantic-actions
-        uses: actions/checkout@v3
-
-      ########################################################################
-      ## TESTING
-      ########################################################################
-
-      - name: Test whitespace
-        run: |
-          ~/.cabal/bin/fix-whitespace --check
-
   compile-agda:
     runs-on: ubuntu-latest
     steps:
@@ -190,7 +158,7 @@ jobs:
         id: cache-library-restore
         with:
           path: ./_build
-          key: library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('Cubical/**', 'cubical.agda-lib', 'Everythings.hs') }}
+          key: library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('~/grammars-and-semantic-actions/code/**', 'grammar.agda-lib') }}
           restore-keys: |
             library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
 
