@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - main
-      - impl
     paths-ignore:
       - 'paper/*'
       - 'notes/*'
@@ -62,6 +61,7 @@ env:
     ~/.cabal/packages
     ~/.cabal/store
     ~/.cabal/bin
+    ~/.agda
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -109,11 +109,24 @@ jobs:
           ghc-version: ${{ env.GHC_VERSION }}
           cabal-version: ${{ env.CABAL_VERSION }}
           cabal-update: true
+
+      # This caching step allows us to save a lot of building time by only
+      # rebuilding Agda, and re-checking unchanged library files if
+      # absolutely necessary i.e. if we change either the version of Agda,
+      # ghc, or cabal that we want to use for the build.
+      - name: Restore external dependencies cache
+        uses: actions/cache/restore@v3
+        id: cache-external-restore
+        with:
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}
+
       ########################################################################
       ## INSTALLATION STEPS
       ########################################################################
 
       - name: Download and install Agda from github
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/agda/agda --branch ${{ env.AGDA_BRANCH }} --depth=1
           cd agda
@@ -124,6 +137,7 @@ jobs:
           rm -rf agda
 
       - name: Download Cubical from github
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run : |
           cd ~
           git clone https://github.com/agda/cubical --branch master
@@ -133,6 +147,7 @@ jobs:
           echo "CUBICAL_DIR=$PWD/cubical" >> "$GITHUB_ENV"
 
       - name: Download categorical-logic from github
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run : |
           cd ~
           git clone https://github.com/maxsnew/cubical-categorical-logic --branch main
@@ -142,12 +157,21 @@ jobs:
           echo "CATLOG_DIR=$PWD/cubical-categorical-logic" >> "$GITHUB_ENV"
 
       - name: Set up Agda dependencies
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run : |
           mkdir ~/.agda
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
           echo "$CATLOG_DIR/cubical-categorical-logic.agda-lib" >> ~/.agda/libraries
           echo "$GITHUB_WORKSPACE/code/cubical/grammar.agda-lib" >> ~/.agda/libraries
+
+      - name: Save external dependencies cache
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        id: cache-external-save
+        with:
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ steps.cache-external-restore.outputs.cache-primary-key }}
 
       ########################################################################
       ## CHECKOUT
@@ -161,6 +185,15 @@ jobs:
       ## TESTING
       ########################################################################
 
+      - name: Restore library cache
+        uses: actions/cache/restore@v3
+        id: cache-library-restore
+        with:
+          path: ./_build
+          key: library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('Cubical/**', 'cubical.agda-lib', 'Everythings.hs') }}
+          restore-keys: |
+            library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+
       - name: Put cabal programs in PATH
         run: echo "~/.cabal/bin" >> $GITHUB_PATH
 
@@ -168,3 +201,11 @@ jobs:
         run: |
           cd code/cubical && make quicktest \
             AGDA='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
+
+      - name: Save library cache
+        if: steps.cache-library-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        id: cache-library-save
+        with:
+          path: ./_build
+          key: ${{ steps.cache-library-restore.outputs.cache-primary-key }}
