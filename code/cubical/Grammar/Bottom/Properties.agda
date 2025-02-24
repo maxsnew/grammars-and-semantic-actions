@@ -5,11 +5,14 @@ open import Cubical.Foundations.Structure
 module Grammar.Bottom.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
+open import Cubical.Data.Sum
 
 open import Grammar.Base Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom.Base Alphabet
 open import Grammar.Product Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearFunction Alphabet
 open import Grammar.Function Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Equivalence.Base Alphabet
@@ -75,6 +78,9 @@ is-initial-⊥&g g .snd e = p ∙ cong (⊕-elim f e ∘g_) inl≡inr-⊥&g ∙ 
 
 open isStrongEquivalence
 
+uninhabited : (g : Grammar ℓg) → Type ℓg
+uninhabited g = g ⊢ ⊥
+
 opaque
   unfolding _&_ &-intro
   -- Every map into ⊥ is a strong equivalence
@@ -97,7 +103,7 @@ opaque
 
   -- Any g with a map into ⊥ is iso to ⊥, so it is also initial
   g⊢⊥→is-initial :
-    g ⊢ ⊥ →
+    uninhabited g →
     is-initial g
   g⊢⊥→is-initial e {h = h} .fst = ⊥-elim {g = h} ∘g e
   g⊢⊥→is-initial e {h = h} .snd e' =
@@ -106,15 +112,49 @@ opaque
     p : ⊥-elim ≡ e' ∘g ⊥-elim
     p = is-initial→propHoms is-initial-⊥ _ _
 
+
 opaque
   unfolding ⊥*
   is-initial-⊥* : is-initial (⊥* {ℓg})
   is-initial-⊥* =
     ⊥*-elim , (λ e → funExt λ x → funExt λ p → Empty.rec (lower p))
 
+uninhabited→≅⊥ :
+  g ⊢ ⊥ →
+  g ≅ ⊥
+uninhabited→≅⊥ e =
+  mkStrEq e (x .inv) (x .sec) (x .ret)
+  where
+  x : isStrongEquivalence _ _ e
+  x = is-strict-initial-⊥ e
+
 unambiguous'⊥ : unambiguous' ⊥
 unambiguous'⊥ {k = k} e e' !∘e≡!∘e' =
   is-initial→propHoms (g⊢⊥→is-initial e) _ _
 
-unambigious⊥ : unambiguous ⊥
-unambigious⊥ = unambiguous'→unambiguous unambiguous'⊥
+unambiguous⊥ : unambiguous ⊥
+unambiguous⊥ = unambiguous'→unambiguous unambiguous'⊥
+
+isProp-uninhabited : ∀ {g : Grammar ℓg} → isProp (uninhabited g)
+isProp-uninhabited = unambiguous⊥
+
+module _ (g : Grammar ℓg) where
+  open StrongEquivalence
+  ⊥⊕≅ : (⊥ ⊕ g) ≅ g
+  ⊥⊕≅ .fun = ⊕-elim ⊥-elim id
+  ⊥⊕≅ .inv = ⊕-inr
+  ⊥⊕≅ .sec = ⊕-βr ⊥-elim id
+  ⊥⊕≅ .ret = the-ret
+    where
+    opaque
+      unfolding ⊕-elim ⊥
+      the-ret : ⊥⊕≅ .inv ∘g ⊥⊕≅ .fun ≡ id
+      the-ret = funExt λ w → funExt λ {
+        (inr x) → refl
+        }
+
+⊗⊥ : g ⊗ ⊥ ⊢ ⊥
+⊗⊥ = ⊸-app ∘g id ,⊗ ⊥-elim
+
+⊥⊗ : ⊥ ⊗ g ⊢ ⊥
+⊥⊗ = ⟜-app ∘g ⊥-elim ,⊗ id

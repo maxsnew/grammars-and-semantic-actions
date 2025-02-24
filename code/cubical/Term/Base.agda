@@ -3,6 +3,8 @@ open import Cubical.Foundations.HLevels
 
 module Term.Base (Alphabet : hSet ℓ-zero) where
 
+open import Cubical.Functions.Embedding
+
 open import Grammar.Base Alphabet
 open import Helper
 
@@ -54,6 +56,15 @@ _∘g_ e e' = seq e' e
 
 infixr 9 _∘g_
 syntax seq e e' = e ⋆ e'
+
+record Inverse
+  {g : Grammar ℓg}
+  {h : Grammar ℓh}
+  (e : g ⊢ h) : Type (ℓ-max ℓg ℓh) where
+  field
+    inv : h ⊢ g
+    is-left-inv : inv ∘g e ≡ id
+    is-right-inv : e ∘g inv ≡ id
 
 isMono :
   g ⊢ h → Typeω

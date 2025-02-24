@@ -37,3 +37,5 @@ opaque
     → f ≡ f'
   ⊥-η _ _ = funExt λ _ → funExt Empty.elim
 
+  get⊥ : ∀ {w} → ⊥ w → Empty.⊥
+  get⊥ p = p

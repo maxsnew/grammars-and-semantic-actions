@@ -6,6 +6,7 @@ module String.ASCII.NoWhitespace where
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
+open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Empty
@@ -20,6 +21,8 @@ open import Cubical.Data.SumFin
 open import String.ASCII.Base
 open import String.SubAlphabet
 open import Helper
+
+open DecidablePowerset
 
 NWSubset : Decℙ ASCIIChar
 NWSubset c =

@@ -114,6 +114,25 @@ module _ {ℓG} {ℓG'}
 
 _≅_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
 g ≅ g' = StrongEquivalence g g'
+infix 4 _≅_
+
+_≈_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
+g ≈ g' = LogicalEquivalence g g'
+infix 4 _≈_
+
+module _
+  (g : Grammar ℓg)
+  (h : Grammar ℓh)
+  (pwIso : ∀ w → Iso (g w) (h w))
+  where
+  open StrongEquivalence
+  open Iso
+
+  pointwiseIso→≅ : g ≅ h
+  pointwiseIso→≅ .fun w = pwIso w .fun
+  pointwiseIso→≅ .inv w = pwIso w .inv
+  pointwiseIso→≅ .sec = funExt λ w → funExt (pwIso w .rightInv)
+  pointwiseIso→≅ .ret = funExt λ w → funExt (pwIso w .leftInv)
 
 module _ {ℓG} {ℓH}
   {g : Grammar ℓG}
@@ -128,6 +147,8 @@ module _ {ℓG} {ℓH}
   sym-strong-equivalence .inv = g≅h .fun
   sym-strong-equivalence .sec = g≅h .ret
   sym-strong-equivalence .ret = g≅h .sec
+
+  sym≅ = sym-strong-equivalence
 
 module _ {ℓG} {ℓH} {ℓK}
   {g : Grammar ℓG}
@@ -148,6 +169,14 @@ module _ {ℓG} {ℓH} {ℓK}
   comp-strong-equiv .ret =
     (λ i → g≅h .inv ∘g h≅k .ret i ∘g g≅h .fun) ∙
     g≅h .ret
+
+_≅∙_ : g ≅ h → h ≅ k → g ≅ k
+_≅∙_ = comp-strong-equiv
+infixr 10 _≅∙_
+
+module _ {g : Grammar ℓg} where
+  id≅ : g ≅ g
+  id≅ = mkStrEq id id refl refl
 
 hasRetraction→isMono :
   (e : g ⊢ h) →
