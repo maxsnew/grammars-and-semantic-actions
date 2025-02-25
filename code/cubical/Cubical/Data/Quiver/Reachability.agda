@@ -1,5 +1,5 @@
 {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
-module Quiver.Reachability where
+module Cubical.Data.Quiver.Reachability where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
@@ -19,7 +19,7 @@ open import Cubical.Data.Nat hiding (elim)
 open import Cubical.Data.Nat.Order
 open import Cubical.Data.Sum
 
-open import Cubical.Data.Quiver.Base -- from cubical-categorical-logic
+open import Cubical.Data.Quiver.Base
 
 import Cubical.Data.Equality as Eq
 
