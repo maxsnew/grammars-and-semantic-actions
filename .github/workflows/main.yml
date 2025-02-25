@@ -161,14 +161,32 @@ jobs:
       ## TESTING
       ########################################################################
 
-      - name: Restore library cache
+      - name: Restore Grammars library cache
         uses: actions/cache/restore@v3
         id: cache-library-restore
         with:
           path: ./code/cubical/_build
           key: library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('code/cubical/**') }}
           restore-keys: |
-            library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+            GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+
+      - name: Restore Cubical library cache
+        uses: actions/cache/restore@v3
+        id: cache-cubical-library-restore
+        with:
+          path: ~/cubical/_build
+          key: library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('~/cubical/cubical/**', '~/cubical/cubical.agda-lib') }}
+          restore-keys: |
+            CubicalLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+
+      - name: Restore Cubical Categorical Logic library cache
+        uses: actions/cache/restore@v3
+        id: cache-cubical-categorical-logic-library-restore
+        with:
+          path: ~/cubical-categorical-logic/_build
+          key: library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('~/cubical-categorical-logic/Cubical/**', '~/cubical-categorical-logic/cubical-categorical-logic.agda-lib') }}
+          restore-keys: |
+            CubicalCategoricalLogicLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
 
       - name: Put cabal programs in PATH
         run: echo "~/.cabal/bin" >> $GITHUB_PATH
@@ -186,3 +204,19 @@ jobs:
         with:
           path: ./code/cubical/_build
           key: ${{ steps.cache-library-restore.outputs.cache-primary-key }}
+
+      - name: Save Cubical library cache
+        if: steps.cache-cubical-library-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        id: cache-cubical-library-save
+        with:
+          path: ~/cubical/_build
+          key: ${{ steps.cache-cubical-library-restore.outputs.cache-primary-key }}
+
+      - name: Save Cubical Categorical Logic library cache
+        if: steps.cache-cubical-categorical-logic-library-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        id: cache-cubical-categorical-logic-library-save
+        with:
+          path: ~/cubical-categorical-logic/_build
+          key: ${{ steps.cache-cubical-categorical-logic-library-restore.outputs.cache-primary-key }}
