@@ -558,7 +558,7 @@ buildTrace = rec DyckTy buildTraceAlg _
 
 -- we then extend the builder to generalized trees, which *adds*
 -- closed parens to the trace.
-genBuildTrace : ∀ m → GenDyck m ⊢ &[ n ∈ _ ] (Trace true (m + n) ⊸ Trace true n)
+genBuildTrace : ∀ m → GenDyck m ⊢ &[ n ∈ _ ] (Trace true n ⊸ Trace true (m + n))
 genBuildTrace zero = buildTrace
 genBuildTrace (suc m) = &ᴰ-intro λ n → ⊸-intro
   -- build using the left subtree
@@ -601,7 +601,7 @@ genBuildTrace (suc m) = &ᴰ-intro λ n → ⊸-intro
   algebra properties without using equalizers.
 -}
 
-lhs rhs : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⊸ Trace true n)
+lhs rhs : IndDyck ⊢ &[ n ∈ _ ] (Trace true n ⊸ GenDyck n)
 lhs = (&ᴰ-intro λ n → ⊸-intro (genMkTree n ∘g ⊸-app) ∘g &ᴰ-π n) ∘g buildTrace
 rhs = ((&ᴰ-intro λ n → ⊸-intro (⊸-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g genAppend')
 
@@ -682,7 +682,7 @@ opaque
         }
 
 genRetr :
-  Path (IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⊸ Trace true n))
+  Path (IndDyck ⊢ &[ n ∈ _ ] (Trace true n ⊸ GenDyck n))
     lhs
     rhs
 genRetr = equalizer-ind-unit (DyckTy tt) pf

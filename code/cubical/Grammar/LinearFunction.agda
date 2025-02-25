@@ -14,6 +14,7 @@ open import Grammar.LinearProduct Alphabet
 open import Grammar.Epsilon Alphabet
 open import Term.Base Alphabet
 open import Term.Bilinear Alphabet
+open import Term.Nullary Alphabet
 
 private
   variable
@@ -27,85 +28,78 @@ private
 opaque
   unfolding _⊗_
   _⟜_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-  (g ⟜ h) w = ∀ (w' : String) → g w' → h (w' ++ w)
+  (g ⟜ h) w = ∀ (w' : String) → h w' → g (w' ++ w)
 
   _⊸_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-  (g ⊸ h) w = ∀ (w' : String) → h w' → g (w ++ w')
+  (g ⊸ h) w = ∀ (w' : String) → g w' → h (w ++ w')
 
-  infixl 2 _⊸_
+  infixr 2 _⊸_
+  infixl 2 _⟜_
 
   ⟜-intro :
     g ⊗ h ⊢ k →
-    h ⊢ g ⟜ k
+    h ⊢ k ⟜ g
   ⟜-intro e _ p w' q =
     e _ ((_ , refl) , (q , p))
 
   ⟜-app :
-    g ⊗ (g ⟜ h) ⊢ h
+    g ⊗ (h ⟜ g) ⊢ h
   ⟜-app {h = h} _ p = subst h (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
 
   ⟜-intro' :
     g ,, h ⊢ k →
-    h ⊢ g ⟜ k
+    h ⊢ k ⟜ g
   ⟜-intro' f w' p w q = f w w' q p
 
   ⟜-app' :
-    g ,, (g ⟜ k) ⊢ k
+    g ,, (h ⟜ g) ⊢ h
   ⟜-app' w1 w2 gp f = f w1 gp
 
-  -- this makes me think we don't want ⟜-app' and ⟜-intro' to be opaque...
+--   -- this makes me think we don't want ⟜-app' and ⟜-intro' to be opaque...
   ⟜-β' :
     ∀ (f : g ,, h ⊢ k) →
-    _b∘r_ {h = g ⟜ k}{k = k} ⟜-app' (⟜-intro' f) ≡ f
+    _b∘r_ {h = k ⟜ g}{k = k} ⟜-app' (⟜-intro' f) ≡ f
   ⟜-β' f = refl
 
   ⟜-η' :
-    ∀ (f : h ⊢ g ⟜ k) →
-    f ≡ ⟜-intro' (_b∘r_ {h = g ⟜ k}{k = k} ⟜-app' f)
+    ∀ (f : g ⊢ h ⟜ k) → f ≡ ⟜-intro' (_b∘r_ {h = h ⟜ k}{k = h} ⟜-app' f)
   ⟜-η' f = refl
 
 
 ⟜-intro-ε :
-  g ⊢ k → ε ⊢ g ⟜ k
+  g ⊢ k → ε ⊢ k ⟜ g
 ⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-r)
 
 ⟜-intro⁻ :
   g ⊢ h ⟜ k →
-  h ⊗ g ⊢ k
-⟜-intro⁻ {h = h}{k = k} f =
-  ⟜-app ∘g (⊗-intro (id {g = h}) f)
+  k ⊗ g ⊢ h
+⟜-intro⁻ f = ⟜-app ∘g id ,⊗ f
 
 opaque
   unfolding _⟜_ _⊗_ ⊗-intro ⊗≡
   ⟜-intro∘⟜-intro⁻≡id :
     (e : g ⊢ h ⟜ k) →
-    ⟜-intro {g = h}{h = g}{k = k}(⟜-intro⁻ e) ≡ e
+    ⟜-intro {g = k}{h = g}{k = h}(⟜-intro⁻ e) ≡ e
   ⟜-intro∘⟜-intro⁻≡id e = funExt λ w → funExt λ pg →
     funExt λ w' → funExt λ ph → transportRefl _
 
   ⟜-intro⁻∘⟜-intro≡id :
     (e : g ⊗ h ⊢ k) →
-    ⟜-intro⁻ {g = h}{h = g}{k = k}(⟜-intro e) ≡ e
-  ⟜-intro⁻∘⟜-intro≡id {k = k} e = funExt λ w → funExt λ p⊗ →
-    fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-      (⊗PathP (≡-× refl refl) (≡-× refl refl)))
-
-
-  ⟜-strength :
-    (g ⟜ h) ⊗ k ⊢ g ⟜ (h ⊗ k)
-  ⟜-strength {g = g}{h = h}{k = k} =
-    ⟜-intro {g = g}{h = (g ⟜ h) ⊗ k}{k = h ⊗ k}
-      (⊗-assoc ⋆ ⊗-intro ⟜-app id)
+    ⟜-intro⁻ {g = h}{h = k}{k = g}(⟜-intro e) ≡ e
+  ⟜-intro⁻∘⟜-intro≡id {k = k} e =
+    funExt λ w → funExt λ p⊗ →
+      fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
+        (⊗PathP (≡-× refl refl) (≡-× refl refl)))
 
   -- THE ORDER SWAPS!
   ⟜-curry :
-    (g ⊗ h) ⟜ k ⊢ h ⟜ (g ⟜ k)
-  ⟜-curry {g = g}{k = k} =
-    ⟜-intro {k = g ⟜ k} (⟜-intro {k = k} (⟜-app ∘g ⊗-assoc))
+    g ⟜ (h ⊗ k) ⊢ (g ⟜ h) ⟜ k
+  ⟜-curry {g = g} =
+    ⟜-intro (⟜-intro {k = g}(⟜-app ∘g ⊗-assoc))
 
   ⟜-β :
     (m : (g ⊗ h) ⊢ k) →
-    (⟜-intro⁻ {g = h}{h = g}{k = k} (⟜-intro {g = g}{h = h}{k = k} m))
+    (⟜-intro⁻ (⟜-intro m))
       ≡
     m
   ⟜-β {k = k} m = funExt (λ w → funExt (λ p⊗ →
@@ -116,12 +110,12 @@ opaque
     (f : g ⊢ h ⟜ k) →
     f
       ≡
-    (⟜-intro {g = h}{h = g}{k = k} (⟜-intro⁻ {g = g}{h = h}{k = k} f))
+    (⟜-intro (⟜-intro⁻ f))
   ⟜-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
     (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
 
 ⟜UMP : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
-  → Iso (g ⊗ h ⊢ k) (h ⊢ g ⟜ k)
+  → Iso (g ⊗ h ⊢ k) (h ⊢ k ⟜ g)
 ⟜UMP {k = k} =
   iso ⟜-intro ⟜-intro⁻
     (λ b → sym (⟜-η b))
@@ -131,58 +125,60 @@ opaque
   unfolding _⊸_ _⊗_ ⊗-intro
   ⊸-intro :
     g ⊗ h ⊢  k →
-    g ⊢ k ⊸ h
+    g ⊢ h ⊸ k
   ⊸-intro e _ p w' q =
     e _ ((_ , refl) , p , q)
 
   ⊸-app :
-    (g ⊸ h) ⊗ h ⊢ g
-  ⊸-app {g = g} _ (((w' , w'') , w≡w'++w'') , f , inp) =
-    subst g (sym w≡w'++w'') (f _ inp)
+    (g ⊸ h) ⊗ g ⊢ h
+  ⊸-app {h = h} _ (((w' , w'') , w≡w'++w'') , f , inp) =
+    subst h (sym w≡w'++w'') (f _ inp)
 
   ⊸-intro' :
     g ,, h ⊢ k
-    → g ⊢ k ⊸ h
+    → g ⊢ h ⊸ k
   ⊸-intro' f w x w' x₁ = f w w' x x₁
+
   ⊸-app' :
-    (g ⊸ h) ,, h ⊢ g
-  ⊸-app' w w' fp hp = fp w' hp
+    (g ⊸ h) ,, g ⊢ h
+  ⊸-app' w w' fp gp = fp w' gp
+
   ⊸-β' :
     ∀ (f : g ,, h ⊢ k) →
-    _b∘l_ {g = k ⊸ h}{k = k} ⊸-app' (⊸-intro' f) ≡ f
+    _b∘l_ {g = h ⊸ k}{k = k} ⊸-app' (⊸-intro' f) ≡ f
   ⊸-β' f = refl
 
   ⊸-η' :
     ∀ (f : g ⊢ k ⊸ h) →
-    f ≡ ⊸-intro' (_b∘l_ {g = k ⊸ h}{k = k} ⊸-app' f)
+    f ≡ ⊸-intro' (_b∘l_ {g = k ⊸ h}{k = h} ⊸-app' f)
   ⊸-η' f = refl
 
 ⊸-intro⁻ :
   g ⊢ h ⊸ k →
-  g ⊗ k ⊢ h
+  g ⊗ h ⊢ k
 ⊸-intro⁻ {h = h}{k = k} f =
-  ⊸-app ∘g ⊗-intro f (id {g = k})
+  ⊸-app ∘g ⊗-intro f (id {g = h})
 
 opaque
   unfolding _⊸_ ⊸-intro ⊗≡
   ⊸-η :
     (e : g ⊢ h ⊸ k) →
-    ⊸-intro {g = g}{h = k}{k = h}(⊸-intro⁻ e) ≡ e
+    ⊸-intro (⊸-intro⁻ e) ≡ e
   ⊸-η e = funExt λ w → funExt λ pg →
-    funExt λ w' → funExt λ pk → transportRefl _
+    funExt λ w' → funExt λ ph → transportRefl _
 
   ⊸-β :
     (e : g ⊗ h ⊢ k) →
-    ⊸-intro⁻ {g = g}{h = k}{k = h}(⊸-intro e) ≡ e
+    ⊸-intro⁻ (⊸-intro e) ≡ e
   ⊸-β e = funExt λ w → funExt λ p⊗ →
     fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
       (⊗PathP refl refl))
 
 -- THE ORDER SWAPS!
-⊸-mapCod : k ⊢ l → k ⊸ g ⊢ l ⊸ g
+⊸-mapCod : k ⊢ l → g ⊸ k ⊢ g ⊸ l
 ⊸-mapCod f = ⊸-intro (f ∘g ⊸-app)
 
-⟜-mapCod : k ⊢ l → g ⟜ k ⊢ g ⟜ l
+⟜-mapCod : k ⊢ l → k ⟜ g ⊢ l ⟜ g
 ⟜-mapCod f = ⟜-intro (f ∘g ⟜-app)
 
 opaque
@@ -203,7 +199,7 @@ opaque
     cong ((⊸-app ∘g id ,⊗ f) ∘g_) ⊗-unit-r⁻⊗-intro
     ∙ (λ i → ⊸-β (e ∘g ⊸-app) i ∘g (id ,⊗ f) ∘g ⊗-unit-r⁻)
 
-⊸-mapDom : g ⊢ h → k ⊸ h ⊢ k ⊸ g
+⊸-mapDom : g ⊢ h → h ⊸ k ⊢ g ⊸ k
 ⊸-mapDom f = ⊸-intro (⊸-app ∘g id ,⊗ f)
 
 opaque
@@ -212,7 +208,7 @@ opaque
   ⊸-mapDom-precomp : (e : g ⊢ h)(f : k ⊗ h ⊢ h) →
     ⊸-mapDom e ∘g ⊸-intro f ≡ ⊸-intro (f ∘g id ,⊗ e)
   ⊸-mapDom-precomp {g = g}{h = h} e f =
-      ⊸-η {h = h} (⊸-intro {h = g}(f ∘g id ,⊗ e))
+      ⊸-η {k = h} (⊸-intro (f ∘g id ,⊗ e))
 
 opaque
   unfolding ⊗-intro
@@ -224,11 +220,11 @@ opaque
     ∙ λ i → ⊸-β (⊸-app ∘g id ,⊗ e) i ∘g (id ,⊗ f) ∘g ⊗-unit-r⁻
 
 ⊸-curry :
-  k ⊸ (g ⊗ h) ⊢ k ⊸ h ⊸ g
-⊸-curry {k = k} = ⊸-intro (⊸-intro {k = k} (⊸-app ∘g ⊗-assoc⁻))
+  (g ⊗ h) ⊸ k ⊢ g ⊸ (h ⊸ k)
+⊸-curry {k = k} = ⊸-intro (⊸-intro (⊸-app ∘g ⊗-assoc⁻))
 
 ⊸-intro-ε :
-  g ⊢ k → ε ⊢ k ⊸ g
+  g ⊢ k → ε ⊢ g ⊸ k
 ⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-l)
 
 ⊸-intro-ε-β :
@@ -237,50 +233,45 @@ opaque
 ⊸-intro-ε-β f = ⊸-β (f ∘g ⊗-unit-l)
 
 ⊸2-intro-ε :
-  g1 ⊗ g2 ⊢ k → ε ⊢ k ⊸ g2 ⊸ g1
-⊸2-intro-ε {k = k} f = ⊸-curry {k = k} ∘g ⊸-intro-ε f
+  g1 ⊗ g2 ⊢ k → ε ⊢ g1 ⊸ g2 ⊸ k
+⊸2-intro-ε {k = k} f = ⊸-curry ∘g ⊸-intro-ε f
 
 ⊸3-intro-ε :
-  g1 ⊗ g2 ⊗ g3 ⊢ k → ε ⊢ k ⊸ g3 ⊸ g2 ⊸ g1
+  g1 ⊗ g2 ⊗ g3 ⊢ k → ε ⊢ g1 ⊸ g2 ⊸ g3 ⊸ k
 ⊸3-intro-ε {k = k} f =
   ⊸-mapCod (⊸-curry {k = k})
   ∘g ⊸2-intro-ε f
 
 ⊸4-intro-ε :
-  g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊢ k → ε ⊢ k ⊸ g4 ⊸ g3 ⊸ g2 ⊸ g1
+  g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊢ k → ε ⊢ g1 ⊸ g2 ⊸ g3 ⊸ g4 ⊸ k
 ⊸4-intro-ε {k = k} f =
   ⊸-mapCod (⊸-mapCod (⊸-curry {k = k}))
   ∘g ⊸3-intro-ε f
 
-⊸-strength :
-  g ⊗ (h ⊸ k) ⊢ (g ⊗ h) ⊸ k
-⊸-strength {g = g}{h = h}{k = k} =
-  ⊸-intro (⊗-intro id ⊸-app ∘g ⊗-assoc⁻)
-
 ⊸UMP : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
-  → Iso (g ⊗ h ⊢ k) (g ⊢ k ⊸ h)
-⊸UMP {k = k} = iso ⊸-intro ⊸-intro⁻ (⊸-η {h = k}) ⊸-β
+  → Iso (g ⊗ h ⊢ k) (g ⊢ h ⊸ k)
+⊸UMP {h = h} = iso ⊸-intro ⊸-intro⁻ (⊸-η {h = h}) ⊸-β
 
 -- applying a multi-argument function to the front of a substitution
-⊸-app-l : (g ⊸ h) ⊗ h ⊗ l ⊢ g ⊗ l
+⊸-app-l : (g ⊸ h) ⊗ g ⊗ l ⊢ h ⊗ l
 ⊸-app-l = (⊗-intro ⊸-app id ∘g ⊗-assoc)
 
 ⊸0⊗ : ε ⊢ k → l ⊢ k ⊗ l
 ⊸0⊗ f = f ,⊗ id ∘g ⊗-unit-l⁻
 
-⊸1⊗ : ε ⊢ k ⊸ g1 → g1 ⊗ h ⊢ k ⊗ h
+⊸1⊗ : ε ⊢ g1 ⊸ k → g1 ⊗ h ⊢ k ⊗ h
 ⊸1⊗ f = ⊸-app-l ∘g ⊸0⊗ f
 
-⊸2⊗ : ε ⊢ k ⊸ g2 ⊸ g1 → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
+⊸2⊗ : ε ⊢ g1 ⊸ g2 ⊸ k → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
 ⊸2⊗ f = ⊸-app-l ∘g ⊸1⊗ f
 
 ⊸2⊗' : g1 ⊗ g2 ⊢ k → g1 ⊗ g2 ⊗ l ⊢ k ⊗ l
 ⊸2⊗' f = f ,⊗ id ∘g ⊗-assoc
 
-⊸3⊗ : ε ⊢ k ⊸ g3 ⊸ g2 ⊸ g1 → g1 ⊗ g2 ⊗ g3 ⊗ l ⊢ k ⊗ l
+⊸3⊗ : ε ⊢ g1 ⊸ g2 ⊸ g3 ⊸ k → g1 ⊗ g2 ⊗ g3 ⊗ l ⊢ k ⊗ l
 ⊸3⊗ f = ⊸-app-l ∘g ⊸2⊗ f
 
-⊸4⊗ : ε ⊢ k ⊸ g4 ⊸ g3 ⊸ g2 ⊸ g1 → g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊗ l ⊢ k ⊗ l
+⊸4⊗ : ε ⊢ g1 ⊸ g2 ⊸ g3 ⊸ g4 ⊸ k → g1 ⊗ g2 ⊗ g3 ⊗ g4 ⊗ l ⊢ k ⊗ l
 ⊸4⊗ f = ⊸-app-l ∘g ⊸3⊗ f
 
 ⟜0⊗ : ε ⊢ k → l ⊢ l ⊗ k
@@ -329,10 +320,19 @@ opaque
 
 opaque
   unfolding _⊸_
-  isSetGrammar⊸ : isSetGrammar h → isSetGrammar (h ⊸ g)
-  isSetGrammar⊸ isSetH w = isSetΠ (λ w' → isSet→ (isSetH _))
+  isSetGrammar⊸ : isSetGrammar g → isSetGrammar (h ⊸ g)
+  isSetGrammar⊸ isSetG w = isSetΠ (λ w' → isSet→ (isSetG _))
 
 opaque
   unfolding _⟜_
-  isSetGrammar⟜ : isSetGrammar g → isSetGrammar (h ⟜ g)
-  isSetGrammar⟜ isSetG w = isSetΠ (λ w' → isSet→ (isSetG _))
+  isSetGrammar⟜ : isSetGrammar h → isSetGrammar (h ⟜ g)
+  isSetGrammar⟜ isSetH w = isSetΠ (λ w' → isSet→ (isSetH _))
+
+Element→Term : ↑ (g ⊸ h) → g ⊢ h
+Element→Term f =
+  ⊸-app
+  ∘g ε-elim f ,⊗ id
+  ∘g ⊗-unit-l⁻
+
+Term→Element : g ⊢ h → ↑ (g ⊸ h)
+Term→Element e = ⊸-intro (e ∘g ⊗-unit-l) [] ε-intro

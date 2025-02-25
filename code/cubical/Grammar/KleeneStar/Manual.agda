@@ -127,7 +127,7 @@ module _ (g : Grammar ℓG) where
       unfolding _⊗_ ⊗-intro
       λalg : *r-Algebra
       λalg .the-ℓ = ℓG
-      λalg .G = KL* ⊸ g
+      λalg .G = g ⊸ KL*
       λalg .nil-case =
         ⊸-intro (cons ∘g ⊗-intro id nil ∘g ⊗-unit-r⁻ ∘g ⊗-unit-l)
       λalg .cons-case =
@@ -167,7 +167,7 @@ module _ (g : Grammar ℓG) where
 
 opaque
   unfolding _⊗_
-  cons' : ε ⊢ KL* g ⊸ KL* g ⊸ g
+  cons' : ε ⊢ g ⊸ KL* g ⊸ KL* g
   cons' = ⊸2-intro-ε cons
 
   NIL : ε ⊢ KL* g

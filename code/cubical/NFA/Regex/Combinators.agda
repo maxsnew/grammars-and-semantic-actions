@@ -438,7 +438,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     ⟦ inr q' ⟧⊗ = LiftG ℓN (Trace N' q')
 
     ⟦_⟧N : ⟨ N .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
-    ⟦ q ⟧N = Trace ⊗NFA (inl q) ⊸ Trace ⊗NFA (inr (N' .init))
+    ⟦ q ⟧N = Trace ⊗NFA (inr (N' .init)) ⊸ Trace ⊗NFA (inl q)
 
     ⟦_⟧N' : ⟨ N' .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
     ⟦ q' ⟧N' = Trace ⊗NFA (inr q')
@@ -912,7 +912,7 @@ module _ (N : NFA ℓN) where
     ⟦ inr q ⟧* = Trace N q ⊗ (Parse N *)
 
     ⟦_⟧N : ⟨ N .Q ⟩ → Grammar ℓN
-    ⟦ q ⟧N = Trace *NFA (inr q) ⊸ Trace *NFA (inl _)
+    ⟦ q ⟧N = Trace *NFA (inl _) ⊸ Trace *NFA (inr q)
 
     *NFAAlg : Algebra (TraceTy *NFA) ⟦_⟧*
     *NFAAlg (inl _) = ⊕ᴰ-elim (λ {

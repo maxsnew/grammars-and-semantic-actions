@@ -157,7 +157,7 @@ module _ {A : Type ℓ}
       isoFunInjective ⊸UMP _ _
         (equalizer-ind
           F'
-          (λ a → g a ⊸ h a)
+          (λ a → h a ⊸ g a)
           (λ a → ⊸-intro (e a))
           (λ a → ⊸-intro (e' a))
           (λ a →
@@ -218,7 +218,7 @@ module _ {A : Type ℓ}
       isoFunInjective ⟜UMP _ _
         (equalizer-ind
           F'
-          (λ a → h a ⟜ g a)
+          (λ a → g a ⟜ h a)
           (λ a → ⟜-intro (e a))
           (λ a → ⟜-intro (e' a))
           (λ a →

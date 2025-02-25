@@ -24,5 +24,8 @@ Element g = g []
 ε⊢ : Grammar ℓg → Type _
 ε⊢ = Element
 
+↑ : Grammar ℓg → Type _
+↑ = Element
+
 _∘ε_ : g ⊢ h → ε⊢ g → ε⊢ h
 (f ∘ε gp) = f [] gp

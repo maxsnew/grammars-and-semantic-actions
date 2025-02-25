@@ -248,7 +248,7 @@ module _ (N : NFA {ℓN}) where
     module _ (the-p-alg : PAlgebra) where
       underlyingAlg : Algebra
       underlyingAlg .the-ℓs = _
-      underlyingAlg .G q = (the-p-alg .G q) ⊸ P
+      underlyingAlg .G q = P ⊸ (the-p-alg .G q)
       underlyingAlg .nil-case qAcc =
         ⊸-intro ((the-p-alg .nil-case qAcc) ∘g ⊗-unit-l)
       underlyingAlg .cons-case t =
