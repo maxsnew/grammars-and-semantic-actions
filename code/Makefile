@@ -21,7 +21,7 @@ build :
 	$(MAKE) AGDA_EXEC=$(AGDA_BIN) gen-everythings check
 
 .PHONY : test
-test : check-whitespace gen-and-check-everythings
+test : check-whitespace gen-and-check-everythings check-README check
 
 # checking and fixing whitespace
 
@@ -41,16 +41,30 @@ check-everythings:
 
 .PHONY : gen-everythings
 gen-everythings:
-	$(EVERYTHINGS) gen-except Grammar/Coinductive
+	cd Cubical && $(EVERYTHINGS) gen-except Grammar/Coinductive
 
 .PHONY : gen-and-check-everythings
 gen-and-check-everythings:
-	$(EVERYTHINGS) gen-except Grammar/Coinductive
-	$(EVERYTHINGS) check-except Grammar/Coinductive
+	cd Cubical && $(EVERYTHINGS) gen-except Grammar/Coinductive
+	cd Cubical && $(EVERYTHINGS) check-except Grammar/Coinductive
+
+.PHONY : check-README
+check-README:
+	cd Cubical && $(EVERYTHINGS) check-README
+
+# typechecking and generating listings for all files imported in README
 
 .PHONY : check
 check: gen-everythings
-	$(AGDA) Cubical/README.agda
+	cd Cubical && $(AGDA) README.agda
+
+.PHONY : timings
+timings: clean gen-everythings
+	cd Cubical && $(AGDA) -v profile.modules:10 README.agda
+
+.PHONY : listings
+listings: $(wildcard Cubical/**/*.agda)
+	cd Cubical && $(AGDA) -i. -isrc --html README.agda -v0
 
 .PHONY : clean
 clean:
@@ -64,31 +78,6 @@ debug : ## Print debug information.
 	@echo "AGDA_EXEC             = $(AGDA_EXEC)"
 	@echo "AGDA                  = $(AGDA)"
 
-# .PHONY: all
-# all: test check-whitespace check-line-lengths
-
-# .PHONY: quicktest
-# quicktest : clean
-# 	@for file in $(AGDA_FILES); do \
-# 		$(AGDA) $$file || exit 1; \
-# 	done; \
-#     echo "All files compiled successfully."
-
-# %.agdai : %.agda
-# 	$(AGDA) $<
-
-# .PHONY: test
-# test : $(AGDAI_FILES)
-# 	@echo "All files compiled successfully"
-
-# .PHONY: check-whitespace
-# check-whitespace:
-# 	cd ../.. && $(FIX_WHITESPACE) --check
-
-# .PHONY: check-line-lengths
-# check-line-lengths:
-# 	bash check-line-lengths.sh
-
-# .PHONY: clean
-# clean:
-# 	find . -name "*.agdai" -type f -delete
+.PHONY: check-line-lengths
+check-line-lengths:
+	bash check-line-lengths.sh

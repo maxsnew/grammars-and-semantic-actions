@@ -158,7 +158,7 @@ jobs:
         id: cache-library-restore
         with:
           path: ./_build
-          key: library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('~/grammars-and-semantic-actions/code/**', 'grammar.agda-lib') }}
+          key: library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('code/Cubical/**') }}
           restore-keys: |
             library-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
 
@@ -167,8 +167,9 @@ jobs:
 
       - name: Test grammars-and-semantic-actions
         run: |
-          cd code/cubical && make quicktest \
-            AGDA='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
+          cd code && make test \
+            AGDA_EXEC='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
+            FIX_WHITESPACE='~/.cabal/bin/fix-whitespace'
 
       - name: Save library cache
         if: steps.cache-library-restore.outputs.cache-hit != 'true'

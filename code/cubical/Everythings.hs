@@ -65,12 +65,10 @@ getMissingFiles fp fpToCheck = do
 checkEverythings :: [SplitFilePath] -> [String] -> IO ()
 checkEverythings excludes dirs = do
   missing_files <- concat <$> forM dirs (\dir -> do
-    let ex = map (\a -> a ++ ["Cubical"]) (map reverse excludes)
-    miss' <- getMissingFiles [dir,"Cubical"] (Just ["Everything",dir,"Cubical"])
-    let miss = map (delete "Cubical") miss'
+    let ex = map reverse excludes
+    miss <- getMissingFiles [dir] (Just ["Everything",dir])
     pure $ filter (\l -> not $ any (`isSuffixOf` l) ex) miss
     )
-  print missing_files
   if null missing_files then pure ()
   else do putStrLn "Found some files which are not imported in any Everything.agda:"
           forM_ missing_files (putStrLn . (" " ++) . showFP '.')
@@ -78,9 +76,10 @@ checkEverythings excludes dirs = do
 
 checkREADME :: IO ()
 checkREADME = do
-  (sub_dirs, _) <- getSubDirsFiles ["Cubical"]
-  imported <- getImported ["README","Cubical"]
-  let missing_files = fmap (\dir -> ["Everything",dir,"Cubical"]) sub_dirs \\ imported
+  (sub_dirs', _) <- getSubDirsFiles ["."]
+  let sub_dirs = filter (\d -> d `notElem` ["Everything.hs", "_build", "README.agda"]) sub_dirs'
+  imported <- getImported ["README"]
+  let missing_files = fmap (\dir -> ["Everything",dir]) sub_dirs \\ imported
   if null missing_files then pure ()
   else do putStrLn "Found some Everything.agda's which are not imported in README.agda:"
           forM_ missing_files (putStrLn . (" " ++) . showFP '.')
@@ -89,20 +88,17 @@ checkREADME = do
 genEverythings :: [SplitFilePath] -> [String] -> IO ()
 genEverythings excludes =
   mapM_ $ \ dir -> do
-    let fp = addToFP ["Cubical"] dir
-    let moduleName = [dir]
+    let fp = [dir]
     files' <- getMissingFiles fp Nothing
-    let ex = map (\a -> a ++ ["Cubical"]) (map reverse excludes)
+    let ex = map reverse excludes
     let files = filter (\l -> not $ any (`isSuffixOf` l) ex) files'
-    let ls = ["module " ++ showFP '.' (addToFP moduleName "Everything") ++ " where",[]]
+    let ls = ["module " ++ showFP '.' (addToFP fp "Everything") ++ " where",[]]
              ++ sort (fmap (\file -> do
-                              let file' = delete "Cubical" file
-                              "import " ++ showFP '.' file'
+                              "import " ++ showFP '.' file
                            )
                            (delete (addToFP fp "Everything") files))
     writeFile ("./" ++ showFP '/' (addToFP fp "Everything") ++ ".agda")
               (unlines ls)
-
 
 helpText :: String
 helpText = unlines [
@@ -119,7 +115,8 @@ helpText = unlines [
 
 main :: IO ()
 main = do
-  all_dirs <- filter ('.' `notElem`) <$> getDirectoryContents "./Cubical"
+  all_dirs' <- filter ('.' `notElem`) <$> getDirectoryContents "."
+  let all_dirs = filter (\d -> d `notElem` ["Everything.hs", "_build", "README.agda"]) all_dirs'
   args <- getArgs
   case args of
     "check":dirs -> checkEverythings [] dirs
