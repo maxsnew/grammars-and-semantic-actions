@@ -150,13 +150,13 @@ module _ (g : Grammar ℓG) where
   *LTy : Unit* {ℓG} → Functor Unit*
   *LTy _ = ⊕e *TagL (λ { nil → k ε* ; snoc → ⊗e (Var _) (k g)})
 
-  *LAlg→*Alg : Algebra *LTy (λ _ → h)  → Algebra *Ty (λ _ → h ⊸ h)
+  *LAlg→*Alg : Algebra *LTy (λ _ → h)  → Algebra *Ty (λ _ → h ⟜ h)
   *LAlg→*Alg l-alg _ = ⊕ᴰ-elim (λ {
-      nil → ⊸-intro-ε id ∘g lowerG ∘g lowerG
-    ; cons → ⊸-intro (⊸-app ∘g (l-alg _ ∘g ⊕ᴰ-in snoc ∘g liftG ,⊗ liftG) ,⊗ id ∘g ⊗-assoc) ∘g lowerG ,⊗ lowerG })
+      nil → ⟜-intro-ε id ∘g lowerG ∘g lowerG
+    ; cons → ⟜-intro (⟜-app ∘g (l-alg _ ∘g ⊕ᴰ-in snoc ∘g liftG ,⊗ liftG) ,⊗ id ∘g ⊗-assoc) ∘g lowerG ,⊗ lowerG })
 
   fold*l : Algebra *LTy (λ _ → h) → KL* ⊢ h
-  fold*l alg = ⊸-app ∘g (alg _ ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG) ,⊗ fold*r (*LAlg→*Alg alg) ∘g ⊗-unit-l⁻
+  fold*l alg = ⟜-app ∘g (alg _ ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG) ,⊗ fold*r (*LAlg→*Alg alg) ∘g ⊗-unit-l⁻
 
   *L : Grammar ℓG
   *L = μ *LTy _

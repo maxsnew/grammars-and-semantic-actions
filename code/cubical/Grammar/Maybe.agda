@@ -35,26 +35,26 @@ fmap e = ⊕-elim (just ∘g e) nothing
 
 Maybe⊗l : (Maybe g) ⊗ h ⊢ Maybe (g ⊗ h)
 Maybe⊗l {g = g}{h = h} =
-  ⟜-intro⁻
+  ⊸-intro⁻
     (⊕-elim
-      (⟜-intro just)
-      (⟜-intro (nothing {h = g ⊗ h})))
+      (⊸-intro just)
+      (⊸-intro (nothing {h = g ⊗ h})))
 
 Maybe⊗r : g ⊗ (Maybe h)  ⊢ Maybe (g ⊗ h)
 Maybe⊗r {g = g}{h = h} =
-  ⊸-intro⁻
+  ⟜-intro⁻
     (⊕-elim
-       (⊸-intro just)
-       (⊸-intro (nothing {h = g ⊗ h}))
+       (⟜-intro just)
+       (⟜-intro (nothing {h = g ⊗ h}))
     )
 
 Maybe⊗ : (Maybe g) ⊗ (Maybe h) ⊢ Maybe (g ⊗ h)
 Maybe⊗ {g = g}{h = h} =
-  ⊸-intro⁻
+  ⟜-intro⁻
     (⊕-elim
-      (⊸-intro {k = Maybe (g ⊗ h)}
-        (⟜-intro⁻
+      (⟜-intro {k = Maybe (g ⊗ h)}
+        (⊸-intro⁻
           (⊕-elim
-            (⟜-intro just)
-            (⟜-intro (nothing {h = g ⊗ h})))))
-      (⊸-intro (nothing {h = g ⊗ h})))
+            (⊸-intro just)
+            (⊸-intro (nothing {h = g ⊗ h})))))
+      (⟜-intro (nothing {h = g ⊗ h})))

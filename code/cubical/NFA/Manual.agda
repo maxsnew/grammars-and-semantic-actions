@@ -248,16 +248,16 @@ module _ (N : NFA {ℓN}) where
     module _ (the-p-alg : PAlgebra) where
       underlyingAlg : Algebra
       underlyingAlg .the-ℓs = _
-      underlyingAlg .G q = (the-p-alg .G q) ⟜ P
+      underlyingAlg .G q = (the-p-alg .G q) ⊸ P
       underlyingAlg .nil-case qAcc =
-        ⟜-intro ((the-p-alg .nil-case qAcc) ∘g ⊗-unit-l)
+        ⊸-intro ((the-p-alg .nil-case qAcc) ∘g ⊗-unit-l)
       underlyingAlg .cons-case t =
-         ⟜-intro ((the-p-alg .cons-case t) ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+         ⊸-intro ((the-p-alg .cons-case t) ∘g ⊗-intro id ⊸-app ∘g ⊗-assoc⁻)
       underlyingAlg .ε-cons-case t =
-         ⟜-intro ((the-p-alg .ε-cons-case t) ∘g ⟜-app)
+         ⊸-intro ((the-p-alg .ε-cons-case t) ∘g ⊸-app)
 
       P-recTrace : ∀ {q} → Parse q ⊗ P ⊢ the-p-alg .G q
-      P-recTrace = ⟜-app ∘g ⊗-intro (recTrace underlyingAlg) id
+      P-recTrace = ⊸-app ∘g ⊗-intro (recTrace underlyingAlg) id
 
       P-recInit : InitParse ⊗ P ⊢ the-p-alg .G init
       P-recInit = P-recTrace
@@ -267,53 +267,53 @@ module _ (N : NFA {ℓN}) where
         ∃PAlgebraHom : PAlgebraHom P-initial the-p-alg
         ∃PAlgebraHom .f q = P-recTrace
         ∃PAlgebraHom .on-nil qAcc =
-          (λ i → ⟜-app ∘g ⊗-intro (∃AlgebraHom underlyingAlg .on-nil qAcc i) id
+          (λ i → ⊸-app ∘g ⊗-intro (∃AlgebraHom underlyingAlg .on-nil qAcc i) id
             ∘g ⊗-unit-l⁻) ∙
-          (λ i → ⟜-β (the-p-alg .nil-case qAcc ∘g ⊗-unit-l) i ∘g ⊗-unit-l⁻) ∙
+          (λ i → ⊸-β (the-p-alg .nil-case qAcc ∘g ⊗-unit-l) i ∘g ⊗-unit-l⁻) ∙
           (λ i → the-p-alg .nil-case qAcc ∘g ⊗-unit-l⁻l i)
         ∃PAlgebraHom .on-cons t =
-          (λ i → ⟜-β ((the-p-alg .cons-case t) ∘g
-            ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) i ∘g
+          (λ i → ⊸-β ((the-p-alg .cons-case t) ∘g
+            ⊗-intro id ⊸-app ∘g ⊗-assoc⁻) i ∘g
             ⊗-intro (⊗-intro id (recTrace underlyingAlg)) id ∘g ⊗-assoc) ∙
             (λ i → the-p-alg .cons-case t ∘g ⊗-intro id P-recTrace ∘g
               ⊗-assoc⁻∘⊗-assoc≡id i)
         ∃PAlgebraHom .on-ε-cons t =
-          (λ i → ⟜-β ((the-p-alg .ε-cons-case t) ∘g ⟜-app) i ∘g
+          (λ i → ⊸-β ((the-p-alg .ε-cons-case t) ∘g ⊸-app) i ∘g
             ⊗-intro (recTrace underlyingAlg) id)
 
         curryPAlg :
           PAlgebraHom P-initial the-p-alg → AlgebraHom initial underlyingAlg
-        curryPAlg e .f q = ⟜-intro (e .f q)
+        curryPAlg e .f q = ⊸-intro (e .f q)
         curryPAlg e .on-nil acc =
-          isoFunInjective (invIso ⟜UMP) _ _
-            ((λ i → ⟜-β (e .f _) i ∘g ⊗-intro (nil acc) id)
+          isoFunInjective (invIso ⊸UMP) _ _
+            ((λ i → ⊸-β (e .f _) i ∘g ⊗-intro (nil acc) id)
             ∙ (λ i → e .f _ ∘g ⊗-intro (nil acc) id ∘g ⊗-unit-ll⁻ (~ i))
             ∙ (λ i → e .on-nil acc i ∘g ⊗-unit-l)
-            ∙ sym (⟜-β (the-p-alg .nil-case acc ∘g ⊗-unit-l))
+            ∙ sym (⊸-β (the-p-alg .nil-case acc ∘g ⊗-unit-l))
             )
-        curryPAlg e .on-cons t = isoFunInjective (invIso ⟜UMP) _ _
-          ( ((λ i → ⟜-β (e .f _) i ∘g ⊗-intro (cons t) id))
+        curryPAlg e .on-cons t = isoFunInjective (invIso ⊸UMP) _ _
+          ( ((λ i → ⊸-β (e .f _) i ∘g ⊗-intro (cons t) id))
           ∙ (λ i → e .f (src t) ∘g
                ⊗-intro (cons t) id ∘g ⊗-assoc∘⊗-assoc⁻≡id (~ i))
           ∙ (λ i → e .on-cons t i ∘g ⊗-assoc⁻)
           ∙ (λ i → the-p-alg .cons-case t ∘g
-               ⊗-intro id (⟜-β (e .f (dst t)) (~ i)) ∘g ⊗-assoc⁻)
-          ∙ (λ i → ⟜-β (the-p-alg .cons-case t ∘g
-                          ⊗-intro id ⟜-app ∘g ⊗-assoc⁻) (~ i) ∘g
-                    ⊗-intro (⊗-intro id (⟜-intro (e .f (dst t)))) id))
-        curryPAlg e .on-ε-cons t = isoFunInjective (invIso ⟜UMP) _ _
-          ((((λ i → ⟜-β (e .f _) i ∘g ⊗-intro (ε-cons t) id)))
+               ⊗-intro id (⊸-β (e .f (dst t)) (~ i)) ∘g ⊗-assoc⁻)
+          ∙ (λ i → ⊸-β (the-p-alg .cons-case t ∘g
+                          ⊗-intro id ⊸-app ∘g ⊗-assoc⁻) (~ i) ∘g
+                    ⊗-intro (⊗-intro id (⊸-intro (e .f (dst t)))) id))
+        curryPAlg e .on-ε-cons t = isoFunInjective (invIso ⊸UMP) _ _
+          ((((λ i → ⊸-β (e .f _) i ∘g ⊗-intro (ε-cons t) id)))
           ∙ e .on-ε-cons t
-          ∙ (λ i → the-p-alg .ε-cons-case t ∘g ⟜-β (e .f (ε-dst t)) (~ i))
-          ∙ (λ i → ⟜-β (the-p-alg .ε-cons-case t ∘g ⟜-app) (~ i) ∘g
-                          ⊗-intro (⟜-intro (e .f (ε-dst t))) id))
+          ∙ (λ i → the-p-alg .ε-cons-case t ∘g ⊸-β (e .f (ε-dst t)) (~ i))
+          ∙ (λ i → ⊸-β (the-p-alg .ε-cons-case t ∘g ⊸-app) (~ i) ∘g
+                          ⊗-intro (⊸-intro (e .f (ε-dst t))) id))
 
         !PAlgebraHom' :
           (e e' : PAlgebraHom P-initial the-p-alg) →
           (q : Q .fst) →
           e .f q ≡ e' .f q
         !PAlgebraHom' e e' q =
-          isoFunInjective ⟜UMP _ _ (!AlgebraHom underlyingAlg
+          isoFunInjective ⊸UMP _ _ (!AlgebraHom underlyingAlg
             (curryPAlg e)
             (curryPAlg e')
             q)

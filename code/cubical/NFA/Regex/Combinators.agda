@@ -438,7 +438,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     ⟦ inr q' ⟧⊗ = LiftG ℓN (Trace N' q')
 
     ⟦_⟧N : ⟨ N .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
-    ⟦ q ⟧N = Trace ⊗NFA (inl q) ⟜ Trace ⊗NFA (inr (N' .init))
+    ⟦ q ⟧N = Trace ⊗NFA (inl q) ⊸ Trace ⊗NFA (inr (N' .init))
 
     ⟦_⟧N' : ⟨ N' .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
     ⟦ q' ⟧N' = Trace ⊗NFA (inr q')
@@ -474,26 +474,26 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     NAlg : Algebra (TraceTy N) ⟦_⟧N
     NAlg q = ⊕ᴰ-elim λ {
          (stop acc) →
-           ⟜-intro
+           ⊸-intro
              (STEPε ⊗NFA (N-acc q acc)
              ∘g ⊗-unit-l
              ∘g (lowerG ∘g lowerG) ,⊗ id)
        ; (step t Eq.refl) →
-           ⟜-intro
+           ⊸-intro
              (STEP ⊗NFA (inl t)
-             ∘g id ,⊗ ⟜-app
+             ∘g id ,⊗ ⊸-app
              ∘g ⊗-assoc⁻
              ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
        ; (stepε t Eq.refl) →
-           ⟜-intro
+           ⊸-intro
              (STEPε ⊗NFA (N-ε-trans t)
-             ∘g ⟜-app
+             ∘g ⊸-app
              ∘g lowerG ,⊗ id)
        }
 
     N→⊗NFA : ∀ q → Trace N q ⊗ Parse N' ⊢ Trace ⊗NFA (inl q)
     N→⊗NFA q =
-      ⟜-intro⁻ (rec (TraceTy N) NAlg q)
+      ⊸-intro⁻ (rec (TraceTy N) NAlg q)
       ∘g id ,⊗ rec _ N'Alg (N' .init)
 
     opaque
@@ -528,7 +528,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
             (stop acc) →
               (λ i →
                rec (TraceTy ⊗NFA) ⊗Alg (inl q)
-               ∘g ⟜-β (STEPε ⊗NFA (N-acc q acc)
+               ∘g ⊸-β (STEPε ⊗NFA (N-acc q acc)
                        ∘g ⊗-unit-l
                        ∘g (lowerG ∘g lowerG) ,⊗ id) i
                ∘g id ,⊗ rec _ N'Alg (N' .init)
@@ -556,9 +556,9 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
           ; (step t Eq.refl) →
             (λ i →
               rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
-              ∘g ⟜-β
+              ∘g ⊸-β
                 (STEP ⊗NFA (inl t)
-                ∘g id ,⊗ ⟜-app
+                ∘g id ,⊗ ⊸-app
                 ∘g ⊗-assoc⁻
                 ∘g ((lowerG ∘g lowerG {ℓ' = ℓ-max ℓN ℓN'}) ,⊗ lowerG {ℓ' = ℓN}) ,⊗ id)
                 i
@@ -569,7 +569,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
             (λ i →
             STEP N t ,⊗ id
             ∘g ⊗-assoc
-            ∘g id ,⊗ eq-π-pf-⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t)) ∘g N→⊗NFA (N .dst t)) id i
+            ∘g id ,⊗ eq-π-pf-⊸-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t)) ∘g N→⊗NFA (N .dst t)) id i
             ∘g ⊗-assoc⁻
             ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id) ∙
             (λ i →
@@ -581,9 +581,9 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
           ; (stepε t Eq.refl) →
               (λ i →
                 rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t))
-                ∘g ⟜-β
+                ∘g ⊸-β
                     (STEPε ⊗NFA (N-ε-trans t)
-                      ∘g ⟜-app
+                      ∘g ⊸-app
                       ∘g lowerG {ℓ' = ℓN} ,⊗ id)
                    i
                 ∘g (liftG ∘g rec (TraceTy N) NAlg (N .ε-dst t)) ,⊗ id
@@ -592,7 +592,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
               ) ∙
               (λ i →
                 STEPε N t ,⊗ id
-                ∘g eq-π-pf-⟜-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-dst t)) ∘g N→⊗NFA (N .ε-dst t)) id i
+                ∘g eq-π-pf-⊸-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-dst t)) ∘g N→⊗NFA (N .ε-dst t)) id i
                 ∘g lowerG ,⊗ id
               )
           })
@@ -653,9 +653,9 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                 λ {
                   (step (inl t) Eq.refl) →
                     (
-                    ⟜-intro⁻ (⟜-intro
+                    ⊸-intro⁻ (⊸-intro
                         (STEP ⊗NFA (inl t)
-                        ∘g id ,⊗ ⟜-app
+                        ∘g id ,⊗ ⊸-app
                         ∘g ⊗-assoc⁻
                         ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id))
                     ∘g ((liftG ∘g liftG) ,⊗ liftG) ,⊗ id
@@ -666,9 +666,9 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g id ,⊗ eq-π _ _
                     ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                       ≡⟨ (λ i →
-                          ⟜-β
+                          ⊸-β
                             (STEP ⊗NFA (inl t)
-                              ∘g id ,⊗ ⟜-app
+                              ∘g id ,⊗ ⊸-app
                               ∘g ⊗-assoc⁻
                               ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id) i
                           ∘g ((liftG {ℓ' = ℓ-max ℓN ℓN'}
@@ -682,7 +682,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                         )
                       ⟩
                     STEP ⊗NFA (inl t)
-                    ∘g id ,⊗ ⟜-app
+                    ∘g id ,⊗ ⊸-app
                     ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
                     ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
                     ∘g ⊗-assoc⁻
@@ -692,7 +692,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                       ≡⟨ (λ i →
                          STEP ⊗NFA (inl t)
-                         ∘g id ,⊗ ⟜-app
+                         ∘g id ,⊗ ⊸-app
                          ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
                          ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
                          ∘g ⊗-assoc⁻∘⊗-assoc≡id i
@@ -702,7 +702,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                          )
                       ⟩
                     STEP ⊗NFA (inl t)
-                    ∘g id ,⊗ ⟜-app
+                    ∘g id ,⊗ ⊸-app
                     ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
                     ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
                     ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
@@ -721,9 +721,9 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     )
                 ; (stepε (N-ε-trans t) Eq.refl) →
                     (
-                    ⟜-intro⁻ (⟜-intro
+                    ⊸-intro⁻ (⊸-intro
                          (STEPε ⊗NFA (N-ε-trans t)
-                         ∘g ⟜-app
+                         ∘g ⊸-app
                          ∘g lowerG ,⊗ id))
                     ∘g liftG ,⊗ id
                     ∘g rec (TraceTy N) NAlg (N .ε-dst t) ,⊗ id
@@ -732,9 +732,9 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g eq-π _ _
                     ∘g lowerG
                       ≡⟨ (λ i →
-                          ⟜-β
+                          ⊸-β
                             (STEPε ⊗NFA (N-ε-trans t)
-                            ∘g ⟜-app
+                            ∘g ⊸-app
                             ∘g lowerG {ℓ' = ℓN} ,⊗ id)
                             i
                           ∘g liftG ,⊗ id
@@ -746,7 +746,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                           )
                       ⟩
                     STEPε ⊗NFA (N-ε-trans t)
-                    ∘g ⟜-app
+                    ∘g ⊸-app
                     ∘g rec (TraceTy N) NAlg (N .ε-dst t) ,⊗ id
                     ∘g id ,⊗ rec _ N'Alg (N' .init)
                     ∘g rec _ ⊗Alg (inl (N .ε-dst t))
@@ -765,8 +765,8 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     )
                 ; (stepε (N-acc q acc) Eq.refl) →
                     (
-                    ⟜-app
-                    ∘g ⟜-intro
+                    ⊸-app
+                    ∘g ⊸-intro
                         (STEPε ⊗NFA (N-acc q acc)
                         ∘g ⊗-unit-l
                         ∘g (lowerG ∘g lowerG) ,⊗ id) ,⊗ id
@@ -778,7 +778,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g eq-π _ _
                     ∘g lowerG
                       ≡⟨ (λ i →
-                          ⟜-β
+                          ⊸-β
                           (STEPε ⊗NFA (N-acc q acc)
                             ∘g ⊗-unit-l
                             ∘g (lowerG {ℓ' = ℓN}
@@ -912,7 +912,7 @@ module _ (N : NFA ℓN) where
     ⟦ inr q ⟧* = Trace N q ⊗ (Parse N *)
 
     ⟦_⟧N : ⟨ N .Q ⟩ → Grammar ℓN
-    ⟦ q ⟧N = Trace *NFA (inr q) ⟜ Trace *NFA (inl _)
+    ⟦ q ⟧N = Trace *NFA (inr q) ⊸ Trace *NFA (inl _)
 
     *NFAAlg : Algebra (TraceTy *NFA) ⟦_⟧*
     *NFAAlg (inl _) = ⊕ᴰ-elim (λ {
@@ -941,20 +941,20 @@ module _ (N : NFA ℓN) where
     NAlg : Algebra (TraceTy N) ⟦_⟧N
     NAlg q = ⊕ᴰ-elim (λ {
         (stop acc) →
-          ⟜-intro
+          ⊸-intro
             (STEPε *NFA (cons⟨N⟩ acc)
             ∘g ⊗-unit-l
             ∘g (lowerG ∘g lowerG) ,⊗ id)
       ; (step t Eq.refl) →
-         ⟜-intro
+         ⊸-intro
            (STEP *NFA t
-           ∘g id ,⊗ ⟜-app
+           ∘g id ,⊗ ⊸-app
            ∘g ⊗-assoc⁻
            ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
       ; (stepε t Eq.refl) →
-         ⟜-intro
+         ⊸-intro
            (STEPε *NFA (N-internal t)
-           ∘g ⟜-app
+           ∘g ⊸-app
            ∘g lowerG ,⊗ id
            )
       })
@@ -966,7 +966,7 @@ module _ (N : NFA ℓN) where
           ∘g lowerG ∘g lowerG
       ; cons →
           STEPε *NFA inr
-          ∘g ⟜-app
+          ∘g ⊸-app
           ∘g rec _ NAlg (N .init) ,⊗ id
           ∘g lowerG ,⊗ lowerG
       })
@@ -974,7 +974,7 @@ module _ (N : NFA ℓN) where
     to*NFA : ∀ q → ⟦ q ⟧* ⊢ Trace *NFA q
     to*NFA (inl _) = rec _ N*Alg _
     to*NFA (inr q) =
-      ⟜-intro⁻ (rec _ NAlg q)
+      ⊸-intro⁻ (rec _ NAlg q)
       ∘g id ,⊗ rec _ N*Alg _
 
     from*NFA : ∀ q → Trace *NFA q ⊢ ⟦ q ⟧*
@@ -989,7 +989,7 @@ module _ (N : NFA ℓN) where
     nested-induction :
       ∀ q →
       rec _ *NFAAlg (inr q)
-      ∘g ⟜-intro⁻ (rec _ NAlg q)
+      ∘g ⊸-intro⁻ (rec _ NAlg q)
         ≡
       id ,⊗ rec _ *NFAAlg (inl _)
     nested-induction = nested-induction'
@@ -999,7 +999,7 @@ module _ (N : NFA ℓN) where
         nested-induction' :
           ∀ q →
           rec _ *NFAAlg (inr q)
-          ∘g ⟜-intro⁻ (rec _ NAlg q)
+          ∘g ⊸-intro⁻ (rec _ NAlg q)
             ≡
           id ,⊗ rec _ *NFAAlg (inl _)
         nested-induction' q =
@@ -1008,13 +1008,13 @@ module _ (N : NFA ℓN) where
             _
             (λ q → Trace N q ⊗ (Parse N *))
             (λ _ → Trace *NFA (inl _))
-            (λ q → rec _ *NFAAlg (inr q) ∘g ⟜-intro⁻ (rec _ NAlg q))
+            (λ q → rec _ *NFAAlg (inr q) ∘g ⊸-intro⁻ (rec _ NAlg q))
             (λ q → id ,⊗ rec _ *NFAAlg (inl _))
             (λ q → λ {
                 (stop acc) →
                   rec _ *NFAAlg (inr q)
-                  ∘g ⟜-intro⁻ (
-                      ⟜-intro
+                  ∘g ⊸-intro⁻ (
+                      ⊸-intro
                         (STEPε *NFA (cons⟨N⟩ acc)
                         ∘g ⊗-unit-l
                         ∘g (lowerG ∘g lowerG) ,⊗ id)
@@ -1024,7 +1024,7 @@ module _ (N : NFA ℓN) where
                     ≡⟨
                       (λ i →
                          rec _ *NFAAlg (inr q)
-                         ∘g ⟜-β
+                         ∘g ⊸-β
                                (STEPε *NFA (cons⟨N⟩ acc)
                                ∘g ⊗-unit-l
                                ∘g (lowerG ∘g lowerG {ℓ' = ℓN}) ,⊗ id) i
@@ -1051,10 +1051,10 @@ module _ (N : NFA ℓN) where
                   ∎
               ; (step t Eq.refl) →
                   rec _ *NFAAlg (inr q)
-                  ∘g ⟜-intro⁻ (
-                     ⟜-intro
+                  ∘g ⊸-intro⁻ (
+                     ⊸-intro
                        (STEP *NFA t
-                       ∘g id ,⊗ ⟜-app
+                       ∘g id ,⊗ ⊸-app
                        ∘g ⊗-assoc⁻
                        ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
                   )
@@ -1065,9 +1065,9 @@ module _ (N : NFA ℓN) where
                     ≡⟨
                       (λ i →
                          rec _ *NFAAlg (inr q)
-                         ∘g ⟜-β (
+                         ∘g ⊸-β (
                               STEP *NFA t
-                              ∘g id ,⊗ ⟜-app
+                              ∘g id ,⊗ ⊸-app
                               ∘g ⊗-assoc⁻
                               ∘g ((lowerG ∘g lowerG {ℓ' = ℓN}) ,⊗ lowerG {ℓ' = ℓN}) ,⊗ id) i
                          ∘g ((liftG ∘g liftG {ℓ' = ℓN}) ,⊗ liftG) ,⊗ id
@@ -1079,7 +1079,7 @@ module _ (N : NFA ℓN) where
                   STEP N t ,⊗ id
                   ∘g ⊗-assoc
                   ∘g id ,⊗ rec _ *NFAAlg (inr (N .dst t))
-                  ∘g id ,⊗ ⟜-app
+                  ∘g id ,⊗ ⊸-app
                   ∘g id ,⊗ (rec _ NAlg (N .dst t) ,⊗ id)
                   ∘g id ,⊗ (eq-π _ _ ,⊗ id)
                   ∘g ⊗-assoc⁻
@@ -1088,9 +1088,9 @@ module _ (N : NFA ℓN) where
                       (λ i →
                          STEP N t ,⊗ id
                          ∘g ⊗-assoc
-                         ∘g id ,⊗ eq-π-pf-⟜-intro
+                         ∘g id ,⊗ eq-π-pf-⊸-intro
                                     (rec _ *NFAAlg (inr (N .dst t))
-                                    ∘g ⟜-intro⁻ (rec _ NAlg (N .dst t)))
+                                    ∘g ⊸-intro⁻ (rec _ NAlg (N .dst t)))
                                     (id ,⊗ rec _ *NFAAlg (inl _))
                                     i
                          ∘g ⊗-assoc⁻
@@ -1119,10 +1119,10 @@ module _ (N : NFA ℓN) where
                   ∎
               ; (stepε t Eq.refl) →
                   rec _ *NFAAlg (inr q)
-                  ∘g ⟜-intro⁻ (
-                       ⟜-intro
+                  ∘g ⊸-intro⁻ (
+                       ⊸-intro
                          (STEPε *NFA (N-internal t)
-                         ∘g ⟜-app
+                         ∘g ⊸-app
                          ∘g lowerG ,⊗ id
                          )
                   )
@@ -1133,9 +1133,9 @@ module _ (N : NFA ℓN) where
                     ≡⟨
                       (λ i →
                          rec _ *NFAAlg (inr q)
-                         ∘g ⟜-β
+                         ∘g ⊸-β
                                 (STEPε *NFA (N-internal t)
-                                ∘g ⟜-app
+                                ∘g ⊸-app
                                 ∘g lowerG {ℓ' = ℓN} ,⊗ id
                                 ) i
                          ∘g liftG ,⊗ id
@@ -1146,14 +1146,14 @@ module _ (N : NFA ℓN) where
                     ⟩
                   STEPε N t ,⊗ id
                   ∘g rec _ *NFAAlg (inr (N .ε-dst t))
-                  ∘g ⟜-app
+                  ∘g ⊸-app
                   ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
                   ∘g eq-π _ _ ,⊗ id
                   ∘g lowerG ,⊗ id
                     ≡⟨
                       (λ i →
                          STEPε N t ,⊗ id
-                         ∘g eq-π-pf-⟜-intro _ _ i
+                         ∘g eq-π-pf-⊸-intro _ _ i
                          ∘g lowerG ,⊗ id
                       )
                     ⟩
@@ -1180,7 +1180,7 @@ module _ (N : NFA ℓN) where
           ; cons →
             CONS
             ∘g from*NFA (inr (N .init))
-            ∘g ⟜-intro⁻ (rec _ NAlg (N .init))
+            ∘g ⊸-intro⁻ (rec _ NAlg (N .init))
             ∘g lowerG ,⊗ lowerG
               ≡⟨
                 (λ i →
@@ -1221,10 +1221,10 @@ module _ (N : NFA ℓN) where
           ⊕ᴰ≡ _ _
             λ {
             (step t Eq.refl) →
-              ⟜-app
-              ∘g ⟜-intro
+              ⊸-app
+              ∘g ⊸-intro
                    (STEP *NFA t
-                   ∘g id ,⊗ ⟜-app
+                   ∘g id ,⊗ ⊸-app
                    ∘g ⊗-assoc⁻
                    ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id) ,⊗ id
               ∘g ((liftG ∘g liftG) ,⊗ liftG) ,⊗ id
@@ -1234,9 +1234,9 @@ module _ (N : NFA ℓN) where
               ∘g (lowerG ∘g lowerG) ,⊗ lowerG
                 ≡⟨
                   (λ i →
-                     ⟜-β
+                     ⊸-β
                           (STEP *NFA t
-                          ∘g id ,⊗ ⟜-app
+                          ∘g id ,⊗ ⊸-app
                           ∘g ⊗-assoc⁻
                           ∘g ((lowerG ∘g lowerG {ℓ' = ℓN}) ,⊗ lowerG {ℓ' = ℓN}) ,⊗ id) i
                      ∘g ((liftG ∘g liftG {ℓ' = ℓN}) ,⊗ liftG) ,⊗ id
@@ -1247,7 +1247,7 @@ module _ (N : NFA ℓN) where
                   )
                 ⟩
               STEP *NFA t
-              ∘g id ,⊗ ⟜-app
+              ∘g id ,⊗ ⊸-app
               ∘g id ,⊗ (rec _ NAlg (N .dst t) ,⊗ id)
               ∘g id ,⊗ (id ,⊗ rec _ N*Alg _)
               ∘g ⊗-assoc⁻
@@ -1256,7 +1256,7 @@ module _ (N : NFA ℓN) where
                 ≡⟨
                   (λ i →
                      STEP *NFA t
-                     ∘g id ,⊗ ⟜-app
+                     ∘g id ,⊗ ⊸-app
                      ∘g id ,⊗ (rec _ NAlg (N .dst t) ,⊗ id)
                      ∘g id ,⊗ (id ,⊗ rec _ N*Alg _)
                      ∘g ⊗-assoc⁻∘⊗-assoc≡id i
@@ -1268,8 +1268,8 @@ module _ (N : NFA ℓN) where
               ∘g (lowerG ∘g lowerG) ,⊗ lowerG
               ∎
           ; (stepε (cons⟨N⟩ acc) Eq.refl) →
-             ⟜-intro⁻ (
-               ⟜-intro
+             ⊸-intro⁻ (
+               ⊸-intro
                  (STEPε *NFA (cons⟨N⟩ acc)
                  ∘g ⊗-unit-l
                  ∘g (lowerG ∘g lowerG) ,⊗ id)
@@ -1280,7 +1280,7 @@ module _ (N : NFA ℓN) where
              ∘g lowerG
                ≡⟨
                  (λ i →
-                    ⟜-β
+                    ⊸-β
                         (STEPε *NFA (cons⟨N⟩ acc)
                         ∘g ⊗-unit-l
                         ∘g (lowerG {ℓ' = ℓN} ∘g lowerG {ℓ' = ℓN}) ,⊗ id) i
@@ -1308,10 +1308,10 @@ module _ (N : NFA ℓN) where
              ∘g lowerG
              ∎
           ; (stepε (N-internal t) Eq.refl) →
-            ⟜-intro⁻ (
-              ⟜-intro
+            ⊸-intro⁻ (
+              ⊸-intro
                 (STEPε *NFA (N-internal t)
-                ∘g ⟜-app
+                ∘g ⊸-app
                 ∘g lowerG ,⊗ id
                 )
             )
@@ -1321,9 +1321,9 @@ module _ (N : NFA ℓN) where
             ∘g lowerG
               ≡⟨
                 (λ i →
-                   ⟜-β
+                   ⊸-β
                        (STEPε *NFA (N-internal t)
-                       ∘g ⟜-app
+                       ∘g ⊸-app
                        ∘g lowerG {ℓ' = ℓN} ,⊗ id
                        ) i
                    ∘g liftG ,⊗ id

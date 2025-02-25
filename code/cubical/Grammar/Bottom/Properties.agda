@@ -154,7 +154,7 @@ module _ (g : Grammar ℓg) where
         }
 
 ⊗⊥ : g ⊗ ⊥ ⊢ ⊥
-⊗⊥ = ⊸-app ∘g id ,⊗ ⊥-elim
+⊗⊥ = ⟜-app ∘g id ,⊗ ⊥-elim
 
 ⊥⊗ : ⊥ ⊗ g ⊢ ⊥
-⊥⊗ = ⟜-app ∘g ⊥-elim ,⊗ id
+⊥⊗ = ⊸-app ∘g ⊥-elim ,⊗ id

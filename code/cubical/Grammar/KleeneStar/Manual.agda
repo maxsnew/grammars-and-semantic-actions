@@ -127,14 +127,14 @@ module _ (g : Grammar ℓG) where
       unfolding _⊗_ ⊗-intro
       λalg : *r-Algebra
       λalg .the-ℓ = ℓG
-      λalg .G = KL* ⟜ g
+      λalg .G = KL* ⊸ g
       λalg .nil-case =
-        ⟜-intro (cons ∘g ⊗-intro id nil ∘g ⊗-unit-r⁻ ∘g ⊗-unit-l)
+        ⊸-intro (cons ∘g ⊗-intro id nil ∘g ⊗-unit-r⁻ ∘g ⊗-unit-l)
       λalg .cons-case =
-        ⟜-intro (cons ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+        ⊸-intro (cons ∘g ⊗-intro id ⊸-app ∘g ⊗-assoc⁻)
 
       ans : KL* ⊗ g ⊢ KL*
-      ans = ⟜-intro⁻ (foldKL*r λalg)
+      ans = ⊸-intro⁻ (foldKL*r λalg)
 
   record *l-AlgebraHom (alg alg' : *l-Algebra) : Typeω where
     field
@@ -147,17 +147,17 @@ module _ (g : Grammar ℓG) where
   module _ (the-l-alg : *l-Algebra) where
     λalg : *r-Algebra
     λalg .the-ℓ = the-l-alg .the-ℓ
-    λalg .G = the-l-alg .G ⊸ the-l-alg .G
-    λalg .nil-case = ⊸-intro ⊗-unit-r
+    λalg .G = the-l-alg .G ⟜ the-l-alg .G
+    λalg .nil-case = ⟜-intro ⊗-unit-r
     λalg .cons-case =
-      ⊸-intro {k = the-l-alg .G}
-        (⊸-app ∘g
+      ⟜-intro {k = the-l-alg .G}
+        (⟜-app ∘g
         ⊗-intro (the-l-alg .snoc-case) id ∘g
         ⊗-assoc)
 
     KL*l-elim : KL* ⊢ the-l-alg .G
     KL*l-elim =
-      ⊸-app ∘g
+      ⟜-app ∘g
       ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g
       ⊗-unit-l⁻
 
@@ -167,8 +167,8 @@ module _ (g : Grammar ℓG) where
 
 opaque
   unfolding _⊗_
-  cons' : ε ⊢ KL* g ⟜ KL* g ⟜ g
-  cons' = ⟜2-intro-ε cons
+  cons' : ε ⊢ KL* g ⊸ KL* g ⊸ g
+  cons' = ⊸2-intro-ε cons
 
   NIL : ε ⊢ KL* g
   NIL = nil
