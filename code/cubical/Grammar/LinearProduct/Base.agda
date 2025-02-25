@@ -282,12 +282,12 @@ opaque
 
     ⊗-unit-rl⁻ : ⊗-unit-r ∘g ⊗-unit-l⁻ ≡ id
     ⊗-unit-rl⁻ = funExt λ w → funExt λ p →
-      isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {g = ε} w p)
+      isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {A = ε} w p)
 
     --technically this follows from more basic monoidal category axioms but it's not simple
     ⊗-unit-lr⁻ : ⊗-unit-l ∘g ⊗-unit-r⁻ ≡ id
     ⊗-unit-lr⁻ = funExt λ w → funExt λ p →
-      isSetString w [] ((⊗-unit-l ∘g ⊗-unit-r⁻ ) w p) ((id {g = ε} w p))
+      isSetString w [] ((⊗-unit-l ∘g ⊗-unit-r⁻ ) w p) ((id {A = ε} w p))
 
   ⊗-unit-r' :
     g ⊗ ε ⊢ g
@@ -407,7 +407,7 @@ opaque
       cong-∘g⊗-unit-r⁻ _ _
         (λ i → ⊗-unit-r⁻r i ∘g f ∘g ⊗-unit-r⁻r (~ i))
 
-    id,⊗id≡id : ⊗-intro id id ≡ id {g = g ⊗ h}
+    id,⊗id≡id : ⊗-intro id id ≡ id {A = g ⊗ h}
     id,⊗id≡id = refl
 
 _,⊗_ = ⊗-intro

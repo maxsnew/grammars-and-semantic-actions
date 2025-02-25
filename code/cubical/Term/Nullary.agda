@@ -9,23 +9,23 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD ℓ ℓ' : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 {-- A direct interpretation of terms in an empty (ε) context
  -- ε ⊢ M : k
  --}
-Element : Grammar ℓg → Type _
-Element g = g []
+Element : Grammar ℓA → Type _
+Element A = A []
 
-ε⊢ : Grammar ℓg → Type _
+ε⊢ : Grammar ℓA → Type _
 ε⊢ = Element
 
-↑ : Grammar ℓg → Type _
+↑ : Grammar ℓA → Type _
 ↑ = Element
 
-_∘ε_ : g ⊢ h → ε⊢ g → ε⊢ h
-(f ∘ε gp) = f [] gp
+_∘ε_ : A ⊢ B → ε⊢ A → ε⊢ B
+(f ∘ε Ap) = f [] Ap
