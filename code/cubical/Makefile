@@ -41,30 +41,30 @@ check-everythings:
 
 .PHONY : gen-everythings
 gen-everythings:
-	cd Cubical && $(EVERYTHINGS) gen-except Grammar/Coinductive
+	$(EVERYTHINGS) gen-except Grammar/Coinductive
 
 .PHONY : gen-and-check-everythings
 gen-and-check-everythings:
-	cd Cubical && $(EVERYTHINGS) gen-except Grammar/Coinductive
-	cd Cubical && $(EVERYTHINGS) check-except Grammar/Coinductive
+	$(EVERYTHINGS) gen-except Grammar/Coinductive
+	$(EVERYTHINGS) check-except Grammar/Coinductive
 
 .PHONY : check-README
 check-README:
-	cd Cubical && $(EVERYTHINGS) check-README
+	$(EVERYTHINGS) check-README
 
 # typechecking and generating listings for all files imported in README
 
 .PHONY : check
 check: gen-everythings
-	cd Cubical && $(AGDA) README.agda
+	$(AGDA) README.agda
 
 .PHONY : timings
 timings: clean gen-everythings
-	cd Cubical && $(AGDA) -v profile.modules:10 README.agda
+	$(AGDA) -v profile.modules:10 README.agda
 
 .PHONY : listings
 listings: $(wildcard Cubical/**/*.agda)
-	cd Cubical && $(AGDA) -i. -isrc --html README.agda -v0
+	$(AGDA) -i. -isrc --html README.agda -v0
 
 .PHONY : clean
 clean:

@@ -77,7 +77,7 @@ checkEverythings excludes dirs = do
 checkREADME :: IO ()
 checkREADME = do
   (sub_dirs', _) <- getSubDirsFiles ["."]
-  let sub_dirs = filter (\d -> d `notElem` ["Everything.hs", "_build", "README.agda"]) sub_dirs'
+  let sub_dirs = filter (\d -> d `notElem` ["Everything.hs", "_build", "README.agda", "Makefile"]) sub_dirs'
   imported <- getImported ["README"]
   let missing_files = fmap (\dir -> ["Everything",dir]) sub_dirs \\ imported
   if null missing_files then pure ()
@@ -116,7 +116,7 @@ helpText = unlines [
 main :: IO ()
 main = do
   all_dirs' <- filter ('.' `notElem`) <$> getDirectoryContents "."
-  let all_dirs = filter (\d -> d `notElem` ["Everything.hs", "_build", "README.agda"]) all_dirs'
+  let all_dirs = filter (\d -> d `notElem` ["Everything.hs", "_build", "README.agda", "Makefile"]) all_dirs'
   args <- getArgs
   case args of
     "check":dirs -> checkEverythings [] dirs

@@ -175,7 +175,7 @@ jobs:
 
       - name: Test grammars-and-semantic-actions
         run: |
-          cd code && make test \
+          cd code/Cubical && make test \
             AGDA_EXEC='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
             FIX_WHITESPACE='~/.cabal/bin/fix-whitespace'
 
