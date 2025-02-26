@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - main
-      - impl
     paths-ignore:
       - 'paper/*'
       - 'notes/*'
@@ -62,44 +61,13 @@ env:
     ~/.cabal/packages
     ~/.cabal/store
     ~/.cabal/bin
+    ~/.agda
+    ~/cubical
+    ~/cubical-categorical-logic
+
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  check-whitespace:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install cabal
-        uses: haskell-actions/setup@v2
-        with:
-          ghc-version: ${{ env.GHC_VERSION }}
-          cabal-version: ${{ env.CABAL_VERSION }}
-          cabal-update: true
-      ########################################################################
-      ## INSTALLATION STEPS
-      ########################################################################
-      - name: Download and install fix-whitespace
-        run: |
-          cd ~
-          git clone https://github.com/agda/fix-whitespace --depth=1
-          cd fix-whitespace
-          ${{ env.CABAL_INSTALL }} fix-whitespace.cabal
-          cd ..
-      ########################################################################
-      ## CHECKOUT
-      ########################################################################
-
-      # By default github actions do not pull the repo
-      - name: Checkout grammars-and-semantic-actions
-        uses: actions/checkout@v3
-
-      ########################################################################
-      ## TESTING
-      ########################################################################
-
-      - name: Test whitespace
-        run: |
-          ~/.cabal/bin/fix-whitespace --check
-
   compile-agda:
     runs-on: ubuntu-latest
     steps:
@@ -109,11 +77,32 @@ jobs:
           ghc-version: ${{ env.GHC_VERSION }}
           cabal-version: ${{ env.CABAL_VERSION }}
           cabal-update: true
+
+      # This caching step allows us to save a lot of building time by only
+      # rebuilding Agda, and re-checking unchanged library files if
+      # absolutely necessary i.e. if we change either the version of Agda,
+      # ghc, or cabal that we want to use for the build.
+      - name: Restore external dependencies cache
+        uses: actions/cache/restore@v3
+        id: cache-external-restore
+        with:
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}
+
       ########################################################################
       ## INSTALLATION STEPS
       ########################################################################
 
+      - name: Download and install fix-whitespace
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
+        run: |
+          git clone https://github.com/agda/fix-whitespace --depth=1
+          cd fix-whitespace
+          ${{ env.CABAL_INSTALL }} fix-whitespace.cabal
+          cd ..
+
       - name: Download and install Agda from github
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run: |
           git clone https://github.com/agda/agda --branch ${{ env.AGDA_BRANCH }} --depth=1
           cd agda
@@ -124,6 +113,7 @@ jobs:
           rm -rf agda
 
       - name: Download Cubical from github
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run : |
           cd ~
           git clone https://github.com/agda/cubical --branch master
@@ -133,6 +123,7 @@ jobs:
           echo "CUBICAL_DIR=$PWD/cubical" >> "$GITHUB_ENV"
 
       - name: Download categorical-logic from github
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run : |
           cd ~
           git clone https://github.com/maxsnew/cubical-categorical-logic --branch main
@@ -142,12 +133,21 @@ jobs:
           echo "CATLOG_DIR=$PWD/cubical-categorical-logic" >> "$GITHUB_ENV"
 
       - name: Set up Agda dependencies
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run : |
           mkdir ~/.agda
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
           echo "$CATLOG_DIR/cubical-categorical-logic.agda-lib" >> ~/.agda/libraries
           echo "$GITHUB_WORKSPACE/code/cubical/grammar.agda-lib" >> ~/.agda/libraries
+
+      - name: Save external dependencies cache
+        if: steps.cache-external-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        id: cache-external-save
+        with:
+          path: ${{ env.CACHE_PATHS }}
+          key: ${{ steps.cache-external-restore.outputs.cache-primary-key }}
 
       ########################################################################
       ## CHECKOUT
@@ -161,10 +161,62 @@ jobs:
       ## TESTING
       ########################################################################
 
+      - name: Restore Grammars library cache
+        uses: actions/cache/restore@v3
+        id: cache-library-restore
+        with:
+          path: ./code/cubical/_build
+          key: GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('code/cubical/**') }}
+          restore-keys: |
+            GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+
+      - name: Restore Cubical library cache
+        uses: actions/cache/restore@v3
+        id: cache-cubical-library-restore
+        with:
+          path: ~/cubical/_build
+          key: CubicalLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('~/cubical/cubical/**', '~/cubical/cubical.agda-lib') }}
+          restore-keys: |
+            CubicalLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+
+      - name: Restore Cubical Categorical Logic library cache
+        uses: actions/cache/restore@v3
+        id: cache-cubical-categorical-logic-library-restore
+        with:
+          path: ~/cubical-categorical-logic/_build
+          key: CubicalCategoricalLogicLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('~/cubical-categorical-logic/Cubical/**', '~/cubical-categorical-logic/cubical-categorical-logic.agda-lib') }}
+          restore-keys: |
+            CubicalCategoricalLogicLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+
       - name: Put cabal programs in PATH
         run: echo "~/.cabal/bin" >> $GITHUB_PATH
 
       - name: Test grammars-and-semantic-actions
         run: |
-          cd code/cubical && make quicktest \
-            AGDA='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
+          cd code/cubical && make test \
+            AGDA_EXEC='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
+            FIX_WHITESPACE='~/.cabal/bin/fix-whitespace'
+
+      - name: Save library cache
+        if: steps.cache-library-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        id: cache-library-save
+        with:
+          path: ./code/cubical/_build
+          key: ${{ steps.cache-library-restore.outputs.cache-primary-key }}
+
+      - name: Save Cubical library cache
+        if: steps.cache-cubical-library-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        id: cache-cubical-library-save
+        with:
+          path: ~/cubical/_build
+          key: ${{ steps.cache-cubical-library-restore.outputs.cache-primary-key }}
+
+      - name: Save Cubical Categorical Logic library cache
+        if: steps.cache-cubical-categorical-logic-library-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
+        id: cache-cubical-categorical-logic-library-save
+        with:
+          path: ~/cubical-categorical-logic/_build
+          key: ${{ steps.cache-cubical-categorical-logic-library-restore.outputs.cache-primary-key }}

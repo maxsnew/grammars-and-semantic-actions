@@ -34,7 +34,7 @@ open import DFA Alphabet
 open import Helper
 
 open import Cubical.Data.Quiver.Base
-open import Quiver.Reachability
+open import Cubical.Data.Quiver.Reachability
 
 private
   variable
