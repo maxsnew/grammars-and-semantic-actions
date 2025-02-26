@@ -10,28 +10,27 @@ open import Term Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' g1 g2 g3 g4 g5 : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    f f' f'' : g ⊢ h
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD ℓX : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 module _
-  {g : Grammar ℓg}
-  {h : SetGrammar ℓh}
-  (f f' : g ⊢ ⟨ h ⟩)
+  {A : Grammar ℓA}
+  {B : SetGrammar ℓB}
+  (f f' : A ⊢ ⟨ B ⟩)
   where
-  eq-prop : g ⊢ Ω
+  eq-prop : A ⊢ Ω
   eq-prop w x .fst = f w x ≡ f' w x
-  eq-prop w x .snd = (h .snd) w (f w x) (f' w x)
+  eq-prop w x .snd = (B .snd) w (f w x) (f' w x)
 
   open Subgrammar eq-prop
 
-  equalizer : Grammar (ℓ-max ℓg ℓh)
+  equalizer : Grammar (ℓ-max ℓA ℓB)
   equalizer = subgrammar
 
-  eq-π : equalizer ⊢ g
+  eq-π : equalizer ⊢ A
   eq-π = sub-π
 
   eq-π-pf : f ∘g eq-π ≡ f' ∘g eq-π
@@ -39,17 +38,17 @@ module _
     funExt λ w → funExt λ x →
     extract-pf sub-π sub-π-pf w x
 
-  module _ (f'' : k ⊢ g) (pf' : f ∘g f'' ≡ f' ∘g f'') where
+  module _ (f'' : C ⊢ A) (pf' : f ∘g f'' ≡ f' ∘g f'') where
     pf : eq-prop ∘g f'' ≡ true ∘g ⊤-intro
     pf = insert-pf f'' λ w x i → pf' i w x
 
-    eq-intro : k ⊢ equalizer
+    eq-intro : C ⊢ equalizer
     eq-intro = sub-intro f'' pf
 
     eq-β : eq-π ∘g eq-intro ≡ f''
     eq-β = sub-β f'' pf
 
-  module _ (f'' : k ⊢ equalizer) where
+  module _ (f'' : C ⊢ equalizer) where
     eq-η : f'' ≡ eq-intro (eq-π ∘g f'') λ i → eq-π-pf i ∘g f''
     eq-η =
       sub-η f''
@@ -58,7 +57,7 @@ module _
           (isSet⊢Ω _ _ _ _)
 
   equalizer-section :
-    ∀ (f'' : g ⊢ equalizer) →
+    ∀ (f'' : A ⊢ equalizer) →
     (eq-π ∘g f'' ≡ id)
     → f ≡ f'
   equalizer-section f'' p =
@@ -66,31 +65,31 @@ module _
     ∙ cong (_∘g f'') eq-π-pf
     ∙ cong (f' ∘g_) p
 
-module _ {A : Type ℓ} (F : A → Functor A) (g : A → SetGrammar ℓg)
-  (e e' : ∀ (a : A) → μ F a ⊢ ⟨ g a ⟩)
-  (pf : ∀ (a : A) →
-    e  a ∘g roll ∘g map (F a) (λ a' → eq-π {h = g a'} (e a') (e' a')) ≡
-    e' a ∘g roll ∘g map (F a) (λ a' → eq-π {h = g a'} (e a') (e' a'))) where
+module _ {X : Type ℓX} (F : X → Functor X) (A : X → SetGrammar ℓA)
+  (e e' : ∀ (x : X) → μ F x ⊢ ⟨ A x ⟩)
+  (pf : ∀ (x : X) →
+    e  x ∘g roll ∘g map (F x) (λ y → eq-π {B = A y} (e y) (e' y)) ≡
+    e' x ∘g roll ∘g map (F x) (λ y → eq-π {B = A y} (e y) (e' y))) where
 
   open Subgrammar
 
-  equalizer-ind' : ∀ (a : A) →
-    eq-prop {h = g a} (e a) (e' a) ≡ true ∘g ⊤-intro
+  equalizer-ind' : ∀ (x : X) →
+    eq-prop {B = A x} (e x) (e' x) ≡ true ∘g ⊤-intro
   equalizer-ind' =
-    subgrammar-ind F (λ a → ⟨ g a ⟩)
-      (λ a → eq-prop {h = g a} (e a) (e' a))
-      (λ a →
-        insert-pf (eq-prop {h = g a} (e a) (e' a))
+    subgrammar-ind F (λ x → ⟨ A x ⟩)
+      (λ x → eq-prop {B = A x} (e x) (e' x))
+      (λ x →
+        insert-pf (eq-prop {B = A x} (e x) (e' x))
           _
-          λ w x → funExt⁻ (funExt⁻ (pf a) w) x
+          λ w z → funExt⁻ (funExt⁻ (pf x) w) z
           )
 
-  equalizer-ind : ∀ (a : A) → e a ≡ e' a
-  equalizer-ind a =
-    funExt λ w → funExt λ x →
+  equalizer-ind : ∀ (x : X) → e x ≡ e' x
+  equalizer-ind x =
+    funExt λ w → funExt λ z →
       extract-pf
-        (eq-prop {h = g a} (e a) (e' a))
+        (eq-prop {B = A x} (e x) (e' x))
         id
-        (equalizer-ind' a)
+        (equalizer-ind' x)
         w
-        x
+        z

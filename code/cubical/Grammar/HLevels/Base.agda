@@ -7,35 +7,35 @@ open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 
 private
-  variable ℓ ℓG ℓG' ℓH ℓK ℓL : Level
+  variable ℓA ℓB ℓC ℓD : Level
 
 module _ where
-  isLang : Grammar ℓG → Type ℓG
+  isLang : Grammar ℓA → Type ℓA
   isLang A = ∀ w → isProp (A w)
 
-  isSetGrammar : Grammar ℓG → Type ℓG
+  isSetGrammar : Grammar ℓA → Type ℓA
   isSetGrammar A = ∀ w → isSet (A w)
 
-  isLang→isSetGrammar : ∀ {A : Grammar ℓG} → isLang A → isSetGrammar A
+  isLang→isSetGrammar : ∀ {A : Grammar ℓA} → isLang A → isSetGrammar A
   isLang→isSetGrammar isLangA w = isProp→isSet (isLangA w)
 
-  Lang : ∀ (ℓ : Level) →  Type (ℓ-suc ℓ)
-  Lang ℓ = Σ[ A ∈ Grammar ℓ ] isLang A
+  Lang : ∀ (ℓA : Level) →  Type (ℓ-suc ℓA)
+  Lang ℓA = Σ[ A ∈ Grammar ℓA ] isLang A
 
-  SetGrammar : ∀ (ℓ : Level) →  Type (ℓ-suc ℓ)
-  SetGrammar ℓ = Σ[ A ∈ Grammar ℓ ] isSetGrammar A
+  SetGrammar : ∀ (ℓA : Level) →  Type (ℓ-suc ℓA)
+  SetGrammar ℓA = Σ[ A ∈ Grammar ℓA ] isSetGrammar A
 
-  Lang→SetGrammar : Lang ℓ → SetGrammar ℓ
-  Lang→SetGrammar L = L .fst , isLang→isSetGrammar (L .snd)
+  Lang→SetGrammar : Lang ℓA → SetGrammar ℓA
+  Lang→SetGrammar A = A .fst , isLang→isSetGrammar (A .snd)
 
   -- Might be confusing but convenient
-  ⟨_⟩ : SetGrammar ℓ → Grammar ℓ
+  ⟨_⟩ : SetGrammar ℓA → Grammar ℓA
   ⟨ A ⟩ = A .fst
 
-  module _ {g : Grammar ℓG} {h : Grammar ℓH} (g≅h : g ≅ h) (isLang-g : isLang g) where
+  module _ {A : Grammar ℓA} {B : Grammar ℓB} (A≅B : A ≅ B) (isLang-A : isLang A) where
     open StrongEquivalence
-    isLang≅ : isLang h
+    isLang≅ : isLang B
     isLang≅ w x y =
-      sym (funExt⁻ (funExt⁻ (g≅h .sec) w) x)
-      ∙ cong (g≅h .fun w) (isLang-g w (g≅h .inv w x) (g≅h .inv w y))
-      ∙ (funExt⁻ (funExt⁻ (g≅h .sec) w) y)
+      sym (funExt⁻ (funExt⁻ (A≅B .sec) w) x)
+      ∙ cong (A≅B .fun w) (isLang-A w (A≅B .inv w x) (A≅B .inv w y))
+      ∙ (funExt⁻ (funExt⁻ (A≅B .sec) w) y)

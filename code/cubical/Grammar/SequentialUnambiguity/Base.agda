@@ -26,102 +26,102 @@ open import Cubical.Foundations.Powerset.More
 
 private
   variable
-    ℓg ℓh ℓk ℓl : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    c : ⟨ Alphabet ⟩
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 open StrongEquivalence
 open Powerset ⟨ Alphabet ⟩
 
 sequentiallyUnambiguous :
-  Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
-sequentiallyUnambiguous g h =
-  ∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉FollowLast g ⟩ ⊎ ⟨ c ∉First h ⟩
+  Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
+sequentiallyUnambiguous A B =
+  ∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉FollowLast A ⟩ ⊎ ⟨ c ∉First B ⟩
 
-syntax sequentiallyUnambiguous g h = g ⊛ h
+syntax sequentiallyUnambiguous A B = A ⊛ B
 
 module _
-  (g : Grammar ℓg)
+  (A : Grammar ℓA)
   (c : ⟨ Alphabet ⟩)
-  (c∉FLg : ⟨ c ∉FollowLast g ⟩)
+  (c∉FLA : ⟨ c ∉FollowLast A ⟩)
   (disc : Discrete ⟨ Alphabet ⟩)
   where
-  ∉FollowLast→⊛ : g ⊛ startsWith c
+  ∉FollowLast→⊛ : A ⊛ startsWith c
   ∉FollowLast→⊛ c' =
     decRec
-      (λ c≡c' → inl (c∉FLg ∘g (id ,⊗ transportG (cong ＂_＂ (sym c≡c')) ,⊗ id) ,&p id))
+      (λ c≡c' → inl (c∉FLA ∘g (id ,⊗ transportG (cong ＂_＂ (sym c≡c')) ,⊗ id) ,&p id))
       (λ c≢c' → inr (⊕ᴰ-elim (λ c'≡c → Empty.rec (c≢c' (sym c'≡c))) ∘g same-first' c' c))
       (disc c c')
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (k : Grammar ℓk)
-  (seq-unambig : g ⊛ h)
-  (¬nullh : ⟨ ¬Nullable h ⟩)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (C : Grammar ℓC)
+  (seq-unambig : A ⊛ B)
+  (¬nullB : ⟨ ¬Nullable B ⟩)
   where
-  ⊛-⊗l : g ⊛ (h ⊗ k)
+  ⊛-⊗l : A ⊛ (B ⊗ C)
   ⊛-⊗l c =
-    Sum.map (λ x → x) (∉First⊗l ¬nullh) (seq-unambig c)
+    Sum.map (λ x → x) (∉First⊗l ¬nullB) (seq-unambig c)
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (k : Grammar ℓk)
-  (seq-unambig-h : g ⊛ h)
-  (seq-unambig-k : g ⊛ k)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (C : Grammar ℓC)
+  (seq-unambig-B : A ⊛ B)
+  (seq-unambig-C : A ⊛ C)
   where
-  ⊛-⊗ : g ⊛ (h ⊗ k)
+  ⊛-⊗ : A ⊛ (B ⊗ C)
   ⊛-⊗ c =
     Sum.rec
       (λ x → inl x)
-      (λ c∉Fh →
+      (λ c∉FB →
         Sum.rec
           inl
-          (λ c∉Fk → inr (∉First⊗ c∉Fh c∉Fk))
-          (seq-unambig-k c)
+          (λ c∉FC → inr (∉First⊗ c∉FB c∉FC))
+          (seq-unambig-C c)
       )
-      (seq-unambig-h c)
+      (seq-unambig-B c)
 
 module _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  {k : Grammar ℓk}
-  (seq-unambig : g ⊛ h)
-  (f : k ⊢ h)
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  {C : Grammar ℓC}
+  (seq-unambig : A ⊛ B)
+  (f : C ⊢ B)
   where
 
-  ⊛∘g-r : g ⊛ k
+  ⊛∘g-r : A ⊛ C
   ⊛∘g-r c = Sum.map (λ x → x) (∉First∘g f) (seq-unambig c)
 
 module _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  {k : Grammar ℓk}
-  (seq-unambig : g ⊛ h)
-  (f : k ⊢ g)
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  {C : Grammar ℓC}
+  (seq-unambig : A ⊛ B)
+  (f : C ⊢ A)
   where
 
-  ⊛∘g-l : k ⊛ h
+  ⊛∘g-l : C ⊛ B
   ⊛∘g-l c = Sum.map (∉FollowLast∘g f) (λ x → x) (seq-unambig c)
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (k : Grammar ℓk)
-  (seq-unambig : g ⊛ h)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (C : Grammar ℓC)
+  (seq-unambig : A ⊛ B)
   where
-  ⊛-& : g ⊛ (h & k)
+  ⊛-& : A ⊛ (B & C)
   ⊛-& c = ⊛∘g-r seq-unambig &-π₁ c
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (seq-unambig : g ⊛ h)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (seq-unambig : A ⊛ B)
   where
-  ⊛-* : g ⊛ (h *)
+  ⊛-* : A ⊛ (B *)
   ⊛-* c =
     Sum.map
       (λ x → x)
@@ -129,16 +129,16 @@ module _
       (seq-unambig c)
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (k : Grammar ℓk)
-  (seq-unambig-h : g ⊛ h)
-  (seq-unambig-k : g ⊛ k)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (C : Grammar ℓC)
+  (seq-unambig-B : A ⊛ B)
+  (seq-unambig-C : A ⊛ C)
   where
 
   private
     uninhabitedFirstPrefixG :
-      firstPrefixG g h g k ⊢ ⊥
+      firstPrefixG A B A C ⊢ ⊥
     uninhabitedFirstPrefixG =
       ⊕ᴰ-elim (λ w →
       ⊕ᴰ-elim (λ x →
@@ -148,24 +148,24 @@ module _
           ([] , notmt) → Empty.rec (notmt refl)
         ; (c ∷ v , notmt) →
           Sum.rec
-            (λ c∉Flg →
+            (λ c∉FlA →
               ⊥⊗
-              ∘g (c∉Flg ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
+              ∘g (c∉FlA ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
               ∘g ⌈⌉-⊗&-distR⁻ {w = x}
               ∘g id ,&p ⊗-assoc
               ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
             )
-            (λ c∉Fk →
+            (λ c∉FC →
               ⊗⊥
-              ∘g id ,⊗ (c∉Fk ∘g &-swap)
+              ∘g id ,⊗ (c∉FC ∘g &-swap)
               ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
               ∘g &-π₂
             )
-            (seq-unambig-k c)
+            (seq-unambig-C c)
         })))))
 
     uninhabitedSecondPrefixG :
-      secondPrefixG g h g k ⊢ ⊥
+      secondPrefixG A B A C ⊢ ⊥
     uninhabitedSecondPrefixG =
       ⊕ᴰ-elim (λ y →
       ⊕ᴰ-elim (λ z →
@@ -175,28 +175,28 @@ module _
           ([] , notmt) → Empty.rec (notmt refl)
         ; (c ∷ v , notmt) →
           Sum.rec
-            (λ c∉Flg →
+            (λ c∉FlA →
               ⊥⊗
-              ∘g (c∉Flg ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
+              ∘g (c∉FlA ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
               ∘g ⌈⌉-⊗&-distR⁻ {w = x}
               ∘g id ,&p ⊗-assoc
               ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
             )
-            (λ c∉Fh →
+            (λ c∉FB →
               ⊗⊥
-              ∘g id ,⊗ (c∉Fh ∘g &-swap)
+              ∘g id ,⊗ (c∉FB ∘g &-swap)
               ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
               ∘g &-π₂
             )
-            (seq-unambig-h c)
+            (seq-unambig-B c)
         })))))
 
   ⊗&-distL≅ :
-    (g ⊗ h) & (g ⊗ k)
+    (A ⊗ B) & (A ⊗ C)
     ≅
-    (g & g) ⊗ (h & k)
+    (A & A) ⊗ (B & C)
   ⊗&-distL≅ =
-    ⊗&-split g h g k
+    ⊗&-split A B A C
     ≅∙ ⊕≅
       id≅
       (
@@ -207,22 +207,22 @@ module _
       ≅∙ ⊥⊕≅ ⊥
       )
     ≅∙ ⊕-swap≅
-    ≅∙ ⊥⊕≅ (g & g ⊗ h & k)
+    ≅∙ ⊥⊕≅ (A & A ⊗ B & C)
 
-seq-unambig-εL : ε ⊛ g
+seq-unambig-εL : ε ⊛ A
 seq-unambig-εL c = inl ((disjoint-ε-char+ ∘g id ,&p (literal→char c ,⊗ id ∘g ⊗-unit-l)) ∘g &-swap)
 
-seq-unambig-εR : g ⊛ ε
+seq-unambig-εR : A ⊛ ε
 seq-unambig-εR c = inr (disjoint-ε-char+ ∘g id ,&p literal→char c ,⊗ id ∘g &-swap)
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (seq-unambig : g ⊛ h)
-  (¬nullh : ⟨ ¬Nullable h ⟩)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (seq-unambig : A ⊛ B)
+  (¬nullB : ⟨ ¬Nullable B ⟩)
   where
 
-  ⊛→must-split : disjoint g (g ⊗ h ⊗ string)
+  ⊛→must-split : disjoint A (A ⊗ B ⊗ string)
   ⊛→must-split =
     ⊕ᴰ-elim (λ c →
       Sum.rec
@@ -231,9 +231,9 @@ module _
           ∘g &-swap
           ∘g id ,&p (id ,⊗ (id ,⊗ string-intro ∘g ⊗-assoc⁻ ∘g &-π₂ ,⊗ id))
         )
-        (λ c∉Fh →
+        (λ c∉FB →
           ⊗⊥
-          ∘g id ,⊗ (⊥⊗ ∘g (c∉Fh ∘g &-swap) ,⊗ id)
+          ∘g id ,⊗ (⊥⊗ ∘g (c∉FB ∘g &-swap) ,⊗ id)
           ∘g &-π₂
         )
         (seq-unambig c)
@@ -244,213 +244,213 @@ module _
       ∘g id ,⊗
         (⊕ᴰ-distL .fun
         ∘g (⊥⊕≅ _ .fun
-            ∘g ((¬nullh ∘g &-swap) ,⊕p id)
+            ∘g ((¬nullB ∘g &-swap) ,⊕p id)
             ∘g firstChar≅ .fun) ,⊗ id))
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (k : Grammar ℓk)
-  (l : Grammar ℓl)
-  (seq-unambig : g ⊛ h)
-  (¬nullh : ⟨ ¬Nullable h ⟩)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (C : Grammar ℓC)
+  (D : Grammar ℓD)
+  (seq-unambig : A ⊛ B)
+  (¬nullB : ⟨ ¬Nullable B ⟩)
   where
 
   factor⊗3≅ :
-    (g ⊗ h ⊗ k) & (g ⊗ h ⊗ l)
+    (A ⊗ B ⊗ C) & (A ⊗ B ⊗ D)
     ≅
-    (g & g) ⊗ ((h ⊗ k) & (h ⊗ l))
+    (A & A) ⊗ ((B ⊗ C) & (B ⊗ D))
   factor⊗3≅ =
-    ⊗&-distL≅ g (h ⊗ k) (h ⊗ l)
-      (⊛-⊗l g h k seq-unambig ¬nullh)
-      (⊛-⊗l g h l seq-unambig ¬nullh)
+    ⊗&-distL≅ A (B ⊗ C) (B ⊗ D)
+      (⊛-⊗l A B C seq-unambig ¬nullB)
+      (⊛-⊗l A B D seq-unambig ¬nullB)
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (¬nullg : ⟨ ¬Nullable g ⟩)
-  (¬nullh : ⟨ ¬Nullable h ⟩)
-  (seq-unambig : g ⊛ h)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (¬nullA : ⟨ ¬Nullable A ⟩)
+  (¬nullB : ⟨ ¬Nullable B ⟩)
+  (seq-unambig : A ⊛ B)
   (c : ⟨ Alphabet ⟩)
-  (c∉FLh : ⟨ c ∉FollowLast h ⟩)
+  (c∉FLB : ⟨ c ∉FollowLast B ⟩)
   where
-  ∉FollowLast-⊗¬null : ⟨ c ∉FollowLast (g ⊗ h) ⟩
+  ∉FollowLast-⊗¬null : ⟨ c ∉FollowLast (A ⊗ B) ⟩
   ∉FollowLast-⊗¬null =
     ⊗⊥
-    ∘g id ,⊗ c∉FLh
+    ∘g id ,⊗ c∉FLB
     ∘g ⊗&-distL≅
-         g
-         (h ⊗ ＂ c ＂ ⊗ string)
-         h
-         (⊛-⊗l g h (＂ c ＂ ⊗ string) seq-unambig ¬nullh)
+         A
+         (B ⊗ ＂ c ＂ ⊗ string)
+         B
+         (⊛-⊗l A B (＂ c ＂ ⊗ string) seq-unambig ¬nullB)
          seq-unambig
          .fun
     ∘g ⊗-assoc⁻ ,&p id
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (¬nullg : ⟨ ¬Nullable g ⟩)
-  (seq-unambig : g ⊛ h)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (¬nullA : ⟨ ¬Nullable A ⟩)
+  (seq-unambig : A ⊛ B)
   (c : ⟨ Alphabet ⟩)
-  (c∉FLg : ⟨ c ∉FollowLast g ⟩)
-  (c∉FLh : ⟨ c ∉FollowLast h ⟩)
-  (c∉Fh : ⟨ c ∉First h ⟩)
+  (c∉FLA : ⟨ c ∉FollowLast A ⟩)
+  (c∉FLB : ⟨ c ∉FollowLast B ⟩)
+  (c∉FB : ⟨ c ∉First B ⟩)
   (disc : Discrete ⟨ Alphabet ⟩)
   where
-  ∉FollowLast-⊗null : ⟨ c ∉FollowLast (g ⊗ h) ⟩
+  ∉FollowLast-⊗null : ⟨ c ∉FollowLast (A ⊗ B) ⟩
   ∉FollowLast-⊗null =
     ⊕-elim
       (⊗⊥
-      ∘g id ,⊗ c∉Fh
-      ∘g ⊗&-distL≅ g (＂ c ＂ ⊗ string) h (∉FollowLast→⊛ g c c∉FLg disc) seq-unambig .fun
+      ∘g id ,⊗ c∉FB
+      ∘g ⊗&-distL≅ A (＂ c ＂ ⊗ string) B (∉FollowLast→⊛ A c c∉FLA disc) seq-unambig .fun
       ∘g ((⊗-unit-r ∘g id ,⊗ &-π₂) ,⊗ id ∘g ⊗-assoc) ,&p id)
       (⊕-elim
-        (⊛→must-split g (h & char +) g⊛h+ ¬nullh+
+        (⊛→must-split A (B & char +) A⊛B+ ¬nullB+
         ∘g id ,&p id ,⊗ id ,⊗ string-intro
         ∘g &-swap
         ∘g id ,&p (⊗-unit-r ∘g id ,⊗ &-π₂))
-        (∉FollowLast-⊗¬null g (h & (char +)) ¬nullg ¬nullh+ g⊛h+ c c∉FLh+
+        (∉FollowLast-⊗¬null A (B & (char +)) ¬nullA ¬nullB+ A⊛B+ c c∉FLB+
         ∘g ⊗-assoc ,&p id)
       ∘g &⊕-distL
       ∘g id ,&p (⊗⊕-distL ∘g id ,⊗ &string-split≅ .fun))
     ∘g &⊕-distR
     ∘g (⊗⊕-distL ∘g id ,⊗ (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ∘g ⊗-assoc⁻) ,&p id
     where
-    g⊛h+ : g ⊛ (h & (char +))
-    g⊛h+ = ⊛-& g h (char +) seq-unambig
+    A⊛B+ : A ⊛ (B & (char +))
+    A⊛B+ = ⊛-& A B (char +) seq-unambig
 
-    ¬nullh+ : ⟨ ¬Nullable (h & (char +)) ⟩
-    ¬nullh+ = ¬Nullable∘g &-π₂ ¬Nullable-char+
+    ¬nullB+ : ⟨ ¬Nullable (B & (char +)) ⟩
+    ¬nullB+ = ¬Nullable∘g &-π₂ ¬Nullable-char+
 
-    c∉FLh+ : ⟨ c ∉FollowLast (h & (char +)) ⟩
-    c∉FLh+ = ∉FollowLast∘g &-π₁ c∉FLh
+    c∉FLB+ : ⟨ c ∉FollowLast (B & (char +)) ⟩
+    c∉FLB+ = ∉FollowLast∘g &-π₁ c∉FLB
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
   (c : ⟨ Alphabet ⟩)
-  (c∉FLg : ⟨ c ∉FollowLast g ⟩)
-  (c∉FLh : ⟨ c ∉FollowLast h ⟩)
-  (¬nullh∨c∉Fg : ⟨ ¬Nullable h ⟩ ⊎ ⟨ c ∉First g ⟩)
-  (¬nullg∨c∉Fh : ⟨ ¬Nullable g ⟩ ⊎ ⟨ c ∉First h ⟩)
-  (sep : g # h)
+  (c∉FLA : ⟨ c ∉FollowLast A ⟩)
+  (c∉FLB : ⟨ c ∉FollowLast B ⟩)
+  (¬nullB∨c∉FA : ⟨ ¬Nullable B ⟩ ⊎ ⟨ c ∉First A ⟩)
+  (¬nullA∨c∉FB : ⟨ ¬Nullable A ⟩ ⊎ ⟨ c ∉First B ⟩)
+  (sep : A # B)
   where
-  ∉FollowLast-⊕ : ⟨ c ∉FollowLast (g ⊕ h) ⟩
+  ∉FollowLast-⊕ : ⟨ c ∉FollowLast (A ⊕ B) ⟩
   ∉FollowLast-⊕ =
     ⊕-elim
       (⊕-elim
-        c∉FLg
+        c∉FLA
         (Sum.rec
-          (λ ¬nullh →
+          (λ ¬nullB →
             #→disjoint
               (#⊗l
                 (¬Nullable∘g &-π₂ ¬Nullable-char+)
                 (sym# (#∘g2 &-π₁ &-π₁ sep))
               )
               (inl (¬Nullable⊗l ¬Nullable-&char+))
-            ∘g (¬Nullable&char+≅ ¬nullh .fun ,⊗ id ∘g &-π₁) ,& &-π₂ ,& (¬Nullable→char+ (¬Nullable⊗l ¬nullh) ∘g &-π₁)
+            ∘g (¬Nullable&char+≅ ¬nullB .fun ,⊗ id ∘g &-π₁) ,& &-π₂ ,& (¬Nullable→char+ (¬Nullable⊗l ¬nullB) ∘g &-π₁)
           )
-          (λ c∉Fg →
+          (λ c∉FA →
             ⊕-elim
-              (c∉Fg
+              (c∉FA
               ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id)
               (#→disjoint (#⊗l ¬Nullable-&char+ (#∘g &-π₁ (sym# sep))) (inl (¬Nullable⊗l ¬Nullable-&char+)))
             ∘g &⊕-distR
             ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id
           )
-          ¬nullh∨c∉Fg)
+          ¬nullB∨c∉FA)
       ∘g &⊕-distR)
       (⊕-elim
         (Sum.rec
-          (λ ¬nullg →
+          (λ ¬nullA →
             #→disjoint
               (#⊗l
                 (¬Nullable∘g &-π₂ ¬Nullable-char+)
                 (#∘g2 &-π₁ &-π₁ sep)
               )
               (inl (¬Nullable⊗l ¬Nullable-&char+))
-            ∘g (¬Nullable&char+≅ ¬nullg .fun ,⊗ id ∘g &-π₁) ,& &-π₂ ,& (¬Nullable→char+ (¬Nullable⊗l ¬nullg) ∘g &-π₁)
+            ∘g (¬Nullable&char+≅ ¬nullA .fun ,⊗ id ∘g &-π₁) ,& &-π₂ ,& (¬Nullable→char+ (¬Nullable⊗l ¬nullA) ∘g &-π₁)
           )
-          (λ c∉Fh →
+          (λ c∉FB →
             ⊕-elim
-              (c∉Fh
+              (c∉FB
               ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id)
               (#→disjoint (#⊗l ¬Nullable-&char+ (#∘g &-π₁ sep)) (inl (¬Nullable⊗l ¬Nullable-&char+)))
             ∘g &⊕-distR
             ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id
           )
-          ¬nullg∨c∉Fh)
-        c∉FLh
+          ¬nullA∨c∉FB)
+        c∉FLB
       ∘g &⊕-distR)
     ∘g &⊕-distL
     ∘g ⊗⊕-distR ,&p id
 
 module _
-  (g : Grammar ℓg)
+  (A : Grammar ℓA)
   (c : ⟨ Alphabet ⟩)
-  (c∉Fg : ⟨ c ∉First g ⟩)
-  (c∉FLg : ⟨ c ∉FollowLast g ⟩)
-  (¬nullg : ⟨ ¬Nullable g ⟩)
-  (seq-unambig : g ⊛ g)
+  (c∉FA : ⟨ c ∉First A ⟩)
+  (c∉FLA : ⟨ c ∉FollowLast A ⟩)
+  (¬nullA : ⟨ ¬Nullable A ⟩)
+  (seq-unambig : A ⊛ A)
   (disc : Discrete ⟨ Alphabet ⟩)
   where
 
--- Goal: show that g * & (g * ⊗ c ⊗ ⊤) ⊢ ⊥ assuming
--- - g & (g ⊗ c ⊗ ⊤) ⊢ ⊥
---   - c not in follow last of g
--- - g & (c ⊗ ⊤) ⊢ ⊥
---   - c not in first set of g
--- - For all c', either g & (c' ⊗ ⊤) ⊢ ⊥ or g & (g ⊗ c' ⊗ ⊤) ⊢ ⊥
---   - g is sequentially unambiguous with itself, which we may write as g ⊛ g.
+-- Goal: show that A * & (A * ⊗ c ⊗ ⊤) ⊢ ⊥ assuming
+-- - A & (A ⊗ c ⊗ ⊤) ⊢ ⊥
+--   - c not in follow last of A
+-- - A & (c ⊗ ⊤) ⊢ ⊥
+--   - c not in first set of A
+-- - For all c', either A & (c' ⊗ ⊤) ⊢ ⊥ or A & (A ⊗ c' ⊗ ⊤) ⊢ ⊥
+--   - A is sequentially unambiguous with itself, which we may write as A ⊛ A.
 --
 -- The proof below goes rough as follows
 --
--- Build a term g * ⊢ ¬(g * ⊗ c ⊗ ⊤) & (g *)
+-- Build a term A * ⊢ ¬(A * ⊗ c ⊗ ⊤) & (A *)
 --
 -- Here the ε case is easy.
--- Then inductively show that g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *)) ⊢ ¬(g * ⊗ c ⊗ ⊤) & (g *)
+-- Then inductively show that A ⊗ (¬(A * ⊗ c ⊗ ⊤) & (A *)) ⊢ ¬(A * ⊗ c ⊗ ⊤) & (A *)
 --
--- Constructing the g * on the right is straightforward so it suffices to show
---   g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *)) ⊢ ¬(g * ⊗ c ⊗ ⊤)
+-- Constructing the A * on the right is straightforward so it suffices to show
+--   A ⊗ (¬(A * ⊗ c ⊗ ⊤) & (A *)) ⊢ ¬(A * ⊗ c ⊗ ⊤)
 --
 -- This proceeds roughly as
 --
--- g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *)) ⊢ ¬(g * ⊗ c ⊗ ⊤)
+-- A ⊗ (¬(A * ⊗ c ⊗ ⊤) & (A *)) ⊢ ¬(A * ⊗ c ⊗ ⊤)
 -- iff
--- (g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *))) & (g * ⊗ c ⊗ ⊤) ⊢ ⊥
+-- (A ⊗ (¬(A * ⊗ c ⊗ ⊤) & (A *))) & (A * ⊗ c ⊗ ⊤) ⊢ ⊥
 --
--- (g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *))) & (g * ⊗ c ⊗ ⊤) ⊢ ⊥
+-- (A ⊗ (¬(A * ⊗ c ⊗ ⊤) & (A *))) & (A * ⊗ c ⊗ ⊤) ⊢ ⊥
 --
--- Reason if the right g * is empty or not,
--- and conclude it can't be because that would put c in the first set of g
+-- Reason if the right A * is empty or not,
+-- and conclude it can't be because that would put c in the first set of A
 -- which we've assumed is not the case.
 --
--- Thus the rightmost g * is really a (g *) & (char +), which is isomorphic to g ⊗ g*
+-- Thus the rightmost A * is really a (A *) & (char +), which is isomorphic to A ⊗ A*
 --
 -- So we show
--- (g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *))) & (g ⊗ g * ⊗ c ⊗ ⊤) ⊢ ⊥
--- by noting that g and (¬(g * ⊗ c ⊗ ⊤) & (g *)) are sequentially unambiguous,
--- so are g and (g * ⊗ c ⊗ ⊤)
+-- (A ⊗ (¬(A * ⊗ c ⊗ ⊤) & (A *))) & (A ⊗ A * ⊗ c ⊗ ⊤) ⊢ ⊥
+-- by noting that A and (¬(A * ⊗ c ⊗ ⊤) & (A *)) are sequentially unambiguous,
+-- so are A and (A * ⊗ c ⊗ ⊤)
 -- Thus we factor as
 --
--- (g ⊗ (¬(g * ⊗ c ⊗ ⊤) & (g *))) & (g ⊗ g * ⊗ c ⊗ ⊤)
--- ≅ (g & g) ⊗ ((¬(g * ⊗ c ⊗ ⊤) & (g *)) & (g * ⊗ c ⊗ ⊤))
+-- (A ⊗ (¬(A * ⊗ c ⊗ ⊤) & (A *))) & (A ⊗ A * ⊗ c ⊗ ⊤)
+-- ≅ (A & A) ⊗ ((¬(A * ⊗ c ⊗ ⊤) & (A *)) & (A * ⊗ c ⊗ ⊤))
 --
 -- From which we can look at the right side of the tensor,
--- project out the ¬(g * ⊗ c ⊗ ⊤) and apply it reach the desired contradiction
+-- project out the ¬(A * ⊗ c ⊗ ⊤) and apply it reach the desired contradiction
 
   private
-    nonmt-* : (g *) & (char +) ≅ g ⊗ (g *)
+    nonmt-* : (A *) & (char +) ≅ A ⊗ (A *)
     nonmt-* =
-      &≅ (*≅ε⊕g⊗g* g) id≅
+      &≅ (*≅ε⊕A⊗A* A) id≅
       ≅∙ &⊕-distR≅
       ≅∙ ⊕≅ (uninhabited→≅⊥ disjoint-ε-char+) id≅
       ≅∙ ⊕≅
         (sym≅
           (uninhabited→≅⊥
             (disjoint-ε-char+
-            ∘g id ,&p ¬Nullable→char+ (¬Nullable⊗l ¬nullg)
+            ∘g id ,&p ¬Nullable→char+ (¬Nullable⊗l ¬nullA)
             ∘g &-swap
             )
           )
@@ -458,13 +458,13 @@ module _
         id≅
       ≅∙ sym≅ &string-split≅
 
-    nil-pf : ε ⊢ ¬G FollowLastG (g *) c
+    nil-pf : ε ⊢ ¬G FollowLastG (A *) c
     nil-pf =
       ⇒-intro
         (disjoint-ε-char+
          ∘g id ,&p ((char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ∘g &-π₁))
 
-    the-alg : Algebra (*Ty g) (λ _ → (¬G FollowLastG (g *) c) & (g *))
+    the-alg : Algebra (*Ty A) (λ _ → (¬G FollowLastG (A *) c) & (A *))
     the-alg _ =
       ⊕ᴰ-elim λ {
           nil →
@@ -475,15 +475,15 @@ module _
            ∘g lowerG ,⊗ lowerG
       }
       where
-      the-⊛-* : g ⊛ (g *)
-      the-⊛-* = ⊛-* g g seq-unambig
+      the-⊛-* : A ⊛ (A *)
+      the-⊛-* = ⊛-* A A seq-unambig
 
-      the-cons-pf : g ⊗ ¬G FollowLastG (g *) c & (g *) ⊢ (¬G FollowLastG (g *) c)
+      the-cons-pf : A ⊗ ¬G FollowLastG (A *) c & (A *) ⊢ ¬G FollowLastG (A *) c
       the-cons-pf =
         ⇒-intro
          (⊕-elim
            (&-π₂
-           ∘g id ,&p (∉First* c∉Fg ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id))
+           ∘g id ,&p (∉First* c∉FA ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id))
            (⊕-elim
              (¬Nullable-char+
              ∘g (&-π₂ ∘g &-π₂) ,& ((char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ∘g &-π₂ ∘g &-π₁))
@@ -496,7 +496,7 @@ module _
              ∘g (&-π₁ ,⊗ id ∘g
                  ⊗&-distL≅ _ _ _
                   (⊛∘g-r the-⊛-* &-π₂)
-                  (⊛-⊗ g (g *) (startsWith c) the-⊛-* (∉FollowLast→⊛ _ _ c∉FLg disc)) .fun
+                  (⊛-⊗ A (A *) (startsWith c) the-⊛-* (∉FollowLast→⊛ _ _ c∉FLA disc)) .fun
                   ∘g id ,&p ⊗-assoc⁻) ,&p nonmt-* .fun
              )
            ∘g &⊕-distL
@@ -507,7 +507,7 @@ module _
          ∘g id ,&p (&⊕-distR ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id)
          )
 
-  ∉FollowLast-* : ⟨ c ∉FollowLast (g *) ⟩
+  ∉FollowLast-* : ⟨ c ∉FollowLast (A *) ⟩
   ∉FollowLast-* =
     ⇒-app
     ∘g (&-π₁ ∘g &-π₂) ,& (id ,&p &-π₂)

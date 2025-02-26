@@ -17,63 +17,62 @@ open import Cubical.Foundations.Powerset.More
 
 private
   variable
-    ℓg ℓh ℓk ℓl : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
+    ℓA ℓB ℓC : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
     c : ⟨ Alphabet ⟩
 
 open StrongEquivalence
 open Powerset ⟨ Alphabet ⟩
 
+FollowLastG : Grammar ℓA → ⟨ Alphabet ⟩ → Grammar ℓA
+FollowLastG A c = (A ⊗ startsWith c) & A
 
-FollowLastG : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
-FollowLastG g c = (g ⊗ startsWith c) & g
-
-FollowLastG+ : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
-FollowLastG+ g c = (g ⊗ startsWith c) & (g & char +)
+FollowLastG+ : Grammar ℓA → ⟨ Alphabet ⟩ → Grammar ℓA
+FollowLastG+ A c = (A ⊗ startsWith c) & (A & char +)
 
 -- This is the version of FollowLast defined by Bruggemann-Klein and Wood, and
 -- further used in Krishnaswami and Yallop
-FollowLastG' : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
-FollowLastG' g c = ((g & char +) ⊗ startsWith c) & g
+FollowLastG' : Grammar ℓA → ⟨ Alphabet ⟩ → Grammar ℓA
+FollowLastG' A c = ((A & char +) ⊗ startsWith c) & A
 
-FollowLastG'+ : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
-FollowLastG'+ g c = ((g & char +) ⊗ startsWith c) & (g & char +)
+FollowLastG'+ : Grammar ℓA → ⟨ Alphabet ⟩ → Grammar ℓA
+FollowLastG'+ A c = ((A & char +) ⊗ startsWith c) & (A & char +)
 
-FollowLastG'⊢FollowLastG : FollowLastG' g c ⊢ FollowLastG g c
+FollowLastG'⊢FollowLastG : FollowLastG' A c ⊢ FollowLastG A c
 FollowLastG'⊢FollowLastG = (&-π₁ ,⊗ id) ,&p id
 
-_∉FollowLast'_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
-(c ∉FollowLast' g) .fst = uninhabited (FollowLastG' g c)
-(c ∉FollowLast' g) .snd = isProp-uninhabited
+_∉FollowLast'_ : ⟨ Alphabet ⟩ → Grammar ℓA → hProp ℓA
+(c ∉FollowLast' A) .fst = uninhabited (FollowLastG' A c)
+(c ∉FollowLast' A) .snd = isProp-uninhabited
 
-_∉FollowLast_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
-(c ∉FollowLast g) .fst = uninhabited (FollowLastG g c)
-(c ∉FollowLast g) .snd = isProp-uninhabited
+_∉FollowLast_ : ⟨ Alphabet ⟩ → Grammar ℓA → hProp ℓA
+(c ∉FollowLast A) .fst = uninhabited (FollowLastG A c)
+(c ∉FollowLast A) .snd = isProp-uninhabited
 
-¬FollowLast→¬FollowLast' : ⟨ c ∉FollowLast g ⟩ → ⟨ c ∉FollowLast' g ⟩
+¬FollowLast→¬FollowLast' : ⟨ c ∉FollowLast A ⟩ → ⟨ c ∉FollowLast' A ⟩
 ¬FollowLast→¬FollowLast' c∉FL' = c∉FL' ∘g FollowLastG'⊢FollowLastG
 
 ¬FollowLast'→¬FollowLast :
-  ⟨ ¬Nullable g ⟩ → ⟨ c ∉FollowLast' g ⟩ → ⟨ c ∉FollowLast g ⟩
-¬FollowLast'→¬FollowLast ¬nullg c∉FL =
-  c∉FL ∘g ((id ,&p ¬Nullable→char+ ¬nullg ∘g &-Δ) ,⊗ id) ,&p id
+  ⟨ ¬Nullable A ⟩ → ⟨ c ∉FollowLast' A ⟩ → ⟨ c ∉FollowLast A ⟩
+¬FollowLast'→¬FollowLast ¬nullA c∉FL =
+  c∉FL ∘g ((id ,&p ¬Nullable→char+ ¬nullA ∘g &-Δ) ,⊗ id) ,&p id
 
 -- It might be nice to have a version of this
 -- at an arbitrary level, but I don't
 -- want to refactor the powerset code rn
 -- or use explicit lifts
 ¬FollowLast' : Grammar ℓ-zero → ℙ
-¬FollowLast' g c = c ∉FollowLast' g
+¬FollowLast' A c = c ∉FollowLast' A
 
 ¬FollowLast : Grammar ℓ-zero → ℙ
-¬FollowLast g c = c ∉FollowLast g
+¬FollowLast A c = c ∉FollowLast A
 
 FollowLastG+≅ :
-  Grammar ℓg → ⟨ Alphabet ⟩ →
-  FollowLastG g c ≅ FollowLastG+ g c
-FollowLastG+≅ g c =
+  Grammar ℓA → ⟨ Alphabet ⟩ →
+  FollowLastG A c ≅ FollowLastG+ A c
+FollowLastG+≅ A c =
   &≅ id≅ &string-split≅
   ≅∙ &⊕-distL≅
   ≅∙ ⊕≅
@@ -81,17 +80,17 @@ FollowLastG+≅ g c =
       id≅
   ≅∙ ⊥⊕≅ _
 
-∉FollowLast∘g : (f : g ⊢ h) → ⟨ c ∉FollowLast h ⟩ → ⟨ c ∉FollowLast g ⟩
+∉FollowLast∘g : (f : A ⊢ B) → ⟨ c ∉FollowLast B ⟩ → ⟨ c ∉FollowLast A ⟩
 ∉FollowLast∘g f c∉FLh = c∉FLh ∘g (f ,⊗ id) ,&p f
 
 module _
-  (g : Grammar ℓg)
+  (A : Grammar ℓA)
   (c : ⟨ Alphabet ⟩)
-  (null : ε ⊢ g)
-  (c∉FL : ⟨ c ∉FollowLast g ⟩)
+  (null : ε ⊢ A)
+  (c∉FL : ⟨ c ∉FollowLast A ⟩)
   where
 
-  ∉FollowLast→∉First : ⟨ c ∉First g ⟩
+  ∉FollowLast→∉First : ⟨ c ∉First A ⟩
   ∉FollowLast→∉First =
     c∉FL ∘g (null ,⊗ id ∘g ⊗-unit-l⁻) ,&p id
 

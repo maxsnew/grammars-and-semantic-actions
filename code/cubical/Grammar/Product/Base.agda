@@ -29,7 +29,7 @@ opaque
   _&_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   _&_ = _&'_
 
-infixr 19 _&_
+infixr 27 _&_
 
 opaque
   unfolding _&_

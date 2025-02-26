@@ -19,48 +19,48 @@ open import Grammar.String.Properties Alphabet
 
 private
   variable
-    ℓg ℓh : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
 
-pick-parse≡ : (w : String) → (x : g w) → (pick-parse w g x) w (mk⌈⌉ w) ≡ x
-pick-parse≡ {g = g} w x =
-  cong (λ a → transport (λ i → g (a i)) x) (isSetString _ _ _ _)
+pick-parse≡ : (w : String) → (x : A w) → (pick-parse w A x) w (mk⌈⌉ w) ≡ x
+pick-parse≡ {A = A} w x =
+  cong (λ a → transport (λ i → A (a i)) x) (isSetString _ _ _ _)
   ∙ transportRefl x
 
-pick-parse≡' : (w : String) → (x y : g w) → pick-parse w g x ≡ pick-parse w g y → x ≡ y
-pick-parse≡' {g = g} w x y parse≡ =
-  sym (pick-parse≡ {g = g} w x)
+pick-parse≡' : (w : String) → (x y : A w) → pick-parse w A x ≡ pick-parse w A y → x ≡ y
+pick-parse≡' {A = A} w x y parse≡ =
+  sym (pick-parse≡ {A = A} w x)
   ∙ funExt⁻ (funExt⁻ parse≡ w) (mk⌈⌉ w)
-  ∙ pick-parse≡ {g = g} w y
+  ∙ pick-parse≡ {A = A} w y
 
-pick-parse-cong : (w : String) → (x y : g w) →
-  (f : g ⊢ h) → (f w x ≡ f w y) →
-  f ∘g pick-parse w g x ≡ f ∘g pick-parse w g y
-pick-parse-cong {g = g} w x y f f≡ = funExt λ w' → funExt λ z →
+pick-parse-cong : (w : String) → (x y : A w) →
+  (f : A ⊢ B) → (f w x ≡ f w y) →
+  f ∘g pick-parse w A x ≡ f ∘g pick-parse w A y
+pick-parse-cong {A = A} w x y f f≡ = funExt λ w' → funExt λ z →
   JDep {A = String }{B = λ w'' → ⌈ w ⌉ w'' }{x = w}{b = mk⌈⌉ w}
     (λ w'' w≡w'' ⌈w⌉w'' →
       λ ⌈⌉≡ →
-    (f ∘g pick-parse w g x) w'' ⌈w⌉w''
+    (f ∘g pick-parse w A x) w'' ⌈w⌉w''
       ≡
-    (f ∘g pick-parse w g y) w'' ⌈w⌉w''
+    (f ∘g pick-parse w A y) w'' ⌈w⌉w''
     )
-    (cong (f w) (pick-parse≡ {g = g} w x) ∙ f≡ ∙ cong (f w) (sym (pick-parse≡ {g = g} w y)))
+    (cong (f w) (pick-parse≡ {A = A} w x) ∙ f≡ ∙ cong (f w) (sym (pick-parse≡ {A = A} w y)))
     (⌈⌉→≡ w w' z)
     (isProp→PathP (λ i → isLang⌈⌉ w (⌈⌉→≡ w w' z i)) _ _)
 
-isMono→injective : {e : h ⊢ g} →
+isMono→injective : {e : B ⊢ A} →
   isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
-isMono→injective {h = h} {g = g} {e = e} mono-e w p p' ewp≡ =
-  pick-parse≡' w p p' (mono-e (pick-parse w h p) (pick-parse w h p')
+isMono→injective {B = B} {A = A} {e = e} mono-e w p p' ewp≡ =
+  pick-parse≡' w p p' (mono-e (pick-parse w B p) (pick-parse w B p')
     (pick-parse-cong w p p' e ewp≡)
   )
 
 isMono→hasPropFibers :
-  {e : h ⊢ g} →
-  isSetGrammar g →
+  {e : B ⊢ A} →
+  isSetGrammar A →
   isMono e →
   (w : String) →
   hasPropFibers (e w)
-isMono→hasPropFibers isSet-g mono-e w =
-  injective→hasPropFibers (isSet-g w) (isMono→injective mono-e w _ _)
+isMono→hasPropFibers isSet-A mono-e w =
+  injective→hasPropFibers (isSet-A w) (isMono→injective mono-e w _ _)

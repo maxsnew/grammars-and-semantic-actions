@@ -27,7 +27,7 @@ module _ where
 
   module _ {X : Type ℓX}{ℓA} where
     ⟦_⟧ : Functor X → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
-    ⟦ k h ⟧ A = LiftG ℓA h
+    ⟦ k B ⟧ A = LiftG ℓA B
     ⟦ Var x ⟧ A = LiftG ℓX (A x)
     ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
@@ -63,3 +63,26 @@ module _ where
       map-∘ (&e Y F) f f' i = &ᴰ-in (λ y → map-∘ (F y) f f' i ∘g &ᴰ-π y)
       map-∘ (⊕e Y F) f f' i = ⊕ᴰ-elim (λ y → ⊕ᴰ-in y ∘g map-∘ (F y) f f' i)
       map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
+
+  module _ {X : Type ℓX} (F : X → Functor X) where
+    Algebra : (X → Grammar ℓA) → Type (ℓ-max ℓX ℓA)
+    Algebra A = ∀ x → ⟦ F x ⟧ A ⊢ A x
+
+    module _ {A : X → Grammar ℓA}{B : X → Grammar ℓB} (α : Algebra A) (β : Algebra B) where
+      isHomo : (∀ x → A x ⊢ B x) → Type _
+      isHomo ϕ = (∀ x → ϕ x ∘g α x ≡ β x ∘g map (F x) ϕ)
+
+      Homomorphism : Type _
+      Homomorphism = Σ _ isHomo
+
+    idHomo : ∀ {A : X → Grammar ℓA} → (α : Algebra A) → Homomorphism α α
+    idHomo α = (λ x → id) , λ x → cong (α x ∘g_) (sym (map-id (F x)))
+
+    compHomo : ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
+      (α : Algebra A)(β : Algebra B)(η : Algebra C)
+      → Homomorphism β η → Homomorphism α β → Homomorphism α η
+    compHomo α β η ϕ ψ .fst x = ϕ .fst x ∘g ψ .fst x
+    compHomo α β η ϕ ψ .snd x =
+      cong (ϕ .fst x ∘g_) (ψ .snd x)
+      ∙ cong (_∘g map (F x) (ψ .fst)) (ϕ .snd x)
+      ∙ cong (η x ∘g_) (sym (map-∘ (F x) (ϕ .fst) (ψ .fst)))

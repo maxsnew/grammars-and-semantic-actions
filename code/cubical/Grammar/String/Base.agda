@@ -25,7 +25,7 @@ open import Term.Base Alphabet
 private
   variable
     w : String
-    ℓh : Level
+    ℓA ℓB : Level
 
 char : Grammar ℓ-zero
 char = ⊕[ c ∈ ⟨ Alphabet ⟩ ] literal c
@@ -72,8 +72,8 @@ opaque
     w≡ : x ∷ p .fst .fst .snd ≡ y ∷ w'
     w≡ = ( (sym (cong (_++ p .fst .fst .snd) (p .snd .fst))) ∙ sym (p .fst .snd))
 
-pick-parse : ∀ (w : String) → (h : Grammar ℓh) → h w → ⌈ w ⌉ ⊢ h
-pick-parse w h ph w' p⌈⌉ = subst h (uniquely-supported-⌈⌉ w w' p⌈⌉) ph
+pick-parse : ∀ (w : String) → (B : Grammar ℓB) → B w → ⌈ w ⌉ ⊢ B
+pick-parse w B pB w' p⌈⌉ = subst B (uniquely-supported-⌈⌉ w w' p⌈⌉) pB
 
 opaque
   unfolding ε literal _⊗_
@@ -91,12 +91,11 @@ opaque
 opaque
   unfolding _&_
   mk&⌈⌉ :
-    ∀ {ℓg}
-    (g : Grammar ℓg) →
+    (A : Grammar ℓA) →
     {w : String} →
-    (p : g w) →
-    (g & ⌈ w ⌉) w
-  mk&⌈⌉ g {w = w} p =
+    (p : A w) →
+    (A & ⌈ w ⌉) w
+  mk&⌈⌉ A {w = w} p =
     p , (mk⌈⌉ w)
 
 ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
@@ -108,5 +107,5 @@ mkstring' [] = NIL [] ε-intro
 mkstring' (c ∷ w) =
   CONS (c ∷ w) (⊗-in (char-intro c) (mkstring' w))
 
-parse-string : {ℓg : Level}{g : Grammar ℓg} → string ⊢ g → (s : String) → g s
+parse-string : {A : Grammar ℓA} → string ⊢ A → (s : String) → A s
 parse-string e s = e s (mkstring' s)

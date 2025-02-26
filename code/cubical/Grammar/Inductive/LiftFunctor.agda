@@ -20,119 +20,119 @@ open import Grammar.Inductive.Indexed Alphabet
 open import Term.Base Alphabet
 
 private
-  variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
+  variable ℓA ℓB ℓX ℓY : Level
 
-module _ (A : Type ℓ) {ℓ'} where
-  LiftFunctor : (F : Functor A) → Functor (Lift {j = ℓ'} A)
-  LiftFunctor (k g) = k (LiftG ℓ' g)
-  LiftFunctor (Var a) = Var (lift a)
-  LiftFunctor (&e B F) = &e (Lift {j = ℓ'} B) (λ b → LiftFunctor (F (lower b)))
-  LiftFunctor (⊕e B F) = ⊕e (Lift {j = ℓ'} B) (λ b → LiftFunctor (F (lower b)))
+module _ (X : Type ℓX) {ℓY} where
+  LiftFunctor : (F : Functor X) → Functor (Lift {j = ℓY} X)
+  LiftFunctor (k A) = k (LiftG ℓY A)
+  LiftFunctor (Var x) = Var (lift x)
+  LiftFunctor (&e Y F) = &e (Lift {j = ℓY} Y) (λ y → LiftFunctor (F (lower y)))
+  LiftFunctor (⊕e Y F) = ⊕e (Lift {j = ℓY} Y) (λ y → LiftFunctor (F (lower y)))
   LiftFunctor (⊗e F F₁) = ⊗e (LiftFunctor F) (LiftFunctor F₁)
 
   lowerFunctor :
-    {ℓ''' : Level} →
-    (F : Functor A) → {g : A → Grammar ℓ''}
-    → ⟦ LiftFunctor F ⟧ (λ (lift a) → LiftG ℓ''' (g a)) ⊢ ⟦ F ⟧ g
-  lowerFunctor (k g) = liftG ∘g lowerG ∘g lowerG
-  lowerFunctor (Var a) = liftG ∘g lowerG ∘g lowerG
-  lowerFunctor (&e B F) = &ᴰ-in (λ b → lowerFunctor (F b) ∘g &ᴰ-π (lift b))
-  lowerFunctor (⊕e B F) = ⊕ᴰ-elim (λ (lift b) → ⊕ᴰ-in b ∘g lowerFunctor (F b))
+    {ℓB : Level} →
+    (F : Functor X) → {A : X → Grammar ℓA}
+    → ⟦ LiftFunctor F ⟧ (λ (lift x) → LiftG ℓB (A x)) ⊢ ⟦ F ⟧ A
+  lowerFunctor (k A) = liftG ∘g lowerG ∘g lowerG
+  lowerFunctor (Var x) = liftG ∘g lowerG ∘g lowerG
+  lowerFunctor (&e Y F) = &ᴰ-in (λ y → lowerFunctor (F y) ∘g &ᴰ-π (lift y))
+  lowerFunctor (⊕e Y F) = ⊕ᴰ-elim (λ (lift y) → ⊕ᴰ-in y ∘g lowerFunctor (F y))
   lowerFunctor (⊗e F F₁) = lowerFunctor F ,⊗ lowerFunctor F₁
 
   liftFunctor :
-    {ℓ''' : Level} →
-    (F : Functor A) → {g : A → Grammar ℓ''}
-    → ⟦ F ⟧ g ⊢ ⟦ LiftFunctor F ⟧ (λ (lift a) → LiftG ℓ''' (g a))
-  liftFunctor (k g) = liftG ∘g liftG ∘g lowerG
-  liftFunctor (Var a) = liftG ∘g liftG ∘g lowerG
-  liftFunctor (&e B F) = &ᴰ-in (λ (lift b) → liftFunctor (F b) ∘g &ᴰ-π b)
-  liftFunctor (⊕e B F) = ⊕ᴰ-elim (λ b → ⊕ᴰ-in (lift b) ∘g liftFunctor (F b))
+    {ℓB : Level} →
+    (F : Functor X) → {A : X → Grammar ℓA}
+    → ⟦ F ⟧ A ⊢ ⟦ LiftFunctor F ⟧ (λ (lift x) → LiftG ℓB (A x))
+  liftFunctor (k A) = liftG ∘g liftG ∘g lowerG
+  liftFunctor (Var x) = liftG ∘g liftG ∘g lowerG
+  liftFunctor (&e Y F) = &ᴰ-in (λ (lift y) → liftFunctor (F y) ∘g &ᴰ-π y)
+  liftFunctor (⊕e Y F) = ⊕ᴰ-elim (λ y → ⊕ᴰ-in (lift y) ∘g liftFunctor (F y))
   liftFunctor (⊗e F F₁) = liftFunctor F ,⊗ liftFunctor F₁
 
   open StrongEquivalence
   liftFunctor≅ :
-    (F : Functor A) → {g : A → Grammar ℓ''} →
+    (F : Functor X) → {A : X → Grammar ℓA} →
     StrongEquivalence
-    (⟦ LiftFunctor F ⟧ (λ (lift a) → LiftG ℓ''' (g a)))
-    (⟦ F ⟧ g)
+    (⟦ LiftFunctor F ⟧ (λ (lift x) → LiftG ℓB (A x)))
+    (⟦ F ⟧ A)
   liftFunctor≅ F .fun = lowerFunctor F
   liftFunctor≅ F .inv = liftFunctor F
-  liftFunctor≅ (k g) .sec = refl
-  liftFunctor≅ (Var a) .sec = refl
-  liftFunctor≅ {ℓ''' = ℓ'''} (&e B F) .sec =
-    &ᴰ≡ _ _ (λ b → λ i →
-      liftFunctor≅ {ℓ''' = ℓ'''} (F b) .sec i ∘g &ᴰ-π b)
-  liftFunctor≅ {ℓ''' = ℓ'''} (⊕e B F) .sec =
-    ⊕ᴰ≡ _ _ λ b → λ i → ⊕ᴰ-in b ∘g liftFunctor≅ {ℓ''' = ℓ'''} (F b) .sec i
-  liftFunctor≅ {ℓ''' = ℓ'''} (⊗e F F₁) {g = g} .sec = ans
+  liftFunctor≅ (k A) .sec = refl
+  liftFunctor≅ (Var X) .sec = refl
+  liftFunctor≅ {ℓB = ℓB} (&e Y F) .sec =
+    &ᴰ≡ _ _ (λ y → λ i →
+      liftFunctor≅ {ℓB = ℓB} (F y) .sec i ∘g &ᴰ-π y)
+  liftFunctor≅ {ℓB = ℓB} (⊕e Y F) .sec =
+    ⊕ᴰ≡ _ _ λ y → λ i → ⊕ᴰ-in y ∘g liftFunctor≅ {ℓB = ℓB} (F y) .sec i
+  liftFunctor≅ {ℓB = ℓB} (⊗e F F₁) {A = A} .sec = ans
     where
       opaque
         unfolding ⊗-intro
-        ans : lowerFunctor {ℓ''' = ℓ'''} F {g = g} ,⊗
-                lowerFunctor {ℓ''' = ℓ'''} F₁ {g = g}
+        ans : lowerFunctor {ℓB = ℓB} F {A = A} ,⊗
+                lowerFunctor {ℓB = ℓB} F₁ {A = A}
               ∘g liftFunctor F ,⊗ liftFunctor F₁ ≡ id
-        ans i = liftFunctor≅ {ℓ''' = ℓ'''} F .sec i
-          ,⊗ liftFunctor≅ {ℓ''' = ℓ'''} F₁ .sec i
-  liftFunctor≅ (k g) .ret = refl
-  liftFunctor≅ (Var a) .ret = refl
-  liftFunctor≅ (&e B F) .ret =
-    &ᴰ≡ _ _ λ (lift b) → λ i →
-      liftFunctor≅ (F b) .ret i ∘g &ᴰ-π (lift b)
-  liftFunctor≅ (⊕e B F) .ret =
-    ⊕ᴰ≡ _ _ λ (lift b) → λ i → ⊕ᴰ-in (lift b) ∘g liftFunctor≅ (F b) .ret i
-  liftFunctor≅ {ℓ''' = ℓ'''} (⊗e F F₁) {g = g} .ret = ans
+        ans i = liftFunctor≅ {ℓB = ℓB} F .sec i
+          ,⊗ liftFunctor≅ {ℓB = ℓB} F₁ .sec i
+  liftFunctor≅ (k A) .ret = refl
+  liftFunctor≅ (Var x) .ret = refl
+  liftFunctor≅ (&e Y F) .ret =
+    &ᴰ≡ _ _ λ (lift y) → λ i →
+      liftFunctor≅ (F y) .ret i ∘g &ᴰ-π (lift y)
+  liftFunctor≅ (⊕e Y F) .ret =
+    ⊕ᴰ≡ _ _ λ (lift y) → λ i → ⊕ᴰ-in (lift y) ∘g liftFunctor≅ (F y) .ret i
+  liftFunctor≅ {ℓB = ℓB} (⊗e F F₁) {A = A} .ret = ans
     where
       opaque
         unfolding ⊗-intro
-        ans : liftFunctor {ℓ''' = ℓ'''} F {g = g} ,⊗
-                 liftFunctor {ℓ''' = ℓ'''} F₁ {g = g}
+        ans : liftFunctor {ℓB = ℓB} F {A = A} ,⊗
+                 liftFunctor {ℓB = ℓB} F₁ {A = A}
               ∘g lowerFunctor F ,⊗ lowerFunctor F₁ ≡ id
-        ans i = liftFunctor≅ {ℓ''' = ℓ'''} F .ret i ,⊗
-          liftFunctor≅ {ℓ''' = ℓ'''} F₁ .ret i
+        ans i = liftFunctor≅ {ℓB = ℓB} F .ret i ,⊗
+          liftFunctor≅ {ℓB = ℓB} F₁ .ret i
 
-  module _ {F : A → Functor A} where
+  module _ {F : X → Functor X} where
     private
-      A' = Lift {j = ℓ'} A
+      X' = Lift {j = ℓY} X
 
-      F' : A' → Functor A'
-      F' (lift a) = LiftFunctor (F a)
+      F' : X' → Functor X'
+      F' (lift x) = LiftFunctor (F x)
 
-    module _ {g : A → Grammar ℓ''} where
+    module _ {A : X → Grammar ℓA} where
       private
-        L = ℓ-max ℓ'' (ℓ-max ℓ ℓ')
+        L = ℓ-max ℓA (ℓ-max ℓX ℓY)
 
-        g' : A' → Grammar L
-        g' (lift a) = LiftG (ℓ-max ℓ ℓ') (g a)
+        g' : X' → Grammar L
+        g' (lift x) = LiftG (ℓ-max ℓX ℓY) (A x)
 
-      module _ (the-alg : Algebra F g) where
+      module _ (the-alg : Algebra F A) where
         LiftAlg : Algebra F' g'
-        LiftAlg (lift a) = liftG ∘g the-alg a ∘g lowerFunctor (F a)
+        LiftAlg (lift x) = liftG ∘g the-alg x ∘g lowerFunctor (F x)
       module _ (the-alg : Algebra F' g') where
-        LowerAlg : Algebra F g
-        LowerAlg a = lowerG ∘g the-alg (lift a) ∘g liftFunctor (F a)
-      module _ (the-alg : Algebra F' λ (lift a) → g a) where
-        LowerAlg' : Algebra F g
-        LowerAlg' a =
-          the-alg (lift a)
-          ∘g map (F' (lift a)) (λ _ → lowerG {ℓ' = ℓ''})
-          ∘g liftFunctor (F a)
+        LowerAlg : Algebra F A
+        LowerAlg x = lowerG ∘g the-alg (lift x) ∘g liftFunctor (F x)
+      module _ (the-alg : Algebra F' λ (lift x) → A x) where
+        LowerAlg' : Algebra F A
+        LowerAlg' x =
+          the-alg (lift x)
+          ∘g map (F' (lift x)) (λ _ → lowerG {ℓB = ℓA})
+          ∘g liftFunctor (F x)
 
-    module _ {a : A} where
-      lowerF : μ F' (lift a) ⊢ μ F a
+    module _ {x : X} where
+      lowerF : μ F' (lift x) ⊢ μ F x
       lowerF =
         rec _
-          (λ (lift a') →
+          (λ (lift y) →
             roll
-            ∘g lowerFunctor {ℓ''' = ℓ-max ℓ ℓ'} (F a')
-            ∘g map (F' (lift a')) (λ _ → liftG))
-          (lift a)
+            ∘g lowerFunctor {ℓB = ℓ-max ℓX ℓY} (F y)
+            ∘g map (F' (lift y)) (λ _ → liftG))
+          (lift x)
 
-      liftF : μ F a ⊢ μ F' (lift a)
+      liftF : μ F x ⊢ μ F' (lift x)
       liftF =
         rec _
-          (λ a' →
+          (λ y →
             roll
-            ∘g map (F' (lift a')) (λ _ → lowerG)
-            ∘g liftFunctor {ℓ''' = ℓ-max ℓ ℓ'} (F a'))
-          a
+            ∘g map (F' (lift y)) (λ _ → lowerG)
+            ∘g liftFunctor {ℓB = ℓ-max ℓX ℓY} (F y))
+          x

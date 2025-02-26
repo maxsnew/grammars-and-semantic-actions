@@ -16,9 +16,9 @@ open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 
 private
   variable
-    ℓg ℓh : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
 
 -- This is the definition of unambiguity you'd expect in the grammar model of the
 -- theory, that each string has at most one parse (up to paths bw parses)
@@ -26,31 +26,31 @@ private
 -- These definitions should not be used for abstract grammars, but can prove
 -- useful for showing unambiguity for things like literals, ε, and string
 module EXTERNAL where
-  isLang→unambiguous' : isLang g → unambiguous' g
-  isLang→unambiguous' {g = g} unambig' e e' _ =
+  isLang→unambiguous' : isLang A → unambiguous' A
+  isLang→unambiguous' {A = A} unambig' e e' _ =
     funExt (λ w → funExt (λ x → unambig' w (e w x) (e' w x)))
 
   opaque
     unfolding ⊤
-    isMono⊤→injective : {e : h ⊢ ⊤} →
+    isMono⊤→injective : {e : B ⊢ ⊤} →
       isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
-    isMono⊤→injective {h = h}{e = e} mono-e w p p' ewp≡ =
+    isMono⊤→injective {B = B}{e = e} mono-e w p p' ewp≡ =
       sym (transportRefl p)
-      ∙ cong (λ a → transp (λ i → h (a i)) i0 p) (isSetString _ w refl _)
-      ∙ funExt⁻ (funExt⁻ (mono-e (pick-parse w h p) (pick-parse w h p') refl) w) (internalize w)
-      ∙ cong (λ a → transp (λ i → h (a i)) i0 p') (isSetString _ w _ refl)
+      ∙ cong (λ a → transp (λ i → B (a i)) i0 p) (isSetString _ w refl _)
+      ∙ funExt⁻ (funExt⁻ (mono-e (pick-parse w B p) (pick-parse w B p') refl) w) (internalize w)
+      ∙ cong (λ a → transp (λ i → B (a i)) i0 p') (isSetString _ w _ refl)
       ∙ transportRefl p'
 
   opaque
     unfolding ⊤
-    unambiguous'→isLang : unambiguous' g → isLang g
-    unambiguous'→isLang {g = g} unambig w pg pg' =
-      isMono⊤→injective {e = ⊤-intro} unambig w pg pg' refl
+    unambiguous'→isLang : unambiguous' A → isLang A
+    unambiguous'→isLang {A = A} unambig w pA pA' =
+      isMono⊤→injective {e = ⊤-intro} unambig w pA pA' refl
 
-    unambiguous→isLang : unambiguous g → isLang g
+    unambiguous→isLang : unambiguous A → isLang A
     unambiguous→isLang unambig =
       unambiguous'→isLang (unambiguous→unambiguous' unambig)
 
-    isLang→unambiguous : isLang g → unambiguous g
-    isLang→unambiguous ppg =
-      unambiguous'→unambiguous (isLang→unambiguous' ppg)
+    isLang→unambiguous : isLang A → unambiguous A
+    isLang→unambiguous ppA =
+      unambiguous'→unambiguous (isLang→unambiguous' ppA)

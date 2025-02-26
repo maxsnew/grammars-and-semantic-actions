@@ -15,3 +15,4 @@ private
 
 ¬G_ : Grammar ℓA → Grammar ℓA
 ¬G A = A ⇒ ⊥
+infix 30 ¬G_

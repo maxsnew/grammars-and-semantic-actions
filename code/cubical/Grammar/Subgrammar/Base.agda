@@ -22,7 +22,7 @@ open import Term Alphabet
 
 private
   variable
-    ℓA ℓB ℓC ℓD ℓX ℓY : Level
+    ℓA ℓB ℓC ℓD ℓX ℓY ℓ : Level
     A : Grammar ℓA
     B : Grammar ℓB
     C : Grammar ℓC
@@ -175,7 +175,7 @@ module _
   {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
   (p : ∀ (x : X) → μ F x ⊢ Ω {ℓ = ℓ'})
   (pf : ∀ (x : X) →
-    p a ∘g roll ∘g map (F x) (λ y → sub-π (p y))
+    p x ∘g roll ∘g map (F x) (λ y → sub-π (p y))
       ≡
     true ∘g ⊤-intro
   )
@@ -219,43 +219,43 @@ module _
           sub-π-homo
           (recHomo F subgrammar-ind-alg)
         )
-        a
+        x
       )
 
 module _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  (f : h ⊢ g)
-  (p : g ⊢ Ω {ℓ = ℓ})
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  (f : B ⊢ A)
+  (p : A ⊢ Ω {ℓ = ℓ})
   where
 
-  preimage : Grammar (ℓ-max ℓh ℓ)
+  preimage : Grammar (ℓ-max ℓB ℓ)
   preimage = subgrammar (p ∘g f)
 
   preimage-map : preimage ⊢ subgrammar p
   preimage-map = sub-intro p (f ∘g sub-π (p ∘g f)) (sub-π-pf (p ∘g f))
 
-module _ {g : Grammar ℓg} {h : Grammar ℓh}
-  (f : h ⊢ g)
-  (isSet-g : isSetGrammar g)
+module _ {A : Grammar ℓA} {B : Grammar ℓB}
+  (f : B ⊢ A)
+  (isSet-A : isSetGrammar A)
   (isMono-f : isMono f)
   where
-  mono-prop : g ⊢ Ω
-  mono-prop w x .fst = Σ[ y ∈ h w ] f w y ≡ x
-  mono-prop w x .snd = isMono→hasPropFibers isSet-g isMono-f w x
+  mono-prop : A ⊢ Ω
+  mono-prop w x .fst = Σ[ y ∈ B w ] f w y ≡ x
+  mono-prop w x .snd = isMono→hasPropFibers isSet-A isMono-f w x
 
-  mono→subgrammar : Grammar (ℓ-max ℓg ℓh)
+  mono→subgrammar : Grammar (ℓ-max ℓA ℓB)
   mono→subgrammar = subgrammar mono-prop
 
 module _
-  {g : Grammar ℓg}
-  (unambig-g : unambiguous g)
-  (h : Grammar ℓh)
+  {A : Grammar ℓA}
+  (unambig-A : unambiguous A)
+  (B : Grammar ℓB)
   where
-  unambiguous-prop : h ⊢ Ω
-  unambiguous-prop w x .fst = g w
+  unambiguous-prop : B ⊢ Ω
+  unambiguous-prop w x .fst = A w
   unambiguous-prop w x .snd =
-    EXTERNAL.unambiguous→isLang unambig-g w
+    EXTERNAL.unambiguous→isLang unambig-A w
 
-  unambiguous→subgrammar : Grammar (ℓ-max ℓg ℓh)
+  unambiguous→subgrammar : Grammar (ℓ-max ℓA ℓB)
   unambiguous→subgrammar = subgrammar unambiguous-prop
