@@ -27,6 +27,14 @@ private
  -- ∙ ⊢ M : A
  -- is given as
  -- x : ε ⊢ M : A
+ --
+ -- Note, a derivation A ⊢ B is equivalent to
+ -- a non-linear term of type ↑ (A ⊸ B)
+ --
+ -- where ↑ encodes the parses of a grammar in the empty context
+ -- - ↑ A ≅ (ε ⊢ A)
+ --
+ -- and ⊸ is a linear function type
  --}
 module _
   (A : Grammar ℓA)
@@ -46,7 +54,6 @@ seq :
   B ⊢ C →
   A ⊢ C
 seq e e' _ p = e' _ (e _ p)
--- e' (e p)
 
 _∘g_ :
   B ⊢ C →
