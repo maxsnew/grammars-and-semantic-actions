@@ -644,7 +644,7 @@ module _ (c c' : ⟨ Alphabet ⟩) where
         ∙ (s' .snd))
         ∙ cong (_++ s' .fst .snd) pc')
 
-firstChar≅ : g ≅ (g & ε) ⊕ ⊕[ c ∈ ⟨ Alphabet ⟩ ] (g & startsWith c)
+firstChar≅ : g ≅ (g & ε) ⊕ (⊕[ c ∈ ⟨ Alphabet ⟩ ] (g & startsWith c))
 firstChar≅ =
   &string-split≅
   ≅∙ ⊕≅ id≅ (&≅ id≅ ⊕ᴰ-distL ≅∙ &⊕ᴰ-distR≅)
