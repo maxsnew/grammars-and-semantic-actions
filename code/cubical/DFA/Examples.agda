@@ -45,12 +45,6 @@ unicode→Alphabet c =
 
 open DecodeUnicode Alphabet unicode→Alphabet
 
-private
-  variable
-    ℓg ℓh : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-
 module examples where
   -- examples are over alphabet drawn from Fin 2
   -- characters are fzero and (fsuc fzero)

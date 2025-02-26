@@ -25,10 +25,10 @@ private
 ⊕ᴰ {X = X} f w = Σ[ x ∈ X ] f x w
 
 syntax ⊕ᴰ {X = X}(λ x → A) = ⊕[ x ∈ X ] A
-infix 7 ⊕ᴰ
+infix 8 ⊕ᴰ
 
 syntax &ᴰ {X = X}(λ x → A) = &[ x ∈ X ] A
-infix 8 &ᴰ
+infix 7 &ᴰ
 
 module _ {X : Type ℓX} {A : X → Grammar ℓA} where
   &ᴰ-π : ∀ x → &[ x ∈ X ] A x ⊢ A x

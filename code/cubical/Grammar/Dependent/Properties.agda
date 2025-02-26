@@ -74,18 +74,18 @@ module _
   where
   &ᴰ⊕ᴰ-dist :
     (&[ x ∈ X ] (⊕[ y ∈ Y x ] A (x , y))) ⊢
-      ⊕[ f ∈ (∀ (x : X) → Y x) ] &[ x ∈ X ] A (x , f x)
+      ⊕[ f ∈ (∀ (x : X) → Y x) ] (&[ x ∈ X ] A (x , f x))
   &ᴰ⊕ᴰ-dist w z = (λ x → z x .fst) , λ x → z x .snd
 
   &ᴰ⊕ᴰ-dist⁻ :
-    ⊕[ f ∈ (∀ (x : X) → Y x) ] &[ x ∈ X ] A (x , f x) ⊢
+    ⊕[ f ∈ (∀ (x : X) → Y x) ] (&[ x ∈ X ] A (x , f x)) ⊢
       (&[ x ∈ X ] (⊕[ y ∈ Y x ] A (x , y)))
   &ᴰ⊕ᴰ-dist⁻ = ⊕ᴰ-elim λ f → &ᴰ-in λ x → λ w z → (f x) , (z x)
 
   &ᴰ⊕ᴰ-dist≅  :
     (&[ x ∈ X ] (⊕[ y ∈ Y x ] A (x , y)))
       ≅
-    (⊕[ f ∈ (∀ (x : X) → Y x) ] &[ x ∈ X ] A (x , f x))
+    (⊕[ f ∈ (∀ (x : X) → Y x) ] (&[ x ∈ X ] A (x , f x)))
   &ᴰ⊕ᴰ-dist≅ .fun = &ᴰ⊕ᴰ-dist
   &ᴰ⊕ᴰ-dist≅ .inv = &ᴰ⊕ᴰ-dist⁻
   &ᴰ⊕ᴰ-dist≅ .sec = refl

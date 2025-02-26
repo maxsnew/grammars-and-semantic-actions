@@ -23,30 +23,30 @@ open import Term Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
     c : ⟨ Alphabet ⟩
 
 open isStrongEquivalence
 open StrongEquivalence
 
+-- All of the below is a proof in the semantics, so don't use it
 private
   module
     _
-    {g : Grammar ℓg}
-    {h : Grammar ℓh}
-    (seq-unambig : g ⊛ h)
+    {A : Grammar ℓA}
+    {B : Grammar ℓB}
+    (seq-unambig : A ⊛ B)
     where
     opaque
       unfolding the-split _⊗_ ⊗-intro _&_ literal
       ⊛→unique-splitting :
         (w : String) →
-        (p : (g ⊗ h) w) →
-        (q : (g ⊗ h) w) →
+        (p : (A ⊗ B) w) →
+        (q : (A ⊗ B) w) →
         same-splits {w = λ _ → w} p q
-      ⊛→unique-splitting w (ps , pg , ph) (qs , qg , qh) =
+      ⊛→unique-splitting w (ps , pA , pB) (qs , qA , qB) =
         Sum.rec
           (λ sameSplit → ΣPathP ((sameSplit .fst) , (sameSplit .snd)))
           (Sum.rec
@@ -54,23 +54,23 @@ private
               (([] , notmt ), _ , _) → Empty.rec (notmt refl)
             ; ((c ∷ w' , _ ), ps11++cw'≡qs11 , ps12≡cw'++qs12) →
               Sum.rec
-                (λ c∉FLg →
+                (λ c∉FLA →
                   Empty.rec (
                     get⊥
-                      (c∉FLg (qs .fst .fst)
+                      (c∉FLA (qs .fst .fst)
                       (((_ , (sym ps11++cw'≡qs11)) ,
-                        (pg , ((([ c ] , w') , refl) , (lit-intro  , (string-intro {g = ⌈ w' ⌉}) w' (mk⌈⌉ w'))))) , qg)
+                        (pA , ((([ c ] , w') , refl) , (lit-intro  , (string-intro {A = ⌈ w' ⌉}) w' (mk⌈⌉ w'))))) , qA)
                     )
                   )
                 )
-                (λ c∉Fh →
+                (λ c∉FB →
                   Empty.rec (
                     get⊥
-                      (c∉Fh (ps .fst .snd)
+                      (c∉FB (ps .fst .snd)
                         (((_ , ps12≡cw'++qs12) ,
                           (lit-intro , ((
-                            string-intro {g = ⌈ w' ++ qs .fst .snd ⌉})
-                              (w' ++ qs .fst .snd) (mk⌈⌉ (w' ++ qs .fst .snd))))) , ph)
+                            string-intro {A = ⌈ w' ++ qs .fst .snd ⌉})
+                              (w' ++ qs .fst .snd) (mk⌈⌉ (w' ++ qs .fst .snd))))) , pB)
                     )
                   )
                 )
@@ -80,23 +80,23 @@ private
               (([] , notmt ), _ , _) → Empty.rec (notmt refl)
             ; ((c ∷ w' , _ ), qs11++cw'≡ps11 , qs12≡cw'++ps12) →
               Sum.rec
-                (λ c∉FLg →
+                (λ c∉FLA →
                   Empty.rec (
                     get⊥
-                      (c∉FLg (ps .fst .fst)
+                      (c∉FLA (ps .fst .fst)
                       (((_ , (sym qs11++cw'≡ps11)) ,
-                        (qg , ((([ c ] , w') , refl) , (lit-intro  , (string-intro {g = ⌈ w' ⌉}) w' (mk⌈⌉ w'))))) , pg)
+                        (qA , ((([ c ] , w') , refl) , (lit-intro  , (string-intro {A = ⌈ w' ⌉}) w' (mk⌈⌉ w'))))) , pA)
                     )
                   )
                 )
-                (λ c∉Fh →
+                (λ c∉FB →
                   Empty.rec (
                     get⊥
-                      (c∉Fh (qs .fst .snd)
+                      (c∉FB (qs .fst .snd)
                         (((_ , qs12≡cw'++ps12) ,
                           (lit-intro , ((
-                            string-intro {g = ⌈ w' ++ ps .fst .snd ⌉})
-                              (w' ++ ps .fst .snd) (mk⌈⌉ (w' ++ ps .fst .snd))))) , qh)
+                            string-intro {A = ⌈ w' ++ ps .fst .snd ⌉})
+                              (w' ++ ps .fst .snd) (mk⌈⌉ (w' ++ ps .fst .snd))))) , qB)
                     )
                   )
                 )
@@ -111,12 +111,12 @@ private
 
 module
   _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  (¬nullg : ⟨ ¬Nullable g ⟩)
-  (seq-unambig : g ⊛ h)
-  (unambig-g : unambiguous g)
-  (unambig-h : unambiguous h)
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  (¬nullA : ⟨ ¬Nullable A ⟩)
+  (seq-unambig : A ⊛ B)
+  (unambig-A : unambiguous A)
+  (unambig-B : unambiguous B)
   where
 
   -- TODO ideally this proof would happen internally rather than appealing
@@ -124,29 +124,29 @@ module
   opaque
     unfolding &-intro ⊗-intro the-split
     private
-      isLang⊗ : isLang (g ⊗ h)
+      isLang⊗ : isLang (A ⊗ B)
       isLang⊗ w x y =
         Σ≡Prop
           (λ s →
             isProp×
-              (EXTERNAL.unambiguous→isLang unambig-g (s .fst .fst))
-              (EXTERNAL.unambiguous→isLang unambig-h (s .fst .snd))
+              (EXTERNAL.unambiguous→isLang unambig-A (s .fst .fst))
+              (EXTERNAL.unambiguous→isLang unambig-B (s .fst .snd))
           )
           s≡
         where
         s≡ : x .fst ≡ y .fst
         s≡ = Splitting≡ (⊛→unique-splitting seq-unambig w x y)
 
-    unambiguous-⊗ : unambiguous (g ⊗ h)
+    unambiguous-⊗ : unambiguous (A ⊗ B)
     unambiguous-⊗ = EXTERNAL.isLang→unambiguous isLang⊗
 
 module
   _
-  {g : Grammar ℓg}
-  (¬nullg : ⟨ ¬Nullable g ⟩)
-  (seq-unambig : g ⊛ g)
-  (unambig-g : unambiguous g)
+  {A : Grammar ℓA}
+  (¬nullA : ⟨ ¬Nullable A ⟩)
+  (seq-unambig : A ⊛ A)
+  (unambig-A : unambiguous A)
   where
 
-  unambiguous-* : unambiguous (g *)
+  unambiguous-* : unambiguous (A *)
   unambiguous-* = {!!}

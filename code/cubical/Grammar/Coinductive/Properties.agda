@@ -15,13 +15,13 @@ open import Grammar.Inductive.Functor Alphabet
 open import Term.Base Alphabet
 
 private
-  variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
+  variable ℓA ℓX : Level
 
-module _ {A : Type ℓ} (F : A → Functor A) where
+module _ {X : Type ℓX} (F : X → Functor X) where
   open StrongEquivalence
 
-  rollν≅ : ∀ a → ν F a ≅ ⟦ F a ⟧ (ν F)
-  rollν≅ a .fun = unrollν' F a
-  rollν≅ a .inv = rollν F a
-  rollν≅ a .sec = refl
-  rollν≅ a .ret = refl
+  rollν≅ : ∀ x → ν F x ≅ ⟦ F x ⟧ (ν F)
+  rollν≅ x .fun = unrollν' F x
+  rollν≅ x .inv = rollν F x
+  rollν≅ x .sec = refl
+  rollν≅ x .ret = refl

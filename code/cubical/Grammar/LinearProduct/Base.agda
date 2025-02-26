@@ -16,13 +16,22 @@ open import Term.Bilinear Alphabet
 
 private
   variable
-    ℓA ℓB ℓC ℓD ℓE ℓF ℓ ℓ' : Level
+    ℓA ℓB ℓC ℓD ℓE ℓF ℓG
+      ℓH ℓK ℓL ℓM ℓN ℓO
+      ℓ ℓ' : Level
     A : Grammar ℓA
     B : Grammar ℓB
     C : Grammar ℓC
     D : Grammar ℓD
     E : Grammar ℓE
     F : Grammar ℓF
+    G : Grammar ℓG
+    H : Grammar ℓH
+    K : Grammar ℓK
+    L : Grammar ℓL
+    M : Grammar ℓM
+    N : Grammar ℓN
+    O : Grammar ℓO
     f f' f'' f''' f'''' f''''' : A ⊢ B
 
 _⊗'_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
@@ -552,7 +561,7 @@ opaque
   ⊗-assoc⁻4⊗-intro :
     ∀ {f f' f'' f''' f''''} →
     (⊗-assoc⁻4 {A = A}{B = B}{C = C}{D = D}{E = E} ∘g (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''')
-    ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {A = B}{B = C}{C = D}{D = E}{E = F}))
+    ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {A = F}{B = G}{C = H}{D = K}{E = L}))
   ⊗-assoc⁻4⊗-intro = refl
 
 opaque
