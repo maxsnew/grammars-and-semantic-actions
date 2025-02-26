@@ -22,12 +22,11 @@ open import Term Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' g1 g2 g3 g4 g5 : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    f f' f'' : g ⊢ h
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD ℓX ℓY ℓ : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 Ω : Grammar (ℓ-suc ℓ)
 Ω {ℓ = ℓ} w = hProp ℓ
@@ -35,7 +34,7 @@ private
 isSetGrammar-Ω : isSetGrammar (Ω {ℓ = ℓ})
 isSetGrammar-Ω w = isSetHProp
 
-isSet⊢Ω : isSet (g ⊢ Ω {ℓ = ℓ})
+isSet⊢Ω : isSet (A ⊢ Ω {ℓ = ℓ})
 isSet⊢Ω = isSetΠ (λ w → isSet→ (isSetGrammar-Ω w))
 
 opaque
@@ -50,14 +49,14 @@ opaque
 
 -- A subgrammar is a subobject in the category of grammars
 -- Intuitively,
--- if a grammar g is a map from strings to sets of parses,
+-- if a grammar A is a map from strings to sets of parses,
 -- a subgrammar is map that picks out
 -- a subset of parses for each string
 --
 -- More precisely, we'll handle these by means of
--- the subobject classifier. i.e. a subgrammar of g
+-- the subobject classifier. i.e. a subgrammar of A
 -- is uniquely identified by a morphism from
--- g to Ω
+-- A to Ω
 --
 -- It isn't clear to me how to best expose this syntactically in
 -- the language
@@ -75,17 +74,17 @@ opaque
 --    - the proposition that two maps are equal, recovering
 --      the definition of equalizers
 --    - the proposition that some grammar is uninhabited. For example
---      you could take the subgrammar of g that doesn't start
+--      you could take the subgrammar of A that doesn't start
 --      with the character c
 --      -  which would be the subgrammar over the proposition
---         that g & (＂ c ＂ ⊗ ⊤) ⊢ ⊥
-module Subgrammar {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
+--         that A & (＂ c ＂ ⊗ ⊤) ⊢ ⊥
+module Subgrammar {ℓ} {A : Grammar ℓA} (p : A ⊢ Ω {ℓ = ℓ}) where
   opaque
     unfolding ⊤ true
-    subgrammar : Grammar (ℓ-max ℓg ℓ)
-    subgrammar w = Σ[ x ∈ g w ] ⟨ p w x ⟩
+    subgrammar : Grammar (ℓ-max ℓA ℓ)
+    subgrammar w = Σ[ x ∈ A w ] ⟨ p w x ⟩
 
-    sub-π : subgrammar ⊢ g
+    sub-π : subgrammar ⊢ A
     sub-π w = fst
 
     -- p holds for the image of sub-π
@@ -98,7 +97,7 @@ module Subgrammar {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
           λ _ → x .snd)
       )
 
-  module _ (f : h ⊢ g) (pf : ∀ w x → ⟨ p w (f w x) ⟩) where
+  module _ (f : B ⊢ A) (pf : ∀ w x → ⟨ p w (f w x) ⟩) where
     opaque
       unfolding true ⊤
       insert-pf : p ∘g f ≡ true ∘g ⊤-intro
@@ -108,19 +107,19 @@ module Subgrammar {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
           (hPropExt (p w (f w x) .snd) isPropUnit* _ λ _ → pf w x)
 
   module _
-    (f : h ⊢ g)
-    (ph : p ∘g f ≡ true ∘g ⊤-intro) where
+    (f : B ⊢ A)
+    (pB : p ∘g f ≡ true ∘g ⊤-intro) where
     opaque
       unfolding subgrammar
       extract-pf :
-        ∀ (w : String) → (x : h w) →
+        ∀ (w : String) → (x : B w) →
         ⟨ p w (f w x) ⟩
       extract-pf w x =
         transport
-          (sym (cong fst (funExt⁻ (funExt⁻ ph w) x)))
+          (sym (cong fst (funExt⁻ (funExt⁻ pB w) x)))
           tt*
 
-      sub-intro : h ⊢ subgrammar
+      sub-intro : B ⊢ subgrammar
       sub-intro w x .fst = f w x
       sub-intro w x .snd = extract-pf w x
 
@@ -128,7 +127,7 @@ module Subgrammar {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
       sub-β = refl
 
   module _
-    (f : h ⊢ subgrammar)
+    (f : B ⊢ subgrammar)
     where
     opaque
       unfolding subgrammar sub-intro
@@ -147,12 +146,12 @@ module Subgrammar {ℓ} {g : Grammar ℓg} (p : g ⊢ Ω {ℓ = ℓ}) where
       sub-η i = f
 
   -- if you can build a section, then p holds over all of
-  -- g
+  -- A
   -- the statement "p ≡ true ∘g ⊤-intro" means
-  -- semantically ∀ w → (x : g w) → ⟨ p w x ⟩
-  -- i.e. that p holds for each g parse
+  -- semantically ∀ w → (x : A w) → ⟨ p w x ⟩
+  -- i.e. that p holds for each A parse
   subgrammar-section :
-    (f : g ⊢ subgrammar) →
+    (f : A ⊢ subgrammar) →
     (sub-π ∘g f ≡ id) →
     p ≡ true ∘g ⊤-intro
   subgrammar-section f sec =
@@ -173,44 +172,44 @@ open Subgrammar
 
 module _
   {ℓ'}
-  {A : Type ℓ} (F : A → Functor A) (g : A → Grammar ℓg)
-  (p : ∀ (a : A) → μ F a ⊢ Ω {ℓ = ℓ'})
-  (pf : ∀ (a : A) →
-    p a ∘g roll ∘g map (F a) (λ a' → sub-π (p a'))
+  {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
+  (p : ∀ (x : X) → μ F x ⊢ Ω {ℓ = ℓ'})
+  (pf : ∀ (x : X) →
+    p x ∘g roll ∘g map (F x) (λ y → sub-π (p y))
       ≡
     true ∘g ⊤-intro
   )
   where
 
-  subgrammar-ind-alg : Algebra F (λ a → subgrammar (p a))
-  subgrammar-ind-alg a =
+  subgrammar-ind-alg : Algebra F (λ x → subgrammar (p x))
+  subgrammar-ind-alg x =
     sub-intro
-      (p a)
-      (roll ∘g map (F a) (λ a' → sub-π (p a')))
-      (pf a)
+      (p x)
+      (roll ∘g map (F x) (λ y → sub-π (p y)))
+      (pf x)
 
   sub-π-homo :
     Homomorphism F subgrammar-ind-alg (initialAlgebra F)
-  sub-π-homo .fst a = sub-π (p a)
-  sub-π-homo .snd a = is-homo
+  sub-π-homo .fst x = sub-π (p x)
+  sub-π-homo .snd x = is-homo
     where
     opaque
       unfolding sub-π sub-intro
       is-homo :
-        sub-π (p a) ∘g subgrammar-ind-alg a
+        sub-π (p x) ∘g subgrammar-ind-alg x
         ≡
-        initialAlgebra F a ∘g map (F a) (λ a' → sub-π (p a'))
+        initialAlgebra F x ∘g map (F x) (λ y → sub-π (p y))
       is-homo = refl
 
-  subgrammar-ind' : ∀ (a : A) → μ F a ⊢ subgrammar (p a)
+  subgrammar-ind' : ∀ (x : X) → μ F x ⊢ subgrammar (p x)
   subgrammar-ind' = rec F subgrammar-ind-alg
 
-  -- p holds over all of μ F a, for all a
-  subgrammar-ind : ∀ (a : A) → p a ≡ true ∘g ⊤-intro
-  subgrammar-ind a =
+  -- p holds over all of μ F x, for all x
+  subgrammar-ind : ∀ (x : X) → p x ≡ true ∘g ⊤-intro
+  subgrammar-ind x =
     subgrammar-section
-      (p a)
-      (subgrammar-ind' a)
+      (p x)
+      (subgrammar-ind' x)
       (ind-id'
         F
         (compHomo F
@@ -220,43 +219,43 @@ module _
           sub-π-homo
           (recHomo F subgrammar-ind-alg)
         )
-        a
+        x
       )
 
 module _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  (f : h ⊢ g)
-  (p : g ⊢ Ω {ℓ = ℓ})
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  (f : B ⊢ A)
+  (p : A ⊢ Ω {ℓ = ℓ})
   where
 
-  preimage : Grammar (ℓ-max ℓh ℓ)
+  preimage : Grammar (ℓ-max ℓB ℓ)
   preimage = subgrammar (p ∘g f)
 
   preimage-map : preimage ⊢ subgrammar p
   preimage-map = sub-intro p (f ∘g sub-π (p ∘g f)) (sub-π-pf (p ∘g f))
 
-module _ {g : Grammar ℓg} {h : Grammar ℓh}
-  (f : h ⊢ g)
-  (isSet-g : isSetGrammar g)
+module _ {A : Grammar ℓA} {B : Grammar ℓB}
+  (f : B ⊢ A)
+  (isSet-A : isSetGrammar A)
   (isMono-f : isMono f)
   where
-  mono-prop : g ⊢ Ω
-  mono-prop w x .fst = Σ[ y ∈ h w ] f w y ≡ x
-  mono-prop w x .snd = isMono→hasPropFibers isSet-g isMono-f w x
+  mono-prop : A ⊢ Ω
+  mono-prop w x .fst = Σ[ y ∈ B w ] f w y ≡ x
+  mono-prop w x .snd = isMono→hasPropFibers isSet-A isMono-f w x
 
-  mono→subgrammar : Grammar (ℓ-max ℓg ℓh)
+  mono→subgrammar : Grammar (ℓ-max ℓA ℓB)
   mono→subgrammar = subgrammar mono-prop
 
 module _
-  {g : Grammar ℓg}
-  (unambig-g : unambiguous g)
-  (h : Grammar ℓh)
+  {A : Grammar ℓA}
+  (unambig-A : unambiguous A)
+  (B : Grammar ℓB)
   where
-  unambiguous-prop : h ⊢ Ω
-  unambiguous-prop w x .fst = g w
+  unambiguous-prop : B ⊢ Ω
+  unambiguous-prop w x .fst = A w
   unambiguous-prop w x .snd =
-    EXTERNAL.unambiguous→isLang unambig-g w
+    EXTERNAL.unambiguous→isLang unambig-A w
 
-  unambiguous→subgrammar : Grammar (ℓ-max ℓg ℓh)
+  unambiguous→subgrammar : Grammar (ℓ-max ℓA ℓB)
   unambiguous→subgrammar = subgrammar unambiguous-prop

@@ -10,53 +10,54 @@ open import Term Alphabet
 
 private
   variable
-    ℓg ℓh : Level
-    g h : Grammar ℓg
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
     c : ⟨ Alphabet ⟩
 
 open StrongEquivalence
 
-NullableG : Grammar ℓg → Grammar ℓg
-NullableG g = ε & g
+NullableG : Grammar ℓA → Grammar ℓA
+NullableG A = ε & A
 
-¬Nullable_ : Grammar ℓg → hProp ℓg
-(¬Nullable g) .fst = uninhabited (NullableG g)
-(¬Nullable g) .snd = isProp-uninhabited
+¬Nullable_ : Grammar ℓA → hProp ℓA
+(¬Nullable A) .fst = uninhabited (NullableG A)
+(¬Nullable A) .snd = isProp-uninhabited
 
-¬Nullable→char+ : ⟨ ¬Nullable g ⟩ → g ⊢ char +
+¬Nullable→char+ : ⟨ ¬Nullable A ⟩ → A ⊢ char +
 ¬Nullable→char+ notnull =
   ⊕-elim
     (⊥-elim ∘g notnull ∘g &-swap)
     &-π₂
   ∘g &string-split≅ .fun
 
-¬Nullable&char+≅ : ⟨ ¬Nullable g ⟩ → (g ≅ (g & (char +)))
-¬Nullable&char+≅ ¬nullg =
+¬Nullable&char+≅ : ⟨ ¬Nullable A ⟩ → (A ≅ (A & (char +)))
+¬Nullable&char+≅ ¬nullA =
   &string-split≅
-  ≅∙ ⊕≅ (uninhabited→≅⊥ (¬nullg ∘g &-swap)) id≅
+  ≅∙ ⊕≅ (uninhabited→≅⊥ (¬nullA ∘g &-swap)) id≅
   ≅∙ ⊥⊕≅ _
 
-char+→¬Nullable : g ⊢ char + → ⟨ ¬Nullable g ⟩
+char+→¬Nullable : A ⊢ char + → ⟨ ¬Nullable A ⟩
 char+→¬Nullable e =
   disjoint-ε-char+'
   ∘g id ,&p e
 
-¬Nullable∘g : (f : g ⊢ h) → ⟨ ¬Nullable h ⟩ → ⟨ ¬Nullable g ⟩
-¬Nullable∘g f ¬nullh = ¬nullh ∘g id ,&p f
+¬Nullable∘g : (f : A ⊢ B) → ⟨ ¬Nullable B ⟩ → ⟨ ¬Nullable A ⟩
+¬Nullable∘g f ¬nullB = ¬nullB ∘g id ,&p f
 
 ¬Nullable-char+ : ⟨ ¬Nullable (char +) ⟩
 ¬Nullable-char+ = disjoint-ε-char+
 
-¬Nullable-&char+ : ⟨ ¬Nullable (g & (char +)) ⟩
+¬Nullable-&char+ : ⟨ ¬Nullable (A & (char +)) ⟩
 ¬Nullable-&char+ = ¬Nullable∘g &-π₂ ¬Nullable-char+
 
 ¬Nullable-startsWith : ⟨ ¬Nullable (startsWith c) ⟩
 ¬Nullable-startsWith = ¬Nullable∘g startsWith→char+ ¬Nullable-char+
 
-¬Nullable⊗l : ⟨ ¬Nullable g ⟩ → ⟨ ¬Nullable (g ⊗ h) ⟩
+¬Nullable⊗l : ⟨ ¬Nullable A ⟩ → ⟨ ¬Nullable (A ⊗ B) ⟩
 ¬Nullable⊗l notnull =
   char+→¬Nullable (char+⊗l→char+ ∘g ¬Nullable→char+ notnull ,⊗ id)
 
-¬Nullable⊗r : ⟨ ¬Nullable g ⟩ → ⟨ ¬Nullable (h ⊗ g) ⟩
+¬Nullable⊗r : ⟨ ¬Nullable A ⟩ → ⟨ ¬Nullable (B ⊗ A) ⟩
 ¬Nullable⊗r notnull =
   char+→¬Nullable (char+⊗r→char+ ∘g id ,⊗ ¬Nullable→char+ notnull)

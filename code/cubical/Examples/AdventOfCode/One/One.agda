@@ -70,7 +70,7 @@ p = PR.run' num s
 q = PR.run' (＂ zero^ ＂r) s
 
 opaque
-  unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊗-intro ⊗-in isSetASCII ASCIIChar Determinization.ε-closure Determinization.lit-closure
+  unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⊸-intro ⟜-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊗-intro ⊗-in isSetASCII ASCIIChar Determinization.ε-closure Determinization.lit-closure
   _ : p .fst ≡ true
   _ = refl
 

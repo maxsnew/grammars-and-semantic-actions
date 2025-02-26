@@ -10,92 +10,99 @@ open import Helper
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD ℓ ℓ' : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 {-- Embed the linear typing rules
- -- These correspond to terms like x : g ⊢ M : g'
+ -- These correspond to terms like x : A ⊢ M : B
  -- with the caveat that derivations
- -- x : g , y : h ⊢ M : g'
+ -- x : A , y : B ⊢ M : C
  -- are represented as
- -- x : g ⊗ h ⊢ M : g'
+ -- x : A ⊗ B ⊢ M : C
  --
  -- Likewise, we represent the empty context with the empty grammar
- -- ∙ ⊢ M : g
+ -- ∙ ⊢ M : A
  -- is given as
- -- x : ε-grammar ⊢ M : g
+ -- x : ε ⊢ M : A
+ --
+ -- Note, a derivation A ⊢ B is equivalent to
+ -- a non-linear term of type ↑ (A ⊸ B)
+ --
+ -- where ↑ encodes the parses of a grammar in the empty context
+ -- - ↑ A ≅ (ε ⊢ A)
+ --
+ -- and ⊸ is a linear function type
  --}
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
   where
-  Term : Type (ℓ-max ℓg ℓh)
-  Term = ∀ w → g w → h w
+  Term : Type (ℓ-max ℓA ℓB)
+  Term = ∀ w → A w → B w
 
   infix 1 Term
-  syntax Term g g' = g ⊢ g'
+  syntax Term A g' = A ⊢ g'
 
-id : g ⊢ g
+id : A ⊢ A
 id _ x = x
 
 seq :
-  g ⊢ h →
-  h ⊢ k →
-  g ⊢ k
+  A ⊢ B →
+  B ⊢ C →
+  A ⊢ C
 seq e e' _ p = e' _ (e _ p)
--- e' (e p)
 
 _∘g_ :
-  h ⊢ k →
-  g ⊢ h →
-  g ⊢ k
+  B ⊢ C →
+  A ⊢ B →
+  A ⊢ C
 _∘g_ e e' = seq e' e
 
 infixr 9 _∘g_
 syntax seq e e' = e ⋆ e'
 
 record Inverse
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  (e : g ⊢ h) : Type (ℓ-max ℓg ℓh) where
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  (e : A ⊢ B) : Type (ℓ-max ℓA ℓB) where
   field
-    inv : h ⊢ g
+    inv : B ⊢ A
     is-left-inv : inv ∘g e ≡ id
     is-right-inv : e ∘g inv ≡ id
 
 isMono :
-  g ⊢ h → Typeω
-isMono {g = g}{h = h} f =
-  ∀ {ℓk}{k : Grammar ℓk} (e e' : k ⊢ g) →
+  A ⊢ B → Typeω
+isMono {A = A}{B = B} f =
+  ∀ {ℓC}{C : Grammar ℓC} (e e' : C ⊢ A) →
     f ∘g e ≡ f ∘g e' → e ≡ e'
 
-Mono∘g : (e : g ⊢ h) (e' : h ⊢ k) →
+Mono∘g : (e : A ⊢ B) (e' : B ⊢ C) →
   isMono e' → isMono e → isMono (e' ∘g e)
 Mono∘g e e' mon-e mon-e' f f' e'ef≡e'ef' =
   mon-e' f f' (mon-e (e ∘g f) (e ∘g f') e'ef≡e'ef')
 
 transportG :
-  g ≡ h
-  → g ⊢ h
-transportG {g = g}{h = h} p = subst (λ h → g ⊢ h) p id
+  A ≡ B
+  → A ⊢ B
+transportG {A = A}{B = B} p = subst (λ B → A ⊢ B) p id
 
 transportGRefl :
-  transportG {g = g} refl ≡ id
-transportGRefl {g = g} = substRefl {B = λ h → g ⊢ h} _
+  transportG {A = A} refl ≡ id
+transportGRefl {A = A} = substRefl {B = λ B → A ⊢ B} _
 
 import Cubical.Data.Equality as Eq
 EqtransportG :
-  g Eq.≡ h
-  → g ⊢ h
-EqtransportG {g = g}{h = h} Eq.refl =
-  Eq.transport (λ h → g ⊢ h) Eq.refl id
+  A Eq.≡ B
+  → A ⊢ B
+EqtransportG {A = A}{B = B} Eq.refl =
+  Eq.transport (λ B → A ⊢ B) Eq.refl id
 
 invMoveR :
-  {f : g ⊢ h} {f⁻ : h ⊢ g}
-  {f' : k ⊢ g} {f'' : k ⊢ h}
+  {f : A ⊢ B} {f⁻ : B ⊢ A}
+  {f' : C ⊢ A} {f'' : C ⊢ B}
   → f⁻ ∘g f ≡ id
   → f ∘g f' ≡ f''
   → f' ≡ f⁻ ∘g f''

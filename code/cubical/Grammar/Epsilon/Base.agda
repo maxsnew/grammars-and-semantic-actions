@@ -16,9 +16,9 @@ open import Term.Bilinear Alphabet
 
 private
   variable
-    ℓG ℓH ℓK : Level
-    g : Grammar ℓG
-    h : Grammar ℓH
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
 
 opaque
   ε : Grammar ℓ-zero
@@ -27,33 +27,33 @@ opaque
   ε-intro : ε⊢ ε
   ε-intro = refl
 
-  ε-elim : ∀ {g : Grammar ℓG}
-    → ε⊢ g
-    → ε ⊢ g
-  ε-elim {g = g} g[] w w≡[] = subst g (sym w≡[]) g[]
+  ε-elim : ∀ {A : Grammar ℓA}
+    → ε⊢ A
+    → ε ⊢ A
+  ε-elim {A = A} A[] w w≡[] = subst A (sym w≡[]) A[]
 
-  ε-β : ∀ (gp : ε⊢ g)
-    → ε-elim {g = g} gp ∘ε ε-intro ≡ gp
-  ε-β {g = g} gp = transportRefl gp
+  ε-β : ∀ (Ap : ε⊢ A)
+    → ε-elim {A = A} Ap ∘ε ε-intro ≡ Ap
+  ε-β {A = A} Ap = transportRefl Ap
 
-  ε-η : ∀ {g : Grammar ℓG}
-   → (f : ε ⊢ g)
+  ε-η : ∀ {A : Grammar ℓA}
+   → (f : ε ⊢ A)
    → f ≡ ε-elim (f _ ε-intro)
-  ε-η {g = g} f = funExt λ w → funExt λ w≡[] →
-    J (λ w []≡w → f w (sym []≡w) ≡ subst g []≡w (f [] ε-intro))
-      (sym (substRefl {B = g} (f [] ε-intro)))
+  ε-η {A = A} f = funExt λ w → funExt λ w≡[] →
+    J (λ w []≡w → f w (sym []≡w) ≡ subst A []≡w (f [] ε-intro))
+      (sym (substRefl {B = A} (f [] ε-intro)))
       (sym w≡[])
-  ε-elim-l : g ⊢ h → ε ,, g ⊢ h
-  ε-elim-l {h = h} f w1 w2 (w1≡[]) gp =
-    subst h
+  ε-elim-l : A ⊢ B → ε ,, A ⊢ B
+  ε-elim-l {B = B} f w1 w2 (w1≡[]) Ap =
+    subst B
       (cong (_++ w2) (sym w1≡[]))
-      (f w2 gp)
+      (f w2 Ap)
 
-  ε-elim-r : g ⊢ h → g ,, ε ⊢ h
-  ε-elim-r {h = h} f w1 w2 gp (w2≡[]) =
-    subst h
+  ε-elim-r : A ⊢ B → A ,, ε ⊢ B
+  ε-elim-r {B = B} f w1 w2 Ap (w2≡[]) =
+    subst B
       (sym (++-unit-r _) ∙ cong (w1 ++_) (sym w2≡[]))
-      (f w1 gp)
+      (f w1 Ap)
 
   isLangε : isLang ε
   isLangε _ _ _ = isSetString _ _ _ _

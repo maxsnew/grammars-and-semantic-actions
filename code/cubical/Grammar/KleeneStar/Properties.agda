@@ -32,15 +32,16 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓG ℓH : Level
-    g h : Grammar ℓG
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
 
 open StrongEquivalence
-module _ (g : Grammar ℓG) where
+module _ (A : Grammar ℓA) where
   opaque
     unfolding ⊕-elim ⊗-intro
-    unrolled*≅ε⊕g⊗g* : unrolled* g ≅ (ε ⊕ g ⊗ g *)
-    unrolled*≅ε⊕g⊗g* =
+    unrolled*≅ε⊕A⊗A* : unrolled* A ≅ (ε ⊕ A ⊗ A *)
+    unrolled*≅ε⊕A⊗A* =
       mkStrEq
         (⊕ᴰ-elim (λ {
           nil → ⊕-inl ∘g lowerG ∘g lowerG
@@ -56,8 +57,8 @@ module _ (g : Grammar ℓG) where
         ; cons → refl
         })
 
-    unrolled*L≅ε⊕g*L⊗g : unrolled*L g ≅ (ε ⊕ (*L g ⊗ g))
-    unrolled*L≅ε⊕g*L⊗g =
+    unrolled*L≅ε⊕A*L⊗A : unrolled*L A ≅ (ε ⊕ (*L A ⊗ A))
+    unrolled*L≅ε⊕A*L⊗A =
       mkStrEq
         (⊕ᴰ-elim (λ {
           nil → ⊕-inl ∘g lowerG ∘g lowerG
@@ -73,12 +74,12 @@ module _ (g : Grammar ℓG) where
         ; snoc → refl
         })
 
-  *≅ε⊕g⊗g* : (g *) ≅ (ε ⊕ g ⊗ (g *))
-  *≅ε⊕g⊗g* = comp-strong-equiv (*≅unrolled* g) unrolled*≅ε⊕g⊗g*
+  *≅ε⊕A⊗A* : (A *) ≅ (ε ⊕ A ⊗ (A *))
+  *≅ε⊕A⊗A* = comp-strong-equiv (*≅unrolled* A) unrolled*≅ε⊕A⊗A*
 
-  *≅ε⊕g*⊗g : (g *) ≅ (ε ⊕ (g * ⊗ g))
-  *≅ε⊕g*⊗g =
-    *≅*L g
-    ≅∙ *L≅unrolled*L g
-    ≅∙ unrolled*L≅ε⊕g*L⊗g
-    ≅∙ ⊕≅ id≅ (⊗≅ (sym≅ (*≅*L g)) id≅)
+  *≅ε⊕A*⊗A : (A *) ≅ (ε ⊕ (A * ⊗ A))
+  *≅ε⊕A*⊗A =
+    *≅*L A
+    ≅∙ *L≅unrolled*L A
+    ≅∙ unrolled*L≅ε⊕A*L⊗A
+    ≅∙ ⊕≅ id≅ (⊗≅ (sym≅ (*≅*L A)) id≅)

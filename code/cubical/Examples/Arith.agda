@@ -86,21 +86,21 @@ data Tok : Type where
 -- module v2 where
 --   -- make LL(1), should be *strongly* equivalent to previous
 --   Sum : Grammar ℓ-zero
---   data Prod⊸Sum : Grammar ℓ-zero
+--   data Prod⟜Sum : Grammar ℓ-zero
 --   Prod : Grammar ℓ-zero
---   data Atom⊸Prod : Grammar ℓ-zero
+--   data Atom⟜Prod : Grammar ℓ-zero
 --   data Atom : Grammar ℓ-zero
 
---   Sum = Prod ⊗ Prod⊸Sum
---   data Prod⊸Sum where
---     plus : literal (binOp +) ⊗ Sum ⊢ Prod⊸Sum
---     arg  : ε-grammar ⊢ Prod⊸Sum
+--   Sum = Prod ⊗ Prod⟜Sum
+--   data Prod⟜Sum where
+--     plus : literal (binOp +) ⊗ Sum ⊢ Prod⟜Sum
+--     arg  : ε-grammar ⊢ Prod⟜Sum
 
---   Prod = Atom ⊗ Atom⊸Prod
+--   Prod = Atom ⊗ Atom⟜Prod
 
---   data Atom⊸Prod where
---     times : literal (binOp *) ⊗ Prod ⊢ Atom⊸Prod
---     arg : ε-grammar ⊢ Atom⊸Prod
+--   data Atom⟜Prod where
+--     times : literal (binOp *) ⊗ Prod ⊢ Atom⟜Prod
+--     arg : ε-grammar ⊢ Atom⟜Prod
 
 --   data Atom where
 --     num : ∀ {n : ℕ} → literal (num n) ⊢ Atom
@@ -127,9 +127,9 @@ data Tok : Type where
 --       -- this TERMINATING block is totally benign
 --       {-# TERMINATING #-}
 --       recP : Prod ⊢ [P]
---       recPS : Prod⊸Sum ⊢ [PS]
+--       recPS : Prod⟜Sum ⊢ [PS]
 --       recS : Sum ⊢ [S]
---       recAP : Atom⊸Prod ⊢ [AP]
+--       recAP : Atom⟜Prod ⊢ [AP]
 --       recA : Atom ⊢ [A]
 --       recS = [mkS] ∘g ⊗-intro recP recPS
 --       recPS w (plus .w x) = [plus] w (⊗-intro id recS w x)
@@ -155,16 +155,16 @@ data Tok : Type where
 --     v2.parens)
 --   (v2.recS
 --     {[S] = v1.Sum}
---     {[PS] = v1.Prod ⊸ v1.Sum}
+--     {[PS] = v1.Prod ⟜ v1.Sum}
 --     {[P] = v1.Prod}
---     {[AP] = v1.Atom ⊸ v1.Prod}
+--     {[AP] = v1.Atom ⟜ v1.Prod}
 --     {[A] = v1.Atom}
---     ⊸-app
---     (⊸-intro v1.plus)
---     (⊸-intro {k = v1.Sum} (v1.arg ∘g ⊗-unit-r))
---     ⊸-app
---     (⊸-intro v1.times)
---     (⊸-intro {k = v1.Prod} (v1.arg ∘g ⊗-unit-r))
+--     ⟜-app
+--     (⟜-intro v1.plus)
+--     (⟜-intro {k = v1.Sum} (v1.arg ∘g ⊗-unit-r))
+--     ⟜-app
+--     (⟜-intro v1.times)
+--     (⟜-intro {k = v1.Prod} (v1.arg ∘g ⊗-unit-r))
 --     v1.num
 --     v1.parens)
 --   {!!}

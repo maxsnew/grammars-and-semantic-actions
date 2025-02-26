@@ -21,19 +21,19 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD  : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
-module _ {g : Grammar ℓg} {h : Grammar ℓh}
-  (disjoint-summands : disjoint g h)
-  (unambig-g : unambiguous g)
-  (unambig-h : unambiguous h)
+module _ {A : Grammar ℓA} {B : Grammar ℓB}
+  (disjoint-summands : disjoint A B)
+  (unambig-A : unambiguous A)
+  (unambig-B : unambiguous B)
   where
 
-  open InductiveSum g h
+  open InductiveSum A B
 
   unambiguous-⊕Ind' : unambiguous ⊕Ind'
   unambiguous-⊕Ind' =
@@ -52,16 +52,16 @@ module _ {g : Grammar ℓg} {h : Grammar ℓh}
       (λ {
         ⊕IndTag.L →
           unambiguous≅
-            (comp-strong-equiv (LiftG≅ ℓh g) (LiftG≅ (ℓ-max ℓg ℓh) (LiftG ℓh g)))
-            unambig-g
+            (comp-strong-equiv (LiftG≅ ℓB A) (LiftG≅ (ℓ-max ℓA ℓB) (LiftG ℓB A)))
+            unambig-A
       ; ⊕IndTag.R →
           unambiguous≅
-            (comp-strong-equiv (LiftG≅ ℓg h) (LiftG≅ (ℓ-max ℓg ℓh) (LiftG ℓg h)))
-            unambig-h
+            (comp-strong-equiv (LiftG≅ ℓA B) (LiftG≅ (ℓ-max ℓA ℓB) (LiftG ℓA B)))
+            unambig-B
        })
       (isFinSet→Discrete isFinSet⊕IndTag)
 
-  unambiguous⊕ : unambiguous (g ⊕ h)
+  unambiguous⊕ : unambiguous (A ⊕ B)
   unambiguous⊕ =
     unambiguous≅
     (comp-strong-equiv
@@ -70,9 +70,9 @@ module _ {g : Grammar ℓg} {h : Grammar ℓh}
     )
     unambiguous-⊕Ind'
 
-module _ (unambig⊕ : unambiguous (g ⊕ h)) where
-  open InductiveSum g h
-  unambig-⊕-is-disjoint : disjoint g h
+module _ (unambig⊕ : unambiguous (A ⊕ B)) where
+  open InductiveSum A B
+  unambig-⊕-is-disjoint : disjoint A B
   unambig-⊕-is-disjoint =
     disjoint≅2
       (hasDisjointSummands⊕ᴰ
@@ -84,7 +84,7 @@ module _ (unambig⊕ : unambiguous (g ⊕ h)) where
       (sym≅ (LiftG≅2 _ _ _))
       (sym≅ (LiftG≅2 _ _ _))
 
-  summand-L-is-unambig : unambiguous g
+  summand-L-is-unambig : unambiguous A
   summand-L-is-unambig =
     unambiguous≅
       (sym≅ (LiftG≅2 _ _ _))
@@ -93,7 +93,7 @@ module _ (unambig⊕ : unambiguous (g ⊕ h)) where
         (unambiguous≅ (⊕≅⊕Ind ≅∙ unroll⊕Ind≅) unambig⊕)
         L)
 
-  summand-R-is-unambig : unambiguous h
+  summand-R-is-unambig : unambiguous B
   summand-R-is-unambig =
     unambiguous≅
       (sym≅ (LiftG≅2 _ _ _))
@@ -105,24 +105,24 @@ module _ (unambig⊕ : unambiguous (g ⊕ h)) where
 open StrongEquivalence
 open LogicalEquivalence
 module _
-  {g : Grammar ℓg} {h : Grammar ℓh} {k : Grammar ℓk} {l : Grammar ℓl}
-  (g≈h : g ≈ h)
-  (dis-gk : disjoint g k)
-  (dis-hl : disjoint h l)
-  (g⊕k≅h⊕l : (g ⊕ k) ≈ (h ⊕ l))
+  {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC} {D : Grammar ℓD}
+  (A≈B : A ≈ B)
+  (dis-AC : disjoint A C)
+  (dis-BD : disjoint B D)
+  (A⊕C≅B⊕D : (A ⊕ C) ≈ (B ⊕ D))
   where
-  disjoint⊕≈ : k ≈ l
+  disjoint⊕≈ : C ≈ D
   disjoint⊕≈ .fun =
     ⊕-elim
-      (⊥-elim ∘g dis-gk ∘g g≈h .inv ,&p id)
+      (⊥-elim ∘g dis-AC ∘g A≈B .inv ,&p id)
       &-π₁
     ∘g &⊕-distR
-    ∘g (g⊕k≅h⊕l .fun ∘g ⊕-inr) ,&p id
+    ∘g (A⊕C≅B⊕D .fun ∘g ⊕-inr) ,&p id
     ∘g &-Δ
   disjoint⊕≈ .inv =
     ⊕-elim
-      (⊥-elim ∘g dis-hl ∘g g≈h .fun ,&p id)
+      (⊥-elim ∘g dis-BD ∘g A≈B .fun ,&p id)
       &-π₁
     ∘g &⊕-distR
-    ∘g (g⊕k≅h⊕l .inv ∘g ⊕-inr) ,&p id
+    ∘g (A⊕C≅B⊕D .inv ∘g ⊕-inr) ,&p id
     ∘g &-Δ

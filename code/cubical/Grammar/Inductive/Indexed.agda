@@ -19,78 +19,58 @@ open import Term.Base Alphabet
 open import Grammar.Inductive.Functor Alphabet public
 
 private
-  variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
+  variable ℓA ℓB ℓX : Level
 
 module _ where
-  module _ {A : Type ℓ} where
+  module _ {X : Type ℓX} where
     -- NOTE: this is only needed because ⊗ is opaque. If it's not
     -- opaque this passes the positivity check.
     -- https://github.com/agda/agda/issues/6970
     {-# NO_POSITIVITY_CHECK #-}
-    data μ (F : A → Functor A) a : Grammar ℓ where
-      roll : ⟦ F a ⟧ (μ F) ⊢ μ F a
+    data μ (F : X → Functor X) x : Grammar ℓX where
+      roll : ⟦ F x ⟧ (μ F) ⊢ μ F x
 
-  module _ {A : Type ℓ} (F : A → Functor A) where
-    Algebra : (A → Grammar ℓ') → Type (ℓ-max ℓ ℓ')
-    Algebra g = ∀ a → ⟦ F a ⟧ g ⊢ g a
+  module _ {X : Type ℓX} (F : X → Functor X) where
+    initialAlgebra : Algebra F (μ F)
+    initialAlgebra = λ x → roll
 
-    initialAlgebra : Algebra (μ F)
-    initialAlgebra = λ a → roll
-
-    Homomorphism : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''} → Algebra g → Algebra h → Type _
-    Homomorphism {g = g}{h} α β =
-      Σ[ ϕ ∈ (∀ a → g a ⊢ h a) ]
-      (∀ a → ϕ a ∘g α a ≡ β a ∘g map (F a) ϕ)
-
-    idHomo : ∀ {g : A → Grammar ℓ'} → (α : Algebra g) → Homomorphism α α
-    idHomo α = (λ a → id) , λ a → cong (α a ∘g_) (sym (map-id (F a)))
-
-    compHomo : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}{k : A → Grammar ℓ'''}
-      (α : Algebra g)(β : Algebra h)(η : Algebra k)
-      → Homomorphism β η → Homomorphism α β → Homomorphism α η
-    compHomo α β η ϕ ψ .fst a = ϕ .fst a ∘g ψ .fst a
-    compHomo α β η ϕ ψ .snd a =
-      cong (ϕ .fst a ∘g_) (ψ .snd a)
-      ∙ cong (_∘g map (F a) (ψ .fst)) (ϕ .snd a)
-      ∙ cong (η a ∘g_) (sym (map-∘ (F a) (ϕ .fst) (ψ .fst)))
-
-    module _ {g : A → Grammar ℓ'} (α : Algebra g) where
+    module _ {A : X → Grammar ℓA} (α : Algebra F A) where
       {-# TERMINATING #-}
-      recHomo : Homomorphism initialAlgebra α
-      recHomo .fst a w (roll ._ x) =
-        α a w (map (F a) (recHomo .fst) w x)
-      recHomo .snd a = refl
+      recHomo : Homomorphism F initialAlgebra α
+      recHomo .fst x w (roll ._ z) =
+        α x w (map (F x) (recHomo .fst) w z)
+      recHomo .snd x = refl
 
-      rec : ∀ a → (μ F a) ⊢ g a
+      rec : ∀ x → (μ F x) ⊢ A x
       rec = recHomo .fst
 
-      module _ (ϕ : Homomorphism initialAlgebra α) where
+      module _ (ϕ : Homomorphism F initialAlgebra α) where
         private
           {-# TERMINATING #-}
-          μ-η' : ∀ a w x → ϕ .fst a w x ≡ rec a w x
-          μ-η' a w (roll _ x) =
-            (λ i → ϕ .snd a i w x)
-            ∙ λ i → α a w (map (F a) (λ a w x → μ-η' a w x i) w x)
+          μ-η' : ∀ x w z → ϕ .fst x w z ≡ rec x w z
+          μ-η' x w (roll _ z) =
+            (λ i → ϕ .snd x i w z)
+            ∙ λ i → α x w (map (F x) (λ x w z → μ-η' x w z i) w z)
         μ-η : ϕ .fst ≡ rec
-        μ-η = funExt (λ a → funExt λ w → funExt λ x → μ-η' a w x)
+        μ-η = funExt (λ x → funExt λ w → funExt λ z → μ-η' x w z)
 
-      ind : (ϕ ϕ' : Homomorphism initialAlgebra α) → ϕ .fst ≡ ϕ' .fst
+      ind : (ϕ ϕ' : Homomorphism F initialAlgebra α) → ϕ .fst ≡ ϕ' .fst
       ind ϕ ϕ' = μ-η ϕ ∙ sym (μ-η ϕ')
 
-      ind' : ∀ (ϕ ϕ' : Homomorphism initialAlgebra α) → ∀ a → ϕ .fst a ≡ ϕ' .fst a
+      ind' : ∀ (ϕ ϕ' : Homomorphism F initialAlgebra α) → ∀ x → ϕ .fst x ≡ ϕ' .fst x
       ind' ϕ ϕ' = funExt⁻ (ind ϕ ϕ')
 
-    ind-id : ∀ (ϕ : Homomorphism initialAlgebra initialAlgebra) → ϕ .fst ≡ idHomo initialAlgebra .fst
-    ind-id ϕ = ind initialAlgebra ϕ (idHomo initialAlgebra)
+    ind-id : ∀ (ϕ : Homomorphism F initialAlgebra initialAlgebra) → ϕ .fst ≡ idHomo F initialAlgebra .fst
+    ind-id ϕ = ind initialAlgebra ϕ (idHomo F initialAlgebra)
 
-    ind-id' : ∀ (ϕ : Homomorphism initialAlgebra initialAlgebra) a → ϕ .fst a ≡ id
-    ind-id' ϕ a = funExt⁻ (ind-id ϕ) a
+    ind-id' : ∀ (ϕ : Homomorphism F initialAlgebra initialAlgebra) x → ϕ .fst x ≡ id
+    ind-id' ϕ x = funExt⁻ (ind-id ϕ) x
 
-    unroll : ∀ a → μ F a ⊢ ⟦ F a ⟧ (μ F)
-    unroll a w (roll .w x) = x
+    unroll : ∀ x → μ F x ⊢ ⟦ F x ⟧ (μ F)
+    unroll x w (roll .w z) = z
 
     -- Lambek's lemma for indexed inductives
-    unroll' : ∀ a → μ F a ⊢ ⟦ F a ⟧ (μ F)
-    unroll' = rec {g = λ a → ⟦ F a ⟧ (μ F)} alg where
-      alg : Algebra (λ a → ⟦ F a ⟧ (μ F))
-      alg a = map (F a) (λ _ → roll)
+    unroll' : ∀ x → μ F x ⊢ ⟦ F x ⟧ (μ F)
+    unroll' = rec {A = λ x → ⟦ F x ⟧ (μ F)} alg where
+      alg : Algebra F (λ x → ⟦ F x ⟧ (μ F))
+      alg x = map (F x) (λ _ → roll)

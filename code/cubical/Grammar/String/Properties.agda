@@ -56,11 +56,11 @@ open import Helper
 private
   variable
     w : String
-    ℓg ℓh ℓk ℓl : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 open StrongEquivalence
 
@@ -87,8 +87,8 @@ opaque
   unfolding the-split _⊗_ literal
   unique-splitting-charL :
     (w : String) →
-    (p : (char ⊗ g) w) →
-    (q : (char ⊗ h) w) →
+    (p : (char ⊗ A) w) →
+    (q : (char ⊗ B) w) →
     same-splits {w = λ _ → w} p q
   unique-splitting-charL  w (s , (c , p) , q) (s' , (c' , p') , q') =
     ≡-×
@@ -104,18 +104,18 @@ opaque
     unique-splitting-literalL :
       {c : ⟨ Alphabet ⟩} →
       (w : String) →
-      (p : (＂ c ＂ ⊗ g) w) →
-      (q : (＂ c ＂ ⊗ h) w) →
+      (p : (＂ c ＂ ⊗ A) w) →
+      (q : (＂ c ＂ ⊗ B) w) →
       same-splits {w = λ _ → w} p q
-    unique-splitting-literalL {g = g} {c = c} w p q =
+    unique-splitting-literalL {A = A} {c = c} w p q =
       unique-splitting-charL w ((literal→char c  ,⊗ id) w p ) ((literal→char c ,⊗ id) w q)
 
   unique-splitting-charR :
     (w : String) →
-    (p : (g ⊗ char) w) →
-    (q : (h ⊗ char) w) →
+    (p : (A ⊗ char) w) →
+    (q : (B ⊗ char) w) →
     same-splits {w = λ _ → w} p q
-  unique-splitting-charR {g = g} w (s , p , (c , q)) (s' , p' , (c' , q')) =
+  unique-splitting-charR {A = A} w (s , p , (c , q)) (s' , p' , (c' , q')) =
     ≡-×
       (snoc-inj₁ w≡)
       (q ∙ cong (_∷ []) (snoc-inj₂ w≡) ∙ sym q')
@@ -128,10 +128,10 @@ opaque
     unique-splitting-literalR :
       {c : ⟨ Alphabet ⟩} →
       (w : String) →
-      (p : (g ⊗ ＂ c ＂) w) →
-      (q : (h ⊗ ＂ c ＂) w) →
+      (p : (A ⊗ ＂ c ＂) w) →
+      (q : (B ⊗ ＂ c ＂) w) →
       same-splits {w = λ _ → w} p q
-    unique-splitting-literalR {g = g} {c = c} w p q =
+    unique-splitting-literalR {A = A} {c = c} w p q =
       unique-splitting-charR w ((id ,⊗ literal→char c) w p ) ((id ,⊗ literal→char c) w q)
 
 
@@ -140,8 +140,8 @@ module _ (x : String) where
     unfolding the-split _⊗_ literal
     unique-splitting-⌈⌉L :
       (w : String) →
-      (p : (⌈ x ⌉ ⊗ g) w) →
-      (q : (⌈ x ⌉ ⊗ h) w) →
+      (p : (⌈ x ⌉ ⊗ A) w) →
+      (q : (⌈ x ⌉ ⊗ B) w) →
       same-splits {w = λ _ → w} p q
     unique-splitting-⌈⌉L w (s , px , q) (s' , px' , q') =
       ≡-× 11≡
@@ -158,8 +158,8 @@ module _ (x : String) where
 
     unique-splitting-⌈⌉R :
       (w : String) →
-      (p : (g ⊗ ⌈ x ⌉) w) →
-      (q : (h ⊗ ⌈ x ⌉) w) →
+      (p : (A ⊗ ⌈ x ⌉) w) →
+      (q : (B ⊗ ⌈ x ⌉) w) →
       same-splits {w = λ _ → w} p q
     unique-splitting-⌈⌉R w (s , q , px) (s' , q' , px') =
       ≡-×
@@ -175,35 +175,35 @@ module _ (x : String) where
         12≡ = (sym (⌈⌉→≡ x (s .fst .snd) px) ∙ ⌈⌉→≡ x (s' .fst .snd) px')
 
 module _
-  {g : Grammar ℓg}
-  (isLang-g : isLang g)
+  {A : Grammar ℓA}
+  (isLang-A : isLang A)
   where
   module _ {c : ⟨ Alphabet ⟩} where
     opaque
       unfolding _⊗_ the-split
-      isLang-lit⊗lang : isLang (＂ c ＂ ⊗ g)
+      isLang-lit⊗lang : isLang (＂ c ＂ ⊗ A)
       isLang-lit⊗lang w x y =
         Σ≡Prop
-          (λ s → isProp× (isLangLiteral c (s .fst .fst)) (isLang-g (s .fst .snd)))
+          (λ s → isProp× (isLangLiteral c (s .fst .fst)) (isLang-A (s .fst .snd)))
           (Splitting≡ (unique-splitting-literalL w x y))
 
-      isLang-lang⊗lit : isLang (g ⊗ ＂ c ＂)
+      isLang-lang⊗lit : isLang (A ⊗ ＂ c ＂)
       isLang-lang⊗lit w x y =
         Σ≡Prop
-          (λ s → isProp× (isLang-g (s .fst .fst)) (isLangLiteral c (s .fst .snd)))
+          (λ s → isProp× (isLang-A (s .fst .fst)) (isLangLiteral c (s .fst .snd)))
           (Splitting≡ (unique-splitting-literalR w x y))
   opaque
     unfolding _⊗_ the-split
-    isLang-char⊗lang : isLang (char ⊗ g)
+    isLang-char⊗lang : isLang (char ⊗ A)
     isLang-char⊗lang w x y =
       Σ≡Prop
-        (λ s → isProp× (isLang-char (s .fst .fst)) (isLang-g (s .fst .snd)))
+        (λ s → isProp× (isLang-char (s .fst .fst)) (isLang-A (s .fst .snd)))
         (Splitting≡ (unique-splitting-charL w x y))
 
-    isLang-lang⊗char : isLang (g ⊗ char)
+    isLang-lang⊗char : isLang (A ⊗ char)
     isLang-lang⊗char w x y =
       Σ≡Prop
-        (λ s → isProp× (isLang-g (s .fst .fst)) (isLang-char (s .fst .snd)))
+        (λ s → isProp× (isLang-A (s .fst .fst)) (isLang-char (s .fst .snd)))
         (Splitting≡ (unique-splitting-charR w x y))
 
 opaque
@@ -272,60 +272,60 @@ opaque
   unambiguous-string : unambiguous string
   unambiguous-string = EXTERNAL.isLang→unambiguous isLang-string
 
-char-⊗⊕-distL⁻ : (char ⊗ g) ⊕ (char ⊗ h) ⊢ char ⊗ (g ⊕ h)
+char-⊗⊕-distL⁻ : (char ⊗ A) ⊕ (char ⊗ B) ⊢ char ⊗ (A ⊕ B)
 char-⊗⊕-distL⁻ = ⊕-elim (id ,⊗ ⊕-inl) (id ,⊗ ⊕-inr)
 
-char-⊗⊕-distR⁻ : (g ⊗ char) ⊕ (h ⊗ char) ⊢ (g ⊕ h) ⊗ char
+char-⊗⊕-distR⁻ : (A ⊗ char) ⊕ (B ⊗ char) ⊢ (A ⊕ B) ⊗ char
 char-⊗⊕-distR⁻ = ⊕-elim (⊕-inl ,⊗ id) (⊕-inr ,⊗ id)
 
-⌈⌉-⊗⊕-distL⁻ : (⌈ w ⌉ ⊗ g) ⊕ (⌈ w ⌉ ⊗ h) ⊢ ⌈ w ⌉ ⊗ (g ⊕ h)
+⌈⌉-⊗⊕-distL⁻ : (⌈ w ⌉ ⊗ A) ⊕ (⌈ w ⌉ ⊗ B) ⊢ ⌈ w ⌉ ⊗ (A ⊕ B)
 ⌈⌉-⊗⊕-distL⁻ = ⊕-elim (id ,⊗ ⊕-inl) (id ,⊗ ⊕-inr)
 
-⌈⌉-⊗⊕-distR⁻ : (g ⊗ ⌈ w ⌉) ⊕ (h ⊗ ⌈ w ⌉) ⊢ (g ⊕ h) ⊗ ⌈ w ⌉
+⌈⌉-⊗⊕-distR⁻ : (A ⊗ ⌈ w ⌉) ⊕ (B ⊗ ⌈ w ⌉) ⊢ (A ⊕ B) ⊗ ⌈ w ⌉
 ⌈⌉-⊗⊕-distR⁻ = ⊕-elim (⊕-inl ,⊗ id) (⊕-inr ,⊗ id)
 
-char-⊗⊕-distL≅ : char ⊗ (g ⊕ h) ≅ (char ⊗ g) ⊕ (char ⊗ h)
+char-⊗⊕-distL≅ : char ⊗ (A ⊕ B) ≅ (char ⊗ A) ⊕ (char ⊗ B)
 char-⊗⊕-distL≅ .fun = ⊗⊕-distL
 char-⊗⊕-distL≅ .inv = char-⊗⊕-distL⁻
-char-⊗⊕-distL≅ {g = g} {h = h} .sec = the-sec
+char-⊗⊕-distL≅ {A = A} {B = B} .sec = the-sec
   where
   opaque
     unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_
-    the-sec : char-⊗⊕-distL≅ {g = g} {h = h} .fun ∘g char-⊗⊕-distL≅ .inv ≡ id
+    the-sec : char-⊗⊕-distL≅ {A = A} {B = B} .fun ∘g char-⊗⊕-distL≅ .inv ≡ id
     the-sec i w (inl p) = inl p
     the-sec i w (inr p) = inr p
 char-⊗⊕-distL≅ .ret = the-ret
   where
   opaque
     unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_ _⊗_
-    the-ret : char-⊗⊕-distL≅ {g = g} {h = h} .inv ∘g char-⊗⊕-distL≅ .fun ≡ id
+    the-ret : char-⊗⊕-distL≅ {A = A} {B = B} .inv ∘g char-⊗⊕-distL≅ .fun ≡ id
     the-ret i w (s , p , inl q) = s , p , inl q
     the-ret i w (s , p , inr q) = s , p , inr q
 
-char-⊗⊕-distR≅ : (g ⊕ h) ⊗ char ≅ (g ⊗ char) ⊕ (h ⊗ char)
+char-⊗⊕-distR≅ : (A ⊕ B) ⊗ char ≅ (A ⊗ char) ⊕ (B ⊗ char)
 char-⊗⊕-distR≅ .fun = ⊗⊕-distR
 char-⊗⊕-distR≅ .inv = char-⊗⊕-distR⁻
-char-⊗⊕-distR≅ {g = g} {h = h} .sec = the-sec
+char-⊗⊕-distR≅ {A = A} {B = B} .sec = the-sec
   where
   opaque
     unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_
-    the-sec : char-⊗⊕-distR≅ {g = g} {h = h} .fun ∘g char-⊗⊕-distR≅ .inv ≡ id
+    the-sec : char-⊗⊕-distR≅ {A = A} {B = B} .fun ∘g char-⊗⊕-distR≅ .inv ≡ id
     the-sec i w (inl p) = inl p
     the-sec i w (inr p) = inr p
 char-⊗⊕-distR≅ .ret = the-ret
   where
   opaque
     unfolding ⊗-intro ⊕-elim ⊗⊕-distR _⊕_ _⊗_
-    the-ret : char-⊗⊕-distR≅ {g = g} {h = h} .inv ∘g char-⊗⊕-distR≅ .fun ≡ id
+    the-ret : char-⊗⊕-distR≅ {A = A} {B = B} .inv ∘g char-⊗⊕-distR≅ .fun ≡ id
     the-ret i w (s , inl p , q) = s , inl p , q
     the-ret i w (s , inr p , q) = s , inr p , q
 
 opaque
   unfolding _⊗_ _&_ the-split literal
   char-⊗&-distL⁻ :
-    (char ⊗ g) & (char ⊗ h) ⊢ char ⊗ (g & h)
-  char-⊗&-distL⁻ {h = h} w ((s , p , q) , (s' , p' , q')) =
-    s , (p , (q , subst h s≡ q'))
+    (char ⊗ A) & (char ⊗ B) ⊢ char ⊗ (A & B)
+  char-⊗&-distL⁻ {B = B} w ((s , p , q) , (s' , p' , q')) =
+    s , (p , (q , subst B s≡ q'))
     where
     s≡ : s' .fst .snd ≡ s .fst .snd
     s≡ = cons-inj₂
@@ -336,20 +336,20 @@ opaque
       )
 
   ⌈⌉-⊗&-distL⁻ :
-    (⌈ w ⌉ ⊗ g) & (⌈ w ⌉ ⊗ h) ⊢ ⌈ w ⌉ ⊗ (g & h)
-  ⌈⌉-⊗&-distL⁻ {w = w} {g = g} {h = h} w' ((s , p , q) , (s' , p' , q')) =
-    s , (p , q , subst h 12≡ q')
+    (⌈ w ⌉ ⊗ A) & (⌈ w ⌉ ⊗ B) ⊢ ⌈ w ⌉ ⊗ (A & B)
+  ⌈⌉-⊗&-distL⁻ {w = w} {A = A} {B = B} w' ((s , p , q) , (s' , p' , q')) =
+    s , (p , q , subst B 12≡ q')
     where
     s≡ : same-splits
-      {g = ⌈ w ⌉} {h = g} {k = ⌈ w ⌉} {l = h}
+      {A = ⌈ w ⌉} {B = A} {C = ⌈ w ⌉} {D = B}
       {w = λ _ → w'}
       (s , p , q)
       (s' , p' , q')
     s≡ =
       unique-splitting-⌈⌉L
         w
-        {g = g}
-        {h = h}
+        {A = A}
+        {B = B}
         w'
         (s , p , q)
         (s' , p' , q')
@@ -358,25 +358,25 @@ opaque
     12≡ = sym (cong snd s≡)
 
   char-⊗&-distR⁻ :
-    (g ⊗ char) & (h ⊗ char) ⊢ (g & h) ⊗ char
-  char-⊗&-distR⁻ {g = g} {h = h} w ((s , p , q) , (s' , p' , q')) =
+    (A ⊗ char) & (B ⊗ char) ⊢ (A & B) ⊗ char
+  char-⊗&-distR⁻ {A = A} {B = B} w ((s , p , q) , (s' , p' , q')) =
     s ,
     ((p ,
-    subst h
+    subst B
       (cong (λ z → z .fst)
-      (sym (unique-splitting-charR {g = g} {h = h}
+      (sym (unique-splitting-charR {A = A} {B = B}
         w (s , p , q) (s' , p' , q')))) p') , q)
 
   ⌈⌉-⊗&-distR⁻ :
-    (g ⊗ ⌈ w ⌉) & (h ⊗ ⌈ w ⌉) ⊢ (g & h) ⊗ ⌈ w ⌉
-  ⌈⌉-⊗&-distR⁻ {g = g} {w = w} {h = h} w' ((s , p , q) , (s' , p' , q')) =
+    (A ⊗ ⌈ w ⌉) & (B ⊗ ⌈ w ⌉) ⊢ (A & B) ⊗ ⌈ w ⌉
+  ⌈⌉-⊗&-distR⁻ {A = A} {w = w} {B = B} w' ((s , p , q) , (s' , p' , q')) =
     s , (p ,
-      (subst h
+      (subst B
         (cong fst (sym (
           unique-splitting-⌈⌉R
             w
-            {g = g}
-            {h = h}
+            {A = A}
+            {B = B}
             w'
             (s , p , q)
             (s' , p' , q')
@@ -384,14 +384,14 @@ opaque
         p')
       ) , q
 
-char-⊗&-distR≅ : (g & h) ⊗ char ≅ (g ⊗ char) & (h ⊗ char)
+char-⊗&-distR≅ : (A & B) ⊗ char ≅ (A ⊗ char) & (B ⊗ char)
 char-⊗&-distR≅ .fun = ⊗&-distR
 char-⊗&-distR≅ .inv = char-⊗&-distR⁻
-char-⊗&-distR≅ {g = g} {h = h} .sec = the-sec
+char-⊗&-distR≅ {A = A} {B = B} .sec = the-sec
   where
   opaque
     unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR
-    the-sec : char-⊗&-distR≅ {g = g} {h = h} .fun ∘g char-⊗&-distR≅ .inv ≡ id
+    the-sec : char-⊗&-distR≅ {A = A} {B = B} .fun ∘g char-⊗&-distR≅ .inv ≡ id
     the-sec = funExt λ w → funExt λ p →
       ΣPathP (refl ,
         ΣPathP (
@@ -406,31 +406,31 @@ char-⊗&-distR≅ .ret = the-ret
   where
   opaque
     unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR
-    the-ret : char-⊗&-distR≅ {g = g} {h = h} .inv ∘g char-⊗&-distR≅ .fun ≡ id
-    the-ret {h = h} = funExt λ w → funExt λ p →
+    the-ret : char-⊗&-distR≅ {A = A} {B = B} .inv ∘g char-⊗&-distR≅ .fun ≡ id
+    the-ret {B = B} = funExt λ w → funExt λ p →
       ΣPathP (
         refl ,
         (ΣPathP (
           (ΣPathP (
             refl ,
             symP (transport-filler _ (p .snd .fst .snd)
-            ∙ cong (λ z → transport (λ i → h (z i)) (p .snd .fst .snd))
+            ∙ cong (λ z → transport (λ i → B (z i)) (p .snd .fst .snd))
               (isSetString _ _ _ _))
           )) ,
           refl
         ))
       )
 
-⌈⌉-⊗&-distR≅ : (g & h) ⊗ ⌈ w ⌉ ≅ (g ⊗ ⌈ w ⌉) & (h ⊗ ⌈ w ⌉)
+⌈⌉-⊗&-distR≅ : (A & B) ⊗ ⌈ w ⌉ ≅ (A ⊗ ⌈ w ⌉) & (B ⊗ ⌈ w ⌉)
 ⌈⌉-⊗&-distR≅ .fun = ⊗&-distR
 ⌈⌉-⊗&-distR≅ {w = w} .inv = ⌈⌉-⊗&-distR⁻ {w = w}
-⌈⌉-⊗&-distR≅ {g = g} {h = h} {w = w} .sec = the-sec
+⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .sec = the-sec
   where
   opaque
     unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR
     the-sec :
-      ⌈⌉-⊗&-distR≅ {g = g} {h = h} {w = w} .fun
-      ∘g ⌈⌉-⊗&-distR≅ {g = g} {h = h} {w = w} .inv ≡ id
+      ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .fun
+      ∘g ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .inv ≡ id
     the-sec = funExt λ w' → funExt λ p →
       ΣPathP (
         refl ,
@@ -444,13 +444,13 @@ char-⊗&-distR≅ .ret = the-ret
           )
         ))
       )
-⌈⌉-⊗&-distR≅ {g = g} {h = h} {w = w} .ret = the-ret
+⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .ret = the-ret
   where
   opaque
     unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR
     the-ret :
-      ⌈⌉-⊗&-distR≅ {g = g} {h = h} {w = w} .inv
-      ∘g ⌈⌉-⊗&-distR≅ {g = g} {h = h} {w = w} .fun ≡ id
+      ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .inv
+      ∘g ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .fun ≡ id
     the-ret = funExt λ w → funExt λ p →
       ΣPathP (
         refl ,
@@ -458,7 +458,7 @@ char-⊗&-distR≅ .ret = the-ret
           (ΣPathP (
             refl ,
             symP (transport-filler _ (p .snd .fst .snd)
-            ∙ cong (λ z → transport (λ i → h (z i)) (p .snd .fst .snd))
+            ∙ cong (λ z → transport (λ i → B (z i)) (p .snd .fst .snd))
               (isSetString _ _ _ _))
           )) ,
           refl
@@ -471,16 +471,16 @@ char-⊗&-distR≅ .ret = the-ret
 ⊤→string' : ⊤ ⊢ string
 ⊤→string' w _ = mkstring' w
 
-⊤*→string : ∀ {ℓg} → ⊤* {ℓg} ⊢ string
+⊤*→string : ∀ {ℓA} → ⊤* {ℓA} ⊢ string
 ⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)
 
 string≅stringL : string ≅ stringL
 string≅stringL = *≅*L char
 
-string-intro : ∀ {ℓg} {g : Grammar ℓg} → g ⊢ string
+string-intro : ∀ {ℓA} {A : Grammar ℓA} → A ⊢ string
 string-intro = ⊤→string ∘g ⊤-intro
 
-stringL-intro : ∀ {ℓg} {g : Grammar ℓg} → g ⊢ stringL
+stringL-intro : ∀ {ℓA} {A : Grammar ℓA} → A ⊢ stringL
 stringL-intro = string≅stringL .fun ∘g string-intro
 
 string≅⊤ : StrongEquivalence string ⊤
@@ -495,7 +495,7 @@ opaque
   disjoint-ε-char+ [] (pε , s , (c , pc) , p*) =
     Empty.rec
       (¬cons≡nil (sym (s .snd ∙ cong (_++ s .fst .snd) pc)))
-  disjoint-ε-char+ (x ∷ w) (pε , s , pg , p*) =
+  disjoint-ε-char+ (x ∷ w) (pε , s , _ , p*) =
     Empty.rec (¬cons≡nil pε)
 
 unrolled-string : Grammar ℓ-zero
@@ -508,10 +508,10 @@ unrolled-stringL : Grammar ℓ-zero
 unrolled-stringL = ε ⊕ (stringL ⊗ char)
 
 unroll-string≅ : string ≅ unrolled-string
-unroll-string≅ = *≅ε⊕g⊗g* char
+unroll-string≅ = *≅ε⊕A⊗A* char
 
 unroll-string≅' : string ≅ unrolled-string'
-unroll-string≅' = *≅ε⊕g*⊗g char
+unroll-string≅' = *≅ε⊕A*⊗A char
 
 string≅unrolled-stringL : string ≅ unrolled-stringL
 string≅unrolled-stringL =
@@ -529,9 +529,9 @@ unambiguous-unrolled-string' : unambiguous unrolled-string'
 unambiguous-unrolled-string' =
     unambiguous≅ unroll-string≅' unambiguous-string
 
-totallyParseable' : Grammar ℓg → Type (ℓ-suc ℓg)
-totallyParseable' {ℓg = ℓg} g =
-  Σ[ g' ∈ Grammar ℓg ] StrongEquivalence (g ⊕ g') string
+totallyParseable' : Grammar ℓA → Type (ℓ-suc ℓA)
+totallyParseable' {ℓA = ℓA} A =
+  Σ[ B ∈ Grammar ℓA ] StrongEquivalence (A ⊕ B) string
 
 disjoint-ε-char+' : disjoint ε (char +)
 disjoint-ε-char+' = unambig-⊕-is-disjoint unambiguous-unrolled-string
@@ -564,27 +564,27 @@ unambiguous-char⊗char+ =
 disjoint-char-char⊗char+ : disjoint char (char ⊗ char +)
 disjoint-char-char⊗char+ = unambig-⊕-is-disjoint (unambiguous≅ unroll-char+≅ unambiguous-char+)
 
-&string≅ : g ≅ g & string
+&string≅ : A ≅ A & string
 &string≅ = &⊤≅ ≅∙ &≅ id≅ (sym≅ string≅⊤)
 
-&string-split≅ : g ≅ (g & ε) ⊕ (g & (char +))
+&string-split≅ : A ≅ (A & ε) ⊕ (A & (char +))
 &string-split≅ =
   &string≅
   ≅∙ &≅ id≅ unroll-string≅
   ≅∙ &⊕-distL≅
 
-string⊗l-split : g ⊗ string ⊢ g ⊕ (g ⊗ char +)
+string⊗l-split : A ⊗ string ⊢ A ⊕ (A ⊗ char +)
 string⊗l-split =
   (⊗-unit-r ,⊕p id)
   ∘g ⊗⊕-distL
   ∘g id ,⊗ unroll-string≅ .fun
 
-char+⊗l→char+ : char + ⊗ g ⊢ char +
+char+⊗l→char+ : char + ⊗ A ⊢ char +
 char+⊗l→char+ =
   id ,⊗ string-intro
   ∘g ⊗-assoc⁻
 
-char+L⊗r→char+L : g ⊗ char +L ⊢ char +L
+char+L⊗r→char+L : A ⊗ char +L ⊢ char +L
 char+L⊗r→char+L =
   string-intro ,⊗ id
   ∘g ⊗-assoc
@@ -600,7 +600,7 @@ char+≈char+L =
 char+≅char+L : char + ≅ char +L
 char+≅char+L = ≈→≅ unambiguous-char+ unambiguous-char+L char+≈char+L
 
-char+⊗r→char+ : g ⊗ char + ⊢ char +
+char+⊗r→char+ : A ⊗ char + ⊢ char +
 char+⊗r→char+ =
   char+≅char+L .inv
   ∘g char+L⊗r→char+L
@@ -644,7 +644,7 @@ module _ (c c' : ⟨ Alphabet ⟩) where
         ∙ (s' .snd))
         ∙ cong (_++ s' .fst .snd) pc')
 
-firstChar≅ : g ≅ (g & ε) ⊕ ⊕[ c ∈ ⟨ Alphabet ⟩ ] (g & startsWith c)
+firstChar≅ : A ≅ (A & ε) ⊕ (⊕[ c ∈ ⟨ Alphabet ⟩ ] (A & startsWith c))
 firstChar≅ =
   &string-split≅
   ≅∙ ⊕≅ id≅ (&≅ id≅ ⊕ᴰ-distL ≅∙ &⊕ᴰ-distR≅)
@@ -653,15 +653,15 @@ unambiguous⌈⌉ : ∀ w → unambiguous ⌈ w ⌉
 unambiguous⌈⌉ w = EXTERNAL.isLang→unambiguous (isLang⌈⌉ w)
 
 hasUniqueSplit :
-  (g : Grammar ℓg) →
-  (h : Grammar ℓh) →
-  Type (ℓ-max ℓg ℓh)
-hasUniqueSplit g h =
+  (A : Grammar ℓA) →
+  (B : Grammar ℓB) →
+  Type (ℓ-max ℓA ℓB)
+hasUniqueSplit A B =
   ∀ (w w' v v' : String) →
-    ((g & ⌈ w ⌉) ⊗ (h & ⌈ w' ⌉))
-      & ((g & ⌈ v ⌉) ⊗ (h & ⌈ v' ⌉))
+    ((A & ⌈ w ⌉) ⊗ (B & ⌈ w' ⌉))
+      & ((A & ⌈ v ⌉) ⊗ (B & ⌈ v' ⌉))
     ⊢
-    (⊕[ x ∈ w ≡ v ] (g & ⌈ w ⌉) ⊗ (⊕[ x ∈ w' ≡ v' ] h & ⌈ v ⌉))
+    (⊕[ x ∈ w ≡ v ] (A & ⌈ w ⌉) ⊗ (⊕[ x ∈ w' ≡ v' ] B & ⌈ v ⌉))
 
 literal→⌈⌉ : (c : ⟨ Alphabet ⟩) → ＂ c ＂ ⊢ ⌈ [ c ] ⌉
 literal→⌈⌉ c = ⊗-unit-r⁻
@@ -699,7 +699,7 @@ whichString≅ .inv = ⊕ᴰ-elim (λ w → ⌈w⌉→string {w = w})
 whichString≅ .sec = unambiguous⊕⌈⌉ _ _
 whichString≅ .ret = unambiguous-string _ _
 
-whichString≅' : g ≅ ⊕[ w ∈ String ] (g & ⌈ w ⌉)
+whichString≅' : A ≅ ⊕[ w ∈ String ] (A & ⌈ w ⌉)
 whichString≅' =
   &string≅
   ≅∙ &≅ id≅ whichString≅

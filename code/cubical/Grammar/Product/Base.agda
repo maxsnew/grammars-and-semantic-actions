@@ -14,59 +14,59 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 open StrongEquivalence
 
-_&'_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-(g &' h) w = g w × h w
-infixr 6 _&'_
+_&'_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
+(A &' B) w = A w × B w
+infixr 19 _&'_
 opaque
-  _&_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
+  _&_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   _&_ = _&'_
 
-infixr 6 _&_
+infixr 27 _&_
 
 opaque
   unfolding _&_
   &-intro :
-    g ⊢ h →
-    g ⊢ k →
-    g ⊢ h & k
+    A ⊢ B →
+    A ⊢ C →
+    A ⊢ B & C
   &-intro e e' _ p =
     e _ p , e' _ p
 
   &-π₁ :
-    g & h ⊢ g
+    A & B ⊢ A
   &-π₁ _ p = p .fst
 
   &-π₂ :
-    g & h ⊢ h
+    A & B ⊢ B
   &-π₂ _ p = p .snd
 
   &-β₁ :
-    (e₁ : g ⊢ h) →
-    (e₂ : g ⊢ k) →
+    (e₁ : A ⊢ B) →
+    (e₂ : A ⊢ C) →
     &-π₁ ∘g (&-intro e₁ e₂)
       ≡
     e₁
   &-β₁ e₁ e₂ = refl
 
   &-β₂ :
-    (e₁ : g ⊢ h) →
-    (e₂ : g ⊢ k) →
+    (e₁ : A ⊢ B) →
+    (e₂ : A ⊢ C) →
     &-π₂ ∘g (&-intro e₁ e₂)
       ≡
     e₂
   &-β₂ e₁ e₂ = refl
 
   &-η :
-    (e : g ⊢ h & k) →
-    (&-intro {g = g}{h = h}{k = k}
+    (e : A ⊢ B & C) →
+    (&-intro {A = A}{B = B}{C = C}
       (&-π₁ ∘g e)
       (&-π₂ ∘g e))
     ≡
@@ -74,7 +74,7 @@ opaque
   &-η e = refl
 
   &-η' :
-   (e e' : g ⊢ h & k) →
+   (e e' : A ⊢ B & C) →
    &-π₁ ∘g e ≡ &-π₁ ∘g e' →
    &-π₂ ∘g e ≡ &-π₂ ∘g e' →
    e ≡ e'
@@ -82,7 +82,7 @@ opaque
     sym (&-η e) ∙ cong₂ &-intro p₁ p₂ ∙ &-η e'
 
   &≡ :
-    (f f' : g  ⊢ h & k) →
+    (f f' : A  ⊢ B & C) →
     &-π₁ ∘g f ≡ &-π₁ ∘g f' →
     &-π₂ ∘g f ≡ &-π₂ ∘g f' →
     f ≡ f'
@@ -92,60 +92,60 @@ opaque
 _,&_ = &-intro
 infixr 20 _,&_
 
-&par : g ⊢ h → k ⊢ l → g & k ⊢ h & l
+&par : A ⊢ B → C ⊢ D → A & C ⊢ B & D
 &par f f' = (f ∘g &-π₁) ,& (f' ∘g &-π₂)
 
 _,&p_ = &par
 infixr 20 _,&p_
 
-id&_ : h ⊢ k → g & h ⊢ g & k
+id&_ : B ⊢ C → A & B ⊢ A & C
 id& f = &-π₁ ,& (f ∘g &-π₂)
 
 &-swap :
-  g & h ⊢ h & g
+  A & B ⊢ B & A
 &-swap = &-intro &-π₂ &-π₁
 
-&-Δ : g ⊢ g & g
+&-Δ : A ⊢ A & A
 &-Δ = id ,& id
 
 module _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
   where
   opaque
     unfolding &-intro
-    &-swap-invol : &-swap ∘g &-swap {g = g}{h = h} ≡ id
+    &-swap-invol : &-swap ∘g &-swap {A = A}{B = B} ≡ id
     &-swap-invol = refl
 
 &-assoc :
-  g & (h & k) ⊢ (g & h) & k
+  A & (B & C) ⊢ (A & B) & C
 &-assoc = &-intro (&-intro &-π₁ (&-π₁ ∘g &-π₂)) (&-π₂ ∘g &-π₂)
 
 &-assoc⁻ :
-  (g & h) & k ⊢ g & (h & k)
+  (A & B) & C ⊢ A & (B & C)
 &-assoc⁻ = &-intro (&-π₁ ∘g &-π₁) (&-intro (&-π₂ ∘g &-π₁) &-π₂)
 
 &-par :
-  g ⊢ h → k ⊢ l →
-  g & k ⊢ h & l
+  A ⊢ B → C ⊢ D →
+  A & C ⊢ B & D
 &-par e e' = &-intro (e ∘g &-π₁) (e' ∘g &-π₂)
 
 ⊗&-distL :
-  g ⊗ (h & k) ⊢ (g ⊗ h) & (g ⊗ k)
+  A ⊗ (B & C) ⊢ (A ⊗ B) & (A ⊗ C)
 ⊗&-distL = &-intro (⊗-intro id &-π₁) (⊗-intro id &-π₂)
 
 ⊗&-distR :
-  (g & h) ⊗ k ⊢ (g ⊗ k) & (h ⊗ k)
+  (A & B) ⊗ C ⊢ (A ⊗ C) & (B ⊗ C)
 ⊗&-distR = &-intro (⊗-intro &-π₁ id) (⊗-intro &-π₂ id)
 
-module InductiveProduct (g : Grammar ℓg) (h : Grammar ℓh) where
+module InductiveProduct (A : Grammar ℓA) (B : Grammar ℓB) where
   open import Grammar.Inductive.Indexed Alphabet as Inductive
   open import Grammar.Dependent.Base Alphabet
   open import Grammar.Lift Alphabet
   open import Cubical.Data.Unit
   open import Cubical.Data.FinSet
 
-  data &IndTag : Type (ℓ-max ℓg ℓh) where
+  data &IndTag : Type (ℓ-max ℓA ℓB) where
     L R : &IndTag
 
   isFinSet&IndTag : isFinSet &IndTag
@@ -159,23 +159,23 @@ module InductiveProduct (g : Grammar ℓg) (h : Grammar ℓh) where
         ))
       (isFinSetFin {n = 2})
 
-  &IndTy : Unit* {ℓ-max ℓg ℓh} → Functor Unit*
+  &IndTy : Unit* {ℓ-max ℓA ℓB} → Functor Unit*
   &IndTy _ = &e &IndTag λ {
-      L → Inductive.k (LiftG ℓh g)
-    ; R → Inductive.k (LiftG ℓg h)}
+      L → Inductive.k (LiftG ℓB A)
+    ; R → Inductive.k (LiftG ℓA B)}
 
-  &Ind : Grammar (ℓ-max ℓg ℓh)
+  &Ind : Grammar (ℓ-max ℓA ℓB)
   &Ind = μ &IndTy _
 
   opaque
     unfolding _&_
-    &Ind→&Alg : Algebra &IndTy λ _ → g & h
+    &Ind→&Alg : Algebra &IndTy λ _ → A & B
     &Ind→&Alg _ = (lowerG ∘g lowerG ∘g &ᴰ-π L) ,& (lowerG ∘g lowerG ∘g &ᴰ-π R)
 
-  &Ind→& : &Ind ⊢ g & h
+  &Ind→& : &Ind ⊢ A & B
   &Ind→& = Inductive.rec &IndTy &Ind→&Alg _
 
-  &Ind' : Grammar (ℓ-max ℓg ℓh)
+  &Ind' : Grammar (ℓ-max ℓA ℓB)
   &Ind' = ⟦ &IndTy _ ⟧ λ _ → &Ind
 
   open import Grammar.Inductive.Properties Alphabet
@@ -184,7 +184,7 @@ module InductiveProduct (g : Grammar ℓg) (h : Grammar ℓh) where
 
   opaque
     unfolding _&_ &-π₁
-    &≅&Ind' : StrongEquivalence (g & h) &Ind'
+    &≅&Ind' : StrongEquivalence (A & B) &Ind'
     &≅&Ind' =
       mkStrEq
         (&ᴰ-in (λ {
@@ -198,45 +198,45 @@ module InductiveProduct (g : Grammar ℓg) (h : Grammar ℓh) where
         }))
         refl
 
-  &≅&Ind : StrongEquivalence (g & h) &Ind
+  &≅&Ind : StrongEquivalence (A & B) &Ind
   &≅&Ind = &≅&Ind' ≅∙ sym≅ unroll&Ind≅
 
 module _
-  {g : Grammar ℓg} {h : Grammar ℓh}
-  {k : Grammar ℓk} {l : Grammar ℓl}
-  (g≅h : g ≅ h)
-  (k≅l : k ≅ l)
+  {A : Grammar ℓA} {B : Grammar ℓB}
+  {C : Grammar ℓC} {D : Grammar ℓD}
+  (A≅B : A ≅ B)
+  (C≅D : C ≅ D)
   where
 
   private
-    the-fun : g & k ⊢ h & l
-    the-fun = g≅h .fun ,&p k≅l .fun
+    the-fun : A & C ⊢ B & D
+    the-fun = A≅B .fun ,&p C≅D .fun
 
-    the-inv : h & l ⊢ g & k
-    the-inv = g≅h .inv ,&p k≅l .inv
+    the-inv : B & D ⊢ A & C
+    the-inv = A≅B .inv ,&p C≅D .inv
     opaque
       unfolding _&_ &-intro
       the-sec : the-fun ∘g the-inv ≡ id
       the-sec =
         &≡ _ _
-          (cong (_∘g &-π₁) (g≅h .sec))
-          (cong (_∘g &-π₂) (k≅l .sec))
+          (cong (_∘g &-π₁) (A≅B .sec))
+          (cong (_∘g &-π₂) (C≅D .sec))
       the-ret : the-inv ∘g the-fun ≡ id
       the-ret =
         &≡ _ _
-          (cong (_∘g &-π₁) (g≅h .ret))
-          (cong (_∘g &-π₂) (k≅l .ret))
+          (cong (_∘g &-π₁) (A≅B .ret))
+          (cong (_∘g &-π₂) (C≅D .ret))
 
-  &≅ : (g & k) ≅ (h & l)
+  &≅ : (A & C) ≅ (B & D)
   &≅ .fun = the-fun
   &≅ .inv = the-inv
   &≅ .sec = the-sec
   &≅ .ret = the-ret
 
 module _
-  {g : Grammar ℓg} {h : Grammar ℓh}
+  {A : Grammar ℓA} {B : Grammar ℓB}
   where
-  &-swap≅ : g & h ≅ h & g
+  &-swap≅ : A & B ≅ B & A
   &-swap≅ .fun = &-swap
   &-swap≅ .inv = &-swap
   &-swap≅ .sec = &-swap-invol

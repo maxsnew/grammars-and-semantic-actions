@@ -7,10 +7,9 @@ open import String.Base Alphabet public
 open import Cubical.HITs.PropositionalTruncation as PT
 
 private
-  variable ℓG ℓG' ℓH ℓK ℓL : Level
+  variable ℓA : Level
 
 module _ where
-  module _ ℓG where
-    Grammar : Type (ℓ-suc ℓG)
-    Grammar = String → Type ℓG
-
+  module _ ℓA where
+    Grammar : Type (ℓ-suc ℓA)
+    Grammar = String → Type ℓA

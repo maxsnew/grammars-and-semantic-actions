@@ -19,60 +19,60 @@ open import Term.Base Alphabet
 open import Grammar.Inductive.Functor Alphabet
 
 private
-  variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
+  variable ℓA ℓB ℓC ℓX : Level
 
 module _ where
-  module _ {A : Type ℓ} where
+  module _ {X : Type ℓX} where
     {-# NO_POSITIVITY_CHECK #-}
-    record ν (F : A → Functor A) a (w : String) : Type ℓ where
+    record ν (F : X → Functor X) x (w : String) : Type ℓX where
       coinductive
-      field unrollν : ⟦ F a ⟧ (ν F) w
+      field unrollν : ⟦ F x ⟧ (ν F) w
 
     {-# ETA ν #-}
 
     open ν
-    module _ (F : A → Functor A) a where
-      unrollν' : ν F a ⊢ ⟦ F a ⟧ (ν F)
-      unrollν' w x = unrollν x
+    module _ (F : X → Functor X) x where
+      unrollν' : ν F x ⊢ ⟦ F x ⟧ (ν F)
+      unrollν' w z = unrollν z
   open ν public
 
-  module _ {A : Type ℓ} (F : A → Functor A) where
-    Coalgebra : (A → Grammar ℓ') → Type (ℓ-max ℓ ℓ')
-    Coalgebra g = ∀ a → g a ⊢ ⟦ F a ⟧ g
+  module _ {X : Type ℓX} (F : X → Functor X) where
+    Coalgebra : (X → Grammar ℓA) → Type (ℓ-max ℓX ℓA)
+    Coalgebra A = ∀ x → A x ⊢ ⟦ F x ⟧ A
 
     terminalCoalgebra : Coalgebra (ν F)
     terminalCoalgebra = unrollν' F
 
-    Cohomomorphism : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''} → Coalgebra g → Coalgebra h → Type _
-    Cohomomorphism {g = g}{h} α β =
-      Σ[ ϕ ∈ (∀ a → g a ⊢ h a) ] (∀ (a : A) → β a ∘g ϕ a ≡ map (F a) ϕ ∘g α a)
+    Cohomomorphism : ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB} → Coalgebra A → Coalgebra B → Type _
+    Cohomomorphism {A = A}{B} α β =
+      Σ[ ϕ ∈ (∀ x → A x ⊢ B x) ] (∀ (x : X) → β x ∘g ϕ x ≡ map (F x) ϕ ∘g α x)
 
-    idCohomo : ∀ {g : A → Grammar ℓ'} → (α : Coalgebra g) → Cohomomorphism α α
-    idCohomo α = (λ a → id) , λ a → cong (_∘g α a) (sym (map-id (F a)))
+    idCohomo : ∀ {A : X → Grammar ℓA} → (α : Coalgebra A) → Cohomomorphism α α
+    idCohomo α = (λ x → id) , λ x → cong (_∘g α x) (sym (map-id (F x)))
 
-    compCohomo : ∀ {g : A → Grammar ℓ'}{h : A → Grammar ℓ''}{k : A → Grammar ℓ'''}
-      (α : Coalgebra g)(β : Coalgebra h)(η : Coalgebra k)
+    compCohomo : ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
+      (α : Coalgebra A)(β : Coalgebra B)(η : Coalgebra C)
       → Cohomomorphism β η → Cohomomorphism α β → Cohomomorphism α η
-    compCohomo α β η ϕ ψ .fst a = ϕ .fst a ∘g ψ .fst a
-    compCohomo α β η ϕ ψ .snd a =
-      cong (_∘g ψ .fst a) (ϕ .snd a)
-      ∙ cong ((map (F a) (ϕ .fst)) ∘g_) (ψ .snd a)
-      ∙ cong (_∘g α a) (sym (map-∘ (F a) (ϕ .fst) (ψ .fst)))
+    compCohomo α β η ϕ ψ .fst x = ϕ .fst x ∘g ψ .fst x
+    compCohomo α β η ϕ ψ .snd x =
+      cong (_∘g ψ .fst x) (ϕ .snd x)
+      ∙ cong ((map (F x) (ϕ .fst)) ∘g_) (ψ .snd x)
+      ∙ cong (_∘g α x) (sym (map-∘ (F x) (ϕ .fst) (ψ .fst)))
 
-    module _ {g : A → Grammar ℓ'} (α : Coalgebra g) where
+    module _ {A : X → Grammar ℓA} (α : Coalgebra A) where
       {-# TERMINATING #-}
       corecCohomo : Cohomomorphism α terminalCoalgebra
-      corecCohomo .fst a w x .unrollν = map (F a) (corecCohomo .fst) w (α a w x)
-      corecCohomo .snd a = refl
+      corecCohomo .fst x w z .unrollν = map (F x) (corecCohomo .fst) w (α x w z)
+      corecCohomo .snd x = refl
 
-      corec : ∀ a → g a ⊢ (ν F a)
+      corec : ∀ x → A x ⊢ (ν F x)
       corec = corecCohomo .fst
 
-    rollν : ∀ a → ⟦ F a ⟧ (ν F) ⊢ ν F a
-    rollν a w x .unrollν = x
+    rollν : ∀ x → ⟦ F x ⟧ (ν F) ⊢ ν F x
+    rollν x w z .unrollν = z
 
-    rollν' : ∀ a → ⟦ F a ⟧ (ν F) ⊢ ν F a
+    rollν' : ∀ x → ⟦ F x ⟧ (ν F) ⊢ ν F x
     rollν' = corec coalg
       where
-      coalg : Coalgebra λ a → ⟦ F a ⟧ (ν F)
-      coalg a = map (F a) λ a' → unrollν' F a'
+      coalg : Coalgebra λ x → ⟦ F x ⟧ (ν F)
+      coalg x = map (F x) λ x' → unrollν' F x'

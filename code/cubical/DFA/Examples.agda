@@ -45,12 +45,6 @@ unicode→Alphabet c =
 
 open DecodeUnicode Alphabet unicode→Alphabet
 
-private
-  variable
-    ℓg ℓh : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-
 module examples where
   -- examples are over alphabet drawn from Fin 2
   -- characters are fzero and (fsuc fzero)
@@ -69,7 +63,7 @@ module examples where
     module D = DeterministicAutomaton D
 
   opaque
-    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⟜-intro ⊸-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊕ᴰ-distL
+    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⊸-intro ⟜-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊕ᴰ-distL
     mktest : String → Bool
     mktest w = (&ᴰ-π (D.init) ∘g D.parse) w (⌈w⌉→string {w = w} w (internalize w)) .fst
 

@@ -8,53 +8,53 @@ open import Term Alphabet
 
 private
   variable
-    ℓg ℓh ℓk : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
+    ℓA ℓB ℓC : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
 
-Maybe : Grammar ℓg → Grammar ℓg
-Maybe {ℓg = ℓg} g = g ⊕ ⊤* {ℓg}
+Maybe : Grammar ℓA → Grammar ℓA
+Maybe {ℓA = ℓA} A = A ⊕ ⊤* {ℓA}
 
-just : g ⊢ Maybe g
+just : A ⊢ Maybe A
 just = ⊕-inl
 
-nothing : g ⊢ Maybe h
+nothing : A ⊢ Maybe B
 nothing = ⊕-inr ∘g ⊤*-intro
 
-return : g ⊢ Maybe g
+return : A ⊢ Maybe A
 return = just
 
-μ : Maybe (Maybe g) ⊢ Maybe g
+μ : Maybe (Maybe A) ⊢ Maybe A
 μ = ⊕-elim id nothing
 
 fmap :
-  g ⊢ h →
-  Maybe g ⊢ Maybe h
+  A ⊢ B →
+  Maybe A ⊢ Maybe B
 fmap e = ⊕-elim (just ∘g e) nothing
 
-Maybe⊗l : (Maybe g) ⊗ h ⊢ Maybe (g ⊗ h)
-Maybe⊗l {g = g}{h = h} =
+Maybe⊗l : (Maybe A) ⊗ B ⊢ Maybe (A ⊗ B)
+Maybe⊗l {A = A}{B = B} =
+  ⊸-intro⁻
+    (⊕-elim
+      (⊸-intro just)
+      (⊸-intro (nothing {B = A ⊗ B})))
+
+Maybe⊗r : A ⊗ (Maybe B)  ⊢ Maybe (A ⊗ B)
+Maybe⊗r {A = A}{B = B} =
   ⟜-intro⁻
     (⊕-elim
-      (⟜-intro just)
-      (⟜-intro (nothing {h = g ⊗ h})))
-
-Maybe⊗r : g ⊗ (Maybe h)  ⊢ Maybe (g ⊗ h)
-Maybe⊗r {g = g}{h = h} =
-  ⊸-intro⁻
-    (⊕-elim
-       (⊸-intro just)
-       (⊸-intro (nothing {h = g ⊗ h}))
+       (⟜-intro just)
+       (⟜-intro (nothing {B = A ⊗ B}))
     )
 
-Maybe⊗ : (Maybe g) ⊗ (Maybe h) ⊢ Maybe (g ⊗ h)
-Maybe⊗ {g = g}{h = h} =
-  ⊸-intro⁻
+Maybe⊗ : (Maybe A) ⊗ (Maybe B) ⊢ Maybe (A ⊗ B)
+Maybe⊗ {A = A}{B = B} =
+  ⟜-intro⁻
     (⊕-elim
-      (⊸-intro {k = Maybe (g ⊗ h)}
-        (⟜-intro⁻
+      (⟜-intro {C = Maybe (A ⊗ B)}
+        (⊸-intro⁻
           (⊕-elim
-            (⟜-intro just)
-            (⟜-intro (nothing {h = g ⊗ h})))))
-      (⊸-intro (nothing {h = g ⊗ h})))
+            (⊸-intro just)
+            (⊸-intro (nothing {B = A ⊗ B})))))
+      (⟜-intro (nothing {B = A ⊗ B})))

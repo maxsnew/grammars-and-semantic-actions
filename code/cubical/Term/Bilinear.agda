@@ -10,40 +10,39 @@ open import Term.Nullary Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD ℓ ℓ' : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 {-- A direct interpretation of terms of 2 variables
- -- x : g , y : h ⊢ M : k
+ -- x : A , y : B ⊢ M : C
  --
  --}
-Bilinear : Grammar ℓg → Grammar ℓh → Grammar ℓk → Type _
-Bilinear g h k = ∀ w1 w2 → g w1 → h w2 → k (w1 ++ w2)
+Bilinear : Grammar ℓA → Grammar ℓB → Grammar ℓC → Type _
+Bilinear A B C = ∀ w1 w2 → A w1 → B w2 → C (w1 ++ w2)
 
-_,,_⊢_ : Grammar ℓg → Grammar ℓh → Grammar ℓk → Type _
+_,,_⊢_ : Grammar ℓA → Grammar ℓB → Grammar ℓC → Type _
 _,,_⊢_ = Bilinear
 
-_∘b_ : k ⊢ l → g ,, h ⊢ k → g ,, h ⊢ l
-_∘b_ f f' = λ w1 w2 gp hp → f (w1 ++ w2) (f' w1 w2 gp hp)
+_∘b_ : C ⊢ D → A ,, B ⊢ C → A ,, B ⊢ D
+_∘b_ f f' = λ w1 w2 Ap Bp → f (w1 ++ w2) (f' w1 w2 Ap Bp)
 
-_b∘l_ : g ,, h ⊢ k → l ⊢ g → l ,, h ⊢ k
-(f b∘l f') w1 w2 lp hp = f w1 w2 (f' w1 lp) hp
+_b∘l_ : A ,, B ⊢ C → D ⊢ A → D ,, B ⊢ C
+(f b∘l f') w1 w2 lp Bp = f w1 w2 (f' w1 lp) Bp
 
-_b∘r_ : g ,, h ⊢ k → l ⊢ h → g ,, l ⊢ k
-(f b∘r f') w1 w2 gp lp = f w1 w2 gp (f' w2 lp)
+_b∘r_ : A ,, B ⊢ C → D ⊢ B → A ,, D ⊢ C
+(f b∘r f') w1 w2 Ap lp = f w1 w2 Ap (f' w2 lp)
 
 -- Does the fact that this is refl make anything easier?
 -- TODO: should these be opaque?
-_b∘εl_ : g ,, h ⊢ k → ε⊢ g → h ⊢ k
-_b∘εl_ {k = k} f gp w hp =
-   (f [] w gp hp)
+_b∘εl_ : A ,, B ⊢ C → ε⊢ A → B ⊢ C
+_b∘εl_ {C = C} f Ap w Bp =
+   (f [] w Ap Bp)
 
-_b∘εr_ : g ,, h ⊢ k → ε⊢ h → g ⊢ k
-_b∘εr_ {k = k} f hp w gp =
-  subst k
+_b∘εr_ : A ,, B ⊢ C → ε⊢ B → A ⊢ C
+_b∘εr_ {C = C} f Bp w Ap =
+  subst C
     (++-unit-r _)
-    (f w [] gp hp)
-
+    (f w [] Ap Bp)

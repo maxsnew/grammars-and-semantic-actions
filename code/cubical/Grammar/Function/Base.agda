@@ -12,49 +12,49 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 opaque
-  _⇒_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-  (g ⇒ h) w = g w → h w
+  _⇒_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
+  (A ⇒ B) w = A w → B w
 
 opaque
   unfolding _⇒_ _&_ &-intro
   ⇒-intro :
-    g & h ⊢ k →
-    g ⊢ h ⇒ k
-  ⇒-intro e _ pg = λ ph → e _ (pg , ph)
+    A & B ⊢ C →
+    A ⊢ B ⇒ C
+  ⇒-intro e _ pA = λ pB → e _ (pA , pB)
 
   ⇒-app :
-    (g ⇒ h) & g ⊢ h
-  ⇒-app _ (f , pg) = f pg
+    (A ⇒ B) & A ⊢ B
+  ⇒-app _ (f , pA) = f pA
 
 ⇒-intro⁻ :
-  g ⊢ h ⇒ k
-  → g & h ⊢ k
+  A ⊢ B ⇒ C
+  → A & B ⊢ C
 ⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₁) &-π₂
 
 opaque
   unfolding _⇒_ _&_ &-intro ⇒-intro
   ⇒-β :
-    (e : g & h ⊢ k) →
+    (e : A & B ⊢ C) →
     ⇒-intro⁻ (⇒-intro e) ≡ e
   ⇒-β e = refl
 
   ⇒-η :
-    (e : g ⊢ h ⇒ k) →
+    (e : A ⊢ B ⇒ C) →
     ⇒-intro (⇒-intro⁻ e) ≡ e
   ⇒-η e = refl
 
-⇒-mapDom : g ⊢ h → h ⇒ k ⊢ g ⇒ k
+⇒-mapDom : A ⊢ B → B ⇒ C ⊢ A ⇒ C
 ⇒-mapDom e = ⇒-intro (⇒-app ∘g id ,&p e)
 
 ⇒-comp :
-  (g ⇒ h) & (h ⇒ k) ⊢ g ⇒ k
+  (A ⇒ B) & (B ⇒ C) ⊢ A ⇒ C
 ⇒-comp =
   ⇒-intro
     (⇒-app ∘g
@@ -63,20 +63,20 @@ opaque
     &-par &-swap id)
 
 term⇒ :
-  g ⊢ h →
-  ⊤ ⊢ g ⇒ h
+  A ⊢ B →
+  ⊤ ⊢ A ⇒ B
 term⇒ f = ⇒-intro (f ∘g &-π₂)
 
-id⇒ : ⊤ ⊢ g ⇒ g
+id⇒ : ⊤ ⊢ A ⇒ A
 id⇒ = term⇒ id
 
 ⇐-intro :
-  g & h ⊢ k →
-  h ⊢ g ⇒ k
+  A & B ⊢ C →
+  B ⊢ A ⇒ C
 ⇐-intro e = ⇒-intro (e ∘g &-intro &-π₂ &-π₁)
 
 ⇐-intro⁻ :
-  h ⊢ g ⇒ k
-  → g & h ⊢ k
+  B ⊢ A ⇒ C
+  → A & B ⊢ C
 ⇐-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₂) &-π₁
 

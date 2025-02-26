@@ -13,20 +13,20 @@ open import Grammar.Inductive.Indexed Alphabet
 open import Term.Base Alphabet
 
 private
-  variable ℓG ℓG' ℓ ℓ' ℓ'' ℓ''' : Level
+  variable ℓA ℓB ℓX : Level
 
-module _ {A : Type ℓ} (F : A → Functor A) where
+module _ {X : Type ℓX} (F : X → Functor X) where
   open StrongEquivalence
 
-  unroll≅ : ∀ a → μ F a ≅ ⟦ F a ⟧ (μ F)
-  unroll≅ a .fun = unroll F a
-  unroll≅ a .inv = roll
-  unroll≅ a .sec = refl
-  unroll≅ a .ret =
+  unroll≅ : ∀ x → μ F x ≅ ⟦ F x ⟧ (μ F)
+  unroll≅ x .fun = unroll F x
+  unroll≅ x .inv = roll
+  unroll≅ x .sec = refl
+  unroll≅ x .ret =
     equalizer-ind
       F
-      (λ a → μ F a)
-      (λ a → roll ∘g unroll F a)
+      (λ x → μ F x)
+      (λ x → roll ∘g unroll F x)
       (λ _ → id)
-      (λ a → refl)
-      a
+      (λ x → refl)
+      x

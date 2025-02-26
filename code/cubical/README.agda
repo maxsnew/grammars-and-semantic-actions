@@ -34,6 +34,8 @@ import Examples.Everything
 -- (ideally these get merged upstream at some point)
 import Cubical.Everything
 
+import Parser.Everything
+
 -- An attempt at defining a "Lexer" as a translation between alphabets
 -- This is very underdeveloped at the moment, but it
 -- is imported in a couple points in the String directory, so

@@ -16,37 +16,37 @@ open import Cubical.Foundations.Powerset.More
 
 private
   variable
-    ℓg ℓh ℓk ℓl : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
     c : ⟨ Alphabet ⟩
 
 open StrongEquivalence
 open Powerset ⟨ Alphabet ⟩
 
-FirstG : Grammar ℓg → ⟨ Alphabet ⟩ → Grammar ℓg
-FirstG g c = startsWith c & g
+FirstG : Grammar ℓA → ⟨ Alphabet ⟩ → Grammar ℓA
+FirstG A c = startsWith c & A
 
-_∉First_ : ⟨ Alphabet ⟩ → Grammar ℓg → hProp ℓg
-(c ∉First g) .fst = uninhabited (FirstG g c)
-(c ∉First g) .snd = isProp-uninhabited
+_∉First_ : ⟨ Alphabet ⟩ → Grammar ℓA → hProp ℓA
+(c ∉First A) .fst = uninhabited (FirstG A c)
+(c ∉First A) .snd = isProp-uninhabited
 
 -- Would like a universe polymorphic version of this.
 -- Something something propositional resizing?
 ¬First : Grammar ℓ-zero → ℙ
-¬First g c = c ∉First g
+¬First A c = c ∉First A
 
 private
-  ∉First⊗l-string : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ string) ⟩
-  ∉First⊗l-string {g = g} {c = c} ¬nullg c∉Fg =
+  ∉First⊗l-string : ⟨ ¬Nullable A ⟩ → ⟨ c ∉First A ⟩ → ⟨ c ∉First (A ⊗ string) ⟩
+  ∉First⊗l-string {A = A} {c = c} ¬nullA c∉FA =
     ⊕-elim
-      (⊥⊗ ∘g (¬nullg ∘g &-swap) ,⊗ id ∘g &-π₂)
+      (⊥⊗ ∘g (¬nullA ∘g &-swap) ,⊗ id ∘g &-π₂)
       (⊕ᴰ-elim (λ c' →
         ⊕ᴰ-elim (λ c≡c' →
           (⊥⊗ ∘g
-            (c∉Fg ∘g
+            (c∉FA ∘g
               (transportG
                (cong literal (sym c≡c')) ,⊗ id) ,&p id ∘g &-swap) ,⊗ id)
           ∘g &-π₂ ∘g &-π₁
@@ -62,44 +62,44 @@ private
     ∘g &⊕-distL
     ∘g id ,&p (⊗⊕-distR ∘g (firstChar≅ .fun ,⊗ id))
 
-∉First⊗l : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g ⊗ h) ⟩
-∉First⊗l {g = g} {c = c} {h = h} ¬nullg c∉Fg =
-  ∉First⊗l-string ¬nullg c∉Fg
+∉First⊗l : ⟨ ¬Nullable A ⟩ → ⟨ c ∉First A ⟩ → ⟨ c ∉First (A ⊗ B) ⟩
+∉First⊗l {A = A} {c = c} {B = B} ¬nullA c∉FA =
+  ∉First⊗l-string ¬nullA c∉FA
   ∘g id ,&p (id ,⊗ string-intro)
 
-∉First∘g : (f : h ⊢ g) → ⟨ c ∉First g ⟩ → ⟨ c ∉First h ⟩
-∉First∘g f c∉Fg = c∉Fg ∘g id ,&p f
+∉First∘g : (f : B ⊢ A) → ⟨ c ∉First A ⟩ → ⟨ c ∉First B ⟩
+∉First∘g f c∉FA = c∉FA ∘g id ,&p f
 
-∉First⊗ : ⟨ c ∉First g ⟩ → ⟨ c ∉First h ⟩ → ⟨ c ∉First (g ⊗ h) ⟩
-∉First⊗ {g = g} {h = h} c∉Fg c∉Fh =
+∉First⊗ : ⟨ c ∉First A ⟩ → ⟨ c ∉First B ⟩ → ⟨ c ∉First (A ⊗ B) ⟩
+∉First⊗ {A = A} {B = B} c∉FA c∉FB =
   ⊕-elim
-    (c∉Fh
+    (c∉FB
     ∘g id ,&p (⊗-unit-l ∘g &-π₂ ,⊗ id))
-    (∉First⊗l ¬Nullable-&char+ (∉First∘g &-π₁ c∉Fg))
+    (∉First⊗l ¬Nullable-&char+ (∉First∘g &-π₁ c∉FA))
   ∘g &⊕-distL
   ∘g id ,&p (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id)
 
 
-∉First-⊕ : ⟨ c ∉First g ⟩ → ⟨ c ∉First h ⟩ → ⟨ c ∉First (g ⊕ h) ⟩
-∉First-⊕ c∉Fg c∉Fh =
-  ⊕-elim c∉Fg c∉Fh
+∉First-⊕ : ⟨ c ∉First A ⟩ → ⟨ c ∉First B ⟩ → ⟨ c ∉First (A ⊕ B) ⟩
+∉First-⊕ c∉FA c∉FB =
+  ⊕-elim c∉FA c∉FB
   ∘g &⊕-distL
 
-∉First*-notnull : ⟨ ¬Nullable g ⟩ → ⟨ c ∉First g ⟩ → ⟨ c ∉First (g *) ⟩
-∉First*-notnull ¬nullg c∉F =
+∉First*-notnull : ⟨ ¬Nullable A ⟩ → ⟨ c ∉First A ⟩ → ⟨ c ∉First (A *) ⟩
+∉First*-notnull ¬nullA c∉F =
   ⊕-elim
     (¬Nullable-startsWith ∘g &-swap)
-    (∉First⊗l ¬nullg c∉F)
+    (∉First⊗l ¬nullA c∉F)
   ∘g &⊕-distL
-  ∘g id ,&p *≅ε⊕g⊗g* _ .fun
+  ∘g id ,&p *≅ε⊕A⊗A* _ .fun
 
-∉First* : ⟨ c ∉First g ⟩ → ⟨ c ∉First (g *) ⟩
-∉First* {c = c}{g = g} c∉F =
+∉First* : ⟨ c ∉First A ⟩ → ⟨ c ∉First (A *) ⟩
+∉First* {c = c}{A = A} c∉F =
   ⇒-app
   ∘g &-swap
   ∘g id ,&p rec _ the-alg _
   where
-  the-alg : Algebra (*Ty g) λ _ → ¬G (startsWith c)
+  the-alg : Algebra (*Ty A) λ _ → ¬G (startsWith c)
   the-alg _ = ⊕ᴰ-elim λ {
       nil → ⇒-intro ¬Nullable-startsWith ∘g lowerG ∘g lowerG
     ; cons →
@@ -113,36 +113,36 @@ private
       ∘g lowerG ,⊗ lowerG
     }
 
-_#_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
-g # h = ∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉First g ⟩ ⊎ ⟨ c ∉First h ⟩
+_#_ : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
+A # B = ∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉First A ⟩ ⊎ ⟨ c ∉First B ⟩
 
-#⊗l : ⟨ ¬Nullable g ⟩ → g # h → (g ⊗ k) # h
-#⊗l ¬nullg sep c =
-  Sum.map (∉First⊗l ¬nullg) (λ x → x) (sep c)
+#⊗l : ⟨ ¬Nullable A ⟩ → A # B → (A ⊗ C) # B
+#⊗l ¬nullA sep c =
+  Sum.map (∉First⊗l ¬nullA) (λ x → x) (sep c)
 
-#∘g : g ⊢ h → h # k → g # k
+#∘g : A ⊢ B → B # C → A # C
 #∘g f sep c = Sum.map (∉First∘g f) (λ x → x) (sep c)
 
-#∘g2 : g ⊢ h → k ⊢ l → h # l → g # k
+#∘g2 : A ⊢ B → C ⊢ D → B # D → A # C
 #∘g2 f f' sep c = Sum.map (∉First∘g f) (∉First∘g f') (sep c)
 
-sym# : g # h → h # g
+sym# : A # B → B # A
 sym# sep c = Sum.rec inr inl (sep c)
 
 #→disjoint :
-  g # h →
-  (⟨ ¬Nullable g ⟩ ⊎ ⟨ ¬Nullable h ⟩) →
-  disjoint g h
+  A # B →
+  (⟨ ¬Nullable A ⟩ ⊎ ⟨ ¬Nullable B ⟩) →
+  disjoint A B
 #→disjoint sep ¬null =
   ⊕-elim
     (Sum.rec
-      (λ ¬nullg → ¬nullg ∘g id ,&p &-π₁ ∘g &-swap)
-      (λ ¬nullh → ¬nullh ∘g id ,&p &-π₂ ∘g &-swap)
+      (λ ¬nullA → ¬nullA ∘g id ,&p &-π₁ ∘g &-swap)
+      (λ ¬nullB → ¬nullB ∘g id ,&p &-π₂ ∘g &-swap)
       ¬null)
     (⊕ᴰ-elim (λ c →
       Sum.rec
-        (λ c∉Fg → c∉Fg ∘g &-swap ∘g &-π₁ ,&p id)
-        (λ c∉Fh → c∉Fh ∘g &-swap ∘g &-π₂ ,&p id)
+        (λ c∉FA → c∉FA ∘g &-swap ∘g &-π₁ ,&p id)
+        (λ c∉FB → c∉FB ∘g &-swap ∘g &-π₂ ,&p id)
         (sep c)
     )
     ∘g &⊕ᴰ-distR≅ .fun

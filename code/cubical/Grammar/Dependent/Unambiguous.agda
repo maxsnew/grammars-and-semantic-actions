@@ -31,79 +31,79 @@ open import Grammar.Literal Alphabet
 
 private
   variable
-    ℓg ℓh ℓS : Level
+    ℓA ℓB ℓX : Level
 
 module _
-  {A : Type ℓS} {h : A → Grammar ℓh}
-  (isSetA : isSet A)
+  {X : Type ℓX} {A : X → Grammar ℓA}
+  (isSetX : isSet X)
   where
 
-  isMono-⊕ᴰ-in : (a : A) → isMono (⊕ᴰ-in {h = h} a)
-  isMono-⊕ᴰ-in a e e' !∘e=!∘e' =
+  isMono-⊕ᴰ-in : (x : X) → isMono (⊕ᴰ-in {A = A} x)
+  isMono-⊕ᴰ-in x e e' !∘e=!∘e' =
     funExt λ w → funExt λ p →
       sym (transportRefl (e w p)) ∙
-      Σ-contractFst (refl , (isSetA _ _ _)) .fst
+      Σ-contractFst (refl , (isSetX _ _ _)) .fst
         (PathΣ→ΣPathTransport _ _ (funExt⁻ (funExt⁻ !∘e=!∘e' w) p))
 
   unambiguous'⊕ᴰ :
-    unambiguous' (⊕[ a ∈ A ] h a) →
-      (a : A)  → unambiguous' (h a)
-  unambiguous'⊕ᴰ unambig⊕ a f f' !≡ =
-    isMono-⊕ᴰ-in a f f'
-      (unambig⊕ (LinΣ-intro a ∘g f) (LinΣ-intro a ∘g f')
+    unambiguous' (⊕[ x ∈ X ] A x) →
+      (x : X)  → unambiguous' (A x)
+  unambiguous'⊕ᴰ unambig⊕ x f f' !≡ =
+    isMono-⊕ᴰ-in x f f'
+      (unambig⊕ (⊕ᴰ-in x ∘g f) (⊕ᴰ-in x ∘g f')
         -- Need to change the endpoints of !≡ to line up with the
         -- ⊤-intro at the proper domain
         (unambiguous⊤ _ _ ∙ !≡ ∙ sym (unambiguous⊤ _ _)))
 
-  unambiguous⊕ᴰ : unambiguous (⊕[ a ∈ A ] h a) → (a : A) →
-    unambiguous (h a)
-  unambiguous⊕ᴰ unambig⊕ a =
+  unambiguous⊕ᴰ : unambiguous (⊕[ x ∈ X ] A x) → (x : X) →
+    unambiguous (A x)
+  unambiguous⊕ᴰ unambig⊕ x =
     unambiguous'→unambiguous
-      (unambiguous'⊕ᴰ (unambiguous→unambiguous' unambig⊕) a)
+      (unambiguous'⊕ᴰ (unambiguous→unambiguous' unambig⊕) x)
 
   module _
-    (unambig⊕ : unambiguous (⊕[ a ∈ A ] h a))
+    (unambig⊕ : unambiguous (⊕[ x ∈ X ] A x))
     where
     opaque
       unfolding _&_ ⊥
-      hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ h
-      hasDisjointSummands⊕ᴰ a a' a≠a' w (p , p') =
-        a≠a' λ i → unambig⊕ (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂) i w (p , p') .fst
+      hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
+      hasDisjointSummands⊕ᴰ x y x≠y w (p , p') =
+        x≠y λ i → unambig⊕ (⊕ᴰ-in x ∘g &-π₁) (⊕ᴰ-in y ∘g &-π₂) i w (p , p') .fst
 
     equalizer→⊥ :
-      (a a' : A) →
-      (a ≡ a' → Empty.⊥) →
-      equalizer (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂) ⊢ ⊥
-    equalizer→⊥ a a' a≠a' =
-     hasDisjointSummands⊕ᴰ a a' a≠a'
-     ∘g eq-π (⊕ᴰ-in a ∘g &-π₁) (⊕ᴰ-in a' ∘g &-π₂)
+      (x y : X) →
+      (x ≡ y → Empty.⊥) →
+      equalizer (⊕ᴰ-in x ∘g &-π₁) (⊕ᴰ-in y ∘g &-π₂) ⊢ ⊥
+    equalizer→⊥ x y x≠y =
+     hasDisjointSummands⊕ᴰ x y x≠y
+     ∘g eq-π (⊕ᴰ-in x ∘g &-π₁) (⊕ᴰ-in y ∘g &-π₂)
 
-module _ {A : Type ℓS} {h : A → Grammar ℓh}
-  (disjoint-summands : disjointSummands⊕ᴰ h)
-  (isLang-summands : ∀ a → isLang (h a))
-  (discA : Discrete A)
+module _ {X : Type ℓX} {A : X → Grammar ℓA}
+  (disjoint-summands : disjointSummands⊕ᴰ A)
+  (isLang-summands : ∀ x → isLang (A x))
+  (discX : Discrete X)
   where
 
   opaque
     unfolding ⊥ _&_
-    mkIsLang⊕ᴰ : isLang (⊕[ a ∈ A ] h a)
+    mkIsLang⊕ᴰ : isLang (⊕[ x ∈ X ] A x)
     mkIsLang⊕ᴰ w x y =
       decRec
         (λ x₁≡y₁ → Σ≡Prop (λ a → isLang-summands a w) x₁≡y₁)
         (λ ¬x₁≡y₁ →
           Empty.rec (disjoint-summands (x .fst) (y .fst) ¬x₁≡y₁ w (x .snd , y .snd))
         )
-        (discA (x .fst) (y .fst))
+        (discX (x .fst) (y .fst))
 
-module _ {A : Type ℓS} {h : A → Grammar ℓh}
-  (disjoint-summands : disjointSummands⊕ᴰ h)
-  (unambig-summands : ∀ a → unambiguous (h a))
-  (discA : Discrete A)
+module _ {X : Type ℓX} {A : X → Grammar ℓA}
+  (disjoint-summands : disjointSummands⊕ᴰ A)
+  (unambig-summands : ∀ x → unambiguous (A x))
+  (discX : Discrete X)
   where
 
-  mkUnambiguous⊕ᴰ : unambiguous (⊕[ a ∈ A ] h a)
+  mkUnambiguous⊕ᴰ : unambiguous (⊕[ x ∈ X ] A x)
   mkUnambiguous⊕ᴰ =
     EXTERNAL.isLang→unambiguous
       (mkIsLang⊕ᴰ disjoint-summands
         (λ a → EXTERNAL.unambiguous→isLang
-          (unambig-summands a)) discA)
+          (unambig-summands a)) discX)

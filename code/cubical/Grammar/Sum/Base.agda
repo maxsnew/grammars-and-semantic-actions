@@ -21,44 +21,44 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD ℓ ℓ' : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
-_⊕'_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
-(g ⊕' h) w = g w ⊎ h w
-infixr 5 _⊕'_
+_⊕'_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
+(A ⊕' B) w = A w ⊎ B w
+infixr 18 _⊕'_
 opaque
-  _⊕_ : Grammar ℓg → Grammar ℓh → Grammar (ℓ-max ℓg ℓh)
+  _⊕_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   _⊕_ = _⊕'_
 
-infixr 5 _⊕_
+infixr 18 _⊕_
 
 opaque
   unfolding _⊕_
   ⊕-inl :
-    g ⊢ g ⊕ h
+    A ⊢ A ⊕ B
   ⊕-inl _ p = inl p
 
 
   ⊕-inr :
-    g ⊢ h ⊕ g
+    A ⊢ B ⊕ A
   ⊕-inr _ p = inr p
 
   ⊕-elim :
-    g ⊢ h →
-    k ⊢ h →
-    g ⊕ k ⊢ h
-  ⊕-elim eg eh _ p =
+    A ⊢ B →
+    C ⊢ B →
+    A ⊕ C ⊢ B
+  ⊕-elim eA eB _ p =
     Sum.elim
-      (λ pg → eg _ pg)
-      (λ ph → eh _ ph)
+      (λ pA → eA _ pA)
+      (λ pB → eB _ pB)
       p
 
   ⊕≡ :
-    (f f' : g ⊕ k ⊢ h)
+    (f f' : A ⊕ C ⊢ B)
     → (f ∘g ⊕-inl ≡ f' ∘g ⊕-inl)
     → (f ∘g ⊕-inr ≡ f' ∘g ⊕-inr)
     → f ≡ f'
@@ -67,24 +67,24 @@ opaque
     ; (inr x) → funExt⁻ (funExt⁻ f≡f'inr _) x }
 
   ⊕-βl :
-    (e₁ : g ⊢ k) →
-    (e₂ : h ⊢ k) →
+    (e₁ : A ⊢ C) →
+    (e₂ : B ⊢ C) →
     ⊕-inl ⋆ ⊕-elim e₁ e₂
       ≡
     e₁
   ⊕-βl e₁ e₂ = refl
 
   ⊕-βr :
-    (e₁ : g ⊢ k) →
-    (e₂ : h ⊢ k) →
+    (e₁ : A ⊢ C) →
+    (e₂ : B ⊢ C) →
     ⊕-inr ⋆ ⊕-elim e₁ e₂
       ≡
     e₂
   ⊕-βr e₁ e₂ = refl
 
   ⊕-η :
-    (e : g ⊕ h ⊢ k) →
-    (⊕-elim {g = g}{h = k}{k = h}
+    (e : A ⊕ B ⊢ C) →
+    (⊕-elim {A = A}{B = C}{C = B}
       (e ∘g ⊕-inl)
       (e ∘g ⊕-inr)
     )
@@ -94,37 +94,37 @@ opaque
   ⊕-η e i _ (inr x) = e _ (inr x)
 
 _,⊕p_ :
-  g ⊢ h →
-  k ⊢ l →
-  g ⊕ k ⊢ h ⊕ l
+  A ⊢ B →
+  C ⊢ D →
+  A ⊕ C ⊢ B ⊕ D
 e ,⊕p f = ⊕-elim (⊕-inl ∘g e) (⊕-inr ∘g f)
 
-⊕-swap : g ⊕ h ⊢ h ⊕ g
+⊕-swap : A ⊕ B ⊢ B ⊕ A
 ⊕-swap = ⊕-elim ⊕-inr ⊕-inl
 
 module _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
   where
   opaque
     unfolding ⊕-elim
-    ⊕-swap-invol : ⊕-swap ∘g ⊕-swap {g = g}{h = h} ≡ id
+    ⊕-swap-invol : ⊕-swap ∘g ⊕-swap {A = A}{B = B} ≡ id
     ⊕-swap-invol = ⊕≡ _ _ refl refl
 
 opaque
   unfolding _⊗_ _⊕_
   ⊗⊕-distL :
-    g ⊗ (h ⊕ k) ⊢ (g ⊗ h) ⊕ (g ⊗ k)
-  ⊗⊕-distL {g = g} {h = h} {k = k} w (s , p , inl q) = inl (s , p , q)
-  ⊗⊕-distL {g = g} {h = h} {k = k} w (s , p , inr q) = inr (s , p , q)
+    A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C)
+  ⊗⊕-distL {A = A} {B = B} {C = C} w (s , p , inl q) = inl (s , p , q)
+  ⊗⊕-distL {A = A} {B = B} {C = C} w (s , p , inr q) = inr (s , p , q)
 
   ⊗⊕-distR :
-    (g ⊕ h) ⊗ k ⊢ (g ⊗ k) ⊕ (h ⊗ k)
-  ⊗⊕-distR {g = g} {h = h} {k = k} w (s , inl p , q) = inl (s , p , q)
-  ⊗⊕-distR {g = g} {h = h} {k = k} w (s , inr p , q) = inr (s , p , q)
+    (A ⊕ B) ⊗ C ⊢ (A ⊗ C) ⊕ (B ⊗ C)
+  ⊗⊕-distR {A = A} {B = B} {C = C} w (s , inl p , q) = inl (s , p , q)
+  ⊗⊕-distR {A = A} {B = B} {C = C} w (s , inr p , q) = inr (s , p , q)
 
 &⊕-distR :
-  (g ⊕ h) & k ⊢ (g & k) ⊕ (h & k)
+  (A ⊕ B) & C ⊢ (A & C) ⊕ (B & C)
 &⊕-distR =
   ⇒-intro⁻
     (⊕-elim
@@ -132,33 +132,33 @@ opaque
       (⇒-intro ⊕-inr))
 
 &⊕-distR⁻ :
- (g & h) ⊕ (k & h) ⊢ (g ⊕ k) & h
+ (A & B) ⊕ (C & B) ⊢ (A ⊕ C) & B
 &⊕-distR⁻ = ⊕-elim (&-par ⊕-inl id) (&-par ⊕-inr id)
 
 open StrongEquivalence
 
 opaque
   unfolding _⊕_ ⇒-intro ⊕-elim
-  &⊕-distR-sec : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
-    &⊕-distR {g = g}{h = k}{k = h} ∘g &⊕-distR⁻ ≡ id
+  &⊕-distR-sec : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
+    &⊕-distR {A = A}{B = C}{C = B} ∘g &⊕-distR⁻ ≡ id
   &⊕-distR-sec =
     funExt λ w → funExt λ { (inl x) → refl ; (inr x) → refl}
-  &⊕-distR-ret : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
-    &⊕-distR⁻ ∘g &⊕-distR {g = g}{h = k}{k = h} ≡ id
+  &⊕-distR-ret : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
+    &⊕-distR⁻ ∘g &⊕-distR {A = A}{B = C}{C = B} ≡ id
   &⊕-distR-ret =
-    funExt λ w → funExt λ { (inl x , ph) → refl ; (inr x , ph) → refl}
+    funExt λ w → funExt λ { (inl x , pB) → refl ; (inr x , pB) → refl}
 
 &⊕-distR≅ :
   StrongEquivalence
-    ((g ⊕ k) & h)
-    ((g & h) ⊕ (k & h))
+    ((A ⊕ C) & B)
+    ((A & B) ⊕ (C & B))
 &⊕-distR≅ .fun = &⊕-distR
 &⊕-distR≅ .inv = &⊕-distR⁻
 &⊕-distR≅ .sec = &⊕-distR-sec
 &⊕-distR≅ .ret = &⊕-distR-ret
 
 &⊕-distL :
-  g & (h ⊕ k) ⊢ (g & h) ⊕ (g & k)
+  A & (B ⊕ C) ⊢ (A & B) ⊕ (A & C)
 &⊕-distL =
   ⇒-intro⁻
     (⊕-elim
@@ -167,50 +167,50 @@ opaque
   &-swap
 
 &⊕-distL⁻ :
- (g & h) ⊕ (g & k) ⊢ g & (h ⊕ k)
+ (A & B) ⊕ (A & C) ⊢ A & (B ⊕ C)
 &⊕-distL⁻ = ⊕-elim (&-par id ⊕-inl) (&-par id ⊕-inr)
 
 opaque
   unfolding _⊕_ ⇒-intro ⊕-elim
-  &⊕-distL-sec : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
-    &⊕-distL {g = g}{h = k}{k = h} ∘g &⊕-distL⁻ ≡ id
+  &⊕-distL-sec : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
+    &⊕-distL {A = A}{B = C}{C = B} ∘g &⊕-distL⁻ ≡ id
   &⊕-distL-sec =
     funExt λ w → funExt λ { (inl x) → refl ; (inr x) → refl}
-  &⊕-distL-ret : ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk} →
-    &⊕-distL⁻ ∘g &⊕-distL {g = g}{h = k}{k = h} ≡ id
+  &⊕-distL-ret : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
+    &⊕-distL⁻ ∘g &⊕-distL {A = A}{B = C}{C = B} ≡ id
   &⊕-distL-ret =
-    funExt λ w → funExt λ { (pg , inl x) → refl ; (pg , inr x) → refl}
+    funExt λ w → funExt λ { (pA , inl x) → refl ; (pA , inr x) → refl}
 
 
 &⊕-distL≅ :
   StrongEquivalence
-    (g & (h ⊕ k))
-    ((g & h) ⊕ (g & k))
+    (A & (B ⊕ C))
+    ((A & B) ⊕ (A & C))
 &⊕-distL≅ .fun = &⊕-distL
 &⊕-distL≅ .inv = &⊕-distL⁻
 &⊕-distL≅ .sec = &⊕-distL-sec
 &⊕-distL≅ .ret = &⊕-distL-ret
 
 open isStrongEquivalence
-isMono-⊕-inl : isMono (⊕-inl {g = g} {h = h})
-isMono-⊕-inl {g = g}{h = h}{k = k} e e' inl∘e≡inl∘e' =
+isMono-⊕-inl : isMono (⊕-inl {A = A} {B = B})
+isMono-⊕-inl {A = A}{B = B}{C = C} e e' inl∘e≡inl∘e' =
   sym (&-β₂ _ _) ∙ cong (&-π₂ ∘g_) r ∙ &-β₂ _ _
   where
-  isMono-k&g→k&g⊕k&h : isMono (⊕-inl {g = k & g } {h = k & h})
-  isMono-k&g→k&g⊕k&h =
+  isMono-C&A→C&A⊕C&B : isMono (⊕-inl {A = C & A } {B = C & B})
+  isMono-C&A→C&A⊕C&B =
     hasRetraction→isMono ⊕-inl (⊕-elim id (id ,& e ∘g &-π₁))
       (⊕-βl id (id ,& e ∘g &-π₁))
 
-  distiso∘inl = (&⊕-distL⁻ ∘g ⊕-inl {g = k & g}{h = k & h})
+  distiso∘inl = (&⊕-distL⁻ ∘g ⊕-inl {A = C & A}{B = C & B})
   isMono-distiso∘inl :
-    isMono (&⊕-distL⁻ ∘g ⊕-inl {g = k & g}{h = k & h})
+    isMono (&⊕-distL⁻ ∘g ⊕-inl {A = C & A}{B = C & B})
   isMono-distiso∘inl =
-    Mono∘g (⊕-inl {g = k & g}{h = k & h}) &⊕-distL⁻
+    Mono∘g (⊕-inl {A = C & A}{B = C & B}) &⊕-distL⁻
       (isStrongEquivalence→isMono &⊕-distL⁻
         (isStrEq &⊕-distL (&⊕-distL≅ .ret) (&⊕-distL≅ .sec)))
-      isMono-k&g→k&g⊕k&h
+      isMono-C&A→C&A⊕C&B
 
-  p : id ,& (⊕-inl {g = g}{h = h} ∘g e) ≡ id ,& (⊕-inl {g = g}{h = h} ∘g e')
+  p : id ,& (⊕-inl {A = A}{B = B} ∘g e) ≡ id ,& (⊕-inl {A = A}{B = B} ∘g e')
   p = &-η' _ _
     (&-β₁ id _ ∙ sym (&-β₁ id _))
     (&-β₂ _ _ ∙ inl∘e≡inl∘e' ∙ sym (&-β₂ _ _))
@@ -220,29 +220,29 @@ isMono-⊕-inl {g = g}{h = h}{k = k} e e' inl∘e≡inl∘e' =
     q : distiso∘inl ∘g (id ,& e) ≡ distiso∘inl ∘g (id ,& e')
     q = p
 
-  r : (id {g = k} ,& e) ≡ (id ,& e')
+  r : (id {A = C} ,& e) ≡ (id ,& e')
   r = isMono-distiso∘inl (id ,& e) (id ,& e') q
 
-isMono-⊕-inr : isMono (⊕-inr {g = h} {h = g})
-isMono-⊕-inr {h = h}{g = g}{k = k} e e' inr∘e≡inr∘e' =
+isMono-⊕-inr : isMono (⊕-inr {A = B} {B = A})
+isMono-⊕-inr {B = B}{A = A}{C = C} e e' inr∘e≡inr∘e' =
   sym (&-β₂ _ _) ∙ cong (&-π₂ ∘g_) r ∙ &-β₂ _ _
   where
-  isMono-k&h→k&g⊕k&h : isMono (⊕-inr {g = k & h } {h = k & g})
-  isMono-k&h→k&g⊕k&h =
+  isMono-C&B→C&A⊕C&B : isMono (⊕-inr {A = C & B } {B = C & A})
+  isMono-C&B→C&A⊕C&B =
     hasRetraction→isMono ⊕-inr
       (⊕-elim (&-π₁ ,& (e ∘g &-π₁)) id)
       (⊕-βr (&-π₁ ,& (e ∘g &-π₁)) id)
 
-  distiso∘inr = (&⊕-distL⁻ ∘g ⊕-inr {g = k & h}{h = k & g})
+  distiso∘inr = (&⊕-distL⁻ ∘g ⊕-inr {A = C & B}{B = C & A})
   isMono-distiso∘inr :
-    isMono (&⊕-distL⁻ ∘g ⊕-inr {g = k & h}{h = k & g})
+    isMono (&⊕-distL⁻ ∘g ⊕-inr {A = C & B}{B = C & A})
   isMono-distiso∘inr =
-    Mono∘g (⊕-inr {g = k & h}{h = k & g}) &⊕-distL⁻
+    Mono∘g (⊕-inr {A = C & B}{B = C & A}) &⊕-distL⁻
       (isStrongEquivalence→isMono &⊕-distL⁻
         (isStrEq &⊕-distL (&⊕-distL≅ .ret) (&⊕-distL≅ .sec)))
-      isMono-k&h→k&g⊕k&h
+      isMono-C&B→C&A⊕C&B
 
-  p : id ,& (⊕-inr {g = h}{h = g} ∘g e) ≡ id ,& (⊕-inr {g = h}{h = g} ∘g e')
+  p : id ,& (⊕-inr {A = B}{B = A} ∘g e) ≡ id ,& (⊕-inr {A = B}{B = A} ∘g e')
   p = &-η' _ _
     (&-β₁ id _ ∙ sym (&-β₁ id _))
     (&-β₂ _ _ ∙ inr∘e≡inr∘e' ∙ sym (&-β₂ _ _))
@@ -252,17 +252,17 @@ isMono-⊕-inr {h = h}{g = g}{k = k} e e' inr∘e≡inr∘e' =
     q : distiso∘inr ∘g id ,& e ≡ distiso∘inr ∘g id ,& e'
     q = p
 
-  r : (id {g = k} ,& e) ≡ (id ,& e')
+  r : (id {A = C} ,& e) ≡ (id ,& e')
   r = isMono-distiso∘inr (id ,& e) (id ,& e') q
 
-module InductiveSum (g : Grammar ℓg) (h : Grammar ℓh) where
+module InductiveSum (A : Grammar ℓA) (B : Grammar ℓB) where
   open import Grammar.Inductive.Indexed Alphabet as Inductive
   open import Grammar.Dependent.Base Alphabet
   open import Grammar.Lift Alphabet
   open import Cubical.Data.Unit
   open import Cubical.Data.FinSet
 
-  data ⊕IndTag : Type (ℓ-max ℓg ℓh) where
+  data ⊕IndTag : Type (ℓ-max ℓA ℓB) where
     L R : ⊕IndTag
 
   ⊕IndTagRep : Iso (Fin 2) ⊕IndTag
@@ -284,23 +284,23 @@ module InductiveSum (g : Grammar ℓg) (h : Grammar ℓh) where
   L≢R : L ≡ R → Empty.⊥
   L≢R L≡R = fzero≠fone (cong (⊕IndTagRep .inv) L≡R)
 
-  ⊕IndTy : Unit* {ℓ-max ℓg ℓh} → Functor Unit*
+  ⊕IndTy : Unit* {ℓ-max ℓA ℓB} → Functor Unit*
   ⊕IndTy _ = ⊕e ⊕IndTag λ {
-      L → Inductive.k (LiftG ℓh g)
-    ; R → Inductive.k (LiftG ℓg h)}
+      L → Inductive.k (LiftG ℓB A)
+    ; R → Inductive.k (LiftG ℓA B)}
 
-  ⊕Ind : Grammar (ℓ-max ℓg ℓh)
+  ⊕Ind : Grammar (ℓ-max ℓA ℓB)
   ⊕Ind = μ ⊕IndTy _
 
-  ⊕Ind→⊕Alg : Algebra ⊕IndTy λ _ → g ⊕ h
+  ⊕Ind→⊕Alg : Algebra ⊕IndTy λ _ → A ⊕ B
   ⊕Ind→⊕Alg _ = ⊕ᴰ-elim (λ {
       L → ⊕-inl ∘g lowerG ∘g lowerG
     ; R → ⊕-inr ∘g lowerG ∘g lowerG })
 
-  ⊕Ind→⊕ : ⊕Ind ⊢ g ⊕ h
+  ⊕Ind→⊕ : ⊕Ind ⊢ A ⊕ B
   ⊕Ind→⊕ = Inductive.rec ⊕IndTy ⊕Ind→⊕Alg _
 
-  ⊕Ind' : Grammar (ℓ-max ℓg ℓh)
+  ⊕Ind' : Grammar (ℓ-max ℓA ℓB)
   ⊕Ind' = ⟦ ⊕IndTy _ ⟧ λ _ → ⊕Ind
 
   open import Grammar.Inductive.Properties Alphabet
@@ -309,7 +309,7 @@ module InductiveSum (g : Grammar ℓg) (h : Grammar ℓh) where
 
   opaque
     unfolding _⊕_ ⊕-elim
-    ⊕≅⊕Ind : StrongEquivalence (g ⊕ h) ⊕Ind
+    ⊕≅⊕Ind : StrongEquivalence (A ⊕ B) ⊕Ind
     ⊕≅⊕Ind =
       mkStrEq
         (⊕-elim
@@ -326,54 +326,54 @@ module InductiveSum (g : Grammar ℓg) (h : Grammar ℓh) where
         (⊕≡ _ _ refl refl)
 
 module _
-  {g : Grammar ℓg} {h : Grammar ℓh}
-  {k : Grammar ℓk} {l : Grammar ℓl}
-  (g≅h : g ≅ h)
-  (k≅l : k ≅ l)
+  {A : Grammar ℓA} {B : Grammar ℓB}
+  {C : Grammar ℓC} {D : Grammar ℓD}
+  (A≅B : A ≅ B)
+  (C≅D : C ≅ D)
   where
 
   private
-    the-fun : g ⊕ k ⊢ h ⊕ l
-    the-fun = g≅h .fun ,⊕p k≅l .fun
+    the-fun : A ⊕ C ⊢ B ⊕ D
+    the-fun = A≅B .fun ,⊕p C≅D .fun
 
-    the-inv : h ⊕ l ⊢ g ⊕ k
-    the-inv = g≅h .inv ,⊕p k≅l .inv
+    the-inv : B ⊕ D ⊢ A ⊕ C
+    the-inv = A≅B .inv ,⊕p C≅D .inv
     opaque
       unfolding _⊕_ ⊕-elim
       the-sec : the-fun ∘g the-inv ≡ id
       the-sec =
         ⊕≡ _ _
-          (cong (⊕-inl ∘g_) (g≅h .sec))
-          (cong (⊕-inr ∘g_) (k≅l .sec))
+          (cong (⊕-inl ∘g_) (A≅B .sec))
+          (cong (⊕-inr ∘g_) (C≅D .sec))
       the-ret : the-inv ∘g the-fun ≡ id
       the-ret =
         ⊕≡ _ _
-          (cong (⊕-inl ∘g_) (g≅h .ret))
-          (cong (⊕-inr ∘g_) (k≅l .ret))
+          (cong (⊕-inl ∘g_) (A≅B .ret))
+          (cong (⊕-inr ∘g_) (C≅D .ret))
 
-  ⊕≅ : (g ⊕ k) ≅ (h ⊕ l)
+  ⊕≅ : (A ⊕ C) ≅ (B ⊕ D)
   ⊕≅ .fun = the-fun
   ⊕≅ .inv = the-inv
   ⊕≅ .sec = the-sec
   ⊕≅ .ret = the-ret
 
 module _
-  {g : Grammar ℓg} {h : Grammar ℓh}
+  {A : Grammar ℓA} {B : Grammar ℓB}
   where
-  ⊕-swap≅ : (g ⊕ h) ≅ (h ⊕ g)
+  ⊕-swap≅ : (A ⊕ B) ≅ (B ⊕ A)
   ⊕-swap≅ .fun = ⊕-swap
   ⊕-swap≅ .inv = ⊕-swap
   ⊕-swap≅ .sec = ⊕-swap-invol
   ⊕-swap≅ .ret = ⊕-swap-invol
 
 module _
-  {g : Grammar ℓg} {h : Grammar ℓh} {k : Grammar ℓk}
+  {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC}
   where
 
-  ⊕-assoc : (g ⊕ h) ⊕ k ⊢ g ⊕ (h ⊕ k)
+  ⊕-assoc : (A ⊕ B) ⊕ C ⊢ A ⊕ (B ⊕ C)
   ⊕-assoc = ⊕-elim (⊕-elim ⊕-inl (⊕-inr ∘g ⊕-inl)) (⊕-inr ∘g ⊕-inr)
 
-  ⊕-assoc⁻ : g ⊕ (h ⊕ k) ⊢ (g ⊕ h) ⊕ k
+  ⊕-assoc⁻ : A ⊕ (B ⊕ C) ⊢ (A ⊕ B) ⊕ C
   ⊕-assoc⁻ = ⊕-elim (⊕-inl ∘g ⊕-inl) (⊕-elim (⊕-inl ∘g ⊕-inr) ⊕-inr)
 
   private
@@ -384,7 +384,7 @@ module _
       the-ret : ⊕-assoc⁻ ∘g ⊕-assoc ≡ id
       the-ret = ⊕≡ _ _ (⊕≡ _ _ refl refl) refl
 
-  ⊕-assoc≅ : (g ⊕ h) ⊕ k ≅ g ⊕ (h ⊕ k)
+  ⊕-assoc≅ : (A ⊕ B) ⊕ C ≅ A ⊕ (B ⊕ C)
   ⊕-assoc≅ .fun = ⊕-assoc
   ⊕-assoc≅ .inv = ⊕-assoc⁻
   ⊕-assoc≅ .sec = the-sec

@@ -64,10 +64,10 @@ open import Cubical.Data.Sigma
 --   -- close parens or have finished parsing the Atom.
 --   opaque
 --     unfolding _⊗_
---     num' : ∀ {n} → ε ⊢ Atom ⟜ literal (num n)
---     num' {n} = ⟜-intro-ε {k = Atom} (num {n})
---     parens' : ε ⊢ Atom ⟜ literal RP ⟜ Exp ⟜ literal LP
---     parens' = ⟜3-intro-ε parens
+--     num' : ∀ {n} → ε ⊢ Atom ⊸ literal (num n)
+--     num' {n} = ⊸-intro-ε {k = Atom} (num {n})
+--     parens' : ε ⊢ Atom ⊸ literal RP ⊸ Exp ⊸ literal LP
+--     parens' = ⊸3-intro-ε parens
 
 --   record Algebra ℓ : Type (ℓ-suc ℓ) where
 --     field
@@ -229,7 +229,7 @@ open import Cubical.Data.Sigma
 --     -- TODO typechecking this parse term is very slow
 --     -- Should probably split it into several pieces
 -- --     opaque
--- --       -- unfolding LL⟨1⟩.fold LL⟨1⟩.num' LL⟨1⟩.parens' LL⟨1⟩.initialAlgebra _⊗_ _⊕_ _&_ _⇒_ ⊕-elim ⇒-intro ⇐-intro ⊸-intro ⊸-app ⟜-intro ⟜-app KL*r-elim fold initialAlgebra ⊗-intro &-intro &-π₁ &-π₂ ⊕-inl ⊕-inr ⇒-app
+-- --       -- unfolding LL⟨1⟩.fold LL⟨1⟩.num' LL⟨1⟩.parens' LL⟨1⟩.initialAlgebra _⊗_ _⊕_ _&_ _⇒_ ⊕-elim ⇒-intro ⇐-intro ⟜-intro ⟜-app ⊸-intro ⊸-app KL*r-elim fold initialAlgebra ⊗-intro &-intro &-π₁ &-π₂ ⊕-inl ⊕-inr ⇒-app
 -- --       parse' : string ⊢ LinearΣ Peek & LinΠ[ n ∈ ℕ ]
 -- --         (LinearΣ (Opening n)
 -- --         & LinearΣ (Closing n)
@@ -248,7 +248,7 @@ open import Cubical.Data.Sigma
 -- --             ,& (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
 -- --             ,& Nat.elim {A = λ n → Term ε (LinearΣ (Multiplying n))} (LinΣ-intro true ∘g done) (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
 -- --         ; cons-case =
--- --           (⟜-intro⁻ (LinΣ-elim (λ tok → ⟜-intro {k = LinearΣ Peek}
+-- --           (⊸-intro⁻ (LinΣ-elim (λ tok → ⊸-intro {k = LinearΣ Peek}
 -- --             (LinΣ-intro {A = Maybe Tok} (just tok) ∘g id ,⊗ ⊤-intro))))
 -- --           ,& LinΠ-intro λ n →
 -- --             {!!}
@@ -261,53 +261,53 @@ open import Cubical.Data.Sigma
 -- --       --     ,& (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
 -- --       --     ,& Nat.elim {A = λ n → Term ε (LinearΣ (Multiplying n))} (LinΣ-intro true ∘g done) (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
 -- --       --   ; cons-case =
--- --       --     (⟜-intro⁻ (LinΣ-elim (λ tok → ⟜-intro {k = LinearΣ Peek}
+-- --       --     (⊸-intro⁻ (LinΣ-elim (λ tok → ⊸-intro {k = LinearΣ Peek}
 -- --       --       (LinΣ-intro {A = Maybe Tok} (just tok) ∘g id ,⊗ ⊤-intro))))
 -- --       --     ,& LinΠ-intro λ n →
--- --       --       (⟜-intro⁻
+-- --       --       (⊸-intro⁻
 -- --       --         (LinΣ-elim λ
--- --       --         { (num x) → ⟜-intro {k = LinearΣ (Opening n)} (⊸-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
+-- --       --         { (num x) → ⊸-intro {k = LinearΣ (Opening n)} (⟜-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
 -- --       --           -- goto closing
--- --       --           { (just RP) → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ ⊕-inr))) ∘g &-π₁) ∘g &-π₂))
--- --       --           ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- --       --           ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- --       --           ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- --       --           ; (just (num y)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro y) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- --       --           { (just RP) → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ ⊕-inr))) ∘g &-π₁) ∘g &-π₂))
+-- --       --           ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- --       --           ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- --       --           ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- --       --           ; (just (num y)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro y) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
 -- --       --           }))
 -- --       --           ∘g id ,⊗ id ,&p LinΠ-app n)
--- --       --           --  (⊸-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
--- --       --         ; LP → ⟜-intro {k = LinearΣ (Opening n)} (⊸-intro⁻ (((LinΣ-elim (λ b → ⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g left)) ∘g &-π₁)) ∘g LinΠ-app (suc n) ∘g &-π₂))
--- --       --         ; RP → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
--- --       --         ; * → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inr ,⊗ ⊤-intro)
+-- --       --           --  (⟜-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
+-- --       --         ; LP → ⊸-intro {k = LinearΣ (Opening n)} (⟜-intro⁻ (((LinΣ-elim (λ b → ⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g left)) ∘g &-π₁)) ∘g LinΠ-app (suc n) ∘g &-π₂))
+-- --       --         ; RP → ⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
+-- --       --         ; * → ⊸-intro {k = LinearΣ (Opening n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inr ∘g ⊕-inr ,⊗ ⊤-intro)
 -- --       --         })
 -- --       --       )
--- --       --       -- ⟜-intro⁻
--- --       --       ,& ⟜-intro⁻ (LinΣ-elim λ
--- --       --        { RP → ⟜-intro {k = LinearΣ (Closing n)} (Nat.elim {A = λ n → Term (literal RP ⊗ Goal) (LinearΣ (Closing n))}
+-- --       --       -- ⊸-intro⁻
+-- --       --       ,& ⊸-intro⁻ (LinΣ-elim λ
+-- --       --        { RP → ⊸-intro {k = LinearΣ (Closing n)} (Nat.elim {A = λ n → Term (literal RP ⊗ Goal) (LinearΣ (Closing n))}
 -- --       --          -- empty stack
 -- --       --          (LinΣ-intro false ∘g rightUnmatched ∘g id ,⊗ ⊤-intro)
 -- --       --          -- popped
--- --       --          (λ n-1 _ → (⊸-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
--- --       --            { (just RP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ ⊕-inr))) ∘g &-π₁ ∘g &-π₂))
--- --       --            ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- --       --            ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- --       --            ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- --       --            ; (just (num x)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⊸-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- --       --          (λ n-1 _ → (⟜-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
+-- --       --            { (just RP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ ⊕-inr))) ∘g &-π₁ ∘g &-π₂))
+-- --       --            ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- --       --            ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- --       --            ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- --       --            ; (just (num x)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
 -- --       --            })) ∘g id ,⊗ id ,&p LinΠ-app n-1))
 -- --       --          n)
--- --       --        ; LP → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
+-- --       --        ; LP → ⊸-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
 -- --       --          unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
--- --       --        ; * → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
+-- --       --        ; * → ⊸-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
 -- --       --          unexpected ∘g ⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro)
--- --       --        ; (num x) → ⟜-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
+-- --       --        ; (num x) → ⊸-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
 -- --       --          unexpected ∘g ⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro)
 -- --       --        })
 -- --       --       ,&
--- --       --      (⟜-intro⁻ (LinΣ-elim λ
--- --       --        { * → ⟜-intro {k = LinearΣ (Multiplying n)} (⊸-intro⁻ ((((LinΣ-elim λ b → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
--- --       --        ; LP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
--- --       --        ; RP → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
--- --       --        ; (num x) → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
+-- --       --      (⊸-intro⁻ (LinΣ-elim λ
+-- --       --        { * → ⊸-intro {k = LinearΣ (Multiplying n)} (⟜-intro⁻ ((((LinΣ-elim λ b → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
+-- --       --        ; LP → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
+-- --       --        ; RP → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
+-- --       --        ; (num x) → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
 -- --       --   })
 
 -- -- --     parse : string ⊢ LinΣ[ b ∈ Bool ] Opening zero b
@@ -326,19 +326,19 @@ open import Cubical.Data.Sigma
 -- -- --     alg .UO n = Exp ⊗ Stk n
 -- -- --     alg .UC n = Stk n
 -- -- --     alg .UM n = KL* (literal * ⊗ Atom) ⊗ Stk n
--- -- --     alg .[left] = ⊗-assoc ∘g ⟜3⊗ LL⟨1⟩.parens'
--- -- --     alg .[num] {n} = ⊸-intro⁻ (⊕-elim
+-- -- --     alg .[left] = ⊗-assoc ∘g ⊸3⊗ LL⟨1⟩.parens'
+-- -- --     alg .[num] {n} = ⟜-intro⁻ (⊕-elim
 -- -- --       -- the next thing was multiplying
--- -- --       (⊸-intro {k = Exp ⊗ Stk n} (⊗-assoc ∘g (LinΣ-elim λ _ → Atom.num) ,⊗ &-π₂))
+-- -- --       (⟜-intro {k = Exp ⊗ Stk n} (⊗-assoc ∘g (LinΣ-elim λ _ → Atom.num) ,⊗ &-π₂))
 -- -- --       -- the next thing was closing
--- -- --       (⊸-intro {k = Exp ⊗ Stk n} ((LinΣ-elim λ _ → Atom.num ,⊗ nil ∘g ⊗-unit-r⁻) ,⊗ &-π₂)))
--- -- --     alg .[rightClose] {n} = ⊸-intro⁻ (⊕-elim
+-- -- --       (⟜-intro {k = Exp ⊗ Stk n} ((LinΣ-elim λ _ → Atom.num ,⊗ nil ∘g ⊗-unit-r⁻) ,⊗ &-π₂)))
+-- -- --     alg .[rightClose] {n} = ⟜-intro⁻ (⊕-elim
 -- -- --       -- next is multiplying
--- -- --       (⊸-intro {k = Stk (suc n)} (id ,⊗ &-π₂))
+-- -- --       (⟜-intro {k = Stk (suc n)} (id ,⊗ &-π₂))
 -- -- --       -- next is more closing
--- -- --       (⊸-intro {k = Stk (suc n)} (id ,⊗ (⟜0⊗ nil ∘g &-π₂))))
--- -- --     alg .[times] = ⟜2⊗ cons' ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc⁻
--- -- --     alg .[done] = ⟜0⊗ nil
+-- -- --       (⟜-intro {k = Stk (suc n)} (id ,⊗ (⊸0⊗ nil ∘g &-π₂))))
+-- -- --     alg .[times] = ⊸2⊗ cons' ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc⁻
+-- -- --     alg .[done] = ⊸0⊗ nil
 
 -- -- -- -- Completeness i.e., that every LL(1) parse has a trace. Though
 -- -- -- -- completeness would be that every LL(1) parse corresponds to one we
@@ -349,19 +349,19 @@ open import Cubical.Data.Sigma
 -- -- -- module Completeness where
 -- -- --   open LL⟨1⟩.Hom
 -- -- --   mkTrace : LL⟨1⟩.Exp ⊢ Automaton.Opening 0 true
--- -- --   mkTrace = (⟜-app ∘g id ,⊗ (⊕-inl ∘g ⊕-inl ,& Automaton.done) ∘g ⊗-unit-r⁻) ∘g LinΠ-app 0 ∘g LL⟨1⟩.fold the-alg .fE where
+-- -- --   mkTrace = (⊸-app ∘g id ,⊗ (⊕-inl ∘g ⊕-inl ,& Automaton.done) ∘g ⊗-unit-r⁻) ∘g LinΠ-app 0 ∘g LL⟨1⟩.fold the-alg .fE where
 -- -- --     open LL⟨1⟩.Algebra
 -- -- --     the-alg : LL⟨1⟩.Algebra ℓ-zero
 -- -- --     -- need to update the motive: a UAs should also produce a proof that it starts with ε or *
--- -- --     the-alg .UE = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⟜ Automaton.DoneOpening n true)
--- -- --     the-alg .UAs = LinΠ[ n ∈ ℕ ] (Automaton.DoneOpening n true ⟜ Automaton.DoneOpening n true)
--- -- --     the-alg .UA = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⟜ Automaton.DoneOpening n true)
--- -- --     the-alg .[mkExp] = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true}
--- -- --       (((⟜-app ∘g LinΠ-app n ,⊗ (⟜-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻))
--- -- --     the-alg .[nil] = LinΠ-intro λ n → ⟜-intro-ε id
--- -- --     the-alg .[cons] = LinΠ-intro λ n → ⟜-intro {k = Automaton.DoneOpening n true}
--- -- --       (((((⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro) ,& Automaton.times) ∘g id ,⊗ ⟜-app) ∘g ⊗-assoc⁻) ∘g (id ,⊗ LinΠ-app n) ,⊗ (⟜-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻)
--- -- --     the-alg .[num] {m} = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true}
+-- -- --     the-alg .UE = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⊸ Automaton.DoneOpening n true)
+-- -- --     the-alg .UAs = LinΠ[ n ∈ ℕ ] (Automaton.DoneOpening n true ⊸ Automaton.DoneOpening n true)
+-- -- --     the-alg .UA = LinΠ[ n ∈ ℕ ] (Automaton.Opening n true ⊸ Automaton.DoneOpening n true)
+-- -- --     the-alg .[mkExp] = LinΠ-intro λ n → ⊸-intro {k = Automaton.Opening n true}
+-- -- --       (((⊸-app ∘g LinΠ-app n ,⊗ (⊸-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻))
+-- -- --     the-alg .[nil] = LinΠ-intro λ n → ⊸-intro-ε id
+-- -- --     the-alg .[cons] = LinΠ-intro λ n → ⊸-intro {k = Automaton.DoneOpening n true}
+-- -- --       (((((⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ ⊤-intro) ,& Automaton.times) ∘g id ,⊗ ⊸-app) ∘g ⊗-assoc⁻) ∘g (id ,⊗ LinΠ-app n) ,⊗ (⊸-app ∘g LinΠ-app n ,⊗ id)) ∘g ⊗-assoc⁻)
+-- -- --     the-alg .[num] {m} = LinΠ-intro λ n → ⊸-intro {k = Automaton.Opening n true}
 -- -- --       (Automaton.num ∘g LinΣ-intro m ,⊗ id)
--- -- --     the-alg .[parens] = LinΠ-intro λ n → ⟜-intro {k = Automaton.Opening n true}
--- -- --       ((Automaton.left ∘g id ,⊗ (⟜-app {g = Automaton.Opening (suc n) true} ∘g LinΠ-app (suc n) ,⊗ (⊕-inr ∘g (id ,⊗ ⊤-intro) ,& Automaton.rightClose)∘g ⊗-assoc⁻)) ∘g ⊗-assoc⁻)
+-- -- --     the-alg .[parens] = LinΠ-intro λ n → ⊸-intro {k = Automaton.Opening n true}
+-- -- --       ((Automaton.left ∘g id ,⊗ (⊸-app {g = Automaton.Opening (suc n) true} ∘g LinΠ-app (suc n) ,⊗ (⊕-inr ∘g (id ,⊗ ⊤-intro) ,& Automaton.rightClose)∘g ⊗-assoc⁻)) ∘g ⊗-assoc⁻)

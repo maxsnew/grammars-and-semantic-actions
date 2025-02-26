@@ -16,8 +16,8 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg : Level
-    g : Grammar ℓg
+    ℓA : Level
+    A : Grammar ℓA
 
-unambiguous¬G : unambiguous (¬G g)
+unambiguous¬G : unambiguous (¬G A)
 unambiguous¬G = unambiguous⇒ unambiguous⊥

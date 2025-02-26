@@ -21,12 +21,13 @@ open import Term.Category Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' g''' g'''' g''''' : Grammar ℓg
-    h h' h'' h''' h'''' h''''' : Grammar ℓh
-    f f' f'' f''' f'''' f''''' : g ⊢ h
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD ℓE ℓF ℓ ℓ' : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
+    E : Grammar ℓE
+    F : Grammar ℓF
 
 private
   G = GRAMMAR ℓ-zero
@@ -34,40 +35,40 @@ private
 
 opaque
   ⊗-assoc⁻4⊗-assoc :
-    ∀ {g g' g'' g''' g'''' g''''' : Grammar ℓ-zero}
-    → isSetGrammar g
-    → isSetGrammar g'
-    → isSetGrammar g''
-    → isSetGrammar g'''
-    → isSetGrammar g''''
-    → isSetGrammar g'''''
-    → ⊗-assoc⁻4 {g = g}{g' = g'}{g'' = g''}{g''' = g'''}{g'''' = g''''}
-      ,⊗ id {g = g'''''}
+    ∀ {A B C D E F : Grammar ℓ-zero}
+    → isSetGrammar A
+    → isSetGrammar B
+    → isSetGrammar C
+    → isSetGrammar D
+    → isSetGrammar E
+    → isSetGrammar F
+    → ⊗-assoc⁻4 {A = A}{B = B}{C = C}{D = D}{E = E}
+      ,⊗ id {A = F}
       ∘g ⊗-assoc
       ≡ ⊗-assoc4 ∘g id ,⊗ id ,⊗ id ,⊗ ⊗-assoc ∘g ⊗-assoc⁻4
-  ⊗-assoc⁻4⊗-assoc isSetG isSetG' isSetG'' isSetG''' isSetG'''' isSetG''''' =
-    α4⁻¹α G (_ , isSetG) (_ , isSetG') (_ , isSetG'')
-            (_ , isSetG''') (_ , isSetG'''') (_ , isSetG''''')
+  ⊗-assoc⁻4⊗-assoc isSetA isSetB isSetC isSetD isSetE isSetF =
+    α4⁻¹α G (_ , isSetA) (_ , isSetB) (_ , isSetC)
+            (_ , isSetD) (_ , isSetE) (_ , isSetF)
 
 ⊗-unit*-l⊗-assoc :
-  {g g' : Grammar ℓ-zero}
-  → isSetGrammar g
-  → isSetGrammar g'
-  → ⊗-unit*-l {ℓ = ℓ-zero} {g = g} ,⊗ id {g = g'} ∘g ⊗-assoc ≡ ⊗-unit*-l
-⊗-unit*-l⊗-assoc isSetG isSetG' =
-  Combinators.ηα G (_ , isSetG) (_ , isSetG')
+  {A B : Grammar ℓ-zero}
+  → isSetGrammar A
+  → isSetGrammar B
+  → ⊗-unit*-l {ℓ = ℓ-zero} {A = A} ,⊗ id {A = B} ∘g ⊗-assoc ≡ ⊗-unit*-l
+⊗-unit*-l⊗-assoc isSetA isSetB =
+  Combinators.ηα G (_ , isSetA) (_ , isSetB)
 
 opaque
   unfolding ⊗-intro ⊗-assoc
   ⊗-unit-l⊗-assoc :
-    {g g' : Grammar ℓ-zero}
-    → isSetGrammar g
-    → isSetGrammar g'
-    → ⊗-unit-l {g = g} ,⊗ id {g = g'} ∘g ⊗-assoc ≡ ⊗-unit-l
-  ⊗-unit-l⊗-assoc isSetG isSetG' =
+    {A B : Grammar ℓ-zero}
+    → isSetGrammar A
+    → isSetGrammar B
+    → ⊗-unit-l {A = A} ,⊗ id {A = B} ∘g ⊗-assoc ≡ ⊗-unit-l
+  ⊗-unit-l⊗-assoc isSetA isSetB =
     ⊗-unit-l ,⊗ id ∘g ⊗-assoc
       ≡⟨ cong ((⊗-unit*-l {ℓ-zero} ,⊗ id) ∘g_) ⊗-assoc⊗-intro ⟩
     (⊗-unit*-l {ℓ-zero} ,⊗ id) ∘g ⊗-assoc ∘g ⊗-intro (liftG {ℓ-zero}) id
-      ≡⟨ cong (_∘g ⊗-intro liftG id) (⊗-unit*-l⊗-assoc isSetG isSetG') ⟩
+      ≡⟨ cong (_∘g ⊗-intro liftG id) (⊗-unit*-l⊗-assoc isSetA isSetB) ⟩
     ⊗-unit-l
     ∎

@@ -14,9 +14,9 @@ open import Helper
 
 private
   variable
-    ℓG ℓH ℓK : Level
-    g : Grammar ℓG
-    h : Grammar ℓH
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
 
 unambiguousε : unambiguous ε
 unambiguousε = ans

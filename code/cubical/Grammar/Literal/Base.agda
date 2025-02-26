@@ -15,8 +15,8 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓG : Level
-    g : Grammar ℓG
+    ℓA : Level
+    A : Grammar ℓA
     c : ⟨ Alphabet ⟩
 
 opaque
@@ -26,9 +26,9 @@ opaque
   lit-intro : (literal c) [ c ]
   lit-intro = refl
 
-  literal-elim : g [ c ] → literal c ⊢ g
-  literal-elim {g = g} gc w w≡[c] =
-    subst g (sym w≡[c]) gc
+  literal-elim : A [ c ] → literal c ⊢ A
+  literal-elim {A = A} Ac w w≡[c] =
+    subst A (sym w≡[c]) Ac
 
   isLangLiteral : ∀ c → isLang (literal c)
   isLangLiteral c w = isSetString w [ c ]

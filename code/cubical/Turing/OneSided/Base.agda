@@ -158,7 +158,7 @@ module _ (TM : TuringMachine) where
     MaybeG.Maybe (⊕[ tape ∈ Tape ]
                   ⊕[ b ∈ Bool ]
                   ⊕[ trace ∈ TuringTrace b (init , tape , initHead) ] TuringG tape)
-  run = &ᴰ-intro λ fuel → ⊕ᴰ-elim (λ tape →
+  run = &ᴰ-in λ fuel → ⊕ᴰ-elim (λ tape →
     let maybeTrace = decide-bounded fuel init tape initHead in
       Maybe.rec
         MaybeG.nothing

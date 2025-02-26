@@ -39,7 +39,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   Trace b = μ (TraceTy b)
 
   open StrongEquivalence
-  parseAlg : Algebra (*Ty char) λ _ → &[ q ∈ Q ] ⊕[ b ∈ Bool ] Trace b q
+  parseAlg : Algebra (*Ty char) λ _ → &[ q ∈ Q ] (⊕[ b ∈ Bool ] Trace b q)
   parseAlg _ = ⊕ᴰ-elim (λ {
     nil → &ᴰ-in (λ q →
       ⊕ᴰ-in (isAcc q) ∘g
@@ -53,7 +53,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
       ∘g ⊕ᴰ-distL .fun)
       ∘g lowerG ,⊗ lowerG) })
 
-  parse : string ⊢ &[ q ∈ Q ] ⊕[ b ∈ Bool ] Trace b q
+  parse : string ⊢ &[ q ∈ Q ] (⊕[ b ∈ Bool ] Trace b q)
   parse = rec (*Ty char) parseAlg _
 
   parseInit : string ⊢ ⊕[ b ∈ Bool ] Trace b init

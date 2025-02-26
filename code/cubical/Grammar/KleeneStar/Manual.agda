@@ -13,36 +13,36 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓG ℓH : Level
-    g : Grammar ℓG
-    h : Grammar ℓH
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
 
-module _ (g : Grammar ℓG) where
-  data KL* : Grammar ℓG
+module _ (A : Grammar ℓA) where
+  data KL* : Grammar ℓA
     where
     nil : ε ⊢ KL*
-    cons : g ⊗' KL* ⊢ KL*
+    cons : A ⊗' KL* ⊢ KL*
 
   -- I want a non-recursive way to check that a Kleene star is either nil
   -- or cons
   -- This shouldn't be definable via fold, because fold necessitates recursion
   --
-  -- If KL* = μ X . ε ⊕ g ⊗ X, then this term is just ⊕-elim on that sum
+  -- If KL* = μ X . ε ⊕ A ⊗ X, then this term is just ⊕-elim on that sum
   opaque
     unfolding _⊗_
     caseKL* :
-      ε ⊢ h →
-      g ⊗ KL* ⊢ h →
-      KL* ⊢ h
+      ε ⊢ B →
+      A ⊗ KL* ⊢ B →
+      KL* ⊢ B
     caseKL* eε e* _ (nil _ x) = eε _ x
     caseKL* eε e* _ (cons _ x) = e* _ x
 
   record *r-Algebra : Typeω where
     field
       the-ℓ : Level
-      G : Grammar the-ℓ
-      nil-case : ε ⊢ G
-      cons-case : g ⊗ G ⊢ G
+      Carrier : Grammar the-ℓ
+      nil-case : ε ⊢ Carrier
+      cons-case : A ⊗ Carrier ⊢ Carrier
 
   open *r-Algebra
 
@@ -50,14 +50,14 @@ module _ (g : Grammar ℓG) where
     unfolding _⊗_
     *r-initial : *r-Algebra
     *r-initial .the-ℓ = _
-    *r-initial .G = KL*
+    *r-initial .Carrier = KL*
     *r-initial .nil-case = nil
     *r-initial .cons-case = cons
 
 
   record *r-AlgebraHom (alg alg' : *r-Algebra) : Typeω where
     field
-      f : alg .G ⊢ alg' .G
+      f : alg .Carrier ⊢ alg' .Carrier
       on-nil : f ∘g alg .nil-case ≡ alg' .nil-case
       on-cons : f ∘g alg .cons-case ≡ alg' .cons-case ∘g ⊗-intro id f
 
@@ -71,7 +71,7 @@ module _ (g : Grammar ℓG) where
       id*r-AlgebraHom .on-nil = refl
       id*r-AlgebraHom .on-cons = refl
 
-      KL*r-elim : KL* ⊢ the-alg .G
+      KL*r-elim : KL* ⊢ the-alg .Carrier
       KL*r-elim _ (nil _ x) = the-alg .nil-case _ x
       KL*r-elim _ (cons _ x) =
         the-alg .cons-case _
@@ -111,34 +111,34 @@ module _ (g : Grammar ℓG) where
   record *l-Algebra : Typeω where
     field
       the-ℓ : Level
-      G : Grammar the-ℓ
-      nil-case : ε ⊢ G
-      snoc-case : G ⊗ g ⊢ G
+      Carrier : Grammar the-ℓ
+      nil-case : ε ⊢ Carrier
+      snoc-case : Carrier ⊗ A ⊢ Carrier
 
   open *l-Algebra
 
   *l-initial : *l-Algebra
   *l-initial .the-ℓ = _
-  *l-initial .G = KL*
+  *l-initial .Carrier = KL*
   *l-initial .nil-case = nil
   *l-initial .snoc-case = ans
     where
     opaque
       unfolding _⊗_ ⊗-intro
       λalg : *r-Algebra
-      λalg .the-ℓ = ℓG
-      λalg .G = KL* ⟜ g
+      λalg .the-ℓ = ℓA
+      λalg .Carrier = A ⊸ KL*
       λalg .nil-case =
-        ⟜-intro (cons ∘g ⊗-intro id nil ∘g ⊗-unit-r⁻ ∘g ⊗-unit-l)
+        ⊸-intro (cons ∘g ⊗-intro id nil ∘g ⊗-unit-r⁻ ∘g ⊗-unit-l)
       λalg .cons-case =
-        ⟜-intro (cons ∘g ⊗-intro id ⟜-app ∘g ⊗-assoc⁻)
+        ⊸-intro (cons ∘g ⊗-intro id ⊸-app ∘g ⊗-assoc⁻)
 
-      ans : KL* ⊗ g ⊢ KL*
-      ans = ⟜-intro⁻ (foldKL*r λalg)
+      ans : KL* ⊗ A ⊢ KL*
+      ans = ⊸-intro⁻ (foldKL*r λalg)
 
   record *l-AlgebraHom (alg alg' : *l-Algebra) : Typeω where
     field
-      f : alg .G ⊢ alg' .G
+      f : alg .Carrier ⊢ alg' .Carrier
       on-nil : f ∘g alg .nil-case ≡ alg' .nil-case
       on-cons : f ∘g alg .snoc-case ≡ alg' .snoc-case ∘g ⊗-intro f id
 
@@ -147,17 +147,17 @@ module _ (g : Grammar ℓG) where
   module _ (the-l-alg : *l-Algebra) where
     λalg : *r-Algebra
     λalg .the-ℓ = the-l-alg .the-ℓ
-    λalg .G = the-l-alg .G ⊸ the-l-alg .G
-    λalg .nil-case = ⊸-intro ⊗-unit-r
+    λalg .Carrier = the-l-alg .Carrier ⟜ the-l-alg .Carrier
+    λalg .nil-case = ⟜-intro ⊗-unit-r
     λalg .cons-case =
-      ⊸-intro {k = the-l-alg .G}
-        (⊸-app ∘g
+      ⟜-intro {C = the-l-alg .Carrier}
+        (⟜-app ∘g
         ⊗-intro (the-l-alg .snoc-case) id ∘g
         ⊗-assoc)
 
-    KL*l-elim : KL* ⊢ the-l-alg .G
+    KL*l-elim : KL* ⊢ the-l-alg .Carrier
     KL*l-elim =
-      ⊸-app ∘g
+      ⟜-app ∘g
       ⊗-intro (the-l-alg .nil-case) (foldKL*r λalg) ∘g
       ⊗-unit-l⁻
 
@@ -167,11 +167,11 @@ module _ (g : Grammar ℓG) where
 
 opaque
   unfolding _⊗_
-  cons' : ε ⊢ KL* g ⟜ KL* g ⟜ g
-  cons' = ⟜2-intro-ε cons
+  cons' : ε ⊢ A ⊸ KL* A ⊸ KL* A
+  cons' = ⊸2-intro-ε cons
 
-  NIL : ε ⊢ KL* g
+  NIL : ε ⊢ KL* A
   NIL = nil
 
-  CONS : g ⊗ KL* g ⊢ KL* g
+  CONS : A ⊗ KL* A ⊢ KL* A
   CONS = cons

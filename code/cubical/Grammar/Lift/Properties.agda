@@ -13,38 +13,37 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' g1 g2 g3 g4 g5 : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    f f' f'' : g ⊢ h
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD ℓE : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 open Iso
 
 -- This can be used in conjunction with isoFunInjective
 -- to preserve better goals than a simple cong
-LiftDomIso : ∀ {g : Grammar ℓg}{h : Grammar ℓh} ℓ
-  → Iso (g ⊢ h) (LiftG ℓ g ⊢ h)
-LiftDomIso ℓ .fun e = e ∘g lowerG
-LiftDomIso ℓ .inv e = e ∘g liftG
-LiftDomIso ℓ .rightInv e = refl
-LiftDomIso ℓ .leftInv e = refl
+LiftDomIso : ∀ {A : Grammar ℓA}{B : Grammar ℓB} ℓC
+  → Iso (A ⊢ B) (LiftG ℓC A ⊢ B)
+LiftDomIso ℓC .fun e = e ∘g lowerG
+LiftDomIso ℓC .inv e = e ∘g liftG
+LiftDomIso ℓC .rightInv e = refl
+LiftDomIso ℓC .leftInv e = refl
 
 opaque
   unfolding ⊗-intro
   LiftDom⊗Iso :
-    ∀ {g : Grammar ℓg}{h : Grammar ℓh}{k : Grammar ℓk}
-    → (ℓ ℓ' : Level)
-    → Iso (g ⊗ k ⊢ h) (LiftG ℓ g ⊗ LiftG ℓ' k ⊢ h)
-  LiftDom⊗Iso ℓ ℓ' .fun e = e ∘g (lowerG ,⊗ lowerG)
-  LiftDom⊗Iso ℓ ℓ' .inv e = e ∘g liftG ,⊗ liftG
-  LiftDom⊗Iso ℓ ℓ' .rightInv e = refl
-  LiftDom⊗Iso ℓ ℓ' .leftInv e = refl
+    ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC}
+    → (ℓD ℓE : Level)
+    → Iso (A ⊗ C ⊢ B) (LiftG ℓD A ⊗ LiftG ℓE C ⊢ B)
+  LiftDom⊗Iso ℓD ℓE .fun e = e ∘g (lowerG ,⊗ lowerG)
+  LiftDom⊗Iso ℓD ℓE .inv e = e ∘g liftG ,⊗ liftG
+  LiftDom⊗Iso ℓD ℓE .rightInv e = refl
+  LiftDom⊗Iso ℓD ℓE .leftInv e = refl
 
 open StrongEquivalence
-module _ ℓ ℓ' (g : Grammar ℓg) (h : Grammar ℓg) where
-  LiftG⊗LiftG≅ : (g ⊗ h) ≅ (LiftG ℓ g ⊗ LiftG ℓ' h)
+module _ ℓC ℓD (A : Grammar ℓA) (B : Grammar ℓB) where
+  LiftG⊗LiftG≅ : (A ⊗ B) ≅ (LiftG ℓC A ⊗ LiftG ℓD B)
   LiftG⊗LiftG≅ .fun = liftG ,⊗ liftG
   LiftG⊗LiftG≅ .inv = lowerG ,⊗ lowerG
   LiftG⊗LiftG≅ .sec = the-sec

@@ -65,7 +65,7 @@ module _ (TM : TuringMachine) where
   t : Tape
   t = parseInitTape TM (mkInputString w) (mkString w) .fst
   opaque
-    unfolding ⟜-intro ⊗-unit-l⁻ ⌈w⌉→string ⊗-intro ⊕ᴰ-distR ⊕ᴰ-distL
+    unfolding ⊸-intro ⊗-unit-l⁻ ⌈w⌉→string ⊗-intro ⊕ᴰ-distR ⊕ᴰ-distL
     -- these values are what we expect
     _ : (t 0 , t 1 , t 2 , t 3 , t 4 , t 5 , t 6 , t 12312312) ≡ (s , z , s , z , s , blank , blank , blank)
     _ = refl

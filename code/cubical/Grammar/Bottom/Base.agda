@@ -14,26 +14,26 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
 
 opaque
   ⊥ : Grammar ℓ-zero
   ⊥ _ = Empty.⊥
 
-  ⊥* : Grammar ℓg
+  ⊥* : Grammar ℓA
   ⊥* _ = Empty.⊥*
 
   ⊥-elim :
-    ⊥ ⊢ g
+    ⊥ ⊢ A
   ⊥-elim _ = Empty.elim
 
   ⊥*-elim :
-    ⊥* {ℓg} ⊢ g
+    ⊥* {ℓB} ⊢ A
   ⊥*-elim _ x = Empty.elim (lower x)
 
-  ⊥-η : ∀ (f f' : ⊥ ⊢ g)
+  ⊥-η : ∀ (f f' : ⊥ ⊢ A)
     → f ≡ f'
   ⊥-η _ _ = funExt λ _ → funExt Empty.elim
 
