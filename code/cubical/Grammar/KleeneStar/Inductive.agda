@@ -29,15 +29,16 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓG ℓH : Level
-    g h : Grammar ℓG
+    ℓA ℓB : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
 
-module _ (g : Grammar ℓG) where
-  data *Tag : Type ℓG where
+module _ (A : Grammar ℓA) where
+  data *Tag : Type ℓA where
     nil cons : *Tag
 
-  *Ty : Unit* {ℓG} → Functor Unit*
-  *Ty _ = ⊕e *Tag (λ { nil → k ε* ; cons → ⊗e (k g) (Var _)})
+  *Ty : Unit* {ℓA} → Functor Unit*
+  *Ty _ = ⊕e *Tag (λ { nil → k ε* ; cons → ⊗e (k A) (Var _)})
 
   isFinSet*Tag : isFinSet *Tag
   isFinSet*Tag =
@@ -50,17 +51,17 @@ module _ (g : Grammar ℓG) where
         ))
       (isFinSetFin {n = 2})
 
-  KL* : Grammar ℓG
+  KL* : Grammar ℓA
   KL* = μ *Ty _
 
-  fold*r : Algebra *Ty (λ _ → h) → KL* ⊢ h
+  fold*r : Algebra *Ty (λ _ → B) → KL* ⊢ B
   fold*r alg = rec *Ty alg _
 
-  repeatTy : Lift {j = ℓG} ℕ → Functor (Lift ℕ)
+  repeatTy : Lift {j = ℓA} ℕ → Functor (Lift ℕ)
   repeatTy (lift zero) = k ε*
-  repeatTy (lift (suc n)) = ⊗e (k g) (Var (lift n))
+  repeatTy (lift (suc n)) = ⊗e (k A) (Var (lift n))
 
-  repeat' : Lift ℕ → Grammar ℓG
+  repeat' : Lift ℕ → Grammar ℓA
   repeat' n = μ repeatTy n
 
   open StrongEquivalence
@@ -93,7 +94,7 @@ module _ (g : Grammar ℓG) where
       unfolding ⊕ᴰ-distR ⊗-intro eq-π
       the-sec-alg-snd :
         ∀ n →
-        (LiftG ℓG g) ⊗ (LiftG ℓG (equalizer (grade ∘g ungrade' (lift n)) (⊕ᴰ-in (lift n))))
+        (LiftG ℓA A) ⊗ (LiftG ℓA (equalizer (grade ∘g ungrade' (lift n)) (⊕ᴰ-in (lift n))))
         ⊢
         equalizer (grade ∘g ungrade' (lift (suc n))) (⊕ᴰ-in (lift (suc n)))
       the-sec-alg-snd n = eq-intro _ _
@@ -144,21 +145,26 @@ module _ (g : Grammar ℓG) where
   *≅unrolled* : KL* ≅ unrolled*
   *≅unrolled* = unroll≅ *Ty _
 
-  data *TagL : Type ℓG where
+  data *TagL : Type ℓA where
     nil snoc : *TagL
 
-  *LTy : Unit* {ℓG} → Functor Unit*
-  *LTy _ = ⊕e *TagL (λ { nil → k ε* ; snoc → ⊗e (Var _) (k g)})
+  *LTy : Unit* {ℓA} → Functor Unit*
+  *LTy _ = ⊕e *TagL (λ { nil → k ε* ; snoc → ⊗e (Var _) (k A)})
 
-  *LAlg→*Alg : Algebra *LTy (λ _ → h)  → Algebra *Ty (λ _ → h ⟜ h)
+  *LAlg→*Alg : Algebra *LTy (λ _ → B)  → Algebra *Ty (λ _ → B ⟜ B)
   *LAlg→*Alg l-alg _ = ⊕ᴰ-elim (λ {
       nil → ⟜-intro-ε id ∘g lowerG ∘g lowerG
-    ; cons → ⟜-intro (⟜-app ∘g (l-alg _ ∘g ⊕ᴰ-in snoc ∘g liftG ,⊗ liftG) ,⊗ id ∘g ⊗-assoc) ∘g lowerG ,⊗ lowerG })
+    ; cons →
+      ⟜-intro (
+        ⟜-app
+        ∘g (l-alg _ ∘g ⊕ᴰ-in snoc ∘g liftG ,⊗ liftG) ,⊗ id
+        ∘g ⊗-assoc) ∘g lowerG ,⊗ lowerG
+        })
 
-  fold*l : Algebra *LTy (λ _ → h) → KL* ⊢ h
+  fold*l : Algebra *LTy (λ _ → B) → KL* ⊢ B
   fold*l alg = ⟜-app ∘g (alg _ ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG) ,⊗ fold*r (*LAlg→*Alg alg) ∘g ⊗-unit-l⁻
 
-  *L : Grammar ℓG
+  *L : Grammar ℓA
   *L = μ *LTy _
 
   unrolled*L = ⟦ *LTy _ ⟧ (μ *LTy)
@@ -166,20 +172,20 @@ module _ (g : Grammar ℓG) where
   *L≅unrolled*L : *L ≅ unrolled*L
   *L≅unrolled*L = unroll≅ *LTy _
 
-  repeatTyL : Lift {j = ℓG} ℕ → Functor (Lift ℕ)
+  repeatTyL : Lift {j = ℓA} ℕ → Functor (Lift ℕ)
   repeatTyL (lift zero) = k ε*
-  repeatTyL (lift (suc n)) = ⊗e (Var (lift n)) (k g)
+  repeatTyL (lift (suc n)) = ⊗e (Var (lift n)) (k A)
 
-  repeat'L : Lift ℕ → Grammar ℓG
+  repeat'L : Lift ℕ → Grammar ℓA
   repeat'L n = μ repeatTyL n
 
-  iterated-tensor : ∀ (n : ℕ) → Grammar ℓG
+  iterated-tensor : ∀ (n : ℕ) → Grammar ℓA
   iterated-tensor zero = ε*
-  iterated-tensor (suc n) = g ⊗ iterated-tensor n
+  iterated-tensor (suc n) = A ⊗ iterated-tensor n
 
-  iterated-tensorL : ∀ (n : ℕ) → Grammar ℓG
+  iterated-tensorL : ∀ (n : ℕ) → Grammar ℓA
   iterated-tensorL zero = ε*
-  iterated-tensorL (suc n) = iterated-tensorL n ⊗ g
+  iterated-tensorL (suc n) = iterated-tensorL n ⊗ A
 
   repeat'0≅ε : repeat' (lift 0) ≅ ε
   repeat'0≅ε = unroll≅ repeatTy (lift 0) ≅∙ sym≅ (LiftG≅2 _ _ _)
@@ -255,9 +261,9 @@ module _ (g : Grammar ℓG) where
       unfolding ⊕ᴰ-distL ⊗-intro eq-π
       the-sec-alg-sndL :
         ∀ n →
-        (LiftG ℓG (equalizer (gradeL ∘g ungrade'L (lift n)) (⊕ᴰ-in (lift n))))
+        (LiftG ℓA (equalizer (gradeL ∘g ungrade'L (lift n)) (⊕ᴰ-in (lift n))))
         ⊗
-        (LiftG ℓG g)
+        (LiftG ℓA A)
         ⊢
         equalizer (gradeL ∘g ungrade'L (lift (suc n))) (⊕ᴰ-in (lift (suc n)))
       the-sec-alg-sndL n = eq-intro _ _
@@ -309,41 +315,44 @@ module _ (g : Grammar ℓG) where
   *≅*L : KL* ≅ *L
   *≅*L = *continuous ≅∙ repeat≅repeatL ≅∙ sym≅ *continuousL
 
-_* : Grammar ℓG → Grammar ℓG
-g * = KL* g
+_* : Grammar ℓA → Grammar ℓA
+A * = KL* A
+infix 40 _*
 
-_+ : Grammar ℓG → Grammar ℓG
-g + = g ⊗ g *
+_+ : Grammar ℓA → Grammar ℓA
+A + = A ⊗ A *
+infix 40 _+
 
-_+L : Grammar ℓG → Grammar ℓG
-g +L = g * ⊗ g
+_+L : Grammar ℓA → Grammar ℓA
+A +L = A * ⊗ A
+infix 40 _+L
 
-_⊗[_] : Grammar ℓG → ℕ → Grammar ℓG
-g ⊗[ n ] = repeat' g (lift n)
+_⊗[_] : Grammar ℓA → ℕ → Grammar ℓA
+A ⊗[ n ] = repeat' A (lift n)
 
-NIL : ∀ {g : Grammar ℓG} → ε ⊢ g *
+NIL : ∀ {A : Grammar ℓA} → ε ⊢ A *
 NIL = roll ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG
 
-NIL-L : ∀ {g : Grammar ℓG} → ε ⊢ *L g
+NIL-L : ∀ {A : Grammar ℓA} → ε ⊢ *L A
 NIL-L = roll ∘g ⊕ᴰ-in nil ∘g liftG ∘g liftG
 
-CONS : ∀ {g : Grammar ℓG} → g ⊗ g * ⊢ g *
+CONS : ∀ {A : Grammar ℓA} → A ⊗ A * ⊢ A *
 CONS = roll ∘g ⊕ᴰ-in cons ∘g liftG ,⊗ liftG
 
-SNOC : ∀ {g : Grammar ℓG} → *L g ⊗ g ⊢ *L g
+SNOC : ∀ {A : Grammar ℓA} → *L A ⊗ A ⊢ *L A
 SNOC = roll ∘g ⊕ᴰ-in snoc ∘g liftG ,⊗ liftG
 
-+→* : (g : Grammar ℓG) → g + ⊢ g *
-+→* g = CONS
++→* : (A : Grammar ℓA) → A + ⊢ A *
++→* A = CONS
 
-+-singleton : (g : Grammar ℓG) → g ⊢ g +
-+-singleton g = id ,⊗ NIL ∘g ⊗-unit-r⁻
++-singleton : (A : Grammar ℓA) → A ⊢ A +
++-singleton A = id ,⊗ NIL ∘g ⊗-unit-r⁻
 
-+L-singleton : (g : Grammar ℓG) → g ⊢ g +L
-+L-singleton g = NIL ,⊗ id ∘g ⊗-unit-l⁻
++L-singleton : (A : Grammar ℓA) → A ⊢ A +L
++L-singleton A = NIL ,⊗ id ∘g ⊗-unit-l⁻
 
-+-cons : (g : Grammar ℓG) → g ⊗ g + ⊢ g +
-+-cons g = id ,⊗ +→* g
++-cons : (A : Grammar ℓA) → A ⊗ A + ⊢ A +
++-cons A = id ,⊗ +→* A
 
-*-singleton : (g : Grammar ℓG) → g ⊢ g *
-*-singleton g = CONS ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻
+*-singleton : (A : Grammar ℓA) → A ⊢ A *
+*-singleton A = CONS ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻

@@ -508,10 +508,10 @@ unrolled-stringL : Grammar ℓ-zero
 unrolled-stringL = ε ⊕ (stringL ⊗ char)
 
 unroll-string≅ : string ≅ unrolled-string
-unroll-string≅ = *≅ε⊕g⊗g* char
+unroll-string≅ = *≅ε⊕A⊗A* char
 
 unroll-string≅' : string ≅ unrolled-string'
-unroll-string≅' = *≅ε⊕g*⊗g char
+unroll-string≅' = *≅ε⊕A*⊗A char
 
 string≅unrolled-stringL : string ≅ unrolled-stringL
 string≅unrolled-stringL =

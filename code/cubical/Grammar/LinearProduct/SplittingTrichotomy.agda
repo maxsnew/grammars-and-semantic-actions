@@ -55,48 +55,48 @@ open import Helper
 
 private
   variable
-    ℓg ℓh ℓk ℓl : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 {--
 -- Building some axioms for splitting a ⊗ across a &
 --
--- That is, the grammar (g ⊗ h) & (k ⊗ l)
+-- That is, the grammar (A ⊗ B) & (C ⊗ D)
 -- should break into a trichotomy that reasons if
 -- the splitting is the same across the tensors,
 -- if the first splitting forms a prefix of the second,
 -- of symmetrically if the second forms a prefix of the first
 --
 --
---   |    g     |         h          |
+--   |    A     |         B          |
 -- w ---------------------------------
 --   |    k     |         l          |
 --
 --
---   |    g     |         h          |
+--   |    A     |         B          |
 -- w ---------------------------------
 --   |  k  |           l             |
 --
 --
---   |  g  |           h             |
+--   |  A  |           B             |
 -- w ---------------------------------
 --   |    k     |         l          |
 --
 --}
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
+  (A : Grammar ℓA)
+  (h : Grammar ℓB)
   (k : Grammar ℓk)
   (l : Grammar ℓl)
   where
 
-  sameSplittingG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓg ℓh) ℓk) ℓl)
-  sameSplittingG = (g & k) ⊗ (h & l)
+  sameSplittingG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓA ℓB) ℓk) ℓl)
+  sameSplittingA = (A & k) ⊗ (h & l)
 
-  firstPrefixG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓg ℓh) ℓk) ℓl)
+  firstPrefixG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓA ℓB) ℓk) ℓl)
   firstPrefixG =
     ⊕[ w ∈ String ]
     ⊕[ x ∈ String ]
@@ -104,12 +104,12 @@ module _
     ⊕[ z ∈ String ]
     ⊕[ v ∈ NonEmptyString ]
       (
-      ((g & ⌈ w ⌉) & (⌈ y ⌉ ⊗ ⌈ v .fst ⌉) ⊗ (h & ⌈ x ⌉))
+      ((A & ⌈ w ⌉) & (⌈ y ⌉ ⊗ ⌈ v .fst ⌉) ⊗ (h & ⌈ x ⌉))
       &
       ((k & ⌈ y ⌉) ⊗ ((l & ⌈ z ⌉) & (⌈ v .fst ⌉ ⊗ ⌈ x ⌉)))
       )
 
-  secondPrefixG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓg ℓh) ℓk) ℓl)
+  secondPrefixG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓA ℓB) ℓk) ℓl)
   secondPrefixG =
     ⊕[ w ∈ String ]
     ⊕[ x ∈ String ]
@@ -119,28 +119,28 @@ module _
       (
       ((k & ⌈ y ⌉) & (⌈ w ⌉ ⊗ ⌈ v .fst ⌉) ⊗ (l & ⌈ z ⌉))
       &
-      ((g & ⌈ w ⌉) ⊗ ((h & ⌈ x ⌉) & (⌈ v .fst ⌉ ⊗ ⌈ z ⌉)))
+      ((A & ⌈ w ⌉) ⊗ ((h & ⌈ x ⌉) & (⌈ v .fst ⌉ ⊗ ⌈ z ⌉)))
       )
 
-  splittingTrichotomyG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓg ℓh) ℓk) ℓl)
+  splittingTrichotomyG : Grammar (ℓ-max (ℓ-max (ℓ-max ℓA ℓB) ℓk) ℓl)
   splittingTrichotomyG = sameSplittingG ⊕ (secondPrefixG ⊕ firstPrefixG)
 
   module _ (w : String) (s s' : Splitting w) where
     splittingTrichotomyGTy : splittingTrichotomyTy' w s s' → Type _
     splittingTrichotomyGTy (inl x) =
-      (g & k) (s .fst .fst) × (h & l) (s .fst .snd)
+      (A & k) (s .fst .fst) × (h & l) (s .fst .snd)
     splittingTrichotomyGTy (inr (inl (([] , notmt) , x))) = Empty.⊥*
     splittingTrichotomyGTy (inr (inl ((c ∷ v , notmt) , x))) =
-      g (s .fst .fst) ×
-      h (s .fst .snd) ×
+      A (s .fst .fst) ×
+      B (s .fst .snd) ×
       k (s' .fst .fst) ×
       l (s' .fst .snd) ×
       (s .fst .fst ++ c ∷ v ≡ s' .fst .fst) ×
       (s .fst .snd ≡ c ∷ v ++ s' .fst .snd)
     splittingTrichotomyGTy (inr (inr (([] , notmt) , x))) = Empty.⊥*
     splittingTrichotomyGTy (inr (inr ((c ∷ v , notmt) , x))) =
-      g (s .fst .fst) ×
-      h (s .fst .snd) ×
+      A (s .fst .fst) ×
+      B (s .fst .snd) ×
       k (s' .fst .fst) ×
       l (s' .fst .snd) ×
       (s' .fst .fst ++ c ∷ v ≡ s .fst .fst ) ×
@@ -152,8 +152,8 @@ module _
       toTrichotomyIso :
         ∀ (st : splittingTrichotomyTy' w s s') →
         Iso
-          (g (s .fst .fst) ×
-           h (s .fst .snd) ×
+          (A (s .fst .fst) ×
+           B (s .fst .snd) ×
            k (s' .fst .fst) ×
            l (s' .fst .snd))
           (splittingTrichotomyGTy st)
@@ -225,8 +225,8 @@ module _
       Iso
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
-          (g (s .fst .fst) ×
-           h (s .fst .snd) ×
+          (A (s .fst .fst) ×
+           B (s .fst .snd) ×
            k (s' .fst .fst) ×
            l (s' .fst .snd)))
         (Σ[ s ∈ Splitting w ]
@@ -257,9 +257,9 @@ module _
         (sameSplittingG w)
     splittingTrichotomyGTy-inl≅ w .fun (s , s' , x , p) =
       s , ((p .fst) , (p .snd))
-    splittingTrichotomyGTy-inl≅ w .inv (s , pgk , phl) =
-      s , s , (refl , refl) , pgk , phl
-    splittingTrichotomyGTy-inl≅ w .rightInv (s , pgk , phl) = refl
+    splittingTrichotomyGTy-inl≅ w .inv (s , pAk , pBl) =
+      s , s , (refl , refl) , pAk , pBl
+    splittingTrichotomyGTy-inl≅ w .rightInv (s , pAk , pBl) = refl
     splittingTrichotomyGTy-inl≅ w .leftInv (s , s' , x , p) =
       ΣPathP (refl , (ΣPathP ((Splitting≡ (≡-× (x .fst) (x .snd))) ,
         (ΣPathP ((ΣPathP (
@@ -285,26 +285,26 @@ module _
         (s , ((mk&⌈⌉ k (p .snd .snd .fst) ,
           (_ , (sym (split++ .fst))) , ((mk⌈⌉ (s' .fst .fst)) , (mk⌈⌉ (c ∷ v)))) ,
           mk&⌈⌉ l (p .snd .snd .snd .fst))) ,
-        s' , ((mk&⌈⌉ g(p .fst)) ,
-          ((mk&⌈⌉ h (p .snd .fst)) ,
+        s' , ((mk&⌈⌉ A(p .fst)) ,
+          ((mk&⌈⌉ B (p .snd .fst)) ,
           ((_ , split++ .snd) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s .fst .snd))))))
     splittingTrichotomyGTy-inr-inl≅ ww .inv
       (w , x , y , z , ([] , notmt) ,
-      (s , (pg , (t , py , pv)) , ph) ,
+      (s , (pA , (t , py , pv)) , pB) ,
       (s' , pk , (pl , (t' , pv' , px)))
       ) =
       Empty.rec (notmt refl)
     splittingTrichotomyGTy-inr-inl≅ ww .inv
       (w , x , y , z , (c ∷ v , notmt) ,
       (s' , (pk , (t , pw , pv)) , pl) ,
-      (s , pg , (ph , (t' , pv' , pz)))
+      (s , pA , (pB , (t' , pv' , pz)))
       ) =
       s , s' ,
       ((c ∷ v , notmt) ,
         s'11≡ ,
         s12≡) ,
-      pg .fst ,
-      ph .fst ,
+      pA .fst ,
+      pB .fst ,
       pk .fst ,
       pl .fst ,
       s'11≡ ,
@@ -312,7 +312,7 @@ module _
       where
       s11≡t11 : s .fst .fst ≡ t .fst .fst
       s11≡t11 =
-        sym (⌈⌉→≡ w (s .fst .fst) (pg .snd))
+        sym (⌈⌉→≡ w (s .fst .fst) (pA .snd))
         ∙ (⌈⌉→≡ w (t .fst .fst) pw)
 
       cv≡t12 : c ∷ v ≡ t .fst .snd
@@ -331,15 +331,15 @@ module _
     splittingTrichotomyGTy-inr-inl≅ ww .rightInv
       (w , x , y , z , ([] , notmt) ,
       (s , (pk , (t , pw , pv)) , pl) ,
-      (s' , pg , (ph , (t' , pv' , pz)))) =
+      (s' , pA , (pB , (t' , pv' , pz)))) =
       Empty.rec (notmt refl)
     splittingTrichotomyGTy-inr-inl≅ ww .rightInv
       (w , x , y , z , (c ∷ v , notmt) ,
       (s , (pk , (t , pw , pv)) , pl) ,
-      (s' , pg , (ph , (t' , pv' , pz)))) =
+      (s' , pA , (pB , (t' , pv' , pz)))) =
       ΣPathP5 (
-        sym (⌈⌉→≡ _ _ (pg .snd)) ,
-        sym (⌈⌉→≡ _ _ (ph .snd)) ,
+        sym (⌈⌉→≡ _ _ (pA .snd)) ,
+        sym (⌈⌉→≡ _ _ (pB .snd)) ,
         sym (⌈⌉→≡ _ _ (pk .snd)) ,
         sym (⌈⌉→≡ _ _ (pl .snd)) ,
         refl ,
@@ -350,16 +350,16 @@ module _
               ΣPathPProp (λ _ → isLang⌈⌉ y (s .fst .fst)) refl ,
               Splitting≡
                 (≡-×
-                  (sym (⌈⌉→≡ w (s' .fst .fst) (pg .snd)) ∙ ⌈⌉→≡ w (t .fst .fst) pw)
+                  (sym (⌈⌉→≡ w (s' .fst .fst) (pA .snd)) ∙ ⌈⌉→≡ w (t .fst .fst) pw)
                   (⌈⌉→≡ _ _ pv)
                 ) ,
               isProp→PathP
                 (λ i →
                   isLang⌈⌉
-                  (⌈⌉→≡ w (s' .fst .fst) (pg .snd) (~ i) )
+                  (⌈⌉→≡ w (s' .fst .fst) (pA .snd) (~ i) )
                   (Splitting≡ {s = _ , sym s11≡} {s' = t}
                     (≡-×
-                     ((λ i₁ → ⌈⌉→≡ w (s' .fst .fst) (pg .snd) (~ i₁)) ∙
+                     ((λ i₁ → ⌈⌉→≡ w (s' .fst .fst) (pA .snd) (~ i₁)) ∙
                       ⌈⌉→≡ w (t .fst .fst) pw)
                      (⌈⌉→≡ (c ∷ v) (t .fst .snd) pv))
                     i .fst .fst)
@@ -372,7 +372,7 @@ module _
                   (c ∷ v)
                   (Splitting≡ {s = _ , sym s11≡} {s' = t}
                     (≡-×
-                     ((λ i₁ → ⌈⌉→≡ w (s' .fst .fst) (pg .snd) (~ i₁)) ∙
+                     ((λ i₁ → ⌈⌉→≡ w (s' .fst .fst) (pA .snd) (~ i₁)) ∙
                       ⌈⌉→≡ w (t .fst .fst) pw)
                      (⌈⌉→≡ (c ∷ v) (t .fst .snd) pv))
                     i .fst .snd)
@@ -383,7 +383,7 @@ module _
             ΣPathPProp (λ _ → isLang⌈⌉ z (s .fst .snd)) refl
             ) ,
           refl ,
-          ΣPathPProp (λ _ → isLang⌈⌉ w (s' .fst .fst)) refl ,
+          ΣPathPProp (λ _ → isLanA⌈⌉ w (s' .fst .fst)) refl ,
           ΣPathPProp (λ _ → isLang⌈⌉ x (s' .fst .snd)) refl ,
           Splitting≡
             (≡-×
@@ -421,7 +421,7 @@ module _
       where
       s'11≡t11 : s' .fst .fst ≡ t .fst .fst
       s'11≡t11 =
-        sym (⌈⌉→≡ w (s' .fst .fst) (pg .snd))
+        sym (⌈⌉→≡ w (s' .fst .fst) (pA .snd))
         ∙ (⌈⌉→≡ w (t .fst .fst) pw)
 
       cv≡t12 : c ∷ v ≡ t .fst .snd
@@ -471,21 +471,21 @@ module _
       s' .fst .fst , s' .fst .snd ,
       s .fst .fst , s .fst .snd ,
       ((c ∷ v , notmt)) ,
-      (s' , ((mk&⌈⌉ g (p .fst) ,
+      (s' , ((mk&⌈⌉ A (p .fst) ,
         (_ , (sym (split++ .fst))) , ((mk⌈⌉ (s .fst .fst)) , (mk⌈⌉ (c ∷ v)))) ,
-        mk&⌈⌉ h (p .snd .fst))) ,
+        mk&⌈⌉ B (p .snd .fst))) ,
       (s , ((mk&⌈⌉ k (p .snd .snd .fst)) ,
         ((mk&⌈⌉ l (p .snd .snd .snd .fst)) ,
         ((_ , split++ .snd) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s' .fst .snd)))))))
     splittingTrichotomyGTy-inr-inr≅ ww .inv
       (w , x , y , z , ([] , notmt) ,
-      (s , (pg , (t , py , pv)) , ph) ,
+      (s , (pA , (t , py , pv)) , pB) ,
       (s' , pk , (pl , (t' , pv' , px)))
       ) =
       Empty.rec (notmt refl)
     splittingTrichotomyGTy-inr-inr≅ ww .inv
       (w , x , y , z , (c ∷ v , notmt) ,
-      (s' , (pg , (t , py , pv)) , ph) ,
+      (s' , (pA , (t , py , pv)) , pB) ,
       (s , pk , (pl , (t' , pv' , px)))
       ) =
       s' ,
@@ -493,8 +493,8 @@ module _
       ((c ∷ v , notmt) ,
         s'11≡ ,
         s12≡) ,
-      pg .fst ,
-      ph .fst ,
+      pA .fst ,
+      pB .fst ,
       pk .fst ,
       pl .fst ,
       s'11≡ ,
@@ -517,19 +517,19 @@ module _
         ∙ cong₂ _++_
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ x (t' .fst .snd) px)
-            ∙ (⌈⌉→≡ x (s' .fst .snd) (ph .snd)))
+            ∙ (⌈⌉→≡ x (s' .fst .snd) (pB .snd)))
     splittingTrichotomyGTy-inr-inr≅ ww .rightInv
       (w , x , y , z , ([] , notmt) ,
       (s , (pk , (t , pw , pv)) , pl) ,
-      (s' , pg , (ph , (t' , pv' , pz)))) =
+      (s' , pA , (pB , (t' , pv' , pz)))) =
       Empty.rec (notmt refl)
     splittingTrichotomyGTy-inr-inr≅ ww .rightInv
       (w , x , y , z , (c ∷ v , notmt) ,
-      (s , (pg , (t , py , pv)) , ph) ,
+      (s , (pA , (t , py , pv)) , pB) ,
       (s' , pk , (pl , (t' , pv' , px)))) =
       ΣPathP5 (
-        sym (⌈⌉→≡ _ _ (pg .snd)) ,
-        sym (⌈⌉→≡ _ _ (ph .snd)) ,
+        sym (⌈⌉→≡ _ _ (pA .snd)) ,
+        sym (⌈⌉→≡ _ _ (pB .snd)) ,
         sym (⌈⌉→≡ _ _ (pk .snd)) ,
         sym (⌈⌉→≡ _ _ (pl .snd)) ,
         refl ,
@@ -579,7 +579,7 @@ module _
           Splitting≡
             (≡-×
               (⌈⌉→≡ _ _ pv')
-              (sym (⌈⌉→≡ x _ (ph .snd)) ∙ ⌈⌉→≡ x _ px)
+              (sym (⌈⌉→≡ x _ (pB .snd)) ∙ ⌈⌉→≡ x _ px)
             ) ,
           ΣPathP (
             isProp→PathP
@@ -588,7 +588,7 @@ module _
                   (c ∷ v)
                   (Splitting≡ {s = _ , s'12≡} {s' = t'}
                    (≡-× (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv')
-                    ((λ i₁ → ⌈⌉→≡ x (s .fst .snd) (ph .snd) (~ i₁)) ∙
+                    ((λ i₁ → ⌈⌉→≡ x (s .fst .snd) (pB .snd) (~ i₁)) ∙
                      ⌈⌉→≡ x (t' .fst .snd) px))
                    i .fst .fst)
                 )
@@ -597,10 +597,10 @@ module _
             isProp→PathP
                 (λ i →
                   isLang⌈⌉
-                  (⌈⌉→≡ x (s .fst .snd) (ph .snd) (~ i))
+                  (⌈⌉→≡ x (s .fst .snd) (pB .snd) (~ i))
                   (Splitting≡ {s = _ , s'12≡} {s' = t'}
                    (≡-× (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv')
-                    ((λ i₁ → ⌈⌉→≡ x (s .fst .snd) (ph .snd) (~ i₁)) ∙
+                    ((λ i₁ → ⌈⌉→≡ x (s .fst .snd) (pB .snd) (~ i₁)) ∙
                      ⌈⌉→≡ x (t' .fst .snd) px))
                    i .fst .snd)
                 )
@@ -626,7 +626,7 @@ module _
         ∙ cong₂ _++_
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ x (t' .fst .snd) px)
-            ∙ (⌈⌉→≡ x (s .fst .snd) (ph .snd)))
+            ∙ (⌈⌉→≡ x (s .fst .snd) (pB .snd)))
     splittingTrichotomyGTy-inr-inr≅ ww .leftInv
       (s , s' , ((c ∷ v , notmt) , split++) , p) =
       ΣPathP3 (
@@ -690,24 +690,24 @@ module _
     ⊗&⊗parse≅ :
       (w : String) →
       Iso
-        (((g ⊗ h) & (k ⊗ l)) w)
+        (((A ⊗ B) & (k ⊗ l)) w)
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
-          (g (s .fst .fst) ×
-           h (s .fst .snd) ×
+          (A (s .fst .fst) ×
+           B (s .fst .snd) ×
            k (s' .fst .fst) ×
            l (s' .fst .snd)))
-    ⊗&⊗parse≅ w .fun ((s , pg , ph) , (s' , pk , pl)) =
-      s , s' , pg , ph , pk , pl
-    ⊗&⊗parse≅ w .inv (s , s' , pg , ph , pk , pl) =
-      (s , pg , ph) , (s' , pk , pl)
+    ⊗&⊗parse≅ w .fun ((s , pA , pB) , (s' , pk , pl)) =
+      s , s' , pA , pB , pk , pl
+    ⊗&⊗parse≅ w .inv (s , s' , pA , pB , pk , pl) =
+      (s , pA , pB) , (s' , pk , pl)
     ⊗&⊗parse≅ w .rightInv _ = refl
     ⊗&⊗parse≅ w .leftInv _ = refl
 
     opaque
       unfolding _⊕_
       splittingTrichotomy≅ :
-        (g ⊗ h) & (k ⊗ l)
+        (A ⊗ B) & (k ⊗ l)
         ≅
         splittingTrichotomyG
       splittingTrichotomy≅ = pointwiseIso→≅ _ _
@@ -732,9 +732,9 @@ module _
         )
 
   ⊗&-split :
-    (g ⊗ h) & (k ⊗ l)
+    (A ⊗ B) & (k ⊗ l)
     ≅
-    ((g & k) ⊗ (h & l)) ⊕
+    ((A & k) ⊗ (h & l)) ⊕
     (
     (
       ⊕[ w ∈ String ]
@@ -745,7 +745,7 @@ module _
         (
         ((k & ⌈ y ⌉) & (⌈ w ⌉ ⊗ ⌈ v .fst ⌉) ⊗ (l & ⌈ z ⌉))
         &
-        ((g & ⌈ w ⌉) ⊗ ((h & ⌈ x ⌉) & (⌈ v .fst ⌉ ⊗ ⌈ z ⌉)))
+        ((A & ⌈ w ⌉) ⊗ ((h & ⌈ x ⌉) & (⌈ v .fst ⌉ ⊗ ⌈ z ⌉)))
         )
     )
     ⊕
@@ -756,7 +756,7 @@ module _
       ⊕[ z ∈ String ]
       ⊕[ v ∈ NonEmptyString ]
         (
-        ((g & ⌈ w ⌉) & (⌈ y ⌉ ⊗ ⌈ v .fst ⌉) ⊗ (h & ⌈ x ⌉))
+        ((A & ⌈ w ⌉) & (⌈ y ⌉ ⊗ ⌈ v .fst ⌉) ⊗ (h & ⌈ x ⌉))
         &
         ((k & ⌈ y ⌉) ⊗ ((l & ⌈ z ⌉) & (⌈ v .fst ⌉ ⊗ ⌈ x ⌉)))
         )

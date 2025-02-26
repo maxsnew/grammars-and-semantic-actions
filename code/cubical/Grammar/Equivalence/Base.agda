@@ -13,32 +13,32 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
-module _ {ℓG}
-  (g : Grammar ℓG)
+module _ {ℓA}
+  (A : Grammar ℓA)
   where
-  Language : Type ℓG
-  Language = Σ[ w ∈ String ] ∥ g w ∥₁
+  Language : Type ℓA
+  Language = Σ[ w ∈ String ] ∥ A w ∥₁
 
-module _ {ℓG} {ℓG'}
-  (g : Grammar ℓG)
-  (g' : Grammar ℓG')
+module _ {ℓA} {ℓB}
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
   where
 
-  record LogicalEquivalence : Type (ℓ-max ℓG ℓG') where
+  record LogicalEquivalence : Type (ℓ-max ℓA ℓB) where
     no-eta-equality
     constructor mkLogEq
     field
-      fun : g ⊢ g'
-      inv : g' ⊢ g
+      fun : A ⊢ B
+      inv : B ⊢ A
 
-  isLogicallyEquivalent : Type (ℓ-max ℓG ℓG')
-  isLogicallyEquivalent = (g ⊢ g') × (g' ⊢ g)
+  isLogicallyEquivalent : Type (ℓ-max ℓA ℓB)
+  isLogicallyEquivalent = (A ⊢ B) × (B ⊢ A)
 
   open LogicalEquivalence
   LogicalEquivalence→isLogicallyEquivalent :
@@ -46,8 +46,8 @@ module _ {ℓG} {ℓG'}
   LogicalEquivalence→isLogicallyEquivalent LogEq .fst = LogEq .fun
   LogicalEquivalence→isLogicallyEquivalent LogEq .snd = LogEq .inv
 
-  isWeaklyEquivalent : Type (ℓ-max ℓG ℓG')
-  isWeaklyEquivalent = Iso (Language g) (Language g')
+  isWeaklyEquivalent : Type (ℓ-max ℓA ℓB)
+  isWeaklyEquivalent = Iso (Language A) (Language B)
 
   open Iso
   isLogicalEquivalence→WeakEquivalence :
@@ -63,8 +63,8 @@ module _ {ℓG} {ℓG'}
   leftInv (isLogicalEquivalence→WeakEquivalence logEq) _ =
     Σ≡Prop (λ _ → isPropPropTrunc) refl
 
-  isStronglyEquivalent : Type (ℓ-max ℓG ℓG')
-  isStronglyEquivalent = ∀ w → Iso (g w) (g' w)
+  isStronglyEquivalent : Type (ℓ-max ℓA ℓB)
+  isStronglyEquivalent = ∀ w → Iso (A w) (B w)
 
   isStronglyEquivalent→isWeaklyEquivalent :
     isStronglyEquivalent → isWeaklyEquivalent
@@ -85,20 +85,20 @@ module _ {ℓG} {ℓG'}
   leftInv (isStronglyEquivalent→isWeaklyEquivalent strEq) _ =
     Σ≡Prop (λ _ → isPropPropTrunc) refl
 
-  record StrongEquivalence : Type (ℓ-max ℓG ℓG') where
+  record StrongEquivalence : Type (ℓ-max ℓA ℓB) where
     no-eta-equality
     constructor mkStrEq
     field
-      fun : g ⊢ g'
-      inv : g' ⊢ g
+      fun : A ⊢ B
+      inv : B ⊢ A
       sec : fun ∘g inv ≡ id
       ret : inv ∘g fun ≡ id
 
-  record isStrongEquivalence (e : g ⊢ g') : Type (ℓ-max ℓG ℓG') where
+  record isStrongEquivalence (e : A ⊢ B) : Type (ℓ-max ℓA ℓB) where
     no-eta-equality
     constructor isStrEq
     field
-      inv : g' ⊢ g
+      inv : B ⊢ A
       sec : e ∘g inv ≡ id
       ret : inv ∘g e ≡ id
 
@@ -112,75 +112,75 @@ module _ {ℓG} {ℓG'}
   StrongEquivalence→isStrongEquivalence eq
     .isStrongEquivalence.ret = eq .StrongEquivalence.ret
 
-_≅_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
-g ≅ g' = StrongEquivalence g g'
-infix 4 _≅_
+_≅_ : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
+A ≅ B = StrongEquivalence A B
+infix 6 _≅_
 
-_≈_ : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
-g ≈ g' = LogicalEquivalence g g'
-infix 4 _≈_
+_≈_ : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
+A ≈ B = LogicalEquivalence A B
+infix 1 _≈_
 
 module _
-  (g : Grammar ℓg)
-  (h : Grammar ℓh)
-  (pwIso : ∀ w → Iso (g w) (h w))
+  (A : Grammar ℓA)
+  (B : Grammar ℓB)
+  (pwIso : ∀ w → Iso (A w) (B w))
   where
   open StrongEquivalence
   open Iso
 
-  pointwiseIso→≅ : g ≅ h
+  pointwiseIso→≅ : A ≅ B
   pointwiseIso→≅ .fun w = pwIso w .fun
   pointwiseIso→≅ .inv w = pwIso w .inv
   pointwiseIso→≅ .sec = funExt λ w → funExt (pwIso w .rightInv)
   pointwiseIso→≅ .ret = funExt λ w → funExt (pwIso w .leftInv)
 
-module _ {ℓG} {ℓH}
-  {g : Grammar ℓG}
-  {h : Grammar ℓH}
-  (g≅h : StrongEquivalence g h)
+module _ {ℓA} {ℓB}
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  (A≅B : StrongEquivalence A B)
   where
 
   open StrongEquivalence
 
-  sym-strong-equivalence : StrongEquivalence h g
-  sym-strong-equivalence .fun = g≅h .inv
-  sym-strong-equivalence .inv = g≅h .fun
-  sym-strong-equivalence .sec = g≅h .ret
-  sym-strong-equivalence .ret = g≅h .sec
+  sym-strong-equivalence : StrongEquivalence B A
+  sym-strong-equivalence .fun = A≅B .inv
+  sym-strong-equivalence .inv = A≅B .fun
+  sym-strong-equivalence .sec = A≅B .ret
+  sym-strong-equivalence .ret = A≅B .sec
 
   sym≅ = sym-strong-equivalence
 
-module _ {ℓG} {ℓH} {ℓK}
-  {g : Grammar ℓG}
-  {h : Grammar ℓH}
-  {k : Grammar ℓK}
-  (g≅h : StrongEquivalence g h)
-  (h≅k : StrongEquivalence h k)
+module _ {ℓA} {ℓB} {ℓC}
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  {C : Grammar ℓC}
+  (A≅B : StrongEquivalence A B)
+  (B≅C : StrongEquivalence B C)
   where
 
   open StrongEquivalence
 
-  comp-strong-equiv : StrongEquivalence g k
-  comp-strong-equiv .fun = h≅k .fun ∘g g≅h .fun
-  comp-strong-equiv .inv = g≅h .inv ∘g h≅k .inv
+  comp-strong-equiv : StrongEquivalence A C
+  comp-strong-equiv .fun = B≅C .fun ∘g A≅B .fun
+  comp-strong-equiv .inv = A≅B .inv ∘g B≅C .inv
   comp-strong-equiv .sec =
-    (λ i → h≅k .fun ∘g g≅h .sec i ∘g h≅k .inv) ∙
-    h≅k .sec
+    (λ i → B≅C .fun ∘g A≅B .sec i ∘g B≅C .inv) ∙
+    B≅C .sec
   comp-strong-equiv .ret =
-    (λ i → g≅h .inv ∘g h≅k .ret i ∘g g≅h .fun) ∙
-    g≅h .ret
+    (λ i → A≅B .inv ∘g B≅C .ret i ∘g A≅B .fun) ∙
+    A≅B .ret
 
-_≅∙_ : g ≅ h → h ≅ k → g ≅ k
+_≅∙_ : A ≅ B → B ≅ C → A ≅ C
 _≅∙_ = comp-strong-equiv
 infixr 10 _≅∙_
 
-module _ {g : Grammar ℓg} where
-  id≅ : g ≅ g
+module _ {A : Grammar ℓA} where
+  id≅ : A ≅ A
   id≅ = mkStrEq id id refl refl
 
 hasRetraction→isMono :
-  (e : g ⊢ h) →
-  (inv : h ⊢ g) →
+  (e : A ⊢ B) →
+  (inv : B ⊢ A) →
   (ret : inv ∘g e ≡ id) →
   isMono e
 hasRetraction→isMono e inv ret f f' e∘f≡e∘f' =
@@ -190,7 +190,7 @@ hasRetraction→isMono e inv ret f f' e∘f≡e∘f' =
 
 open isStrongEquivalence
 isStrongEquivalence→isMono :
-  (e : g ⊢ h) →
+  (e : A ⊢ B) →
   isStrongEquivalence _ _ e →
   isMono e
 isStrongEquivalence→isMono e streq =

@@ -16,82 +16,61 @@ open import Grammar.Literal Alphabet
 
 private
   variable
-    ℓG ℓH ℓS ℓ ℓ' ℓ'' ℓ''' : Level
+    ℓA ℓB ℓC ℓX : Level
 
-LinearΠ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-LinearΠ {A = A} f w = ∀ (a : A) → f a w
-&ᴰ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-&ᴰ = LinearΠ
+&ᴰ : {X : Type ℓX} → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
+&ᴰ {X = X} f w = ∀ (x : X) → f x w
 
-LinearΣ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-LinearΣ {A = A} f w = Σ[ a ∈ A ] f a w
--- TODO: full rename?
-⊕ᴰ : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-⊕ᴰ = LinearΣ
+⊕ᴰ : {X : Type ℓX} → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
+⊕ᴰ {X = X} f w = Σ[ x ∈ X ] f x w
 
-⊕ᴰ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-⊕ᴰ-syntax = LinearΣ
+syntax ⊕ᴰ {X = X}(λ x → A) = ⊕[ x ∈ X ] A
+infix 7 ⊕ᴰ
 
-LinearΣ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-LinearΣ-syntax = LinearΣ
+syntax &ᴰ {X = X}(λ x → A) = &[ x ∈ X ] A
+infix 8 &ᴰ
 
-&ᴰ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-&ᴰ-syntax = LinearΠ
+module _ {X : Type ℓX} {A : X → Grammar ℓA} where
+  &ᴰ-π : ∀ x → &[ x ∈ X ] A x ⊢ A x
+  &ᴰ-π x w f = f x
 
-LinearΠ-syntax : {A : Type ℓS} → (A → Grammar ℓG) → Grammar (ℓ-max ℓS ℓG)
-LinearΠ-syntax = LinearΠ
+  ⊕ᴰ-in : ∀ x → A x ⊢ ⊕[ x ∈ X ] A x
+  ⊕ᴰ-in x w z = x , z
 
--- TODO: this precedence isn't really right
-syntax LinearΣ-syntax {A = A} (λ x → B) = LinΣ[ x ∈ A ] B
-syntax ⊕ᴰ-syntax {A = A} (λ x → B) = ⊕[ x ∈ A ] B
-syntax LinearΠ-syntax {A = A} (λ x → B) = LinΠ[ x ∈ A ] B
-syntax &ᴰ-syntax {A = A} (λ x → B) = &[ x ∈ A ] B
+module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
+  &ᴰ-in : (∀ x → A ⊢ B x) → A ⊢ &[ x ∈ X ] B x
+  &ᴰ-in f w z x = f x w z
 
-module _ {A : Type ℓS} {h : A → Grammar ℓH} where
-  LinΠ-app : ∀ a → LinΠ[ a ∈ A ] h a ⊢ h a
-  LinΠ-app = λ a w z → z a
-  &ᴰ-π = LinΠ-app
+  ⊕ᴰ-elim : (∀ x → B x ⊢ A) → ⊕[ x ∈ X ] B x ⊢ A
+  ⊕ᴰ-elim f w x = f (x .fst) w (x .snd)
 
-  LinΣ-intro : ∀ a → h a ⊢ LinΣ[ a ∈ A ] h a
-  LinΣ-intro = λ a w → _,_ a
-  ⊕ᴰ-in = LinΣ-intro
-module _ {A : Type ℓS} {g : Grammar ℓG}{h : A → Grammar ℓH} where
-  LinΠ-intro : (∀ a → g ⊢ h a) → g ⊢ LinΠ[ a ∈ A ] h a
-  LinΠ-intro = λ f w z a → f a w z
-  &ᴰ-intro = LinΠ-intro
-
-  &ᴰ-in = &ᴰ-intro
-
-  LinΣ-elim : (∀ a → h a ⊢ g) → (LinΣ[ a ∈ A ] h a) ⊢ g
-  LinΣ-elim f w x = f (fst x) w (snd x)
-  ⊕ᴰ-elim = LinΣ-elim
-
-  ⊕ᴰ≡ : (f f' : (⊕[ a ∈ A ] h a) ⊢ g)
-    → (∀ a → f ∘g ⊕ᴰ-in a ≡ f' ∘g ⊕ᴰ-in a)
+  ⊕ᴰ≡ : (f f' : (⊕[ x ∈ X ] B x) ⊢ A)
+    → (∀ x → f ∘g ⊕ᴰ-in x ≡ f' ∘g ⊕ᴰ-in x)
     → f ≡ f'
-  ⊕ᴰ≡ f f' fa≡fa' i w x = fa≡fa' (x .fst) i w (x .snd)
+  ⊕ᴰ≡ f f' fx≡fx' i w z = fx≡fx' (z .fst) i w (z .snd)
 
-  &ᴰ≡ : (f f' : g ⊢ (&[ a ∈ A ] h a))
-    → (∀ a → &ᴰ-π a ∘g f ≡ &ᴰ-π a ∘g f')
+  &ᴰ≡ : (f f' : A ⊢ &[ x ∈ X ] B x)
+    → (∀ x → &ᴰ-π x ∘g f ≡ &ᴰ-π x ∘g f')
     → f ≡ f'
-  &ᴰ≡ f f' f≡ i w x a = f≡ a i w x
+  &ᴰ≡ f f' f≡ i w z x = f≡ x i w z
 
 ⊕ᴰ-elim∘g :
-  ∀ {A : Type ℓ}{g : Grammar ℓ'}{h : A → Grammar ℓ''}{k : Grammar ℓ'''}
-  → {f' : ∀ a → h a ⊢ g}
-  → {f : g ⊢ k}
-  → f ∘g ⊕ᴰ-elim f' ≡ ⊕ᴰ-elim (λ a → f ∘g f' a)
-⊕ᴰ-elim∘g = ⊕ᴰ≡ _ _ (λ a → refl)
+  ∀ {X : Type ℓX}{A : Grammar ℓA}
+  {B : X → Grammar ℓB}{C : Grammar ℓC}
+  → {f' : ∀ x → B x ⊢ A}
+  → {f : A ⊢ C}
+  → f ∘g ⊕ᴰ-elim f' ≡ ⊕ᴰ-elim (λ x → f ∘g f' x)
+⊕ᴰ-elim∘g = ⊕ᴰ≡ _ _ (λ x → refl)
 
 module _
-  {A : Type ℓS}
-  {g : A → Grammar ℓG}
-  {h : A → Grammar ℓH}
-  (e : (a : A) → g a ⊢ h a)
+  {X : Type ℓX}
+  {A : X → Grammar ℓA}
+  {B : X → Grammar ℓB}
+  (e : (x : X) → A x ⊢ B x)
   where
 
-  map⊕ᴰ : ⊕[ a ∈ A ] g a ⊢ ⊕[ a ∈ A ] h a
-  map⊕ᴰ = ⊕ᴰ-elim (λ a → ⊕ᴰ-in a ∘g e a)
+  map⊕ᴰ : ⊕[ x ∈ X ] A x ⊢ ⊕[ x ∈ X ] B x
+  map⊕ᴰ = ⊕ᴰ-elim (λ x → ⊕ᴰ-in x ∘g e x)
 
-  map&ᴰ : &[ a ∈ A ] g a ⊢ &[ a ∈ A ] h a
-  map&ᴰ = &ᴰ-in λ a → e a ∘g &ᴰ-π a
+  map&ᴰ : &[ x ∈ X ] A x ⊢ &[ x ∈ X ] B x
+  map&ᴰ = &ᴰ-in λ x → e x ∘g &ᴰ-π x

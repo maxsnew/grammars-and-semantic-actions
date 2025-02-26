@@ -16,17 +16,17 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 open StrongEquivalence
 
 &unambiguous :
-  unambiguous g →
-  unambiguous h →
-  unambiguous (g & h)
-&unambiguous ug uh e e' =
-  &≡ e e' (ug _ _) (uh _ _)
+  unambiguous A →
+  unambiguous B →
+  unambiguous (A & B)
+&unambiguous uA uB e e' =
+  &≡ e e' (uA _ _) (uB _ _)

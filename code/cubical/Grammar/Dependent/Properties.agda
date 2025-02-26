@@ -29,94 +29,99 @@ open import Grammar.Literal Alphabet
 
 private
   variable
-    ℓg ℓh ℓS ℓS' : Level
+    ℓA ℓB ℓX ℓY : Level
 
 open StrongEquivalence
-module _ {A : Type ℓS} (h : A → Grammar ℓh) where
-  disjointSummands⊕ᴰ : Type (ℓ-max ℓS ℓh)
-  disjointSummands⊕ᴰ = ∀ a a' → (a ≡ a' → Empty.⊥) → disjoint (h a) (h a')
+module _ {X : Type ℓX} (A : X → Grammar ℓA) where
+  disjointSummands⊕ᴰ : Type (ℓ-max ℓX ℓA)
+  disjointSummands⊕ᴰ =
+    ∀ x y → (x ≡ y → Empty.⊥) → disjoint (A x) (A y)
 
-module _ {A : Type ℓS} {g : Grammar ℓg}{h : A → Grammar ℓh} where
+module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
 
   opaque
     unfolding _⊗_
     ⊕ᴰ-distL :
       StrongEquivalence
-        ((⊕[ a ∈ A ] h a) ⊗ g)
-        (⊕[ a ∈ A ] (h a ⊗ g))
-    ⊕ᴰ-distL .fun w (s , (a , x) , y) = a , ((s , (x , y)))
-    ⊕ᴰ-distL .inv w (a , (s , (x , y))) = s , ((a , x) , y)
+        ((⊕[ x ∈ X ] B x) ⊗ A)
+        (⊕[ x ∈ X ] (B x ⊗ A))
+    ⊕ᴰ-distL .fun w (s , (x , p) , q) = x , ((s , (p , q)))
+    ⊕ᴰ-distL .inv w (x , (s , (p , q))) = s , ((x , p) , q)
     ⊕ᴰ-distL .sec = refl
     ⊕ᴰ-distL .ret = refl
 
     ⊕ᴰ-distR :
       StrongEquivalence
-        (g ⊗ (⊕[ a ∈ A ] h a))
-        (⊕[ a ∈ A ] (g ⊗ h a))
-    ⊕ᴰ-distR .fun w (s , x , (a , y)) = a , ((s , (x , y)))
-    ⊕ᴰ-distR .inv w (a , (s , (x , y))) = s , (x , (a , y))
+        (A ⊗ (⊕[ x ∈ X ] B x))
+        (⊕[ x ∈ X ] (A ⊗ B x))
+    ⊕ᴰ-distR .fun w (s , p , (x , q)) = x , ((s , (p , q)))
+    ⊕ᴰ-distR .inv w (x , (s , (p , q))) = s , (p , (x , q))
     ⊕ᴰ-distR .sec = refl
     ⊕ᴰ-distR .ret = refl
 
     &ᴰ-strengthL :
-        (&[ a ∈ A ] h a) ⊗ g ⊢ &[ a ∈ A ] (h a ⊗ g)
-    &ᴰ-strengthL w (s , f , pg) a = s , (f a , pg)
+        (&[ x ∈ X ] B x) ⊗ A ⊢ &[ x ∈ X ] (B x ⊗ A)
+    &ᴰ-strengthL w (s , f , pA) x = s , (f x , pA)
 
     &ᴰ-strengthR :
-        g ⊗ (&[ a ∈ A ] h a) ⊢ &[ a ∈ A ] (g ⊗ h a)
-    &ᴰ-strengthR w (s , pg , f) a = s , (pg , f a)
+        A ⊗ (&[ x ∈ X ] B x) ⊢ &[ x ∈ X ] (A ⊗ B x)
+    &ᴰ-strengthR w (s , pA , f) x = s , (pA , f x)
 
 module _
-  {A : Type ℓS}
-  {B : A → Type ℓS'}
-  {h : Σ[ a ∈ A ] B a → Grammar ℓh}
+  {X : Type ℓX}
+  {Y : X → Type ℓY}
+  {A : Σ[ x ∈ X ] Y x → Grammar ℓA}
   where
   &ᴰ⊕ᴰ-dist :
-    (&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b))) ⊢ ⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a)
-  &ᴰ⊕ᴰ-dist w x = (λ a → x a .fst) , λ a → x a .snd
+    (&[ x ∈ X ] (⊕[ y ∈ Y x ] A (x , y))) ⊢
+      ⊕[ f ∈ (∀ (x : X) → Y x) ] &[ x ∈ X ] A (x , f x)
+  &ᴰ⊕ᴰ-dist w z = (λ x → z x .fst) , λ x → z x .snd
 
   &ᴰ⊕ᴰ-dist⁻ :
-    ⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a) ⊢ (&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b)))
-  &ᴰ⊕ᴰ-dist⁻ = ⊕ᴰ-elim λ f → &ᴰ-in λ a → λ w x → (f a) , (x a)
+    ⊕[ f ∈ (∀ (x : X) → Y x) ] &[ x ∈ X ] A (x , f x) ⊢
+      (&[ x ∈ X ] (⊕[ y ∈ Y x ] A (x , y)))
+  &ᴰ⊕ᴰ-dist⁻ = ⊕ᴰ-elim λ f → &ᴰ-in λ x → λ w z → (f x) , (z x)
 
   &ᴰ⊕ᴰ-dist≅  :
-    ((&[ a ∈ A ] (⊕[ b ∈ B a ] h (a , b)))) ≅ (⊕[ f ∈ (∀ (a : A) → B a) ] &[ a ∈ A ] h (a , f a))
+    (&[ x ∈ X ] (⊕[ y ∈ Y x ] A (x , y)))
+      ≅
+    (⊕[ f ∈ (∀ (x : X) → Y x) ] &[ x ∈ X ] A (x , f x))
   &ᴰ⊕ᴰ-dist≅ .fun = &ᴰ⊕ᴰ-dist
   &ᴰ⊕ᴰ-dist≅ .inv = &ᴰ⊕ᴰ-dist⁻
   &ᴰ⊕ᴰ-dist≅ .sec = refl
   &ᴰ⊕ᴰ-dist≅ .ret = refl
 
 module _
-  {A : Type ℓS}
-  {g : A → Grammar ℓg}
-  {h : A → Grammar ℓh}
-  (g≅h : ∀ (a : A) → g a ≅ h a)
+  {X : Type ℓX}
+  {A : X → Grammar ℓA}
+  {B : X → Grammar ℓB}
+  (A≅B : ∀ (x : X) → A x ≅ B x)
   where
 
-  &ᴰ≅ : (&[ a ∈ A ] g a) ≅ &[ a ∈ A ] h a
-  &ᴰ≅ .fun = map&ᴰ λ a → g≅h a .fun
-  &ᴰ≅ .inv = map&ᴰ λ a → g≅h a .inv
-  &ᴰ≅ .sec = &ᴰ≡ _ _ λ a → cong (_∘g &ᴰ-π a) (g≅h a .sec)
-  &ᴰ≅ .ret = &ᴰ≡ _ _ λ a → cong (_∘g &ᴰ-π a) (g≅h a .ret)
+  &ᴰ≅ : (&[ x ∈ X ] A x) ≅ &[ x ∈ X ] B x
+  &ᴰ≅ .fun = map&ᴰ λ x → A≅B x .fun
+  &ᴰ≅ .inv = map&ᴰ λ x → A≅B x .inv
+  &ᴰ≅ .sec = &ᴰ≡ _ _ λ x → cong (_∘g &ᴰ-π x) (A≅B x .sec)
+  &ᴰ≅ .ret = &ᴰ≡ _ _ λ x → cong (_∘g &ᴰ-π x) (A≅B x .ret)
 
-  ⊕ᴰ≅ : (⊕[ a ∈ A ] g a) ≅ ⊕[ a ∈ A ] h a
-  ⊕ᴰ≅ .fun = map⊕ᴰ λ a → g≅h a .fun
-  ⊕ᴰ≅ .inv = map⊕ᴰ λ a → g≅h a .inv
-  ⊕ᴰ≅ .sec = ⊕ᴰ≡ _ _ λ a → cong (⊕ᴰ-in a ∘g_) (g≅h a .sec)
-  ⊕ᴰ≅ .ret = ⊕ᴰ≡ _ _ λ a → cong (⊕ᴰ-in a ∘g_) (g≅h a .ret)
+  ⊕ᴰ≅ : (⊕[ x ∈ X ] A x) ≅ ⊕[ x ∈ X ] B x
+  ⊕ᴰ≅ .fun = map⊕ᴰ λ x → A≅B x .fun
+  ⊕ᴰ≅ .inv = map⊕ᴰ λ x → A≅B x .inv
+  ⊕ᴰ≅ .sec = ⊕ᴰ≡ _ _ λ x → cong (⊕ᴰ-in x ∘g_) (A≅B x .sec)
+  ⊕ᴰ≅ .ret = ⊕ᴰ≡ _ _ λ x → cong (⊕ᴰ-in x ∘g_) (A≅B x .ret)
 
 module _
-  {A : Type ℓS}
-  {g : A → Grammar ℓg}
-  {h : Grammar ℓh}
+  {X : Type ℓX}
+  {A : X → Grammar ℓA}
+  {B : Grammar ℓB}
   where
 
   private
-    the-fun : (⊕[ a ∈ A ] g a) & h ⊢ ⊕[ a ∈ A ] (g a & h)
-    the-fun = ⇒-intro⁻ (⊕ᴰ-elim (λ a → ⇒-intro (⊕ᴰ-in a)))
+    the-fun : (⊕[ x ∈ X ] A x) & B ⊢ ⊕[ x ∈ X ] (A x & B)
+    the-fun = ⇒-intro⁻ (⊕ᴰ-elim (λ x → ⇒-intro (⊕ᴰ-in x)))
 
-    the-inv : ⊕[ a ∈ A ] (g a & h) ⊢ (⊕[ a ∈ A ] g a) & h
-    the-inv = ⊕ᴰ-elim λ a → ⊕ᴰ-in a ,&p id
+    the-inv : ⊕[ x ∈ X ] (A x & B) ⊢ (⊕[ x ∈ X ] A x) & B
+    the-inv = ⊕ᴰ-elim λ x → ⊕ᴰ-in x ,&p id
 
     opaque
       unfolding ⇒-intro &-intro
@@ -127,18 +132,18 @@ module _
       the-ret = refl
 
   &⊕ᴰ-distL≅ :
-    (⊕[ a ∈ A ] g a) & h ≅ ⊕[ a ∈ A ] (g a & h)
+    (⊕[ x ∈ X ] A x) & B ≅ ⊕[ x ∈ X ] (A x & B)
   &⊕ᴰ-distL≅ = mkStrEq the-fun the-inv the-sec the-ret
 
   &⊕ᴰ-distR≅ :
-    h & (⊕[ a ∈ A ] g a) ≅ ⊕[ a ∈ A ] (h & g a)
+    B & (⊕[ x ∈ X ] A x) ≅ ⊕[ x ∈ X ] (B & A x)
   &⊕ᴰ-distR≅ =
     &-swap≅
     ≅∙ &⊕ᴰ-distL≅
     ≅∙ ⊕ᴰ≅ λ a → &-swap≅
 
 module _
-  {X : Type ℓS} {A : X → Grammar ℓh}
+  {X : Type ℓX} {A : X → Grammar ℓA}
   where
   isSetGrammar&ᴰ : (∀ x → isSetGrammar (A x)) → isSetGrammar (&ᴰ A)
   isSetGrammar&ᴰ isSetGrammarA w = isSetΠ λ x → isSetGrammarA x w

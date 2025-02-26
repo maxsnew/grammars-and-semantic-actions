@@ -12,15 +12,15 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 opaque
   unfolding _⇒_
-  unambiguous⇒ : unambiguous g → unambiguous (h ⇒ g)
-  unambiguous⇒ unambig-g =
+  unambiguous⇒ : unambiguous A → unambiguous (B ⇒ A)
+  unambiguous⇒ unambig-A =
     EXTERNAL.isLang→unambiguous
-      (λ w → isProp→ (EXTERNAL.unambiguous→isLang unambig-g w))
+      (λ w → isProp→ (EXTERNAL.unambiguous→isLang unambig-A w))

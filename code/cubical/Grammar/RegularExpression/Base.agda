@@ -8,9 +8,6 @@ open import Cubical.Foundations.Structure
 open import Helper
 open import Grammar Alphabet
 
-private
-  variable ℓG ℓG' : Level
-
 data RegularExpression  : Type ℓ-zero where
   εr : RegularExpression
   ⊥r : RegularExpression
@@ -24,12 +21,12 @@ Regex = RegularExpression
 RegularExpression→Grammar : RegularExpression → Grammar ℓ-zero
 RegularExpression→Grammar  εr = ε
 RegularExpression→Grammar  ⊥r = ⊥
-RegularExpression→Grammar (g ⊗r g') =
-  (RegularExpression→Grammar g) ⊗ (RegularExpression→Grammar g')
+RegularExpression→Grammar (r ⊗r r') =
+  (RegularExpression→Grammar r) ⊗ (RegularExpression→Grammar r')
 RegularExpression→Grammar (＂ c ＂r) = literal c
-RegularExpression→Grammar (g ⊕r g') =
-  RegularExpression→Grammar g ⊕ RegularExpression→Grammar g'
-RegularExpression→Grammar (g *r) = (RegularExpression→Grammar g) *
+RegularExpression→Grammar (r ⊕r r') =
+  RegularExpression→Grammar r ⊕ RegularExpression→Grammar r'
+RegularExpression→Grammar (r *r) = (RegularExpression→Grammar r) *
 
 ⟦_⟧r : RegularExpression → Grammar ℓ-zero
 ⟦_⟧r = RegularExpression→Grammar

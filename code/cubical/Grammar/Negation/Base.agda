@@ -10,8 +10,8 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg : Level
-    g : Grammar ℓg
+    ℓA : Level
+    A : Grammar ℓA
 
-¬G_ : Grammar ℓg → Grammar ℓg
-¬G g = g ⇒ ⊥
+¬G_ : Grammar ℓA → Grammar ℓA
+¬G A = A ⇒ ⊥

@@ -28,10 +28,10 @@ private
     ℓh : Level
 
 char : Grammar ℓ-zero
-char = LinΣ[ c ∈ ⟨ Alphabet ⟩ ] literal c
+char = ⊕[ c ∈ ⟨ Alphabet ⟩ ] literal c
 
 char-intro : ∀ (c : ⟨ Alphabet ⟩) → char [ c ]
-char-intro c = (⊕ᴰ-in {h = λ c' → ＂ c' ＂} c) [ c ] lit-intro
+char-intro c = (⊕ᴰ-in {A = λ c' → ＂ c' ＂} c) [ c ] lit-intro
 
 string : Grammar ℓ-zero
 string = char *

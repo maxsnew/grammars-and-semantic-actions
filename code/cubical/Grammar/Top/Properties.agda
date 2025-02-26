@@ -12,8 +12,8 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg : Level
-    g : Grammar ℓg
+    ℓA : Level
+    A : Grammar ℓA
 
 opaque
   unfolding ⊤
@@ -25,10 +25,10 @@ unambiguous⊤ = unambiguous'→unambiguous unambiguous'⊤
 
 opaque
   unfolding ⊤*
-  unambiguous'⊤* : ∀ {ℓg} → unambiguous' (⊤* {ℓg})
+  unambiguous'⊤* : ∀ {ℓA} → unambiguous' (⊤* {ℓA})
   unambiguous'⊤* e e' _ = refl
 
-unambiguous⊤* : ∀ {ℓg} → unambiguous (⊤* {ℓg})
+unambiguous⊤* : ∀ {ℓA} → unambiguous (⊤* {ℓA})
 unambiguous⊤* = unambiguous'→unambiguous unambiguous'⊤*
 
 opaque

@@ -42,10 +42,6 @@ open import Helper
 
 private
   variable
-    ℓg ℓh ℓk ℓl : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
     c : ⟨ Alphabet ⟩
 
 open StrongEquivalence

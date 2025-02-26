@@ -31,44 +31,44 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓ ℓ' ℓg ℓh ℓk ℓl ℓS : Level
-    g : Grammar ℓg
-    h : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 open isStrongEquivalence
 open StrongEquivalence
 
 -- A grammar is unambiguous if there is at most one term from any
 -- other fixed grammar into it
-unambiguous : Grammar ℓg → Typeω
-unambiguous g = ∀ {ℓh} {h : Grammar ℓh} → (e e' : h ⊢ g) → e ≡ e'
+unambiguous : Grammar ℓA → Typeω
+unambiguous A = ∀ {ℓB} {B : Grammar ℓB} → (e e' : B ⊢ A) → e ≡ e'
 
 -- A grammar is unambiguous if it is subterminal ---
 -- if the unique map to the terminal object (⊤) is a
 -- monomorphism
-unambiguous' : Grammar ℓg → Typeω
-unambiguous' {ℓg = ℓg} g = isMono {g = g}{h = ⊤} (⊤-intro {g = g})
+unambiguous' : Grammar ℓA → Typeω
+unambiguous' {ℓA = ℓA} A = isMono {A = A}{B = ⊤} (⊤-intro {A = A})
 
-unambiguous'→unambiguous : unambiguous' g → unambiguous g
+unambiguous'→unambiguous : unambiguous' A → unambiguous A
 unambiguous'→unambiguous unambig e e' =
   unambig e e'
     (sym (is-terminal-⊤ .snd (⊤-intro ∘g e)) ∙
          is-terminal-⊤ .snd (⊤-intro ∘g e') )
 
-unambiguous→unambiguous' : unambiguous g → unambiguous' g
+unambiguous→unambiguous' : unambiguous A → unambiguous' A
 unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
 
--- A grammar is unambiguous if Δ : g ⊢ g & g is a strong equivalence
-module _ {g : Grammar ℓg} where
+-- A grammar is unambiguous if Δ : A ⊢ A & A is a strong equivalence
+module _ {A : Grammar ℓA} where
   private
-    π₁ = &-π₁ {g = g} {h = g}
-    π₂ = &-π₂ {g = g} {h = g}
-    Δ = &-Δ {g = g}
+    π₁ = &-π₁ {A = A} {B = A}
+    π₂ = &-π₂ {A = A} {B = A}
+    Δ = &-Δ {A = A}
 
   module _ (π≡ : π₁ ≡ π₂) where
-    π≡→unambiguous : unambiguous g
+    π≡→unambiguous : unambiguous A
     π≡→unambiguous e e' =
       sym (&-β₁ e e')
       ∙ cong (_∘g e ,& e') π≡
@@ -83,10 +83,10 @@ module _ {g : Grammar ℓg} where
         ∙ cong (_∘g Δ≅ .inv) (sym (&-β₂ id id))
         ∙ cong (π₂ ∘g_) (Δ≅ .sec)
 
-    Δ≅→unambiguous : unambiguous g
+    Δ≅→unambiguous : unambiguous A
     Δ≅→unambiguous = π≡→unambiguous π≡
 
-  module _ (unambig : unambiguous g) where
+  module _ (unambig : unambiguous A) where
     private
       π≡ : π₁ ≡ π₂
       π≡ = unambig π₁ π₂
@@ -100,40 +100,40 @@ module _ {g : Grammar ℓg} where
     unambiguous→Δ≅ .ret = &-β₁ id id
 
 -- rename to "unambiguously parseable?"
-totallyParseable : Grammar ℓg → Type (ℓ-suc ℓg)
-totallyParseable {ℓg = ℓg} g =
-  Σ[ g' ∈ Grammar ℓg ] StrongEquivalence (g ⊕ g') ⊤
+totallyParseable : Grammar ℓA → Type (ℓ-suc ℓA)
+totallyParseable {ℓA = ℓA} A =
+  Σ[ A' ∈ Grammar ℓA ] StrongEquivalence (A ⊕ A') ⊤
 
-disjoint : Grammar ℓg → Grammar ℓh → Type (ℓ-max ℓg ℓh)
-disjoint g h = g & h ⊢ ⊥
+disjoint : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
+disjoint A B = A & B ⊢ ⊥
 
 
-module _ (dis : disjoint g h) (e : k ⊢ g) where
-  disjoint⊢ : disjoint k h
+module _ (dis : disjoint A B) (e : C ⊢ A) where
+  disjoint⊢ : disjoint C B
   disjoint⊢ = dis ∘g e ,&p id
 
-  module _ (f : l ⊢ h) where
-    disjoint⊢2 : disjoint k l
+  module _ (f : D ⊢ B) where
+    disjoint⊢2 : disjoint C D
     disjoint⊢2 = disjoint⊢ ∘g id ,&p f
 
 open LogicalEquivalence
-module _ (dis : disjoint g h) (g≈k : LogicalEquivalence g k) where
-  disjoint≈ : disjoint k h
-  disjoint≈ = disjoint⊢ dis (g≈k .inv)
+module _ (dis : disjoint A B) (A≈C : LogicalEquivalence A C) where
+  disjoint≈ : disjoint C B
+  disjoint≈ = disjoint⊢ dis (A≈C .inv)
 
 open StrongEquivalence
-module _ (dis : disjoint g h) (g≅k : g ≅ k) where
-  disjoint≅ : disjoint k h
-  disjoint≅ = disjoint⊢ dis (g≅k .inv)
+module _ (dis : disjoint A B) (A≅C : A ≅ C) where
+  disjoint≅ : disjoint C B
+  disjoint≅ = disjoint⊢ dis (A≅C .inv)
 
-  module _ (h≅l : h ≅ l) where
-    disjoint≅2 : disjoint k l
-    disjoint≅2 = disjoint≅ ∘g id ,&p h≅l .inv
+  module _ (B≅D : B ≅ D) where
+    disjoint≅2 : disjoint C D
+    disjoint≅2 = disjoint≅ ∘g id ,&p B≅D .inv
 
-disjoint⊕l : disjoint (g ⊕ h) k → disjoint g k
+disjoint⊕l : disjoint (A ⊕ B) C → disjoint A C
 disjoint⊕l dis = disjoint⊢ dis ⊕-inl
 
-disjoint⊕r : disjoint (g ⊕ h) k → disjoint h k
+disjoint⊕r : disjoint (A ⊕ B) C → disjoint B C
 disjoint⊕r dis = disjoint⊢ dis ⊕-inr
 
 open StrongEquivalence
@@ -141,7 +141,7 @@ open StrongEquivalence
 opaque
   unfolding ⊤-intro
   totallyParseable→unambiguous' :
-    totallyParseable g → unambiguous' g
+    totallyParseable A → unambiguous' A
   totallyParseable→unambiguous' parseable =
     Mono∘g ⊕-inl _
       (isStrongEquivalence→isMono
@@ -149,49 +149,49 @@ opaque
         (StrongEquivalence→isStrongEquivalence _ _ (parseable .snd)))
       isMono-⊕-inl
 totallyParseable→unambiguous :
-  totallyParseable g → unambiguous g
+  totallyParseable A → unambiguous A
 totallyParseable→unambiguous parseable =
   unambiguous'→unambiguous (totallyParseable→unambiguous' parseable)
 
-parser : Grammar ℓg → Type (ℓ-suc ℓg)
-parser {ℓg = ℓg} g =
-  Σ[ g' ∈ Grammar ℓg ] (disjoint g g' × (⊤ ⊢ g ⊕ g'))
+parser : Grammar ℓA → Type (ℓ-suc ℓA)
+parser {ℓA = ℓA} A =
+  Σ[ A' ∈ Grammar ℓA ] (disjoint A A' × (⊤ ⊢ A ⊕ A'))
 
-decidable : Grammar ℓg → Type ℓg
-decidable g = ⊤ ⊢ g ⊕ ¬G g
+decidable : Grammar ℓA → Type ℓA
+decidable A = ⊤ ⊢ A ⊕ ¬G A
 
 isUnambiguousRetract :
-  ∀ (f : g ⊢ h) (f' : h ⊢ g)
+  ∀ (f : A ⊢ B) (f' : B ⊢ A)
   → (f' ∘g f ≡ id)
-  → unambiguous h → unambiguous g
-isUnambiguousRetract f f' ret unambH e e' =
+  → unambiguous B → unambiguous A
+isUnambiguousRetract f f' ret unambB e e' =
   cong (_∘g e) (sym ret)
-  ∙ cong (f' ∘g_) (unambH _ _)
+  ∙ cong (f' ∘g_) (unambB _ _)
   ∙ cong (_∘g e') ret
 
-unambiguous≅ : StrongEquivalence g h → unambiguous g → unambiguous h
-unambiguous≅ g≅h unambG = isUnambiguousRetract (g≅h .inv) (g≅h .fun) (g≅h .sec) unambG
+unambiguous≅ : StrongEquivalence A B → unambiguous A → unambiguous B
+unambiguous≅ A≅B unambA = isUnambiguousRetract (A≅B .inv) (A≅B .fun) (A≅B .sec) unambA
   where open isStrongEquivalence
 
 unambiguous→StrongEquivalence
-  : unambiguous g
-  → unambiguous h
-  → (g ⊢ h)
-  → (h ⊢ g)
-  → StrongEquivalence g h
-unambiguous→StrongEquivalence unambG unambH f f' =
-  mkStrEq f f' (unambH (f ∘g f') id) (unambG (f' ∘g f) id)
+  : unambiguous A
+  → unambiguous B
+  → (A ⊢ B)
+  → (B ⊢ A)
+  → StrongEquivalence A B
+unambiguous→StrongEquivalence unambA unambB f f' =
+  mkStrEq f f' (unambB (f ∘g f') id) (unambA (f' ∘g f) id)
 
 unambiguousRetract→StrongEquivalence
-  : ∀ (f : g ⊢ h) (f' : h ⊢ g)
+  : ∀ (f : A ⊢ B) (f' : B ⊢ A)
   → (f' ∘g f ≡ id)
-  → unambiguous h
-  → StrongEquivalence g h
-unambiguousRetract→StrongEquivalence f f' ret unambH
-  = unambiguous→StrongEquivalence (isUnambiguousRetract f f' ret unambH) unambH f f'
+  → unambiguous B
+  → StrongEquivalence A B
+unambiguousRetract→StrongEquivalence f f' ret unambB
+  = unambiguous→StrongEquivalence (isUnambiguousRetract f f' ret unambB) unambB f f'
 
-module _ {g : Grammar ℓg} where
-  &⊤≅ : g ≅ g & ⊤
+module _ {A : Grammar ℓA} where
+  &⊤≅ : A ≅ A & ⊤
   &⊤≅ .fun = id ,& ⊤-intro
   &⊤≅ .inv = &-π₁
   &⊤≅ .sec = the-sec
@@ -208,25 +208,25 @@ module _ {g : Grammar ℓg} where
       the-ret = refl
 
 module _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  (unambig-g : unambiguous g)
-  (unambig-h : unambiguous h)
-  (g≈h : g ≈ h)
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  (unambig-A : unambiguous A)
+  (unambig-B : unambiguous B)
+  (A≈B : A ≈ B)
   where
 
-  ≈→≅ : g ≅ h
-  ≈→≅ .fun = g≈h .fun
-  ≈→≅ .inv = g≈h .inv
-  ≈→≅ .sec = unambig-h _ _
-  ≈→≅ .ret = unambig-g _ _
+  ≈→≅ : A ≅ B
+  ≈→≅ .fun = A≈B .fun
+  ≈→≅ .inv = A≈B .inv
+  ≈→≅ .sec = unambig-B _ _
+  ≈→≅ .ret = unambig-A _ _
 
 module _
-  {g : Grammar ℓg}
-  {h : Grammar ℓh}
-  (g≅h : g ≅ h)
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  (A≅B : A ≅ B)
   where
 
-  ≅→≈ : g ≈ h
-  ≅→≈ .fun = g≅h .fun
-  ≅→≈ .inv = g≅h .inv
+  ≅→≈ : A ≈ B
+  ≅→≈ .fun = A≅B .fun
+  ≅→≈ .inv = A≅B .inv

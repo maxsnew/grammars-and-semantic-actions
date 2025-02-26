@@ -27,7 +27,7 @@ private
 
 _⊗'_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
 (A ⊗' B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
-infixr 5 _⊗'_
+infixr 25 _⊗'_
 opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   _⊗_ = _⊗'_
@@ -36,7 +36,7 @@ opaque
   isSetGrammar⊗ isSetG isSetB w = isSetΣ (isSetSplitting w)
     λ _ → isSet× (isSetG _) (isSetB _)
 
-infixr 5 _⊗_
+infixr 25 _⊗_
 
 opaque
   unfolding _⊗_
@@ -595,7 +595,7 @@ opaque
 
 open StrongEquivalence
 module _
-  {g : Grammar ℓA} {B : Grammar ℓB}
+  {A : Grammar ℓA} {B : Grammar ℓB}
   {C : Grammar ℓC} {D : Grammar ℓD}
   (A≅B : A ≅ B)
   (C≅D : C ≅ D)

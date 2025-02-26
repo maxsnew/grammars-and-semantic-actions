@@ -10,45 +10,45 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓg ℓh ℓk ℓl ℓ ℓ' : Level
-    g g' g'' g1 g2 g3 g4 g5 : Grammar ℓg
-    h h' h'' : Grammar ℓh
-    k : Grammar ℓk
-    l : Grammar ℓl
+    ℓA ℓB ℓC ℓD : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
-LiftG : ∀ ℓ' → Grammar ℓ → Grammar (ℓ-max ℓ ℓ')
-LiftG ℓ' g w = Lift {j = ℓ'} (g w)
+LiftG : ∀ ℓB → Grammar ℓA → Grammar (ℓ-max ℓA ℓB)
+LiftG ℓB A w = Lift {j = ℓB} (A w)
 
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Equiv
 -- I thought this would be helpful at some point when
 -- fiddling with transports,
 -- but it's almost surely a bad idea to use univalence directly
-LiftG≡ : ∀ ℓ → (g : Grammar ℓ) → g ≡ LiftG ℓ g
-LiftG≡ ℓ g i w = ua {A = g w} (LiftEquiv {ℓ' = ℓ}) i
+LiftG≡ : ∀ ℓA → (A : Grammar ℓA) → A ≡ LiftG ℓA A
+LiftG≡ ℓA A i w = ua {A = A w} (LiftEquiv {ℓ' = ℓA}) i
 
-liftG : g ⊢ LiftG ℓ' g
+liftG : A ⊢ LiftG ℓB A
 liftG = λ w z → lift z
 
-lowerG : LiftG ℓ' g ⊢ g
+lowerG : LiftG ℓB A ⊢ A
 lowerG = λ w z → z .lower
 
 open StrongEquivalence
-module _ ℓ (g : Grammar ℓg) where
-  LiftG≅ : StrongEquivalence g (LiftG ℓ g)
+module _ ℓB (A : Grammar ℓA) where
+  LiftG≅ : A ≅ (LiftG ℓB A)
   LiftG≅ .fun = liftG
   LiftG≅ .inv = lowerG
   LiftG≅ .sec = refl
   LiftG≅ .ret = refl
 
-module _ ℓ ℓ' (g : Grammar ℓg) where
-    LiftG≅2 : g ≅ (LiftG ℓ' (LiftG ℓ g))
+module _ ℓB ℓC (A : Grammar ℓA) where
+    LiftG≅2 : A ≅ (LiftG ℓC (LiftG ℓB A))
     LiftG≅2 =
-      LiftG≅ ℓ g
-      ≅∙ LiftG≅ ℓ' (LiftG ℓ g)
+      LiftG≅ ℓB A
+      ≅∙ LiftG≅ ℓC (LiftG ℓB A)
 
-isLangLift : isLang g → isLang (LiftG ℓ' g)
-isLangLift isLangG w = isOfHLevelLift 1 (isLangG w)
+isLangLift : isLang A → isLang (LiftG ℓB A)
+isLangLift isLangA w = isOfHLevelLift 1 (isLangA w)
 
-isSetGrammarLift : isSetGrammar g → isSetGrammar (LiftG ℓ' g)
-isSetGrammarLift isSetGrammarG w = isOfHLevelLift 2 (isSetGrammarG w)
+isSetGrammarLift : isSetGrammar A → isSetGrammar (LiftG ℓB A)
+isSetGrammarLift isSetGrammarA w = isOfHLevelLift 2 (isSetGrammarA w)
