@@ -1,6 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Equiv
 
 module Automaton.Deterministic (Alphabet : hSet ℓ-zero) where
 
@@ -18,12 +19,13 @@ import Cubical.Data.Equality as Eq
 open import Grammar Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.Dependent.Unambiguous Alphabet
+open import Grammar.SequentialUnambiguity Alphabet
 open import Term Alphabet
 open import Helper
 
 private
   variable
-    ℓ ℓA : Level
+    ℓ ℓA ℓB : Level
 
 record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   field
@@ -33,6 +35,9 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   data Tag : Type ℓ where
     stop step : Tag
+
+  StatesOf : Type ℓ
+  StatesOf = Q
 
   TraceTy : Bool → (q : Q) → Functor Q
   TraceTy b q = ⊕e Tag λ {
@@ -176,19 +181,19 @@ module _ (Q : Type ℓ) where
   FreelyAddFail≅Unit⊎ .leftInv fail = refl
   FreelyAddFail≅Unit⊎ .leftInv (↑f _) = refl
 
-  FreelyAddFail+Initial≅Unit⊎ : Iso (FreelyAddFail+Initial Q) ((Unit ⊎ Unit) ⊎ Q)
-  FreelyAddFail+Initial≅Unit⊎ .fun initial = inl (inl _)
-  FreelyAddFail+Initial≅Unit⊎ .fun fail = inl (inr _)
-  FreelyAddFail+Initial≅Unit⊎ .fun (↑q q) = inr q
-  FreelyAddFail+Initial≅Unit⊎ .inv (inl (inl _)) = initial
-  FreelyAddFail+Initial≅Unit⊎ .inv (inl (inr _)) = fail
-  FreelyAddFail+Initial≅Unit⊎ .inv (inr q) = ↑q q
-  FreelyAddFail+Initial≅Unit⊎ .rightInv (inl (inl _)) = refl
-  FreelyAddFail+Initial≅Unit⊎ .rightInv (inl (inr _)) = refl
-  FreelyAddFail+Initial≅Unit⊎ .rightInv (inr _) = refl
-  FreelyAddFail+Initial≅Unit⊎ .leftInv fail = refl
-  FreelyAddFail+Initial≅Unit⊎ .leftInv initial = refl
-  FreelyAddFail+Initial≅Unit⊎ .leftInv (↑q _) = refl
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ : Iso (FreelyAddFail+Initial Q) ((Unit ⊎ Unit) ⊎ Q)
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .fun initial = inl (inl _)
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .fun fail = inl (inr _)
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .fun (↑q q) = inr q
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .inv (inl (inl _)) = initial
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .inv (inl (inr _)) = fail
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .inv (inr q) = ↑q q
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .rightInv (inl (inl _)) = refl
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .rightInv (inl (inr _)) = refl
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .rightInv (inr _) = refl
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .leftInv fail = refl
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .leftInv initial = refl
+  FreelyAddFail+Initial≅Unit⊎Unit⊎ .leftInv (↑q _) = refl
 
 -- Automata with a transition function given partially such
 -- that unspecified transitions implicitly map to a fail state
@@ -226,4 +231,33 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
     (A-init : Grammar ℓA) →
     (A : Q → Grammar ℓA) →
     Type (ℓ-max ℓ ℓA)
-  AutAlg A-init A = {!ParseAlg Aut ?!}
+  AutAlg A-init A = ParseAlg Aut (AutAlgCarrier A-init A)
+
+  AutAlg-fail' :
+    {A-init : Grammar ℓA} →
+    {A : Q → Grammar ℓA} →
+    ⟦ TraceTy Aut true fail ⟧ (AutAlgCarrier A-init A) ⊢ ⊥
+  AutAlg-fail' =
+    ⊕ᴰ-elim (λ {
+      step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
+    })
+
+  AutAlg-fail :
+    {A-init : Grammar ℓA} →
+    {A : Q → Grammar ℓA} →
+    {B : Grammar ℓB} →
+    ⟦ TraceTy Aut true fail ⟧ (AutAlgCarrier A-init A) ⊢ B
+  AutAlg-fail = ⊥-elim ∘g AutAlg-fail'
+
+  noMapsIntoInitial' :
+    ∀ (q : FreelyAddFail+Initial Q)  →
+    (c : ⟨ Alphabet ⟩) →
+    fiber ↑q_ (Aut .δ q c) ⊎ (Aut .δ q c ≡ fail)
+  noMapsIntoInitial' fail c = inr refl
+  noMapsIntoInitial' initial c with δᵢ c
+  noMapsIntoInitial' initial c | fail = inr refl
+  noMapsIntoInitial' initial c | ↑f q = inl (q , refl)
+  noMapsIntoInitial' (↑q q) c with δq q c
+  noMapsIntoInitial' (↑q q) c | fail = inr refl
+  noMapsIntoInitial' (↑q q) c | ↑f q' = inl (q' , refl)
+
