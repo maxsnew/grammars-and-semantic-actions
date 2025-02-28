@@ -112,7 +112,9 @@ module _
     litAut : ImplicitDeterministicAutomaton Unit
     litAut .acc _ = true
     litAut .null = false
-    litAut .δᵢ c' = ?
+    litAut .δᵢ c' with DiscreteAlphabet isFinSetAlphabet c c'
+    litAut .δᵢ c' | yes p = ↑f _
+    litAut .δᵢ c' | no ¬p = fail
       -- discreteElim (DiscreteAlphabet isFinSetAlphabet) c
       --   (↑f _)
       --   (λ _ → fail)
@@ -139,7 +141,7 @@ module _
       litAlg initial =
         ⊕ᴰ-elim λ { step →
           ⊕ᴰ-elim (λ (lift c') →
-            ?
+            {!with!}
             -- discreteElim
             --   {A = ⟨ Alphabet ⟩}
             --   {B = λ c'' →
