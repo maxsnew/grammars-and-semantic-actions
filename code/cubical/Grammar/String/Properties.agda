@@ -466,7 +466,7 @@ char-⊗&-distR≅ .ret = the-ret
       )
 
 ⊤→string : ⊤ ⊢ string
-⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
+⊤→string w _ = mkstring w
 
 ⊤→string' : ⊤ ⊢ string
 ⊤→string' w _ = mkstring' w

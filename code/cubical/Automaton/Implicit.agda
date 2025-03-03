@@ -52,16 +52,9 @@ FreelyAddFail→FreelyAddFail+Initial :
 FreelyAddFail→FreelyAddFail+Initial fail = fail
 FreelyAddFail→FreelyAddFail+Initial (↑f q) = ↑q q
 
-module _ (Q : Type ℓ) where
-  -- elimFreelyAddFail :
-  --   {B : FreelyAddFail Q → Type ℓ'} →
-  --   B fail →
-  --   ((q : Q) → B (↑f q)) →
-  --   (q : FreelyAddFail Q) →
-  --   B q
-  -- elimFreelyAddFail if-fail if-↑f fail = if-fail
-  -- elimFreelyAddFail if-fail if-↑f (↑f x) = if-↑f x
+↑f→q = FreelyAddFail→FreelyAddFail+Initial
 
+module _ (Q : Type ℓ) where
   open Iso
   FreelyAddInitial≅Unit⊎ : Iso (FreelyAddInitial Q) (Unit ⊎ Q)
   FreelyAddInitial≅Unit⊎ .fun initial = inl _
@@ -111,27 +104,27 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   -- open DeterministicAutomaton
 
-  data Tag (b : Bool) : (q : FreelyAddFail+Initial Q) → Type ℓ where
-    stop : ∀ q → b Eq.≡ acc q → Tag b (↑q q)
-    stopᵢ : b Eq.≡ null → Tag b initial
-    stopFail : b Eq.≡ false → Tag b fail
-    step : ∀ q → (c : ⟨ Alphabet ⟩) → Eq.fiber ↑f_ (δq q c) → Tag b (↑q q)
-    stepᵢ : (c : ⟨ Alphabet ⟩) → Eq.fiber ↑f_ (δᵢ c) → Tag b initial
-    stepFail : (c : ⟨ Alphabet ⟩) → b Eq.≡ false → Tag b fail
-    unexpected : ∀ q → (c : ⟨ Alphabet ⟩) → b Eq.≡ false → fail Eq.≡ δq q c → Tag b (↑q q)
-    unexpectedᵢ : (c : ⟨ Alphabet ⟩) → b Eq.≡ false → fail Eq.≡ δᵢ c → Tag b initial
+  data Tag : Bool → (q : FreelyAddFail+Initial Q) → Type ℓ where
+    stop : ∀ q → Tag (acc q) (↑q q)
+    stopᵢ : Tag null initial
+    stopFail : Tag false fail
+    step : ∀ {b} (q : Q) → (c : ⟨ Alphabet ⟩) → Tag b (↑q q)
+    stepᵢ : ∀ {b} → (c : ⟨ Alphabet ⟩) → Tag b initial
+    -- step : ∀ {b} (q : Q) → (c : ⟨ Alphabet ⟩) → Eq.fiber ↑f_ (δq q c) → Tag b (↑q q)
+    -- stepᵢ : ∀ {b} → (c : ⟨ Alphabet ⟩) → Eq.fiber ↑f_ (δᵢ c) → Tag b initial
+    stepFail : ∀ {b} → (c : ⟨ Alphabet ⟩) → Tag b fail
+    -- unexpected : ∀ q → (c : ⟨ Alphabet ⟩) → fail Eq.≡ δq q c → Tag false (↑q q)
+    -- unexpectedᵢ : (c : ⟨ Alphabet ⟩) → fail Eq.≡ δᵢ c → Tag false initial
 
   TraceTy : Bool → (q : FreelyAddFail+Initial Q) → Functor (FreelyAddFail+Initial Q)
   TraceTy b q =
     ⊕e (Tag b q) λ where
-      (stop q acc) → k ε*
-      (stopᵢ isNull) → k ε*
-      (stopFail x) → k ε*
-      (step q c (q' , x)) → ⊗e (k (literal* c)) (Var (↑q q'))
-      (stepᵢ c (q' , x)) → ⊗e (k (literal* c)) (Var (↑q q'))
-      (stepFail c x) → ⊗e (k (literal* c)) (k (LiftG ℓ string))
-      (unexpected q c isFalse x) → ⊗e (k (literal* c)) (Var fail)
-      (unexpectedᵢ c isFalse x) → ⊗e (k (literal* c)) (Var fail)
+      (stop q) → k ε*
+      (stopᵢ) → k ε*
+      (stopFail) → k ε*
+      (step q c) → ⊗e (k (literal* c)) (Var (↑f→q (δq q c)))
+      (stepᵢ c) → ⊗e (k (literal* c)) (Var (↑f→q (δᵢ c)))
+      (stepFail c) → ⊗e (k (literal* c)) (Var fail)
 
   Trace : Bool → FreelyAddFail+Initial Q → Grammar _
   Trace b = μ (TraceTy b)
@@ -139,133 +132,131 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   STOP : (q : Q) → ε ⊢ Trace (acc q) (↑q q)
   STOP q =
     roll
-    ∘g ⊕ᴰ-in (stop q Eq.refl)
+    ∘g ⊕ᴰ-in (stop q)
     ∘g liftG ∘g liftG
 
   STOPᵢ : ε ⊢ Trace null initial
   STOPᵢ =
     roll
-    ∘g ⊕ᴰ-in (stopᵢ Eq.refl)
+    ∘g ⊕ᴰ-in stopᵢ
     ∘g liftG ∘g liftG
 
   STOPFAIL : ε ⊢ Trace false fail
   STOPFAIL =
     roll
-    ∘g ⊕ᴰ-in (stopFail Eq.refl)
+    ∘g ⊕ᴰ-in stopFail
     ∘g liftG ∘g liftG
 
   STEP : ∀ {b : Bool} → (q : Q) → (c : ⟨ Alphabet ⟩) →
-    (fib : Eq.fiber ↑f_ (δq q c)) →
-    ＂ c ＂ ⊗ Trace b (↑q (fib .fst)) ⊢ Trace b (↑q q)
-  STEP q c fib =
+    ＂ c ＂ ⊗ Trace b (↑f→q (δq q c)) ⊢ Trace b (↑q q)
+  STEP q c =
     roll
-    ∘g ⊕ᴰ-in (step q c fib)
+    ∘g ⊕ᴰ-in (step q c)
     ∘g (liftG ∘g liftG) ,⊗ liftG
 
   STEPᵢ : ∀ {b : Bool} → (c : ⟨ Alphabet ⟩) →
-    (fib : Eq.fiber ↑f_ (δᵢ c)) →
-    ＂ c ＂ ⊗ Trace b (↑q (fib .fst)) ⊢ Trace b initial
-  STEPᵢ c fib =
+    ＂ c ＂ ⊗ Trace b (↑f→q (δᵢ c)) ⊢ Trace b initial
+  STEPᵢ c =
     roll
-    ∘g ⊕ᴰ-in (stepᵢ c fib)
+    ∘g ⊕ᴰ-in (stepᵢ c)
     ∘g (liftG ∘g liftG) ,⊗ liftG
 
   STEPFAIL : ∀ {b : Bool} → (c : ⟨ Alphabet ⟩) →
-    b Eq.≡ false →
-    ＂ c ＂ ⊗ string ⊢ Trace b fail
-  STEPFAIL c isFalse =
+    ＂ c ＂ ⊗ Trace b fail ⊢ Trace b fail
+  STEPFAIL c =
     roll
-    ∘g ⊕ᴰ-in (stepFail c isFalse)
-    ∘g (liftG ∘g liftG) ,⊗ (liftG ∘g liftG)
-
-  UNEXPECTED : ∀ {b : Bool} → (q : Q) → (c : ⟨ Alphabet ⟩) →
-    b Eq.≡ false →
-    fail Eq.≡ δq q c →
-    ＂ c ＂ ⊗ Trace b fail ⊢ Trace b (↑q q)
-  UNEXPECTED q c Eq.refl x =
-    roll
-    ∘g ⊕ᴰ-in (unexpected q c Eq.refl x)
+    ∘g ⊕ᴰ-in (stepFail c)
     ∘g (liftG ∘g liftG) ,⊗ liftG
 
-  UNEXPECTEDᵢ : ∀ {b : Bool} → (c : ⟨ Alphabet ⟩) →
-    b Eq.≡ false →
-    fail Eq.≡ δᵢ c →
-    ＂ c ＂ ⊗ Trace b fail ⊢ Trace b initial
-  UNEXPECTEDᵢ c Eq.refl x =
-    roll
-    ∘g ⊕ᴰ-in (unexpectedᵢ c Eq.refl x)
-    ∘g (liftG ∘g liftG) ,⊗ liftG
+  -- UNEXPECTED : (q : Q) → (c : ⟨ Alphabet ⟩) →
+  --   fail Eq.≡ δq q c →
+  --   ＂ c ＂ ⊗ Trace false fail ⊢ Trace false (↑q q)
+  -- UNEXPECTED q c x =
+  --   roll
+  --   ∘g ⊕ᴰ-in (unexpected q c x)
+  --   ∘g (liftG ∘g liftG) ,⊗ liftG
+
+  -- UNEXPECTEDᵢ : (c : ⟨ Alphabet ⟩) →
+  --   fail Eq.≡ δᵢ c →
+  --   ＂ c ＂ ⊗ Trace false fail ⊢ Trace false initial
+  -- UNEXPECTEDᵢ c x =
+  --   roll
+  --   ∘g ⊕ᴰ-in (unexpectedᵢ c x)
+  --   ∘g (liftG ∘g liftG) ,⊗ liftG
 
   Parse : Grammar _
   Parse = Trace true initial
 
-  TraceAlgCarrier :
-    (A-init : Grammar ℓA) →
-    (A-fail : Grammar ℓA) →
-    (A : Q → Grammar ℓA) →
-    FreelyAddFail+Initial Q →
-    Grammar ℓA
-  TraceAlgCarrier A-init A-fail A initial = A-init
-  TraceAlgCarrier A-init A-fail A fail = A-fail
-  TraceAlgCarrier A-init A-fail A (↑q q) = A q
+  -- TraceAlgCarrier :
+  --   (A-init : Grammar ℓA) →
+  --   (A-fail : Grammar ℓA) →
+  --   (A : Q → Grammar ℓA) →
+  --   FreelyAddFail+Initial Q →
+  --   Grammar ℓA
+  -- TraceAlgCarrier A-init A-fail A initial = A-init
+  -- TraceAlgCarrier A-init A-fail A fail = A-fail
+  -- TraceAlgCarrier A-init A-fail A (↑q q) = A q
 
-  TraceAlg :
-    (A-init : Grammar ℓA) →
-    (A-fail : Grammar ℓA) →
-    (A : Q → Grammar ℓA) →
-    Bool → Type (ℓ-max ℓ ℓA)
-  TraceAlg A-init A-fail A b =
-    Algebra (TraceTy b) (TraceAlgCarrier A-init A-fail A)
+  -- TraceAlg :
+  --   (A-init : Grammar ℓA) →
+  --   (A-fail : Grammar ℓA) →
+  --   (A : Q → Grammar ℓA) →
+  --   Bool → Type (ℓ-max ℓ ℓA)
+  -- TraceAlg A-init A-fail A b =
+  --   Algebra (TraceTy b) (TraceAlgCarrier A-init A-fail A)
 
-  ParseAlgCarrier :
-    (A-init : Grammar ℓA) →
-    (A : Q → Grammar ℓA) →
-    FreelyAddFail+Initial Q →
-    Grammar ℓA
-  ParseAlgCarrier A-init A = TraceAlgCarrier A-init ⊥* A
+  -- ParseAlgCarrier :
+  --   (A-init : Grammar ℓA) →
+  --   (A : Q → Grammar ℓA) →
+  --   FreelyAddFail+Initial Q →
+  --   Grammar ℓA
+  -- ParseAlgCarrier A-init A = TraceAlgCarrier A-init ⊥* A
 
-  ParseAlg :
-    (A-init : Grammar ℓA) →
-    (A : Q → Grammar ℓA) →
-    Bool → Type (ℓ-max ℓ ℓA)
-  ParseAlg A-init = TraceAlg A-init ⊥*
+  -- ParseAlg :
+  --   (A-init : Grammar ℓA) →
+  --   (A : Q → Grammar ℓA) →
+  --   Bool → Type (ℓ-max ℓ ℓA)
+  -- ParseAlg A-init = TraceAlg A-init ⊥*
 
-  ParseAlg-fail' :
-    {A-init : Grammar ℓA} →
-    {A : Q → Grammar ℓA} →
-    ⟦ TraceTy true fail ⟧ (ParseAlgCarrier A-init A) ⊢ ⊥
-  ParseAlg-fail' =
-    ⊕ᴰ-elim λ where
-      (stopFail ())
+  -- ParseAlg-fail' :
+  --   {A-init : Grammar ℓA} →
+  --   {A : Q → Grammar ℓA} →
+  --   ⟦ TraceTy true fail ⟧ (ParseAlgCarrier A-init A) ⊢ ⊥
+  -- ParseAlg-fail' =
+  --   ⊕ᴰ-elim λ where
+  --     (stopFail ())
 
-  ParseAlg-fail :
-    {A-init : Grammar ℓA} →
-    {A : Q → Grammar ℓA} →
-    {B : Grammar ℓB} →
-    ⟦ TraceTy true fail ⟧ (ParseAlgCarrier A-init A) ⊢ B
-  ParseAlg-fail = ⊥-elim ∘g ParseAlg-fail'
+  -- ParseAlg-fail :
+  --   {A-init : Grammar ℓA} →
+  --   {A : Q → Grammar ℓA} →
+  --   {B : Grammar ℓB} →
+  --   ⟦ TraceTy true fail ⟧ (ParseAlgCarrier A-init A) ⊢ B
+  -- ParseAlg-fail = ⊥-elim ∘g ParseAlg-fail'
 
 
-  fail→false' : ∀ {b : Bool} → Trace b fail ⊢ ⊕[ x ∈ b Eq.≡ false ] Trace b fail
-  fail→false' {b = b} = rec _ fail→falseAlg fail
-    where
-    fail→falseAlg : Algebra (TraceTy _)
-      (λ where
-        fail → ⊕[ x ∈ b Eq.≡ false ] Trace b fail
-        initial → ⊤*
-        (↑q q) → ⊤*
-      )
-    fail→falseAlg fail =
-      ⊕ᴰ-elim λ where
-        (stopFail Eq.refl) → ⊕ᴰ-in Eq.refl ∘g STOPFAIL ∘g lowerG ∘g lowerG
-        (stepFail c Eq.refl) → ⊕ᴰ-in Eq.refl ∘g STEPFAIL c Eq.refl ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
-    fail→falseAlg initial = ⊤*-intro
-    fail→falseAlg (↑q q) = ⊤*-intro
+  -- fail→false' : ∀ {b : Bool} → Trace b fail ⊢ ⊕[ x ∈ b Eq.≡ false ] Trace b fail
+  -- fail→false' {b = b} = rec _ fail→falseAlg fail
+  --   where
+  --   fail→falseAlg : Algebra (TraceTy _)
+  --     (λ where
+  --       fail → ⊕[ x ∈ b Eq.≡ false ] Trace b fail
+  --       initial → ⊤*
+  --       (↑q q) → ⊤*
+  --     )
+  --   fail→falseAlg fail =
+  --     ⊕ᴰ-elim λ where
+  --       (stopFail) → ⊕ᴰ-in Eq.refl ∘g STOPFAIL ∘g lowerG ∘g lowerG
+  --       (stepFail c) →
+  --         map⊕ᴰ (λ where Eq.refl → STEPFAIL c)
+  --         ∘g ⊕ᴰ-distR .fun
+  --         ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+  --   fail→falseAlg initial = ⊤*-intro
+  --   fail→falseAlg (↑q q) = ⊤*-intro
 
-  fail→false : ∀ {b : Bool} → Trace b fail ⊢ Trace false fail
-  fail→false {b = b} =
-    ⊕ᴰ-elim (λ where Eq.refl → id)
-    ∘g fail→false'
+  -- fail→false : ∀ {b : Bool} → Trace b fail ⊢ Trace false fail
+  -- fail→false {b = b} =
+  --   ⊕ᴰ-elim (λ where Eq.refl → id)
+  --   ∘g fail→false'
 
   readAlg : Algebra (*Ty char) λ _ → &[ q ∈ FreelyAddFail+Initial Q ] ⊕[ b ∈ Bool ] Trace b q
   readAlg _ =
@@ -281,45 +272,25 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
         (&ᴰ-in λ where
           fail →
             ⊕ᴰ-elim (λ c →
-              ⊕ᴰ-elim (λ b → ⊕ᴰ-in false ∘g STEPFAIL c Eq.refl ∘g id ,⊗ string-intro)
+              map⊕ᴰ (λ b → STEPFAIL c)
               ∘g ⊕ᴰ-distR .fun
               ∘g id ,⊗ &ᴰ-π fail
             )
           initial →
             ⊕ᴰ-elim (λ c →
-              ⊕ᴰ-elim (λ b →
-                initialStep c b
-              )
+              map⊕ᴰ (λ b → STEPᵢ c)
               ∘g ⊕ᴰ-distR .fun
-              ∘g id ,⊗ &ᴰ-π (FreelyAddFail→FreelyAddFail+Initial (δᵢ c))
+              ∘g id ,⊗ &ᴰ-π (↑f→q (δᵢ c))
             )
           (↑q q) →
             ⊕ᴰ-elim (λ c →
-              ⊕ᴰ-elim (λ b →
-                internalStep q c b
-              )
+              map⊕ᴰ (λ b → STEP q c)
               ∘g ⊕ᴰ-distR .fun
-              ∘g id ,⊗ &ᴰ-π (FreelyAddFail→FreelyAddFail+Initial (δq q c))
+              ∘g id ,⊗ &ᴰ-π (↑f→q (δq q c))
             )
         )
         ∘g ⊕ᴰ-distL .fun
         ∘g lowerG ,⊗ lowerG
-    where
-    initialStep : (c : ⟨ Alphabet ⟩) → (b : Bool) →
-      ＂ c ＂ ⊗ Trace b (FreelyAddFail→FreelyAddFail+Initial (δᵢ c))
-        ⊢
-      (⊕[ b ∈ Bool ] Trace b initial)
-    initialStep c b with δᵢ c in eq
-    ... | fail = ⊕ᴰ-in false ∘g UNEXPECTEDᵢ c Eq.refl (Eq.sym eq) ∘g id ,⊗ fail→false
-    ... | ↑f q = ⊕ᴰ-in b ∘g STEPᵢ c (q , (Eq.sym eq))
-
-    internalStep : (q : Q) → (c : ⟨ Alphabet ⟩) → (b : Bool) →
-      ＂ c ＂ ⊗ Trace b (FreelyAddFail→FreelyAddFail+Initial (δq q c))
-        ⊢
-      (⊕[ b ∈ Bool ] Trace b (↑q q))
-    internalStep q c b with δq q c in eq
-    ... | fail = ⊕ᴰ-in false ∘g UNEXPECTED q c Eq.refl (Eq.sym eq) ∘g id ,⊗ fail→false
-    ... | ↑f q' = ⊕ᴰ-in b ∘g STEP q c (q' , (Eq.sym eq))
 
   read : string ⊢ &[ q ∈ FreelyAddFail+Initial Q ] ⊕[ b ∈ Bool ] Trace b q
   read = rec _ readAlg _
@@ -327,18 +298,16 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   printAlg : ∀ b → Algebra (TraceTy b) λ _ → string
   printAlg b fail =
     ⊕ᴰ-elim λ where
-      (stopFail x) → NIL ∘g lowerG ∘g lowerG
-      (stepFail c x) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
+      (stopFail) → NIL ∘g lowerG ∘g lowerG
+      (stepFail c) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
   printAlg b initial =
     ⊕ᴰ-elim λ where
-      (stopᵢ x) → NIL ∘g lowerG ∘g lowerG
-      (stepᵢ c x) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
-      (unexpectedᵢ c x x₁) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      (stopᵢ) → NIL ∘g lowerG ∘g lowerG
+      (stepᵢ c) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
   printAlg b (↑q q) =
     ⊕ᴰ-elim λ where
-      (stop .q x) → NIL ∘g lowerG ∘g lowerG
-      (step .q c x) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
-      (unexpected .q c x x₁) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      (stop .q) → NIL ∘g lowerG ∘g lowerG
+      (step .q c) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
 
   print : ∀ b q → Trace b q ⊢ string
   print b = rec _ (printAlg b)
@@ -346,27 +315,19 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   ⊕ᴰAlg : ∀ b → Algebra (TraceTy b) (λ q → ⊕[ b ∈ Bool ] Trace b q)
   ⊕ᴰAlg b q =
     ⊕ᴰ-elim λ where
-      (stop q Eq.refl) → ⊕ᴰ-in b ∘g STOP q ∘g lowerG ∘g lowerG
-      (stopᵢ Eq.refl) → ⊕ᴰ-in b ∘g STOPᵢ ∘g lowerG ∘g lowerG
-      (stopFail Eq.refl) → ⊕ᴰ-in b ∘g STOPFAIL ∘g lowerG ∘g lowerG
-      (step q c (q' , x)) →
-        ⊕ᴰ-elim (λ b' → ⊕ᴰ-in b' ∘g STEP q c (q' , x))
+      (stop q) → ⊕ᴰ-in b ∘g STOP q ∘g lowerG ∘g lowerG
+      (stopᵢ) → ⊕ᴰ-in b ∘g STOPᵢ ∘g lowerG ∘g lowerG
+      (stopFail) → ⊕ᴰ-in b ∘g STOPFAIL ∘g lowerG ∘g lowerG
+      (step q c) →
+        ⊕ᴰ-elim (λ b' → ⊕ᴰ-in b' ∘g STEP q c)
         ∘g ⊕ᴰ-distR .fun
         ∘g (lowerG ∘g lowerG) ,⊗ lowerG
-      (stepᵢ c (q' , x)) →
-        ⊕ᴰ-elim (λ b' → ⊕ᴰ-in b' ∘g STEPᵢ c (q' , x))
+      (stepᵢ c) →
+        ⊕ᴰ-elim (λ b' → ⊕ᴰ-in b' ∘g STEPᵢ c)
         ∘g ⊕ᴰ-distR .fun
         ∘g (lowerG ∘g lowerG) ,⊗ lowerG
-      (stepFail c Eq.refl) →
-        ⊕ᴰ-in b
-        ∘g STEPFAIL c Eq.refl
-        ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
-      (unexpected q c Eq.refl x) →
-        ⊕ᴰ-elim (λ _ → ⊕ᴰ-in false ∘g UNEXPECTED q c Eq.refl x ∘g id ,⊗ fail→false)
-        ∘g ⊕ᴰ-distR .fun
-        ∘g (lowerG ∘g lowerG) ,⊗ lowerG
-      (unexpectedᵢ c Eq.refl x) →
-        ⊕ᴰ-elim (λ _ → ⊕ᴰ-in false ∘g UNEXPECTEDᵢ c Eq.refl x ∘g id ,⊗ fail→false)
+      (stepFail c) →
+        map⊕ᴰ (λ b → STEPFAIL c)
         ∘g ⊕ᴰ-distR .fun
         ∘g (lowerG ∘g lowerG) ,⊗ lowerG
 
@@ -387,76 +348,84 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
            (λ q →
              ⊕ᴰ≡ _ _
                λ where
-                 (stop q Eq.refl) → refl
-                 (stopᵢ Eq.refl) → refl
-                 (stopFail Eq.refl) → refl
-                 (step q c x) → {!!}
-                 (stepᵢ c x) → {!!}
-                 (stepFail c Eq.refl) → {!refl!}
-                 (unexpected q c Eq.refl x) → {!refl!}
-                 (unexpectedᵢ c Eq.refl x) → {!!}
+                 (stop q) → refl
+                 (stopᵢ) → refl
+                 (stopFail) → refl
+                 (step q c) → refl
+                 (stepᵢ c) → refl
+                 (stepFail c) → refl
            )
           )
-          ({!!} ,
-          {!!})
+          ((λ q → ⊕ᴰ-in b) ,
+           (λ q →
+             ⊕ᴰ≡ _ _
+               λ where
+                 (stop q) → refl
+                 stopᵢ → refl
+                 stopFail → refl
+                 (step q c) → refl
+                 (stepᵢ c) → refl
+                 (stepFail c) → refl
+           )
+          )
           q
 
-  -- TraceParser : Parser {!!}
-  -- TraceParser = {!!}
+  -- -- TraceParser : Parser {!!}
+  -- -- TraceParser = {!!}
 
-  -- Aut : DeterministicAutomaton (FreelyAddFail+Initial Q)
-  -- Aut .init = initial
-  -- Aut .isAcc fail = false
-  -- Aut .isAcc initial = null
-  -- Aut .isAcc (↑q q) = acc q
-  -- Aut .δ fail _ = fail
-  -- Aut .δ initial c with δᵢ c
-  -- ... | fail = fail
-  -- ... | ↑f q = ↑q q
-  -- -- FreelyAddFail→FreelyAddFail+Initial (δᵢ c)
-  -- Aut .δ (↑q q) c with δq q c
-  -- ... | fail = fail
-  -- ... | ↑f q = ↑q q
+  -- -- Aut : DeterministicAutomaton (FreelyAddFail+Initial Q)
+  -- -- Aut .init = initial
+  -- -- Aut .isAcc fail = false
+  -- -- Aut .isAcc initial = null
+  -- -- Aut .isAcc (↑q q) = acc q
+  -- -- Aut .δ fail _ = fail
+  -- -- Aut .δ initial c with δᵢ c
+  -- -- ... | fail = fail
+  -- -- ... | ↑f q = ↑q q
+  -- -- -- FreelyAddFail→FreelyAddFail+Initial (δᵢ c)
+  -- -- Aut .δ (↑q q) c with δq q c
+  -- -- ... | fail = fail
+  -- -- ... | ↑f q = ↑q q
 
-  -- AutAlgCarrier :
-  --   (A-init : Grammar ℓA) →
-  --   (A : Q → Grammar ℓA) →
-  --   FreelyAddFail+Initial Q →
-  --   Grammar ℓA
-  -- AutAlgCarrier A-init A fail = ⊥*
-  -- AutAlgCarrier A-init A initial = A-init
-  -- AutAlgCarrier A-init A (↑q q) = A q
+  -- -- AutAlgCarrier :
+  -- --   (A-init : Grammar ℓA) →
+  -- --   (A : Q → Grammar ℓA) →
+  -- --   FreelyAddFail+Initial Q →
+  -- --   Grammar ℓA
+  -- -- AutAlgCarrier A-init A fail = ⊥*
+  -- -- AutAlgCarrier A-init A initial = A-init
+  -- -- AutAlgCarrier A-init A (↑q q) = A q
 
-  -- AutAlg :
-  --   (A-init : Grammar ℓA) →
-  --   (A : Q → Grammar ℓA) →
-  --   Type (ℓ-max ℓ ℓA)
-  -- AutAlg A-init A = ParseAlg Aut (AutAlgCarrier A-init A)
+  -- -- AutAlg :
+  -- --   (A-init : Grammar ℓA) →
+  -- --   (A : Q → Grammar ℓA) →
+  -- --   Type (ℓ-max ℓ ℓA)
+  -- -- AutAlg A-init A = ParseAlg Aut (AutAlgCarrier A-init A)
 
-  -- AutAlg-fail' :
-  --   {A-init : Grammar ℓA} →
-  --   {A : Q → Grammar ℓA} →
-  --   ⟦ TraceTy Aut true fail ⟧ (AutAlgCarrier A-init A) ⊢ ⊥
-  -- AutAlg-fail' =
-  --   ⊕ᴰ-elim (λ {
-  --     step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
-  --   })
+  -- -- AutAlg-fail' :
+  -- --   {A-init : Grammar ℓA} →
+  -- --   {A : Q → Grammar ℓA} →
+  -- --   ⟦ TraceTy Aut true fail ⟧ (AutAlgCarrier A-init A) ⊢ ⊥
+  -- -- AutAlg-fail' =
+  -- --   ⊕ᴰ-elim (λ {
+  -- --     step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
+  -- --   })
 
-  -- AutAlg-fail :
-  --   {A-init : Grammar ℓA} →
-  --   {A : Q → Grammar ℓA} →
-  --   {B : Grammar ℓB} →
-  --   ⟦ TraceTy Aut true fail ⟧ (AutAlgCarrier A-init A) ⊢ B
-  -- AutAlg-fail = ⊥-elim ∘g AutAlg-fail'
+  -- -- AutAlg-fail :
+  -- --   {A-init : Grammar ℓA} →
+  -- --   {A : Q → Grammar ℓA} →
+  -- --   {B : Grammar ℓB} →
+  -- --   ⟦ TraceTy Aut true fail ⟧ (AutAlgCarrier A-init A) ⊢ B
+  -- -- AutAlg-fail = ⊥-elim ∘g AutAlg-fail'
 
-  -- noMapsIntoInitial' :
-  --   ∀ (q : FreelyAddFail+Initial Q)  →
-  --   (c : ⟨ Alphabet ⟩) →
-  --   fiber ↑q_ (Aut .δ q c) ⊎ (Aut .δ q c ≡ fail)
-  -- noMapsIntoInitial' fail c = inr refl
-  -- noMapsIntoInitial' initial c with δᵢ c
-  -- noMapsIntoInitial' initial c | fail = inr refl
-  -- noMapsIntoInitial' initial c | ↑f q = inl (q , refl)
-  -- noMapsIntoInitial' (↑q q) c with δq q c
-  -- noMapsIntoInitial' (↑q q) c | fail = inr refl
-  -- noMapsIntoInitial' (↑q q) c | ↑f q' = inl (q' , refl)
+  -- -- noMapsIntoInitial' :
+  -- --   ∀ (q : FreelyAddFail+Initial Q)  →
+  -- --   (c : ⟨ Alphabet ⟩) →
+  -- --   fiber ↑q_ (Aut .δ q c) ⊎ (Aut .δ q c ≡ fail)
+  -- -- noMapsIntoInitial' fail c = inr refl
+  -- -- noMapsIntoInitial' initial c with δᵢ c
+  -- -- noMapsIntoInitial' initial c | fail = inr refl
+  -- -- noMapsIntoInitial' initial c | ↑f q = inl (q , refl)
+  -- -- noMapsIntoInitial' (↑q q) c with δq q c
+  -- -- noMapsIntoInitial' (↑q q) c | fail = inr refl
+  -- -- noMapsIntoInitial' (↑q q) c | ↑f q' = inl (q' , refl)
