@@ -76,9 +76,8 @@ module _
     ⊥Alg : AutAlg ⊥Aut ⊥ (λ ())
     ⊥Alg fail = AutAlg-fail ⊥Aut
     ⊥Alg initial =
-      ⊕ᴰ-elim (λ {
+      ⊕ᴰ-elim λ where
         step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
-      })
 
   εAut : ImplicitDeterministicAutomaton Empty.⊥
   εAut .acc ()
@@ -102,10 +101,9 @@ module _
     εAlg : AutAlg εAut ε (λ ())
     εAlg fail = AutAlg-fail εAut
     εAlg initial =
-      ⊕ᴰ-elim (λ {
+      ⊕ᴰ-elim λ where
         stop → ⊕ᴰ-elim λ _ → lowerG ∘g lowerG
-      ; step → ⊕ᴰ-elim (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
-      })
+        step → ⊕ᴰ-elim (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
 
   module _ (c : ⟨ Alphabet ⟩) where
 
@@ -115,6 +113,10 @@ module _
     litAut .δᵢ c' with DiscreteAlphabet isFinSetAlphabet c c'
     litAut .δᵢ c' | yes p = ↑f _
     litAut .δᵢ c' | no ¬p = fail
+    -- litAut .δᵢ =
+    --   discreteElim (DiscreteAlphabet isFinSetAlphabet) c
+    --     (↑f _)
+    --     λ _ → fail
       -- discreteElim (DiscreteAlphabet isFinSetAlphabet) c
       --   (↑f _)
       --   (λ _ → fail)
@@ -130,33 +132,40 @@ module _
         (unambiguous-Trace litDFA true _)
         (unambiguous-literal c)
         (mkLogEq
+          (rec _ litAlg _)
           {!!}
-          {!!}
-          -- (rec _ litAlg _)
           -- (toDFA initial)
         )
       where
       litAlg : AutAlg litAut ＂ c ＂ (λ _ → ε)
       litAlg fail = AutAlg-fail litAut
       litAlg initial =
-        ⊕ᴰ-elim λ { step →
-          ⊕ᴰ-elim (λ (lift c') →
-            {!with!}
-            -- discreteElim
-            --   {A = ⟨ Alphabet ⟩}
-            --   {B = λ c'' →
-            --     ＂ c'' ＂ ⊗
-            --       AutAlgCarrier
-            --         litAut ＂ c ＂ (λ _ → ε)
-            --         (litDFA .δ initial c'')
-            --         ⊢ ＂ c ＂
-            --   }
-            --   (DiscreteAlphabet isFinSetAlphabet)
-            --   c
-            --   {!⊗-unit-r!}
-            --   {!!}
-            --   c'
-            ∘g (lowerG ∘g lowerG) ,⊗ lowerG
-          )
-        }
-      litAlg (↑q q) = {!!}
+        ⊕ᴰ-elim λ where
+          step → ⊕ᴰ-elim λ where
+            (lift c') →
+              initialStep c'
+              ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+        where
+        initialStep :
+          (c' : ⟨ Alphabet ⟩) →
+          ＂ c' ＂ ⊗
+            AutAlgCarrier litAut
+              ＂ c ＂ (λ _ → ε) (litDFA .δ initial c') ⊢ ＂ c ＂
+        initialStep c' with DiscreteAlphabet isFinSetAlphabet c c'
+        initialStep c' | yes p =
+          J (λ c'' c≡c'' → ＂ c'' ＂ ⊗ ε ⊢ ＂ c ＂) ⊗-unit-r p
+        initialStep c' | no ¬p = ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ ⊥*-elim
+      litAlg (↑q q) =
+        ⊕ᴰ-elim λ where
+          stop → ⊕ᴰ-elim (λ _ → lowerG ∘g lowerG)
+          step → ⊕ᴰ-elim (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
+
+      toDFA : ∀ q → AutAlgCarrier litAut ＂ c ＂ (λ _ → ε) q ⊢ Trace litDFA true q
+      toDFA fail = ⊥*-elim
+      toDFA initial =
+        STEP litDFA {q = initial} c
+        -- ∘g id ,⊗ {!id!}
+        ∘g id ,⊗ transportG (cong (Trace litDFA true) {!!})
+        ∘g id ,⊗ STOP litDFA {q = ↑q _}
+        ∘g ⊗-unit-r⁻
+      toDFA (↑q q) = STOP litDFA
