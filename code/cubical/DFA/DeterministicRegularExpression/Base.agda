@@ -165,6 +165,7 @@ module _
         ∘g ⊗-unit-r⁻
         where
         -- Weirdly need things like this to ensure that goals properly reduce
+        -- and they don't reduce if I let the type signature of help be inferred
         help : Trace litAut true (↑q _) ⊢ Trace litAut true (↑f→q (litAut .δᵢ c))
         help with DiscreteAlphabet isFinSetAlphabet c c
         help | yes p = id
@@ -193,10 +194,13 @@ module _
     ⊕Aut .δq (inr q') c with M' .δq q' c
     ⊕Aut .δq (inr q') c | fail = fail
     ⊕Aut .δq (inr q') c | ↑f qq' = ↑f inr qq'
+    -- ⊕Aut .δᵢ c =
+    --   Sum.rec
+    --     (λ _ → mapFreelyAddFail inr (M' .δᵢ c))
+    --     (λ _ → mapFreelyAddFail inl (M .δᵢ c))
+    --     (disjointFirsts c)
     ⊕Aut .δᵢ c with M .δᵢ c
-    ⊕Aut .δᵢ c | fail with M' .δᵢ c
-    ⊕Aut .δᵢ c | fail | fail = fail
-    ⊕Aut .δᵢ c | fail | ↑f q' = ↑f inr q'
+    ⊕Aut .δᵢ c | fail = mapFreelyAddFail inr (M' .δᵢ c)
     ⊕Aut .δᵢ c | ↑f q = ↑f inl q
 
     private
@@ -215,9 +219,9 @@ module _
             notBothNull
           )
 
-      ⟦_⟧M : FreelyAddInitial Q → Grammar ℓ
-      ⟦ initial ⟧M = Parse M
-      ⟦ ↑i q ⟧M = Trace M true (↑q q)
+      ⟦_⟧M : FreelyAddInitial Q → Grammar (ℓ-max ℓ ℓ')
+      ⟦ initial ⟧M = Parse ⊕Aut
+      ⟦ ↑i q ⟧M = Trace ⊕Aut true (↑q inl q)
 
       ⟦_⟧M' : FreelyAddInitial Q' → Grammar ℓ'
       ⟦ initial ⟧M' = Parse M'
@@ -227,6 +231,30 @@ module _
       ⟦ initial ⟧⊕ = Parse M ⊕ Parse M'
       ⟦ ↑i (inl q) ⟧⊕ = LiftG ℓ' (Trace M true (↑q q))
       ⟦ ↑i (inr q') ⟧⊕ = LiftG ℓ (Trace M' true (↑q q'))
+
+      MAlg : ParseAlg M ⟦_⟧M
+      MAlg fail = ParseAlgFail M _
+      MAlg initial =
+        ⊕ᴰ-elim λ where
+          (stopᵢ Eq.refl) →
+            STOPᵢ ⊕Aut
+            ∘g lowerG ∘g lowerG
+          (stepᵢ c) →
+            stepInitial c
+            ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+        where
+        motive : (c : ⟨ Alphabet ⟩) → Type _
+        motive c = ＂ c ＂ ⊗ ParseAlgCarrier M ⟦_⟧M (↑f→q (M .δᵢ c)) ⊢ ParseAlgCarrier M ⟦_⟧M initial
+
+        stepInitial : (c : ⟨ Alphabet ⟩) → ＂ c ＂ ⊗ ParseAlgCarrier M ⟦_⟧M (↑f→q (M .δᵢ c)) ⊢ ParseAlgCarrier M ⟦_⟧M initial
+        stepInitial c with M .δᵢ c in eq
+        stepInitial c | fail = ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ ⊥*-elim
+        stepInitial c | ↑f q = {!STEPᵢ ⊕Aut c!}
+
+      MAlg (↑q q) =
+        ⊕ᴰ-elim λ where
+          (stop .q x) → {!!}
+          (step .q c) → {!!}
 
 
     ⊕Aut≅ : Parse ⊕Aut ≅ Parse M ⊕ Parse M'

@@ -102,6 +102,20 @@ module _ (Q : Type ℓ) where
   FreelyAddFail+Initial≅Unit⊎Unit⊎ .leftInv initial = refl
   FreelyAddFail+Initial≅Unit⊎Unit⊎ .leftInv (↑q _) = refl
 
+module _ {X : Type ℓ}{Y : Type ℓ'} (f : X → Y) where
+  mapFreelyAddFail : FreelyAddFail X → FreelyAddFail Y
+  mapFreelyAddFail fail = fail
+  mapFreelyAddFail (↑f x) = ↑f (f x)
+
+  mapFreelyAddInitial : FreelyAddInitial X → FreelyAddInitial Y
+  mapFreelyAddInitial initial = initial
+  mapFreelyAddInitial (↑i x) = ↑i (f x)
+
+  mapFreelyAddFail+Initial : FreelyAddFail+Initial X → FreelyAddFail+Initial Y
+  mapFreelyAddFail+Initial fail = fail
+  mapFreelyAddFail+Initial initial = initial
+  mapFreelyAddFail+Initial (↑q x) = ↑q (f x)
+
 -- Automata with a transition function given partially such
 -- that unspecified transitions implicitly map to a fail state
 -- Further, these have a freely added initial state such that
