@@ -74,3 +74,14 @@ module _
 
   map&ᴰ : &[ x ∈ X ] A x ⊢ &[ x ∈ X ] B x
   map&ᴰ = &ᴰ-in λ x → e x ∘g &ᴰ-π x
+
+module _
+  {X : Type ℓX}
+  {A : Grammar ℓA}
+  {B : X → Grammar ℓB}
+  (x y : X)
+  (e : A ⊢ B x)
+  (f : A ⊢ B y)
+  where
+  ⊕ᴰ-fst≡ : ⊕ᴰ-in x ∘g e ≡ ⊕ᴰ-in y ∘g f → A ⊢ ⊕[ _ ∈ x ≡ y ] A
+  ⊕ᴰ-fst≡ the-⊕ᴰ≡ w z = cong fst (funExt⁻ (funExt⁻ the-⊕ᴰ≡ w) z) , z

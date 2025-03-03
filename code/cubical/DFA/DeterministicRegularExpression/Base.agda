@@ -102,7 +102,7 @@ module _
     εAlg fail = ParseAlgFail εAut _
     εAlg initial =
       ⊕ᴰ-elim λ where
-        stopᵢ → lowerG ∘g lowerG
+        (stopᵢ Eq.refl) → lowerG ∘g lowerG
         (stepᵢ c) →
           ⊥-elim
           ∘g ⊗⊥
@@ -153,7 +153,7 @@ module _
         initialStep c' | no ¬p = ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ ⊥*-elim
       litAlg (↑q q) =
         ⊕ᴰ-elim λ where
-          (stop .q) → lowerG ∘g lowerG
+          (stop .q Eq.refl) → lowerG ∘g lowerG
           (step .q c) → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ ⊥*-elim ∘g (lowerG ∘g lowerG) ,⊗ lowerG
 
       toAut : ∀ q → ParseAlgCarrier litAut ⟦_⟧lit q ⊢ Trace litAut true q
@@ -204,12 +204,16 @@ module _
       disjointParses =
         #→disjoint
           (λ c →
-            {!Sum.map
-              ?
-              ?
-              (disjointFirsts c)!}
+            Sum.map
+              (¬FirstAut M c)
+              (¬FirstAut M' c)
+              (disjointFirsts c)
           )
-          {!!}
+          (Sum.map
+            (¬NullableAut M)
+            (¬NullableAut M')
+            notBothNull
+          )
 
       ⟦_⟧M : FreelyAddInitial Q → Grammar ℓ
       ⟦ initial ⟧M = Parse M
@@ -230,8 +234,11 @@ module _
       ≈→≅
         (unambiguous-Trace ⊕Aut true _)
         (unambiguous⊕
-          {!!}
+          disjointParses
           (unambiguous-Trace M true _)
           (unambiguous-Trace M' true _)
         )
-        {!!}
+        (mkLogEq
+          {!!}
+          {!!}
+        )

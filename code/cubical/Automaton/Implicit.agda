@@ -114,20 +114,20 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
     δq : Q → ⟨ Alphabet ⟩ → FreelyAddFail Q -- transitions between internal states
     δᵢ : ⟨ Alphabet ⟩ → FreelyAddFail Q -- transitions out of the initial state
 
-  data Tag : Bool → (q : FreelyAddFail+Initial Q) → Type ℓ where
-    stop : ∀ q → Tag (acc q) (↑q q)
-    stopᵢ : Tag null initial
-    stopFail : Tag false fail
-    step : ∀ {b} (q : Q) → (c : ⟨ Alphabet ⟩) → Tag b (↑q q)
-    stepᵢ : ∀ {b} → (c : ⟨ Alphabet ⟩) → Tag b initial
-    stepFail : ∀ {b} → (c : ⟨ Alphabet ⟩) → Tag b fail
+  data Tag (b : Bool) : (q : FreelyAddFail+Initial Q) → Type ℓ where
+    stop : ∀ q → b Eq.≡ acc q → Tag b (↑q q)
+    stopᵢ : b Eq.≡ null → Tag b initial
+    stopFail : b Eq.≡ false → Tag b fail
+    step : (q : Q) → (c : ⟨ Alphabet ⟩) → Tag b (↑q q)
+    stepᵢ : (c : ⟨ Alphabet ⟩) → Tag b initial
+    stepFail : (c : ⟨ Alphabet ⟩) → Tag b fail
 
   TraceTy : Bool → (q : FreelyAddFail+Initial Q) → Functor (FreelyAddFail+Initial Q)
   TraceTy b q =
     ⊕e (Tag b q) λ where
-      (stop q) → k ε*
-      (stopᵢ) → k ε*
-      (stopFail) → k ε*
+      (stop q x) → k ε*
+      (stopᵢ x) → k ε*
+      (stopFail x) → k ε*
       (step q c) → ⊗e (k (literal* c)) (Var (↑f→q (δq q c)))
       (stepᵢ c) → ⊗e (k (literal* c)) (Var (↑f→q (δᵢ c)))
       (stepFail c) → ⊗e (k (literal* c)) (Var fail)
@@ -160,19 +160,19 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   STOP : (q : Q) → ε ⊢ Trace (acc q) (↑q q)
   STOP q =
     roll
-    ∘g ⊕ᴰ-in (stop q)
+    ∘g ⊕ᴰ-in (stop q Eq.refl)
     ∘g liftG ∘g liftG
 
   STOPᵢ : ε ⊢ Trace null initial
   STOPᵢ =
     roll
-    ∘g ⊕ᴰ-in stopᵢ
+    ∘g ⊕ᴰ-in (stopᵢ Eq.refl)
     ∘g liftG ∘g liftG
 
   STOPFAIL : ε ⊢ Trace false fail
   STOPFAIL =
     roll
-    ∘g ⊕ᴰ-in stopFail
+    ∘g ⊕ᴰ-in (stopFail Eq.refl)
     ∘g liftG ∘g liftG
 
   STEP : ∀ {b : Bool} → (q : Q) → (c : ⟨ Alphabet ⟩) →
@@ -239,15 +239,15 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   printAlg : ∀ b → Algebra (TraceTy b) λ _ → string
   printAlg b fail =
     ⊕ᴰ-elim λ where
-      (stopFail) → NIL ∘g lowerG ∘g lowerG
+      (stopFail x) → NIL ∘g lowerG ∘g lowerG
       (stepFail c) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
   printAlg b initial =
     ⊕ᴰ-elim λ where
-      (stopᵢ) → NIL ∘g lowerG ∘g lowerG
+      (stopᵢ x) → NIL ∘g lowerG ∘g lowerG
       (stepᵢ c) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
   printAlg b (↑q q) =
     ⊕ᴰ-elim λ where
-      (stop .q) → NIL ∘g lowerG ∘g lowerG
+      (stop .q x) → NIL ∘g lowerG ∘g lowerG
       (step .q c) → CONS ∘g literal→char c ,⊗ id ∘g (lowerG ∘g lowerG) ,⊗ lowerG
 
   print : ∀ b q → Trace b q ⊢ string
@@ -256,9 +256,12 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   ⊕ᴰAlg : ∀ b → Algebra (TraceTy b) (λ q → ⊕[ b ∈ Bool ] Trace b q)
   ⊕ᴰAlg b q =
     ⊕ᴰ-elim λ where
-      (stop q) → ⊕ᴰ-in b ∘g STOP q ∘g lowerG ∘g lowerG
-      (stopᵢ) → ⊕ᴰ-in b ∘g STOPᵢ ∘g lowerG ∘g lowerG
-      (stopFail) → ⊕ᴰ-in b ∘g STOPFAIL ∘g lowerG ∘g lowerG
+      (stop q Eq.refl) →
+        ⊕ᴰ-in (acc q) ∘g STOP q ∘g lowerG ∘g lowerG
+      (stopᵢ Eq.refl) →
+        ⊕ᴰ-in null ∘g STOPᵢ ∘g lowerG ∘g lowerG
+      (stopFail Eq.refl) →
+        ⊕ᴰ-in false ∘g STOPFAIL ∘g lowerG ∘g lowerG
       (step q c) →
         ⊕ᴰ-elim (λ b' → ⊕ᴰ-in b' ∘g STEP q c)
         ∘g ⊕ᴰ-distR .fun
@@ -289,9 +292,9 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
            (λ q →
              ⊕ᴰ≡ _ _
                λ where
-                 (stop q) → refl
-                 (stopᵢ) → refl
-                 (stopFail) → refl
+                 (stop q Eq.refl) → refl
+                 (stopᵢ Eq.refl) → refl
+                 (stopFail Eq.refl) → refl
                  (step q c) → refl
                  (stepᵢ c) → refl
                  (stepFail c) → refl
@@ -301,9 +304,9 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
            (λ q →
              ⊕ᴰ≡ _ _
                λ where
-                 (stop q) → refl
-                 stopᵢ → refl
-                 stopFail → refl
+                 (stop q Eq.refl) → refl
+                 (stopᵢ Eq.refl) → refl
+                 (stopFail Eq.refl) → refl
                  (step q c) → refl
                  (stepᵢ c) → refl
                  (stepFail c) → refl
@@ -328,7 +331,7 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
       )
     fail→falseAlg fail =
       ⊕ᴰ-elim λ where
-        (stopFail) → ⊕ᴰ-in Eq.refl ∘g STOPFAIL ∘g lowerG ∘g lowerG
+        (stopFail Eq.refl) → ⊕ᴰ-in Eq.refl ∘g STOPFAIL ∘g lowerG ∘g lowerG
         (stepFail c) →
           map⊕ᴰ (λ where Eq.refl → STEPFAIL c)
           ∘g ⊕ᴰ-distR .fun
@@ -362,14 +365,37 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
     ⇒-intro⁻ (rec _ the-alg initial)
     ∘g &-swap
     where
-    the-alg : ParseAlg (λ _ → startsWith c ⇒ (⊕[ x ∈ fiber ↑f_ (δᵢ c) ] ⊤))
+    ⟦_⟧q : FreelyAddInitial Q → Grammar _
+    ⟦ initial ⟧q = startsWith c ⇒ (⊕[ _ ∈ fiber ↑f_ (δᵢ c) ] ⊤)
+    ⟦ ↑i q ⟧q = ⊤*
+
+    the-alg : ParseAlg ⟦_⟧q
     the-alg fail = ParseAlgFail _
     the-alg initial =
       ⊕ᴰ-elim λ where
-        x → {!!}
+        (stopᵢ x) →
+          ⇒-intro (⊥-elim ∘g ¬Nullable-startsWith) ∘g lowerG ∘g lowerG
+        (stepᵢ c') →
+          help c'
+          ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      where
+      help : (c' : ⟨ Alphabet ⟩) → ＂ c' ＂ ⊗ ParseAlgCarrier ⟦_⟧q (↑f→q (δᵢ c')) ⊢ ParseAlgCarrier ⟦_⟧q initial
+      help c' with δᵢ c' in eq
+      ... | fail = ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ ⊥*-elim
+      ... | ↑f q =
+        ⇒-intro
+          (⊕ᴰ-elim (λ c'≡c →
+             ⊕ᴰ-in (q , (J (λ c'' c≡c'' → (↑f q) ≡ δᵢ c'') (Eq.eqToPath (Eq.sym eq)) c'≡c))
+             ∘g ⊤-intro
+          )
+          ∘g same-first' c' c
+          ∘g (id ,⊗ string-intro) ,&p (id ,⊗ string-intro)
+          )
+
     the-alg (↑q q) =
       ⊕ᴰ-elim λ where
-        x → {!!}
+        (stop .q x) → ⊤*-intro
+        (step .q c) → ⊤*-intro
 
   ¬FirstAut :
     (c : ⟨ Alphabet ⟩) →
@@ -378,3 +404,22 @@ record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   ¬FirstAut c toFail =
     ⊕ᴰ-elim (λ { (q , x) → Empty.rec (fail≢↑f (Eq.pathToEq (toFail ∙ sym x))) })
     ∘g getFirstTransition c
+
+  sound-null :
+    Parse & ε ⊢ ⊕[ _ ∈ true ≡ null ] ⊤
+  sound-null =
+    map⊕ᴰ (λ _ → ⊤-intro)
+    ∘g ⊕ᴰ-fst≡ _ _ _ _
+        (unambiguous-⊕Trace initial
+          (⊕ᴰ-in true ∘g &-π₁)
+          (⊕ᴰ-in null ∘g &-π₂)
+        )
+    ∘g id ,&p STOPᵢ
+
+  ¬NullableAut :
+    null ≡ false →
+    ⟨ ¬Nullable Parse ⟩
+  ¬NullableAut isFalse =
+    ⊕ᴰ-elim (λ isTrue → Empty.rec (true≢false (isTrue ∙ isFalse)))
+    ∘g sound-null
+    ∘g &-swap
