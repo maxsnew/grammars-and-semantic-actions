@@ -1,3 +1,4 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
@@ -30,10 +31,12 @@ open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.Literal.Properties Alphabet
 open import Grammar.SequentialUnambiguity Alphabet
-open import DFA.Base Alphabet public
+-- open import DFA.Base Alphabet public
+open import Automaton.Implicit Alphabet public
 open import Term Alphabet
 
-open DeterministicAutomaton
+-- open DeterministicAutomaton
+
 open ImplicitDeterministicAutomaton
 open LogicalEquivalence
 
@@ -41,14 +44,14 @@ private
   variable
     ℓ ℓ' : Level
 
-  mkFinSet : {Q : Type ℓ} → isFinSet Q → FinSet ℓ
-  mkFinSet {Q = Q} _ .fst = FreelyAddFail+Initial Q
-  mkFinSet isFinSetQ .snd =
-    EquivPresIsFinSet
-      (isoToEquiv (invIso (FreelyAddFail+Initial≅Unit⊎Unit⊎ _)))
-      (isFinSet⊎
-        (_ , isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSetUnit))
-        (_ , isFinSetQ))
+  -- mkFinSet : {Q : Type ℓ} → isFinSet Q → FinSet ℓ
+  -- mkFinSet {Q = Q} _ .fst = FreelyAddFail+Initial Q
+  -- mkFinSet isFinSetQ .snd =
+  --   EquivPresIsFinSet
+  --     (isoToEquiv (invIso (FreelyAddFail+Initial≅Unit⊎Unit⊎ _)))
+  --     (isFinSet⊎
+  --       (_ , isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSetUnit))
+  --       (_ , isFinSetQ))
 
 module _
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
@@ -60,24 +63,24 @@ module _
   ⊥Aut .δq ()
   ⊥Aut .δᵢ _ = fail
 
-  ⊥DFA : DFAOver (mkFinSet isFinSet⊥)
-  ⊥DFA = Aut ⊥Aut
-
-  ⊥DFA≅ : Parse ⊥DFA ≅ ⊥
-  ⊥DFA≅ =
+  ⊥≅ : Parse ⊥Aut ≅ ⊥
+  ⊥≅ =
     ≈→≅
-      (unambiguous-Trace ⊥DFA true _)
+      (unambiguous-Trace ⊥Aut true _)
       unambiguous⊥
       (mkLogEq
         (rec _ ⊥Alg _)
         ⊥-elim
       )
     where
-    ⊥Alg : AutAlg ⊥Aut ⊥ (λ ())
-    ⊥Alg fail = AutAlg-fail ⊥Aut
+    ⊥Alg : ParseAlg ⊥Aut λ { initial → ⊥ }
+    ⊥Alg fail = ParseAlgFail ⊥Aut _
     ⊥Alg initial =
       ⊕ᴰ-elim λ where
-        step → ⊕ᴰ-elim (λ _ → ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
+        (stepᵢ c) →
+          ⊗⊥
+          ∘g id ,⊗ ⊥*-elim
+          ∘g (lowerG ∘g lowerG) ,⊗ lowerG
 
   εAut : ImplicitDeterministicAutomaton Empty.⊥
   εAut .acc ()
@@ -85,87 +88,150 @@ module _
   εAut .δq ()
   εAut .δᵢ _ = fail
 
-  εDFA : DFAOver (mkFinSet isFinSet⊥)
-  εDFA = Aut εAut
-
-  εDFA≅ : Parse εDFA ≅ ε
-  εDFA≅ =
+  ε≅ : Parse εAut ≅ ε
+  ε≅ =
     ≈→≅
-      (unambiguous-Trace εDFA true _)
+      (unambiguous-Trace εAut true _)
       unambiguousε
       (mkLogEq
         (rec _ εAlg _)
-        (STOP εDFA)
+        (STOPᵢ εAut)
       )
     where
-    εAlg : AutAlg εAut ε (λ ())
-    εAlg fail = AutAlg-fail εAut
+    εAlg : ParseAlg εAut λ { initial → ε }
+    εAlg fail = ParseAlgFail εAut _
     εAlg initial =
       ⊕ᴰ-elim λ where
-        stop → ⊕ᴰ-elim λ _ → lowerG ∘g lowerG
-        step → ⊕ᴰ-elim (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
+        stopᵢ → lowerG ∘g lowerG
+        (stepᵢ c) →
+          ⊥-elim
+          ∘g ⊗⊥
+          ∘g id ,⊗ ⊥*-elim
+          ∘g (lowerG ∘g lowerG) ,⊗ lowerG
 
   module _ (c : ⟨ Alphabet ⟩) where
 
     litAut : ImplicitDeterministicAutomaton Unit
     litAut .acc _ = true
     litAut .null = false
-    litAut .δᵢ c' with DiscreteAlphabet isFinSetAlphabet c c'
-    litAut .δᵢ c' | yes p = ↑f _
-    litAut .δᵢ c' | no ¬p = fail
-    -- litAut .δᵢ =
-    --   discreteElim (DiscreteAlphabet isFinSetAlphabet) c
-    --     (↑f _)
-    --     λ _ → fail
-      -- discreteElim (DiscreteAlphabet isFinSetAlphabet) c
-      --   (↑f _)
-      --   (λ _ → fail)
-      --   c'
+    -- litAut .δᵢ c' with DiscreteAlphabet isFinSetAlphabet c c'
+    -- litAut .δᵢ c' | yes p = ↑f _
+    -- litAut .δᵢ c' | no ¬p = fail
+    litAut .δᵢ =
+      discreteElim (DiscreteAlphabet isFinSetAlphabet) c
+        (↑f _)
+        λ _ → fail
     litAut .δq _ _ = fail
 
-    litDFA : DFAOver (mkFinSet isFinSetUnit)
-    litDFA = Aut litAut
-
-    litDFA≅ : Parse litDFA ≅ ＂ c ＂
-    litDFA≅ =
+    lit≅ : Parse litAut ≅ ＂ c ＂
+    lit≅ =
       ≈→≅
-        (unambiguous-Trace litDFA true _)
+        (unambiguous-Trace litAut true _)
         (unambiguous-literal c)
         (mkLogEq
           (rec _ litAlg _)
-          {!!}
-          -- (toDFA initial)
+          (toAut initial)
         )
       where
-      litAlg : AutAlg litAut ＂ c ＂ (λ _ → ε)
-      litAlg fail = AutAlg-fail litAut
+      ⟦_⟧lit : FreelyAddInitial Unit → Grammar ℓ-zero
+      ⟦ initial ⟧lit = ＂ c ＂
+      ⟦ ↑i _ ⟧lit = ε
+
+      litAlg : ParseAlg litAut ⟦_⟧lit
+      litAlg fail = ParseAlgFail litAut _
       litAlg initial =
         ⊕ᴰ-elim λ where
-          step → ⊕ᴰ-elim λ where
-            (lift c') →
-              initialStep c'
-              ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+          (stepᵢ c') →
+            initialStep c'
+            ∘g (lowerG ∘g lowerG) ,⊗ lowerG
         where
         initialStep :
           (c' : ⟨ Alphabet ⟩) →
-          ＂ c' ＂ ⊗
-            AutAlgCarrier litAut
-              ＂ c ＂ (λ _ → ε) (litDFA .δ initial c') ⊢ ＂ c ＂
-        initialStep c' with DiscreteAlphabet isFinSetAlphabet c c'
-        initialStep c' | yes p =
-          J (λ c'' c≡c'' → ＂ c'' ＂ ⊗ ε ⊢ ＂ c ＂) ⊗-unit-r p
+          ＂ c' ＂ ⊗ ParseAlgCarrier litAut ⟦_⟧lit (↑f→q (litAut .δᵢ c')) ⊢ ＂ c ＂
+        initialStep c' with (DiscreteAlphabet isFinSetAlphabet c c')
+        initialStep c' | yes p = J (λ c' c≡c' → ＂ c' ＂ ⊗ ε ⊢ ＂ c ＂) ⊗-unit-r p
         initialStep c' | no ¬p = ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ ⊥*-elim
       litAlg (↑q q) =
         ⊕ᴰ-elim λ where
-          stop → ⊕ᴰ-elim (λ _ → lowerG ∘g lowerG)
-          step → ⊕ᴰ-elim (λ _ → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ (⊥*-elim ∘g lowerG))
+          (stop .q) → lowerG ∘g lowerG
+          (step .q c) → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ ⊥*-elim ∘g (lowerG ∘g lowerG) ,⊗ lowerG
 
-      toDFA : ∀ q → AutAlgCarrier litAut ＂ c ＂ (λ _ → ε) q ⊢ Trace litDFA true q
-      toDFA fail = ⊥*-elim
-      toDFA initial =
-        STEP litDFA {q = initial} c
-        -- ∘g id ,⊗ {!id!}
-        ∘g id ,⊗ transportG (cong (Trace litDFA true) {!!})
-        ∘g id ,⊗ STOP litDFA {q = ↑q _}
+      toAut : ∀ q → ParseAlgCarrier litAut ⟦_⟧lit q ⊢ Trace litAut true q
+      toAut fail = ⊥*-elim
+      toAut initial =
+        STEPᵢ litAut c
+        ∘g id ,⊗ help
+        ∘g id ,⊗ toAut (↑q _)
         ∘g ⊗-unit-r⁻
-      toDFA (↑q q) = STOP litDFA
+        where
+        -- Weirdly need things like this to ensure that goals properly reduce
+        help : Trace litAut true (↑q _) ⊢ Trace litAut true (↑f→q (litAut .δᵢ c))
+        help with DiscreteAlphabet isFinSetAlphabet c c
+        help | yes p = id
+        help | no ¬p = Empty.rec (¬p refl)
+      toAut (↑q _) = STOP litAut _
+
+  module _
+    {Q : Type ℓ}
+    {Q' : Type ℓ'}
+    (M : ImplicitDeterministicAutomaton Q)
+    (M' : ImplicitDeterministicAutomaton Q')
+    (notBothNull : (M .null ≡ false) ⊎ (M' .null ≡ false))
+    (disjointFirsts :
+      ∀ (c : ⟨ Alphabet ⟩) →
+      (fail ≡ M .δᵢ c) ⊎ (fail ≡ M' .δᵢ c)
+    )
+    where
+
+    ⊕Aut : ImplicitDeterministicAutomaton (Q ⊎ Q')
+    ⊕Aut .acc (inl q) = M .acc q
+    ⊕Aut .acc (inr q') = M' .acc q'
+    ⊕Aut .null = M .null or M' .null
+    ⊕Aut .δq (inl q) c with M .δq q c
+    ⊕Aut .δq (inl q) c | fail = fail
+    ⊕Aut .δq (inl q) c | ↑f qq = ↑f inl qq
+    ⊕Aut .δq (inr q') c with M' .δq q' c
+    ⊕Aut .δq (inr q') c | fail = fail
+    ⊕Aut .δq (inr q') c | ↑f qq' = ↑f inr qq'
+    ⊕Aut .δᵢ c with M .δᵢ c
+    ⊕Aut .δᵢ c | fail with M' .δᵢ c
+    ⊕Aut .δᵢ c | fail | fail = fail
+    ⊕Aut .δᵢ c | fail | ↑f q' = ↑f inr q'
+    ⊕Aut .δᵢ c | ↑f q = ↑f inl q
+
+    private
+      disjointParses : disjoint (Parse M) (Parse M')
+      disjointParses =
+        #→disjoint
+          (λ c →
+            {!Sum.map
+              ?
+              ?
+              (disjointFirsts c)!}
+          )
+          {!!}
+
+      ⟦_⟧M : FreelyAddInitial Q → Grammar ℓ
+      ⟦ initial ⟧M = Parse M
+      ⟦ ↑i q ⟧M = Trace M true (↑q q)
+
+      ⟦_⟧M' : FreelyAddInitial Q' → Grammar ℓ'
+      ⟦ initial ⟧M' = Parse M'
+      ⟦ ↑i q' ⟧M' = Trace M' true (↑q q')
+
+      ⟦_⟧⊕ : FreelyAddInitial (Q ⊎ Q') → Grammar (ℓ-max ℓ ℓ')
+      ⟦ initial ⟧⊕ = Parse M ⊕ Parse M'
+      ⟦ ↑i (inl q) ⟧⊕ = LiftG ℓ' (Trace M true (↑q q))
+      ⟦ ↑i (inr q') ⟧⊕ = LiftG ℓ (Trace M' true (↑q q'))
+
+
+    ⊕Aut≅ : Parse ⊕Aut ≅ Parse M ⊕ Parse M'
+    ⊕Aut≅ =
+      ≈→≅
+        (unambiguous-Trace ⊕Aut true _)
+        (unambiguous⊕
+          {!!}
+          (unambiguous-Trace M true _)
+          (unambiguous-Trace M' true _)
+        )
+        {!!}

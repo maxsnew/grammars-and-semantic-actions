@@ -39,41 +39,20 @@ decElim : ∀ {ℓ ℓ'} {P : Type ℓ} {A : Dec P → Type ℓ'} →
 decElim ifyes ifno (yes p) = ifyes p
 decElim ifyes ifno (no ¬p) = ifno ¬p
 
-discreteElim' :
-  {A : Type ℓ} →
-  {B : A → Type ℓ'} →
-  Discrete A →
-  (a : A) →
-  B a →
-  (∀ {a' : A} → ¬ (a ≡ a') → B a') →
-  (a' : A) →
-  B a'
-discreteElim' {B = B} disc a B≡ B≢ a' =
-  decElim
-    (J (λ a' a≡a' → B a') B≡)
-    B≢
-    (disc a a')
-
 discreteElim :
   {A : Type ℓ} →
+  {B : A → Type ℓ'} →
   (disc : Discrete A) →
   (a : A) →
-  {B : {a' : A} → Dec (a ≡ a') → Type ℓ'} →
-  B (yes refl) →
-  ({a' : A} → (≢ : ¬ (a ≡ a')) → B (no ≢)) →
+  B a →
+  ({a' : A} → (≢ : ¬ (a ≡ a')) → B a') →
   (a' : A) →
-  B (disc a a')
-discreteElim disc a {B = B} B≡ B≢ a' =
+  B a'
+discreteElim {B = B} disc a B≡ B≢ a' =
   decElim
-    {A = B}
-    (λ a≡a' → J (λ a'' a≡a'' → B (yes a≡a'')) B≡ a≡a')
-    (λ a≢a' → B≢ a≢a')
+    (J (λ a'' a≡a'' → B a'') B≡)
+    B≢
     (disc a a')
--- a' with disc a a'
--- ... | yes p = J (λ a'' a≡a'' → B a'' (yes a≡a'')) B≡ p
--- ... | no ¬p = B≢ ¬p
--- ... | yes p = J (λ a'' a≡a'' → B a'') B≡ p
--- ... | no ¬p = B≢ ¬p
 
 negateDecProp : ∀ {ℓ} → DecProp ℓ → DecProp ℓ
 fst (fst (negateDecProp A)) = ¬ A .fst .fst
