@@ -21,7 +21,7 @@ open import Term.Base Alphabet
 
 private
   variable
-    ℓA ℓB : Level
+    ℓA ℓB ℓ⊥ : Level
     A : Grammar ℓA
     B : Grammar ℓB
 
@@ -156,5 +156,17 @@ module _ (A : Grammar ℓA) where
 ⊗⊥ : A ⊗ ⊥ ⊢ ⊥
 ⊗⊥ = ⟜-app ∘g id ,⊗ ⊥-elim
 
+⊗⊥-elim : A ⊗ ⊥ ⊢ B
+⊗⊥-elim = ⊥-elim ∘g ⊗⊥
+
+⊗⊥*-elim : A ⊗ ⊥* {ℓ⊥} ⊢ B
+⊗⊥*-elim = ⊗⊥-elim ∘g id ,⊗ ⊥*-elim
+
 ⊥⊗ : ⊥ ⊗ A ⊢ ⊥
 ⊥⊗ = ⊸-app ∘g ⊥-elim ,⊗ id
+
+⊥⊗-elim : ⊥ ⊗ A ⊢ B
+⊥⊗-elim = ⊥-elim ∘g ⊥⊗
+
+⊥*⊗-elim : ⊥* {ℓ⊥} ⊗ A ⊢ B
+⊥*⊗-elim = ⊥⊗-elim ∘g ⊥*-elim ,⊗ id
