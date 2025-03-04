@@ -424,15 +424,59 @@ module _
     ⊕Alg fail = ParseAlgFail ⊕Aut _
     ⊕Alg initial =
       ⊕ᴰ-elim λ where
-        (stopᵢ x) → {!!}
-        (stepᵢ c) → {!!}
+        (stopᵢ x) →
+          Sum.elim
+            {C =
+              λ y →
+              true Eq.≡
+                Sum.rec
+                  (λ _ → M' .null)
+                  (λ _ → M .null)
+                  y
+              → ε ⊢ Parse M ⊕ Parse M'}
+            (λ _ → λ {Eq.refl → ⊕-inr ∘g STOPᵢ M'})
+            (λ _ → λ {Eq.refl → ⊕-inl ∘g STOPᵢ M})
+            notBothNull
+            x
+          ∘g lowerG ∘g lowerG
+        (stepᵢ c) →
+          Sum.elim
+            {C = λ x →
+              ＂ c ＂ ⊗
+                ParseAlgCarrier ⊕Aut ⟦_⟧⊕
+                  (↑f→q
+                    (Sum.rec
+                      (λ _ → mapFreelyAddFail inr (M' .δᵢ c))
+                      (λ _ → mapFreelyAddFail inl (M .δᵢ c))
+                      x
+                    )
+                  )
+                ⊢ Parse M ⊕ Parse M'
+            }
+            (λ _ →
+              {!!}
+            )
+            (λ _ →
+              {!!}
+            )
+            (disjointFirsts c)
+          
+          ∘g (lowerG ∘g lowerG) ,⊗ lowerG
     ⊕Alg (↑q (inl q)) =
       ⊕ᴰ-elim λ where
-        (stop .(inl q) x) → {!!}
-        (step .(inl q) c) → {!!}
+        (stop .(inl q) x) →
+          liftG
+          ∘g Eq.J (λ x y → ε ⊢ Trace M x (↑q q)) (STOP M q) (Eq.sym x)
+          ∘g lowerG ∘g lowerG
+        (step .(inl q) c) →
+          {!!}
+          ∘g (lowerG ∘g lowerG) ,⊗ lowerG
     ⊕Alg (↑q (inr q')) =
       ⊕ᴰ-elim λ where
-        (stop .(inr q') x) → {!!}
+        (stop .(inr q') x) →
+          liftG
+          ∘g Eq.J (λ x y → ε ⊢ Trace M' x (↑q q')) (STOP M' q') (Eq.sym x)
+          ∘g lowerG ∘g lowerG
         (step .(inr q') c) → {!!}
 
     M→⊕Aut : Parse M ⊢ Parse ⊕Aut
