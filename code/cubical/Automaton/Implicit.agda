@@ -120,9 +120,10 @@ module _ {X : Type ℓ}{Y : Type ℓ'} (f : X → Y) where
 -- that unspecified transitions implicitly map to a fail state
 -- Further, these have a freely added initial state such that
 -- there are no back edges to the initial state
-record ImplicitDeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
+record ImplicitDeterministicAutomaton ℓ : Type (ℓ-suc ℓ) where
   constructor mkImplicitAut
   field
+    Q : Type ℓ
     acc : Q → Bool
     null : Bool
     δq : Q → ⟨ Alphabet ⟩ → FreelyAddFail Q -- transitions between internal states

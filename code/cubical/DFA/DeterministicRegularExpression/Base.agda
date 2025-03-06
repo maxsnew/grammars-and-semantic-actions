@@ -57,7 +57,8 @@ module _
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
   where
 
-  ⊥Aut : ImplicitDeterministicAutomaton Empty.⊥
+  ⊥Aut : ImplicitDeterministicAutomaton ℓ-zero
+  ⊥Aut .Q = Empty.⊥
   ⊥Aut .acc ()
   ⊥Aut .null = false
   ⊥Aut .δq ()
@@ -81,7 +82,8 @@ module _
           ⊗⊥*-elim
           ∘g (lowerG ∘g lowerG) ,⊗ lowerG
 
-  εAut : ImplicitDeterministicAutomaton Empty.⊥
+  εAut : ImplicitDeterministicAutomaton ℓ-zero
+  εAut .Q = Empty.⊥
   εAut .acc ()
   εAut .null = true
   εAut .δq ()
@@ -108,7 +110,8 @@ module _
 
   module _ (c : ⟨ Alphabet ⟩) where
 
-    litAut : ImplicitDeterministicAutomaton Unit
+    litAut : ImplicitDeterministicAutomaton ℓ-zero
+    litAut .Q = Unit
     litAut .acc _ = true
     litAut .null = false
     litAut .δᵢ c' =
@@ -187,11 +190,8 @@ module _
       toAut (↑q _) = STOP litAut _
 
   module _
-    {Q : Type ℓ}
-    {Q' : Type ℓ'}
-    -- TODO Q not param
-    (M : ImplicitDeterministicAutomaton Q)
-    (M' : ImplicitDeterministicAutomaton Q')
+    (M : ImplicitDeterministicAutomaton ℓ)
+    (M' : ImplicitDeterministicAutomaton ℓ')
     (notBothNull : (M .null ≡ false) ⊎ (M' .null ≡ false))
     (disjointFirsts :
       ∀ (c : ⟨ Alphabet ⟩) →
@@ -199,7 +199,8 @@ module _
     )
     where
 
-    ⊕Aut : ImplicitDeterministicAutomaton (Q ⊎ Q')
+    ⊕Aut : ImplicitDeterministicAutomaton (ℓ-max ℓ ℓ')
+    ⊕Aut .Q = M .Q ⊎ M' .Q
     ⊕Aut .acc (inl q) = M .acc q
     ⊕Aut .acc (inr q') = M' .acc q'
     ⊕Aut .null =
@@ -231,15 +232,15 @@ module _
             notBothNull
           )
 
-      ⟦_⟧M : FreelyAddInitial Q → Grammar (ℓ-max ℓ ℓ')
+      ⟦_⟧M : FreelyAddInitial (M .Q) → Grammar (ℓ-max ℓ ℓ')
       ⟦ initial ⟧M = Parse ⊕Aut
       ⟦ ↑i q ⟧M = Trace ⊕Aut true (↑q inl q)
 
-      ⟦_⟧M' : FreelyAddInitial Q' → Grammar (ℓ-max ℓ ℓ')
+      ⟦_⟧M' : FreelyAddInitial (M' .Q) → Grammar (ℓ-max ℓ ℓ')
       ⟦ initial ⟧M' = Parse ⊕Aut
       ⟦ ↑i q' ⟧M' = Trace ⊕Aut true (↑q inr q')
 
-      ⟦_⟧⊕ : FreelyAddInitial (Q ⊎ Q') → Grammar (ℓ-max ℓ ℓ')
+      ⟦_⟧⊕ : FreelyAddInitial (⊕Aut .Q) → Grammar (ℓ-max ℓ ℓ')
       ⟦ initial ⟧⊕ = Parse M ⊕ Parse M'
       ⟦ ↑i (inl q) ⟧⊕ = LiftG ℓ' (Trace M true (↑q q))
       ⟦ ↑i (inr q') ⟧⊕ = LiftG ℓ (Trace M' true (↑q q'))
@@ -454,14 +455,40 @@ module _
                 ⊢ Parse M ⊕ Parse M'
             }
             (λ _ →
-              {!!}
+              ⊕-inr
+              ∘g STEPᵢ M' c
+              ∘g id ,⊗ helpL c
             )
             (λ _ →
-              {!!}
+              ⊕-inl
+              ∘g STEPᵢ M c
+              ∘g id ,⊗ helpR c
             )
             (disjointFirsts c)
-          
           ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+
+          where
+          helpL :
+            (c : ⟨ Alphabet ⟩) →
+              ParseAlgCarrier ⊕Aut ⟦_⟧⊕
+                (↑f→q
+                  (mapFreelyAddFail inr (M' .δᵢ c))
+                )
+              ⊢ Trace M' true (↑f→q (M' .δᵢ c))
+          helpL c with M' .δᵢ c
+          ... | fail = ⊥*-elim
+          ... | ↑f q' = lowerG
+
+          helpR :
+            (c : ⟨ Alphabet ⟩) →
+              ParseAlgCarrier ⊕Aut ⟦_⟧⊕
+                (↑f→q
+                  (mapFreelyAddFail inl (M .δᵢ c))
+                )
+              ⊢ Trace M true (↑f→q (M .δᵢ c))
+          helpR c with M .δᵢ c
+          ... | fail = ⊥*-elim
+          ... | ↑f q = lowerG
     ⊕Alg (↑q (inl q)) =
       ⊕ᴰ-elim λ where
         (stop .(inl q) x) →
@@ -469,15 +496,45 @@ module _
           ∘g Eq.J (λ x y → ε ⊢ Trace M x (↑q q)) (STOP M q) (Eq.sym x)
           ∘g lowerG ∘g lowerG
         (step .(inl q) c) →
-          {!!}
+          liftG
+          ∘g STEP M q c
+          ∘g id ,⊗ help q c
           ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+          where
+          help :
+            (q : M .Q) →
+            (c : ⟨ Alphabet ⟩) →
+              ParseAlgCarrier ⊕Aut ⟦_⟧⊕
+                (↑f→q
+                  (mapFreelyAddFail inl (M .δq q c))
+                )
+              ⊢ Trace M true (↑f→q (M .δq q c))
+          help q c with M .δq q c
+          ... | fail = ⊥*-elim
+          ... | ↑f q = lowerG
     ⊕Alg (↑q (inr q')) =
       ⊕ᴰ-elim λ where
         (stop .(inr q') x) →
           liftG
           ∘g Eq.J (λ x y → ε ⊢ Trace M' x (↑q q')) (STOP M' q') (Eq.sym x)
           ∘g lowerG ∘g lowerG
-        (step .(inr q') c) → {!!}
+        (step .(inr q') c) →
+          liftG
+          ∘g STEP M' q' c
+          ∘g id ,⊗ help q' c
+          ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+          where
+          help :
+            (q' : (M' .Q)) →
+            (c : ⟨ Alphabet ⟩) →
+              ParseAlgCarrier ⊕Aut ⟦_⟧⊕
+                (↑f→q
+                  (mapFreelyAddFail inr (M' .δq q' c))
+                )
+              ⊢ Trace M' true (↑f→q (M' .δq q' c))
+          help q' c with M' .δq q' c
+          ... | fail = ⊥*-elim
+          ... | ↑f q' = lowerG
 
     M→⊕Aut : Parse M ⊢ Parse ⊕Aut
     M→⊕Aut = rec _ MAlg initial
