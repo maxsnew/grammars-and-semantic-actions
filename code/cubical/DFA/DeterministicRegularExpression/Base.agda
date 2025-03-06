@@ -555,3 +555,186 @@ module _
           (rec _ ⊕Alg initial)
           (⊕-elim M→⊕Aut M'→⊕Aut)
         )
+
+  module _
+    (M : ImplicitDeterministicAutomaton ℓ)
+    (M' : ImplicitDeterministicAutomaton ℓ')
+    (notNullM : (M .null ≡ false))
+    (seqUnambig :
+      ∀ (c : ⟨ Alphabet ⟩) →
+      (∀ (q : M .Q) → M .acc q ≡ true → fail ≡ M .δq q c) ⊎ (fail ≡ M' .δᵢ c)
+    )
+    where
+
+    ⊗Aut : ImplicitDeterministicAutomaton (ℓ-max ℓ ℓ')
+    ⊗Aut .Q = M .Q ⊎ M' .Q
+    ⊗Aut .acc (inl q) = M' .null
+    ⊗Aut .acc (inr q') = M' .acc q'
+    ⊗Aut .null = false
+    ⊗Aut .δq (inl q) c =
+      if (M .acc q)
+      then
+        (Sum.rec
+          (λ _ → mapFreelyAddFail inr (M' .δᵢ c))
+          (λ x → mapFreelyAddFail inl (M .δq q c))
+          (seqUnambig c))
+      else mapFreelyAddFail inl (M .δq q c)
+    ⊗Aut .δq (inr q') c = mapFreelyAddFail inr (M' .δq q' c)
+    ⊗Aut .δᵢ c = mapFreelyAddFail inl (M .δᵢ c)
+
+    private
+      M⊛M' : Parse M ⊛ Parse M'
+      M⊛M' = {!!}
+
+      ⟦_⟧M : FreelyAddInitial (M .Q) → Grammar (ℓ-max ℓ ℓ')
+      ⟦ initial ⟧M = Parse ⊗Aut
+      ⟦ ↑i q ⟧M =
+        &[ c ∈ ⟨ Alphabet ⟩ ]
+        &[ _ ∈ M .acc q ≡ true ]
+        &[ _ ∈ fail ≡ M .δq q c ]
+          ((＂ c ＂ ⊗ Trace ⊗Aut true (↑f→q (mapFreelyAddFail inr (M' .δᵢ c)))) ⊸ Trace ⊗Aut true (↑q inl q))
+
+      ⟦_⟧M' : FreelyAddInitial (M' .Q) → Grammar (ℓ-max ℓ ℓ')
+      ⟦ initial ⟧M' =
+        &[ q ∈ M .Q ]
+        &[ _ ∈ M .acc q ≡ true ]
+          Trace ⊗Aut true (↑q inl q)
+
+        -- &[ c ∈ ⟨ Alphabet ⟩ ]
+        -- &[ q ∈ M .Q ]
+        -- &[ _ ∈ M .acc q ≡ true ]
+        -- &[ _ ∈ fail ≡ M .δq q c ]
+        -- &[ (c , q , _ , _) ∈
+        --   Σ[ c ∈ ⟨ Alphabet ⟩ ]
+        --   Σ[ q ∈ M .Q ]
+        --   Σ[ _ ∈ M .acc q ≡ true ]
+        --     fail ≡ M .δq q c ]
+        --   (startsWith c & Trace ⊗Aut true (↑q inl q))
+      ⟦ ↑i q' ⟧M' = Trace ⊗Aut true (↑q inr q')
+
+      ⟦_⟧⊗ : FreelyAddInitial (⊗Aut .Q) → Grammar (ℓ-max ℓ ℓ')
+      ⟦ initial ⟧⊗ = Parse M ⊗ Parse M'
+      ⟦ ↑i (inl q) ⟧⊗ = Trace ⊗Aut true (↑q inl q) ⊗ Parse M'
+      ⟦ ↑i (inr q') ⟧⊗ = Trace ⊗Aut true (↑q inr q')
+
+      M'Alg : ParseAlg M' ⟦_⟧M'
+      M'Alg fail = ParseAlgFail M' _
+      M'Alg initial =
+        ⊕ᴰ-elim λ where
+          (stopᵢ Eq.refl) →
+            &ᴰ-in (λ q →
+              &ᴰ-in (λ acc →
+                STOP ⊗Aut (inl q)
+              )
+            )
+            ∘g lowerG ∘g lowerG
+          (stepᵢ c) →
+            &ᴰ-in (λ q →
+              &ᴰ-in (λ acc →
+                STEP ⊗Aut (inl q) c
+                ∘g id ,⊗ help c q acc
+              )
+            )
+            ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+        where
+        help :
+          (c : ⟨ Alphabet ⟩) →
+          (q : M .Q) →
+          M .acc q ≡ true →
+          ParseAlgCarrier M' ⟦_⟧M' (↑f→q (M' .δᵢ c)) ⊢ Trace ⊗Aut true _
+        -- help c q isAcc =
+        --   -- {!J
+        --   --   (λ x y → ParseAlgCarrier M' ⟦_⟧M' (↑f→q (M' .δᵢ c)) )!}
+        --   Sum.elim
+        --     {C = λ x →
+        --        ParseAlgCarrier M' ⟦_⟧M' (↑f→q (M' .δᵢ c)) ⊢
+        --        Trace ⊗Aut true
+        --          (↑f→q
+        --            (if M .acc q then
+        --               Sum.rec
+        --                 (λ _ → mapFreelyAddFail inr (M' .δᵢ c))
+        --                 (λ _ → mapFreelyAddFail inl (M .δq q c))
+        --                 x
+        --             else
+        --             mapFreelyAddFail inl (M .δq q c))
+        --          )
+        --     }
+        --     (λ f → {!!})
+        --     {!!}
+        --     (seqUnambig c)
+
+        help c q acc with M' .δᵢ c
+        help c q acc | fail = ⊥*-elim
+        help c q acc | ↑f q' =
+          ?
+      -- -- -- (↑f→q
+      -- -- --  (if Automaton.Implicit.ImplicitDeterministicAutomaton.acc M q then
+      -- -- --   Sum.rec
+      -- -- --   (λ _ →
+      -- -- --      mapFreelyAddFail inr
+      -- -- --      (Automaton.Implicit.ImplicitDeterministicAutomaton.δᵢ M' c))
+      -- -- --   (λ x →
+      -- -- --      mapFreelyAddFail inl
+      -- -- --      (Automaton.Implicit.ImplicitDeterministicAutomaton.δq M q c))
+      -- -- --   (seqUnambig c)
+      -- -- --   else
+      -- -- --   mapFreelyAddFail inl
+      -- -- --   (Automaton.Implicit.ImplicitDeterministicAutomaton.δq M q c)))
+      --     J
+      --       (λ x y →
+      --         Trace ⊗Aut true (↑q inr q') ⊢
+      --         Trace ⊗Aut true
+      --           (↑f→q
+      --             (if x
+      --             then Sum.rec
+      --               (λ _ → mapFreelyAddFail inr (M' .δᵢ c))
+      --               (λ _ → mapFreelyAddFail inl (M .δq q c))
+      --               (seqUnambig c)
+      --             else mapFreelyAddFail inl (M .δq q c))
+      --           )
+      --           )
+      --           (Sum.elim
+      --             {C = λ x →
+      --               Trace ⊗Aut true (↑q inr q') ⊢
+      --               Trace ⊗Aut true
+      --                 (↑f→q
+      --                 (Sum.rec
+      --                   _
+      --                   _
+      --                   x)
+      --                 )
+      --             }
+      --             (λ f → {!!})
+      --             (λ notAcc' → {!!})
+      --             (seqUnambig c))
+      --           (sym acc)
+      --   -- help c q acc | ↑f q' | true = ?
+      --   -- stepInitial : (c : ⟨ Alphabet ⟩) →
+      --   --   ＂ c ＂ ⊗ ParseAlgCarrier M' ⟦_⟧M' (↑f→q (M' .δᵢ c))
+      --   --     ⊢ ParseAlgCarrier M' ⟦_⟧M' initial
+      --   -- stepInitial c with M' .δᵢ c
+      --   -- ... | fail = ⊗⊥*-elim
+      --   -- ... | ↑f q' =
+      --   --   &ᴰ-in (λ q →
+      --   --     &ᴰ-in (λ acc →
+      --   --       J (λ x y → ＂ c ＂ ⊗ Trace ⊗Aut x (↑q inr q') ⊢ Trace ⊗Aut true (↑q inl q))
+      --   --         (STEP ⊗Aut (inl q) c ∘g id ,⊗ {!!}) acc
+      --   --         -- ({!!} ∘g STEP ⊗Aut {!inr q'!} c)
+      --   --     )
+      --   --   )
+
+      M'Alg (↑q q') =
+        ⊕ᴰ-elim λ where
+          (stop .q' x) → {!!}
+          (step .q' c) → {!!}
+
+      MAlg : ParseAlg M ⟦_⟧M
+      MAlg fail = ParseAlgFail M _
+      MAlg initial =
+        ⊕ᴰ-elim λ where
+          (stopᵢ Eq.refl) → Empty.rec (true≢false notNullM)
+          (stepᵢ c) → {!!}
+      MAlg (↑q q) =
+        ⊕ᴰ-elim λ where
+          (stop .q x) → {!!}
+          (step .q c) → {!!}
