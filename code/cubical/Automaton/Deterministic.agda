@@ -33,7 +33,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   TraceTy : Bool → (q : Q) → Functor Q
   TraceTy b q = ⊕e Tag λ {
       stop → ⊕e (Lift (b Eq.≡ isAcc q)) λ { (lift acc) → k ε* }
-      ; step → ⊕e (Lift ⟨ Alphabet ⟩) (λ { (lift c) → ⊗e (k (literal* c)) (Var (δ q c)) }) }
+      ; step → ⊕e (Lift ⟨ Alphabet ⟩) (λ { (lift c) → (k (literal* c)) ⊗e (Var (δ q c)) }) }
 
   Trace : Bool → (q : Q) → Grammar ℓ
   Trace b = μ (TraceTy b)

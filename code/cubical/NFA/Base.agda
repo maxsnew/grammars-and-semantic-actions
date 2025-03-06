@@ -71,7 +71,7 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     TraceTy : (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
     TraceTy q = ⊕e (Tag q) λ
       { (stop x) → k ε*
-      ; (step t x) → ⊗e (k (literal* (label t))) (Var (dst t))
+      ; (step t x) → (k (literal* (label t))) ⊗e (Var (dst t))
       ; (stepε t x) → Var (ε-dst t) }
     Trace : (q : ⟨ Q ⟩) → Grammar ℓN
     Trace = μ TraceTy
@@ -101,7 +101,7 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
           (lift acc) → k (LiftG ℓN ε) )
       ; step → ⊕e (Eq.fiber src q) λ {
           (t , Eq.refl ) →
-            ⊗e (k (LiftG ℓN (literal (label t)))) (Var (dst t)) }
+            (k (LiftG ℓN (literal (label t)))) ⊗e (Var (dst t)) }
       ; stepε → ⊕e (Eq.fiber ε-src q) λ { (t , Eq.refl) → Var (ε-dst t) } }
 
     Trace : Bool → (q : ⟨ Q ⟩) → Grammar ℓN

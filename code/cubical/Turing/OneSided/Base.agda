@@ -116,7 +116,7 @@ module _ (TM : TuringMachine) where
     ⊕e Tag λ {
       nil → k ε
     ; snoc → ⊕e ⟨ Alphabet ⟩
-      λ c → ⊕e (Σ[ tape' ∈ Tape ] Tape≡ (consTape (inl c) tape') tape) (λ (tape' , _) → ⊗e (Var tape') (k (literal c))) }
+      λ c → ⊕e (Σ[ tape' ∈ Tape ] Tape≡ (consTape (inl c) tape') tape) (λ (tape' , _) → (Var tape') ⊗e (k (literal c))) }
 
   -- The grammar of strings thats form the tape that have the input string in the leftmost
   -- entries of the tape

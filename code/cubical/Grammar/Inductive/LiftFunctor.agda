@@ -28,7 +28,7 @@ module _ (X : Type ℓX) {ℓY} where
   LiftFunctor (Var x) = Var (lift x)
   LiftFunctor (&e Y F) = &e (Lift {j = ℓY} Y) (λ y → LiftFunctor (F (lower y)))
   LiftFunctor (⊕e Y F) = ⊕e (Lift {j = ℓY} Y) (λ y → LiftFunctor (F (lower y)))
-  LiftFunctor (⊗e F F₁) = ⊗e (LiftFunctor F) (LiftFunctor F₁)
+  LiftFunctor (F ⊗e F₁) = (LiftFunctor F) ⊗e (LiftFunctor F₁)
 
   lowerFunctor :
     {ℓB : Level} →
@@ -38,7 +38,7 @@ module _ (X : Type ℓX) {ℓY} where
   lowerFunctor (Var x) = liftG ∘g lowerG ∘g lowerG
   lowerFunctor (&e Y F) = &ᴰ-in (λ y → lowerFunctor (F y) ∘g &ᴰ-π (lift y))
   lowerFunctor (⊕e Y F) = ⊕ᴰ-elim (λ (lift y) → ⊕ᴰ-in y ∘g lowerFunctor (F y))
-  lowerFunctor (⊗e F F₁) = lowerFunctor F ,⊗ lowerFunctor F₁
+  lowerFunctor (F ⊗e F₁) = lowerFunctor F ,⊗ lowerFunctor F₁
 
   liftFunctor :
     {ℓB : Level} →
@@ -48,7 +48,7 @@ module _ (X : Type ℓX) {ℓY} where
   liftFunctor (Var x) = liftG ∘g liftG ∘g lowerG
   liftFunctor (&e Y F) = &ᴰ-in (λ (lift y) → liftFunctor (F y) ∘g &ᴰ-π y)
   liftFunctor (⊕e Y F) = ⊕ᴰ-elim (λ y → ⊕ᴰ-in (lift y) ∘g liftFunctor (F y))
-  liftFunctor (⊗e F F₁) = liftFunctor F ,⊗ liftFunctor F₁
+  liftFunctor (F ⊗e F₁) = liftFunctor F ,⊗ liftFunctor F₁
 
   open StrongEquivalence
   liftFunctor≅ :
@@ -65,7 +65,7 @@ module _ (X : Type ℓX) {ℓY} where
       liftFunctor≅ {ℓB = ℓB} (F y) .sec i ∘g &ᴰ-π y)
   liftFunctor≅ {ℓB = ℓB} (⊕e Y F) .sec =
     ⊕ᴰ≡ _ _ λ y → λ i → ⊕ᴰ-in y ∘g liftFunctor≅ {ℓB = ℓB} (F y) .sec i
-  liftFunctor≅ {ℓB = ℓB} (⊗e F F₁) {A = A} .sec = ans
+  liftFunctor≅ {ℓB = ℓB} (F ⊗e F₁) {A = A} .sec = ans
     where
       opaque
         unfolding ⊗-intro
@@ -81,7 +81,7 @@ module _ (X : Type ℓX) {ℓY} where
       liftFunctor≅ (F y) .ret i ∘g &ᴰ-π (lift y)
   liftFunctor≅ (⊕e Y F) .ret =
     ⊕ᴰ≡ _ _ λ (lift y) → λ i → ⊕ᴰ-in (lift y) ∘g liftFunctor≅ (F y) .ret i
-  liftFunctor≅ {ℓB = ℓB} (⊗e F F₁) {A = A} .ret = ans
+  liftFunctor≅ {ℓB = ℓB} (F ⊗e F₁) {A = A} .ret = ans
     where
       opaque
         unfolding ⊗-intro

@@ -71,7 +71,7 @@ isSetDyckTag = isSetRetract enc dec retr isSetBool where
 DyckTy : Unit → Functor Unit
 DyckTy _ = ⊕e DyckTag (λ
   { nil' → k ε
-  ; balanced' → ⊗e (k (literal [)) (⊗e (Var _) (⊗e (k (literal ])) (Var _))) })
+  ; balanced' → (k (literal [)) ⊗e (Var _) ⊗e (k (literal ]) ⊗e (Var _)) })
 
 
 IndDyck : Grammar ℓ-zero
@@ -205,9 +205,9 @@ TraceTys : Bool → ℕ → Functor ℕ
 TraceTys b n = ⊕e (TraceTag b n) (λ
   { (eof' x x₁) → k ε
   ; (leftovers' x n-1 x₁) → k ε
-  ; open' → ⊗e (k (literal LP)) (Var (suc n))
-  ; (close' n-1 _) → ⊗e (k (literal RP)) (Var n-1)
-  ; (unexpected' x x₁) → ⊗e (k (literal RP)) (k ⊤) })
+  ; open' → (k (literal LP)) ⊗e (Var (suc n))
+  ; (close' n-1 _) → (k (literal RP)) ⊗e (Var n-1)
+  ; (unexpected' x x₁) → (k (literal RP)) ⊗e (k ⊤) })
 
 Trace : Bool → ℕ → Grammar _
 Trace b = μ (TraceTys b)

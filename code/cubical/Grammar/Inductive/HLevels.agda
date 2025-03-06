@@ -27,7 +27,7 @@ isSetValued (k A) = isSetGrammar A
 isSetValued {X = X} (Var x) = Unit*
 isSetValued (&e Y F) = ∀ y → isSetValued (F y)
 isSetValued (⊕e Y F) = isSet Y × (∀ y → isSetValued (F y))
-isSetValued (⊗e F G) = isSetValued F × isSetValued G
+isSetValued (F ⊗e G) = isSetValued F × isSetValued G
 
 module _ {X : Type ℓX} where
   FS : (F : Functor X) → String → Type ℓX
@@ -40,7 +40,7 @@ module _ {X : Type ℓX} where
     FP (Var x') w s = Unit*
     FP (&e Y F) w s = Σ[ y ∈ Y ] FP (F y) w (s y)
     FP (⊕e Y F) w (y , s) = FP (F y) w s
-    FP (⊗e Fl Fr) _ (((wl , wr), _) , sl , sr) = FP Fl wl sl ⊎ FP Fr wr sr
+    FP (Fl ⊗e Fr) _ (((wl , wr), _) , sl , sr) = FP Fl wl sl ⊎ FP Fr wr sr
 
     F-inX : (F : Functor X) (ix : X × String) (s : FS F (ix .snd))
       (p : FP F (ix .snd) s)
@@ -48,9 +48,9 @@ module _ {X : Type ℓX} where
     F-inX (Var x) ix s p = x , (ix .snd)
     F-inX (&e Y F) ix s (y , p) = F-inX (F y) ix (s y) p
     F-inX (⊕e Y F) ix (y , s) p = F-inX (F y) ix s p
-    F-inX (⊗e Fl Fr) ix (sp , sl , sr) (inl p) =
+    F-inX (Fl ⊗e Fr) ix (sp , sl , sr) (inl p) =
       F-inX Fl (ix .fst , sp .fst .fst) sl p
-    F-inX (⊗e Fl Fr) ix (sp , sl , sr) (inr p) =
+    F-inX (Fl ⊗e Fr) ix (sp , sl , sr) (inr p) =
       F-inX Fr (ix .fst , sp .fst .snd) sr p
 
   μIW : (X → Functor X) → X × String → Type ℓX
@@ -76,9 +76,9 @@ module _ {X : Type ℓX} where
     getSubtreeF g (Var x') w x e p = e .lower
     getSubtreeF g (&e Y F) w x e (y , p) = getSubtreeF g (F y) w x (e y) p
     getSubtreeF g (⊕e Y F) w x (y , e) p = getSubtreeF g (F y) w x e p
-    getSubtreeF g (⊗e Fl Fr) w x (((wl , wr) , _) , el , er) (inl pl) =
+    getSubtreeF g (Fl ⊗e Fr) w x (((wl , wr) , _) , el , er) (inl pl) =
       getSubtreeF g Fl wl x el pl
-    getSubtreeF g (⊗e Fl Fr) w x (((wl , wr) , _) , el , er) (inr pr) =
+    getSubtreeF g (Fl ⊗e Fr) w x (((wl , wr) , _) , el , er) (inr pr) =
       getSubtreeF g Fr wr x er pr
 
     nodeF : ∀ {A : X → Grammar ℓA}(F : Functor X)
@@ -94,7 +94,7 @@ module _ {X : Type ℓX} where
     nodeF (&e Y F) w x s subtree y =
       nodeF (F y) w x (s y) (λ p → subtree (y , p))
     nodeF (⊕e Y F) w x (y , s) subtree = y , nodeF (F y) w x s subtree
-    nodeF (⊗e Fl Fr) w x (((wl , wr) , w≡wlwr) , sl , sr) subtree =
+    nodeF (Fl ⊗e Fr) w x (((wl , wr) , w≡wlwr) , sl , sr) subtree =
       ((wl , wr) , w≡wlwr)
         , (nodeF Fl wl x sl (λ p → subtree (inl p)))
         , ((nodeF Fr wr x sr λ p → subtree (inr p)))
@@ -107,7 +107,7 @@ module _ {X : Type ℓX} where
     reconstructF (Var y) w x t = refl
     reconstructF (&e Y F) w x t i y = reconstructF (F y) w x (t y) i
     reconstructF (⊕e Y F) w x (y , t) i = y , (reconstructF (F y) w x t i)
-    reconstructF (⊗e Fl Fr) w x (((wl , wr), sp) , tl , tr) i =
+    reconstructF (Fl ⊗e Fr) w x (((wl , wr), sp) , tl , tr) i =
       ((wl , wr) , sp) , (reconstructF Fl wl x tl i , reconstructF Fr wr x tr i)
 
 
@@ -121,7 +121,7 @@ module _ {X : Type ℓX} where
       isSetGrammar&ᴰ (λ b → isSet⟦F⟧ (F b) (isSetF b) A)
     isSet⟦F⟧ (⊕e Y F) isSetF A =
       isSetGrammar⊕ᴰ (isSetF .fst) (λ b → isSet⟦F⟧ (F b) (isSetF .snd b) A)
-    isSet⟦F⟧ (⊗e Fl Fr) isSetF A =
+    isSet⟦F⟧ (Fl ⊗e Fr) isSetF A =
       isSetGrammar⊗ (isSet⟦F⟧ Fl (isSetF .fst) A) (isSet⟦F⟧ Fr (isSetF .snd) A)
 
     isSetμIW : ∀ (F : X → Functor X) → (∀ x → isSetValued (F x))

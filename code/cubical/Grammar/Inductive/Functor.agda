@@ -23,7 +23,9 @@ module _ where
     k : (A : Grammar ℓX) → Functor X
     Var : (x : X) → Functor X -- reference one of the mutually inductive types being defined
     &e ⊕e : ∀ (Y : Type ℓX) → (F : Y → Functor X) → Functor X
-    ⊗e : (F : Functor X) → (F' : Functor X) → Functor X
+    _⊗e_ : (F : Functor X) → (F' : Functor X) → Functor X
+
+  infixr 25 _⊗e_
 
   module _ {X : Type ℓX}{ℓA} where
     ⟦_⟧ : Functor X → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
@@ -31,7 +33,7 @@ module _ where
     ⟦ Var x ⟧ A = LiftG ℓX (A x)
     ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
-    ⟦ ⊗e F F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
+    ⟦ F ⊗e F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
 
   map : ∀ {X : Type ℓX}(F : Functor X) {A : X → Grammar ℓA}{B : X → Grammar ℓB}
         → (∀ x → A x ⊢ B x)
@@ -40,7 +42,7 @@ module _ where
   map (Var x) f = liftG ∘g f x ∘g lowerG
   map (&e Y F) f = &ᴰ-in λ y → map (F y) f ∘g &ᴰ-π y
   map (⊕e Y F) f = ⊕ᴰ-elim λ y → ⊕ᴰ-in y ∘g map (F y) f
-  map (⊗e F F') f = map F f ,⊗ map F' f
+  map (F ⊗e F') f = map F f ,⊗ map F' f
 
   module _ {X : Type ℓX} where
     opaque
@@ -52,7 +54,7 @@ module _ where
       map-id (Var x) i = id
       map-id (&e Y F) i = &ᴰ-in (λ y → map-id (F y) i ∘g &ᴰ-π y)
       map-id (⊕e Y F) i = ⊕ᴰ-elim (λ y → ⊕ᴰ-in y ∘g map-id (F y) i)
-      map-id (⊗e F F') i = map-id F i ,⊗ map-id F' i
+      map-id (F ⊗e F') i = map-id F i ,⊗ map-id F' i
 
       map-∘ :  ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
         (F : Functor X)
@@ -62,7 +64,7 @@ module _ where
       map-∘ (Var x) f f' i = liftG ∘g f x ∘g f' x ∘g lowerG
       map-∘ (&e Y F) f f' i = &ᴰ-in (λ y → map-∘ (F y) f f' i ∘g &ᴰ-π y)
       map-∘ (⊕e Y F) f f' i = ⊕ᴰ-elim (λ y → ⊕ᴰ-in y ∘g map-∘ (F y) f f' i)
-      map-∘ (⊗e F F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
+      map-∘ (F ⊗e F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
 
   module _ {X : Type ℓX} (F : X → Functor X) where
     Algebra : (X → Grammar ℓA) → Type (ℓ-max ℓX ℓA)

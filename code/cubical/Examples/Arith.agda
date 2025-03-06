@@ -9,21 +9,51 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Data.Bool
 open import Cubical.Data.Nat
 open import Cubical.Data.FinSet
+open import Cubical.Data.Sum
 
 data BinOp : Type where
   + * : BinOp
+
+opaque
+  BinOpRep : BinOp ≃ Bool
+  BinOpRep = isoToEquiv (iso
+    (λ { + → true ; * → false })
+    (λ { false → * ; true → + })
+    (λ { false → refl ; true → refl })
+    λ { + → refl ; * → refl })
+
+  isFinBinOp : isFinSet BinOp
+  isFinBinOp = EquivPresIsFinSet (invEquiv BinOpRep) isFinSetBool
+
+  isSetBinOp : isSet BinOp
+  isSetBinOp = isFinSet→isSet isFinBinOp
 
 data Tok : Type where
   [ ] : Tok
   binOp : BinOp → Tok
   num : ℕ → Tok
 
--- Alphabet : hSet _
--- Alphabet = Tok , {!!}
+open Iso
+opaque
+  TokRep : Iso Tok (Bool ⊎ (BinOp ⊎ ℕ))
+  TokRep =
+      iso
+        (λ { [ → inl true ; ] → inl false ; (binOp x) → inr (inl x) ; (num x) → inr (inr x)})
+        (λ { (inl false) → ] ; (inl true) → [ ; (inr (inl x)) → binOp x ; (inr (inr x)) → num x})
+        (λ { (inl false) → refl ; (inl true) → refl ; (inr (inl x)) → refl ; (inr (inr x)) → refl})
+        λ { [ → refl ; ] → refl ; (binOp x) → refl ; (num x) → refl}
 
--- open import Grammar Alphabet
--- open import Grammar.Equivalence Alphabet
--- open import Term Alphabet
+  isSetTok : isSet Tok
+  isSetTok =
+    isSetRetract (TokRep .fun) (TokRep .inv) (TokRep .leftInv)
+      (isSet⊎ isSetBool (isSet⊎ isSetBinOp isSetℕ))
+
+Alphabet : hSet _
+Alphabet = Tok , isSetTok
+
+open import Grammar Alphabet
+open import Grammar.Equivalence Alphabet
+open import Term Alphabet
 
 -- module v0 where
 --   -- ambiguous grammar

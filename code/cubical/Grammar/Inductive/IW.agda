@@ -37,7 +37,7 @@ module _ {X : Type ℓX} where
     FP (Var a') w s = Unit*
     FP (&e B F) w s = Σ[ b ∈ B ] FP (F b) w (s b)
     FP (⊕e B F) w (b , s) = FP (F b) w s
-    FP (⊗e Fl Fr) _ (((wl , wr), _) , sl , sr) = FP Fl wl sl ⊎ FP Fr wr sr
+    FP (Fl ⊗e Fr) _ (((wl , wr), _) , sl , sr) = FP Fl wl sl ⊎ FP Fr wr sr
 
     F-inX : (F : Functor X) (w : String) (s : FS F w)
       (p : FP F w s)
@@ -45,9 +45,9 @@ module _ {X : Type ℓX} where
     F-inX (Var a) w s p = a , w
     F-inX (&e B F) w s (b , p) = F-inX (F b) w (s b) p
     F-inX (⊕e B F) w (b , s) p = F-inX (F b) w s p
-    F-inX (⊗e Fl Fr) _ (sp , sl , sr) (inl p) =
+    F-inX (Fl ⊗e Fr) _ (sp , sl , sr) (inl p) =
       F-inX Fl (sp .fst .fst) sl p
-    F-inX (⊗e Fl Fr) _ (sp , sl , sr) (inr p) =
+    F-inX (Fl ⊗e Fr) _ (sp , sl , sr) (inr p) =
       F-inX Fr (sp .fst .snd) sr p
 
   Container : (F : Functor X) → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
@@ -88,9 +88,9 @@ module _ {X : Type ℓX} where
       getSubtreeF (Var a') w e p = e .lower
       getSubtreeF (&e B F) w e (b , p) = getSubtreeF (F b) w (e b) p
       getSubtreeF (⊕e B F) w (b , e) p = getSubtreeF (F b) w e p
-      getSubtreeF (⊗e Fl Fr) w (((wl , wr) , _) , el , er) (inl pl) =
+      getSubtreeF (Fl ⊗e Fr) w (((wl , wr) , _) , el , er) (inl pl) =
         getSubtreeF Fl wl el pl
-      getSubtreeF (⊗e Fl Fr) w (((wl , wr) , _) , el , er) (inr pr) =
+      getSubtreeF (Fl ⊗e Fr) w (((wl , wr) , _) , el , er) (inr pr) =
         getSubtreeF Fr wr er pr
 
       toContainer : (F : Functor X)
@@ -102,7 +102,7 @@ module _ {X : Type ℓX} where
       fromContainer (Var a) _ (s , child) = lift (child tt*)
       fromContainer (&e B F) _ (s , child) b = fromContainer (F b) _ (s b , (λ p → child (b , p)))
       fromContainer (⊕e B F) _ ((b , s) , child) = b , (fromContainer (F b) _ (s , child))
-      fromContainer (⊗e Fl Fr) _ ((splits , sl , sr) , child) =
+      fromContainer (Fl ⊗e Fr) _ ((splits , sl , sr) , child) =
        splits
         , (fromContainer Fl _ (sl , λ p → child (inl p)))
         , (fromContainer Fr _ (sr , λ p → child (inr p)))
@@ -112,7 +112,7 @@ module _ {X : Type ℓX} where
       secFC (Var a) w t = refl
       secFC (&e B F) w t i b = secFC (F b) w (t b) i
       secFC (⊕e B F) w (b , t) i = b , secFC (F b) w t i
-      secFC (⊗e Fl Fr) w (splits , tl , tr) i = splits , (secFC Fl _ tl i , secFC Fr _ tr i)
+      secFC (Fl ⊗e Fr) w (splits , tl , tr) i = splits , (secFC Fl _ tl i , secFC Fr _ tr i)
 
       retFC1 : ∀ (F : Functor X) w t →
         (toContainer F ∘g fromContainer F) w t .fst ≡ t .fst
@@ -122,7 +122,7 @@ module _ {X : Type ℓX} where
         retFC1 (F b) w (s b , (λ p → child (b , p)))
       retFC1 (⊕e B F) w ((b , s) , child) =
         ΣPathP (refl , (retFC1 (F b) w (s , child)))
-      retFC1 (⊗e Fl Fr) w ((splits , sl , sr) , child) = ΣPathP (refl , ΣPathP
+      retFC1 (Fl ⊗e Fr) w ((splits , sl , sr) , child) = ΣPathP (refl , ΣPathP
         ( retFC1 Fl _ (sl , λ p → child (inl p))
         , retFC1 Fr _ (sr , λ p → child (inr p))))
 
@@ -136,8 +136,8 @@ module _ {X : Type ℓX} where
       retFC2 (k g) w _ = isContr→isProp isContrΠ⊥* _ _
       retFC2 (⊕e B F) w ((b , s) , child) = retFC2 (F b) w (s , child)
       retFC2 (&e B F) w (s , child) i (b , p) = retFC2 (F b) w (s b , (λ p → child (b , p))) i p
-      retFC2 (⊗e Fl Fr) w ((_ , sl , sr) , child) i (inl p) = retFC2 Fl _ (sl , λ p → child (inl p)) i p
-      retFC2 (⊗e Fl Fr) w ((_ , sl , sr) , child) i (inr p) = retFC2 Fr _ (sr , λ p → child (inr p)) i p
+      retFC2 (Fl ⊗e Fr) w ((_ , sl , sr) , child) i (inl p) = retFC2 Fl _ (sl , λ p → child (inl p)) i p
+      retFC2 (Fl ⊗e Fr) w ((_ , sl , sr) , child) i (inr p) = retFC2 Fr _ (sr , λ p → child (inr p)) i p
 
       retFC : ∀ (F : Functor X) w t → (toContainer F ∘g fromContainer F) w t ≡ t
       retFC F w t = ΣPathP ((retFC1 F w t) , retFC2 F w t)
@@ -167,7 +167,7 @@ module _ {X : Type ℓX} where
       b , (fromContainerNat (F b) f i w (s , child))
     fromContainerNat (&e Y F) f i w (s , child) b =
       fromContainerNat (F b) f i w (s b , λ p → child (b , p))
-    fromContainerNat (⊗e Fl Fr) f i w ((splits , sl , sr) , child) =
+    fromContainerNat (Fl ⊗e Fr) f i w ((splits , sl , sr) , child) =
       splits
       , fromContainerNat Fl f i _ (sl , λ p → child (inl p))
       , fromContainerNat Fr f i _ (sr , λ p → child (inr p))
