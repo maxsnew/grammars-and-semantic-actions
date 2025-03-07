@@ -19,7 +19,7 @@ import Cubical.Data.Equality as Eq
 
 data Tok : Type where
   [ ] : Tok     -- parens
-  * : Tok       -- the binary operation
+  + : Tok       -- the binary operation
   num : ℕ → Tok -- constants
 
 open Iso
@@ -27,10 +27,10 @@ opaque
   TokRep : Iso Tok (Bool ⊎ (Unit ⊎ ℕ))
   TokRep =
       iso
-        (λ { [ → inl true ; ] → inl false ; * → inr (inl _) ; (num x) → inr (inr x)})
-        (λ { (inl false) → ] ; (inl true) → [ ; (inr (inl x)) → * ; (inr (inr x)) → num x})
+        (λ { [ → inl true ; ] → inl false ; + → inr (inl _) ; (num x) → inr (inr x)})
+        (λ { (inl false) → ] ; (inl true) → [ ; (inr (inl x)) → + ; (inr (inr x)) → num x})
         (λ { (inl false) → refl ; (inl true) → refl ; (inr (inl x)) → refl ; (inr (inr x)) → refl})
-        λ { [ → refl ; ] → refl ; * → refl ; (num x) → refl}
+        λ { [ → refl ; ] → refl ; + → refl ; (num x) → refl}
 
   isSetTok : isSet Tok
   isSetTok =
@@ -41,8 +41,9 @@ Alphabet : hSet ℓ-zero
 Alphabet = Tok , isSetTok
 
 open import Grammar Alphabet
-open import Grammar.Equivalence Alphabet
 open import Term Alphabet
+
+open StrongEquivalence
 
 anyNum : Grammar _
 anyNum = ⊕[ n ∈ ℕ ] ＂ num n ＂
@@ -52,7 +53,7 @@ anyNum = ⊕[ n ∈ ℕ ] ＂ num n ＂
 -- over natural numbers and parentheses
 --
 -- S → E
--- E → A | A * E
+-- E → A | A + E
 -- A → n | [ E ]
 --
 --}
@@ -71,7 +72,7 @@ module LL⟨1⟩ where
     ⊕e (Tag Exp)
       λ where
         done → Var Atom
-        add → Var Atom ⊗e k ＂ * ＂ ⊗e Var Exp
+        add → Var Atom ⊗e k ＂ + ＂ ⊗e Var Exp
   BinOpTy Atom =
     ⊕e (Tag Atom)
       λ where
@@ -87,7 +88,7 @@ module LL⟨1⟩ where
   DONE : ATOM ⊢ EXP
   DONE = roll ∘g ⊕ᴰ-in done ∘g liftG
 
-  ADD : ATOM ⊗ ＂ * ＂ ⊗ EXP ⊢ EXP
+  ADD : ATOM ⊗ ＂ + ＂ ⊗ EXP ⊢ EXP
   ADD = roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG ,⊗ liftG
 
   NUM : anyNum ⊢ ATOM
@@ -98,19 +99,19 @@ module LL⟨1⟩ where
 
 module Automaton where
   data AutomatonState : Type ℓ-zero where
-    Opening DoneOpening Closing Multiplying : AutomatonState
+    Opening DoneOpening Closing Adding : AutomatonState
 
   -- the constructor names of each automaton state
   data AutomatonTag (b : Bool) (n : ℕ) : (N : AutomatonState) → Type ℓ-zero where
     left num : AutomatonTag b n Opening
-    doneO unexpected*O unexpected]O  : b Eq.≡ false → AutomatonTag b n Opening
-    lookaheadRP lookaheadNot : AutomatonTag b n DoneOpening
+    doneO unexpected+O unexpected]O  : b Eq.≡ false → AutomatonTag b n Opening
+    lookahead] lookahead[ lookaheadε lookaheadNum : AutomatonTag b n DoneOpening
     closeGood : ∀ n-1 → n Eq.≡ suc n-1 → AutomatonTag b n Closing
     closeBad : n Eq.≡ 0 → AutomatonTag b n Closing
-    doneC unexpected[C unexpected*C unexpectedNumC : b Eq.≡ false → AutomatonTag b n Closing
-    doneGood : n Eq.≡ 0 → b Eq.≡ true → AutomatonTag b n Multiplying
-    add : AutomatonTag b n Multiplying
-    doneBad unexpected[M unexpected]M unexpectedNumM : b Eq.≡ false → AutomatonTag b n Multiplying
+    doneC unexpected[C unexpected+C unexpectedNumC : b Eq.≡ false → AutomatonTag b n Closing
+    doneGood : n Eq.≡ 0 → b Eq.≡ true → AutomatonTag b n Adding
+    add : AutomatonTag b n Adding
+    doneBad unexpected[A unexpected]A unexpectedNumA : b Eq.≡ false → AutomatonTag b n Adding
 
   AutomatonTy : Bool → ℕ → AutomatonState → Functor (ℕ × AutomatonState)
   AutomatonTy b n Opening =
@@ -120,33 +121,36 @@ module Automaton where
         num → k anyNum ⊗e Var (n , DoneOpening)
         (doneO Eq.refl) → k ε
         (unexpected]O Eq.refl) → k ＂ ] ＂ ⊗e k ⊤
-        (unexpected*O Eq.refl) → k ＂ * ＂ ⊗e k ⊤
+        (unexpected+O Eq.refl) → k ＂ + ＂ ⊗e k ⊤
   AutomatonTy b n DoneOpening =
     ⊕e (AutomatonTag b n DoneOpening)
       λ where
-        lookaheadRP →
+        lookahead[ →
           &e Bool -- binary product
             λ where
               true → k ＂ ] ＂ ⊗e k ⊤
               false → Var (n , Closing)
-        lookaheadNot →
-          &e Bool -- binary product
-            λ where
-              true →
-                -- NotStartsWithRP = ε ⊕ (＂ [ ＂ ⊕ ＂ * ＂ ⊕ anyNum) ⊗ ⊤
-                ⊕e Bool -- binary coproduct
-                  λ where
-                    true → k ε
-                    false →
-                      (⊕e Bool
-                        λ where
-                          true → k ＂ [ ＂
-                          false →
-                            ⊕e Bool
-                              λ where
-                                true → k ＂ * ＂
-                                false → k anyNum) ⊗e k ⊤
-              false → Var (n , Multiplying)
+        lookaheadε → {!!}
+        lookahead] → {!!}
+        lookaheadNum → {!!}
+        -- lookaheadNot →
+        --   &e Bool -- binary product
+        --     λ where
+        --       true →
+        --         -- NotStartsWithRP = ε ⊕ (＂ [ ＂ ⊕ ＂ * ＂ ⊕ anyNum) ⊗ ⊤
+        --         ⊕e Bool -- binary coproduct
+        --           λ where
+        --             true → k ε
+        --             false →
+        --               (⊕e Bool
+        --                 λ where
+        --                   true → k ＂ [ ＂
+        --                   false →
+        --                     ⊕e Bool
+        --                       λ where
+        --                         true → k ＂ + ＂
+        --                         false → k anyNum) ⊗e k ⊤
+        --       false → Var (n , Adding)
   AutomatonTy b n Closing =
     ⊕e (AutomatonTag b n Closing)
       λ where
@@ -154,24 +158,24 @@ module Automaton where
         (closeBad Eq.refl) → k ＂ ] ＂
         (doneC Eq.refl) → k ε
         (unexpected[C Eq.refl) → k ＂ [ ＂ ⊗e k ⊤
-        (unexpected*C Eq.refl) → k ＂ * ＂ ⊗e k ⊤
+        (unexpected+C Eq.refl) → k ＂ + ＂ ⊗e k ⊤
         (unexpectedNumC Eq.refl) → k anyNum ⊗e k ⊤
-  AutomatonTy b n Multiplying =
-    ⊕e (AutomatonTag b n Multiplying)
+  AutomatonTy b n Adding =
+    ⊕e (AutomatonTag b n Adding)
       λ where
         (doneGood Eq.refl Eq.refl) → k ε
         (doneBad Eq.refl) → k ε
-        add → k ＂ [ ＂ ⊗e Var (n , Opening)
-        (unexpected[M Eq.refl) → k ＂ [ ＂ ⊗e k ⊤
-        (unexpected]M Eq.refl) → k ＂ ] ＂ ⊗e k ⊤
-        (unexpectedNumM Eq.refl) → k anyNum ⊗e k ⊤
+        add → k ＂ + ＂ ⊗e Var (n , Opening)
+        (unexpected[A Eq.refl) → k ＂ [ ＂ ⊗e k ⊤
+        (unexpected]A Eq.refl) → k ＂ ] ＂ ⊗e k ⊤
+        (unexpectedNumA Eq.refl) → k anyNum ⊗e k ⊤
 
   AutomatonG : Bool → ℕ → AutomatonState → Grammar ℓ-zero
   AutomatonG b n S = μ (λ (n' , s') → AutomatonTy b n' s') (n , S)
 
   -- NotStartsWithRP = ε ⊕ (＂ [ ＂ ⊕ ＂ * ＂ ⊕ anyNum) ⊗ ⊤
   NOT_STARTS_WITH_[ : Grammar ℓ-zero
-  NOT_STARTS_WITH_[ = ε ⊕ (＂ [ ＂ ⊕ ＂ * ＂ ⊕ anyNum) ⊗ ⊤
+  NOT_STARTS_WITH_[ = ε ⊕ (＂ [ ＂ ⊕ ＂ + ＂ ⊕ anyNum) ⊗ ⊤
 
   -- States of the automaton as Grammars
 
@@ -190,8 +194,8 @@ module Automaton where
   CLOSING : Bool → ℕ → Grammar ℓ-zero
   CLOSING b n = AutomatonG b n Closing
 
-  MULTIPLYING : Bool → ℕ → Grammar ℓ-zero
-  MULTIPLYING b n = AutomatonG b n Multiplying
+  ADDING : Bool → ℕ → Grammar ℓ-zero
+  ADDING b n = AutomatonG b n Adding
 
   -- Constructors of the automaton states that adjust for lifts
   LEFT : ∀ n b → ＂ [ ＂ ⊗ OPENING b (suc n) ⊢ OPENING b n
@@ -203,19 +207,25 @@ module Automaton where
   DONE_O : ∀ n → ε ⊢ OPENING false n
   DONE_O n = roll ∘g ⊕ᴰ-in (doneO Eq.refl) ∘g liftG
 
-  UNEXPECTED*O : ∀ n → ＂ * ＂ ⊗ ⊤ ⊢ OPENING false n
-  UNEXPECTED*O n = roll ∘g ⊕ᴰ-in (unexpected*O Eq.refl) ∘g liftG ,⊗ liftG
+  UNEXPECTED+O : ∀ n → ＂ + ＂ ⊗ ⊤ ⊢ OPENING false n
+  UNEXPECTED+O n = roll ∘g ⊕ᴰ-in (unexpected+O Eq.refl) ∘g liftG ,⊗ liftG
 
   UNEXPECTED]O : ∀ n → ＂ ] ＂ ⊗ ⊤ ⊢ OPENING false n
   UNEXPECTED]O n = roll ∘g ⊕ᴰ-in (unexpected]O Eq.refl) ∘g liftG ,⊗ liftG
 
   -- TODO : go between binary sum/product and there inductive counterparts
   -- this is in each of Grammar.Sum/Grammar.Product
-  LOOKAHEAD_RP  : ∀ n b → (＂ ] ＂ ⊗ ⊤) & CLOSING b n ⊢ DONE_OPENING b n
-  LOOKAHEAD_RP n b = roll ∘g ⊕ᴰ-in lookaheadRP ∘g {!!}
+  LOOKAHEAD]  : ∀ n b → (＂ ] ＂ ⊗ ⊤) & CLOSING b n ⊢ DONE_OPENING b n
+  LOOKAHEAD] n b = roll ∘g ⊕ᴰ-in lookahead] ∘g {!!}
 
-  LOOKAHEAD_NOT : ∀ n b → NOT_STARTS_WITH_[ & MULTIPLYING b n ⊢ DONE_OPENING b n
-  LOOKAHEAD_NOT n b = roll ∘g ⊕ᴰ-in lookaheadNot ∘g {!!}
+  LOOKAHEADε : ∀ n b → ε & ADDING b n ⊢ DONE_OPENING b n
+  LOOKAHEADε n b = roll ∘g ⊕ᴰ-in lookaheadε ∘g {!!}
+
+  LOOKAHEAD[ : ∀ n b → (＂ [ ＂ ⊗ ⊤) & ADDING b n ⊢ DONE_OPENING b n
+  LOOKAHEAD[ n b = roll ∘g ⊕ᴰ-in lookahead[ ∘g {!!}
+
+  LOOKAHEAD_NUM : ∀ n b →  (anyNum ⊗ ⊤) & ADDING b n ⊢ DONE_OPENING b n
+  LOOKAHEAD_NUM n b = roll ∘g ⊕ᴰ-in lookaheadNum ∘g {!!}
 
   CLOSE_GOOD : ∀ n b → ＂ ] ＂ ⊗ DONE_OPENING b n ⊢ CLOSING b (suc n)
   CLOSE_GOOD n b = roll ∘g ⊕ᴰ-in (closeGood n Eq.refl) ∘g liftG ,⊗ liftG
@@ -229,29 +239,118 @@ module Automaton where
   UNEXPECTED[C : ∀ n → ＂ [ ＂ ⊗ ⊤ ⊢ CLOSING false n
   UNEXPECTED[C n = roll ∘g ⊕ᴰ-in (unexpected[C Eq.refl) ∘g liftG ,⊗ liftG
 
-  UNEXPECTED*C  : ∀ n → ＂ * ＂ ⊗ ⊤ ⊢ CLOSING false n
-  UNEXPECTED*C n = roll ∘g ⊕ᴰ-in (unexpected*C Eq.refl) ∘g liftG ,⊗ liftG
+  UNEXPECTED+C  : ∀ n → ＂ + ＂ ⊗ ⊤ ⊢ CLOSING false n
+  UNEXPECTED+C n = roll ∘g ⊕ᴰ-in (unexpected+C Eq.refl) ∘g liftG ,⊗ liftG
 
   UNEXPECTED_NUM_C : ∀ n → anyNum ⊗ ⊤ ⊢ CLOSING false n
   UNEXPECTED_NUM_C n = roll ∘g ⊕ᴰ-in (unexpectedNumC Eq.refl) ∘g liftG ,⊗ liftG
 
-  DONE_GOOD : ε ⊢ MULTIPLYING true 0
+  DONE_GOOD : ε ⊢ ADDING true 0
   DONE_GOOD = roll ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl) ∘g liftG
 
-  ADD : ∀ n b → ＂ [ ＂ ⊗ OPENING b n ⊢ MULTIPLYING b n
+  ADD : ∀ n b → ＂ + ＂ ⊗ OPENING b n ⊢ ADDING b n
   ADD n b = roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG
 
-  DONE_BAD : ∀ n → ε ⊢ MULTIPLYING false (suc n)
+  DONE_BAD : ∀ n → ε ⊢ ADDING false (suc n)
   DONE_BAD n = roll ∘g ⊕ᴰ-in (doneBad Eq.refl) ∘g liftG
 
-  UNEXPECTED[M : ∀ n → ＂ [ ＂ ⊗ ⊤ ⊢ MULTIPLYING false n
-  UNEXPECTED[M n = roll ∘g ⊕ᴰ-in (unexpected[M Eq.refl) ∘g liftG ,⊗ liftG
+  UNEXPECTED[A : ∀ n → ＂ [ ＂ ⊗ ⊤ ⊢ ADDING false n
+  UNEXPECTED[A n = roll ∘g ⊕ᴰ-in (unexpected[A Eq.refl) ∘g liftG ,⊗ liftG
 
-  UNEXPECTED]M : ∀ n → ＂ ] ＂ ⊗ ⊤ ⊢ MULTIPLYING false n
-  UNEXPECTED]M n = roll ∘g ⊕ᴰ-in (unexpected]M Eq.refl) ∘g liftG ,⊗ liftG
+  UNEXPECTED]A : ∀ n → ＂ ] ＂ ⊗ ⊤ ⊢ ADDING false n
+  UNEXPECTED]A n = roll ∘g ⊕ᴰ-in (unexpected]A Eq.refl) ∘g liftG ,⊗ liftG
 
-  UNEXPECTED_NUM_M : ∀ n → anyNum ⊗ ⊤ ⊢ MULTIPLYING false n
-  UNEXPECTED_NUM_M n = roll ∘g ⊕ᴰ-in (unexpectedNumM Eq.refl) ∘g liftG ,⊗ liftG
+  UNEXPECTED_NUM_A : ∀ n → anyNum ⊗ ⊤ ⊢ ADDING false n
+  UNEXPECTED_NUM_A n = roll ∘g ⊕ᴰ-in (unexpectedNumA Eq.refl) ∘g liftG ,⊗ liftG
+
+  parseTy =
+    &[ s ∈ AutomatonState ]
+    &[ n ∈ ℕ ]
+    ⊕[ b ∈ Bool ]
+      AutomatonG b n s
+
+  parseAlg : string ⊢ parseTy
+  parseAlg =
+    fold*r char λ where
+      (lift _) →
+        ⊕ᴰ-elim λ where
+          nil →
+            &ᴰ-in (λ where
+              Opening → &ᴰ-in λ n → ⊕ᴰ-in false ∘g DONE_O n
+              DoneOpening → {!!}
+              Closing → &ᴰ-in λ n → ⊕ᴰ-in false ∘g DONE_C n
+              Adding →
+                &ᴰ-in
+                  (Nat.elim
+                    (⊕ᴰ-in true ∘g DONE_GOOD)
+                    (λ n-1 _ → ⊕ᴰ-in false ∘g DONE_BAD n-1)
+                  )
+            )
+            ∘g lowerG ∘g lowerG
+          cons →
+            (&ᴰ-in λ where
+              Opening → &ᴰ-in λ n →
+                  ⊕ᴰ-elim λ where
+                    [ →
+                      map⊕ᴰ (LEFT n)
+                      ∘g ⊕ᴰ-distR .fun
+                      ∘g id ,⊗ (&ᴰ-π (suc n) ∘g &ᴰ-π Opening)
+                    ] →
+                      ⊕ᴰ-in false
+                      ∘g UNEXPECTED]O n
+                      ∘g id ,⊗ ⊤-intro
+                    + →
+                      ⊕ᴰ-in false
+                      ∘g UNEXPECTED+O n
+                      ∘g id ,⊗ ⊤-intro
+                    (num m) →
+                      map⊕ᴰ (NUM n)
+                      ∘g ⊕ᴰ-distR .fun
+                      ∘g ⊕ᴰ-in m ,⊗ (&ᴰ-π n ∘g &ᴰ-π DoneOpening)
+              DoneOpening → &ᴰ-in λ n →
+                  ⊕ᴰ-elim λ where
+                    [ → {!!}
+                    ] → {!!}
+                    + → {!!}
+                    (num m) → {!!}
+              Closing → &ᴰ-in λ n →
+                  ⊕ᴰ-elim λ where
+                    [ → {!!}
+                    ] →
+                      {!!}
+                      -- map⊕ᴰ {!!}
+                      -- ∘g ⊕ᴰ-distR .fun
+                      -- ∘g id ,⊗ (&ᴰ-π n ∘g &ᴰ-π DoneOpening)
+                    + →
+                      ⊕ᴰ-in false
+                      ∘g UNEXPECTED+C n
+                      ∘g id ,⊗ ⊤-intro
+                    (num m) →
+                      ⊕ᴰ-in false
+                      ∘g UNEXPECTED_NUM_C n
+                      ∘g ⊕ᴰ-in m ,⊗ ⊤-intro
+              Adding → &ᴰ-in λ n →
+                  ⊕ᴰ-elim λ where
+                    [ →
+                      {!!}
+                      -- map⊕ᴰ (ADD n)
+                      -- ∘g ⊕ᴰ-distR .fun
+                      -- ∘g id ,⊗ (&ᴰ-π n ∘g &ᴰ-π Opening)
+                    ] →
+                      ⊕ᴰ-in false
+                      ∘g UNEXPECTED]A n
+                      ∘g id ,⊗ ⊤-intro
+                    + →
+                      map⊕ᴰ (ADD n)
+                      ∘g ⊕ᴰ-distR .fun
+                      ∘g id ,⊗ (&ᴰ-π n ∘g &ᴰ-π Opening)
+                    (num m) →
+                      ⊕ᴰ-in false
+                      ∘g UNEXPECTED_NUM_A n
+                      ∘g ⊕ᴰ-in m ,⊗ ⊤-intro
+            )
+            ∘g ⊕ᴰ-distL .fun
+            ∘g lowerG ,⊗ lowerG
 
 --   record Algebra ℓ : Type (ℓ-suc ℓ) where
 --     field
@@ -274,7 +373,7 @@ module Automaton where
 --     initialAlgebra : Algebra ℓ-zero
 --     initialAlgebra .UO n = Opening n true
 --     initialAlgebra .UC n = Closing n true
---     initialAlgebra .UM n = Multiplying n true
+--     initialAlgebra .UM n = Adding n true
 --     initialAlgebra .[left] = left
 --     initialAlgebra .[num] = num
 --     initialAlgebra .[rightClose] = rightClose
@@ -295,7 +394,7 @@ module Automaton where
 --     fold A = record { fO = rO ; fC = rC ; fM = rM } where
 --       rO : ∀ n → Opening n true ⊢ A .UO n
 --       rC : ∀ n → Closing n true ⊢ A .UC n
---       rM : ∀ n → Multiplying n true ⊢ A .UM n
+--       rM : ∀ n → Adding n true ⊢ A .UM n
 --       rDO : ∀ n → DoneOpening n true ⊢ UDO A n
 --       rO n w (left _ (sp , lp , o)) = A .[left] w (sp , (lp , rO _ _ o))
 --       rO n w (num _ (sp , m , doo)) = A .[num] _ (sp , m , rDO _ _ doo)
@@ -311,7 +410,7 @@ module Automaton where
 --     Goal = LinearΣ Peek & LinΠ[ n ∈ ℕ ]
 --       (LinearΣ (Opening n)
 --       & LinearΣ (Closing n)
---       & LinearΣ (Multiplying n))
+--       & LinearΣ (Adding n))
 
 --     -- TODO typechecking this parse term is very slow
 --     -- Should probably split it into several pieces
@@ -320,20 +419,23 @@ module Automaton where
 -- --       parse' : string ⊢ LinearΣ Peek & LinΠ[ n ∈ ℕ ]
 -- --         (LinearΣ (Opening n)
 -- --         & LinearΣ (Closing n)
--- --         & LinearΣ (Multiplying n))
+-- --         & LinearΣ (Adding n))
 -- --       parse' = foldKL*r char
 -- --         (record {
 -- --           the-ℓ = ℓ-zero
 -- --         ; G = LinearΣ Peek & LinΠ[ n ∈ ℕ ]
 -- --               (LinearΣ (Opening n)
 -- --               & LinearΣ (Closing n)
--- --               & LinearΣ (Multiplying n))
+-- --               & LinearΣ (Adding n))
 -- --         ; nil-case =
 -- --           LinΣ-intro Maybe.nothing
 -- --           ,& LinΠ-intro λ n →
 -- --             (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
 -- --             ,& (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
--- --             ,& Nat.elim {A = λ n → Term ε (LinearΣ (Multiplying n))} (LinΣ-intro true ∘g done) (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
+-- --             ,& Nat.elim
+-- {A = λ n → Term ε (LinearΣ (Adding n))}
+-- (LinΣ-intro true ∘g done)
+-- (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
 -- --         ; cons-case =
 -- --           (⊸-intro⁻ (LinΣ-elim (λ tok → ⊸-intro {k = LinearΣ Peek}
 -- --             (LinΣ-intro {A = Maybe Tok} (just tok) ∘g id ,⊗ ⊤-intro))))
@@ -346,7 +448,7 @@ module Automaton where
 -- --       --     ,& LinΠ-intro λ n →
 -- --       --     (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
 -- --       --     ,& (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
--- --       --     ,& Nat.elim {A = λ n → Term ε (LinearΣ (Multiplying n))} (LinΣ-intro true ∘g done) (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
+-- --       --     ,& Nat.elim {A = λ n → Term ε (LinearΣ (Adding n))} (LinΣ-intro true ∘g done) (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
 -- --       --   ; cons-case =
 -- --       --     (⊸-intro⁻ (LinΣ-elim (λ tok → ⊸-intro {k = LinearΣ Peek}
 -- --       --       (LinΣ-intro {A = Maybe Tok} (just tok) ∘g id ,⊗ ⊤-intro))))
@@ -391,10 +493,10 @@ module Automaton where
 -- --       --        })
 -- --       --       ,&
 -- --       --      (⊸-intro⁻ (LinΣ-elim λ
--- --       --        { * → ⊸-intro {k = LinearΣ (Multiplying n)} (⟜-intro⁻ ((((LinΣ-elim λ b → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
--- --       --        ; LP → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
--- --       --        ; RP → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
--- --       --        ; (num x) → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
+-- --       --        { * → ⊸-intro {k = LinearΣ (Adding n)} (⟜-intro⁻ ((((LinΣ-elim λ b → ⟜-intro {k = LinearΣ (Adding n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
+-- --       --        ; LP → ⊸-intro {k = LinearΣ (Adding n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
+-- --       --        ; RP → ⊸-intro {k = LinearΣ (Adding n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
+-- --       --        ; (num x) → ⊸-intro {k = LinearΣ (Adding n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
 -- --       --   })
 
 -- -- --     parse : string ⊢ LinΣ[ b ∈ Bool ] Opening zero b
