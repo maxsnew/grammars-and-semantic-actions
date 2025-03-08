@@ -9,11 +9,11 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 
 open import Cubical.Data.Bool hiding (_⊕_)
-open import Cubical.Data.Maybe as Maybe
+open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Nat as Nat
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
-open import Cubical.Data.Sum as Sum
+open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.Sigma
 import Cubical.Data.Equality as Eq
 
@@ -41,6 +41,7 @@ Alphabet : hSet ℓ-zero
 Alphabet = Tok , isSetTok
 
 open import Grammar Alphabet
+open import Grammar.String.Properties Alphabet
 open import Term Alphabet
 
 open StrongEquivalence
@@ -264,8 +265,8 @@ module Automaton where
     ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
     ∘g id ,⊗ id ,&p &ᴰ-π n
 
-  parseAlg : string ⊢ goal
-  parseAlg =
+  parse' : string ⊢ goal
+  parse' =
     fold*r char λ where
       (lift _) →
         ⊕ᴰ-elim λ where
@@ -330,6 +331,145 @@ module Automaton where
             )
             ∘g ⊕ᴰ-distL .fun
             ∘g lowerG ,⊗ lowerG
+
+  printAlg : (b : Bool) →
+    Algebra (AutomatonTy' b) (λ _ → string)
+  printAlg b (n , Opening) =
+    ⊕ᴰ-elim λ where
+      left →
+        CONS
+        ∘g literal→char [ ,⊗ id
+        ∘g lowerG ,⊗ lowerG
+      num →
+        ⊕ᴰ-elim (λ m →
+          ⊕ᴰ-elim (λ where
+            ] → CONS ∘g literal→char (num m) ,⊗ (lowerG ∘g &ᴰ-π false)
+            ¬] → CONS ∘g literal→char (num m) ,⊗ (lowerG ∘g &ᴰ-π false)
+          )
+          ∘g ⊕ᴰ-distR .fun
+        )
+        ∘g ⊕ᴰ-distL .fun
+        ∘g lowerG ,⊗ id
+      (unexpectedO Eq.refl EOF) →
+        NIL ∘g lowerG
+      (unexpectedO Eq.refl ]) →
+        CONS
+        ∘g literal→char ] ,⊗ ⊤→string
+        ∘g lowerG
+      (unexpectedO Eq.refl +) →
+        CONS
+        ∘g literal→char Tok.+ ,⊗ ⊤→string
+        ∘g lowerG
+  printAlg b (n , Closing) =
+    ⊕ᴰ-elim λ where
+      (closeGood n-1 Eq.refl) →
+        ⊕ᴰ-elim (λ where
+          ] → CONS ∘g literal→char ] ,⊗ (lowerG ∘g &ᴰ-π false)
+          ¬] → CONS ∘g literal→char ] ,⊗ (lowerG ∘g &ᴰ-π false)
+        )
+        ∘g ⊕ᴰ-distR .fun
+        ∘g lowerG ,⊗ id
+      (closeBad Eq.refl) →
+        CONS
+        ∘g literal→char ] ,⊗ ⊤→string
+        ∘g lowerG
+      (unexpectedC Eq.refl EOF) → NIL ∘g lowerG
+      (unexpectedC Eq.refl [) →
+        CONS
+        ∘g literal→char [ ,⊗ ⊤→string
+        ∘g lowerG
+      (unexpectedC Eq.refl +) →
+        CONS
+        ∘g literal→char Tok.+ ,⊗ ⊤→string
+        ∘g lowerG
+      (unexpectedC Eq.refl aNum) →
+        ⊕ᴰ-elim (λ m → CONS ∘g literal→char (num m) ,⊗ ⊤→string)
+        ∘g ⊕ᴰ-distL .fun
+        ∘g lowerG
+  printAlg b (n , Adding) =
+    ⊕ᴰ-elim λ where
+      (doneGood Eq.refl Eq.refl) → NIL ∘g lowerG
+      (doneBad n-1 Eq.refl Eq.refl) → NIL ∘g lowerG
+      add →
+        CONS
+        ∘g literal→char Tok.+ ,⊗ id
+        ∘g lowerG ,⊗ lowerG
+      (unexpectedA Eq.refl [) →
+        CONS
+        ∘g literal→char [ ,⊗ ⊤→string
+        ∘g lowerG
+      (unexpectedA Eq.refl ]) →
+        CONS
+        ∘g literal→char ] ,⊗ ⊤→string
+        ∘g lowerG
+      (unexpectedA Eq.refl aNum) →
+        ⊕ᴰ-elim (λ m → CONS ∘g literal→char (num m) ,⊗ ⊤→string)
+        ∘g ⊕ᴰ-distL .fun
+        ∘g lowerG
+
+  print : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+    AutomatonG b (n , s) ⊢ string
+  print b n s = rec (AutomatonTy' b) (printAlg b) (n , s)
+
+  parse :
+    (n : ℕ) →
+    (s : AutomatonState) →
+    string ⊢ ⊕[ b ∈ Bool ] AutomatonG b (n , s)
+  parse n s = &ᴰ-π s ∘g &ᴰ-π n ∘g &-π₂ ∘g parse'
+
+  ⊕ᴰAlg : (b : Bool) →
+    Algebra
+      (AutomatonTy' b)
+      (λ (n , s) → ⊕[ b' ∈ Bool ] AutomatonG b' (n , s))
+  ⊕ᴰAlg b (n , Opening) =
+    ⊕ᴰ-elim λ where
+      left →
+        map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+        ∘g ⊕ᴰ-distR .fun
+        ∘g lowerG ,⊗ lowerG
+      num →
+        {!!}
+        -- ⊕ᴰ-elim (λ where
+        --   ] →
+        --     {!!}
+        --     ∘g roll {F = AutomatonTy' b} {x = (n , Opening)}
+        --     ∘g ⊕ᴰ-in num
+        --     ∘g liftG ,⊗ ((⊕ᴰ-in ] ∘g {!!} ∘g lowerG) ∘g &ᴰ-π false)
+        --   ¬] → {!!}
+        -- )
+        -- ∘g ⊕ᴰ-distR .fun
+        -- ∘g lowerG ,⊗ id
+      (unexpectedO Eq.refl c) → {!!}
+  ⊕ᴰAlg b (n , Closing) =
+    ⊕ᴰ-elim λ where
+      (closeGood n-1 Eq.refl) → {!!}
+      (closeBad Eq.refl) → {!!}
+      (unexpectedC Eq.refl c) → {!!}
+  ⊕ᴰAlg b (n , Adding) =
+    ⊕ᴰ-elim λ where
+      (doneGood Eq.refl Eq.refl) → {!!}
+      (doneBad n-1 Eq.refl Eq.refl) → {!!}
+      add → {!!}
+      (unexpectedA Eq.refl c) → {!!}
+
+  Trace≅string :
+    (n : ℕ) → (s : AutomatonState) →
+    (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
+  Trace≅string n s .fun = ⊕ᴰ-elim (λ b → print b n s)
+  Trace≅string n s .inv = parse n s
+  Trace≅string n s .sec = unambiguous-string _ _
+  Trace≅string n s .ret = isRetract
+    where
+    opaque
+      unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
+      isRetract : parse n s ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
+      isRetract = ⊕ᴰ≡ _ _ λ b →
+        ind'
+          (AutomatonTy' b)
+          (⊕ᴰAlg b)
+          {!!}
+          {!!}
+          (n , s)
 
 -- {- Grammar for one associative binary operation with constants and parens -}
 -- {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
