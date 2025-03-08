@@ -10,7 +10,7 @@ open import Cubical.Foundations.HLevels
 
 open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.Maybe as Maybe hiding (rec)
-open import Cubical.Data.Nat as Nat
+open import Cubical.Data.Nat as Nat hiding (_+_)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
 open import Cubical.Data.Sum as Sum hiding (rec)
@@ -40,7 +40,7 @@ opaque
 Alphabet : hSet ℓ-zero
 Alphabet = Tok , isSetTok
 
-open import Grammar Alphabet
+open import Grammar Alphabet hiding (_+)
 open import Grammar.String.Properties Alphabet
 open import Term Alphabet
 
@@ -210,6 +210,36 @@ module Automaton where
   AutomatonG : Bool → ℕ × AutomatonState → Grammar ℓ-zero
   AutomatonG b = μ (AutomatonTy' b)
 
+  directParse : string ⊢
+    &[ nq ∈ ℕ × AutomatonState ]
+    ⊕[ b ∈ Bool ]
+    AutomatonG b nq
+  directParse = fold*r _ λ _ → ⊕ᴰ-elim λ where
+    nil → (&ᴰ-in λ where
+      (_ , Opening) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF)
+      (_ , Closing) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF)
+      (zero , Adding) → ⊕ᴰ-in true ∘g roll ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl)
+      (suc n-1 , Adding) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (doneBad n-1 Eq.refl Eq.refl))
+      ∘g lowerG
+    cons → (&ᴰ-in λ where
+      (n , Opening) → ⊕ᴰ-elim λ where
+        ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
+        + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl +) ∘g liftG ∘g id ,⊗ ⊤-intro
+        [ → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+          ∘g ⊕ᴰ-distR .fun
+          ∘g id ,⊗ &ᴰ-π (suc n , Opening)
+        (num x) → {!!}
+      (n , Closing) → {!!}
+      (n , Adding) → ⊕ᴰ-elim λ where
+        [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
+        ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
+        (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl aNum) ∘g liftG ∘g (⊕ᴰ-in x) ,⊗ ⊤-intro 
+        + → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
+            ∘g ⊕ᴰ-distR .fun
+            ∘g id ,⊗ &ᴰ-π (n , Opening))
+      ∘g ⊕ᴰ-distL .fun
+      ∘g (lowerG ,⊗ lowerG)
+
   parseTy =
     &[ n ∈ ℕ ]
     &[ s ∈ AutomatonState ]
@@ -277,8 +307,7 @@ module Automaton where
                 ⊕ᴰ-in false ∘g roll
                 ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF) ∘g lowerG
               Closing →
-                ⊕ᴰ-in false ∘g roll
-                ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF) ∘g lowerG
+                ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF) ∘g lowerG
               Adding →
                 Nat.elim {A = λ n → LiftG ℓ-zero ε* ⊢ ⊕[ b ∈ Bool ] AutomatonG b (n , Adding)}
                   (⊕ᴰ-in true ∘g roll
@@ -467,8 +496,8 @@ module Automaton where
         ind'
           (AutomatonTy' b)
           (⊕ᴰAlg b)
-          {!!}
-          {!!}
+          ((λ (n , q) → parse n q ∘g print b n q) , {!!})
+          ((λ (n , q) → ⊕ᴰ-in b) , λ (n , q) → {!!})
           (n , s)
 
 -- {- Grammar for one associative binary operation with constants and parens -}
