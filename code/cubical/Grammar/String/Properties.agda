@@ -15,6 +15,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Sigma.MoreMore
 open import Cubical.Data.Sum as Sum hiding (rec)
 open import Cubical.Data.Sum.More
+open import Cubical.Data.Maybe hiding (rec)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Nat
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
@@ -648,6 +649,41 @@ firstChar≅ : A ≅ (A & ε) ⊕ (⊕[ c ∈ ⟨ Alphabet ⟩ ] (A & startsWith
 firstChar≅ =
   &string-split≅
   ≅∙ ⊕≅ id≅ (&≅ id≅ ⊕ᴰ-distL ≅∙ &⊕ᴰ-distR≅)
+
+Peek : Maybe ⟨ Alphabet ⟩ → Grammar ℓ-zero
+Peek nothing = ε
+Peek (just c) = ＂ c ＂ ⊗ string
+
+peek' :
+  (A & ε) ⊕ (⊕[ c ∈ ⟨ Alphabet ⟩ ] (A & startsWith c))
+  ≅
+  ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A & Peek c?)
+peek' =
+  ⊕⊕ᴰ≅ _ _
+  ≅∙ help≅
+  where
+  help≅ :
+    ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] merge⊕ (A & ε) (λ c → A & startsWith c) c?
+    ≅
+    ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A & Peek c?)
+  help≅ .fun = map⊕ᴰ λ where
+    nothing → lowerG
+    (just x) → lowerG
+  help≅ .inv = map⊕ᴰ λ where
+    nothing → liftG
+    (just x) → liftG
+  help≅ .sec = ⊕ᴰ≡ _ _ λ where
+    nothing → refl
+    (just x) → refl
+  help≅ .ret = ⊕ᴰ≡ _ _ λ where
+    nothing → refl
+    (just x) → refl
+
+peek :
+  A
+  ≅
+  ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A & Peek c?)
+peek = firstChar≅ ≅∙ peek'
 
 unambiguous⌈⌉ : ∀ w → unambiguous ⌈ w ⌉
 unambiguous⌈⌉ w = EXTERNAL.isLang→unambiguous (isLang⌈⌉ w)

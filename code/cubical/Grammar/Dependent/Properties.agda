@@ -7,6 +7,7 @@ module Grammar.Dependent.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
+open import Cubical.Data.Maybe hiding (rec)
 import Cubical.Data.Empty as Empty
 
 open import Cubical.Foundations.Structure
@@ -24,6 +25,7 @@ open import Grammar.Equalizer Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Dependent.Base Alphabet
 open import Grammar.Top Alphabet
+open import Grammar.Sum Alphabet
 open import Term.Base Alphabet
 open import Grammar.Literal Alphabet
 
@@ -141,6 +143,51 @@ module _
     &-swap≅
     ≅∙ &⊕ᴰ-distL≅
     ≅∙ ⊕ᴰ≅ λ a → &-swap≅
+
+module _
+  {X : Type ℓX}
+  {Y : X → Type ℓY}
+  {A : (x : X) → Y x → Grammar ℓA}
+  where
+  nested⊕ᴰ≅ :
+    (⊕[ x ∈ X ] ⊕[ y ∈ Y x ] A x y) ≅ ⊕[ (x , y) ∈ Σ X Y ] A x y
+  nested⊕ᴰ≅ .fun = ⊕ᴰ-elim (λ x → ⊕ᴰ-elim (λ y → ⊕ᴰ-in (x , y)))
+  nested⊕ᴰ≅ .inv = ⊕ᴰ-elim (λ (x , y) → ⊕ᴰ-in x ∘g ⊕ᴰ-in y)
+  nested⊕ᴰ≅ .sec = refl
+  nested⊕ᴰ≅ .ret = refl
+
+module _
+  {X : Type ℓX}
+  (A : Grammar ℓA)
+  (B : X → Grammar ℓB)
+  where
+
+  merge⊕ : Maybe X → Grammar (ℓ-max ℓA ℓB)
+  merge⊕ nothing = LiftG ℓB A
+  merge⊕ (just x) = LiftG ℓA (B x)
+
+  ⊕⊕ᴰ≅ : A ⊕ (⊕[ x ∈ X ] B x) ≅ ⊕[ x? ∈ Maybe X ] merge⊕ x?
+  ⊕⊕ᴰ≅ .fun = ⊕-elim (⊕ᴰ-in nothing ∘g liftG) (mapFst⊕ᴰ just (λ _ → liftG))
+  ⊕⊕ᴰ≅ .inv = ⊕ᴰ-elim λ where
+    nothing → ⊕-inl ∘g lowerG
+    (just x) → ⊕-inr ∘g ⊕ᴰ-in x ∘g lowerG
+  ⊕⊕ᴰ≅ .sec =
+    ⊕ᴰ≡ _ _ λ where
+      nothing i →
+        ⊕-βl (⊕ᴰ-in nothing ∘g liftG) (mapFst⊕ᴰ just (λ _ → liftG)) i ∘g lowerG
+      (just x) i →
+        ⊕-βr
+          (⊕ᴰ-in nothing ∘g liftG)
+          (mapFst⊕ᴰ just (λ _ → liftG)) i
+        ∘g ⊕ᴰ-in x ∘g lowerG
+  ⊕⊕ᴰ≅ .ret =
+    ⊕≡ _ _
+      (λ i →
+        inv ⊕⊕ᴰ≅
+        ∘g ⊕-βl (⊕ᴰ-in nothing ∘g liftG) (mapFst⊕ᴰ just (λ _ → liftG)) i)
+      (λ i →
+        inv ⊕⊕ᴰ≅
+        ∘g ⊕-βr (⊕ᴰ-in nothing ∘g liftG) (mapFst⊕ᴰ just (λ _ → liftG)) i)
 
 module _
   {X : Type ℓX} {A : X → Grammar ℓA}

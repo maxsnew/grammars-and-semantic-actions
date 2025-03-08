@@ -74,3 +74,17 @@ module _
 
   map&ᴰ : &[ x ∈ X ] A x ⊢ &[ x ∈ X ] B x
   map&ᴰ = &ᴰ-in λ x → e x ∘g &ᴰ-π x
+
+module _
+  {X : Type ℓX}
+  {Y : Type ℓX}
+  {A : X → Grammar ℓA}
+  {B : Y → Grammar ℓB}
+  (f : X → Y)
+  (e : (x : X) → A x ⊢ B (f x))
+  where
+
+  mapFst⊕ᴰ : ⊕[ x ∈ X ] A x ⊢ ⊕[ y ∈ Y ] B y
+  mapFst⊕ᴰ =
+    ⊕ᴰ-elim (λ x → ⊕ᴰ-in (f x))
+    ∘g map⊕ᴰ e

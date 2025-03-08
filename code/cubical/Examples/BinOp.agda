@@ -210,6 +210,63 @@ module Automaton where
   AutomatonG : Bool → ℕ × AutomatonState → Grammar ℓ-zero
   AutomatonG b = μ (AutomatonTy' b)
 
+  peek : Maybe Tok → Grammar ℓ-zero
+  peek = Maybe.rec ε (λ c → ＂ c ＂ ⊗ ⊤)
+
+
+  -- After peeking, we choose a subsequent Guard and
+  -- AutomatonState to transition to
+  -- Here we ensure that the chosen guard and state match
+  -- the ones prescribed by DoneOpening
+  -- mkGuardPfs' : ∀ (b : Bool) → (n : ℕ) →
+  --   (tok? : Maybe Tok) →
+  --   peek tok? & AutomatonG  b (n , (Guard→State (Tok→Guard tok?))) ⊢
+  --     ⟦ DoneOpeningFun b n (Tok→Guard tok?) ⟧
+  --       (λ (n , s) → AutomatonG b (n , s))
+  -- mkGuardPfs' b n nothing = &ᴰ-in λ where
+  --     false → liftG ∘g &-π₂
+  --     true → liftG ∘g ⊕-inl ∘g &-π₁
+  -- mkGuardPfs' b n (just [) = &ᴰ-in λ where
+  --     false → liftG ∘g &-π₂
+  --     true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in [ ∘g &-π₁
+  -- mkGuardPfs' b n (just ]) = &ᴰ-in λ where
+  --     false → liftG ∘g &-π₂
+  --     true → liftG ∘g &-π₁
+  -- mkGuardPfs' b n (just +) = &ᴰ-in λ where
+  --     false → liftG ∘g &-π₂
+  --     true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in NotRP.+ ∘g &-π₁
+  -- mkGuardPfs' b n (just (num m)) = &ᴰ-in λ where
+  --     false → liftG ∘g &-π₂
+  --     true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in (num m) ∘g &-π₁
+
+  -- Whenever we want to use a Guard, this cuts out
+  -- the redundant work in checking the guardedness condition
+  mkGuardPfs : (tok : Tok) → (n : ℕ) →
+    ＂ tok ＂ ⊗
+      (&[ nq ∈ ℕ × AutomatonState ]
+      ⊕[ b ∈ Bool ]
+      AutomatonG b nq)
+    ⊢
+    ⊕[ b ∈ Bool ]
+      (＂ tok ＂ ⊗
+        (⊕[ g ∈ Guard ] ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b)))
+  mkGuardPfs tok n =
+    ⊕-elim
+      {!!}
+      {!!}
+    ∘g ⊗⊕-distL
+    ∘g id ,⊗ firstChar≅ .fun
+    -- ⊕ᴰ-elim (λ tok? →
+    --   map⊕ᴰ (λ b →
+    --     id ,⊗ (⊕ᴰ-in (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
+    --   )
+    --   ∘g ⊕ᴰ-distR .fun
+    --   ∘g id ,⊗ (&⊕ᴰ-distR≅ .fun ∘g (id ,&p &ᴰ-π (Guard→State (Tok→Guard tok?))))
+    -- )
+    -- ∘g ⊕ᴰ-distR .fun
+    -- ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
+    -- ∘g id ,⊗ &ᴰ-π n
+
   directParse : string ⊢
     &[ nq ∈ ℕ × AutomatonState ]
     ⊕[ b ∈ Bool ]
@@ -228,8 +285,22 @@ module Automaton where
            ∘g id ,⊗ &ᴰ-π (suc n , Opening)
         ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
         + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl +) ∘g liftG ∘g id ,⊗ ⊤-intro
-        (num x) → {!!}
-      (n , Closing) → {!!}
+        (num x) →
+          map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id ∘g ⊕ᴰ-in x ,⊗ id)
+          ∘g mkGuardPfs (num x) n
+      (zero , Closing) →
+        ⊕ᴰ-elim λ where
+        [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
+        ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (closeBad Eq.refl) ∘g liftG ∘g id ,⊗ ⊤-intro
+        + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ ⊤-intro
+        (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum) ∘g liftG ∘g ⊕ᴰ-in x  ,⊗ ⊤-intro
+      (suc n-1 , Closing) →
+        ⊕ᴰ-elim λ where
+        [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
+        ] → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ id)
+            ∘g mkGuardPfs ] n-1
+        + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ ⊤-intro
+        (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum) ∘g liftG ∘g ⊕ᴰ-in x  ,⊗ ⊤-intro
       (n , Adding) → ⊕ᴰ-elim λ where
         [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
         ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
@@ -246,120 +317,74 @@ module Automaton where
     ⊕[ b ∈ Bool ]
       AutomatonG b (n , s)
 
-  peek : Maybe Tok → Grammar ℓ-zero
-  peek = Maybe.rec ε (λ c → ＂ c ＂ ⊗ ⊤)
-
   goal = ⊕ᴰ peek & parseTy
 
-  -- After peeking, we choose a subsequent Guard and
-  -- AutomatonState to transition to
-  -- Here we ensure that the chosen guard and state match
-  -- the ones prescribed by DoneOpening
-  mkGuardPfs' : ∀ (b : Bool) → (n : ℕ) →
-    (tok? : Maybe Tok) →
-    peek tok? & AutomatonG  b (n , (Guard→State (Tok→Guard tok?))) ⊢
-      ⟦ DoneOpeningFun b n (Tok→Guard tok?) ⟧
-        (λ (n , s) → AutomatonG b (n , s))
-  mkGuardPfs' b n nothing = &ᴰ-in λ where
-      false → liftG ∘g &-π₂
-      true → liftG ∘g ⊕-inl ∘g &-π₁
-  mkGuardPfs' b n (just [) = &ᴰ-in λ where
-      false → liftG ∘g &-π₂
-      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in [ ∘g &-π₁
-  mkGuardPfs' b n (just ]) = &ᴰ-in λ where
-      false → liftG ∘g &-π₂
-      true → liftG ∘g &-π₁
-  mkGuardPfs' b n (just +) = &ᴰ-in λ where
-      false → liftG ∘g &-π₂
-      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in NotRP.+ ∘g &-π₁
-  mkGuardPfs' b n (just (num m)) = &ᴰ-in λ where
-      false → liftG ∘g &-π₂
-      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in (num m) ∘g &-π₁
-
-  -- Whenever we want to use a Guard, this cuts out
-  -- the redundant work in checking the guardedness condition
-  mkGuardPfs : (tok : Tok) → (n : ℕ) →
-    ＂ tok ＂ ⊗ goal ⊢
-    ⊕[ b ∈ Bool ]
-      (＂ tok ＂ ⊗
-        (⊕[ g ∈ Guard ] ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b)))
-  mkGuardPfs tok n =
-    ⊕ᴰ-elim (λ tok? →
-      map⊕ᴰ (λ b →
-        id ,⊗ (⊕ᴰ-in (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
-      )
-      ∘g ⊕ᴰ-distR .fun
-      ∘g id ,⊗ (&⊕ᴰ-distR≅ .fun ∘g (id ,&p &ᴰ-π (Guard→State (Tok→Guard tok?))))
-    )
-    ∘g ⊕ᴰ-distR .fun
-    ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
-    ∘g id ,⊗ id ,&p &ᴰ-π n
 
   parse' : string ⊢ goal
-  parse' =
-    fold*r char λ where
-      (lift _) →
-        ⊕ᴰ-elim λ where
-          nil →
-            (⊕ᴰ-in nothing ∘g lowerG ∘g lowerG) ,&
-            &ᴰ-in λ n → &ᴰ-in λ where
-              Opening →
-                ⊕ᴰ-in false ∘g roll
-                ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF) ∘g lowerG
-              Closing →
-                ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF) ∘g lowerG
-              Adding →
-                Nat.elim {A = λ n → LiftG ℓ-zero ε* ⊢ ⊕[ b ∈ Bool ] AutomatonG b (n , Adding)}
-                  (⊕ᴰ-in true ∘g roll
-                    ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl) ∘g lowerG)
-                  (λ n-1 _ →
-                    ⊕ᴰ-in false ∘g roll
-                    ∘g ⊕ᴰ-in (doneBad n-1 Eq.refl Eq.refl) ∘g lowerG)
-                  n
-          cons →
-            ⊕ᴰ-elim (λ tok → ⊕ᴰ-in (just tok) ∘g id ,⊗ ⊤-intro) ,&
-            (&ᴰ-in λ n → &ᴰ-in λ where
-              Opening → ⊕ᴰ-elim λ where
-                [ →
-                  map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
-                  ∘g ⊕ᴰ-distR .fun
-                  ∘g id ,⊗ (&ᴰ-π Opening ∘g &ᴰ-π (suc n) ∘g &-π₂)
-                ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ])
-                    ∘g liftG ∘g id ,⊗ ⊤-intro
-                + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl UnexpectedOpening.+)
-                    ∘g liftG ∘g id ,⊗ ⊤-intro
-                (num m) →
-                  map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id ∘g ⊕ᴰ-in m ,⊗ id)
-                  ∘g mkGuardPfs (num m) n
-              Closing → ⊕ᴰ-elim λ where
-                [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [)
-                    ∘g liftG ∘g id ,⊗ ⊤-intro
-                ] →
-                  Nat.elim {A = λ n → ＂ ] ＂ ⊗ goal ⊢ ⊕[ b ∈ Bool ] AutomatonG b (n , Closing)}
-                    (⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (closeBad Eq.refl) ∘g liftG ∘g id ,⊗ ⊤-intro)
-                    (λ n-1 _ →
-                      map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ id)
-                      ∘g mkGuardPfs ] n-1
-                    )
-                    n
-                + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+)
-                    ∘g liftG ∘g id ,⊗ ⊤-intro
-                (num m) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum)
-                          ∘g liftG ∘g ⊕ᴰ-in m  ,⊗ ⊤-intro
-              Adding → ⊕ᴰ-elim λ where
-                [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl [)
-                    ∘g liftG ∘g id ,⊗ ⊤-intro
-                ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl ])
-                    ∘g liftG ∘g id ,⊗ ⊤-intro
-                + →
-                  map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
-                  ∘g ⊕ᴰ-distR .fun
-                  ∘g id ,⊗ (&ᴰ-π Opening ∘g &ᴰ-π n ∘g &-π₂)
-                (num m) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl aNum)
-                          ∘g liftG ∘g ⊕ᴰ-in m  ,⊗ ⊤-intro
-            )
-            ∘g ⊕ᴰ-distL .fun
-            ∘g lowerG ,⊗ lowerG
+  parse' = {!!}
+    -- fold*r char λ where
+    --   (lift _) →
+    --     ⊕ᴰ-elim λ where
+    --       nil →
+    --         (⊕ᴰ-in nothing ∘g lowerG ∘g lowerG) ,&
+    --         &ᴰ-in λ n → &ᴰ-in λ where
+    --           Opening →
+    --             ⊕ᴰ-in false ∘g roll
+    --             ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF) ∘g lowerG
+    --           Closing →
+    --             ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF) ∘g lowerG
+    --           Adding →
+    --             Nat.elim {A = λ n → LiftG ℓ-zero ε* ⊢ ⊕[ b ∈ Bool ] AutomatonG b (n , Adding)}
+    --               (⊕ᴰ-in true ∘g roll
+    --                 ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl) ∘g lowerG)
+    --               (λ n-1 _ →
+    --                 ⊕ᴰ-in false ∘g roll
+    --                 ∘g ⊕ᴰ-in (doneBad n-1 Eq.refl Eq.refl) ∘g lowerG)
+    --               n
+    --       cons →
+    --         ⊕ᴰ-elim (λ tok → ⊕ᴰ-in (just tok) ∘g id ,⊗ ⊤-intro) ,&
+    --         (&ᴰ-in λ n → &ᴰ-in λ where
+    --           Opening → ⊕ᴰ-elim λ where
+    --             [ →
+    --               map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+    --               ∘g ⊕ᴰ-distR .fun
+    --               ∘g id ,⊗ (&ᴰ-π Opening ∘g &ᴰ-π (suc n) ∘g &-π₂)
+    --             ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ])
+    --                 ∘g liftG ∘g id ,⊗ ⊤-intro
+    --             + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl UnexpectedOpening.+)
+    --                 ∘g liftG ∘g id ,⊗ ⊤-intro
+    --             (num m) →
+    --               map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id ∘g ⊕ᴰ-in m ,⊗ id)
+    --               ∘g mkGuardPfs (num m) n
+    --           Closing → ⊕ᴰ-elim λ where
+    --             [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [)
+    --                 ∘g liftG ∘g id ,⊗ ⊤-intro
+    --             ] →
+    --               Nat.elim {A = λ n → ＂ ] ＂ ⊗ goal ⊢ ⊕[ b ∈ Bool ] AutomatonG b (n , Closing)}
+    --                 (⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (closeBad Eq.refl) ∘g liftG ∘g id ,⊗ ⊤-intro)
+    --                 (λ n-1 _ →
+    --                   map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ id)
+    --                   ∘g mkGuardPfs ] n-1
+    --                 )
+    --                 n
+    --             + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+)
+    --                 ∘g liftG ∘g id ,⊗ ⊤-intro
+    --             (num m) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum)
+    --                       ∘g liftG ∘g ⊕ᴰ-in m  ,⊗ ⊤-intro
+    --           Adding → ⊕ᴰ-elim λ where
+    --             [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl [)
+    --                 ∘g liftG ∘g id ,⊗ ⊤-intro
+    --             ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl ])
+    --                 ∘g liftG ∘g id ,⊗ ⊤-intro
+    --             + →
+    --               map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
+    --               ∘g ⊕ᴰ-distR .fun
+    --               ∘g id ,⊗ (&ᴰ-π Opening ∘g &ᴰ-π n ∘g &-π₂)
+    --             (num m) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl aNum)
+    --                       ∘g liftG ∘g ⊕ᴰ-in m  ,⊗ ⊤-intro
+    --         )
+    --         ∘g ⊕ᴰ-distL .fun
+    --         ∘g lowerG ,⊗ lowerG
 
   printAlg : (b : Bool) →
     Algebra (AutomatonTy' b) (λ _ → string)
