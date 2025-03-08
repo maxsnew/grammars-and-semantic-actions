@@ -214,31 +214,31 @@ module Automaton where
     &[ nq ∈ ℕ × AutomatonState ]
     ⊕[ b ∈ Bool ]
     AutomatonG b nq
-  directParse = fold*r _ λ _ → ⊕ᴰ-elim λ where
-    nil → (&ᴰ-in λ where
-      (_ , Opening) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF)
-      (_ , Closing) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF)
+  directParse = fold*r' _
+    ((&ᴰ-in λ where
+      (n , Opening) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF)
+      (n , Closing) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF)
       (zero , Adding) → ⊕ᴰ-in true ∘g roll ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl)
       (suc n-1 , Adding) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (doneBad n-1 Eq.refl Eq.refl))
-      ∘g lowerG
-    cons → (&ᴰ-in λ where
+      ∘g liftG)
+    ((&ᴰ-in λ where
       (n , Opening) → ⊕ᴰ-elim λ where
+        [ → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+            ∘g ⊕ᴰ-distR .fun
+           ∘g id ,⊗ &ᴰ-π (suc n , Opening)
         ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
         + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl +) ∘g liftG ∘g id ,⊗ ⊤-intro
-        [ → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
-          ∘g ⊕ᴰ-distR .fun
-          ∘g id ,⊗ &ᴰ-π (suc n , Opening)
         (num x) → {!!}
       (n , Closing) → {!!}
       (n , Adding) → ⊕ᴰ-elim λ where
         [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
         ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
-        (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl aNum) ∘g liftG ∘g (⊕ᴰ-in x) ,⊗ ⊤-intro 
         + → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
             ∘g ⊕ᴰ-distR .fun
-            ∘g id ,⊗ &ᴰ-π (n , Opening))
+            ∘g id ,⊗ &ᴰ-π (n , Opening)
+        (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl aNum) ∘g liftG ∘g (⊕ᴰ-in x) ,⊗ ⊤-intro )
       ∘g ⊕ᴰ-distL .fun
-      ∘g (lowerG ,⊗ lowerG)
+      )
 
   parseTy =
     &[ n ∈ ℕ ]

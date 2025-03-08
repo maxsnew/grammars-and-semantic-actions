@@ -57,6 +57,11 @@ module _ (A : Grammar ℓA) where
   fold*r : Algebra *Ty (λ _ → B) → KL* ⊢ B
   fold*r alg = rec *Ty alg _
 
+  fold*r' : (ε ⊢ B) → A ⊗ B ⊢ B → KL* ⊢ B
+  fold*r' [nil] [cons] = fold*r (λ _ → ⊕ᴰ-elim λ where
+    nil  → [nil] ∘g lowerG ∘g lowerG
+    cons → [cons] ∘g lowerG ,⊗ lowerG)
+
   repeatTy : Lift {j = ℓA} ℕ → Functor (Lift ℕ)
   repeatTy (lift zero) = k ε*
   repeatTy (lift (suc n)) = (k A) ⊗e (Var (lift n))
