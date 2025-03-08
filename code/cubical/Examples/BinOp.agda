@@ -85,17 +85,17 @@ module LL⟨1⟩ where
   EXP = BinOpG Exp
   ATOM = BinOpG Atom
 
-  DONE : ATOM ⊢ EXP
-  DONE = roll ∘g ⊕ᴰ-in done ∘g liftG
+  -- DONE : ATOM ⊢ EXP
+  -- DONE = roll ∘g ⊕ᴰ-in done ∘g liftG
 
-  ADD : ATOM ⊗ ＂ + ＂ ⊗ EXP ⊢ EXP
-  ADD = roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG ,⊗ liftG
+  -- ADD : ATOM ⊗ ＂ + ＂ ⊗ EXP ⊢ EXP
+  -- ADD = roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG ,⊗ liftG
 
-  NUM : anyNum ⊢ ATOM
-  NUM = roll ∘g ⊕ᴰ-in num ∘g liftG
+  -- NUM : anyNum ⊢ ATOM
+  -- NUM = roll ∘g ⊕ᴰ-in num ∘g liftG
 
-  PARENS : ＂ [ ＂ ⊗ EXP ⊗ ＂ ] ＂ ⊢ ATOM
-  PARENS = roll ∘g ⊕ᴰ-in parens ∘g liftG ,⊗ liftG ,⊗ liftG
+  -- PARENS : ＂ [ ＂ ⊗ EXP ⊗ ＂ ] ＂ ⊢ ATOM
+  -- PARENS = roll ∘g ⊕ᴰ-in parens ∘g liftG ,⊗ liftG ,⊗ liftG
 
 module Automaton where
   data AutomatonState : Type ℓ-zero where
@@ -106,31 +106,31 @@ module Automaton where
 
   uo : UnexpectedOpening → Grammar _
   uo EOF = ε
-  uo ] = ＂ ] ＂
-  uo + = ＂ + ＂
+  uo ] = ＂ ] ＂ ⊗ ⊤
+  uo + = ＂ + ＂ ⊗ ⊤
 
   data UnexpectedClosing : Type where
     EOF [ + aNum : UnexpectedClosing
 
   uc : UnexpectedClosing → Grammar _
   uc EOF = ε
-  uc [ = ＂ [ ＂
-  uc + = ＂ + ＂
-  uc aNum = anyNum
+  uc [ = ＂ [ ＂ ⊗ ⊤
+  uc + = ＂ + ＂ ⊗ ⊤
+  uc aNum = anyNum ⊗ ⊤
 
   data UnexpectedAdding : Type where
     [ ] aNum : UnexpectedAdding
 
   ua : UnexpectedAdding → Grammar _
-  ua [ = ＂ [ ＂
-  ua ] = ＂ ] ＂
-  ua aNum = anyNum
+  ua [ = ＂ [ ＂ ⊗ ⊤
+  ua ] = ＂ ] ＂ ⊗ ⊤
+  ua aNum = anyNum ⊗ ⊤
 
   data Guard : Type where
     ] ¬] : Guard
 
   data NotRP : Type where
-    [ : NotRP     -- parens
+    [ : NotRP       -- parens
     + : NotRP       -- the binary operation
     num : ℕ → NotRP -- constants
 
@@ -141,7 +141,18 @@ module Automaton where
   
   guard : Guard → Grammar _
   guard ] = ＂ ] ＂ ⊗ ⊤
-  guard ¬] = ε ⊕ ⊕ᴰ {X = NotRP} λ t → ＂ notRP t ＂
+  guard ¬] = ε ⊕ (⊕ᴰ {X = NotRP} λ t → ＂ notRP t ＂ ⊗ ⊤)
+
+  Tok→Guard : Maybe Tok → Guard
+  Tok→Guard nothing = ¬]
+  Tok→Guard (just [) = ¬]
+  Tok→Guard (just ]) = ]
+  Tok→Guard (just +) = ¬]
+  Tok→Guard (just (num x)) = ¬]
+
+  Guard→State : Guard → AutomatonState
+  Guard→State ] = Closing
+  Guard→State ¬] = Adding
 
   -- the constructor names of each automaton state
   data AutomatonTag (b : Bool) (n : ℕ) : (N : AutomatonState) → Type ℓ-zero where
@@ -158,14 +169,18 @@ module Automaton where
     add : AutomatonTag b n Adding
     unexpectedA : b Eq.≡ false → UnexpectedAdding → AutomatonTag b n Adding
 
-  DoneOpening : Bool → ℕ → Functor (ℕ × AutomatonState)
-  DoneOpening b n = ⊕e Guard (λ where
-    ] → &e Bool λ where
+  DoneOpeningFun : Bool → ℕ → Guard → Functor (ℕ × AutomatonState)
+  DoneOpeningFun b n ] =
+    &e Bool λ where
       true → k (guard ])
       false → Var (n , Closing)
-    ¬] → &e Bool λ where
+  DoneOpeningFun b n ¬] =
+    &e Bool λ where
       true → k (guard ¬])
-      false → Var (n , Adding))
+      false → Var (n , Adding)
+
+  DoneOpening : Bool → ℕ → Functor (ℕ × AutomatonState)
+  DoneOpening b n = ⊕e Guard (DoneOpeningFun b n)
 
   AutomatonTy : Bool → ℕ → AutomatonState → Functor (ℕ × AutomatonState)
   AutomatonTy b n Opening =
@@ -178,7 +193,7 @@ module Automaton where
     ⊕e (AutomatonTag b n Closing)
       λ where
         (closeGood n-1 Eq.refl) → k ＂ ] ＂ ⊗e DoneOpening b n-1
-        (closeBad Eq.refl) → k ＂ ] ＂
+        (closeBad Eq.refl) → k (＂ ] ＂ ⊗ ⊤)
         (unexpectedC Eq.refl c) → k (uc c)
   AutomatonTy b n Adding =
     ⊕e (AutomatonTag b n Adding)
@@ -188,188 +203,302 @@ module Automaton where
         add → k ＂ + ＂ ⊗e Var (n , Opening)
         (unexpectedA Eq.refl c) → k (ua c)
 
-  AutomatonG : Bool → ℕ → AutomatonState → Grammar ℓ-zero
-  AutomatonG b n S = μ (λ (n' , s') → AutomatonTy b n' s') (n , S)
+  AutomatonTy' : Bool → ℕ × AutomatonState → Functor (ℕ × AutomatonState)
+  AutomatonTy' b (n , s) = AutomatonTy b n s
 
-  -- NotStartsWithRP = ε ⊕ (＂ [ ＂ ⊕ ＂ * ＂ ⊕ anyNum) ⊗ ⊤
-  NOT_STARTS_WITH_[ : Grammar ℓ-zero
-  NOT_STARTS_WITH_[ = ε ⊕ (＂ [ ＂ ⊕ ＂ + ＂ ⊕ anyNum) ⊗ ⊤
+  AutomatonG : Bool → ℕ × AutomatonState → Grammar ℓ-zero
+  AutomatonG b = μ (AutomatonTy' b)
 
-  -- States of the automaton as Grammars
+  parseTy =
+    &[ n ∈ ℕ ]
+    &[ s ∈ AutomatonState ]
+    ⊕[ b ∈ Bool ]
+      AutomatonG b (n , s)
 
-  -- Opening: at the start of an expression, the term starts with a
-  -- sequence of 0 or more opening parens, which we count. Ends when
-  -- we see a number, then we use lookahead to determine whether to
-  -- parse closing parens or start parsing a multiplication sequence
-  OPENING : Bool → ℕ → Grammar ℓ-zero
-  OPENING b n = AutomatonG b n Opening
+  peek : Maybe Tok → Grammar ℓ-zero
+  peek = Maybe.rec ε (λ c → ＂ c ＂ ⊗ ⊤)
 
---   DONE_OPENING : Bool → ℕ → Grammar ℓ-zero
---   DONE_OPENING b n = AutomatonG b n DoneOpening
+  goal = ⊕ᴰ peek & parseTy
 
---   -- Closing: parse as many closing parens as you can, eventually
---   -- use lookahead to decide when to start parsing multiplication sequence
---   CLOSING : Bool → ℕ → Grammar ℓ-zero
---   CLOSING b n = AutomatonG b n Closing
+  -- After peeking, we choose a subsequent Guard and
+  -- AutomatonState to transition to
+  -- Here we ensure that the chosen guard and state match
+  -- the ones prescribed by DoneOpening
+  mkGuardPfs' : ∀ (b : Bool) → (n : ℕ) →
+    (tok? : Maybe Tok) →
+    peek tok? & AutomatonG  b (n , (Guard→State (Tok→Guard tok?))) ⊢
+      ⟦ DoneOpeningFun b n (Tok→Guard tok?) ⟧
+        (λ (n , s) → AutomatonG b (n , s))
+  mkGuardPfs' b n nothing = &ᴰ-in λ where
+      false → liftG ∘g &-π₂
+      true → liftG ∘g ⊕-inl ∘g &-π₁
+  mkGuardPfs' b n (just [) = &ᴰ-in λ where
+      false → liftG ∘g &-π₂
+      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in [ ∘g &-π₁
+  mkGuardPfs' b n (just ]) = &ᴰ-in λ where
+      false → liftG ∘g &-π₂
+      true → liftG ∘g &-π₁
+  mkGuardPfs' b n (just +) = &ᴰ-in λ where
+      false → liftG ∘g &-π₂
+      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in NotRP.+ ∘g &-π₁
+  mkGuardPfs' b n (just (num m)) = &ᴰ-in λ where
+      false → liftG ∘g &-π₂
+      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in (num m) ∘g &-π₁
 
---   ADDING : Bool → ℕ → Grammar ℓ-zero
---   ADDING b n = AutomatonG b n Adding
+  -- Whenever we want to use a Guard, this cuts out
+  -- the redundant work in checking the guardedness condition
+  mkGuardPfs : (tok : Tok) → (n : ℕ) →
+    ＂ tok ＂ ⊗ goal ⊢
+    ⊕[ b ∈ Bool ]
+      (＂ tok ＂ ⊗
+        (⊕[ g ∈ Guard ] ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b)))
+  mkGuardPfs tok n =
+    ⊕ᴰ-elim (λ tok? →
+      map⊕ᴰ (λ b →
+        id ,⊗ (⊕ᴰ-in (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
+      )
+      ∘g ⊕ᴰ-distR .fun
+      ∘g id ,⊗ (&⊕ᴰ-distR≅ .fun ∘g (id ,&p &ᴰ-π (Guard→State (Tok→Guard tok?))))
+    )
+    ∘g ⊕ᴰ-distR .fun
+    ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
+    ∘g id ,⊗ id ,&p &ᴰ-π n
 
---   -- Constructors of the automaton states that adjust for lifts
---   LEFT : ∀ n b → ＂ [ ＂ ⊗ OPENING b (suc n) ⊢ OPENING b n
---   LEFT n b = roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG
+  parseAlg : string ⊢ goal
+  parseAlg =
+    fold*r char λ where
+      (lift _) →
+        ⊕ᴰ-elim λ where
+          nil →
+            (⊕ᴰ-in nothing ∘g lowerG ∘g lowerG) ,&
+            &ᴰ-in λ n → &ᴰ-in λ where
+              Opening →
+                ⊕ᴰ-in false ∘g roll
+                ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF) ∘g lowerG
+              Closing →
+                ⊕ᴰ-in false ∘g roll
+                ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF) ∘g lowerG
+              Adding →
+                Nat.elim {A = λ n → LiftG ℓ-zero ε* ⊢ ⊕[ b ∈ Bool ] AutomatonG b (n , Adding)}
+                  (⊕ᴰ-in true ∘g roll
+                    ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl) ∘g lowerG)
+                  (λ n-1 _ →
+                    ⊕ᴰ-in false ∘g roll
+                    ∘g ⊕ᴰ-in (doneBad n-1 Eq.refl Eq.refl) ∘g lowerG)
+                  n
+          cons →
+            ⊕ᴰ-elim (λ tok → ⊕ᴰ-in (just tok) ∘g id ,⊗ ⊤-intro) ,&
+            (&ᴰ-in λ n → &ᴰ-in λ where
+              Opening → ⊕ᴰ-elim λ where
+                [ →
+                  map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+                  ∘g ⊕ᴰ-distR .fun
+                  ∘g id ,⊗ (&ᴰ-π Opening ∘g &ᴰ-π (suc n) ∘g &-π₂)
+                ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ])
+                    ∘g liftG ∘g id ,⊗ ⊤-intro
+                + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl UnexpectedOpening.+)
+                    ∘g liftG ∘g id ,⊗ ⊤-intro
+                (num m) →
+                  map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id ∘g ⊕ᴰ-in m ,⊗ id)
+                  ∘g mkGuardPfs (num m) n
+              Closing → ⊕ᴰ-elim λ where
+                [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [)
+                    ∘g liftG ∘g id ,⊗ ⊤-intro
+                ] →
+                  Nat.elim {A = λ n → ＂ ] ＂ ⊗ goal ⊢ ⊕[ b ∈ Bool ] AutomatonG b (n , Closing)}
+                    (⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (closeBad Eq.refl) ∘g liftG ∘g id ,⊗ ⊤-intro)
+                    (λ n-1 _ →
+                      map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ id)
+                      ∘g mkGuardPfs ] n-1
+                    )
+                    n
+                + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+)
+                    ∘g liftG ∘g id ,⊗ ⊤-intro
+                (num m) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum)
+                          ∘g liftG ∘g ⊕ᴰ-in m  ,⊗ ⊤-intro
+              Adding → ⊕ᴰ-elim λ where
+                [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl [)
+                    ∘g liftG ∘g id ,⊗ ⊤-intro
+                ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl ])
+                    ∘g liftG ∘g id ,⊗ ⊤-intro
+                + →
+                  map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
+                  ∘g ⊕ᴰ-distR .fun
+                  ∘g id ,⊗ (&ᴰ-π Opening ∘g &ᴰ-π n ∘g &-π₂)
+                (num m) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl aNum)
+                          ∘g liftG ∘g ⊕ᴰ-in m  ,⊗ ⊤-intro
+            )
+            ∘g ⊕ᴰ-distL .fun
+            ∘g lowerG ,⊗ lowerG
 
---   NUM : ∀ n b → anyNum ⊗ DONE_OPENING b n ⊢ OPENING b n
---   NUM n b = roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ liftG
+-- {- Grammar for one associative binary operation with constants and parens -}
+-- {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
+-- module Examples.BinOp where
 
---   DONE_O : ∀ n → ε ⊢ OPENING false n
---   DONE_O n = roll ∘g ⊕ᴰ-in (unexpectedεO Eq.refl) ∘g liftG
+-- open import Cubical.Foundations.Prelude
+-- open import Cubical.Foundations.Equiv
+-- open import Cubical.Foundations.Isomorphism
+-- open import Cubical.Foundations.Function
+-- open import Cubical.Foundations.HLevels
 
---   UNEXPECTED+O : ∀ n → ＂ + ＂ ⊗ ⊤ ⊢ OPENING false n
---   UNEXPECTED+O n = roll ∘g ⊕ᴰ-in (unexpected+O Eq.refl) ∘g liftG ,⊗ liftG
+-- open import Cubical.Data.Bool hiding (_⊕_)
+-- open import Cubical.Data.Maybe as Maybe
+-- open import Cubical.Data.Nat as Nat
+-- open import Cubical.Data.FinSet
+-- open import Cubical.Data.Sum as Sum
+-- open import Cubical.Data.Sigma
 
---   UNEXPECTED]O : ∀ n → ＂ ] ＂ ⊗ ⊤ ⊢ OPENING false n
---   UNEXPECTED]O n = roll ∘g ⊕ᴰ-in (unexpected]O Eq.refl) ∘g liftG ,⊗ liftG
+-- -- TODO need to make this work with opaqueness
+-- -- data Tok : Type where
+-- --   LP RP : Tok   -- parens
+-- --   * : Tok       -- the binary operation
+-- --   num : ℕ → Tok -- constants
 
---   -- TODO : go between binary sum/product and there inductive counterparts
---   -- this is in each of Grammar.Sum/Grammar.Product
---   LOOKAHEAD]  : ∀ n b → (＂ ] ＂ ⊗ ⊤) & CLOSING b n ⊢ DONE_OPENING b n
---   LOOKAHEAD] n b = roll ∘g ⊕ᴰ-in lookahead] ∘g {!!}
+-- -- Alphabet : hSet _
+-- -- Alphabet = Tok , isSetRetract encode decode dex≡x (isSet⊎ isSetFin isSetℕ)
+-- --   where
+-- --   open import Cubical.Data.Sum as Sum
+-- --   open import Cubical.Data.Fin as Fin
+-- --   Tok' = Fin 3 ⊎ ℕ
+-- --   encode : Tok → Tok'
+-- --   encode LP = inl 0
+-- --   encode RP = inl 1
+-- --   encode * = inl 2
+-- --   encode (num x) = inr x
+-- --   decode : Tok' → Tok
+-- --   decode (inl (0 , snd₁)) = LP
+-- --   decode (inl (1 , snd₁)) = RP
+-- --   decode (inl (suc (suc fst₁) , snd₁)) = *
+-- --   decode (inr x) = num x
+-- --   dex≡x : ∀ x → decode (encode x) ≡ x
+-- --   dex≡x LP = refl
+-- --   dex≡x RP = refl
+-- --   dex≡x * = refl
+-- --   dex≡x (num x) = refl
 
---   LOOKAHEADε : ∀ n b → ε & ADDING b n ⊢ DONE_OPENING b n
---   LOOKAHEADε n b = roll ∘g ⊕ᴰ-in lookaheadε ∘g {!!}
+-- -- open import Grammar Alphabet
+-- -- open import Grammar.Equivalence Alphabet
+-- -- open import Term Alphabet
 
---   LOOKAHEAD[ : ∀ n b → (＂ [ ＂ ⊗ ⊤) & ADDING b n ⊢ DONE_OPENING b n
---   LOOKAHEAD[ n b = roll ∘g ⊕ᴰ-in lookahead[ ∘g {!!}
+-- -- anyNum : Grammar _
+-- -- anyNum = LinΣ[ n ∈ ℕ ] literal (num n)
+-- -- module LL⟨1⟩ where
+-- --   Exp : Grammar ℓ-zero
+-- --   data Atom : Grammar ℓ-zero
 
---   LOOKAHEAD_NUM : ∀ n b →  (anyNum ⊗ ⊤) & ADDING b n ⊢ DONE_OPENING b n
---   LOOKAHEAD_NUM n b = roll ∘g ⊕ᴰ-in lookaheadNum ∘g {!!}
+-- --   Exp = Atom ⊗' (KL* (literal * ⊗' Atom))
+-- --   data Atom where
+-- --     num : ∀ {n} → literal (num n) ⊢ Atom
+-- --     parens :
+-- --       literal LP ⊗' Exp ⊗' literal RP ⊢ Atom
 
---   CLOSE_GOOD : ∀ n b → ＂ ] ＂ ⊗ DONE_OPENING b n ⊢ CLOSING b (suc n)
---   CLOSE_GOOD n b = roll ∘g ⊕ᴰ-in (closeGood n Eq.refl) ∘g liftG ,⊗ liftG
+-- --   -- This grammar is LL(1) because after you match a close paren, you
+-- --   -- need to look ahead one token to know if you continue matching
+-- --   -- close parens or have finished parsing the Atom.
+-- --   opaque
+-- --     unfolding _⊗_
+-- --     num' : ∀ {n} → ε ⊢ Atom ⊸ literal (num n)
+-- --     num' {n} = ⊸-intro-ε {k = Atom} (num {n})
+-- --     parens' : ε ⊢ Atom ⊸ literal RP ⊸ Exp ⊸ literal LP
+-- --     parens' = ⊸3-intro-ε parens
 
---   CLOSE_BAD : ∀ b → ＂ ] ＂ ⊢ CLOSING b 0
---   CLOSE_BAD b = roll ∘g ⊕ᴰ-in (closeBad Eq.refl) ∘g liftG
+-- --   record Algebra ℓ : Type (ℓ-suc ℓ) where
+-- --     field
+-- --       UE : Grammar ℓ
+-- --       UAs : Grammar ℓ
+-- --       UA : Grammar ℓ
 
---   DONE_C : ∀ n → ε ⊢ CLOSING false n
---   DONE_C n = roll ∘g ⊕ᴰ-in (doneC Eq.refl) ∘g liftG
+-- --       [mkExp] : UA ⊗ UAs ⊢ UE
+-- --       [nil] : ε ⊢ UAs
+-- --       [cons] : (literal * ⊗ UA) ⊗ UAs ⊢ UAs
+-- --       [num] : ∀ {n} → literal (num n) ⊢ UA
+-- --       [parens] : literal LP ⊗ UE ⊗ literal RP ⊢ UA
 
---   UNEXPECTED[C : ∀ n → ＂ [ ＂ ⊗ ⊤ ⊢ CLOSING false n
---   UNEXPECTED[C n = roll ∘g ⊕ᴰ-in (unexpected[C Eq.refl) ∘g liftG ,⊗ liftG
+-- --   open Algebra
+-- --   opaque
+-- --     unfolding _⊗_
+-- --     initialAlgebra : Algebra ℓ-zero
+-- --     initialAlgebra .UE = Exp
+-- --     initialAlgebra .UAs = KL* (literal * ⊗ Atom)
+-- --     initialAlgebra .UA = Atom
+-- --     initialAlgebra .[mkExp] = id
+-- --     initialAlgebra .[nil] = nil
+-- --     initialAlgebra .[cons] = cons
+-- --     initialAlgebra .[num] = num
+-- --     initialAlgebra .[parens] = parens
+-- --   record Hom {ℓ}{ℓ'} (A : Algebra ℓ) (B : Algebra ℓ') : Type (ℓ-max ℓ ℓ') where
+-- --     field
+-- --       fE : A .UE ⊢ B .UE
+-- --       fAs : A .UAs ⊢ B .UAs
+-- --       fA : A .UA ⊢ B .UA
 
---   UNEXPECTED+C  : ∀ n → ＂ + ＂ ⊗ ⊤ ⊢ CLOSING false n
---   UNEXPECTED+C n = roll ∘g ⊕ᴰ-in (unexpected+C Eq.refl) ∘g liftG ,⊗ liftG
+-- --   -- this can be avoided by doing manual recursion for rAs
+-- --   opaque
+-- --     unfolding _⊗_ initialAlgebra
+-- --     fold : ∀ {ℓ}(A : Algebra ℓ) → Hom initialAlgebra A
+-- --     fold A = record { fE = rE ; fAs = rAs ; fA = rA } where
+-- --       rE : Exp ⊢ A .UE
+-- --       rAs : KL* (literal * ⊗ Atom) ⊢ A .UAs
+-- --       rA : Atom ⊢ A .UA
+-- --       rE _ (sp , a , as) = A .[mkExp] _ (sp , rA _ a , rAs _ as)
+-- --       rAs _ (KL*.nil _ x) = A .[nil] _ x
+-- --       rAs _ (KL*.cons _ (sp1 , (sp2 , star , a) , as)) = A .[cons] _ (sp1 , (sp2 , star , rA _ a) , rAs _ as)
+-- --       rA _ (num _ x) = A .[num] _ x
+-- --       rA _ (parens _ (sp1 , lp , sp2 , e , rp)) = A .[parens] _ (sp1 , lp , sp2 , rE _ e , rp)
 
---   UNEXPECTED_NUM_C : ∀ n → anyNum ⊗ ⊤ ⊢ CLOSING false n
---   UNEXPECTED_NUM_C n = roll ∘g ⊕ᴰ-in (unexpectedNumC Eq.refl) ∘g liftG ,⊗ liftG
+-- -- module Automaton where
+-- --   -- TODO: we should be able to generalize this definition to an
+-- --   -- (infinite state) deterministic automaton with guarded
+-- --   -- transitions.
 
---   DONE_GOOD : ε ⊢ ADDING true 0
---   DONE_GOOD = roll ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl) ∘g liftG
+-- --   -- the stack is a number,
+-- --   -- the number of open parens that are closed by the term
 
---   ADD : ∀ n b → ＂ + ＂ ⊗ OPENING b n ⊢ ADDING b n
---   ADD n b = roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG
+-- --   -- Exp is for when we are parsing a single expression, Suffix is
+-- --   -- when we are parsing the sequence of multiplications after an
+-- --   -- expression
 
---   DONE_BAD : ∀ n → ε ⊢ ADDING false (suc n)
---   DONE_BAD n = roll ∘g ⊕ᴰ-in (doneBad Eq.refl) ∘g liftG
+-- --   -- the boolean is whether it is an accepting or rejecting trace
 
---   UNEXPECTED[A : ∀ n → ＂ [ ＂ ⊗ ⊤ ⊢ ADDING false n
---   UNEXPECTED[A n = roll ∘g ⊕ᴰ-in (unexpected[A Eq.refl) ∘g liftG ,⊗ liftG
+-- --   -- three cases: Opening, Closing, Multiplying
 
---   UNEXPECTED]A : ∀ n → ＂ ] ＂ ⊗ ⊤ ⊢ ADDING false n
---   UNEXPECTED]A n = roll ∘g ⊕ᴰ-in (unexpected]A Eq.refl) ∘g liftG ,⊗ liftG
+-- --   -- Opening: at the start of an expression, the term starts with a
+-- --   -- sequence of 0 or more opening parens, which we count. Ends when
+-- --   -- we see a number, then we use lookahead to determine whether to
+-- --   -- parse closing parens or start parsing a multiplication sequence
+-- --   data Opening : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero
+-- --   -- Closing: parse as many closing parens as you can, eventually
+-- --   -- use lookahead to decide when to start parsing multiplication sequence
+-- --   data Closing : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero
+-- --   -- Parse a sequence of * Exps
+-- --   data Multiplying : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero
+-- --   DoneOpening : ∀ (n : ℕ) (b : Bool) → Grammar ℓ-zero
+-- --   DoneOpening n b =
+-- --     ((ε ⊕' (literal * ⊕' literal LP ⊕' anyNum) ⊗' ⊤) &' Multiplying n b)
+-- --     ⊕' ((literal RP ⊗' ⊤) &' Closing n b)
+-- --   data Opening where
+-- --     left : ∀ {n b} → literal LP ⊗' Opening (suc n) b ⊢ Opening n b
+-- --     num  : ∀ {n b} →
+-- --       (LinΣ[ m ∈ ℕ ] literal (num m)) ⊗' DoneOpening n b ⊢ Opening n b
+-- --     unexpected : ∀ {n} → ε ⊕' (literal RP ⊕' literal *) ⊗' ⊤ ⊢ Opening n false
 
---   UNEXPECTED_NUM_A : ∀ n → anyNum ⊗ ⊤ ⊢ ADDING false n
---   UNEXPECTED_NUM_A n = roll ∘g ⊕ᴰ-in (unexpectedNumA Eq.refl) ∘g liftG ,⊗ liftG
+-- --   data Closing where
+-- --     rightClose : ∀ {n b} →
+-- --       literal RP ⊗' DoneOpening n b ⊢ Closing (suc n) b
+-- --     rightUnmatched : literal RP ⊗' ⊤ ⊢ Closing 0 false
+-- --     unexpected : ∀ {n} → ε ⊕' (literal * ⊕' literal LP ⊕' anyNum) ⊗' ⊤ ⊢ Closing n false
 
---   parseTy =
---     &[ s ∈ AutomatonState ]
---     &[ n ∈ ℕ ]
---     ⊕[ b ∈ Bool ]
---       AutomatonG b n s
+-- --   data Multiplying where
+-- --     done : ε ⊢ Multiplying 0 true
+-- --     times : ∀ {n b} → literal * ⊗' Opening n b ⊢ Multiplying n b
+-- --     unmatched : ∀ {n} → ε ⊢ Multiplying (suc n) false
+-- --     unexpected : ∀ {n} →
+-- --       (literal LP ⊕' literal RP ⊕' anyNum) ⊗' ⊤ ⊢ Multiplying n false
 
---   parseAlg : string ⊢ parseTy
---   parseAlg =
---     fold*r char λ where
---       (lift _) →
---         ⊕ᴰ-elim λ where
---           nil →
---             &ᴰ-in (λ where
---               Opening → &ᴰ-in λ n → ⊕ᴰ-in false ∘g DONE_O n
---               DoneOpening → {!!}
---               Closing → &ᴰ-in λ n → ⊕ᴰ-in false ∘g DONE_C n
---               Adding →
---                 &ᴰ-in
---                   (Nat.elim
---                     (⊕ᴰ-in true ∘g DONE_GOOD)
---                     (λ n-1 _ → ⊕ᴰ-in false ∘g DONE_BAD n-1)
---                   )
---             )
---             ∘g lowerG ∘g lowerG
---           cons →
---             (&ᴰ-in λ where
---               Opening → &ᴰ-in λ n →
---                   ⊕ᴰ-elim λ where
---                     [ →
---                       map⊕ᴰ (LEFT n)
---                       ∘g ⊕ᴰ-distR .fun
---                       ∘g id ,⊗ (&ᴰ-π (suc n) ∘g &ᴰ-π Opening)
---                     ] →
---                       ⊕ᴰ-in false
---                       ∘g UNEXPECTED]O n
---                       ∘g id ,⊗ ⊤-intro
---                     + →
---                       ⊕ᴰ-in false
---                       ∘g UNEXPECTED+O n
---                       ∘g id ,⊗ ⊤-intro
---                     (num m) →
---                       map⊕ᴰ (NUM n)
---                       ∘g ⊕ᴰ-distR .fun
---                       ∘g ⊕ᴰ-in m ,⊗ (&ᴰ-π n ∘g &ᴰ-π DoneOpening)
---               DoneOpening → &ᴰ-in λ n →
---                   ⊕ᴰ-elim λ where
---                     [ → {!!}
---                     ] → {!!}
---                     + → {!!}
---                     (num m) → {!!}
---               Closing → &ᴰ-in λ n →
---                   ⊕ᴰ-elim λ where
---                     [ → {!!}
---                     ] →
---                       {!!}
---                       -- map⊕ᴰ {!!}
---                       -- ∘g ⊕ᴰ-distR .fun
---                       -- ∘g id ,⊗ (&ᴰ-π n ∘g &ᴰ-π DoneOpening)
---                     + →
---                       ⊕ᴰ-in false
---                       ∘g UNEXPECTED+C n
---                       ∘g id ,⊗ ⊤-intro
---                     (num m) →
---                       ⊕ᴰ-in false
---                       ∘g UNEXPECTED_NUM_C n
---                       ∘g ⊕ᴰ-in m ,⊗ ⊤-intro
---               Adding → &ᴰ-in λ n →
---                   ⊕ᴰ-elim λ where
---                     [ →
---                       {!!}
---                       -- map⊕ᴰ (ADD n)
---                       -- ∘g ⊕ᴰ-distR .fun
---                       -- ∘g id ,⊗ (&ᴰ-π n ∘g &ᴰ-π Opening)
---                     ] →
---                       ⊕ᴰ-in false
---                       ∘g UNEXPECTED]A n
---                       ∘g id ,⊗ ⊤-intro
---                     + →
---                       map⊕ᴰ (ADD n)
---                       ∘g ⊕ᴰ-distR .fun
---                       ∘g id ,⊗ (&ᴰ-π n ∘g &ᴰ-π Opening)
---                     (num m) →
---                       ⊕ᴰ-in false
---                       ∘g UNEXPECTED_NUM_A n
---                       ∘g ⊕ᴰ-in m ,⊗ ⊤-intro
---             )
---             ∘g ⊕ᴰ-distL .fun
---             ∘g lowerG ,⊗ lowerG
-
+-- --   -- note this is for the true cases, the tautological one would also
+-- --   -- have false cases but we would just use ⊥ for them.
+-- --   --
+-- --   -- because of this we are getting a `warning: -W[no]UnsupportedIndexedMatch`
 -- --   record Algebra ℓ : Type (ℓ-suc ℓ) where
 -- --     field
 -- --       UO : ℕ → Grammar ℓ
@@ -391,7 +520,7 @@ module Automaton where
 -- --     initialAlgebra : Algebra ℓ-zero
 -- --     initialAlgebra .UO n = Opening n true
 -- --     initialAlgebra .UC n = Closing n true
--- --     initialAlgebra .UM n = Adding n true
+-- --     initialAlgebra .UM n = Multiplying n true
 -- --     initialAlgebra .[left] = left
 -- --     initialAlgebra .[num] = num
 -- --     initialAlgebra .[rightClose] = rightClose
@@ -412,7 +541,7 @@ module Automaton where
 -- --     fold A = record { fO = rO ; fC = rC ; fM = rM } where
 -- --       rO : ∀ n → Opening n true ⊢ A .UO n
 -- --       rC : ∀ n → Closing n true ⊢ A .UC n
--- --       rM : ∀ n → Adding n true ⊢ A .UM n
+-- --       rM : ∀ n → Multiplying n true ⊢ A .UM n
 -- --       rDO : ∀ n → DoneOpening n true ⊢ UDO A n
 -- --       rO n w (left _ (sp , lp , o)) = A .[left] w (sp , (lp , rO _ _ o))
 -- --       rO n w (num _ (sp , m , doo)) = A .[num] _ (sp , m , rDO _ _ doo)
@@ -428,7 +557,7 @@ module Automaton where
 -- --     Goal = LinearΣ Peek & LinΠ[ n ∈ ℕ ]
 -- --       (LinearΣ (Opening n)
 -- --       & LinearΣ (Closing n)
--- --       & LinearΣ (Adding n))
+-- --       & LinearΣ (Multiplying n))
 
 -- --     -- TODO typechecking this parse term is very slow
 -- --     -- Should probably split it into several pieces
@@ -437,23 +566,22 @@ module Automaton where
 -- -- --       parse' : string ⊢ LinearΣ Peek & LinΠ[ n ∈ ℕ ]
 -- -- --         (LinearΣ (Opening n)
 -- -- --         & LinearΣ (Closing n)
--- -- --         & LinearΣ (Adding n))
+-- -- --         & LinearΣ (Multiplying n))
 -- -- --       parse' = foldKL*r char
 -- -- --         (record {
 -- -- --           the-ℓ = ℓ-zero
 -- -- --         ; G = LinearΣ Peek & LinΠ[ n ∈ ℕ ]
 -- -- --               (LinearΣ (Opening n)
 -- -- --               & LinearΣ (Closing n)
--- -- --               & LinearΣ (Adding n))
+-- -- --               & LinearΣ (Multiplying n))
 -- -- --         ; nil-case =
 -- -- --           LinΣ-intro Maybe.nothing
 -- -- --           ,& LinΠ-intro λ n →
 -- -- --             (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
 -- -- --             ,& (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
--- -- --             ,& Nat.elim
--- -- {A = λ n → Term ε (LinearΣ (Adding n))}
--- -- (LinΣ-intro true ∘g done)
--- -- (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
+-- -- --             ,& Nat.elim {A = λ n → Term ε (LinearΣ (Multiplying n))}
+--                      (LinΣ-intro true ∘g done)
+--                      (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
 -- -- --         ; cons-case =
 -- -- --           (⊸-intro⁻ (LinΣ-elim (λ tok → ⊸-intro {k = LinearΣ Peek}
 -- -- --             (LinΣ-intro {A = Maybe Tok} (just tok) ∘g id ,⊗ ⊤-intro))))
@@ -466,7 +594,7 @@ module Automaton where
 -- -- --       --     ,& LinΠ-intro λ n →
 -- -- --       --     (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
 -- -- --       --     ,& (LinΣ-intro false ∘g unexpected ∘g ⊕-inl)
--- -- --       --     ,& Nat.elim {A = λ n → Term ε (LinearΣ (Adding n))} (LinΣ-intro true ∘g done) (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
+-- -- --       --     ,& Nat.elim {A = λ n → Term ε (LinearΣ (Multiplying n))} (LinΣ-intro true ∘g done) (λ n-1 _ → LinΣ-intro false ∘g unmatched) n
 -- -- --       --   ; cons-case =
 -- -- --       --     (⊸-intro⁻ (LinΣ-elim (λ tok → ⊸-intro {k = LinearΣ Peek}
 -- -- --       --       (LinΣ-intro {A = Maybe Tok} (just tok) ∘g id ,⊗ ⊤-intro))))
@@ -475,11 +603,16 @@ module Automaton where
 -- -- --       --         (LinΣ-elim λ
 -- -- --       --         { (num x) → ⊸-intro {k = LinearΣ (Opening n)} (⟜-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
 -- -- --       --           -- goto closing
--- -- --       --           { (just RP) → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ ⊕-inr))) ∘g &-π₁) ∘g &-π₂))
--- -- --       --           ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- -- --       --           ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- -- --       --           ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- -- --       --           ; (just (num y)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro y) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- -- --       --           { (just RP) → ⇒-intro (⇐-intro⁻ (((LinΣ-elim λ b → ⇐-intro (⟜-intro
+-- {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ ⊕-inr))) ∘g &-π₁) ∘g &-π₂))
+-- -- --       --           ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro
+-- {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- -- --       --           ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro
+-- {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- -- --       --           ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro
+-- {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- -- --       --           ; (just (num y)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro
+-- {k = LinearΣ (Opening n)} (LinΣ-intro b ∘g num ∘g LinΣ-intro x ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro y) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
 -- -- --       --           }))
 -- -- --       --           ∘g id ,⊗ id ,&p LinΠ-app n)
 -- -- --       --           --  (⟜-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
@@ -495,11 +628,16 @@ module Automaton where
 -- -- --       --          (LinΣ-intro false ∘g rightUnmatched ∘g id ,⊗ ⊤-intro)
 -- -- --       --          -- popped
 -- -- --       --          (λ n-1 _ → (⟜-intro⁻ (⇒-intro⁻ (LinΣ-elim λ
--- -- --       --            { (just RP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ ⊕-inr))) ∘g &-π₁ ∘g &-π₂))
--- -- --       --            ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- -- --       --            ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- -- --       --            ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
--- -- --       --            ; (just (num x)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)} (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- -- --       --            { (just RP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)}
+-- (LinΣ-intro b ∘g rightClose ∘g id ,⊗ ⊕-inr))) ∘g &-π₁ ∘g &-π₂))
+-- -- --       --            ; nothing → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)}
+-- (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g ⊕-inl ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- -- --       --            ; (just *) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)}
+-- (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g ⊕-inl ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- -- --       --            ; (just LP) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)}
+-- (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inl) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
+-- -- --       --            ; (just (num x)) → ⇒-intro (⇐-intro⁻ ((LinΣ-elim λ b → ⇐-intro (⟜-intro {k = LinearΣ (Closing _)}
+-- (LinΣ-intro b ∘g rightClose ∘g id ,⊗ (⊕-inl ∘g (⊕-inr ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ id) ,&p id)))) ∘g &-π₂ ∘g &-π₂))
 -- -- --       --            })) ∘g id ,⊗ id ,&p LinΠ-app n-1))
 -- -- --       --          n)
 -- -- --       --        ; LP → ⊸-intro {k = LinearΣ (Closing n)} (LinΣ-intro false ∘g
@@ -511,10 +649,10 @@ module Automaton where
 -- -- --       --        })
 -- -- --       --       ,&
 -- -- --       --      (⊸-intro⁻ (LinΣ-elim λ
--- -- --       --        { * → ⊸-intro {k = LinearΣ (Adding n)} (⟜-intro⁻ ((((LinΣ-elim λ b → ⟜-intro {k = LinearΣ (Adding n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
--- -- --       --        ; LP → ⊸-intro {k = LinearΣ (Adding n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
--- -- --       --        ; RP → ⊸-intro {k = LinearΣ (Adding n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
--- -- --       --        ; (num x) → ⊸-intro {k = LinearΣ (Adding n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
+-- -- --       --        { * → ⊸-intro {k = LinearΣ (Multiplying n)} (⟜-intro⁻ ((((LinΣ-elim λ b → ⟜-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro b ∘g times)) ∘g &-π₁) ∘g LinΠ-app n) ∘g &-π₂))
+-- -- --       --        ; LP → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g ⊕-inl ,⊗ ⊤-intro)
+-- -- --       --        ; RP → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inl) ,⊗ ⊤-intro)
+-- -- --       --        ; (num x) → ⊸-intro {k = LinearΣ (Multiplying n)} (LinΣ-intro false ∘g unexpected ∘g (⊕-inr ∘g ⊕-inr ∘g LinΣ-intro x) ,⊗ ⊤-intro) }))
 -- -- --       --   })
 
 -- -- -- --     parse : string ⊢ LinΣ[ b ∈ Bool ] Opening zero b
