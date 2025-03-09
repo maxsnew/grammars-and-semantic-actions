@@ -13,7 +13,7 @@ open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Nat as Nat hiding (_+_)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
-open import Cubical.Data.Sum as Sum hiding (rec)
+open import Cubical.Data.Sum as Sum hiding (rec ; map)
 open import Cubical.Data.Sigma
 import Cubical.Data.Equality as Eq
 
@@ -42,6 +42,7 @@ Alphabet = Tok , isSetTok
 
 open import Grammar Alphabet hiding (_+)
 open import Grammar.String.Properties Alphabet
+open import Grammar.Equalizer Alphabet
 open import Term Alphabet
 
 open StrongEquivalence
@@ -381,59 +382,66 @@ module Automaton where
     AutomatonG b (n , s) ⊢ string
   print b n s = rec (AutomatonTy' b) (printAlg b) (n , s)
 
---   ⊕ᴰAlg : (b : Bool) →
---     Algebra
---       (AutomatonTy' b)
---       (λ (n , s) → ⊕[ b' ∈ Bool ] AutomatonG b' (n , s))
---   ⊕ᴰAlg b (n , Opening) =
---     ⊕ᴰ-elim λ where
---       left →
---         map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
---         ∘g ⊕ᴰ-distR .fun
---         ∘g lowerG ,⊗ lowerG
---       num →
---         {!!}
---         -- ⊕ᴰ-elim (λ where
---         --   ] →
---         --     {!!}
---         --     ∘g roll {F = AutomatonTy' b} {x = (n , Opening)}
---         --     ∘g ⊕ᴰ-in num
---         --     ∘g liftG ,⊗ ((⊕ᴰ-in ] ∘g {!!} ∘g lowerG) ∘g &ᴰ-π false)
---         --   ¬] → {!!}
---         -- )
---         -- ∘g ⊕ᴰ-distR .fun
---         -- ∘g lowerG ,⊗ id
---       (unexpectedO Eq.refl c) → {!!}
---   ⊕ᴰAlg b (n , Closing) =
---     ⊕ᴰ-elim λ where
---       (closeGood n-1 Eq.refl) → {!!}
---       (closeBad Eq.refl) → {!!}
---       (unexpectedC Eq.refl c) → {!!}
---   ⊕ᴰAlg b (n , Adding) =
---     ⊕ᴰ-elim λ where
---       (doneGood Eq.refl Eq.refl) → {!!}
---       (doneBad n-1 Eq.refl Eq.refl) → {!!}
---       add → {!!}
---       (unexpectedA Eq.refl c) → {!!}
-
---   Trace≅string :
---     (n : ℕ) → (s : AutomatonState) →
---     (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
---   Trace≅string n s .fun = ⊕ᴰ-elim (λ b → print b n s)
---   Trace≅string n s .inv = parse n s
---   Trace≅string n s .sec = unambiguous-string _ _
---   Trace≅string n s .ret = isRetract
---     where
---     opaque
---       unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
---       isRetract : parse n s ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
---       isRetract = ⊕ᴰ≡ _ _ λ b →
---         ind'
---           (AutomatonTy' b)
---           (⊕ᴰAlg b)
---           ((λ (n , q) → parse n q ∘g print b n q) , {!!})
---           ((λ (n , q) → ⊕ᴰ-in b) , λ (n , q) → {!!})
---           (n , s)
+  Trace≅string :
+    (n : ℕ) → (s : AutomatonState) →
+    (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
+  Trace≅string n s .fun = ⊕ᴰ-elim (λ b → print b n s)
+  Trace≅string n s .inv = &ᴰ-π (n , s) ∘g parse
+  Trace≅string n s .sec = unambiguous-string _ _
+  Trace≅string n s .ret = the-ret
+    where
+    opaque
+      unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
+      the-ret : &ᴰ-π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
+      the-ret = ⊕ᴰ≡ _ _ λ b →
+        equalizer-ind
+          (AutomatonTy' b)
+          (λ (n , s) → ⊕[ b ∈ Bool ] AutomatonG b (n , s))
+          (λ (n , s) → &ᴰ-π (n , s) ∘g parse ∘g print b n s)
+          (λ (n , s) → ⊕ᴰ-in b)
+          (λ where
+            (n , Opening) →
+              ⊕ᴰ≡ _ _ λ where
+                left i →
+                  map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+                  ∘g ⊕ᴰ-distR .fun
+                  ∘g id ,⊗ eq-π-pf _ _ i
+                  ∘g lowerG ,⊗ lowerG
+                num → {!!} -- can't do a pattern matching lamba directly
+                        --  in this equality proof
+                        --  You need a lemma よ
+                  -- ⊕ᴰ-elim (λ g →
+                  --   {!!}
+                  --   ∘g id ,⊗ map (DoneOpeningFun b n g) {!!}
+                  -- )
+                  -- ∘g ⊕ᴰ-distR .fun
+                  -- ∘g lowerG ,⊗ id
+                (unexpectedO Eq.refl EOF) → refl
+                -- TODO : The cases for unexpected tokens
+                -- should have to invoke the equivlance
+                -- between ⊤ and string?
+                (unexpectedO Eq.refl ]) → {!!}
+                (unexpectedO Eq.refl +) → {!!}
+            (0 , Closing) →
+              ⊕ᴰ≡ _ _ λ where
+                (closeBad Eq.refl) → {!!}
+                (unexpectedC Eq.refl c) → {!!}
+            (suc n-1 , Closing) →
+              ⊕ᴰ≡ _ _ λ where
+                (closeGood n-1 Eq.refl) → {!!}
+                (unexpectedC Eq.refl c) → {!!}
+            (n , Adding) →
+              ⊕ᴰ≡ _ _ λ where
+                (doneGood Eq.refl Eq.refl) → refl
+                (doneBad n-1 Eq.refl Eq.refl) → refl
+                add i →
+                  map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
+                  ∘g ⊕ᴰ-distR .fun
+                  ∘g id ,⊗ eq-π-pf _ _ i
+                  ∘g lowerG ,⊗ lowerG
+                (unexpectedA Eq.refl c) → {!!}
+          )
+          (n , s)
 
 -- -- {- Grammar for one associative binary operation with constants and parens -}
 -- -- {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
