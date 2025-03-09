@@ -99,6 +99,37 @@ module LL⟨1⟩ where
   PARENS : ＂ [ ＂ ⊗ EXP ⊗ ＂ ] ＂ ⊢ ATOM
   PARENS = roll ∘g ⊕ᴰ-in parens ∘g liftG ,⊗ liftG ,⊗ liftG
 
+  unrollEXPAlg :
+    Algebra BinOpTy (λ where
+      Exp → ATOM ⊕ (ATOM ⊗ (＂ + ＂ ⊗ ATOM) *)
+      Atom → ATOM
+    )
+  unrollEXPAlg Exp =
+    ⊕ᴰ-elim (λ where
+      done → ⊕-inl ∘g lowerG
+      add →
+        (⊕-inr
+        ∘g id ,⊗ (CONS ∘g
+          ⊕-elim
+            (id ,⊗ NIL ∘g ⊗-unit-r⁻)
+            ⊗-assoc
+          ∘g ⊗⊕-distL
+        ))
+        ∘g lowerG ,⊗ lowerG ,⊗ lowerG
+    )
+  unrollEXPAlg Atom = ⊕ᴰ-elim λ where
+    num → NUM ∘g lowerG
+    parens → {!? ∘g lowerG ,⊗ lowerG ,⊗ lowerG!}
+
+  unrollEXP : EXP ⊢ ATOM ⊕ (ATOM ⊗ (＂ + ＂ ⊗ ATOM) *)
+  unrollEXP = rec BinOpTy unrollEXPAlg Exp
+
+  ATOM*→EXP : ATOM ⊗ (＂ + ＂ ⊗ ATOM) * ⊢ EXP
+  ATOM*→EXP = ⟜-intro⁻
+      (fold*r' _
+        (⟜-intro (DONE ∘g ⊗-unit-r))
+        (⟜-intro (ADD ∘g id ,⊗ (id ,⊗ ⟜-app ∘g ⊗-assoc⁻))))
+
 module Automaton where
   data AutomatonState : Type ℓ-zero where
     Opening Closing Adding : AutomatonState
@@ -163,7 +194,7 @@ module Automaton where
     unexpectedO : b Eq.≡ false → UnexpectedOpening → AutomatonTag b n Opening
 
     closeGood : ∀ n-1 → n Eq.≡ suc n-1 → AutomatonTag b n Closing
-    closeBad : n Eq.≡ 0 → AutomatonTag b n Closing
+    closeBad : b Eq.≡ false → n Eq.≡ 0 → AutomatonTag b n Closing
     unexpectedC : b Eq.≡ false → UnexpectedClosing → AutomatonTag b n Closing
 
     doneGood : n Eq.≡ 0 → b Eq.≡ true → AutomatonTag b n Adding
@@ -195,7 +226,7 @@ module Automaton where
     ⊕e (AutomatonTag b n Closing)
       λ where
         (closeGood n-1 Eq.refl) → k ＂ ] ＂ ⊗e DoneOpening b n-1
-        (closeBad Eq.refl) → k (＂ ] ＂ ⊗ ⊤)
+        (closeBad Eq.refl Eq.refl) → k (＂ ] ＂ ⊗ ⊤)
         (unexpectedC Eq.refl c) → k (uc c)
   AutomatonTy b n Adding =
     ⊕e (AutomatonTag b n Adding)
@@ -283,7 +314,7 @@ module Automaton where
       (zero , Closing) →
         ⊕ᴰ-elim λ where
         [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
-        ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (closeBad Eq.refl) ∘g liftG ∘g id ,⊗ ⊤-intro
+        ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (closeBad Eq.refl Eq.refl) ∘g liftG ∘g id ,⊗ ⊤-intro
         + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ ⊤-intro
         (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum) ∘g liftG ∘g ⊕ᴰ-in x  ,⊗ ⊤-intro
       (suc n-1 , Closing) →
@@ -340,7 +371,7 @@ module Automaton where
         )
         ∘g ⊕ᴰ-distR .fun
         ∘g lowerG ,⊗ id
-      (closeBad Eq.refl) →
+      (closeBad Eq.refl Eq.refl) →
         CONS
         ∘g literal→char ] ,⊗ ⊤→string
         ∘g lowerG
@@ -463,7 +494,7 @@ module Soundness where
 
   Stk : ℕ → Grammar ℓ-zero
   Stk zero = ε
-  Stk (suc n) = ＂ ] ＂ ⊗ (＂ + ＂ ⊗ ATOM) ⊗ Stk n
+  Stk (suc n) = ＂ ] ＂ ⊗ (＂ + ＂ ⊗ ATOM) * ⊗ Stk n
 
   ⟦_⟧State : ℕ × AutomatonState → Grammar ℓ-zero
   ⟦ n , Opening ⟧State = EXP ⊗ Stk n
@@ -473,16 +504,28 @@ module Soundness where
   buildExpAlg : Algebra (AutomatonTy' true) ⟦_⟧State
   buildExpAlg (n , Opening) =
     ⊕ᴰ-elim λ where
-      left → {!⊸3⊗ ?!} ∘g lowerG ,⊗ lowerG
-      num → {!!}
+      left → ATOM*→EXP ,⊗ id ∘g ⊗-assoc ∘g ⊸3⊗ (⊸3-intro-ε PARENS) ∘g lowerG ,⊗ lowerG
+      num →
+        (⊕ᴰ-elim λ where
+          ] → (DONE ∘g NUM) ,⊗ id ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
+          ¬] → (ATOM*→EXP ∘g NUM ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
+        )
+        ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
   buildExpAlg (n , Closing) =
     ⊕ᴰ-elim λ where
-      (closeGood n-1 x) → {!!}
-      (closeBad x) → {!!}
+      (closeGood n-1 Eq.refl) →
+        (⊕ᴰ-elim λ where
+          ] →
+            id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻) ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
+          ¬] → id ,⊗ (lowerG ∘g &ᴰ-π false)
+        )
+        ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
   buildExpAlg (n , Adding) =
     ⊕ᴰ-elim λ where
-      (doneGood x x₁) → {!!}
-      add → {!!}
+      (doneGood Eq.refl Eq.refl) → NIL ,⊗ id ∘g ⊗-unit-r⁻ ∘g lowerG
+      add →
+        {!!}
+        ∘g lowerG ,⊗ lowerG
 
 -- -- {- Grammar for one associative binary operation with constants and parens -}
 -- -- {-# OPTIONS -WnoUnsupportedIndexedMatch #-}

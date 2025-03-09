@@ -18,11 +18,12 @@ open import Term.Nullary Alphabet
 
 private
   variable
-    ℓA ℓB ℓC ℓD : Level
+    ℓA ℓB ℓC ℓD ℓE : Level
     A A1 : Grammar ℓA
     B A2 : Grammar ℓB
     C A3 : Grammar ℓC
     D A4 : Grammar ℓD
+    E A5 : Grammar ℓE
     f f' f'' : A ⊢ B
 
 opaque
@@ -202,6 +203,9 @@ opaque
 ⊸-mapDom : A ⊢ B → B ⊸ C ⊢ A ⊸ C
 ⊸-mapDom f = ⊸-intro (⊸-app ∘g id ,⊗ f)
 
+⟜-mapDom : A ⊢ B → C ⟜ B ⊢ C ⟜ A
+⟜-mapDom f = ⟜-intro (⟜-app ∘g f ,⊗ id)
+
 opaque
   -- why do we need to unfold ⊸-intro here?
   unfolding ⊸-intro
@@ -248,6 +252,12 @@ opaque
   ⊸-mapCod (⊸-mapCod (⊸-curry {C = C}))
   ∘g ⊸3-intro-ε f
 
+⊸5-intro-ε :
+  A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ A5 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ A5 ⊸ C
+⊸5-intro-ε {C = C} f =
+  ⊸-mapCod (⊸-mapCod (⊸-mapCod ⊸-curry))
+  ∘g ⊸4-intro-ε f
+
 ⊸UMP : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC}
   → Iso (A ⊗ B ⊢ C) (A ⊢ B ⊸ C)
 ⊸UMP {B = B} = iso ⊸-intro ⊸-intro⁻ (⊸-η {B = B}) ⊸-β
@@ -273,6 +283,9 @@ opaque
 
 ⊸4⊗ : ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ C → A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ D ⊢ C ⊗ D
 ⊸4⊗ f = ⊸-app-l ∘g ⊸3⊗ f
+
+⊸5⊗ : ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ A5 ⊸ C → A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ A5 ⊗ D ⊢ C ⊗ D
+⊸5⊗ f = ⊸-app-l ∘g ⊸4⊗ f
 
 ⟜0⊗ : ε ⊢ C → D ⊢ D ⊗ C
 ⟜0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
