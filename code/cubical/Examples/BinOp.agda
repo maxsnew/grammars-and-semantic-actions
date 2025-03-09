@@ -87,17 +87,17 @@ module LL⟨1⟩ where
   EXP = BinOpG Exp
   ATOM = BinOpG Atom
 
-  -- DONE : ATOM ⊢ EXP
-  -- DONE = roll ∘g ⊕ᴰ-in done ∘g liftG
+  DONE : ATOM ⊢ EXP
+  DONE = roll ∘g ⊕ᴰ-in done ∘g liftG
 
-  -- ADD : ATOM ⊗ ＂ + ＂ ⊗ EXP ⊢ EXP
-  -- ADD = roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG ,⊗ liftG
+  ADD : ATOM ⊗ ＂ + ＂ ⊗ EXP ⊢ EXP
+  ADD = roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG ,⊗ liftG
 
-  -- NUM : anyNum ⊢ ATOM
-  -- NUM = roll ∘g ⊕ᴰ-in num ∘g liftG
+  NUM : anyNum ⊢ ATOM
+  NUM = roll ∘g ⊕ᴰ-in num ∘g liftG
 
-  -- PARENS : ＂ [ ＂ ⊗ EXP ⊗ ＂ ] ＂ ⊢ ATOM
-  -- PARENS = roll ∘g ⊕ᴰ-in parens ∘g liftG ,⊗ liftG ,⊗ liftG
+  PARENS : ＂ [ ＂ ⊗ EXP ⊗ ＂ ] ＂ ⊢ ATOM
+  PARENS = roll ∘g ⊕ᴰ-in parens ∘g liftG ,⊗ liftG ,⊗ liftG
 
 module Automaton where
   data AutomatonState : Type ℓ-zero where
@@ -382,66 +382,107 @@ module Automaton where
     AutomatonG b (n , s) ⊢ string
   print b n s = rec (AutomatonTy' b) (printAlg b) (n , s)
 
-  Trace≅string :
-    (n : ℕ) → (s : AutomatonState) →
-    (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
-  Trace≅string n s .fun = ⊕ᴰ-elim (λ b → print b n s)
-  Trace≅string n s .inv = &ᴰ-π (n , s) ∘g parse
-  Trace≅string n s .sec = unambiguous-string _ _
-  Trace≅string n s .ret = the-ret
-    where
-    opaque
-      unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
-      the-ret : &ᴰ-π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
-      the-ret = ⊕ᴰ≡ _ _ λ b →
-        equalizer-ind
-          (AutomatonTy' b)
-          (λ (n , s) → ⊕[ b ∈ Bool ] AutomatonG b (n , s))
-          (λ (n , s) → &ᴰ-π (n , s) ∘g parse ∘g print b n s)
-          (λ (n , s) → ⊕ᴰ-in b)
-          (λ where
-            (n , Opening) →
-              ⊕ᴰ≡ _ _ λ where
-                left i →
-                  map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
-                  ∘g ⊕ᴰ-distR .fun
-                  ∘g id ,⊗ eq-π-pf _ _ i
-                  ∘g lowerG ,⊗ lowerG
-                num → {!!} -- can't do a pattern matching lamba directly
-                        --  in this equality proof
-                        --  You need a lemma よ
-                  -- ⊕ᴰ-elim (λ g →
-                  --   {!!}
-                  --   ∘g id ,⊗ map (DoneOpeningFun b n g) {!!}
-                  -- )
-                  -- ∘g ⊕ᴰ-distR .fun
-                  -- ∘g lowerG ,⊗ id
-                (unexpectedO Eq.refl EOF) → refl
-                -- TODO : The cases for unexpected tokens
-                -- should have to invoke the equivlance
-                -- between ⊤ and string?
-                (unexpectedO Eq.refl ]) → {!!}
-                (unexpectedO Eq.refl +) → {!!}
-            (0 , Closing) →
-              ⊕ᴰ≡ _ _ λ where
-                (closeBad Eq.refl) → {!!}
-                (unexpectedC Eq.refl c) → {!!}
-            (suc n-1 , Closing) →
-              ⊕ᴰ≡ _ _ λ where
-                (closeGood n-1 Eq.refl) → {!!}
-                (unexpectedC Eq.refl c) → {!!}
-            (n , Adding) →
-              ⊕ᴰ≡ _ _ λ where
-                (doneGood Eq.refl Eq.refl) → refl
-                (doneBad n-1 Eq.refl Eq.refl) → refl
-                add i →
-                  map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
-                  ∘g ⊕ᴰ-distR .fun
-                  ∘g id ,⊗ eq-π-pf _ _ i
-                  ∘g lowerG ,⊗ lowerG
-                (unexpectedA Eq.refl c) → {!!}
-          )
-          (n , s)
+  -- Commenting out for speed of typing checking other parts, but
+  -- this seems to be a viable strategy. The entire file
+  -- would likely benefit from splitting up into additional
+  -- files/modules, because things are getting slow (although
+  -- idk if thats just due the holes)
+  --
+  -- Likely need explicit
+  -- lemmas for the guarded cases to get around writing
+  -- a pattern matching lambda in the equality proof.
+  -- That is, in the "num" case below, you can't
+  -- locally pattern match on the variable g : Guard
+  --
+  -- Trace≅string :
+  --   (n : ℕ) → (s : AutomatonState) →
+  --   (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
+  -- Trace≅string n s .fun = ⊕ᴰ-elim (λ b → print b n s)
+  -- Trace≅string n s .inv = &ᴰ-π (n , s) ∘g parse
+  -- Trace≅string n s .sec = unambiguous-string _ _
+  -- Trace≅string n s .ret = the-ret
+  --   where
+  --   opaque
+  --     unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
+  --     the-ret : &ᴰ-π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
+  --     the-ret = ⊕ᴰ≡ _ _ λ b →
+  --       equalizer-ind
+  --         (AutomatonTy' b)
+  --         (λ (n , s) → ⊕[ b ∈ Bool ] AutomatonG b (n , s))
+  --         (λ (n , s) → &ᴰ-π (n , s) ∘g parse ∘g print b n s)
+  --         (λ (n , s) → ⊕ᴰ-in b)
+  --         (λ where
+  --           (n , Opening) →
+  --             ⊕ᴰ≡ _ _ λ where
+  --               left i →
+  --                 map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+  --                 ∘g ⊕ᴰ-distR .fun
+  --                 ∘g id ,⊗ eq-π-pf _ _ i
+  --                 ∘g lowerG ,⊗ lowerG
+  --               num → {!!} -- can't do a pattern matching lamba directly
+  --                       --  in this equality proof
+  --                       --  You need a lemma よ
+  --                 -- ⊕ᴰ-elim (λ g →
+  --                 --   {!!}
+  --                 --   ∘g id ,⊗ map (DoneOpeningFun b n g) {!!}
+  --                 -- )
+  --                 -- ∘g ⊕ᴰ-distR .fun
+  --                 -- ∘g lowerG ,⊗ id
+  --               (unexpectedO Eq.refl EOF) → refl
+  --               -- TODO : The cases for unexpected tokens
+  --               -- should have to invoke the equivlance
+  --               -- between ⊤ and string?
+  --               (unexpectedO Eq.refl ]) → {!!}
+  --               (unexpectedO Eq.refl +) → {!!}
+  --           (0 , Closing) →
+  --             ⊕ᴰ≡ _ _ λ where
+  --               (closeBad Eq.refl) → {!!}
+  --               (unexpectedC Eq.refl c) → {!!}
+  --           (suc n-1 , Closing) →
+  --             ⊕ᴰ≡ _ _ λ where
+  --               (closeGood n-1 Eq.refl) → {!!}
+  --               (unexpectedC Eq.refl c) → {!!}
+  --           (n , Adding) →
+  --             ⊕ᴰ≡ _ _ λ where
+  --               (doneGood Eq.refl Eq.refl) → refl
+  --               (doneBad n-1 Eq.refl Eq.refl) → refl
+  --               add i →
+  --                 map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
+  --                 ∘g ⊕ᴰ-distR .fun
+  --                 ∘g id ,⊗ eq-π-pf _ _ i
+  --                 ∘g lowerG ,⊗ lowerG
+  --               (unexpectedA Eq.refl c) → {!!}
+  --         )
+  --         (n , s)
+  --
+
+-- Soundness : from every trace we can extract an LL⟨1⟩ parse
+module Soundness where
+  open LL⟨1⟩
+  open Automaton
+
+  Stk : ℕ → Grammar ℓ-zero
+  Stk zero = ε
+  Stk (suc n) = ＂ ] ＂ ⊗ (＂ + ＂ ⊗ ATOM) ⊗ Stk n
+
+  ⟦_⟧State : ℕ × AutomatonState → Grammar ℓ-zero
+  ⟦ n , Opening ⟧State = EXP ⊗ Stk n
+  ⟦ n , Closing ⟧State = Stk n
+  ⟦ n , Adding ⟧State = (＂ + ＂ ⊗ ATOM) * ⊗ Stk n
+
+  buildExpAlg : Algebra (AutomatonTy' true) ⟦_⟧State
+  buildExpAlg (n , Opening) =
+    ⊕ᴰ-elim λ where
+      left → {!⊸3⊗ ?!} ∘g lowerG ,⊗ lowerG
+      num → {!!}
+  buildExpAlg (n , Closing) =
+    ⊕ᴰ-elim λ where
+      (closeGood n-1 x) → {!!}
+      (closeBad x) → {!!}
+  buildExpAlg (n , Adding) =
+    ⊕ᴰ-elim λ where
+      (doneGood x x₁) → {!!}
+      add → {!!}
 
 -- -- {- Grammar for one associative binary operation with constants and parens -}
 -- -- {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
