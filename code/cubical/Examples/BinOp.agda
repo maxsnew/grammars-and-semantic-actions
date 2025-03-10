@@ -450,50 +450,56 @@ module Automaton where
     where
     opaque
       unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
-      goal : ℕ → AutomatonState → Grammar ℓ-zero
-      goal n s = ⊕[ b ∈ Bool ] AutomatonG b (n , s)
+      {--
+      -- For speed of typechecking it is crucial to separate the equality
+      -- proofs into lemmas. It is also important to scaffold typechecking
+      -- by limiting inference for the signatures of these lemmas
+      --}
 
-      l : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
-        AutomatonG b (n , s) ⊢ goal n s
-      l b n s = &ᴰ-π (n , s) ∘g parse ∘g print b n s
+      {--
+      -- Definitions for the type signatures of the equality lemmas
+      --}
+      module _ where
+        goal : ℕ → AutomatonState → Grammar ℓ-zero
+        goal n s = ⊕[ b ∈ Bool ] AutomatonG b (n , s)
 
-      r : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
-        AutomatonG b (n , s) ⊢ goal n s
-      r b n s = ⊕ᴰ-in b
+        l : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+          AutomatonG b (n , s) ⊢ goal n s
+        l b n s = &ᴰ-π (n , s) ∘g parse ∘g print b n s
 
-      the-eq : Bool → ℕ × AutomatonState → Grammar ℓ-zero
-      the-eq b (n , s) = equalizer (l b n s) (r b n s)
+        r : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+          AutomatonG b (n , s) ⊢ goal n s
+        r b n s = ⊕ᴰ-in b
 
-      L : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
-        ⟦ AutomatonTy b n s ⟧ (the-eq b) ⊢ goal n s
-      L b n s =
-        l b n s ∘g roll
-        ∘g map (AutomatonTy' b (n , s))
-          (λ (n , s) → eq-π (l b n s) (r b n s))
+        the-eq : Bool → ℕ × AutomatonState → Grammar ℓ-zero
+        the-eq b (n , s) = equalizer (l b n s) (r b n s)
 
-      R : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
-        ⟦ AutomatonTy b n s ⟧ (the-eq b) ⊢ goal n s
-      R b n s =
-        r b n s ∘g roll
-        ∘g map (AutomatonTy' b (n , s))
-          (λ (n , s) → eq-π (l b n s) (r b n s))
+        the-eq-π : (b : Bool) → ((n , s) : ℕ × AutomatonState) → equalizer (l b n s) (r b n s) ⊢ AutomatonG b (n , s)
+        the-eq-π b (n , s) = eq-π (l b n s) (r b n s)
 
-      the-≡-ty : (b : Bool) → (n : ℕ) → (s : AutomatonState) → Type ℓ-zero
-      the-≡-ty b n s = L b n s ≡ R b n s
+        L : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+          ⟦ AutomatonTy b n s ⟧ (the-eq b) ⊢ goal n s
+        L b n s = l b n s ∘g roll ∘g map (AutomatonTy' b (n , s)) (the-eq-π b)
 
-      mk≡Ty : {A : Grammar ℓ-zero} →
-        (b : Bool) → (n : ℕ) → (s : AutomatonState) →
-        A ⊢ ⟦ AutomatonTy b n s ⟧ (the-eq b) → Type ℓ-zero
-      mk≡Ty b n s f = L b n s ∘g f ≡ R b n s ∘g f
+
+        R : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+          ⟦ AutomatonTy b n s ⟧ (the-eq b) ⊢ goal n s
+        R b n s = r b n s ∘g roll ∘g map (AutomatonTy' b (n , s)) (the-eq-π b)
+
+        the-≡-ty : (b : Bool) → (n : ℕ) → (s : AutomatonState) → Type ℓ-zero
+        the-≡-ty b n s = L b n s ≡ R b n s
+
+        mk≡Ty : {A : Grammar ℓ-zero} →
+          (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+          A ⊢ ⟦ AutomatonTy b n s ⟧ (the-eq b) → Type ℓ-zero
+        mk≡Ty b n s f = L b n s ∘g f ≡ R b n s ∘g f
 
       Opening≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Opening
       Opening≡ b n =
         ⊕ᴰ≡ _ _ λ where
         left → the-left-pf
         num → the-num-pf
-        (unexpectedO Eq.refl EOF) → refl
-        (unexpectedO Eq.refl ]) → the-unexpected]-pf Eq.refl
-        (unexpectedO Eq.refl +) → {!!}
+        (unexpectedO Eq.refl c) → the-unexpected-pf c
           where
           the-left-pf : mk≡Ty b n Opening (⊕ᴰ-in left)
           the-left-pf i =
@@ -528,16 +534,54 @@ module Automaton where
             ∘g lowerG ,⊗ id
 
           the-unexpected]-pf :
-            (x : b Eq.≡ false) →
-            mk≡Ty b n Opening (⊕ᴰ-in (unexpectedO x ]))
-          the-unexpected]-pf Eq.refl = {!!}
+            mk≡Ty false n Opening (⊕ᴰ-in (unexpectedO Eq.refl ]))
+          the-unexpected]-pf =
+            cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ]) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+              (unambiguous⊤ _ _)
+
+          the-unexpected+-pf :
+            mk≡Ty false n Opening (⊕ᴰ-in (unexpectedO Eq.refl +))
+          the-unexpected+-pf =
+            cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl +) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+              (unambiguous⊤ _ _)
+
+          the-unexpected-pf :
+            (c : UnexpectedOpening) →
+            mk≡Ty false n Opening (⊕ᴰ-in (unexpectedO Eq.refl c))
+          the-unexpected-pf EOF = refl
+          the-unexpected-pf ] = the-unexpected]-pf
+          the-unexpected-pf + = the-unexpected+-pf
+
+      unexpectedClosing≡ :
+        (n : ℕ) →
+        (c : UnexpectedClosing) →
+        mk≡Ty false n Closing (⊕ᴰ-in (unexpectedC Eq.refl c))
+      unexpectedClosing≡ n EOF = refl
+      unexpectedClosing≡ n [ = {!!}
+      unexpectedClosing≡ n + = {!!}
+      unexpectedClosing≡ n aNum = {!!}
 
       Closing≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Closing
-      Closing≡ b zero =  {!!}
-      Closing≡ b (suc n) = {!!}
+      Closing≡ b zero = ⊕ᴰ≡ _ _ λ where
+        (closeBad Eq.refl Eq.refl) → {!!}
+        (unexpectedC Eq.refl c) → unexpectedClosing≡ zero c
+      Closing≡ b (suc n) = ⊕ᴰ≡ _ _ λ where
+        (closeGood n-1 Eq.refl) → {!!}
+        (unexpectedC Eq.refl c) → unexpectedClosing≡ (suc n) c
 
       Adding≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Adding
-      Adding≡ b n = {!!}
+      Adding≡ b n = ⊕ᴰ≡ _ _ λ where
+        (doneGood Eq.refl Eq.refl) → {!!}
+        (doneBad n-1 Eq.refl Eq.refl) → {!!}
+        add → {!!}
+        (unexpectedA Eq.refl c) → the-unexpected-pf c
+          where
+          the-unexpected-pf :
+            (c : UnexpectedAdding) →
+            mk≡Ty false n Adding (⊕ᴰ-in (unexpectedA Eq.refl c))
+          the-unexpected-pf [ = {!!}
+          the-unexpected-pf ] = {!!}
+          the-unexpected-pf aNum = {!!}
 
       the-ret : &ᴰ-π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
       the-ret = ⊕ᴰ≡ _ _ λ b →
