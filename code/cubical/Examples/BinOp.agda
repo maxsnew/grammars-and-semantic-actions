@@ -546,31 +546,80 @@ module Automaton where
         (c : UnexpectedClosing) →
         mk≡Ty false n Closing (⊕ᴰ-in (unexpectedC Eq.refl c))
       unexpectedClosing≡ n EOF = refl
-      unexpectedClosing≡ n [ = {!!}
-      unexpectedClosing≡ n + = {!!}
-      unexpectedClosing≡ n aNum = {!!}
+      unexpectedClosing≡ zero [ =
+        cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+          (unambiguous⊤ _ _)
+      unexpectedClosing≡ (suc n) [ =
+        cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+          (unambiguous⊤ _ _)
+      unexpectedClosing≡ zero + =
+        cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl +) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+          (unambiguous⊤ _ _)
+      unexpectedClosing≡ (suc n) + =
+        cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl +) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+          (unambiguous⊤ _ _)
+      unexpectedClosing≡ zero aNum =
+        cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+          (unambiguous⊤ _ _)
+      unexpectedClosing≡ (suc n) aNum =
+        cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+          (unambiguous⊤ _ _)
 
       Closing≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Closing
       Closing≡ b zero = ⊕ᴰ≡ _ _ λ where
-        (closeBad Eq.refl Eq.refl) → {!!}
+        (closeBad Eq.refl Eq.refl) → the-close-bad-pf
         (unexpectedC Eq.refl c) → unexpectedClosing≡ zero c
+          where
+          the-close-bad-pf : mk≡Ty false 0 Closing (⊕ᴰ-in (closeBad Eq.refl Eq.refl))
+          the-close-bad-pf =
+            cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (closeBad Eq.refl Eq.refl) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+              (unambiguous⊤ _ _)
       Closing≡ b (suc n) = ⊕ᴰ≡ _ _ λ where
-        (closeGood n-1 Eq.refl) → {!!}
+        (closeGood n-1 Eq.refl) → the-close-good-pf n-1
         (unexpectedC Eq.refl c) → unexpectedClosing≡ (suc n) c
+          where
+          the-]-pf : (n-1 : ℕ) → mk≡Ty b (suc n-1) Closing (⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ ⊕ᴰ-in ])
+          the-]-pf = {!!}
+
+          the-¬]-pf : (n-1 : ℕ) → mk≡Ty b (suc n-1) Closing (⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ ⊕ᴰ-in ¬])
+          the-¬]-pf = {!!}
+
+          the-guard-pf :
+            (n-1 : ℕ) →
+            (g : Guard) →
+            mk≡Ty b (suc n-1) Closing (⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ ⊕ᴰ-in g)
+          the-guard-pf n-1 ] = the-]-pf n-1
+          the-guard-pf n-1 ¬] = the-¬]-pf n-1
+
+          the-close-good-pf :
+            (n-1 : ℕ) →
+            mk≡Ty b (suc n-1) Closing (⊕ᴰ-in (closeGood n-1 Eq.refl))
+          the-close-good-pf n-1 i = ⊕ᴰ-elim (λ g → the-guard-pf n-1 g i) ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
 
       Adding≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Adding
       Adding≡ b n = ⊕ᴰ≡ _ _ λ where
-        (doneGood Eq.refl Eq.refl) → {!!}
-        (doneBad n-1 Eq.refl Eq.refl) → {!!}
-        add → {!!}
+        (doneGood Eq.refl Eq.refl) → refl
+        (doneBad n-1 Eq.refl Eq.refl) → refl
+        add → the-add-pf
         (unexpectedA Eq.refl c) → the-unexpected-pf c
           where
+          the-add-pf : mk≡Ty b n Adding (⊕ᴰ-in add)
+          the-add-pf i =
+            map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun
+            ∘g id ,⊗ eq-π-pf (l b n Opening) (r b n Opening) i ∘g lowerG ,⊗ lowerG
+
           the-unexpected-pf :
             (c : UnexpectedAdding) →
             mk≡Ty false n Adding (⊕ᴰ-in (unexpectedA Eq.refl c))
-          the-unexpected-pf [ = {!!}
-          the-unexpected-pf ] = {!!}
-          the-unexpected-pf aNum = {!!}
+          the-unexpected-pf [ =
+            cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl [) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+              (unambiguous⊤ _ _)
+          the-unexpected-pf ] =
+            cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl ]) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+              (unambiguous⊤ _ _)
+          the-unexpected-pf aNum =
+            cong (λ z → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl aNum) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
+              (unambiguous⊤ _ _)
 
       the-ret : &ᴰ-π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
       the-ret = ⊕ᴰ≡ _ _ λ b →
@@ -585,8 +634,6 @@ module Automaton where
             (n , Adding) → Adding≡ b n
           )
           (n , s)
-
-
 
 -- Soundness : from every trace we can extract an LL⟨1⟩ parse
 module Soundness where
