@@ -425,18 +425,6 @@ module Automaton where
     AutomatonG b (n , s) ⊢ string
   print b n s = rec (AutomatonTy' b) (printAlg b) (n , s)
 
-  -- Commenting out for speed of typing checking other parts, but
-  -- this seems to be a viable strategy. The entire file
-  -- would likely benefit from splitting up into additional
-  -- files/modules, because things are getting slow (although
-  -- idk if thats just due the holes)
-  --
-  -- Likely need explicit
-  -- lemmas for the guarded cases to get around writing
-  -- a pattern matching lambda in the equality proof.
-  -- That is, in the "num" case below, you can't
-  -- locally pattern match on the variable g : Guard
-
   Trace≅string :
     (n : ℕ) → (s : AutomatonState) →
     (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
