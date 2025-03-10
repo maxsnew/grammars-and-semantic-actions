@@ -99,6 +99,12 @@ module LL⟨1⟩ where
   PARENS : ＂ [ ＂ ⊗ EXP ⊗ ＂ ] ＂ ⊢ ATOM
   PARENS = roll ∘g ⊕ᴰ-in parens ∘g liftG ,⊗ liftG ,⊗ liftG
 
+  ATOM*→EXP : ATOM ⊗ (＂ + ＂ ⊗ ATOM) * ⊢ EXP
+  ATOM*→EXP = ⟜-intro⁻
+      (fold*r' _
+        (⟜-intro (DONE ∘g ⊗-unit-r))
+        (⟜-intro (ADD ∘g id ,⊗ (id ,⊗ ⟜-app ∘g ⊗-assoc⁻))))
+
   unrollEXPAlg :
     Algebra BinOpTy (λ where
       Exp → ATOM ⊕ (ATOM ⊗ (＂ + ＂ ⊗ ATOM) *)
@@ -119,16 +125,16 @@ module LL⟨1⟩ where
     )
   unrollEXPAlg Atom = ⊕ᴰ-elim λ where
     num → NUM ∘g lowerG
-    parens → {!? ∘g lowerG ,⊗ lowerG ,⊗ lowerG!}
+    parens →
+      ⊕-elim
+        (PARENS ∘g id ,⊗ DONE ,⊗ id)
+        (PARENS ∘g id ,⊗ ATOM*→EXP ,⊗ id)
+      ∘g ⊗⊕-distL
+      ∘g id ,⊗ ⊗⊕-distR
+      ∘g lowerG ,⊗ lowerG ,⊗ lowerG
 
   unrollEXP : EXP ⊢ ATOM ⊕ (ATOM ⊗ (＂ + ＂ ⊗ ATOM) *)
   unrollEXP = rec BinOpTy unrollEXPAlg Exp
-
-  ATOM*→EXP : ATOM ⊗ (＂ + ＂ ⊗ ATOM) * ⊢ EXP
-  ATOM*→EXP = ⟜-intro⁻
-      (fold*r' _
-        (⟜-intro (DONE ∘g ⊗-unit-r))
-        (⟜-intro (ADD ∘g id ,⊗ (id ,⊗ ⟜-app ∘g ⊗-assoc⁻))))
 
 module Automaton where
   data AutomatonState : Type ℓ-zero where
@@ -241,6 +247,15 @@ module Automaton where
 
   AutomatonG : Bool → ℕ × AutomatonState → Grammar ℓ-zero
   AutomatonG b = μ (AutomatonTy' b)
+
+  -- DoneOpeningClosing : Bool → ℕ → Grammar ℓ-zero
+  -- DoneOpeningClosing b n = μ (λ (n , s) → DoneOpeningFun b n ]) (n , Closing)
+
+  -- DoneOpeningAdding : Bool → ℕ → Grammar ℓ-zero
+  -- DoneOpeningAdding b n = μ (λ (n , s) → DoneOpeningFun b n ¬]) (n , Adding)
+
+  -- DoneOpeningG : Bool → ℕ → Grammar ℓ-zero
+  -- DoneOpeningG b n = DoneOpeningClosing b n ⊕ DoneOpeningAdding b n
 
   -- After peeking, we choose a subsequent Guard and
   -- AutomatonState to transition to
@@ -424,68 +439,121 @@ module Automaton where
   -- a pattern matching lambda in the equality proof.
   -- That is, in the "num" case below, you can't
   -- locally pattern match on the variable g : Guard
-  --
-  -- Trace≅string :
-  --   (n : ℕ) → (s : AutomatonState) →
-  --   (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
-  -- Trace≅string n s .fun = ⊕ᴰ-elim (λ b → print b n s)
-  -- Trace≅string n s .inv = &ᴰ-π (n , s) ∘g parse
-  -- Trace≅string n s .sec = unambiguous-string _ _
-  -- Trace≅string n s .ret = the-ret
-  --   where
-  --   opaque
-  --     unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
-  --     the-ret : &ᴰ-π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
-  --     the-ret = ⊕ᴰ≡ _ _ λ b →
-  --       equalizer-ind
-  --         (AutomatonTy' b)
-  --         (λ (n , s) → ⊕[ b ∈ Bool ] AutomatonG b (n , s))
-  --         (λ (n , s) → &ᴰ-π (n , s) ∘g parse ∘g print b n s)
-  --         (λ (n , s) → ⊕ᴰ-in b)
-  --         (λ where
-  --           (n , Opening) →
-  --             ⊕ᴰ≡ _ _ λ where
-  --               left i →
-  --                 map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
-  --                 ∘g ⊕ᴰ-distR .fun
-  --                 ∘g id ,⊗ eq-π-pf _ _ i
-  --                 ∘g lowerG ,⊗ lowerG
-  --               num → {!!} -- can't do a pattern matching lamba directly
-  --                       --  in this equality proof
-  --                       --  You need a lemma よ
-  --                 -- ⊕ᴰ-elim (λ g →
-  --                 --   {!!}
-  --                 --   ∘g id ,⊗ map (DoneOpeningFun b n g) {!!}
-  --                 -- )
-  --                 -- ∘g ⊕ᴰ-distR .fun
-  --                 -- ∘g lowerG ,⊗ id
-  --               (unexpectedO Eq.refl EOF) → refl
-  --               -- TODO : The cases for unexpected tokens
-  --               -- should have to invoke the equivlance
-  --               -- between ⊤ and string?
-  --               (unexpectedO Eq.refl ]) → {!!}
-  --               (unexpectedO Eq.refl +) → {!!}
-  --           (0 , Closing) →
-  --             ⊕ᴰ≡ _ _ λ where
-  --               (closeBad Eq.refl) → {!!}
-  --               (unexpectedC Eq.refl c) → {!!}
-  --           (suc n-1 , Closing) →
-  --             ⊕ᴰ≡ _ _ λ where
-  --               (closeGood n-1 Eq.refl) → {!!}
-  --               (unexpectedC Eq.refl c) → {!!}
-  --           (n , Adding) →
-  --             ⊕ᴰ≡ _ _ λ where
-  --               (doneGood Eq.refl Eq.refl) → refl
-  --               (doneBad n-1 Eq.refl Eq.refl) → refl
-  --               add i →
-  --                 map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
-  --                 ∘g ⊕ᴰ-distR .fun
-  --                 ∘g id ,⊗ eq-π-pf _ _ i
-  --                 ∘g lowerG ,⊗ lowerG
-  --               (unexpectedA Eq.refl c) → {!!}
-  --         )
-  --         (n , s)
-  --
+
+  Trace≅string :
+    (n : ℕ) → (s : AutomatonState) →
+    (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
+  Trace≅string n s .fun = ⊕ᴰ-elim (λ b → print b n s)
+  Trace≅string n s .inv = &ᴰ-π (n , s) ∘g parse
+  Trace≅string n s .sec = unambiguous-string _ _
+  Trace≅string n s .ret = the-ret
+    where
+    opaque
+      unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
+      goal : ℕ → AutomatonState → Grammar ℓ-zero
+      goal n s = ⊕[ b ∈ Bool ] AutomatonG b (n , s)
+
+      l : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+        AutomatonG b (n , s) ⊢ goal n s
+      l b n s = &ᴰ-π (n , s) ∘g parse ∘g print b n s
+
+      r : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+        AutomatonG b (n , s) ⊢ goal n s
+      r b n s = ⊕ᴰ-in b
+
+      the-eq : Bool → ℕ × AutomatonState → Grammar ℓ-zero
+      the-eq b (n , s) = equalizer (l b n s) (r b n s)
+
+      L : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+        ⟦ AutomatonTy b n s ⟧ (the-eq b) ⊢ goal n s
+      L b n s =
+        l b n s ∘g roll
+        ∘g map (AutomatonTy' b (n , s))
+          (λ (n , s) → eq-π (l b n s) (r b n s))
+
+      R : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+        ⟦ AutomatonTy b n s ⟧ (the-eq b) ⊢ goal n s
+      R b n s =
+        r b n s ∘g roll
+        ∘g map (AutomatonTy' b (n , s))
+          (λ (n , s) → eq-π (l b n s) (r b n s))
+
+      the-≡-ty : (b : Bool) → (n : ℕ) → (s : AutomatonState) → Type ℓ-zero
+      the-≡-ty b n s = L b n s ≡ R b n s
+
+      mk≡Ty : {A : Grammar ℓ-zero} →
+        (b : Bool) → (n : ℕ) → (s : AutomatonState) →
+        A ⊢ ⟦ AutomatonTy b n s ⟧ (the-eq b) → Type ℓ-zero
+      mk≡Ty b n s f = L b n s ∘g f ≡ R b n s ∘g f
+
+      Opening≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Opening
+      Opening≡ b n =
+        ⊕ᴰ≡ _ _ λ where
+        left → the-left-pf
+        num → the-num-pf
+        (unexpectedO Eq.refl EOF) → refl
+        (unexpectedO Eq.refl ]) → the-unexpected]-pf Eq.refl
+        (unexpectedO Eq.refl +) → {!!}
+          where
+          the-left-pf : mk≡Ty b n Opening (⊕ᴰ-in left)
+          the-left-pf i =
+            map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+            ∘g ⊕ᴰ-distR .fun
+            ∘g id ,⊗ eq-π-pf (l b (suc n) Opening) (r b (suc n) Opening) i
+            ∘g lowerG ,⊗ lowerG
+
+          the-]-pf : mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ id ∘g  ⊕ᴰ-distR .inv ∘g ⊕ᴰ-in ])
+          the-]-pf = {!!}
+            -- map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num)
+            -- -- ∘g ⊕ᴰ-distR .fun
+            -- ∘g ?
+            -- ?
+            -- ∘g id ,⊗ eq-π-pf _ _ i
+            -- ∘g id ,⊗ lowerG
+            -- ∘g id ,⊗ &ᴰ-π false
+
+          the-¬]-pf : mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ id ∘g  ⊕ᴰ-distR .inv ∘g ⊕ᴰ-in ¬])
+          the-¬]-pf = {!!}
+
+          the-guard-pf :
+            (g : Guard) →
+            mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ id ∘g  ⊕ᴰ-distR .inv ∘g ⊕ᴰ-in g)
+          the-guard-pf ] = the-]-pf
+          the-guard-pf ¬] = the-¬]-pf
+
+          the-num-pf : mk≡Ty b n Opening (⊕ᴰ-in num)
+          the-num-pf i =
+            ⊕ᴰ-elim (λ g → the-guard-pf g i)
+            ∘g ⊕ᴰ-distR .fun
+            ∘g lowerG ,⊗ id
+
+          the-unexpected]-pf :
+            (x : b Eq.≡ false) →
+            mk≡Ty b n Opening (⊕ᴰ-in (unexpectedO x ]))
+          the-unexpected]-pf Eq.refl = {!!}
+
+      Closing≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Closing
+      Closing≡ b zero =  {!!}
+      Closing≡ b (suc n) = {!!}
+
+      Adding≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Adding
+      Adding≡ b n = {!!}
+
+      the-ret : &ᴰ-π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b n s) ≡ id
+      the-ret = ⊕ᴰ≡ _ _ λ b →
+        equalizer-ind
+          (AutomatonTy' b)
+          (λ (n , s) → ⊕[ b ∈ Bool ] AutomatonG b (n , s))
+          (λ (n , s) → &ᴰ-π (n , s) ∘g parse ∘g print b n s)
+          (λ (n , s) → ⊕ᴰ-in b)
+          (λ where
+            (n , Opening) → Opening≡ b n
+            (n , Closing) → Closing≡ b n
+            (n , Adding) → Adding≡ b n
+          )
+          (n , s)
+
+
 
 -- Soundness : from every trace we can extract an LL⟨1⟩ parse
 module Soundness where
@@ -524,8 +592,45 @@ module Soundness where
     ⊕ᴰ-elim λ where
       (doneGood Eq.refl Eq.refl) → NIL ,⊗ id ∘g ⊗-unit-r⁻ ∘g lowerG
       add →
-        {!!}
+        ⊕-elim
+          (*-singleton _ ,⊗ id ∘g ⊗-assoc)
+          ((CONS ∘g ⊗-assoc) ,⊗ id ∘g ⊗-assoc)
+        ∘g ⊗⊕-distL
+        ∘g id ,⊗ (⊗⊕-distR ∘g unrollEXP ,⊗ id)
         ∘g lowerG ,⊗ lowerG
+
+  buildExp : AutomatonG true (0 , Opening) ⊢ EXP
+  buildExp = ⊗-unit-r ∘g rec _ buildExpAlg (0 , Opening)
+
+-- Completeness : every LL⟨1⟩ parse has a corresponding accepting trace
+-- module Completeness where
+--   open LL⟨1⟩
+--   open Automaton
+
+-- -- TODO : its not clear how to make a DoneOpening grammar
+--   ⟦_⟧Nonterminal : Nonterminal → Grammar ℓ-zero
+--   ⟦ Exp ⟧Nonterminal = &[ n ∈ ℕ ] {!!} -- &[ n ∈ ℕ ] (DoneOpeningG true n ⊸ AutomatonG true (n , Opening))
+--   ⟦ Atom ⟧Nonterminal = {!!} -- &[ n ∈ ℕ ] (DoneOpeningG true n ⊸ AutomatonG true (n , Opening))
+
+  -- mkTraceAlg : Algebra BinOpTy ⟦_⟧Nonterminal
+  -- mkTraceAlg Exp =
+  --   ⊕ᴰ-elim λ where
+  --     done →
+  --       id
+  --       ∘g lowerG
+  --     add → {!!}
+  -- mkTraceAlg Atom =
+  --   ⊕ᴰ-elim λ where
+  --     num → {!!}
+  --     parens → {!!}
+
+  -- mkTrace : EXP ⊢ AutomatonG true (0 , Opening)
+  -- mkTrace =
+  --   ⊸-app
+  --   ∘g id ,⊗ {!!}
+  --   ∘g ⊗-unit-r⁻
+  --   ∘g &ᴰ-π 0
+  --   ∘g rec _ mkTraceAlg Exp
 
 -- -- {- Grammar for one associative binary operation with constants and parens -}
 -- -- {-# OPTIONS -WnoUnsupportedIndexedMatch #-}
