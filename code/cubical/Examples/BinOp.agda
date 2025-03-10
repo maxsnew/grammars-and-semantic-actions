@@ -285,25 +285,15 @@ module Automaton where
 
   -- Whenever we want to use a Guard, this cuts out
   -- the redundant work in checking the guardedness condition
-  mkGuardPfs : (tok : Tok) → (n : ℕ) →
-    ＂ tok ＂ ⊗
-      (&[ nq ∈ ℕ × AutomatonState ]
-      ⊕[ b ∈ Bool ]
-      AutomatonG b nq)
+  mkGuardPfs : (n : ℕ) →
+    &[ nq ∈ ℕ × AutomatonState ] ⊕[ b ∈ Bool ] AutomatonG b nq
     ⊢
-    ⊕[ b ∈ Bool ]
-      (＂ tok ＂ ⊗
-        (⊕[ g ∈ Guard ] ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b)))
-  mkGuardPfs tok n =
+    ⊕[ b ∈ Bool ] ⊕[ g ∈ Guard ] ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b)
+  mkGuardPfs n =
     ⊕ᴰ-elim (λ tok? →
-      map⊕ᴰ (λ b →
-        id ,⊗ (⊕ᴰ-in (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
-      )
-      ∘g ⊕ᴰ-distR .fun
-      ∘g id ,⊗ (&⊕ᴰ-distL≅ .fun ∘g &ᴰ-π (n , Guard→State (Tok→Guard tok?)) ,&p id)
-    )
-    ∘g ⊕ᴰ-distR .fun
-    ∘g id ,⊗ peek .fun
+      map⊕ᴰ (λ b → ⊕ᴰ-in (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
+      ∘g &⊕ᴰ-distL≅ .fun ∘g &ᴰ-π (n , Guard→State (Tok→Guard tok?)) ,&p id)
+    ∘g peek .fun
 
   parse : string ⊢
     &[ nq ∈ ℕ × AutomatonState ]
@@ -324,8 +314,9 @@ module Automaton where
         ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
         + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl +) ∘g liftG ∘g id ,⊗ ⊤-intro
         (num x) →
-          map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id ∘g ⊕ᴰ-in x ,⊗ id)
-          ∘g mkGuardPfs (num x) n
+          map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
+          ∘g ⊕ᴰ-distR .fun
+          ∘g (⊕ᴰ-in x) ,⊗ mkGuardPfs n
       (zero , Closing) →
         ⊕ᴰ-elim λ where
         [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
@@ -336,7 +327,8 @@ module Automaton where
         ⊕ᴰ-elim λ where
         [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
         ] → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ id)
-            ∘g mkGuardPfs ] n-1
+            ∘g ⊕ᴰ-distR .fun
+            ∘g id ,⊗ mkGuardPfs n-1
         + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ ⊤-intro
         (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum) ∘g liftG ∘g ⊕ᴰ-in x  ,⊗ ⊤-intro
       (n , Adding) → ⊕ᴰ-elim λ where
@@ -462,6 +454,10 @@ module Automaton where
         the-eq-π : (b : Bool) → ((n , s) : ℕ × AutomatonState) → equalizer (l b n s) (r b n s) ⊢ AutomatonG b (n , s)
         the-eq-π b (n , s) = eq-π (l b n s) (r b n s)
 
+        the-eq-π-pf : (b : Bool) → ((n , s) : ℕ × AutomatonState) →
+          l b n s ∘g the-eq-π b (n , s) ≡ r b n s ∘g the-eq-π b (n , s)
+        the-eq-π-pf b (n , s) = eq-π-pf (l b n s) (r b n s)
+
         L : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
           ⟦ AutomatonTy b n s ⟧ (the-eq b) ⊢ goal n s
         L b n s = l b n s ∘g roll ∘g map (AutomatonTy' b (n , s)) (the-eq-π b)
@@ -493,12 +489,25 @@ module Automaton where
 
           the-]-pf' : (m : ℕ) → mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in ] ∘g ⊕ᴰ-in m ,⊗ id)
           the-]-pf' m  =
-            &ᴰ-π (n , Opening)
-            ∘g parse
-            ∘g print b n Opening
-            ∘g roll ∘g ⊕ᴰ-in num
-            ∘g (liftG ∘g ⊕ᴰ-in m) ,⊗ ⊕ᴰ-in ]
-            ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
+            map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
+            ∘g ⊕ᴰ-distR .fun
+            ∘g (⊕ᴰ-in m) ,⊗ mkGuardPfs n
+            ∘g id ,⊗
+              (parse
+              ∘g print b n Closing
+              ∘g the-eq-π b (n , Closing)
+              )
+            ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
+              ≡⟨{!!}⟩
+            map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
+            ∘g ⊕ᴰ-distR .fun
+            ∘g (⊕ᴰ-in m) ,⊗ mkGuardPfs n
+            ∘g id ,⊗
+              (parse
+              ∘g print b n Closing
+              ∘g the-eq-π b (n , Closing)
+              )
+            ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
               ≡⟨{!!}⟩
             ⊕ᴰ-in b
             ∘g roll ∘g ⊕ᴰ-in num
