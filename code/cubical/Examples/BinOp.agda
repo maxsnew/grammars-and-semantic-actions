@@ -295,17 +295,24 @@ module Automaton where
       ∘g &⊕ᴰ-distL≅ .fun ∘g &ᴰ-π (n , Guard→State (Tok→Guard tok?)) ,&p id)
     ∘g peek .fun
 
+  forgetGuard : (b : Bool) → (n : ℕ) → (g : Guard) →
+    ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b) ⊢ AutomatonG b (n , Guard→State g)
+  forgetGuard b n ] = lowerG ∘g &ᴰ-π false
+  forgetGuard b n ¬] = lowerG ∘g &ᴰ-π false
+
   parse : string ⊢
     &[ nq ∈ ℕ × AutomatonState ]
     ⊕[ b ∈ Bool ]
     AutomatonG b nq
   parse = fold*r' _
+    -- nil
     ((&ᴰ-in λ where
       (n , Opening) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF)
       (n , Closing) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF)
       (zero , Adding) → ⊕ᴰ-in true ∘g roll ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl)
       (suc n-1 , Adding) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (doneBad n-1 Eq.refl Eq.refl))
       ∘g liftG)
+    -- cons
     ((&ᴰ-in λ where
       (n , Opening) → ⊕ᴰ-elim λ where
         [ → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
@@ -350,12 +357,25 @@ module Automaton where
         ∘g literal→char [ ,⊗ id
         ∘g lowerG ,⊗ lowerG
       num →
-        ⊕ᴰ-elim (λ where
-          ] → CONS ∘g id ,⊗ lowerG ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ &ᴰ-π false
-          ¬] → CONS ∘g id ,⊗ lowerG ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ &ᴰ-π false
+        (CONS ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ id)
+        ∘g lowerG ,⊗ ⊕ᴰ-elim (λ where
+          ] → CONS ∘g literal→char ] ,⊗ ⊤→string ∘g lowerG ∘g &ᴰ-π true
+          ¬] →
+            ⊕-elim
+              NIL
+              (⊕ᴰ-elim (λ where
+                [ → CONS ∘g literal→char [ ,⊗ ⊤→string
+                + → CONS ∘g literal→char + ,⊗ ⊤→string
+                (num x) → CONS ∘g literal→char (num x) ,⊗ ⊤→string))
+              ∘g lowerG ∘g &ᴰ-π true
         )
-        ∘g ⊕ᴰ-distR .fun
-        ∘g lowerG ,⊗ id
+        -- -- ⊕ᴰ-elim (λ where
+        -- --   ] → CONS ∘g id ,⊗ lowerG ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ &ᴰ-π false
+        -- --   ¬] → CONS ∘g id ,⊗ lowerG ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ &ᴰ-π false
+        -- -- )
+        -- ⊕ᴰ-elim (λ _ → CONS ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ string-intro)
+        -- ∘g ⊕ᴰ-distR .fun
+        -- ∘g lowerG ,⊗ id
       (unexpectedO Eq.refl EOF) →
         NIL ∘g lowerG
       (unexpectedO Eq.refl ]) →
@@ -369,10 +389,11 @@ module Automaton where
   printAlg b (n , Closing) =
     ⊕ᴰ-elim λ where
       (closeGood n-1 Eq.refl) →
-        ⊕ᴰ-elim (λ where
-          ] → CONS ∘g literal→char ] ,⊗ (lowerG ∘g &ᴰ-π false)
-          ¬] → CONS ∘g literal→char ] ,⊗ (lowerG ∘g &ᴰ-π false)
-        )
+        ⊕ᴰ-elim (λ _ → CONS ∘g literal→char ] ,⊗ string-intro)
+        -- ⊕ᴰ-elim (λ where
+        --   ] → CONS ∘g literal→char ] ,⊗ (lowerG ∘g &ᴰ-π false)
+        --   ¬] → CONS ∘g literal→char ] ,⊗ (lowerG ∘g &ᴰ-π false)
+        -- )
         ∘g ⊕ᴰ-distR .fun
         ∘g lowerG ,⊗ id
       (closeBad Eq.refl Eq.refl) →
@@ -493,23 +514,45 @@ module Automaton where
           -- behind a map
           the-]-pf' : (m : ℕ) → mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in ] ∘g ⊕ᴰ-in m ,⊗ id)
           the-]-pf' m =
+            &ᴰ-π (n , Opening)
+            ∘g parse
+            ∘g print b n Opening
+            ∘g roll ∘g ⊕ᴰ-in num
+            ∘g (liftG ∘g ⊕ᴰ-in m) ,⊗ ⊕ᴰ-in ]
+            ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
+              ≡⟨ refl ⟩
             -- &ᴰ-π (n , Opening)
             -- ∘g parse
-            -- ∘g print b n Opening
-            -- ∘g roll ∘g ⊕ᴰ-in num
-            -- ∘g (liftG ∘g ⊕ᴰ-in m) ,⊗ ⊕ᴰ-in ]
-            -- ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
-              -- ≡⟨ refl ⟩
+            -- ∘g CONS
+            -- ∘g literal→char (num m) ,⊗ id
+
             map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
             ∘g ⊕ᴰ-distR .fun
-            ∘g (⊕ᴰ-in m) ,⊗ mkGuardPfs n
+            ∘g (⊕ᴰ-in m) ,⊗
+                (⊕ᴰ-elim (λ tok? →
+                  map⊕ᴰ (λ b → ⊕ᴰ-in (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
+                  ∘g &⊕ᴰ-distL≅ .fun ∘g &ᴰ-π (n , Guard→State (Tok→Guard tok?)) ,&p id)
+                ∘g peek .fun)
             ∘g id ,⊗
               (parse
-              ∘g print b n Closing
+              ∘g CONS
+              ∘g literal→char ] ,⊗ ⊤→string
               ∘g lowerG
-              ∘g &ᴰ-π false
+              ∘g &ᴰ-π true
               )
+
             ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
+
+            -- map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
+            -- ∘g ⊕ᴰ-distR .fun
+            -- ∘g (⊕ᴰ-in m) ,⊗ mkGuardPfs n
+            -- ∘g id ,⊗
+            --   (parse
+            --   ∘g print b n Closing
+            --   ∘g lowerG
+            --   ∘g &ᴰ-π false
+            --   )
+            -- ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
               -- ≡⟨ refl ⟩
             -- map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
             -- ∘g ⊕ᴰ-distR .fun
@@ -520,35 +563,64 @@ module Automaton where
             --   ∘g the-eq-π b (n , Closing)
             --   )
             -- ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
-              ≡⟨{!!}⟩
-            -- ⊕ᴰ-in b
-            -- ∘g roll ∘g ⊕ᴰ-in num
-            -- ∘g (liftG ∘g ⊕ᴰ-in m) ,⊗ ⊕ᴰ-in ]
-            -- ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
-              -- ≡⟨ refl ⟩
-            map⊕ᴰ (λ _ →
-              roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id
-              ∘g ⊕ᴰ-in m ,⊗ ⊕ᴰ-in ]
-              )
-            ∘g ⊕ᴰ-in b
+              ≡⟨{!refl!}⟩
+            ⊕ᴰ-in b
+            ∘g roll ∘g ⊕ᴰ-in num
+            ∘g (liftG ∘g ⊕ᴰ-in m) ,⊗ ⊕ᴰ-in ]
             ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
+              -- ≡⟨ refl ⟩
+            -- map⊕ᴰ (λ _ →
+            --   roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id
+            --   ∘g ⊕ᴰ-in m ,⊗ ⊕ᴰ-in ]
+            --   )
+            -- ∘g ⊕ᴰ-in b
+            -- ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
             ∎
 
           the-]-pf : mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in ])
             -- cong (_∘g ⊕ᴰ-distL .fun) (⊕ᴰ≡ _ _ the-]-pf')
           the-]-pf i = {!!}
 
-          the-¬]-pf : mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in ¬])
-          the-¬]-pf = {!!}
+          -- the-¬]-pf : mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in ¬])
+          -- the-¬]-pf i = {!!}
 
-          the-guard-pf :
-            (g : Guard) →
-            mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in g)
-          the-guard-pf ] = {!!}
-          the-guard-pf ¬] = the-¬]-pf
+          -- the-guard-pf :
+          --   (g : Guard) →
+          --   mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in g)
+          -- the-guard-pf ] = {!!}
+          -- the-guard-pf ¬] = ?
 
           the-num-pf : mk≡Ty b n Opening (⊕ᴰ-in num)
-          the-num-pf i = ⊕ᴰ-elim (λ g → the-guard-pf g i) ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
+          the-num-pf = λ i → {!!}
+            -- &ᴰ-π (n , Opening)
+            -- ∘g parse
+
+            -- ∘g print b n Opening
+            -- ∘g roll
+            -- ∘g ⊕ᴰ-in num
+
+            -- ∘g ⊕ᴰ-elim (λ _ → CONS ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ string-intro)
+            -- ∘g ⊕ᴰ-distR .fun
+            -- ∘g lowerG ,⊗ id
+            -- ∘g id ,⊗ map⊕ᴰ (λ g → print b n (Guard→State g) ∘g forgetGuard b n g)
+
+            -- ∘g id ,⊗ map⊕ᴰ (λ g → map (DoneOpeningFun b n g) (the-eq-π b))
+            -- ⊕ᴰ-elim (λ g →
+            --   &ᴰ-π (n , Opening)
+            --   ∘g parse
+            --   ∘g CONS ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ string-intro
+            --   ∘g lowerG ,⊗ id
+            --   ∘g id ,⊗ (print b n (Guard→State g) ∘g forgetGuard b n g)
+            --   ∘g id ,⊗ map (DoneOpeningFun b n g) (the-eq-π b)
+            -- )
+            -- ∘g ⊕ᴰ-distR .fun
+            --   ≡⟨ {!!} ⟩
+            -- ⊕ᴰ-in b
+            -- ∘g roll
+            -- ∘g ⊕ᴰ-in num
+            -- ∘g id ,⊗ map⊕ᴰ (λ g → map (DoneOpeningFun b n g) (the-eq-π b))
+            -- ∎
+            -- ⊕ᴰ-elim (λ g → the-guard-pf g i) ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
 
           the-unexpected]-pf :
             mk≡Ty false n Opening (⊕ᴰ-in (unexpectedO Eq.refl ]))
