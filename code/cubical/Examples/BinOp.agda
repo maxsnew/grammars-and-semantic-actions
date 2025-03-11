@@ -487,37 +487,56 @@ module Automaton where
             map⊕ᴰ (λ b → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun
             ∘g id ,⊗ eq-π-pf (l b (suc n) Opening) (r b (suc n) Opening) i ∘g lowerG ,⊗ lowerG
 
+          -- TODO : the partial attempts at equality
+          -- are very nearly of the form that would allow application
+          -- of eq-π-pf, except it seems the "eq-π" subterm is stuck
+          -- behind a map
           the-]-pf' : (m : ℕ) → mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in ] ∘g ⊕ᴰ-in m ,⊗ id)
-          the-]-pf' m  =
+          the-]-pf' m =
+            -- &ᴰ-π (n , Opening)
+            -- ∘g parse
+            -- ∘g print b n Opening
+            -- ∘g roll ∘g ⊕ᴰ-in num
+            -- ∘g (liftG ∘g ⊕ᴰ-in m) ,⊗ ⊕ᴰ-in ]
+            -- ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
+              -- ≡⟨ refl ⟩
             map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
             ∘g ⊕ᴰ-distR .fun
             ∘g (⊕ᴰ-in m) ,⊗ mkGuardPfs n
             ∘g id ,⊗
               (parse
               ∘g print b n Closing
-              ∘g the-eq-π b (n , Closing)
+              ∘g lowerG
+              ∘g &ᴰ-π false
               )
-            ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
+            ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
+              -- ≡⟨ refl ⟩
+            -- map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
+            -- ∘g ⊕ᴰ-distR .fun
+            -- ∘g (⊕ᴰ-in m) ,⊗ mkGuardPfs n
+            -- ∘g id ,⊗
+            --   (parse
+            --   ∘g print b n Closing
+            --   ∘g the-eq-π b (n , Closing)
+            --   )
+            -- ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
               ≡⟨{!!}⟩
-            map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
-            ∘g ⊕ᴰ-distR .fun
-            ∘g (⊕ᴰ-in m) ,⊗ mkGuardPfs n
-            ∘g id ,⊗
-              (parse
-              ∘g print b n Closing
-              ∘g the-eq-π b (n , Closing)
+            -- ⊕ᴰ-in b
+            -- ∘g roll ∘g ⊕ᴰ-in num
+            -- ∘g (liftG ∘g ⊕ᴰ-in m) ,⊗ ⊕ᴰ-in ]
+            -- ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
+              -- ≡⟨ refl ⟩
+            map⊕ᴰ (λ _ →
+              roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id
+              ∘g ⊕ᴰ-in m ,⊗ ⊕ᴰ-in ]
               )
-            ∘g id ,⊗ (lowerG ∘g &ᴰ-π false)
-              ≡⟨{!!}⟩
-            ⊕ᴰ-in b
-            ∘g roll ∘g ⊕ᴰ-in num
-            ∘g (liftG ∘g ⊕ᴰ-in m) ,⊗ ⊕ᴰ-in ]
+            ∘g ⊕ᴰ-in b
             ∘g id ,⊗ map (DoneOpeningFun b n ]) (the-eq-π b)
             ∎
 
           the-]-pf : mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in ])
-          the-]-pf = {!!}
             -- cong (_∘g ⊕ᴰ-distL .fun) (⊕ᴰ≡ _ _ the-]-pf')
+          the-]-pf i = {!!}
 
           the-¬]-pf : mk≡Ty b n Opening (⊕ᴰ-in num ∘g liftG ,⊗ ⊕ᴰ-in ¬])
           the-¬]-pf = {!!}
