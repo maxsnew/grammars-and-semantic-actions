@@ -14,11 +14,10 @@ open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.SumFin
 open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
-open import Cubical.Data.Sum hiding (rec)
+import Cubical.Data.Sum as Sum
 open import Cubical.Data.Empty as Empty hiding (rec)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
@@ -33,10 +32,10 @@ private
 -- and the tape alphabet adds a blank character
 TapeAlphabet : hSet ℓ-zero
 TapeAlphabet =
-  ⟨ Alphabet ⟩ ⊎ Unit , isSet⊎ (str Alphabet) isSetUnit
+  ⟨ Alphabet ⟩ Sum.⊎ Unit , Sum.isSet⊎ (str Alphabet) isSetUnit
 
 blank : ⟨ TapeAlphabet ⟩
-blank = inr _
+blank = Sum.inr _
 
 opaque
   isFinSetTapeAlphabet : isFinSet ⟨ TapeAlphabet ⟩
@@ -116,7 +115,7 @@ module _ (TM : TuringMachine) where
     ⊕e Tag λ {
       nil → k ε
     ; snoc → ⊕e ⟨ Alphabet ⟩
-      λ c → ⊕e (Σ[ tape' ∈ Tape ] Tape≡ (consTape (inl c) tape') tape) (λ (tape' , _) → (Var tape') ⊗e (k (literal c))) }
+      λ c → ⊕e (Σ[ tape' ∈ Tape ] Tape≡ (consTape (Sum.inl c) tape') tape) (λ (tape' , _) → (Var tape') ⊗e (k (literal c))) }
 
   -- The grammar of strings thats form the tape that have the input string in the leftmost
   -- entries of the tape
@@ -126,11 +125,11 @@ module _ (TM : TuringMachine) where
   open StrongEquivalence
   -- Linearly build the initial tape
   parseInitTape : string ⊢ ⊕[ tape ∈ Tape ] TuringG tape
-  parseInitTape = fold*l char (λ _ → ⊕ᴰ-elim (λ {
-        nil → ⊕ᴰ-in blankTape ∘g roll ∘g ⊕ᴰ-in nil ∘g lowerG
+  parseInitTape = fold*l' char (λ _ → ⊕ᴰ-elim (λ {
+        nil → σ blankTape ∘g roll ∘g σ nil ∘g lowerG
       ; snoc → (⊕ᴰ-elim (λ tape →
-          ⊕ᴰ-elim (λ c → ⊕ᴰ-in (consTape (inl c) tape)
-            ∘g roll ∘g ⊕ᴰ-in snoc ∘g ⊕ᴰ-in c ∘g ⊕ᴰ-in (tape , λ _ → refl) ∘g liftG ,⊗ liftG)
+          ⊕ᴰ-elim (λ c → σ (consTape (Sum.inl c) tape)
+            ∘g roll ∘g σ snoc ∘g σ c ∘g σ (tape , λ _ → refl) ∘g liftG ,⊗ liftG)
           ∘g ⊕ᴰ-distR .fun)
         ∘g ⊕ᴰ-distL .fun) ∘g lowerG ,⊗ lowerG}))
 
@@ -158,9 +157,9 @@ module _ (TM : TuringMachine) where
     MaybeG.Maybe (⊕[ tape ∈ Tape ]
                   ⊕[ b ∈ Bool ]
                   ⊕[ trace ∈ TuringTrace b (init , tape , initHead) ] TuringG tape)
-  run = &ᴰ-in λ fuel → ⊕ᴰ-elim (λ tape →
+  run = &ᴰ-intro λ fuel → ⊕ᴰ-elim (λ tape →
     let maybeTrace = decide-bounded fuel init tape initHead in
       Maybe.rec
         MaybeG.nothing
-        (λ (b , trace) → MaybeG.return ∘g ⊕ᴰ-in tape ∘g ⊕ᴰ-in b ∘g ⊕ᴰ-in trace)
+        (λ (b , trace) → MaybeG.return ∘g σ tape ∘g σ b ∘g σ trace)
         maybeTrace)

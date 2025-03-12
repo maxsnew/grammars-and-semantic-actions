@@ -17,15 +17,10 @@ open import Examples.AdventOfCode.One.Input
 open DecodeUnicode ASCII Unicode→ASCII
 
 open import Grammar ASCII
-open import Grammar.Maybe ASCII
-open import Grammar.String.Properties ASCII
-open import Grammar.Equivalence ASCII
-open import Grammar.RegularExpression ASCII
 open import NFA.Determinization ASCII
 open import DFA.Base ASCII
 open import DFA.Regex ASCII
 open import Term ASCII
-open import Helper
 
 private
   module PR = ParseRegex isFinSetASCII
@@ -70,7 +65,7 @@ p = PR.run' num s
 q = PR.run' (＂ zero^ ＂r) s
 
 opaque
-  unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⊸-intro ⟜-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊗-intro ⊗-in isSetASCII ASCIIChar Determinization.ε-closure Determinization.lit-closure
+  unfolding _⊕_ ⊕-elim inl inr ⊸-intro ⟜-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊗-intro ⊗-in isSetASCII ASCIIChar Determinization.ε-closure Determinization.lit-closure
   _ : p .fst ≡ true
   _ = refl
 

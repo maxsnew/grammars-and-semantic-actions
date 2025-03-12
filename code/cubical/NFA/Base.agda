@@ -8,6 +8,7 @@ open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
+open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sigma
@@ -18,7 +19,6 @@ import Cubical.Data.Equality as Eq
 open import Grammar Alphabet
 open import Grammar.Equivalence Alphabet
 open import Term Alphabet
-open import Helper
 
 private
   variable ℓN ℓN' ℓP ℓ : Level
@@ -77,13 +77,13 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     Trace = μ TraceTy
 
     STOP : ∀ {q} → true Eq.≡ isAcc q → ε ⊢ Trace q
-    STOP acc = roll ∘g ⊕ᴰ-in (stop acc) ∘g liftG ∘g liftG
+    STOP acc = roll ∘g σ (stop acc) ∘g liftG ∘g liftG
 
     STEP : ∀ t → literal (label t) ⊗ Trace (dst t) ⊢ Trace (src t)
-    STEP t = roll ∘g ⊕ᴰ-in (step _ Eq.refl) ∘g (liftG ∘g liftG) ,⊗ liftG
+    STEP t = roll ∘g σ (step _ Eq.refl) ∘g (liftG ∘g liftG) ,⊗ liftG
 
     STEPε : ∀ t → Trace (ε-dst t) ⊢ Trace (ε-src t)
-    STEPε t = roll ∘g ⊕ᴰ-in (stepε t Eq.refl) ∘g liftG
+    STEPε t = roll ∘g σ (stepε t Eq.refl) ∘g liftG
 
     Parse : Grammar _
     Parse = Trace init

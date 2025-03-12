@@ -6,9 +6,8 @@ module Grammar.Epsilon.Base (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.List
 import Cubical.Data.Empty as Empty
 
-open import Helper
 open import Grammar.Base Alphabet
-open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Grammar.Lift.Base Alphabet
 open import Term.Base Alphabet
 open import Term.Nullary Alphabet

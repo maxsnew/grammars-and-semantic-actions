@@ -22,7 +22,7 @@ open import Cubical.Relation.Nullary.Base
 
 open import Grammar.Base Alphabet
 open import Grammar.Equalizer Alphabet
-open import Grammar.HLevels Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom Alphabet
@@ -34,9 +34,7 @@ open import Grammar.Product Alphabet
 open import Grammar.Sum.Binary.Cartesian Alphabet
 open import Grammar.Product.Binary.Cartesian Alphabet
 open import Grammar.Lift Alphabet
-open import Grammar.Lift.Properties Alphabet
 open import Grammar.Literal Alphabet
-open import Grammar.Literal.Properties Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.KleeneStar.Inductive Alphabet
@@ -47,7 +45,6 @@ open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Inductive.Properties Alphabet
 
 open import Term.Base Alphabet
-open import Helper
 
 private
   variable

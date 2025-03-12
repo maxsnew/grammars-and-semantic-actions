@@ -19,7 +19,6 @@ open import Grammar Alphabet hiding (Algebra)
 open import Grammar.Lift Alphabet
 import Cubical.Data.Equality as Eq
 open import Term Alphabet
-open import Helper
 
 private
   variable ℓN ℓN' ℓP ℓ : Level

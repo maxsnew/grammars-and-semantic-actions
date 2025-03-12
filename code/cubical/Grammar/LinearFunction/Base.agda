@@ -9,7 +9,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
 
 open import Grammar.Base Alphabet
-open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Epsilon.Base Alphabet
 open import Term.Base Alphabet

@@ -77,8 +77,8 @@ module _
   opaque
     unfolding _⊗_ ⊗-intro map-id
     star-strong-equiv : StrongEquivalence (A *) (B *)
-    star-strong-equiv .fun = fold*r A the-A*-alg
-    star-strong-equiv .inv = fold*r B the-B*-alg
+    star-strong-equiv .fun = fold*r' A the-A*-alg
+    star-strong-equiv .inv = fold*r' B the-B*-alg
     star-strong-equiv .sec =
       ind-id' (*Ty B) (compHomo (*Ty B) _ the-B*-alg (initialAlgebra (*Ty B))
         ((λ _ → rec (*Ty A) the-A*-alg _) ,
@@ -87,7 +87,7 @@ module _
             ; cons → λ i →
               CONS ∘g
               (A≅B .sec i ∘g lowerG) ,⊗
-                (fold*r A the-A*-alg ∘g lowerG)
+                (fold*r' A the-A*-alg ∘g lowerG)
               }))
         (recHomo (*Ty B) the-B*-alg)) _
     star-strong-equiv .ret =
@@ -98,7 +98,7 @@ module _
             ; cons → λ i →
               CONS ∘g
               (A≅B .ret i ∘g lowerG) ,⊗
-                (fold*r B the-B*-alg ∘g lowerG)
+                (fold*r' B the-B*-alg ∘g lowerG)
               }))
         (recHomo (*Ty A) the-A*-alg)) _
 

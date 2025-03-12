@@ -13,7 +13,7 @@ open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Nat as Nat hiding (_+_)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
-open import Cubical.Data.Sum as Sum hiding (rec ; map)
+open import Cubical.Data.Sum as Sum using (_⊎_)
 open import Cubical.Data.Sigma
 import Cubical.Data.Equality as Eq
 
@@ -27,22 +27,20 @@ opaque
   TokRep : Iso Tok (Bool ⊎ (Unit ⊎ ℕ))
   TokRep =
       iso
-        (λ { [ → inl true ; ] → inl false ; + → inr (inl _) ; (num x) → inr (inr x)})
-        (λ { (inl false) → ] ; (inl true) → [ ; (inr (inl x)) → + ; (inr (inr x)) → num x})
-        (λ { (inl false) → refl ; (inl true) → refl ; (inr (inl x)) → refl ; (inr (inr x)) → refl})
+        (λ { [ → Sum.inl true ; ] → Sum.inl false ; + → Sum.inr (Sum.inl _) ; (num x) → Sum.inr (Sum.inr x)})
+        (λ { (Sum.inl false) → ] ; (Sum.inl true) → [ ; (Sum.inr (Sum.inl x)) → + ; (Sum.inr (Sum.inr x)) → num x})
+        (λ { (Sum.inl false) → refl ; (Sum.inl true) → refl ; (Sum.inr (Sum.inl x)) → refl ; (Sum.inr (Sum.inr x)) → refl})
         λ { [ → refl ; ] → refl ; + → refl ; (num x) → refl}
 
   isSetTok : isSet Tok
   isSetTok =
     isSetRetract (TokRep .fun) (TokRep .inv) (TokRep .leftInv)
-      (isSet⊎ isSetBool (isSet⊎ isSetUnit isSetℕ))
+      (Sum.isSet⊎ isSetBool (Sum.isSet⊎ isSetUnit isSetℕ))
 
 Alphabet : hSet ℓ-zero
 Alphabet = Tok , isSetTok
 
 open import Grammar Alphabet hiding (_+)
-open import Grammar.String.Properties Alphabet
-open import Grammar.Equalizer Alphabet
 open import Term Alphabet
 
 open StrongEquivalence
@@ -88,20 +86,20 @@ module LL⟨1⟩ where
   ATOM = BinOpG Atom
 
   DONE : ATOM ⊢ EXP
-  DONE = roll ∘g ⊕ᴰ-in done ∘g liftG
+  DONE = roll ∘g σ done ∘g liftG
 
   ADD : ATOM ⊗ ＂ + ＂ ⊗ EXP ⊢ EXP
-  ADD = roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG ,⊗ liftG
+  ADD = roll ∘g σ add ∘g liftG ,⊗ liftG ,⊗ liftG
 
   NUM : anyNum ⊢ ATOM
-  NUM = roll ∘g ⊕ᴰ-in num ∘g liftG
+  NUM = roll ∘g σ num ∘g liftG
 
   PARENS : ＂ [ ＂ ⊗ EXP ⊗ ＂ ] ＂ ⊢ ATOM
-  PARENS = roll ∘g ⊕ᴰ-in parens ∘g liftG ,⊗ liftG ,⊗ liftG
+  PARENS = roll ∘g σ parens ∘g liftG ,⊗ liftG ,⊗ liftG
 
   ATOM*→EXP : ATOM ⊗ (＂ + ＂ ⊗ ATOM) * ⊢ EXP
   ATOM*→EXP = ⟜-intro⁻
-      (fold*r' _
+      (fold*r _
         (⟜-intro (DONE ∘g ⊗-unit-r))
         (⟜-intro (ADD ∘g id ,⊗ (id ,⊗ ⟜-app ∘g ⊗-assoc⁻))))
 
@@ -112,9 +110,9 @@ module LL⟨1⟩ where
     )
   unrollEXPAlg Exp =
     ⊕ᴰ-elim (λ where
-      done → ⊕-inl ∘g lowerG
+      done → inl ∘g lowerG
       add →
-        (⊕-inr
+        (inr
         ∘g id ,⊗ (CONS ∘g
           ⊕-elim
             (id ,⊗ NIL ∘g ⊗-unit-r⁻)
@@ -222,9 +220,9 @@ module Automaton where
     B ⊢ C →
     &ᴰ {X = Bool} (λ {true → A ; false → B}) ⊢ &ᴰ {X = Bool} (λ {true → A ; false → C})
   mapFalseWithBool e =
-    &ᴰ-in λ where
-      true → &ᴰ-π true
-      false → e ∘g &ᴰ-π false
+    &ᴰ-intro λ where
+      true → π true
+      false → e ∘g π false
 
   -- mapDoneOpening : (b : Bool) → (n : ℕ) → (g : Guard) →
   --   {A B : ℕ × AutomatonState → Grammar ℓ-zero} →
@@ -281,21 +279,21 @@ module Automaton where
       & Peek tok? ⊢
       ⟦ DoneOpeningFun b n (Tok→Guard tok?) ⟧
         (λ (n , s) → AutomatonG b (n , s))
-  mkGuardPfs' b n nothing = &ᴰ-in λ where
-      false → liftG ∘g &-π₁
-      true → liftG ∘g ⊕-inl ∘g &-π₂
-  mkGuardPfs' b n (just [) = &ᴰ-in λ where
-      false → liftG ∘g &-π₁
-      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in [ ∘g id ,⊗ ⊤-intro ∘g &-π₂
-  mkGuardPfs' b n (just ]) = &ᴰ-in λ where
-      false → liftG ∘g &-π₁
-      true → liftG ∘g id ,⊗ ⊤-intro ∘g &-π₂
-  mkGuardPfs' b n (just +) = &ᴰ-in λ where
-      false → liftG ∘g &-π₁
-      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in NotRP.+ ∘g id ,⊗ ⊤-intro ∘g &-π₂
-  mkGuardPfs' b n (just (num m)) = &ᴰ-in λ where
-      false → liftG ∘g &-π₁
-      true → liftG ∘g ⊕-inr ∘g ⊕ᴰ-in (num m) ∘g id ,⊗ ⊤-intro ∘g &-π₂
+  mkGuardPfs' b n nothing = &ᴰ-intro λ where
+      false → liftG ∘g π₁
+      true → liftG ∘g inl ∘g π₂
+  mkGuardPfs' b n (just [) = &ᴰ-intro λ where
+      false → liftG ∘g π₁
+      true → liftG ∘g inr ∘g σ [ ∘g id ,⊗ ⊤-intro ∘g π₂
+  mkGuardPfs' b n (just ]) = &ᴰ-intro λ where
+      false → liftG ∘g π₁
+      true → liftG ∘g id ,⊗ ⊤-intro ∘g π₂
+  mkGuardPfs' b n (just +) = &ᴰ-intro λ where
+      false → liftG ∘g π₁
+      true → liftG ∘g inr ∘g σ NotRP.+ ∘g id ,⊗ ⊤-intro ∘g π₂
+  mkGuardPfs' b n (just (num m)) = &ᴰ-intro λ where
+      false → liftG ∘g π₁
+      true → liftG ∘g inr ∘g σ (num m) ∘g id ,⊗ ⊤-intro ∘g π₂
 
   -- Whenever we want to use a Guard, this cuts out
   -- the redundant work in checking the guardedness condition
@@ -305,60 +303,60 @@ module Automaton where
     ⊕[ b ∈ Bool ] ⊕[ g ∈ Guard ] ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b)
   mkGuardPfs n =
     ⊕ᴰ-elim (λ tok? →
-      map⊕ᴰ (λ b → ⊕ᴰ-in (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
-      ∘g &⊕ᴰ-distL≅ .fun ∘g &ᴰ-π (n , Guard→State (Tok→Guard tok?)) ,&p id)
+      map⊕ᴰ (λ b → σ (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
+      ∘g &⊕ᴰ-distL≅ .fun ∘g π (n , Guard→State (Tok→Guard tok?)) ,&p id)
     ∘g peek .fun
 
   forgetGuard : (b : Bool) → (n : ℕ) → (g : Guard) →
     ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b) ⊢ AutomatonG b (n , Guard→State g)
-  forgetGuard b n ] = lowerG ∘g &ᴰ-π false
-  forgetGuard b n ¬] = lowerG ∘g &ᴰ-π false
+  forgetGuard b n ] = lowerG ∘g π false
+  forgetGuard b n ¬] = lowerG ∘g π false
 
   parse : string ⊢
     &[ nq ∈ ℕ × AutomatonState ]
     ⊕[ b ∈ Bool ]
     AutomatonG b nq
-  parse = fold*r' _
+  parse = fold*r _
     -- nil
-    ((&ᴰ-in λ where
-      (n , Opening) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl EOF)
-      (n , Closing) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl EOF)
-      (zero , Adding) → ⊕ᴰ-in true ∘g roll ∘g ⊕ᴰ-in (doneGood Eq.refl Eq.refl)
-      (suc n-1 , Adding) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (doneBad n-1 Eq.refl Eq.refl))
+    ((&ᴰ-intro λ where
+      (n , Opening) → σ false ∘g roll ∘g σ (unexpectedO Eq.refl EOF)
+      (n , Closing) → σ false ∘g roll ∘g σ (unexpectedC Eq.refl EOF)
+      (zero , Adding) → σ true ∘g roll ∘g σ (doneGood Eq.refl Eq.refl)
+      (suc n-1 , Adding) → σ false ∘g roll ∘g σ (doneBad n-1 Eq.refl Eq.refl))
       ∘g liftG)
     -- cons
-    ((&ᴰ-in λ where
+    ((&ᴰ-intro λ where
       (n , Opening) → ⊕ᴰ-elim λ where
-        [ → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in left ∘g liftG ,⊗ liftG)
+        [ → map⊕ᴰ (λ _ → roll ∘g σ left ∘g liftG ,⊗ liftG)
             ∘g ⊕ᴰ-distR .fun
-           ∘g id ,⊗ &ᴰ-π (suc n , Opening)
-        ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
-        + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedO Eq.refl +) ∘g liftG ∘g id ,⊗ ⊤-intro
+           ∘g id ,⊗ π (suc n , Opening)
+        ] → σ false ∘g roll ∘g σ (unexpectedO Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
+        + → σ false ∘g roll ∘g σ (unexpectedO Eq.refl +) ∘g liftG ∘g id ,⊗ ⊤-intro
         (num x) →
-          map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in num ∘g liftG ,⊗ id)
+          map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
           ∘g ⊕ᴰ-distR .fun
-          ∘g (⊕ᴰ-in x) ,⊗ mkGuardPfs n
+          ∘g (σ x) ,⊗ mkGuardPfs n
       (zero , Closing) →
         ⊕ᴰ-elim λ where
-        [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
-        ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (closeBad Eq.refl Eq.refl) ∘g liftG ∘g id ,⊗ ⊤-intro
-        + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ ⊤-intro
-        (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum) ∘g liftG ∘g ⊕ᴰ-in x  ,⊗ ⊤-intro
+        [ → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
+        ] → σ false ∘g roll ∘g σ (closeBad Eq.refl Eq.refl) ∘g liftG ∘g id ,⊗ ⊤-intro
+        + → σ false ∘g roll ∘g σ (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ ⊤-intro
+        (num x) → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum) ∘g liftG ∘g σ x  ,⊗ ⊤-intro
       (suc n-1 , Closing) →
         ⊕ᴰ-elim λ where
-        [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
-        ] → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ id)
+        [ → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
+        ] → map⊕ᴰ (λ _ → roll ∘g σ (closeGood n-1 Eq.refl) ∘g liftG ,⊗ id)
             ∘g ⊕ᴰ-distR .fun
             ∘g id ,⊗ mkGuardPfs n-1
-        + → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ ⊤-intro
-        (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedC Eq.refl aNum) ∘g liftG ∘g ⊕ᴰ-in x  ,⊗ ⊤-intro
+        + → σ false ∘g roll ∘g σ (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ ⊤-intro
+        (num x) → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum) ∘g liftG ∘g σ x  ,⊗ ⊤-intro
       (n , Adding) → ⊕ᴰ-elim λ where
-        [ → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
-        ] → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
-        + → map⊕ᴰ (λ _ → roll ∘g ⊕ᴰ-in add ∘g liftG ,⊗ liftG)
+        [ → σ false ∘g roll ∘g σ (unexpectedA Eq.refl [) ∘g liftG ∘g id ,⊗ ⊤-intro
+        ] → σ false ∘g roll ∘g σ (unexpectedA Eq.refl ]) ∘g liftG ∘g id ,⊗ ⊤-intro
+        + → map⊕ᴰ (λ _ → roll ∘g σ add ∘g liftG ,⊗ liftG)
             ∘g ⊕ᴰ-distR .fun
-            ∘g id ,⊗ &ᴰ-π (n , Opening)
-        (num x) → ⊕ᴰ-in false ∘g roll ∘g ⊕ᴰ-in (unexpectedA Eq.refl aNum) ∘g liftG ∘g (⊕ᴰ-in x) ,⊗ ⊤-intro )
+            ∘g id ,⊗ π (n , Opening)
+        (num x) → σ false ∘g roll ∘g σ (unexpectedA Eq.refl aNum) ∘g liftG ∘g (σ x) ,⊗ ⊤-intro )
       ∘g ⊕ᴰ-distL .fun
       )
 
@@ -371,7 +369,7 @@ module Automaton where
         ∘g literal→char [ ,⊗ id
         ∘g lowerG ,⊗ lowerG
       num →
-        ⊕ᴰ-elim (λ _ → CONS ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ (lowerG ∘g &ᴰ-π false))
+        ⊕ᴰ-elim (λ _ → CONS ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ (lowerG ∘g π false))
         ∘g ⊕ᴰ-distR .fun
         ∘g lowerG ,⊗ id
       (unexpectedO Eq.refl EOF) →
@@ -387,7 +385,7 @@ module Automaton where
   printAlg b (n , Closing) =
     ⊕ᴰ-elim λ where
       (closeGood n-1 Eq.refl) →
-        ⊕ᴰ-elim (λ _ → CONS ∘g literal→char ] ,⊗ (lowerG ∘g &ᴰ-π false))
+        ⊕ᴰ-elim (λ _ → CONS ∘g literal→char ] ,⊗ (lowerG ∘g π false))
         ∘g ⊕ᴰ-distR .fun
         ∘g lowerG ,⊗ id
       (closeBad Eq.refl Eq.refl) →

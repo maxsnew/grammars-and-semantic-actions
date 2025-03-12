@@ -14,7 +14,7 @@ import Cubical.Data.Equality.Conversion as Eq
 open import Cubical.Data.Nat as Nat
 open import Cubical.Data.List hiding (init; rec; map)
 open import Cubical.Data.Sigma
-open import Cubical.Data.Sum as Sum hiding (rec; map)
+open import Cubical.Data.Sum as Sum using (_⊎_ ; isSet⊎)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
 
@@ -43,11 +43,6 @@ Alphabet : hSet _
 Alphabet = (Bracket , isSetBracket)
 
 open import Grammar Alphabet renaming (NIL to *NIL)
-open import Grammar.String.Properties Alphabet
-open import Grammar.Dependent.Unambiguous Alphabet
-open import Grammar.Equalizer Alphabet
-open import Grammar.Inductive.HLevels Alphabet
-open import Grammar.HLevels Alphabet
 open import Grammar.Coherence Alphabet
 open import Term Alphabet
 
@@ -83,10 +78,10 @@ isSetGrammarDyck = isSetGrammarμ DyckTy
   tt
 
 NIL : ε ⊢ IndDyck
-NIL = roll ∘g ⊕ᴰ-in nil' ∘g liftG
+NIL = roll ∘g σ nil' ∘g liftG
 
 BALANCED : literal [ ⊗ IndDyck ⊗ literal ] ⊗ IndDyck ⊢ IndDyck
-BALANCED = roll ∘g ⊕ᴰ-in balanced' ∘g liftG ,⊗ liftG ,⊗ liftG ,⊗ liftG
+BALANCED = roll ∘g σ balanced' ∘g liftG ,⊗ liftG ,⊗ liftG ,⊗ liftG
 
 appendAlg : Algebra DyckTy λ _ → IndDyck ⊸ IndDyck
 appendAlg tt = ⊕ᴰ-elim λ
@@ -177,18 +172,18 @@ isSetTraceTag b n = isSetRetract {B = TT} enc dec retr isSetTT where
       (isSetΣ isSetℕ (λ _ → isProp→isSet isPropℕEq)))
     (isProp→isSet (isProp× isPropBoolEq isPropℕEq)))))
   enc : TraceTag b n → TT
-  enc (eof' x x₁) = inl (x , x₁)
-  enc (close' n-1 x) = inr (inl (n-1 , x))
-  enc open' = inr (inr (inl tt))
-  enc (leftovers' x n-1 x₁) = inr (inr (inr (inl (x , n-1 , x₁))))
-  enc (unexpected' x x₁) = inr (inr (inr (inr (x , x₁))))
+  enc (eof' x x₁) = Sum.inl (x , x₁)
+  enc (close' n-1 x) = Sum.inr (Sum.inl (n-1 , x))
+  enc open' = Sum.inr (Sum.inr (Sum.inl tt))
+  enc (leftovers' x n-1 x₁) = Sum.inr (Sum.inr (Sum.inr (Sum.inl (x , n-1 , x₁))))
+  enc (unexpected' x x₁) = Sum.inr (Sum.inr (Sum.inr (Sum.inr (x , x₁))))
 
   dec : TT → TraceTag b n
-  dec (inl x) = eof' (x .fst) (x .snd)
-  dec (inr (inl x)) = close' (x .fst) (x .snd)
-  dec (inr (inr (inl x))) = open'
-  dec (inr (inr (inr (inl x)))) = leftovers' (x .fst) _ (x .snd .snd)
-  dec (inr (inr (inr (inr x)))) = unexpected' (x .fst) (x .snd)
+  dec (Sum.inl x) = eof' (x .fst) (x .snd)
+  dec (Sum.inr (Sum.inl x)) = close' (x .fst) (x .snd)
+  dec (Sum.inr (Sum.inr (Sum.inl x))) = open'
+  dec (Sum.inr (Sum.inr (Sum.inr (Sum.inl x)))) = leftovers' (x .fst) _ (x .snd .snd)
+  dec (Sum.inr (Sum.inr (Sum.inr (Sum.inr x)))) = unexpected' (x .fst) (x .snd)
 
   retr : ∀ t → dec (enc t) ≡ t
   retr (eof' x x₁) = refl
@@ -223,35 +218,35 @@ isSetGrammarTrace b = isSetGrammarμ (TraceTys b) λ n →
       }
 
 EOF : ε ⊢ Trace true 0
-EOF = roll ∘g ⊕ᴰ-in (eof' Eq.refl Eq.refl) ∘g liftG
+EOF = roll ∘g σ (eof' Eq.refl Eq.refl) ∘g liftG
 
 OPEN : ∀ {n b} → literal [ ⊗ Trace b (suc n) ⊢ Trace b n
-OPEN = roll ∘g ⊕ᴰ-in open' ∘g liftG ,⊗ liftG
+OPEN = roll ∘g σ open' ∘g liftG ,⊗ liftG
 
 CLOSE : ∀ {n b} → literal ] ⊗ Trace b n ⊢ Trace b (suc n)
-CLOSE = roll ∘g ⊕ᴰ-in (close' _ Eq.refl) ∘g liftG ,⊗ liftG
+CLOSE = roll ∘g σ (close' _ Eq.refl) ∘g liftG ,⊗ liftG
 
 LEFTOVERS : ∀ {n} → ε ⊢ Trace false (suc n)
-LEFTOVERS = roll ∘g ⊕ᴰ-in (leftovers' Eq.refl _ Eq.refl) ∘g liftG
+LEFTOVERS = roll ∘g σ (leftovers' Eq.refl _ Eq.refl) ∘g liftG
 
 UNEXPECTED : literal ] ⊗ ⊤ ⊢ Trace false 0
-UNEXPECTED = roll ∘g ⊕ᴰ-in (unexpected' Eq.refl Eq.refl) ∘g liftG ,⊗ liftG
+UNEXPECTED = roll ∘g σ (unexpected' Eq.refl Eq.refl) ∘g liftG ,⊗ liftG
 
 parseTy = &[ n ∈ ℕ ] ⊕[ b ∈ _ ] Trace b n
 parse : string ⊢ parseTy
 parse =
-  fold*r char (λ { (lift _) →
+  fold*r' char (λ { (lift _) →
     ⊕ᴰ-elim (λ {
       nil →
-        &ᴰ-in (
+        &ᴰ-intro (
           Nat.elim
-            (⊕ᴰ-in true ∘g EOF ∘g lowerG ∘g lowerG)
-            (λ _ _ → ⊕ᴰ-in false ∘g LEFTOVERS ∘g lowerG ∘g lowerG))
-    ; cons → &ᴰ-in (λ n → (⊕ᴰ-elim (λ {
-        [ → ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g OPEN) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ &ᴰ-π (suc n)
+            (σ true ∘g EOF ∘g lowerG ∘g lowerG)
+            (λ _ _ → σ false ∘g LEFTOVERS ∘g lowerG ∘g lowerG))
+    ; cons → &ᴰ-intro (λ n → (⊕ᴰ-elim (λ {
+        [ → ⊕ᴰ-elim (λ b → σ b ∘g OPEN) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ π (suc n)
       ; ] → Nat.elim {A = λ n → literal RP ⊗ parseTy ⊢ ⊕[ b ∈ _ ] Trace b n}
-        (⊕ᴰ-in false ∘g UNEXPECTED ∘g id ,⊗ ⊤-intro)
-        (λ n-1 _ → ⊕ᴰ-elim (λ b → ⊕ᴰ-in b ∘g CLOSE) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ &ᴰ-π n-1)
+        (σ false ∘g UNEXPECTED ∘g id ,⊗ ⊤-intro)
+        (λ n-1 _ → ⊕ᴰ-elim (λ b → σ b ∘g CLOSE) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ π n-1)
         n
       })
       ∘g ⊕ᴰ-distL .fun) ∘g lowerG ,⊗ lowerG)
@@ -261,9 +256,9 @@ printAlg : ∀ b → Algebra (TraceTys b) (λ _ → string)
 printAlg b n = ⊕ᴰ-elim λ
   { (eof' _ _)         → *NIL ∘g lowerG
   ; (leftovers' _ _ _) → *NIL ∘g lowerG
-  ; open' → CONS ∘g (⊕ᴰ-in LP ∘g lowerG) ,⊗ lowerG
-  ; (close' _ _)      → CONS ∘g (⊕ᴰ-in RP ∘g lowerG) ,⊗ lowerG
-  ; (unexpected' _ _) → CONS ∘g (⊕ᴰ-in RP ∘g lowerG) ,⊗ (⊤→string ∘g lowerG)
+  ; open' → CONS ∘g (σ LP ∘g lowerG) ,⊗ lowerG
+  ; (close' _ _)      → CONS ∘g (σ RP ∘g lowerG) ,⊗ lowerG
+  ; (unexpected' _ _) → CONS ∘g (σ RP ∘g lowerG) ,⊗ (⊤→string ∘g lowerG)
   }
 
 print : ∀ {n b} → Trace b n ⊢ string
@@ -271,26 +266,26 @@ print = rec (TraceTys _) (printAlg _) _
 
 ⊕ᴰAlg : ∀ b → Algebra (TraceTys b) (λ n → ⊕[ b' ∈ _ ] Trace b' n)
 ⊕ᴰAlg b n = ⊕ᴰ-elim (λ
-  { (eof' Eq.refl Eq.refl) → ⊕ᴰ-in true ∘g EOF ∘g lowerG
-  ; (leftovers' Eq.refl n-1 Eq.refl) → ⊕ᴰ-in false ∘g LEFTOVERS ∘g lowerG
+  { (eof' Eq.refl Eq.refl) → σ true ∘g EOF ∘g lowerG
+  ; (leftovers' Eq.refl n-1 Eq.refl) → σ false ∘g LEFTOVERS ∘g lowerG
   ; (close' n-1 Eq.refl) →
-    (⊕ᴰ-elim λ b' → ⊕ᴰ-in b' ∘g CLOSE)
+    (⊕ᴰ-elim λ b' → σ b' ∘g CLOSE)
     ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ lowerG
   ; open' →
-    ((⊕ᴰ-elim λ b' → ⊕ᴰ-in b' ∘g OPEN) ∘g ⊕ᴰ-distR .fun)
+    ((⊕ᴰ-elim λ b' → σ b' ∘g OPEN) ∘g ⊕ᴰ-distR .fun)
     ∘g lowerG ,⊗ lowerG
   ; (unexpected' Eq.refl Eq.refl) →
-    ⊕ᴰ-in false ∘g UNEXPECTED ∘g lowerG ,⊗ lowerG
+    σ false ∘g UNEXPECTED ∘g lowerG ,⊗ lowerG
   })
 
-⊕ᴰ-in-homo : ∀ b →
+σ-homo : ∀ b →
   Homomorphism (TraceTys b) (initialAlgebra (TraceTys b)) (⊕ᴰAlg b)
-⊕ᴰ-in-homo b .fst n = ⊕ᴰ-in b
-⊕ᴰ-in-homo b .snd n = pf where
+σ-homo b .fst n = σ b
+σ-homo b .snd n = pf where
   opaque
     unfolding ⊕ᴰ-distR ⊗-intro
-    pf : ⊕ᴰ-in b ∘g initialAlgebra (TraceTys b) n
-         ≡ ⊕ᴰAlg b n ∘g map (TraceTys b n) λ _ → ⊕ᴰ-in b
+    pf : σ b ∘g initialAlgebra (TraceTys b) n
+         ≡ ⊕ᴰAlg b n ∘g map (TraceTys b n) λ _ → σ b
     pf = ⊕ᴰ≡ _ _ (λ
       { (eof' Eq.refl Eq.refl) → refl
       ; (leftovers' Eq.refl n-1 Eq.refl) → refl
@@ -299,12 +294,11 @@ print = rec (TraceTys _) (printAlg _) _
       ; (unexpected' Eq.refl Eq.refl) → refl })
 
 parseHomo : ∀ b → Homomorphism (TraceTys b) (printAlg b) (⊕ᴰAlg b)
-parseHomo b .fst n = &ᴰ-π n ∘g parse
+parseHomo b .fst n = π n ∘g parse
 parseHomo b .snd n = pf where
   opaque
     unfolding ⊕ᴰ-distR ⊤ ⊗-intro
-    pf : &ᴰ-π n ∘g parse ∘g printAlg b n
-       ≡ ⊕ᴰAlg b n ∘g map (TraceTys b n) (λ n → &ᴰ-π n ∘g parse)
+    pf : π n ∘g parse ∘g printAlg b n ≡ ⊕ᴰAlg b n ∘g map (TraceTys b n) (λ n → π n ∘g parse)
     pf = ⊕ᴰ≡ _ _ λ
       { (eof' Eq.refl Eq.refl) → refl
       ; (close' n-1 Eq.refl) → refl
@@ -316,18 +310,18 @@ parseHomo b .snd n = pf where
 Trace≅String : ∀ {n} → StrongEquivalence (⊕[ b ∈ _ ] Trace b n) string
 Trace≅String {n} = mkStrEq
   (⊕ᴰ-elim (λ _ → print))
-  (&ᴰ-π _ ∘g parse)
+  (π _ ∘g parse)
   (unambiguous-string _ _)
   isRetr
   where
-    isRetr : (&ᴰ-π n ∘g parse) ∘g ⊕ᴰ-elim (λ _ → print) ≡ id
+    isRetr : (π n ∘g parse) ∘g ⊕ᴰ-elim (λ _ → print) ≡ id
     isRetr = ⊕ᴰ≡ _ _ (λ b →
       ind' (TraceTys b)
         (⊕ᴰAlg b)
         (compHomo (TraceTys b) (initialAlgebra (TraceTys b)) (printAlg b) (⊕ᴰAlg b)
           (parseHomo b)
           (recHomo (TraceTys b) (printAlg b)))
-        (⊕ᴰ-in-homo b)
+        (σ-homo b)
         n)
 
 isUnambiguousTrace : ∀ {n b} → unambiguous (Trace b n)
@@ -496,7 +490,7 @@ opaque
       ∘g ⊗-assoc⁻4
 
 genAppend' : IndDyck ⊢ &[ n ∈ _ ] (GenDyck n ⊸ GenDyck n)
-genAppend' = (&ᴰ-in upgradeBuilder) ∘g append'
+genAppend' = (&ᴰ-intro upgradeBuilder) ∘g append'
 
 genAppend : ∀ n → IndDyck ⊗ GenDyck n ⊢ GenDyck n
 genAppend zero    = append
@@ -538,16 +532,16 @@ TraceBuilder _ = &[ n ∈ _ ] (Trace true n ⊸ Trace true n)
 
 buildTraceAlg : Algebra DyckTy TraceBuilder
 buildTraceAlg _ = ⊕ᴰ-elim (λ
-  { nil' → &ᴰ-in (λ n → ⊸-intro-ε id ∘g lowerG)
-  ; balanced' → &ᴰ-in λ n → ⊸-intro
+  { nil' → &ᴰ-intro (λ n → ⊸-intro-ε id ∘g lowerG)
+  ; balanced' → &ᴰ-intro λ n → ⊸-intro
     -- OPEN, making a Trace n
     (OPEN
     -- build a Trace (suc n) with the left subtree
-    ∘g id ,⊗ (⊸-app ∘g &ᴰ-π (suc n) ,⊗ id)
+    ∘g id ,⊗ (⊸-app ∘g π (suc n) ,⊗ id)
     -- CLOSE, making a Trace (suc n)
     ∘g id ,⊗ id ,⊗ CLOSE
      -- build a Trace n with the right subtree
-    ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g &ᴰ-π n ,⊗ id)
+    ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g π n ,⊗ id)
      -- reassoc the builder arg to the right, and lower everything else
     ∘g ⊗-assoc⁻4
     ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ lowerG) ,⊗ id
@@ -561,13 +555,13 @@ buildTrace = rec DyckTy buildTraceAlg _
 -- closed parens to the trace.
 genBuildTrace : ∀ m → GenDyck m ⊢ &[ n ∈ _ ] (Trace true n ⊸ Trace true (m + n))
 genBuildTrace zero = buildTrace
-genBuildTrace (suc m) = &ᴰ-in λ n → ⊸-intro
+genBuildTrace (suc m) = &ᴰ-intro λ n → ⊸-intro
   -- build using the left subtree
-  ((⊸-app ∘g (&ᴰ-π (suc (m + n)) ∘g buildTrace) ,⊗ id)
+  ((⊸-app ∘g (π (suc (m + n)) ∘g buildTrace) ,⊗ id)
   -- CLOSE the trace, to make is (suc (m + n))
   ∘g id ,⊗ CLOSE
   -- recursively build using the right subtree
-  ∘g id ,⊗ id ,⊗ (⊸-app ∘g (&ᴰ-π n ∘g genBuildTrace m) ,⊗ id)
+  ∘g id ,⊗ id ,⊗ (⊸-app ∘g (π n ∘g genBuildTrace m) ,⊗ id)
   -- reassoc everything
   ∘g ⊗-assoc⁻3
   )
@@ -603,8 +597,8 @@ genBuildTrace (suc m) = &ᴰ-in λ n → ⊸-intro
 -}
 
 lhs rhs : IndDyck ⊢ &[ n ∈ _ ] (Trace true n ⊸ GenDyck n)
-lhs = (&ᴰ-in λ n → ⊸-intro (genMkTree n ∘g ⊸-app) ∘g &ᴰ-π n) ∘g buildTrace
-rhs = ((&ᴰ-in λ n → ⊸-intro (⊸-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g genAppend')
+lhs = (&ᴰ-intro λ n → ⊸-intro (genMkTree n ∘g ⊸-app) ∘g π n) ∘g buildTrace
+rhs = ((&ᴰ-intro λ n → ⊸-intro (⊸-app ∘g id ,⊗ genMkTree n) ∘g π n) ∘g genAppend')
 
 opaque
   unfolding ⊗-intro
@@ -622,47 +616,47 @@ opaque
           cong ⊸-intro
             ((λ i → genMkTree n
               ∘g ⊸-β (OPEN
-                ∘g id ,⊗ (⊸-app ∘g &ᴰ-π (suc n) ,⊗ id)
+                ∘g id ,⊗ (⊸-app ∘g π (suc n) ,⊗ id)
                 ∘g id ,⊗ id ,⊗ CLOSE
-                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g π n ,⊗ id)
                 ∘g ⊗-assoc⁻4
                 ∘g (lowerG ,⊗ lowerG {ℓ-zero} ,⊗ lowerG ,⊗ lowerG {ℓ-zero}) ,⊗ id) i
               ∘g (id ,⊗ (liftG {ℓ-zero} ∘g buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id ,⊗ ((liftG {ℓ-zero} ∘g buildTrace ∘g eq-π lhs rhs ∘g lowerG))) ,⊗ id)
             ∙ (λ i → genBALANCED n
                 ∘g id ,⊗ genMkTree (suc n)
-                ∘g id ,⊗ (⊸-app ∘g &ᴰ-π (suc n) ,⊗ id)
+                ∘g id ,⊗ (⊸-app ∘g π (suc n) ,⊗ id)
                 ∘g id ,⊗ id ,⊗ CLOSE
-                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g π n ,⊗ id)
                 ∘g ⊗-assoc⁻4⊗-intro {f = lowerG}{f' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'' = lowerG}{f''' = buildTrace ∘g eq-π lhs rhs ∘g lowerG}{f'''' = id} i
                 )
             ∙ (λ i → genBALANCED n
-                ∘g id ,⊗ (⊸-β (genMkTree (suc n) ∘g ⊸-app) (~ i) ∘g (&ᴰ-π (suc n) ∘g (buildTrace ∘g eq-π lhs rhs)) ,⊗ id)
+                ∘g id ,⊗ (⊸-β (genMkTree (suc n) ∘g ⊸-app) (~ i) ∘g (π (suc n) ∘g (buildTrace ∘g eq-π lhs rhs)) ,⊗ id)
                 ∘g id ,⊗ id ,⊗ CLOSE
-                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g π n ,⊗ id)
                 ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
                 ∘g ⊗-assoc⁻4)
             -- by inductive hypothesis for the left subtree
             ∙ (λ i → genBALANCED n
-                ∘g id ,⊗ (⊸-app ∘g (&ᴰ-π (suc n) ∘g eq-π-pf lhs rhs i) ,⊗ id)
+                ∘g id ,⊗ (⊸-app ∘g (π (suc n) ∘g eq-π-pf lhs rhs i) ,⊗ id)
                 ∘g id ,⊗ id ,⊗ CLOSE
-                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g π n ,⊗ id)
                 ∘g (lowerG ,⊗ lowerG ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
                 ∘g ⊗-assoc⁻4)
             ∙ (λ i → genBALANCED n
-                ∘g id ,⊗ (⊸-β (⊸-app ∘g id ,⊗ genMkTree (suc n)) i ∘g (&ᴰ-π (suc n) ∘g genAppend') ,⊗ id)
+                ∘g id ,⊗ (⊸-β (⊸-app ∘g id ,⊗ genMkTree (suc n)) i ∘g (π (suc n) ∘g genAppend') ,⊗ id)
                 ∘g id ,⊗ id ,⊗ CLOSE
-                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g &ᴰ-π n ,⊗ id)
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g π n ,⊗ id)
                 ∘g (lowerG ,⊗ (eq-π lhs rhs ∘g lowerG) ,⊗ lowerG ,⊗ (buildTrace ∘g eq-π lhs rhs ∘g lowerG) ,⊗ id)
                 ∘g ⊗-assoc⁻4)
             ∙ (λ i → genBALANCED n
                 ∘g id ,⊗ (⊸-app ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
-                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-β (genMkTree n ∘g ⊸-app) (~ i) ∘g (&ᴰ-π n ∘g buildTrace ∘g eq-π lhs rhs) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-β (genMkTree n ∘g ⊸-app) (~ i) ∘g (π n ∘g buildTrace ∘g eq-π lhs rhs) ,⊗ id)
                 ∘g (lowerG ,⊗ (upgradeBuilder (suc n) ∘g append' ∘g eq-π lhs rhs ∘g lowerG) ,⊗ lowerG ,⊗ lowerG ,⊗ id)
                 ∘g ⊗-assoc⁻4)
             -- inductive hypothesis
             ∙ ((λ i → genBALANCED n
                 ∘g id ,⊗ (⊸-app ∘g id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻))
-                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g (&ᴰ-π n ∘g eq-π-pf lhs rhs i) ,⊗ id)
+                ∘g id ,⊗ id ,⊗ id ,⊗ (⊸-app ∘g (π n ∘g eq-π-pf lhs rhs i) ,⊗ id)
                 ∘g (lowerG ,⊗ (upgradeBuilder (suc n) ∘g append' ∘g eq-π lhs rhs ∘g lowerG) ,⊗ lowerG ,⊗ lowerG ,⊗ id)
                 ∘g ⊗-assoc⁻4))
             ∙ ((λ i → genBALANCED n
@@ -691,17 +685,17 @@ genRetr = equalizer-ind-unit (DyckTy tt) pf
 Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
 Dyck≅Trace =
   unambiguousRetract→StrongEquivalence
-    (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g genBuildTrace 0)
+    (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g π 0 ∘g genBuildTrace 0)
     mkTree
-    (mkTree ∘g ⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g buildTrace
-     ≡⟨ (λ i → ⊸-mapCod-postcompε mkTree EOF (~ i) ∘g &ᴰ-π 0 ∘g buildTrace) ⟩
-     ⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g ⊸-mapCod mkTree ∘g &ᴰ-π 0 ∘g buildTrace
+    (mkTree ∘g ⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g π 0 ∘g buildTrace
+     ≡⟨ (λ i → ⊸-mapCod-postcompε mkTree EOF (~ i) ∘g π 0 ∘g buildTrace) ⟩
+     ⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g ⊸-mapCod mkTree ∘g π 0 ∘g buildTrace
      ≡⟨ refl ⟩
-     ⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g &ᴰ-π 0 ∘g (&ᴰ-in λ n → ⊸-mapCod (genMkTree n) ∘g &ᴰ-π n) ∘g buildTrace
-     ≡⟨ cong (((⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0) ∘g_) genRetr ⟩
-     (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g &ᴰ-π 0 ∘g (&ᴰ-in λ n → ⊸-intro (⊸-app ∘g id ,⊗ genMkTree n) ∘g &ᴰ-π n) ∘g genAppend'
+     ⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g π 0 ∘g (&ᴰ-intro λ n → ⊸-mapCod (genMkTree n) ∘g π n) ∘g buildTrace
+     ≡⟨ cong (((⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g π 0) ∘g_) genRetr ⟩
+     (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g π 0 ∘g (&ᴰ-intro λ n → ⊸-intro (⊸-app ∘g id ,⊗ genMkTree n) ∘g π n) ∘g genAppend'
      ≡⟨ refl ⟩
-     (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⊸-mapDom mkTree ∘g &ᴰ-π 0 ∘g genAppend'
+     (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⊸-mapDom mkTree ∘g π 0 ∘g genAppend'
      ≡⟨ refl ⟩
      (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻) ∘g ⊸-mapDom mkTree ∘g append'
      ≡⟨ ((λ i → ⊸-mapDom-postcompε mkTree EOF i ∘g append')) ⟩

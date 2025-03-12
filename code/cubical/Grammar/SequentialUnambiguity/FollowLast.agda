@@ -7,8 +7,7 @@ module Grammar.SequentialUnambiguity.FollowLast (Alphabet : hSet ℓ-zero)where
 open import Cubical.Data.Sum
 open import Cubical.Data.Sigma
 
-open import Grammar Alphabet hiding (k)
-open import Grammar.String.Properties Alphabet
+open import Grammar Alphabet
 open import Grammar.SequentialUnambiguity.Nullable Alphabet
 open import Grammar.SequentialUnambiguity.First Alphabet
 open import Term Alphabet
@@ -41,7 +40,7 @@ FollowLastG'+ : Grammar ℓA → ⟨ Alphabet ⟩ → Grammar ℓA
 FollowLastG'+ A c = ((A & char +) ⊗ startsWith c) & (A & char +)
 
 FollowLastG'⊢FollowLastG : FollowLastG' A c ⊢ FollowLastG A c
-FollowLastG'⊢FollowLastG = (&-π₁ ,⊗ id) ,&p id
+FollowLastG'⊢FollowLastG = (π₁ ,⊗ id) ,&p id
 
 _∉FollowLast'_ : ⟨ Alphabet ⟩ → Grammar ℓA → hProp ℓA
 (c ∉FollowLast' A) .fst = uninhabited (FollowLastG' A c)
@@ -76,7 +75,7 @@ FollowLastG+≅ A c =
   &≅ id≅ &string-split≅
   ≅∙ &⊕-distL≅
   ≅∙ ⊕≅
-      (uninhabited→≅⊥ (disjoint-ε-char+ ∘g &-swap ∘g (char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ,&p &-π₂))
+      (uninhabited→≅⊥ (disjoint-ε-char+ ∘g &-swap ∘g (char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ,&p π₂))
       id≅
   ≅∙ ⊥⊕≅ _
 

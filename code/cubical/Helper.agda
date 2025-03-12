@@ -142,13 +142,6 @@ subCardBounded A DecProp'B = card↪Inequality
 --   isFinSet→isFinOrd : isFinOrd A
 --   isFinSet→isFinOrd = card FinSetA , rankEquiv
 
-isFinSetFin' : ∀ {n} → isFinSet (FD.Fin n)
-isFinSetFin' = isFinSetFin & subst isFinSet (sym Fin≡SumFin)
-
-isContr→isFinOrd : ∀ {ℓ} → {A : Type ℓ} →
-  isContr A → isFinOrd A
-isContr→isFinOrd isContrA = 1 , isContr→Equiv isContrA isContrSumFin1
-
 DecProp'→isFinOrd :
   ∀ {ℓ} → (A : DecProp' ℓ) → isFinOrd (A .fst)
 DecProp'→isFinOrd (u , true , u≃⊤) =

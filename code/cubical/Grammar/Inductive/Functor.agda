@@ -7,9 +7,8 @@ open import Cubical.Foundations.Structure
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 
-open import Helper
 open import Grammar.Base Alphabet
-open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Product.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet

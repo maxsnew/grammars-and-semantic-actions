@@ -11,8 +11,8 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.Bool hiding (_⊕_)
-open import Cubical.Data.Sum as Sum
-open import Cubical.Data.SumFin
+import Cubical.Data.Sum as Sum
+open import Cubical.Data.SumFin using (Fin ; fzero ; fsuc ; fromℕ)
 open import Cubical.Data.Unit
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 open import Cubical.Data.List hiding (init)
@@ -28,7 +28,6 @@ Alphabet = (Alph , isSetAlph)
 open import Grammar Alphabet
 open import Term Alphabet
 open import DFA.Base Alphabet
-open import Helper
 
 open import String.Unicode
 open import Cubical.Data.Maybe
@@ -63,9 +62,9 @@ module examples where
     module D = DeterministicAutomaton D
 
   opaque
-    unfolding _⊕_ ⊕-elim ⊕-inl ⊕-inr ⊸-intro ⟜-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊕ᴰ-distL
+    unfolding _⊕_ ⊕-elim inl inr ⊸-intro ⟜-intro _⊗_ ⌈w⌉→string ⊕ᴰ-distR ⊕ᴰ-distL
     mktest : String → Bool
-    mktest w = (&ᴰ-π (D.init) ∘g D.parse) w (⌈w⌉→string {w = w} w (internalize w)) .fst
+    mktest w = (π (D.init) ∘g D.parse) w (⌈w⌉→string {w = w} w (internalize w)) .fst
 
     _ : mktest (mkString "011") ≡ true
     _ = refl

@@ -12,7 +12,7 @@ open import Cubical.Data.FinSet
 open import Cubical.Data.List as List hiding (rec)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
-open import Cubical.Data.Sum as Sum hiding (rec)
+import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool hiding (_⊕_)
 import Cubical.Data.Empty as Empty
 import Cubical.Data.Equality as Eq
@@ -23,22 +23,13 @@ open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base
 
-open import Grammar Alphabet hiding (k)
-open import Grammar.Sum.Properties Alphabet
-open import Grammar.Negation.Properties Alphabet
-open import Grammar.KleeneStar.Properties Alphabet
-open import Grammar.Literal.Properties Alphabet
-open import Grammar.LinearProduct.SplittingTrichotomy Alphabet
-open import Grammar.Epsilon.Properties Alphabet
-open import Grammar.String.Properties Alphabet
-open import Grammar.RegularExpression.Base Alphabet
+open import Grammar Alphabet
 open import Grammar.PropositionalTruncation.Base Alphabet
 
 open import Grammar.SequentialUnambiguity Alphabet
 open import Grammar.Subgrammar.Base Alphabet renaming (true to trueG ; false to falseG)
 
 open import Term Alphabet
-open import Helper
 
 private
   variable
@@ -79,13 +70,6 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     c ∈ ¬FL →
     ⟨ c ∉FollowLast ⟦ r ⟧r ⟩
 
-  unambiguousDR :
-    ∀ {r : RegularExpression} →
-    {¬FL ¬F : ℙ} →
-    {b : Bool} →
-    (dr : DetReg r ¬FL ¬F b) →
-    unambiguous ⟦ r ⟧r
-
   -- A deterministic regular expression is parametrized
   -- a regular expression r and
   -- the complement of its follow last set,
@@ -107,7 +91,7 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
       (dr : DetReg r ¬FL ¬F true) →
       (seq-unambig :
         ∀ (c : ⟨ Alphabet ⟩) →
-          (c ∈ ¬FL) ⊎ (c ∈ ¬F')
+          (c ∈ ¬FL) Sum.⊎ (c ∈ ¬F')
       ) →
       (dr' : DetReg r' ¬FL' ¬F' b') →
       DetReg
@@ -123,7 +107,7 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
       (dr : DetReg r ¬FL ¬F b) →
       (sep :
         ∀ (c : ⟨ Alphabet ⟩) →
-          (c ∈ ¬F) ⊎ (c ∈ ¬F')
+          (c ∈ ¬F) Sum.⊎ (c ∈ ¬F')
       ) →
       (dr' : DetReg r' ¬FL' ¬F' b') →
       DetReg
@@ -140,7 +124,7 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
       (dr : DetReg r ¬FL ¬F true) →
       (seq-unambig :
         ∀ (c : ⟨ Alphabet ⟩) →
-          (c ∈ ¬FL) ⊎ (c ∈ ¬F)
+          (c ∈ ¬FL) Sum.⊎ (c ∈ ¬F)
       ) →
       DetReg
         (r *r)
@@ -149,14 +133,14 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
         false
 
   sound¬Nullable εdr = id
-  sound¬Nullable ⊥dr = &-π₂
+  sound¬Nullable ⊥dr = π₂
   sound¬Nullable ＂ c ＂dr = ¬Nullable-char+ ∘g id ,&p (+-singleton char ∘g literal→char c)
   sound¬Nullable (dr ⊗DR[ FL∩F'mt ] dr') =
     ¬Nullable⊗l (sound¬Nullable dr)
   sound¬Nullable (_⊕DR[_]_ {b = false} {b' = true}
-    dr disjointFsts dr') = ⊕-inl ∘g sound¬Nullable dr
+    dr disjointFsts dr') = inl ∘g sound¬Nullable dr
   sound¬Nullable (_⊕DR[_]_ {b = true} {b' = false}
-    dr disjointFsts dr') = ⊕-inr ∘g sound¬Nullable dr'
+    dr disjointFsts dr') = inr ∘g sound¬Nullable dr'
   sound¬Nullable (_⊕DR[_]_ {b = true} {b' = true}
     dr disjointFsts dr') =
     ⊕-elim
@@ -169,7 +153,7 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     disjoint-ε-char+
     ∘g id ,&p literal→char c ,⊗ string-intro
     ∘g &-swap
-  sound¬First ⊥dr c c∈¬F = &-π₂
+  sound¬First ⊥dr c c∈¬F = π₂
   sound¬First ＂ c' ＂dr c c∈¬F =
     ⊕ᴰ-elim (λ c'≡c → Empty.rec (c∈¬F c'≡c))
     ∘g same-first c' c
@@ -187,7 +171,7 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     disjoint-ε-char+
     ∘g id ,&p (char+⊗r→char+ ∘g id ,⊗ literal→char c ,⊗ id)
     ∘g &-swap
-  sound¬FollowLast ⊥dr c _ = &-π₂
+  sound¬FollowLast ⊥dr c _ = π₂
   sound¬FollowLast ＂ c' ＂dr c _ =
     disjoint-char-char⊗char+
     ∘g &-swap
@@ -212,8 +196,8 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
     ∉FollowLast-⊗¬null _ _ (sound¬Nullable dr) (sound¬Nullable dr')
       (λ c' →
          Sum.rec
-           (λ c'∉FL → inl (sound¬FollowLast dr c' c'∉FL))
-           (λ c'∉F' → inr (sound¬First dr' c' c'∉F'))
+           (λ c'∉FL → Sum.inl (sound¬FollowLast dr c' c'∉FL))
+           (λ c'∉F' → Sum.inr (sound¬First dr' c' c'∉F'))
            (seq-unambig c')
       )
       c
@@ -233,12 +217,12 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
       )
     where
     case-bool : {x y : Bool} → x or y Eq.≡ true →
-      ((x Eq.≡ true) × (y Eq.≡ false)) ⊎
-      (((x Eq.≡ false) × (y Eq.≡ true)) ⊎
+      ((x Eq.≡ true) × (y Eq.≡ false)) Sum.⊎
+      (((x Eq.≡ false) × (y Eq.≡ true)) Sum.⊎
       ((x Eq.≡ true) × (y Eq.≡ true)))
-    case-bool {false} {true} _ = inr (inl (Eq.refl , Eq.refl))
-    case-bool {true} {false} _ = inl (Eq.refl , Eq.refl)
-    case-bool {true} {true} _ = inr (inr (Eq.refl , Eq.refl))
+    case-bool {false} {true} _ = Sum.inr (Sum.inl (Eq.refl , Eq.refl))
+    case-bool {true} {false} _ = Sum.inl (Eq.refl , Eq.refl)
+    case-bool {true} {true} _ = Sum.inr (Sum.inr (Eq.refl , Eq.refl))
 
     elim-if : ∀ {ℓ} → {A B : Type ℓ} {x : Bool} →
       x Eq.≡ true →
@@ -252,45 +236,45 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
       B
     elim-if' {x = false} Eq.refl the-if = the-if
 
-    ¬nullr'∨c∉F : ⟨ ¬Nullable ⟦ r' ⟧r ⟩ ⊎ ⟨ c ∉First ⟦ r ⟧r ⟩
+    ¬nullr'∨c∉F : ⟨ ¬Nullable ⟦ r' ⟧r ⟩ Sum.⊎ ⟨ c ∉First ⟦ r ⟧r ⟩
     ¬nullr'∨c∉F =
       Sum.rec
-        (λ c∉F → inr (sound¬First dr c c∉F))
+        (λ c∉F → Sum.inr (sound¬First dr c c∉F))
         (λ c∉F' →
              Sum.rec
                (λ { (Eq.refl , Eq.refl) →
-                 inr (sound¬First dr c (c∉Firsts? .fst))
+                 Sum.inr (sound¬First dr c (c∉Firsts? .fst))
                })
                (Sum.rec
                  (λ { (Eq.refl , Eq.refl) →
-                   inl (sound¬Nullable dr')
+                   Sum.inl (sound¬Nullable dr')
                    })
                  (λ { (Eq.refl , Eq.refl) →
-                   inl (sound¬Nullable dr')
+                   Sum.inl (sound¬Nullable dr')
                    })
                  )
                (case-bool {x = b} {y = b'} notBothNull)
         )
         (sep c)
 
-    ¬nullr∨c∉F' : ⟨ ¬Nullable ⟦ r ⟧r ⟩ ⊎ ⟨ c ∉First ⟦ r' ⟧r ⟩
+    ¬nullr∨c∉F' : ⟨ ¬Nullable ⟦ r ⟧r ⟩ Sum.⊎ ⟨ c ∉First ⟦ r' ⟧r ⟩
     ¬nullr∨c∉F' =
       Sum.rec
         (λ c∉F →
           Sum.rec
             (λ { (Eq.refl , Eq.refl) →
-              inl (sound¬Nullable dr)
+              Sum.inl (sound¬Nullable dr)
               })
             (Sum.rec
               (λ { (Eq.refl , Eq.refl) →
-                inr (sound¬First dr' c (c∉Firsts? .snd))
+                Sum.inr (sound¬First dr' c (c∉Firsts? .snd))
                 })
               (λ { (Eq.refl , Eq.refl) →
-                inl (sound¬Nullable dr)
+                Sum.inl (sound¬Nullable dr)
                 }))
             (case-bool {x = b} {y = b'} notBothNull))
         (λ c∉F' →
-          inr (sound¬First dr' c c∉F')
+          Sum.inr (sound¬First dr' c c∉F')
         )
         (sep c)
   sound¬FollowLast (dr *DR[ seq-unambig ]) c (c∉F , c∉FL) =
@@ -305,56 +289,3 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
           (seq-unambig c')
       )
       (DiscreteAlphabet isFinSetAlphabet)
-
-  unambiguousDR εdr = unambiguousε
-  unambiguousDR ⊥dr = unambiguous⊥
-  unambiguousDR ＂ c ＂dr = unambiguous-literal c
-  unambiguousDR (dr ⊗DR[ seq-unambig ] dr') =
-    unambiguous-⊗
-      (sound¬Nullable dr)
-      (λ c →
-        Sum.map
-          (sound¬FollowLast dr c)
-          (sound¬First dr' c)
-          (seq-unambig c))
-      (unambiguousDR dr)
-      (unambiguousDR dr')
-  unambiguousDR (_⊕DR[_]_ {b = b}{b' = b'}{notBothNull = notBothNull} dr sep dr') =
-    unambiguous⊕
-      (#→disjoint
-        (λ c →
-           Sum.map
-             (sound¬First dr c)
-             (sound¬First dr' c)
-             (sep c))
-        ¬null
-      )
-      (unambiguousDR dr)
-      (unambiguousDR dr')
-    where
-    case-bool : {x y : Bool} → x or y Eq.≡ true →
-      ((x Eq.≡ true) × (y Eq.≡ false)) ⊎
-      (((x Eq.≡ false) × (y Eq.≡ true)) ⊎
-      ((x Eq.≡ true) × (y Eq.≡ true)))
-    case-bool {false} {true} _ = inr (inl (Eq.refl , Eq.refl))
-    case-bool {true} {false} _ = inl (Eq.refl , Eq.refl)
-    case-bool {true} {true} _ = inr (inr (Eq.refl , Eq.refl))
-
-    ¬null =
-      Sum.rec
-        (λ { (Eq.refl , Eq.refl) → inl (sound¬Nullable dr)})
-        (
-        Sum.rec
-          (λ { (Eq.refl , Eq.refl) → inr (sound¬Nullable dr')})
-          (λ { (Eq.refl , Eq.refl) → inl (sound¬Nullable dr)})
-        )
-        (case-bool {x = b}{y = b'} notBothNull)
-  unambiguousDR (dr *DR[ seq-unambig ]) =
-    unambiguous-*
-      (sound¬Nullable dr)
-      (λ c →
-         Sum.map
-           (sound¬FollowLast dr c)
-           (sound¬First dr c)
-           (seq-unambig c))
-      (unambiguousDR dr)

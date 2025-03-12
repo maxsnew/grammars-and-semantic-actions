@@ -7,7 +7,7 @@ open import Grammar.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Product.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Term.Base Alphabet
 
 private

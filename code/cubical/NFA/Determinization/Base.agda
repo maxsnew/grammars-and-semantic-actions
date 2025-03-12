@@ -10,6 +10,7 @@ import Cubical.Foundations.Isomorphism as Isom
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
+open import Cubical.Relation.Nullary.DecidablePropositions.More
 open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base
 
 open import Cubical.Data.Empty as Empty hiding (rec)
@@ -31,7 +32,6 @@ open import Grammar Alphabet
 open import Term Alphabet
 open import NFA.Base Alphabet
 open import DFA Alphabet
-open import Helper
 
 open import Cubical.Data.Quiver.Base
 open import Cubical.Data.Quiver.Reachability
@@ -337,31 +337,31 @@ module Determinization
   NFA→DFA-alg q =
     ⊕ᴰ-elim (λ {
         NTrace.stop → ⊕ᴰ-elim (λ {
-          (lift acc) → &ᴰ-in λ X →
-            &ᴰ-in (λ q∈X →
+          (lift acc) → &ᴰ-intro λ X →
+            &ᴰ-intro (λ q∈X →
               roll ∘g
-              ⊕ᴰ-in ℙN.stop ∘g
-              ⊕ᴰ-in (lift (embedAcc q X q∈X acc)) ∘g
+              σ ℙN.stop ∘g
+              σ (lift (embedAcc q X q∈X acc)) ∘g
               liftG ∘g liftG ∘g lowerG ∘g lowerG
             ) })
       ; NTrace.step → ⊕ᴰ-elim (λ { (t , Eq.refl) →
-        &ᴰ-in (λ X → &ᴰ-in λ src∈X →
+        &ᴰ-intro (λ X → &ᴰ-intro λ src∈X →
           roll ∘g
-          ⊕ᴰ-in ℙN.step ∘g
-          ⊕ᴰ-in (lift (N.label t)) ∘g
+          σ ℙN.step ∘g
+          σ (lift (N.label t)) ∘g
           liftG ,⊗ id ∘g
           liftG ,⊗ liftG ∘g
-          id ,⊗ &ᴰ-π (lit-closure-transition t X src∈X) ∘g
-          id ,⊗ &ᴰ-π (ε-closure (lit-closure (N.label t) (X .fst))) ∘g
+          id ,⊗ π (lit-closure-transition t X src∈X) ∘g
+          id ,⊗ π (ε-closure (lit-closure (N.label t) (X .fst))) ∘g
           lowerG ,⊗ id ∘g
           lowerG ,⊗ lowerG
           )
           })
       ; NTrace.stepε →
         ⊕ᴰ-elim λ { (t , Eq.refl) →
-          &ᴰ-in (λ X → &ᴰ-in (λ src∈X →
-            &ᴰ-π (ε-closure-transition t X src∈X) ∘g
-            &ᴰ-π X)) ∘g
+          &ᴰ-intro (λ X → &ᴰ-intro (λ src∈X →
+            π (ε-closure-transition t X src∈X) ∘g
+            π X)) ∘g
           lowerG } })
 
   fold-walk :
@@ -373,8 +373,8 @@ module Determinization
   fold-walk q X q' q∈εX (0 , nil) = id
   fold-walk q X q' q∈εX (n , (cons n-1 e walk)) =
     roll ∘g
-    ⊕ᴰ-in NTrace.stepε ∘g
-    ⊕ᴰ-in (e , Eq.refl) ∘g
+    σ NTrace.stepε ∘g
+    σ (e , Eq.refl) ∘g
     liftG ∘g
     fold-walk q X (N.ε-dst e) q∈εX (n-1 , walk)
 
@@ -393,11 +393,11 @@ module Determinization
         let
           q , q∈X , acc = chooseAcc X accX
         in
-        ⊕ᴰ-in q ∘g
-        ⊕ᴰ-in q∈X ∘g
+        σ q ∘g
+        σ q∈X ∘g
         roll ∘g
-        ⊕ᴰ-in NTrace.stop ∘g
-        ⊕ᴰ-in (lift acc) ∘g
+        σ NTrace.stop ∘g
+        σ (lift acc) ∘g
         liftG ∘g liftG ∘g lowerG ∘g lowerG
       })
     ; step → ⊕ᴰ-elim (λ { (lift c) →
@@ -405,8 +405,8 @@ module Determinization
         ⊕ᴰ-elim (λ q∈εlitX →
           let q' , q'∈litX , n , walk = witness-ε q (lit-closure c (X .fst)) q∈εlitX in
           let qt , qt∈X , t , label≡c , src≡qt , dst≡q' = witness-lit c q' (X .fst) q'∈litX in
-          ⊕ᴰ-in qt ∘g
-          ⊕ᴰ-in qt∈X ∘g
+          σ qt ∘g
+          σ qt∈X ∘g
           step-help c q (X .fst) q∈εlitX q' q'∈litX n walk
                     t qt qt∈X label≡c src≡qt dst≡q'
           ) ∘g
@@ -436,8 +436,8 @@ module Determinization
     step-help c q X q∈εlitX q' q'∈litX n walk t qt qt∈x
       Eq.refl Eq.refl Eq.refl =
       roll ∘g
-      ⊕ᴰ-in NTrace.step ∘g
-      ⊕ᴰ-in (t , Eq.refl) ∘g
+      σ NTrace.step ∘g
+      σ (t , Eq.refl) ∘g
       liftG ,⊗ liftG ∘g
       id ,⊗ fold-walk q (lit-closure c X) q' q∈εlitX (n , walk) ∘g
       liftG ,⊗ id
@@ -461,5 +461,5 @@ module Determinization
   NFA≈DFA : isLogicallyEquivalent
               (NTrace.Trace true N.init)
               (ℙN.Trace true (ε-closure (SingletonDecℙ N.Q N.init)))
-  NFA≈DFA .fst = &ᴰ-π (ε-closure-lift-∈ refl) ∘g &ᴰ-π _ ∘g NFA→DFA N.init
+  NFA≈DFA .fst = π (ε-closure-lift-∈ refl) ∘g π _ ∘g NFA→DFA N.init
   NFA≈DFA .snd = DFA→NFA-init

@@ -9,7 +9,6 @@ open import Cubical.Data.Sum
 open import Cubical.Data.Unit
 open import Cubical.Data.W.Indexed
 
-open import Helper
 open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
 open import Grammar.Sum Alphabet
@@ -150,7 +149,6 @@ module _ {X : Type ℓX} where
     isRetract F x w (roll .w t) = cong (roll w)
       (cong (nodeF (F x) w x _) (funExt λ p → isRetract F _ _ _)
       ∙ reconstructF (F x) w x t)
-
 
 isSetGrammarμ : ∀ {X : Type ℓX}
   → (F : X → Functor X)

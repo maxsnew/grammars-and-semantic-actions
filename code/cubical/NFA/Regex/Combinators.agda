@@ -12,6 +12,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
+open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 import      Cubical.Data.Equality as Eq
 open import Cubical.Data.List hiding (init ; rec ; map)
@@ -21,24 +22,18 @@ open import Cubical.Data.FinSet.More
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
-open import Cubical.Data.SumFin hiding (fsuc)
+open import Cubical.Data.SumFin using (Fin ; fzero ; isSetFin ; discreteFin)
 open import Cubical.Data.Unit
 import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 
 open import Grammar Alphabet
-open import Grammar.Equalizer Alphabet
-open import Grammar.RegularExpression Alphabet
-open import Grammar.Lift.Properties Alphabet
-
 open import NFA.Base Alphabet
-
-open import Helper
 open import Term Alphabet
 
 open StrongEquivalence
 
 private
-  variable ℓΣ₀ ℓN ℓN' ℓP ℓ : Level
+  variable ℓN ℓN' ℓP ℓ : Level
 
 open NFA
 open NFA.Accepting
@@ -62,11 +57,11 @@ module _ (c : ⟨ Alphabet ⟩) where
   open Iso
   STATE≅Fin2 : Iso STATE (Fin 2)
   STATE≅Fin2 .Iso.fun c-st = fzero
-  STATE≅Fin2 .Iso.fun ε-st = inr fzero
+  STATE≅Fin2 .Iso.fun ε-st = Sum.inr fzero
   STATE≅Fin2 .Iso.inv fzero = c-st
-  STATE≅Fin2 .Iso.inv (inr x) = ε-st
+  STATE≅Fin2 .Iso.inv (Sum.inr x) = ε-st
   STATE≅Fin2 .Iso.rightInv fzero = refl
-  STATE≅Fin2 .Iso.rightInv (inr fzero) = refl
+  STATE≅Fin2 .Iso.rightInv (Sum.inr fzero) = refl
   STATE≅Fin2 .Iso.leftInv c-st = refl
   STATE≅Fin2 .Iso.leftInv ε-st = refl
 
@@ -89,7 +84,7 @@ module _ (c : ⟨ Alphabet ⟩) where
   literalNFA .label _ = c
   literalNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  litNFA≅ : StrongEquivalence (Trace literalNFA c-st) (literal c)
+  litNFA≅ : Trace literalNFA c-st ≅ ＂ c ＂
   litNFA≅ =
     mkStrEq
       (rec (TraceTy literalNFA) litAlg c-st)
@@ -98,7 +93,7 @@ module _ (c : ⟨ Alphabet ⟩) where
       (the-sections c-st)
     where
     ⟦_⟧st : ⟨ literalNFA .Q ⟩ → Grammar ℓ-zero
-    ⟦ c-st ⟧st = literal c
+    ⟦ c-st ⟧st = ＂ c ＂
     ⟦ ε-st ⟧st = ε
 
     litAlg : Algebra (TraceTy literalNFA) ⟦_⟧st
@@ -142,7 +137,7 @@ module _ where
   ⊥NFA .transition = Empty.⊥ , isFinSet⊥
   ⊥NFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  ⊥NFA≅ : StrongEquivalence (Parse ⊥NFA) ⊥
+  ⊥NFA≅ : Parse ⊥NFA ≅ ⊥
   ⊥NFA≅ = mkStrEq
     (rec _ ⊥Alg _)
     ⊥-elim
@@ -159,18 +154,18 @@ module _ where
 module _ (N : NFA ℓN) (N' : NFA ℓN') where
   data ⊕State : Type (ℓ-max ℓN ℓN') where
     start : ⊕State
-    inl   : ⟨ N .Q ⟩  → ⊕State
-    inr   : ⟨ N' .Q ⟩ → ⊕State
+    inl'   : ⟨ N .Q ⟩  → ⊕State
+    inr'   : ⟨ N' .Q ⟩ → ⊕State
 
-  ⊕State-rep : ⊕State ≃ (Unit ⊎ (⟨ N .Q ⟩ ⊎ ⟨ N' .Q ⟩))
+  ⊕State-rep : ⊕State ≃ (Unit Sum.⊎ (⟨ N .Q ⟩ Sum.⊎ ⟨ N' .Q ⟩))
   ⊕State-rep = isoToEquiv (iso
-    (λ { start → inl tt ; (inl x) → inr (inl x) ; (inr x) → inr (inr x) })
-    (λ { (inl x) → start ; (inr (inl x)) → inl x ; (inr (inr x)) → inr x })
-    (λ { (inl x) → refl ; (inr (inl x)) → refl ; (inr (inr x)) → refl })
-    λ { start → refl ; (inl x) → refl ; (inr x) → refl })
+    (λ { start → Sum.inl tt ; (inl' x) → Sum.inr (Sum.inl x) ; (inr' x) → Sum.inr (Sum.inr x) })
+    (λ { (Sum.inl x) → start ; (Sum.inr (Sum.inl x)) → inl' x ; (Sum.inr (Sum.inr x)) → inr' x })
+    (λ { (Sum.inl x) → refl ; (Sum.inr (Sum.inl x)) → refl ; (Sum.inr (Sum.inr x)) → refl })
+    λ { start → refl ; (inl' x) → refl ; (inr' x) → refl })
 
   ⊕Trans : FinSet (ℓ-max ℓN ℓN')
-  ⊕Trans .fst = ⟨ N .transition ⟩ ⊎ ⟨ N' .transition ⟩
+  ⊕Trans .fst = ⟨ N .transition ⟩ Sum.⊎ ⟨ N' .transition ⟩
   ⊕Trans .snd = isFinSet⊎ (N .transition) (N' .transition)
 
   data ⊕εTrans : Type (ℓ-max ℓN ℓN') where
@@ -180,36 +175,36 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     N'-ε-trans  : ⟨ N' .ε-transition ⟩ → ⊕εTrans
 
   ⊕εTrans-rep :
-    (Unit ⊎ (Unit ⊎ (⟨ N .ε-transition ⟩ ⊎ ⟨ N' .ε-transition ⟩ ))) ≃ ⊕εTrans
+    (Unit Sum.⊎ (Unit Sum.⊎ (⟨ N .ε-transition ⟩ Sum.⊎ ⟨ N' .ε-transition ⟩ ))) ≃ ⊕εTrans
   ⊕εTrans-rep = isoToEquiv (iso
-    (λ { (inl t) → pick-inl
-    ; (inr (inl t)) → pick-inr
-    ; (inr (inr (inl t))) → N-ε-trans t
-    ; (inr (inr (inr t'))) → N'-ε-trans t' })
-    (λ { pick-inl → inl _
-    ; pick-inr → inr (inl _)
-    ; (N-ε-trans t) → inr (inr (inl t))
-    ; (N'-ε-trans t') → inr (inr (inr t')) })
+    (λ { (Sum.inl t) → pick-inl
+    ; (Sum.inr (Sum.inl t)) → pick-inr
+    ; (Sum.inr (Sum.inr (Sum.inl t))) → N-ε-trans t
+    ; (Sum.inr (Sum.inr (Sum.inr t'))) → N'-ε-trans t' })
+    (λ { pick-inl → Sum.inl _
+    ; pick-inr → Sum.inr (Sum.inl _)
+    ; (N-ε-trans t) → Sum.inr (Sum.inr (Sum.inl t))
+    ; (N'-ε-trans t') → Sum.inr (Sum.inr (Sum.inr t')) })
     (λ { pick-inl → refl
     ; pick-inr → refl
     ; (N-ε-trans t) → refl
     ; (N'-ε-trans t') → refl })
-    (λ { (inl t) → refl
-    ; (inr (inl t)) → refl
-    ; (inr (inr (inl t))) → refl
-    ; (inr (inr (inr t'))) → refl }))
+    (λ { (Sum.inl t) → refl
+    ; (Sum.inr (Sum.inl t)) → refl
+    ; (Sum.inr (Sum.inr (Sum.inl t))) → refl
+    ; (Sum.inr (Sum.inr (Sum.inr t'))) → refl }))
 
   ⊕NFA : NFA (ℓ-max ℓN ℓN')
   ⊕NFA .Q = ⊕State , EquivPresIsFinSet (invEquiv ⊕State-rep)
     (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSet⊎ (N .Q) (N' .Q)))
   ⊕NFA .init = start
   ⊕NFA .isAcc start = false
-  ⊕NFA .isAcc (inl q) = N .isAcc q
-  ⊕NFA .isAcc (inr q') = N' .isAcc q'
+  ⊕NFA .isAcc (inl' q) = N .isAcc q
+  ⊕NFA .isAcc (inr' q') = N' .isAcc q'
   ⊕NFA .transition = ⊕Trans
-  ⊕NFA .src = λ { (inl t) → inl (N .src t) ; (inr t') → inr (N' .src t') }
-  ⊕NFA .dst = λ { (inl t) → inl (N .dst t) ; (inr t') → inr (N' .dst t') }
-  ⊕NFA .label = λ { (inl t) → N .label t ; (inr t') → N' .label t' }
+  ⊕NFA .src = λ { (Sum.inl t) → inl' (N .src t) ; (Sum.inr t') → inr' (N' .src t') }
+  ⊕NFA .dst = λ { (Sum.inl t) → inl' (N .dst t) ; (Sum.inr t') → inr' (N' .dst t') }
+  ⊕NFA .label = λ { (Sum.inl t) → N .label t ; (Sum.inr t') → N' .label t' }
   ⊕NFA .ε-transition =
     ⊕εTrans ,
     EquivPresIsFinSet ⊕εTrans-rep
@@ -217,16 +212,16 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
         (_ , isFinSet⊎ (N .ε-transition) (N' .ε-transition))))
   ⊕NFA .ε-src = λ
     { pick-inl → start ; pick-inr → start
-    ; (N-ε-trans t) → inl (N .ε-src t)
-    ; (N'-ε-trans t') → inr (N' .ε-src t') }
+    ; (N-ε-trans t) → inl' (N .ε-src t)
+    ; (N'-ε-trans t') → inr' (N' .ε-src t') }
   ⊕NFA .ε-dst = λ
-    { pick-inl → inl (N .init)
-    ; pick-inr → inr (N' .init)
-    ; (N-ε-trans t) → inl (N .ε-dst t)
-    ; (N'-ε-trans t') → inr (N' .ε-dst t')
+    { pick-inl → inl' (N .init)
+    ; pick-inr → inr' (N' .init)
+    ; (N-ε-trans t) → inl' (N .ε-dst t)
+    ; (N'-ε-trans t') → inr' (N' .ε-dst t')
     }
 
-  ⊕NFA≅ : StrongEquivalence (Parse ⊕NFA) (Parse N ⊕ Parse N')
+  ⊕NFA≅ : Parse ⊕NFA ≅ Parse N ⊕ Parse N'
   ⊕NFA≅ =
     mkStrEq
       (fromNFA start)
@@ -236,39 +231,39 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     where
     ⟦_⟧⊕ : ⟨ ⊕NFA .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
     ⟦ start ⟧⊕ = Parse N  ⊕ Parse N'
-    ⟦ inl q ⟧⊕ = LiftG ℓN' (Trace N q)
-    ⟦ inr q' ⟧⊕ = LiftG ℓN (Trace N' q')
+    ⟦ inl' q ⟧⊕ = LiftG ℓN' (Trace N q)
+    ⟦ inr' q' ⟧⊕ = LiftG ℓN (Trace N' q')
 
     ⊕Alg : Algebra (TraceTy ⊕NFA) ⟦_⟧⊕
     ⊕Alg start =
       ⊕ᴰ-elim (λ {
-        (step (inl t) ())
-      ; (step (inr t) ())
-      ; (stepε pick-inl Eq.refl) → ⊕-inl ∘g lowerG ∘g lowerG
-      ; (stepε pick-inr Eq.refl) → ⊕-inr ∘g lowerG ∘g lowerG})
-    ⊕Alg (inl q) = ⊕ᴰ-elim λ {
+        (step (Sum.inl t) ())
+      ; (step (Sum.inr t) ())
+      ; (stepε pick-inl Eq.refl) → inl ∘g lowerG ∘g lowerG
+      ; (stepε pick-inr Eq.refl) → inr ∘g lowerG ∘g lowerG})
+    ⊕Alg (inl' q) = ⊕ᴰ-elim λ {
         (stop acc) → liftG ∘g STOP N acc ∘g lowerG ∘g lowerG
-      ; (step (inl t) Eq.refl) → liftG ∘g STEP N t ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
+      ; (step (Sum.inl t) Eq.refl) → liftG ∘g STEP N t ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
       ; (stepε (N-ε-trans t) Eq.refl) → liftG ∘g STEPε N t ∘g lowerG ∘g lowerG }
-    ⊕Alg (inr q') =
+    ⊕Alg (inr' q') =
       ⊕ᴰ-elim (λ {
         (stop acc) → liftG ∘g STOP N' acc ∘g lowerG ∘g lowerG
-      ; (step (inr t) Eq.refl) → liftG ∘g STEP N' t ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
+      ; (step (Sum.inr t) Eq.refl) → liftG ∘g STEP N' t ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
       ; (stepε (N'-ε-trans t) Eq.refl) → liftG ∘g STEPε N' t ∘g lowerG ∘g lowerG})
 
     fromNFA = rec (TraceTy ⊕NFA) ⊕Alg
 
     ⟦_⟧N : ⟨ N .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
-    ⟦ q ⟧N = Trace ⊕NFA (inl q)
+    ⟦ q ⟧N = Trace ⊕NFA (inl' q)
 
     ⟦_⟧N' : ⟨ N' .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
-    ⟦ q' ⟧N' = Trace ⊕NFA (inr q')
+    ⟦ q' ⟧N' = Trace ⊕NFA (inr' q')
 
     NAlg : Algebra (TraceTy N) ⟦_⟧N
     NAlg q =
       ⊕ᴰ-elim (λ {
         (stop acc) → STOP ⊕NFA acc ∘g lowerG ∘g lowerG
-      ; (step t Eq.refl) → STEP ⊕NFA (inl t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      ; (step t Eq.refl) → STEP ⊕NFA (Sum.inl t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
       ; (stepε t Eq.refl) → STEPε ⊕NFA (N-ε-trans t) ∘g lowerG })
 
     N→⊕NFA = rec (TraceTy N) NAlg
@@ -277,7 +272,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     N'Alg q' =
       ⊕ᴰ-elim (λ {
         (stop acc) → STOP ⊕NFA acc ∘g lowerG ∘g lowerG
-      ; (step t Eq.refl) → STEP ⊕NFA (inr t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      ; (step t Eq.refl) → STEP ⊕NFA (Sum.inr t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
       ; (stepε t Eq.refl) → STEPε ⊕NFA (N'-ε-trans t) ∘g lowerG })
 
     N'→⊕NFA = rec (TraceTy N') N'Alg
@@ -287,12 +282,12 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
       ⊕-elim
         (STEPε ⊕NFA pick-inl ∘g N→⊕NFA (N .init))
         (STEPε ⊕NFA pick-inr ∘g N'→⊕NFA (N' .init))
-    toNFA (inl q) = N→⊕NFA q ∘g lowerG
-    toNFA (inr q') = N'→⊕NFA q' ∘g lowerG
+    toNFA (inl' q) = N→⊕NFA q ∘g lowerG
+    toNFA (inr' q') = N'→⊕NFA q' ∘g lowerG
 
     opaque
       unfolding ⊗-intro ⊗-unit-r⁻ ⊕-elim eq-intro
-      the-retN : ∀ q → lowerG ∘g fromNFA (inl q) ∘g toNFA (inl q) ∘g liftG ≡ id
+      the-retN : ∀ q → lowerG ∘g fromNFA (inl' q) ∘g toNFA (inl' q) ∘g liftG ≡ id
       the-retN =
         equalizer-ind (TraceTy N) _ _ _
           λ q → ⊕ᴰ≡ _ _ (λ {
@@ -302,7 +297,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
           ; (stepε t Eq.refl) → λ i →
               STEPε N t ∘g eq-π-pf _ _ i ∘g lowerG })
 
-      the-retN' : ∀ q' → lowerG ∘g fromNFA (inr q') ∘g toNFA (inr q') ∘g liftG ≡ id
+      the-retN' : ∀ q' → lowerG ∘g fromNFA (inr' q') ∘g toNFA (inr' q') ∘g liftG ≡ id
       the-retN' =
         equalizer-ind (TraceTy N') _ _ _
           λ q' → ⊕ᴰ≡ _ _ (λ {
@@ -315,30 +310,30 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
       the-ret : ∀ q → fromNFA q ∘g toNFA q  ≡ id
       the-ret start =
         ⊕≡ _ _
-          (λ i → ⊕-inl ∘g the-retN (N .init) i)
-          (λ i → ⊕-inr ∘g the-retN' (N' .init) i)
-      the-ret (inl q) i = liftG ∘g the-retN q i ∘g lowerG
-      the-ret (inr q') i = liftG ∘g the-retN' q' i ∘g lowerG
+          (λ i → inl ∘g the-retN (N .init) i)
+          (λ i → inr ∘g the-retN' (N' .init) i)
+      the-ret (inl' q) i = liftG ∘g the-retN q i ∘g lowerG
+      the-ret (inr' q') i = liftG ∘g the-retN' q' i ∘g lowerG
 
       the-sec : ∀ q → toNFA q ∘g fromNFA q ≡ id
       the-sec = equalizer-ind _ _ _ _
         λ { start → ⊕ᴰ≡ _ _ (λ {
-             (step (inl t) ())
-           ; (step (inr t) ())
+             (step (Sum.inl t) ())
+           ; (step (Sum.inr t) ())
            ; (stepε pick-inl Eq.refl) → λ i →
              STEPε ⊕NFA pick-inl ∘g eq-π-pf _ _ i ∘g lowerG
            ; (stepε pick-inr Eq.refl) → λ i →
              STEPε ⊕NFA pick-inr ∘g eq-π-pf _ _ i ∘g lowerG})
-         ; (inl q) → ⊕ᴰ≡ _ _ λ {
+         ; (inl' q) → ⊕ᴰ≡ _ _ λ {
              (stop x) → refl
-           ; (step (inl t) Eq.refl) → λ i →
-             STEP ⊕NFA (inl t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+           ; (step (Sum.inl t) Eq.refl) → λ i →
+             STEP ⊕NFA (Sum.inl t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
            ; (stepε (N-ε-trans t) Eq.refl) → λ i →
              STEPε ⊕NFA (N-ε-trans t) ∘g eq-π-pf _ _ i ∘g lowerG }
-         ; (inr q') → ⊕ᴰ≡ _ _ λ {
+         ; (inr' q') → ⊕ᴰ≡ _ _ λ {
              (stop x) → refl
-           ; (step (inr t) Eq.refl) → λ i →
-             STEP ⊕NFA (inr t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+           ; (step (Sum.inr t) Eq.refl) → λ i →
+             STEP ⊕NFA (Sum.inr t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
            ; (stepε (N'-ε-trans t) Eq.refl) → λ i →
              STEPε ⊕NFA (N'-ε-trans t) ∘g eq-π-pf _ _ i ∘g lowerG }}
 
@@ -354,7 +349,7 @@ module _ where
   εNFA .transition = Empty.⊥ , isFinSet⊥
   εNFA .ε-transition = Empty.⊥ , isFinSet⊥
 
-  εNFA≅ : StrongEquivalence (Parse εNFA) ε
+  εNFA≅ : Parse εNFA ≅ ε
   εNFA≅ = mkStrEq
     (rec _ εAlg _)
     (STOP εNFA Eq.refl)
@@ -369,11 +364,11 @@ module _ where
 -- w ≡ w₁ ++ w₂ where w₁ is accepted by N and w₂ accepted by N'
 module _ (N : NFA ℓN) (N' : NFA ℓN') where
   ⊗State : FinSet (ℓ-max ℓN ℓN')
-  ⊗State .fst = ⟨ N .Q ⟩ ⊎ ⟨ N' .Q ⟩
+  ⊗State .fst = ⟨ N .Q ⟩ Sum.⊎ ⟨ N' .Q ⟩
   ⊗State .snd = isFinSet⊎ (N .Q) (N' .Q)
 
   ⊗Trans : FinSet (ℓ-max ℓN ℓN')
-  ⊗Trans .fst = ⟨ N .transition ⟩ ⊎ ⟨ N' .transition ⟩
+  ⊗Trans .fst = ⟨ N .transition ⟩ Sum.⊎ ⟨ N' .transition ⟩
   ⊗Trans .snd = isFinSet⊎ (N .transition) (N' .transition)
 
   data ⊗εTrans : Type (ℓ-max ℓN ℓN') where
@@ -382,32 +377,32 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     N'-ε-trans  : ⟨ N' .ε-transition ⟩ → ⊗εTrans
 
   ⊗εTrans-rep :
-    (Σ[ q ∈ ⟨ N .Q ⟩ ] (true Eq.≡ N .isAcc q)) ⊎
-      (⟨ N .ε-transition ⟩ ⊎ ⟨ N' .ε-transition ⟩)
+    (Σ[ q ∈ ⟨ N .Q ⟩ ] (true Eq.≡ N .isAcc q)) Sum.⊎
+      (⟨ N .ε-transition ⟩ Sum.⊎ ⟨ N' .ε-transition ⟩)
       ≃ ⊗εTrans
   ⊗εTrans-rep = isoToEquiv (iso
-    (λ { (inl (acc)) → N-acc _ (acc .snd)
-       ; (inr (inl t)) → N-ε-trans t
-       ; (inr (inr t')) → N'-ε-trans t'})
-    (λ { (N-acc q acc) → inl (q , acc)
-       ; (N-ε-trans t) → inr (inl t)
-       ; (N'-ε-trans t') → inr (inr t') })
+    (λ { (Sum.inl (acc)) → N-acc _ (acc .snd)
+       ; (Sum.inr (Sum.inl t)) → N-ε-trans t
+       ; (Sum.inr (Sum.inr t')) → N'-ε-trans t'})
+    (λ { (N-acc q acc) → Sum.inl (q , acc)
+       ; (N-ε-trans t) → Sum.inr (Sum.inl t)
+       ; (N'-ε-trans t') → Sum.inr (Sum.inr t') })
     (λ { (N-acc _ _) → refl
        ; (N-ε-trans _) → refl
        ; (N'-ε-trans _) → refl})
-    (λ { (inl _) → refl
-       ; (inr (inl _)) → refl
-       ; (inr (inr _)) → refl }))
+    (λ { (Sum.inl _) → refl
+       ; (Sum.inr (Sum.inl _)) → refl
+       ; (Sum.inr (Sum.inr _)) → refl }))
 
   ⊗NFA : NFA (ℓ-max ℓN ℓN')
   ⊗NFA .Q = ⊗State
-  ⊗NFA .init = inl (N .init)
-  ⊗NFA .isAcc = λ { (inl q) → false
-                  ; (inr q') → N' .isAcc q' }
+  ⊗NFA .init = Sum.inl (N .init)
+  ⊗NFA .isAcc = λ { (Sum.inl q) → false
+                  ; (Sum.inr q') → N' .isAcc q' }
   ⊗NFA .transition = ⊗Trans
-  ⊗NFA .src = λ { (inl t) → inl (N .src t) ; (inr t') → inr (N' .src t') }
-  ⊗NFA .dst = λ { (inl t) → inl (N .dst t) ; (inr t') → inr (N' .dst t') }
-  ⊗NFA .label = λ { (inl t) → N .label t ; (inr t') → N' .label t' }
+  ⊗NFA .src = λ { (Sum.inl t) → Sum.inl (N .src t) ; (Sum.inr t') → Sum.inr (N' .src t') }
+  ⊗NFA .dst = λ { (Sum.inl t) → Sum.inl (N .dst t) ; (Sum.inr t') → Sum.inr (N' .dst t') }
+  ⊗NFA .label = λ { (Sum.inl t) → N .label t ; (Sum.inr t') → N' .label t' }
   ⊗NFA .ε-transition .fst = ⊗εTrans
   ⊗NFA .ε-transition .snd =
     EquivPresIsFinSet ⊗εTrans-rep
@@ -418,14 +413,14 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     where
       the-dec-prop : ⟨ N .Q ⟩ → Σ (hProp ℓ-zero) (λ P → Dec (P .fst))
       the-dec-prop q =  isFinSet→DecProp-Eq≡ isFinSetBool true (N .isAcc q)
-  ⊗NFA .ε-src = λ { (N-acc q qAcc) → inl q
-                  ; (N-ε-trans t) → inl (N .ε-src t)
-                  ; (N'-ε-trans t') → inr (N' .ε-src t') }
-  ⊗NFA .ε-dst = λ { (N-acc q qAcc) → inr (N' .init)
-                  ; (N-ε-trans t) → inl (N .ε-dst t)
-                  ; (N'-ε-trans t') → inr (N' .ε-dst t') }
+  ⊗NFA .ε-src = λ { (N-acc q qAcc) → Sum.inl q
+                  ; (N-ε-trans t) → Sum.inl (N .ε-src t)
+                  ; (N'-ε-trans t') → Sum.inr (N' .ε-src t') }
+  ⊗NFA .ε-dst = λ { (N-acc q qAcc) → Sum.inr (N' .init)
+                  ; (N-ε-trans t) → Sum.inl (N .ε-dst t)
+                  ; (N'-ε-trans t') → Sum.inr (N' .ε-dst t') }
 
-  ⊗NFA≅ : StrongEquivalence (Parse ⊗NFA) (Parse N ⊗ Parse N')
+  ⊗NFA≅ : Parse ⊗NFA ≅ Parse N ⊗ Parse N'
   ⊗NFA≅ =
     mkStrEq
       (rec _ ⊗Alg (⊗NFA .init))
@@ -434,18 +429,18 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
       (the-secN (N .init))
     where
     ⟦_⟧⊗ : ⟨ ⊗NFA .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
-    ⟦ inl q ⟧⊗ = Trace N q ⊗ Parse N'
-    ⟦ inr q' ⟧⊗ = LiftG ℓN (Trace N' q')
+    ⟦ Sum.inl q ⟧⊗ = Trace N q ⊗ Parse N'
+    ⟦ Sum.inr q' ⟧⊗ = LiftG ℓN (Trace N' q')
 
     ⟦_⟧N : ⟨ N .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
-    ⟦ q ⟧N = Trace ⊗NFA (inr (N' .init)) ⊸ Trace ⊗NFA (inl q)
+    ⟦ q ⟧N = Trace ⊗NFA (Sum.inr (N' .init)) ⊸ Trace ⊗NFA (Sum.inl q)
 
     ⟦_⟧N' : ⟨ N' .Q ⟩ → Grammar (ℓ-max ℓN ℓN')
-    ⟦ q' ⟧N' = Trace ⊗NFA (inr q')
+    ⟦ q' ⟧N' = Trace ⊗NFA (Sum.inr q')
 
     ⊗Alg : Algebra (TraceTy ⊗NFA) ⟦_⟧⊗
-    ⊗Alg (inl q) = ⊕ᴰ-elim (λ {
-        (step (inl t) Eq.refl) →
+    ⊗Alg (Sum.inl q) = ⊕ᴰ-elim (λ {
+        (step (Sum.inl t) Eq.refl) →
           (STEP N t ,⊗ id
           ∘g ⊗-assoc)
           ∘g (lowerG ∘g lowerG) ,⊗ lowerG
@@ -456,9 +451,9 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
       ; (stepε (N-ε-trans t) Eq.refl) →
          STEPε N t ,⊗ id
          ∘g lowerG })
-    ⊗Alg (inr q') = ⊕ᴰ-elim (λ {
+    ⊗Alg (Sum.inr q') = ⊕ᴰ-elim (λ {
         (stop acc) → liftG ∘g STOP N' acc ∘g lowerG ∘g lowerG
-      ; (step (inr t) Eq.refl) →
+      ; (step (Sum.inr t) Eq.refl) →
         liftG ∘g STEP N' t
         ∘g (lowerG ∘g lowerG) ,⊗ (lowerG ∘g lowerG)
       ; (stepε (N'-ε-trans t) Eq.refl) →
@@ -468,7 +463,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     N'Alg q =
       ⊕ᴰ-elim λ {
         (stop acc) → STOP ⊗NFA acc ∘g lowerG ∘g lowerG
-      ; (step t Eq.refl) → STEP ⊗NFA (inr t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+      ; (step t Eq.refl) → STEP ⊗NFA (Sum.inr t) ∘g (lowerG ∘g lowerG) ,⊗ lowerG
       ; (stepε t Eq.refl) → STEPε ⊗NFA (N'-ε-trans t) ∘g lowerG}
 
     NAlg : Algebra (TraceTy N) ⟦_⟧N
@@ -480,7 +475,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
              ∘g (lowerG ∘g lowerG) ,⊗ id)
        ; (step t Eq.refl) →
            ⊸-intro
-             (STEP ⊗NFA (inl t)
+             (STEP ⊗NFA (Sum.inl t)
              ∘g id ,⊗ ⊸-app
              ∘g ⊗-assoc⁻
              ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id)
@@ -491,7 +486,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
              ∘g lowerG ,⊗ id)
        }
 
-    N→⊗NFA : ∀ q → Trace N q ⊗ Parse N' ⊢ Trace ⊗NFA (inl q)
+    N→⊗NFA : ∀ q → Trace N q ⊗ Parse N' ⊢ Trace ⊗NFA (Sum.inl q)
     N→⊗NFA q =
       ⊸-intro⁻ (rec (TraceTy N) NAlg q)
       ∘g id ,⊗ rec _ N'Alg (N' .init)
@@ -499,7 +494,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
     opaque
       unfolding ⊗-intro ⊗-unit-r⁻ ⊕-elim eq-intro
       the-retN' : ∀ q' →
-        lowerG ∘g rec _ ⊗Alg (inr q') ∘g rec _ N'Alg q' ≡ id
+        lowerG ∘g rec _ ⊗Alg (Sum.inr q') ∘g rec _ N'Alg q' ≡ id
       the-retN' =
         equalizer-ind (TraceTy N') _ _ _
           (λ q' → ⊕ᴰ≡ _ _ λ {
@@ -515,19 +510,19 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
           } )
 
       the-retN : ∀ q →
-        rec _ ⊗Alg (inl q) ∘g N→⊗NFA q ≡ id
+        rec _ ⊗Alg (Sum.inl q) ∘g N→⊗NFA q ≡ id
       the-retN q =
         equalizer-ind-⊗l
           (Tag N)
           _
           (λ q → Trace N q ⊗ Parse N')
           (λ _ → Parse N')
-          (λ q → rec _ ⊗Alg (inl q) ∘g N→⊗NFA q)
+          (λ q → rec _ ⊗Alg (Sum.inl q) ∘g N→⊗NFA q)
           (λ q → id)
           (λ q → λ {
             (stop acc) →
               (λ i →
-               rec (TraceTy ⊗NFA) ⊗Alg (inl q)
+               rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl q)
                ∘g ⊸-β (STEPε ⊗NFA (N-acc q acc)
                        ∘g ⊗-unit-l
                        ∘g (lowerG ∘g lowerG) ,⊗ id) i
@@ -537,7 +532,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
               STOP N acc ,⊗ id
               ∘g ⊗-unit-l⁻
               ∘g lowerG
-              ∘g rec _ ⊗Alg (inr (N' .init))
+              ∘g rec _ ⊗Alg (Sum.inr (N' .init))
               ∘g ⊗-unit-l⊗-intro (rec _ N'Alg (N' .init)) (~ i)
               ∘g (lowerG ∘g lowerG) ,⊗ id
              ) ∙
@@ -555,9 +550,9 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                )
           ; (step t Eq.refl) →
             (λ i →
-              rec (TraceTy ⊗NFA) ⊗Alg (inl (N .src t))
+              rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .src t))
               ∘g ⊸-β
-                (STEP ⊗NFA (inl t)
+                (STEP ⊗NFA (Sum.inl t)
                 ∘g id ,⊗ ⊸-app
                 ∘g ⊗-assoc⁻
                 ∘g ((lowerG ∘g lowerG {ℓB = ℓ-max ℓN ℓN'}) ,⊗ lowerG {ℓB = ℓN}) ,⊗ id)
@@ -569,7 +564,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
             (λ i →
             STEP N t ,⊗ id
             ∘g ⊗-assoc
-            ∘g id ,⊗ eq-π-pf-⊸-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t)) ∘g N→⊗NFA (N .dst t)) id i
+            ∘g id ,⊗ eq-π-pf-⊸-intro (rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .dst t)) ∘g N→⊗NFA (N .dst t)) id i
             ∘g ⊗-assoc⁻
             ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id) ∙
             (λ i →
@@ -580,7 +575,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
             )
           ; (stepε t Eq.refl) →
               (λ i →
-                rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-src t))
+                rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .ε-src t))
                 ∘g ⊸-β
                     (STEPε ⊗NFA (N-ε-trans t)
                       ∘g ⊸-app
@@ -592,69 +587,69 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
               ) ∙
               (λ i →
                 STEPε N t ,⊗ id
-                ∘g eq-π-pf-⊸-intro (rec (TraceTy ⊗NFA) ⊗Alg (inl (N .ε-dst t)) ∘g N→⊗NFA (N .ε-dst t)) id i
+                ∘g eq-π-pf-⊸-intro (rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .ε-dst t)) ∘g N→⊗NFA (N .ε-dst t)) id i
                 ∘g lowerG ,⊗ id
               )
           })
           q
 
       -- Annoying artifact of how equalizer-induction is written:
-      -- Need to handle each of the ⊗NFA states, even if the inl
+      -- Need to handle each of the ⊗NFA states, even if the Sum.inl
       -- half of this proof is unecessary
-      -- To handle this, map the inl terms to ⊤* so the
+      -- To handle this, map the Sum.inl terms to ⊤* so the
       -- equations are trivial to prove
       the-secN' : ∀ q' →
-        rec _ N'Alg q' ∘g lowerG ∘g rec _ ⊗Alg (inr q') ≡ id
+        rec _ N'Alg q' ∘g lowerG ∘g rec _ ⊗Alg (Sum.inr q') ≡ id
       the-secN' q' =
         equalizer-ind
           (TraceTy ⊗NFA)
           (λ {
-            (inl q) → ⊤*
-          ; (inr q') → Trace ⊗NFA (inr q')})
+            (Sum.inl q) → ⊤*
+          ; (Sum.inr q') → Trace ⊗NFA (Sum.inr q')})
           (λ {
-            (inl q) → ⊤*-intro
-          ; (inr q') → rec _ N'Alg q' ∘g lowerG ∘g rec _ ⊗Alg (inr q')})
+            (Sum.inl q) → ⊤*-intro
+          ; (Sum.inr q') → rec _ N'Alg q' ∘g lowerG ∘g rec _ ⊗Alg (Sum.inr q')})
           (λ {
-            (inl q) → ⊤*-intro
-          ; (inr q') → id})
+            (Sum.inl q) → ⊤*-intro
+          ; (Sum.inr q') → id})
           (λ {
-            (inl q) → unambiguous⊤* _ _
-          ; (inr q') →
+            (Sum.inl q) → unambiguous⊤* _ _
+          ; (Sum.inr q') →
               ⊕ᴰ≡ _ _ λ {
                   (stop acc) → refl
-              ; (step (inr t) Eq.refl) → λ i →
-                  STEP ⊗NFA (inr t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
+              ; (step (Sum.inr t) Eq.refl) → λ i →
+                  STEP ⊗NFA (Sum.inr t) ∘g id ,⊗ eq-π-pf _ _ i ∘g (lowerG ∘g lowerG) ,⊗ lowerG
               ; (stepε (N'-ε-trans t) Eq.refl) → λ i →
                   STEPε ⊗NFA (N'-ε-trans t) ∘g eq-π-pf _ _ i ∘g lowerG
               }
           })
-          (inr q')
+          (Sum.inr q')
 
       the-secN : ∀ q →
-        N→⊗NFA q ∘g rec _ ⊗Alg (inl q) ≡ id
+        N→⊗NFA q ∘g rec _ ⊗Alg (Sum.inl q) ≡ id
       the-secN q =
         equalizer-ind
           (TraceTy ⊗NFA)
           (λ {
-            (inl q) → Trace ⊗NFA (inl q)
-          ; (inr q') → ⊤*
+            (Sum.inl q) → Trace ⊗NFA (Sum.inl q)
+          ; (Sum.inr q') → ⊤*
           })
           (λ {
-            (inl q) → N→⊗NFA q ∘g rec _ ⊗Alg (inl q)
-          ; (inr q') → ⊤*-intro
+            (Sum.inl q) → N→⊗NFA q ∘g rec _ ⊗Alg (Sum.inl q)
+          ; (Sum.inr q') → ⊤*-intro
           })
           (λ {
-            (inl q) → id
-          ; (inr q') → ⊤*-intro
+            (Sum.inl q) → id
+          ; (Sum.inr q') → ⊤*-intro
           })
           (λ {
-            (inl q) →
+            (Sum.inl q) →
               ⊕ᴰ≡ _ _
                 λ {
-                  (step (inl t) Eq.refl) →
+                  (step (Sum.inl t) Eq.refl) →
                     (
                     ⊸-intro⁻ (⊸-intro
-                        (STEP ⊗NFA (inl t)
+                        (STEP ⊗NFA (Sum.inl t)
                         ∘g id ,⊗ ⊸-app
                         ∘g ⊗-assoc⁻
                         ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id))
@@ -662,12 +657,12 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g (id ,⊗ rec (TraceTy N) NAlg (N .dst t)) ,⊗ id
                     ∘g id ,⊗ rec _ N'Alg (N' .init)
                     ∘g ⊗-assoc
-                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .dst t))
                     ∘g id ,⊗ eq-π _ _
                     ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                       ≡⟨ (λ i →
                           ⊸-β
-                            (STEP ⊗NFA (inl t)
+                            (STEP ⊗NFA (Sum.inl t)
                               ∘g id ,⊗ ⊸-app
                               ∘g ⊗-assoc⁻
                               ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id) i
@@ -676,45 +671,45 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                           ∘g (id ,⊗ rec (TraceTy N) NAlg (N .dst t)) ,⊗ id
                           ∘g id ,⊗ rec _ N'Alg (N' .init)
                           ∘g ⊗-assoc
-                          ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                          ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .dst t))
                           ∘g id ,⊗ eq-π _ _
                           ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                         )
                       ⟩
-                    STEP ⊗NFA (inl t)
+                    STEP ⊗NFA (Sum.inl t)
                     ∘g id ,⊗ ⊸-app
                     ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
                     ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
                     ∘g ⊗-assoc⁻
                     ∘g ⊗-assoc
-                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .dst t))
                     ∘g id ,⊗ eq-π _ _
                     ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                       ≡⟨ (λ i →
-                         STEP ⊗NFA (inl t)
+                         STEP ⊗NFA (Sum.inl t)
                          ∘g id ,⊗ ⊸-app
                          ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
                          ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
                          ∘g ⊗-assoc⁻∘⊗-assoc≡id i
-                         ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                         ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .dst t))
                          ∘g id ,⊗ eq-π _ _
                          ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                          )
                       ⟩
-                    STEP ⊗NFA (inl t)
+                    STEP ⊗NFA (Sum.inl t)
                     ∘g id ,⊗ ⊸-app
                     ∘g id ,⊗ (rec (TraceTy N) NAlg (N .dst t) ,⊗ id)
                     ∘g id ,⊗ (id ,⊗ rec _ N'Alg (N' .init))
-                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (inl (N .dst t))
+                    ∘g id ,⊗ rec (TraceTy ⊗NFA) ⊗Alg (Sum.inl (N .dst t))
                     ∘g id ,⊗ eq-π _ _
                     ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                       ≡⟨ (λ i →
-                          STEP ⊗NFA (inl t)
+                          STEP ⊗NFA (Sum.inl t)
                           ∘g id ,⊗ eq-π-pf _ _ i
                           ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                          )
                       ⟩
-                    STEP ⊗NFA (inl t)
+                    STEP ⊗NFA (Sum.inl t)
                     ∘g id ,⊗ eq-π _ _
                     ∘g (lowerG ∘g lowerG) ,⊗ (lowerG)
                     ∎
@@ -728,7 +723,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g liftG ,⊗ id
                     ∘g rec (TraceTy N) NAlg (N .ε-dst t) ,⊗ id
                     ∘g id ,⊗ rec _ N'Alg (N' .init)
-                    ∘g rec _ ⊗Alg (inl (N .ε-dst t))
+                    ∘g rec _ ⊗Alg (Sum.inl (N .ε-dst t))
                     ∘g eq-π _ _
                     ∘g lowerG
                       ≡⟨ (λ i →
@@ -740,7 +735,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                           ∘g liftG ,⊗ id
                           ∘g rec (TraceTy N) NAlg (N .ε-dst t) ,⊗ id
                           ∘g id ,⊗ rec _ N'Alg (N' .init)
-                          ∘g rec _ ⊗Alg (inl (N .ε-dst t))
+                          ∘g rec _ ⊗Alg (Sum.inl (N .ε-dst t))
                           ∘g eq-π _ _
                           ∘g lowerG
                           )
@@ -749,7 +744,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g ⊸-app
                     ∘g rec (TraceTy N) NAlg (N .ε-dst t) ,⊗ id
                     ∘g id ,⊗ rec _ N'Alg (N' .init)
-                    ∘g rec _ ⊗Alg (inl (N .ε-dst t))
+                    ∘g rec _ ⊗Alg (Sum.inl (N .ε-dst t))
                     ∘g eq-π _ _
                     ∘g lowerG
                       ≡⟨  (λ i →
@@ -774,7 +769,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g id ,⊗ rec _ N'Alg (N' .init)
                     ∘g ⊗-unit-l⁻
                     ∘g lowerG
-                    ∘g rec _ ⊗Alg (inr (N' .init))
+                    ∘g rec _ ⊗Alg (Sum.inr (N' .init))
                     ∘g eq-π _ _
                     ∘g lowerG
                       ≡⟨ (λ i →
@@ -787,7 +782,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                           ∘g id ,⊗ rec _ N'Alg (N' .init)
                           ∘g ⊗-unit-l⁻
                           ∘g lowerG
-                          ∘g rec _ ⊗Alg (inr (N' .init))
+                          ∘g rec _ ⊗Alg (Sum.inr (N' .init))
                           ∘g eq-π _ _
                           ∘g lowerG
                         )
@@ -797,7 +792,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∘g ⊗-unit-l⁻
                     ∘g rec _ N'Alg (N' .init)
                     ∘g lowerG
-                    ∘g rec _ ⊗Alg (inr (N' .init))
+                    ∘g rec _ ⊗Alg (Sum.inr (N' .init))
                     ∘g eq-π _ _
                     ∘g lowerG
                       ≡⟨ (λ i →
@@ -805,7 +800,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                           ∘g ⊗-unit-l⁻l i
                           ∘g rec _ N'Alg (N' .init)
                           ∘g lowerG
-                          ∘g rec _ ⊗Alg (inr (N' .init))
+                          ∘g rec _ ⊗Alg (Sum.inr (N' .init))
                           ∘g eq-π _ _
                           ∘g lowerG
                          )
@@ -813,7 +808,7 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     STEPε ⊗NFA (N-acc q acc)
                     ∘g rec _ N'Alg (N' .init)
                     ∘g lowerG
-                    ∘g rec _ ⊗Alg (inr (N' .init))
+                    ∘g rec _ ⊗Alg (Sum.inr (N' .init))
                     ∘g eq-π _ _
                     ∘g lowerG
                       ≡⟨
@@ -830,39 +825,39 @@ module _ (N : NFA ℓN) (N' : NFA ℓN') where
                     ∎
                     )
                 }
-          ; (inr q') → unambiguous⊤* _ _
+          ; (Sum.inr q') → unambiguous⊤* _ _
           })
-          (inl q)
+          (Sum.inl q)
 
 
 -- Kleene Star
 module _ (N : NFA ℓN) where
   data *εTrans : Type ℓN where
-    inr : *εTrans
+    inr' : *εTrans
     cons⟨N⟩ : ∀ {q} → true Eq.≡ N .isAcc q  → *εTrans
     N-internal : ⟨ N .ε-transition ⟩ → *εTrans
 
   *εTrans-rep :
-    (Unit ⊎ ((Σ[ q ∈ _ ] (true Eq.≡ N .isAcc q)) ⊎ ⟨ N .ε-transition ⟩)) ≃ *εTrans
+    (Unit Sum.⊎ ((Σ[ q ∈ _ ] (true Eq.≡ N .isAcc q)) Sum.⊎ ⟨ N .ε-transition ⟩)) ≃ *εTrans
   *εTrans-rep = isoToEquiv
     (iso
-      (λ { (inl x) → inr
-         ; (inr (inl x)) → cons⟨N⟩ (x .snd)
-         ; (inr (inr x)) → N-internal x })
-      (λ { inr → inl tt
-         ; (cons⟨N⟩ x) → inr (inl (_ , x))
-         ; (N-internal x) → inr (inr x)})
-      (λ { inr → refl ; (cons⟨N⟩ x) → refl ; (N-internal x) → refl })
-      λ { (inl x) → refl ; (inr (inl x)) → refl ; (inr (inr x)) → refl })
+      (λ { (Sum.inl x) → inr'
+         ; (Sum.inr (Sum.inl x)) → cons⟨N⟩ (x .snd)
+         ; (Sum.inr (Sum.inr x)) → N-internal x })
+      (λ { inr' → Sum.inl tt
+         ; (cons⟨N⟩ x) → Sum.inr (Sum.inl (_ , x))
+         ; (N-internal x) → Sum.inr (Sum.inr x)})
+      (λ { inr' → refl ; (cons⟨N⟩ x) → refl ; (N-internal x) → refl })
+      λ { (Sum.inl x) → refl ; (Sum.inr (Sum.inl x)) → refl ; (Sum.inr (Sum.inr x)) → refl })
 
   *NFA : NFA ℓN
-  *NFA .Q = Unit ⊎ N .Q .fst , isFinSet⊎ (_ , isFinSetUnit) (N .Q)
-  *NFA .init = inl _
-  *NFA .isAcc (inl _) = true
-  *NFA .isAcc (inr q) = false
+  *NFA .Q = Unit Sum.⊎ N .Q .fst , isFinSet⊎ (_ , isFinSetUnit) (N .Q)
+  *NFA .init = Sum.inl _
+  *NFA .isAcc (Sum.inl _) = true
+  *NFA .isAcc (Sum.inr q) = false
   *NFA .transition = N .transition
-  *NFA .src = inr ∘ N .src
-  *NFA .dst = inr ∘ N .dst
+  *NFA .src = Sum.inr ∘ N .src
+  *NFA .dst = Sum.inr ∘ N .dst
   *NFA .label = N .label
   *NFA .ε-transition = *εTrans , EquivPresIsFinSet *εTrans-rep
     (isFinSet⊎ (_ , isFinSetUnit) (_ , isFinSet⊎ (_ ,
@@ -872,18 +867,18 @@ module _ (N : NFA ℓN) where
     where
       the-dec-prop : ⟨ N .Q ⟩ → Σ (hProp ℓ-zero) (λ P → Dec (P .fst))
       the-dec-prop q =  isFinSet→DecProp-Eq≡ isFinSetBool true (N .isAcc q)
-  *NFA .ε-src inr = inl _
-  *NFA .ε-dst inr = inr (N .init)
-  *NFA .ε-src (cons⟨N⟩ {q} _) = inr q
-  *NFA .ε-dst (cons⟨N⟩ {q} _) = inl _
-  *NFA .ε-src (N-internal t) = inr (N .ε-src t)
-  *NFA .ε-dst (N-internal t) = inr (N .ε-dst t)
+  *NFA .ε-src inr' = Sum.inl _
+  *NFA .ε-dst inr' = Sum.inr (N .init)
+  *NFA .ε-src (cons⟨N⟩ {q} _) = Sum.inr q
+  *NFA .ε-dst (cons⟨N⟩ {q} _) = Sum.inl _
+  *NFA .ε-src (N-internal t) = Sum.inr (N .ε-src t)
+  *NFA .ε-dst (N-internal t) = Sum.inr (N .ε-dst t)
 
-  *NFA≅ : StrongEquivalence (Parse *NFA) (Parse N *)
+  *NFA≅ : Parse *NFA ≅ Parse N *
   *NFA≅ =
     mkStrEq
-      (from*NFA (inl _))
-      (to*NFA (inl _))
+      (from*NFA (Sum.inl _))
+      (to*NFA (Sum.inl _))
       (ind-id'
         (*Ty (Parse N))
         (compHomo
@@ -904,27 +899,27 @@ module _ (N : NFA ℓN) where
           (initialAlgebra (TraceTy *NFA))
           to*NFAHomo
           (recHomo _ *NFAAlg))
-        (inl _)
+        (Sum.inl _)
       )
     where
     ⟦_⟧* : ⟨ *NFA .Q ⟩ → Grammar ℓN
-    ⟦ inl _ ⟧* = Parse N *
-    ⟦ inr q ⟧* = Trace N q ⊗ (Parse N *)
+    ⟦ Sum.inl _ ⟧* = Parse N *
+    ⟦ Sum.inr q ⟧* = Trace N q ⊗ (Parse N *)
 
     ⟦_⟧N : ⟨ N .Q ⟩ → Grammar ℓN
-    ⟦ q ⟧N = Trace *NFA (inl _) ⊸ Trace *NFA (inr q)
+    ⟦ q ⟧N = Trace *NFA (Sum.inl _) ⊸ Trace *NFA (Sum.inr q)
 
     *NFAAlg : Algebra (TraceTy *NFA) ⟦_⟧*
-    *NFAAlg (inl _) = ⊕ᴰ-elim (λ {
+    *NFAAlg (Sum.inl _) = ⊕ᴰ-elim (λ {
         (stop Eq.refl) →
           NIL
           ∘g lowerG
           ∘g lowerG
-      ; (stepε inr Eq.refl) →
+      ; (stepε inr' Eq.refl) →
           CONS
           ∘g lowerG
       })
-    *NFAAlg (inr q) = ⊕ᴰ-elim (λ {
+    *NFAAlg (Sum.inr q) = ⊕ᴰ-elim (λ {
         (step t Eq.refl) →
           STEP N t ,⊗ id
           ∘g ⊗-assoc
@@ -965,15 +960,15 @@ module _ (N : NFA ℓN) where
           STOP *NFA Eq.refl
           ∘g lowerG ∘g lowerG
       ; cons →
-          STEPε *NFA inr
+          STEPε *NFA inr'
           ∘g ⊸-app
           ∘g rec _ NAlg (N .init) ,⊗ id
           ∘g lowerG ,⊗ lowerG
       })
 
     to*NFA : ∀ q → ⟦ q ⟧* ⊢ Trace *NFA q
-    to*NFA (inl _) = rec _ N*Alg _
-    to*NFA (inr q) =
+    to*NFA (Sum.inl _) = rec _ N*Alg _
+    to*NFA (Sum.inr q) =
       ⊸-intro⁻ (rec _ NAlg q)
       ∘g id ,⊗ rec _ N*Alg _
 
@@ -988,31 +983,31 @@ module _ (N : NFA ℓN) where
     -- but this unqiue principle suffices
     nested-induction :
       ∀ q →
-      rec _ *NFAAlg (inr q)
+      rec _ *NFAAlg (Sum.inr q)
       ∘g ⊸-intro⁻ (rec _ NAlg q)
         ≡
-      id ,⊗ rec _ *NFAAlg (inl _)
+      id ,⊗ rec _ *NFAAlg (Sum.inl _)
     nested-induction = nested-induction'
       where
       opaque
         unfolding ⊗-intro ⊗-unit-r⁻
         nested-induction' :
           ∀ q →
-          rec _ *NFAAlg (inr q)
+          rec _ *NFAAlg (Sum.inr q)
           ∘g ⊸-intro⁻ (rec _ NAlg q)
             ≡
-          id ,⊗ rec _ *NFAAlg (inl _)
+          id ,⊗ rec _ *NFAAlg (Sum.inl _)
         nested-induction' q =
             equalizer-ind-⊗l
             (Tag N)
             _
             (λ q → Trace N q ⊗ (Parse N *))
-            (λ _ → Trace *NFA (inl _))
-            (λ q → rec _ *NFAAlg (inr q) ∘g ⊸-intro⁻ (rec _ NAlg q))
-            (λ q → id ,⊗ rec _ *NFAAlg (inl _))
+            (λ _ → Trace *NFA (Sum.inl _))
+            (λ q → rec _ *NFAAlg (Sum.inr q) ∘g ⊸-intro⁻ (rec _ NAlg q))
+            (λ q → id ,⊗ rec _ *NFAAlg (Sum.inl _))
             (λ q → λ {
                 (stop acc) →
-                  rec _ *NFAAlg (inr q)
+                  rec _ *NFAAlg (Sum.inr q)
                   ∘g ⊸-intro⁻ (
                       ⊸-intro
                         (STEPε *NFA (cons⟨N⟩ acc)
@@ -1023,7 +1018,7 @@ module _ (N : NFA ℓN) where
                   ∘g (lowerG ∘g lowerG) ,⊗ id
                     ≡⟨
                       (λ i →
-                         rec _ *NFAAlg (inr q)
+                         rec _ *NFAAlg (Sum.inr q)
                          ∘g ⊸-β
                                (STEPε *NFA (cons⟨N⟩ acc)
                                ∘g ⊗-unit-l
@@ -1033,24 +1028,24 @@ module _ (N : NFA ℓN) where
                              )
                     ⟩
                   STOP N acc ,⊗ id
-                  ∘g id ,⊗ rec _ *NFAAlg (inl _)
+                  ∘g id ,⊗ rec _ *NFAAlg (Sum.inl _)
                   ∘g ⊗-unit-l⁻
                   ∘g ⊗-unit-l
                   ∘g (lowerG ∘g lowerG) ,⊗ id
                     ≡⟨
                       (λ i →
                          STOP N acc ,⊗ id
-                         ∘g id ,⊗ rec _ *NFAAlg (inl _)
+                         ∘g id ,⊗ rec _ *NFAAlg (Sum.inl _)
                          ∘g ⊗-unit-ll⁻ i
                          ∘g (lowerG ∘g lowerG) ,⊗ id
                       )
                     ⟩
-                  id ,⊗ rec _ *NFAAlg (inl _)
+                  id ,⊗ rec _ *NFAAlg (Sum.inl _)
                   ∘g STOP N acc ,⊗ id
                   ∘g (lowerG ∘g lowerG) ,⊗ id
                   ∎
               ; (step t Eq.refl) →
-                  rec _ *NFAAlg (inr q)
+                  rec _ *NFAAlg (Sum.inr q)
                   ∘g ⊸-intro⁻ (
                      ⊸-intro
                        (STEP *NFA t
@@ -1064,7 +1059,7 @@ module _ (N : NFA ℓN) where
                   ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
                     ≡⟨
                       (λ i →
-                         rec _ *NFAAlg (inr q)
+                         rec _ *NFAAlg (Sum.inr q)
                          ∘g ⊸-β (
                               STEP *NFA t
                               ∘g id ,⊗ ⊸-app
@@ -1078,7 +1073,7 @@ module _ (N : NFA ℓN) where
                     ⟩
                   STEP N t ,⊗ id
                   ∘g ⊗-assoc
-                  ∘g id ,⊗ rec _ *NFAAlg (inr (N .dst t))
+                  ∘g id ,⊗ rec _ *NFAAlg (Sum.inr (N .dst t))
                   ∘g id ,⊗ ⊸-app
                   ∘g id ,⊗ (rec _ NAlg (N .dst t) ,⊗ id)
                   ∘g id ,⊗ (eq-π _ _ ,⊗ id)
@@ -1089,9 +1084,9 @@ module _ (N : NFA ℓN) where
                          STEP N t ,⊗ id
                          ∘g ⊗-assoc
                          ∘g id ,⊗ eq-π-pf-⊸-intro
-                                    (rec _ *NFAAlg (inr (N .dst t))
+                                    (rec _ *NFAAlg (Sum.inr (N .dst t))
                                     ∘g ⊸-intro⁻ (rec _ NAlg (N .dst t)))
-                                    (id ,⊗ rec _ *NFAAlg (inl _))
+                                    (id ,⊗ rec _ *NFAAlg (Sum.inl _))
                                     i
                          ∘g ⊗-assoc⁻
                          ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
@@ -1100,25 +1095,25 @@ module _ (N : NFA ℓN) where
                   STEP N t ,⊗ id
                   ∘g ⊗-assoc
                   ∘g ⊗-assoc⁻
-                  ∘g id ,⊗ rec _ *NFAAlg (inl _)
+                  ∘g id ,⊗ rec _ *NFAAlg (Sum.inl _)
                   ∘g (id ,⊗ eq-π _ _) ,⊗ id
                   ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
                     ≡⟨
                       (λ i →
                          STEP N t ,⊗ id
                          ∘g ⊗-assoc∘⊗-assoc⁻≡id i
-                         ∘g id ,⊗ rec _ *NFAAlg (inl _)
+                         ∘g id ,⊗ rec _ *NFAAlg (Sum.inl _)
                          ∘g (id ,⊗ eq-π _ _) ,⊗ id
                          ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
                       )
                     ⟩
-                  id ,⊗ rec _ *NFAAlg (inl _)
+                  id ,⊗ rec _ *NFAAlg (Sum.inl _)
                   ∘g STEP N t ,⊗ id
                   ∘g (id ,⊗ eq-π _ _) ,⊗ id
                   ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
                   ∎
               ; (stepε t Eq.refl) →
-                  rec _ *NFAAlg (inr q)
+                  rec _ *NFAAlg (Sum.inr q)
                   ∘g ⊸-intro⁻ (
                        ⊸-intro
                          (STEPε *NFA (N-internal t)
@@ -1132,7 +1127,7 @@ module _ (N : NFA ℓN) where
                   ∘g lowerG ,⊗ id
                     ≡⟨
                       (λ i →
-                         rec _ *NFAAlg (inr q)
+                         rec _ *NFAAlg (Sum.inr q)
                          ∘g ⊸-β
                                 (STEPε *NFA (N-internal t)
                                 ∘g ⊸-app
@@ -1145,7 +1140,7 @@ module _ (N : NFA ℓN) where
                       )
                     ⟩
                   STEPε N t ,⊗ id
-                  ∘g rec _ *NFAAlg (inr (N .ε-dst t))
+                  ∘g rec _ *NFAAlg (Sum.inr (N .ε-dst t))
                   ∘g ⊸-app
                   ∘g rec _ NAlg (N .ε-dst t) ,⊗ id
                   ∘g eq-π _ _ ,⊗ id
@@ -1157,7 +1152,7 @@ module _ (N : NFA ℓN) where
                          ∘g lowerG ,⊗ id
                       )
                     ⟩
-                  id ,⊗ rec _ *NFAAlg (inl _)
+                  id ,⊗ rec _ *NFAAlg (Sum.inl _)
                   ∘g STEPε N t ,⊗ id
                   ∘g eq-π _ _ ,⊗ id
                   ∘g lowerG ,⊗ id
@@ -1166,20 +1161,20 @@ module _ (N : NFA ℓN) where
             q
 
     N*Homo : Homomorphism (*Ty (Parse N)) N*Alg (initialAlgebra (*Ty (Parse N)))
-    N*Homo .fst _ = from*NFA (inl _)
+    N*Homo .fst _ = from*NFA (Sum.inl _)
     N*Homo .snd _ = is-homo
       where
       opaque
         unfolding ⊗-intro ⊗-unit-r⁻
         is-homo :
-          from*NFA (inl _) ∘g N*Alg _
+          from*NFA (Sum.inl _) ∘g N*Alg _
           ≡
-          roll ∘g map (*Ty (Parse N) _) λ _ → from*NFA (inl _)
+          roll ∘g map (*Ty (Parse N) _) λ _ → from*NFA (Sum.inl _)
         is-homo = ⊕ᴰ≡ _ _ λ {
             nil → refl
           ; cons →
             CONS
-            ∘g from*NFA (inr (N .init))
+            ∘g from*NFA (Sum.inr (N .init))
             ∘g ⊸-intro⁻ (rec _ NAlg (N .init))
             ∘g lowerG ,⊗ lowerG
               ≡⟨
@@ -1190,7 +1185,7 @@ module _ (N : NFA ℓN) where
                 )
               ⟩
             CONS
-            ∘g id ,⊗ rec _ *NFAAlg (inl _)
+            ∘g id ,⊗ rec _ *NFAAlg (Sum.inl _)
             ∘g lowerG ,⊗ lowerG
             ∎
           }
@@ -1211,13 +1206,13 @@ module _ (N : NFA ℓN) where
           ≡
           roll
           ∘g map (TraceTy *NFA q) (to*NFA)
-        is-homo (inl _) =
+        is-homo (Sum.inl _) =
           ⊕ᴰ≡ _ _
             λ {
             (stop Eq.refl) → refl
-          ; (stepε inr Eq.refl) → refl
+          ; (stepε inr' Eq.refl) → refl
            }
-        is-homo (inr q) =
+        is-homo (Sum.inr q) =
           ⊕ᴰ≡ _ _
             λ {
             (step t Eq.refl) →
@@ -1264,7 +1259,7 @@ module _ (N : NFA ℓN) where
                   )
                 ⟩
               STEP *NFA t
-              ∘g id ,⊗ to*NFA (inr (N .dst t))
+              ∘g id ,⊗ to*NFA (Sum.inr (N .dst t))
               ∘g (lowerG ∘g lowerG) ,⊗ lowerG
               ∎
           ; (stepε (cons⟨N⟩ acc) Eq.refl) →
@@ -1304,7 +1299,7 @@ module _ (N : NFA ℓN) where
                  )
                ⟩
              STEPε *NFA (cons⟨N⟩ acc)
-             ∘g to*NFA (inl _)
+             ∘g to*NFA (Sum.inl _)
              ∘g lowerG
              ∎
           ; (stepε (N-internal t) Eq.refl) →
@@ -1333,7 +1328,7 @@ module _ (N : NFA ℓN) where
                 )
               ⟩
             STEPε *NFA (N-internal t)
-            ∘g to*NFA (inr (N .ε-dst t))
+            ∘g to*NFA (Sum.inr (N .ε-dst t))
             ∘g lowerG
             ∎
           }

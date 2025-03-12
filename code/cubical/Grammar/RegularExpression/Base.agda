@@ -5,8 +5,13 @@ module Grammar.RegularExpression.Base (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Foundations.Structure
 
-open import Helper
-open import Grammar Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.Epsilon Alphabet
+open import Grammar.Bottom Alphabet
+open import Grammar.Literal Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.Sum.Binary.Cartesian Alphabet
+open import Grammar.KleeneStar.Inductive Alphabet
 
 data RegularExpression  : Type ℓ-zero where
   εr : RegularExpression

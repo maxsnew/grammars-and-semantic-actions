@@ -18,7 +18,7 @@ open import Grammar.Sum.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.Product.Binary.Cartesian.Base Alphabet
 open import Grammar.Equalizer Alphabet
-open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Term.Base Alphabet

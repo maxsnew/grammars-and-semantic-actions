@@ -8,7 +8,6 @@ open import Cubical.Foundations.Structure
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 
-open import Helper
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence Alphabet
 open import Grammar.HLevels Alphabet

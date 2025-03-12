@@ -10,7 +10,7 @@ import Cubical.Data.Empty as Empty
 
 open import Grammar.Base Alphabet
 open import Grammar.Lift Alphabet
-open import Grammar.HLevels Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Term.Base Alphabet
 
 private

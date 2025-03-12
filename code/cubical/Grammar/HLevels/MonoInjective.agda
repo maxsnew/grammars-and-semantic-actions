@@ -11,7 +11,8 @@ open import Cubical.Functions.Embedding
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
 
-open import Grammar Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.String.Base Alphabet
 open import Term Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet

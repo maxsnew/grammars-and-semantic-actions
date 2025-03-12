@@ -9,9 +9,7 @@ import Cubical.Data.Equality as Eq
 
 open import NFA.Base Alphabet
 open import Grammar Alphabet
-open import Grammar.Equalizer Alphabet
 open import Term Alphabet
-open import Helper
 
 open StrongEquivalence
 
@@ -28,11 +26,11 @@ module _ (N : NFA ℓN) where
   AccAlg : Acc.TraceAlg (PR.Trace true)
   AccAlg q = ⊕ᴰ-elim λ {
       (Acc.stop x) →
-        roll ∘g ⊕ᴰ-in PR.stop ∘g ⊕ᴰ-in (lift x)
+        roll ∘g σ PR.stop ∘g σ (lift x)
     ; (Acc.step t Eq.refl) →
-       roll ∘g ⊕ᴰ-in PR.step ∘g ⊕ᴰ-in (t , Eq.refl)
+       roll ∘g σ PR.step ∘g σ (t , Eq.refl)
     ; (Acc.stepε t Eq.refl) →
-       roll ∘g ⊕ᴰ-in PR.stepε ∘g ⊕ᴰ-in (t , Eq.refl)
+       roll ∘g σ PR.stepε ∘g σ (t , Eq.refl)
     }
 
   PRAlg : PR.TraceAlg true Acc.Trace
@@ -40,15 +38,15 @@ module _ (N : NFA ℓN) where
       (PR.stop) →
          roll ∘g ⊕ᴰ-elim λ {
            (lift (acc)) →
-             ⊕ᴰ-in (Acc.stop acc)
+             σ (Acc.stop acc)
          }
     ; (PR.step) →
          roll ∘g ⊕ᴰ-elim λ {
-           (t , Eq.refl) → ⊕ᴰ-in (Acc.step t Eq.refl)
+           (t , Eq.refl) → σ (Acc.step t Eq.refl)
          }
     ; (PR.stepε) →
          roll ∘g ⊕ᴰ-elim λ {
-           (t , Eq.refl) → ⊕ᴰ-in (Acc.stepε t Eq.refl)
+           (t , Eq.refl) → σ (Acc.stepε t Eq.refl)
          }
     }
 
@@ -73,8 +71,8 @@ module _ (N : NFA ℓN) where
             ; PR.step → ⊕ᴰ≡ _ _ λ {
               (t , Eq.refl) →
                 roll
-                ∘g ⊕ᴰ-in PR.step
-                ∘g ⊕ᴰ-in (t , Eq.refl)
+                ∘g σ PR.step
+                ∘g σ (t , Eq.refl)
                 ∘g (liftG ∘g liftG) ,⊗ liftG
                 ∘g id ,⊗ rec Acc.TraceTy AccAlg (dst t)
                 ∘g id ,⊗ rec (PR.TraceTy true) PRAlg (dst t)
@@ -83,16 +81,16 @@ module _ (N : NFA ℓN) where
                   ≡⟨
                     (λ i →
                        roll
-                       ∘g ⊕ᴰ-in PR.step
-                       ∘g ⊕ᴰ-in (t , Eq.refl)
+                       ∘g σ PR.step
+                       ∘g σ (t , Eq.refl)
                        ∘g (liftG ∘g liftG) ,⊗ liftG
                        ∘g id ,⊗ eq-π-pf _ _ i
                        ∘g (lowerG ∘g lowerG) ,⊗ lowerG
                     )
                   ⟩
                 roll
-                ∘g ⊕ᴰ-in PR.Tag.step
-                ∘g ⊕ᴰ-in (t , Eq.refl)
+                ∘g σ PR.Tag.step
+                ∘g σ (t , Eq.refl)
                 ∘g id ,⊗ liftG
                 ∘g id ,⊗ eq-π _ _
                 ∘g id ,⊗ lowerG
@@ -101,8 +99,8 @@ module _ (N : NFA ℓN) where
             ; PR.stepε → ⊕ᴰ≡ _ _ λ {
             (t , Eq.refl) → λ i →
               roll
-              ∘g ⊕ᴰ-in PR.stepε
-              ∘g ⊕ᴰ-in (t , Eq.refl)
+              ∘g σ PR.stepε
+              ∘g σ (t , Eq.refl)
               ∘g liftG
               ∘g eq-π-pf _ _ i
               ∘g lowerG

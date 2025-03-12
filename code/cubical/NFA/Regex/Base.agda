@@ -9,16 +9,17 @@ module NFA.Regex.Base
   (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.FinSet
+open import Cubical.Data.FinSet.More
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.SumFin
 open import Cubical.Data.Unit
 open import Cubical.Data.Bool
 
+open import Cubical.Relation.Nullary.DecidablePropositions.More
+
 open import Grammar Alphabet
 open import Grammar.Equivalence.Combinators Alphabet
-open import Grammar.RegularExpression Alphabet
 open import Term Alphabet
-open import Helper
 
 open import NFA.Base Alphabet
 open import NFA.Regex.Combinators Alphabet

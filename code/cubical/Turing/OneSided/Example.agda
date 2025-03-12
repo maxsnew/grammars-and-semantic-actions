@@ -9,7 +9,9 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.Maybe
-open import Cubical.Data.SumFin
+open import Cubical.Data.Unit
+import Cubical.Data.SumFin as SumFin
+import Cubical.Data.Sum as Sum
 open import Cubical.Data.List
 open import String.Unicode
 import Agda.Builtin.Char as BuiltinChar
@@ -17,7 +19,7 @@ import Agda.Builtin.String as BuiltinString
 
 
 Alphabet : hSet ℓ-zero
-Alphabet = Fin 2 , isSetFin
+Alphabet = SumFin.Fin 2 , SumFin.isSetFin
 
 isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩
 isFinSetAlphabet = isFinSetFin
@@ -27,19 +29,19 @@ open import Turing.OneSided.Base Alphabet isFinSetAlphabet
 module _ (TM : TuringMachine) where
   open TuringMachine TM
   z : ⟨ TapeAlphabet ⟩
-  z = inl (inl tt)
+  z = Sum.inl (Sum.inl tt)
 
   s : ⟨ TapeAlphabet ⟩
-  s = inl (inr (inl tt))
+  s = Sum.inl (Sum.inr (Sum.inl tt))
 
   unicode→TapeAlphabet : UnicodeChar → Maybe ⟨ TapeAlphabet ⟩
   unicode→TapeAlphabet c =
     decRec
-      (λ _ → just (inl (inl _)))
+      (λ _ → just (Sum.inl (Sum.inl _)))
       (λ _ → decRec
-              (λ _ → just (inl (inr (inl tt))))
+              (λ _ → just (Sum.inl (Sum.inr (Sum.inl tt))))
               (λ _ → decRec
-                       (λ _ → just (inr _))
+                       (λ _ → just (Sum.inr _))
                        (λ _ → nothing)
                        (DiscreteUnicodeChar ' ' c))
               (DiscreteUnicodeChar '1' c))
@@ -51,9 +53,9 @@ module _ (TM : TuringMachine) where
   mkInputString : UnicodeString → String
   mkInputString w =
     filterMap
-      (λ { (inl fzero) → just (inl _)
-         ; (inl (fsuc fzero)) → just (inr (inl tt))
-         ; (fsuc tt) → nothing })
+      (λ { (Sum.inl SumFin.fzero) → just (Sum.inl _)
+         ; (Sum.inl (SumFin.fsuc SumFin.fzero)) → just (Sum.inr (Sum.inl tt))
+         ; (Sum.inr tt) → nothing })
     (mkTapeString w)
 
   mkString : (w : UnicodeString) → string (mkInputString w)

@@ -14,15 +14,19 @@ open import Cubical.Data.Sigma
 import Cubical.Data.Equality as Eq
 import Cubical.Data.Empty as Empty
 
-open import Grammar Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.Properties Alphabet
+open import Grammar.Distributivity Alphabet
+open import Grammar.Epsilon Alphabet
+open import Grammar.LinearProduct Alphabet
+open import Grammar.KleeneStar.Inductive Alphabet
+open import Grammar.Sum Alphabet
+open import Grammar.Sum.Binary.Cartesian Alphabet
+open import Grammar.String Alphabet
+open import Grammar.Literal.Base Alphabet
 open import Grammar.Literal.Properties Alphabet
-open import Grammar.Inductive.Indexed Alphabet
-open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
-open import Grammar.HLevels.Properties Alphabet
-open import Grammar.String.Properties Alphabet
-open import Grammar.Sum.Properties Alphabet
-open import Grammar.Epsilon.Properties Alphabet
-open import Grammar.KleeneStar.Properties Alphabet
+open import Grammar.Equivalence.Base Alphabet
+open import Grammar.HLevels Alphabet hiding (⟨_⟩)
 open import Term.Base Alphabet
 
 open StrongEquivalence
@@ -32,7 +36,7 @@ module _ (c : ⟨ Alphabet ⟩) where
     ⊕[ c' ∈ ⟨ Alphabet ⟩ ] ⊕[ x ∈ (c ≡ c' → Empty.⊥ ) ] ＂ c' ＂
 
   different-char→char : different-char ⊢ char
-  different-char→char = ⊕ᴰ-elim (λ c' → ⊕ᴰ-elim λ _ → ⊕ᴰ-in c')
+  different-char→char = ⊕ᴰ-elim (λ c' → ⊕ᴰ-elim λ _ → σ c')
 
   disjoint-different-char : disjoint ＂ c ＂ different-char
   disjoint-different-char =
@@ -65,8 +69,8 @@ module _ (c : ⟨ Alphabet ⟩) where
     lit≅ .inv =
       ⊕ᴰ-elim (λ c' →
         decRec
-          (λ c≡c' → ⊕-inl ∘g transportG (cong literal (sym c≡c')))
-          (λ c≢c' → ⊕-inr ∘g ⊕ᴰ-in c' ∘g ⊕ᴰ-in c≢c')
+          (J (λ c' c≡c' → ＂ c' ＂ ⊢ ＂ c ＂ ⊕ _) inl)
+          (λ c≢c' → inr ∘g σ c' ∘g σ c≢c')
           (disc c c')
       )
     lit≅ .sec = unambiguous-char _ _

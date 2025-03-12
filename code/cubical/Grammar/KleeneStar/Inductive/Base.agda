@@ -52,11 +52,11 @@ module _ (A : Grammar ℓA) where
   KL* : Grammar ℓA
   KL* = μ *Ty _
 
-  fold*r : Algebra *Ty (λ _ → B) → KL* ⊢ B
-  fold*r alg = rec *Ty alg _
+  fold*r' : Algebra *Ty (λ _ → B) → KL* ⊢ B
+  fold*r' alg = rec *Ty alg _
 
-  fold*r' : (ε ⊢ B) → A ⊗ B ⊢ B → KL* ⊢ B
-  fold*r' [nil] [cons] = fold*r (λ _ → ⊕ᴰ-elim λ where
+  fold*r : (ε ⊢ B) → A ⊗ B ⊢ B → KL* ⊢ B
+  fold*r [nil] [cons] = fold*r' (λ _ → ⊕ᴰ-elim λ where
     nil  → [nil] ∘g lowerG ∘g lowerG
     cons → [cons] ∘g lowerG ,⊗ lowerG)
 
@@ -164,8 +164,13 @@ module _ (A : Grammar ℓA) where
         ∘g ⊗-assoc) ∘g lowerG ,⊗ lowerG
         })
 
-  fold*l : Algebra *LTy (λ _ → B) → KL* ⊢ B
-  fold*l alg = ⟜-app ∘g (alg _ ∘g σ nil ∘g liftG ∘g liftG) ,⊗ fold*r (*LAlg→*Alg alg) ∘g ⊗-unit-l⁻
+  fold*l' : Algebra *LTy (λ _ → B) → KL* ⊢ B
+  fold*l' alg = ⟜-app ∘g (alg _ ∘g σ nil ∘g liftG ∘g liftG) ,⊗ fold*r' (*LAlg→*Alg alg) ∘g ⊗-unit-l⁻
+
+  fold*l : (ε ⊢ B) → B ⊗ A ⊢ B → KL* ⊢ B
+  fold*l [nil] [snoc] = fold*l' (λ _ → ⊕ᴰ-elim λ where
+    nil  → [nil] ∘g lowerG ∘g lowerG
+    snoc → [snoc] ∘g lowerG ,⊗ lowerG)
 
   *L : Grammar ℓA
   *L = μ *LTy _
