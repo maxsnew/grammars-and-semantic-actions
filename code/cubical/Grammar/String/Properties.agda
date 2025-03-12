@@ -35,10 +35,8 @@ open import Grammar.Epsilon Alphabet
 open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Lift Alphabet
-open import Grammar.Lift.Properties Alphabet
 open import Grammar.Literal Alphabet
-open import Grammar.Literal.Properties Alphabet
-open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.KleeneStar.Inductive Alphabet
 open import Grammar.String.Base Alphabet

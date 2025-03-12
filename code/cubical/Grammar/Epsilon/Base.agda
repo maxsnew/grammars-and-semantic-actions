@@ -9,7 +9,7 @@ import Cubical.Data.Empty as Empty
 open import Helper
 open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
-open import Grammar.Lift Alphabet
+open import Grammar.Lift.Base Alphabet
 open import Term.Base Alphabet
 open import Term.Nullary Alphabet
 open import Term.Bilinear Alphabet

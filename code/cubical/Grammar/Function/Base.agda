@@ -5,7 +5,7 @@ module Grammar.Function.Base (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.Product.Binary.Cartesian.Base Alphabet
-open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.Top.Base Alphabet
 open import Term.Base Alphabet

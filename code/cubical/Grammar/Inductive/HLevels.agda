@@ -12,7 +12,8 @@ open import Cubical.Data.W.Indexed
 open import Helper
 open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
-open import Grammar.Dependent Alphabet
+open import Grammar.Sum Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet
@@ -110,7 +111,6 @@ module _ {X : Type ℓX} where
     reconstructF (Fl ⊗e Fr) w x (((wl , wr), sp) , tl , tr) i =
       ((wl , wr) , sp) , (reconstructF Fl wl x tl i , reconstructF Fr wr x tr i)
 
-
     isSet⟦F⟧ : ∀ (F : Functor X)
       → isSetValued F
       → (A : X → SetGrammar ℓA)
@@ -130,7 +130,6 @@ module _ {X : Type ℓX} where
       isSet⟦F⟧ (F (ix .fst)) (isSetF (ix .fst))
         (λ x → (λ _ → Lift Unit) , λ _ → isSetUnit*)
         (ix .snd)
-
 
   {-# TERMINATING #-}
   encode : (F : X → Functor X) → ∀ ix → μ F (ix .fst) (ix .snd) → μIW F ix

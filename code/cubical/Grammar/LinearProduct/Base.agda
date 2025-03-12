@@ -8,9 +8,9 @@ open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Lift Alphabet
+open import Grammar.Lift.Base Alphabet
 open import Grammar.HLevels Alphabet
-open import Grammar.Epsilon Alphabet
+open import Grammar.Epsilon.Base Alphabet
 open import Term.Base Alphabet
 open import Term.Bilinear Alphabet
 

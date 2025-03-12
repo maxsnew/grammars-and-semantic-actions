@@ -13,7 +13,7 @@ open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Product.Base Alphabet
-open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 

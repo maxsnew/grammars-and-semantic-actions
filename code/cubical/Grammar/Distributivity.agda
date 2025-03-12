@@ -8,7 +8,7 @@ module Grammar.Distributivity (Alphabet : hSet ℓ-zero) where
 import Cubical.Data.Sum as Sum
 
 open import Grammar.Base Alphabet
-open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.Product.Base Alphabet

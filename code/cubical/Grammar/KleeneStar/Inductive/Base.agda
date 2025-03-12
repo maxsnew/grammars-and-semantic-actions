@@ -13,16 +13,14 @@ open import Cubical.Data.FinSet
 
 open import Grammar.Base Alphabet
 open import Grammar.Properties Alphabet
-open import Grammar.Product Alphabet
-open import Grammar.Bottom Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
-open import Grammar.Epsilon Alphabet
-open import Grammar.LinearProduct Alphabet
+open import Grammar.Epsilon.Base Alphabet
+open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Equalizer Alphabet
-open import Grammar.Lift Alphabet
+open import Grammar.Equalizer.Base Alphabet
+open import Grammar.Lift.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.Inductive.Properties Alphabet
 open import Term.Base Alphabet

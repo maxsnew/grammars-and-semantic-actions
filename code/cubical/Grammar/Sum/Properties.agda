@@ -14,7 +14,7 @@ open import Cubical.Relation.Nullary.DecidablePropositions
 open import Grammar.Base Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Properties Alphabet
-open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Sum.Binary.Cartesian.Base Alphabet
 open import Grammar.Product.Binary.Cartesian.Base Alphabet

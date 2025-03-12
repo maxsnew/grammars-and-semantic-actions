@@ -15,19 +15,15 @@ open import Cubical.Data.Empty as Empty hiding (⊥;⊥*)
 open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet
-open import Grammar.HLevels Alphabet
-open import Grammar.Lift Alphabet
 open import Grammar.Top.Base Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Bottom.Base Alphabet
-open import Grammar.Product Alphabet
-open import Grammar.Literal Alphabet
-open import Grammar.Epsilon Alphabet
-open import Grammar.Negation Alphabet
-open import Grammar.LinearProduct Alphabet
+open import Grammar.Literal.Base Alphabet
+open import Grammar.Epsilon.Base Alphabet
+open import Grammar.Negation.Base Alphabet
+open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Sum.Binary.Cartesian.Base Alphabet
 open import Grammar.Product.Binary.Cartesian.Base Alphabet
-open import Grammar.Product.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 

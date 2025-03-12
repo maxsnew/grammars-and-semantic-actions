@@ -14,7 +14,8 @@ open import Cubical.Data.W.Indexed
 open import Helper
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence Alphabet
-open import Grammar.Dependent Alphabet
+open import Grammar.Sum Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet
