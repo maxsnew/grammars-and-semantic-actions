@@ -40,7 +40,10 @@ opaque
 Alphabet : hSet ℓ-zero
 Alphabet = Tok , isSetTok
 
-open import Grammar Alphabet hiding (_+)
+open import Grammar.Core Alphabet hiding (_+)
+open import Grammar.Sum.Binary.Cartesian Alphabet
+open import Grammar.Product.Binary.Inductive Alphabet
+-- open import Grammar.InductiveBinops Alphabet hiding (_+)
 open import Term Alphabet
 
 open StrongEquivalence
@@ -207,31 +210,14 @@ module Automaton where
     unexpectedA : b Eq.≡ false → UnexpectedAdding → AutomatonTag b n Adding
 
   DoneOpeningFun : Bool → ℕ → Guard → Functor (ℕ × AutomatonState)
-  DoneOpeningFun b n g =
-    &e Bool λ where
-      true → k (guard g)
-      false → Var (n , (Guard→State g))
+  DoneOpeningFun b n g = &e Bool the-func
+    where
+    the-func : Bool → Functor (ℕ × AutomatonState)
+    the-func true = k (guard g)
+    the-func false = Var (n , Guard→State g)
 
   DoneOpening : Bool → ℕ → Functor (ℕ × AutomatonState)
   DoneOpening b n = ⊕e Guard (DoneOpeningFun b n)
-
-  mapFalseWithBool : {ℓA : Level} →
-    {A B C : Grammar ℓA} →
-    B ⊢ C →
-    &ᴰ {X = Bool} (λ {true → A ; false → B}) ⊢ &ᴰ {X = Bool} (λ {true → A ; false → C})
-  mapFalseWithBool e =
-    &ᴰ-intro λ where
-      true → π true
-      false → e ∘g π false
-
-  -- mapDoneOpening : (b : Bool) → (n : ℕ) → (g : Guard) →
-  --   {A B : ℕ × AutomatonState → Grammar ℓ-zero} →
-  --   (e : ∀ q → A q ⊢ B q) →
-  --   ⟦ DoneOpeningFun b n g ⟧ A ⊢ ⟦ DoneOpeningFun b n g ⟧ B
-  -- mapDoneOpening b n g e =
-  --   &ᴰ-in λ where
-  --     true → &ᴰ-π true
-  --     false → liftG ∘g e (n , Guard→State g) ∘g lowerG ∘g &ᴰ-π false
 
   AutomatonTy : Bool → ℕ → AutomatonState → Functor (ℕ × AutomatonState)
   AutomatonTy b n Opening =
@@ -260,14 +246,14 @@ module Automaton where
   AutomatonG : Bool → ℕ × AutomatonState → Grammar ℓ-zero
   AutomatonG b = μ (AutomatonTy' b)
 
-  -- DoneOpeningClosing : Bool → ℕ → Grammar ℓ-zero
-  -- DoneOpeningClosing b n = μ (λ (n , s) → DoneOpeningFun b n ]) (n , Closing)
+  DoneOpening] : Bool → ℕ → Grammar ℓ-zero
+  DoneOpening] b n = ⟦ DoneOpeningFun b n ] ⟧ (AutomatonG b)
 
-  -- DoneOpeningAdding : Bool → ℕ → Grammar ℓ-zero
-  -- DoneOpeningAdding b n = μ (λ (n , s) → DoneOpeningFun b n ¬]) (n , Adding)
+  DoneOpening¬] : Bool → ℕ → Grammar ℓ-zero
+  DoneOpening¬] b n = ⟦ DoneOpeningFun b n ¬] ⟧ (AutomatonG b)
 
-  -- DoneOpeningG : Bool → ℕ → Grammar ℓ-zero
-  -- DoneOpeningG b n = DoneOpeningClosing b n ⊕ DoneOpeningAdding b n
+  DoneOpeningG : Bool → ℕ → Grammar ℓ-zero
+  DoneOpeningG b n = ⟦ &e Guard (DoneOpeningFun b n) ⟧ (AutomatonG b)
 
   -- After peeking, we choose a subsequent Guard and
   -- AutomatonState to transition to
@@ -276,24 +262,27 @@ module Automaton where
   mkGuardPfs' : ∀ (b : Bool) → (n : ℕ) →
     (tok? : Maybe Tok) →
     AutomatonG  b (n , (Guard→State (Tok→Guard tok?)))
-      & Peek tok? ⊢
-      ⟦ DoneOpeningFun b n (Tok→Guard tok?) ⟧
-        (λ (n , s) → AutomatonG b (n , s))
-  mkGuardPfs' b n nothing = &ᴰ-intro λ where
-      false → liftG ∘g π₁
-      true → liftG ∘g inl ∘g π₂
-  mkGuardPfs' b n (just [) = &ᴰ-intro λ where
-      false → liftG ∘g π₁
-      true → liftG ∘g inr ∘g σ [ ∘g id ,⊗ ⊤-intro ∘g π₂
-  mkGuardPfs' b n (just ]) = &ᴰ-intro λ where
-      false → liftG ∘g π₁
-      true → liftG ∘g id ,⊗ ⊤-intro ∘g π₂
-  mkGuardPfs' b n (just +) = &ᴰ-intro λ where
-      false → liftG ∘g π₁
-      true → liftG ∘g inr ∘g σ NotRP.+ ∘g id ,⊗ ⊤-intro ∘g π₂
-  mkGuardPfs' b n (just (num m)) = &ᴰ-intro λ where
-      false → liftG ∘g π₁
-      true → liftG ∘g inr ∘g σ (num m) ∘g id ,⊗ ⊤-intro ∘g π₂
+      & Peek tok? ⊢ ⟦ DoneOpeningFun b n (Tok→Guard tok?) ⟧ (AutomatonG b)
+  mkGuardPfs' b n nothing = {!? ,& ?!}
+  -- &ᴰ-intro λ where
+  --     false → liftG ∘g π₁
+  --     true → liftG ∘g inl ∘g π₂
+  mkGuardPfs' b n (just [) = {!!}
+  -- &ᴰ-intro λ where
+  --     false → liftG ∘g π₁
+  --     true → liftG ∘g inr ∘g σ [ ∘g id ,⊗ ⊤-intro ∘g π₂
+  mkGuardPfs' b n (just ]) = {!!}
+  -- &ᴰ-intro λ where
+  --     false → liftG ∘g π₁
+  --     true → liftG ∘g id ,⊗ ⊤-intro ∘g π₂
+  mkGuardPfs' b n (just +) = {!!}
+  -- &ᴰ-intro λ where
+  --     false → liftG ∘g π₁
+  --     true → liftG ∘g inr ∘g σ NotRP.+ ∘g id ,⊗ ⊤-intro ∘g π₂
+  mkGuardPfs' b n (just (num m)) = {!!}
+  -- &ᴰ-intro λ where
+  --     false → liftG ∘g π₁
+  --     true → liftG ∘g inr ∘g σ (num m) ∘g id ,⊗ ⊤-intro ∘g π₂
 
   -- Whenever we want to use a Guard, this cuts out
   -- the redundant work in checking the guardedness condition
@@ -302,10 +291,11 @@ module Automaton where
     ⊢
     ⊕[ b ∈ Bool ] ⊕[ g ∈ Guard ] ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b)
   mkGuardPfs n =
-    ⊕ᴰ-elim (λ tok? →
-      map⊕ᴰ (λ b → σ (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
-      ∘g &⊕ᴰ-distL≅ .fun ∘g π (n , Guard→State (Tok→Guard tok?)) ,&p id)
-    ∘g peek .fun
+    {!!}
+    -- ⊕ᴰ-elim (λ tok? →
+    --   map⊕ᴰ (λ b → σ (Tok→Guard tok?) ∘g mkGuardPfs' b n tok?)
+    --   ∘g &⊕ᴰ-distL≅ .fun ∘g π (n , Guard→State (Tok→Guard tok?)) ,&p id)
+    -- ∘g peek .fun
 
   forgetGuard : (b : Bool) → (n : ℕ) → (g : Guard) →
     ⟦ DoneOpeningFun b n g ⟧ (AutomatonG b) ⊢ AutomatonG b (n , Guard→State g)

@@ -9,11 +9,12 @@ open import Cubical.Data.Bool
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Product.Base Alphabet
+open import Grammar.Inductive.Indexed Alphabet
 open import Term.Base Alphabet
 
 private
   variable
-    ℓA ℓB ℓC ℓD : Level
+    ℓA ℓB ℓC ℓD ℓX : Level
     A : Grammar ℓA
     B : Grammar ℓB
     C : Grammar ℓC
@@ -21,10 +22,9 @@ private
 
 open StrongEquivalence
 
-private
-  &Ind : Grammar ℓA → Grammar ℓA → Bool → Grammar ℓA
-  &Ind A B true = A
-  &Ind A B false = B
+&Ind : Grammar ℓA → Grammar ℓA → Bool → Grammar ℓA
+&Ind A B true = A
+&Ind A B false = B
 
 _&_ : Grammar ℓA → Grammar ℓA → Grammar ℓA
 A & B = &ᴰ (&Ind A B)

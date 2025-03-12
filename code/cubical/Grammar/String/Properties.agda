@@ -1,30 +1,19 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
-open import Cubical.Foundations.Transport
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.GroupoidLaws
 
 module Grammar.String.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List as List hiding (rec)
-open import Cubical.Data.List.Properties
 open import Cubical.Data.List.More
 open import Cubical.Data.Sigma
-open import Cubical.Data.Sigma.MoreMore
 import Cubical.Data.Sum as Sum
-open import Cubical.Data.Sum.More
-open import Cubical.Data.Maybe hiding (rec)
-open import Cubical.Data.FinSet
 open import Cubical.Data.Nat
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
 
-open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 open import Grammar.Base Alphabet
-open import Grammar.Equalizer Alphabet
-open import Grammar.Product Alphabet
 open import Grammar.Product.Binary.Cartesian Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Sum.Binary.Cartesian Alphabet
@@ -33,16 +22,14 @@ open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom Alphabet
 open import Grammar.Epsilon Alphabet
-open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.LinearFunction Alphabet
 open import Grammar.KleeneStar.Inductive Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Inductive.Indexed Alphabet hiding (k)
+open import Grammar.Inductive.Indexed Alphabet
 open import Grammar.Inductive.Properties Alphabet
 open import Grammar.Distributivity Alphabet
 
@@ -623,6 +610,7 @@ module _ (c c' : ⟨ Alphabet ⟩) where
         ∘g ⊗⊕-distL
         ∘g id ,⊗ unroll-string≅ .fun)
 
+  -- TODO
   -- There's almost surely a way to do this in the logic
   -- but I am just going to axiomatize it
   opaque
@@ -640,46 +628,6 @@ module _ (c c' : ⟨ Alphabet ⟩) where
         ∙ (sym (s .snd)
         ∙ (s' .snd))
         ∙ cong (_++ s' .fst .snd) pc')
-
-firstChar≅ : A ≅ (A & ε) ⊕ (⊕[ c ∈ ⟨ Alphabet ⟩ ] (A & startsWith c))
-firstChar≅ =
-  &string-split≅
-  ≅∙ ⊕≅ id≅ (&≅ id≅ ⊕ᴰ-distL ≅∙ &⊕ᴰ-distR≅)
-
-Peek : Maybe ⟨ Alphabet ⟩ → Grammar ℓ-zero
-Peek nothing = ε
-Peek (just c) = ＂ c ＂ ⊗ string
-
-peek' :
-  (A & ε) ⊕ (⊕[ c ∈ ⟨ Alphabet ⟩ ] (A & startsWith c))
-  ≅
-  ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A & Peek c?)
-peek' =
-  ⊕⊕ᴰ≅ _ _
-  ≅∙ help≅
-  where
-  help≅ :
-    ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] merge⊕ (A & ε) (λ c → A & startsWith c) c?
-    ≅
-    ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A & Peek c?)
-  help≅ .fun = map⊕ᴰ λ where
-    nothing → lowerG
-    (just x) → lowerG
-  help≅ .inv = map⊕ᴰ λ where
-    nothing → liftG
-    (just x) → liftG
-  help≅ .sec = ⊕ᴰ≡ _ _ λ where
-    nothing → refl
-    (just x) → refl
-  help≅ .ret = ⊕ᴰ≡ _ _ λ where
-    nothing → refl
-    (just x) → refl
-
-peek :
-  A
-  ≅
-  ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A & Peek c?)
-peek = firstChar≅ ≅∙ peek'
 
 unambiguous⌈⌉ : ∀ w → unambiguous ⌈ w ⌉
 unambiguous⌈⌉ w = EXTERNAL.isLang→unambiguous (isLang⌈⌉ w)
