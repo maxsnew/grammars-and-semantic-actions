@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Function.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Function.Cartesian.Base (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.Product.Binary.Cartesian.Base Alphabet

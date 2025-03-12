@@ -8,7 +8,7 @@ import Cubical.Data.Sum as Sum
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Product.Binary.Cartesian.Base Alphabet
-open import Grammar.Function Alphabet
+open import Grammar.Function.Cartesian.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 

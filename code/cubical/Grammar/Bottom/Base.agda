@@ -7,7 +7,6 @@ open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 
 open import Grammar.Base Alphabet
 open import Grammar.Sum.Base Alphabet
-open import Grammar.Function Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 

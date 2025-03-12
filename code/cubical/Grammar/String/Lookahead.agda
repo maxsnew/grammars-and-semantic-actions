@@ -40,7 +40,7 @@ firstChar≅ =
 
 PeekChar : Maybe ⟨ Alphabet ⟩ → Grammar ℓ-zero
 PeekChar nothing = ε
-PeekChar (just c) = ＂ c ＂ ⊗ string
+PeekChar (just c) = startsWith c
 
 Peek : Grammar ℓA → Grammar ℓA
 Peek A = ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A & PeekChar c?)

@@ -13,9 +13,11 @@ open import Grammar.Sum.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.Product.Base Alphabet
 open import Grammar.Sum.Binary.Cartesian.Base Alphabet
-open import Grammar.Product.Binary.Cartesian.Base Alphabet
+open import Grammar.Product.Binary.Cartesian Alphabet
+import Grammar.Sum.Binary.Inductive.Base Alphabet as Ind⊕
+import Grammar.Product.Binary.Inductive Alphabet as Ind&
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Function.Base Alphabet
+open import Grammar.Function.Cartesian.Base Alphabet
 open import Term.Base Alphabet
 
 private
@@ -35,8 +37,8 @@ module _
   where
   -- Distributivity axiom
   &ᴰ⊕ᴰ-dist :
-    (&[ x ∈ X ] (⊕[ y ∈ Y x ] A (x , y))) ⊢
-      ⊕[ f ∈ (∀ (x : X) → Y x) ] (&[ x ∈ X ] A (x , f x))
+    &[ x ∈ X ] ⊕[ y ∈ Y x ] A (x , y)
+      ⊢ ⊕[ f ∈ (∀ (x : X) → Y x) ] (&[ x ∈ X ] A (x , f x))
   &ᴰ⊕ᴰ-dist _ z = fst ∘ z , snd ∘ z
 
   -- Derived inverse to the axiom
@@ -46,9 +48,8 @@ module _
   &ᴰ⊕ᴰ-dist⁻ = ⊕ᴰ-elim (λ f → &ᴰ-intro λ x → σ (f x) ∘g π x)
 
   &ᴰ⊕ᴰ-dist≅  :
-    (&[ x ∈ X ] (⊕[ y ∈ Y x ] A (x , y)))
-      ≅
-    (⊕[ f ∈ (∀ (x : X) → Y x) ] (&[ x ∈ X ] A (x , f x)))
+    &[ x ∈ X ] ⊕[ y ∈ Y x ] A (x , y)
+      ≅ ⊕[ f ∈ (∀ (x : X) → Y x) ] (&[ x ∈ X ] A (x , f x))
   &ᴰ⊕ᴰ-dist≅ .fun = &ᴰ⊕ᴰ-dist
   &ᴰ⊕ᴰ-dist≅ .inv = &ᴰ⊕ᴰ-dist⁻
   &ᴰ⊕ᴰ-dist≅ .sec = refl
@@ -76,12 +77,10 @@ module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : Grammar ℓB}
       the-ret : the-inv ∘g the-fun ≡ id
       the-ret = refl
 
-  &⊕ᴰ-distL≅ :
-    (⊕[ x ∈ X ] A x) & B ≅ ⊕[ x ∈ X ] (A x & B)
+  &⊕ᴰ-distL≅ : (⊕[ x ∈ X ] A x) & B ≅ ⊕[ x ∈ X ] (A x & B)
   &⊕ᴰ-distL≅ = mkStrEq the-fun the-inv the-sec the-ret
 
-  &⊕ᴰ-distR≅ :
-    B & (⊕[ x ∈ X ] A x) ≅ ⊕[ x ∈ X ] (B & A x)
+  &⊕ᴰ-distR≅ : B & (⊕[ x ∈ X ] A x) ≅ ⊕[ x ∈ X ] (B & A x)
   &⊕ᴰ-distR≅ =
     &-swap≅
     ≅∙ &⊕ᴰ-distL≅
@@ -89,12 +88,10 @@ module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : Grammar ℓB}
 
 -- Binary products over binary sums
 module _ where
-  &⊕-distR :
-    (A ⊕ B) & C ⊢ (A & C) ⊕ (B & C)
+  &⊕-distR : (A ⊕ B) & C ⊢ (A & C) ⊕ (B & C)
   &⊕-distR = ⇒-intro⁻ (⊕-elim (⇒-intro inl) (⇒-intro inr))
 
-  &⊕-distR⁻ :
-    (A & B) ⊕ (C & B) ⊢ (A ⊕ C) & B
+  &⊕-distR⁻ : (A & B) ⊕ (C & B) ⊢ (A ⊕ C) & B
   &⊕-distR⁻ = ⊕-elim (inl ,&p id) (inr ,&p id)
 
   opaque
@@ -108,10 +105,7 @@ module _ where
     &⊕-distR-ret =
       funExt λ w → funExt λ { (Sum.inl x , pB) → refl ; (Sum.inr x , pB) → refl}
 
-  &⊕-distR≅ :
-    StrongEquivalence
-      ((A ⊕ C) & B)
-      ((A & B) ⊕ (C & B))
+  &⊕-distR≅ : (A ⊕ C) & B ≅ (A & B) ⊕ (C & B)
   &⊕-distR≅ .fun = &⊕-distR
   &⊕-distR≅ .inv = &⊕-distR⁻
   &⊕-distR≅ .sec = &⊕-distR-sec
@@ -145,3 +139,19 @@ module _ where
   &⊕-distL≅ .inv = &⊕-distL⁻
   &⊕-distL≅ .sec = &⊕-distL-sec
   &⊕-distL≅ .ret = &⊕-distL-ret
+
+-- Distributivity of inductive binary product over arbitrary sums
+module _ {X : Type ℓA} {A : X → Grammar ℓA} {B : Grammar ℓA}
+  where
+
+  Ind&⊕ᴰ-distL≅ : (⊕[ x ∈ X ] A x) Ind&.& B ≅ ⊕[ x ∈ X ] (A x Ind&.& B)
+  Ind&⊕ᴰ-distL≅ =
+    sym≅ (&≅Ind& _ _)
+    ≅∙ &⊕ᴰ-distL≅
+    ≅∙ ⊕ᴰ≅ (λ _ → &≅Ind& _ _)
+
+  Ind&⊕ᴰ-distR≅ : B Ind&.& (⊕[ x ∈ X ] A x) ≅ ⊕[ x ∈ X ] (B Ind&.& A x)
+  Ind&⊕ᴰ-distR≅ =
+    sym≅ (&≅Ind& _ _)
+    ≅∙ &⊕ᴰ-distR≅
+    ≅∙ ⊕ᴰ≅ (λ _ → &≅Ind& _ _)

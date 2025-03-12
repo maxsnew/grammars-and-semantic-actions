@@ -43,11 +43,12 @@ infixr 27 _&_
 _,&_ = &-intro
 infixr 20 _,&_
 
-π₁ : A & B ⊢ A
-π₁ = π true
+module _ {A : Bool → Grammar ℓA} where
+  π₁ : &ᴰ A ⊢ A true
+  π₁ = π true
 
-π₂ : A & B ⊢ B
-π₂ = π false
+  π₂ : &ᴰ A ⊢ A false
+  π₂ = π false
 
 &-β₁ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) → π₁ ∘g (e₁ ,& e₂) ≡ e₁
 &-β₁ e₁ e₂ = refl
