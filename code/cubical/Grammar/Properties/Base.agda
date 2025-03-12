@@ -18,14 +18,16 @@ open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Top.Base Alphabet
-open import Grammar.Sum Alphabet
+open import Grammar.Sum.Base Alphabet
 open import Grammar.Bottom.Base Alphabet
 open import Grammar.Product Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Negation Alphabet
 open import Grammar.LinearProduct Alphabet
-open import Grammar.Dependent.Base Alphabet
+open import Grammar.Sum.Binary.Cartesian.Base Alphabet
+open import Grammar.Product.Binary.Cartesian.Base Alphabet
+open import Grammar.Product.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
@@ -62,11 +64,6 @@ unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
 
 -- A grammar is unambiguous if Δ : A ⊢ A & A is a strong equivalence
 module _ {A : Grammar ℓA} where
-  private
-    π₁ = &-π₁ {A = A} {B = A}
-    π₂ = &-π₂ {A = A} {B = A}
-    Δ = &-Δ {A = A}
-
   module _ (π≡ : π₁ ≡ π₂) where
     π≡→unambiguous : unambiguous A
     π≡→unambiguous e e' =
@@ -74,7 +71,7 @@ module _ {A : Grammar ℓA} where
       ∙ cong (_∘g e ,& e') π≡
       ∙ &-β₂ e e'
 
-  module _ (Δ≅ : isStrongEquivalence _ _ Δ) where
+  module _ (Δ≅ : isStrongEquivalence A (A & A) &-Δ) where
     private
       π≡ : π₁ ≡ π₂
       π≡ =
@@ -90,7 +87,7 @@ module _ {A : Grammar ℓA} where
     private
       π≡ : π₁ ≡ π₂
       π≡ = unambig π₁ π₂
-    unambiguous→Δ≅ : isStrongEquivalence _ _ Δ
+    unambiguous→Δ≅ : isStrongEquivalence _ _ &-Δ
     unambiguous→Δ≅ .inv = π₁
     unambiguous→Δ≅ .sec =
       &≡ _ _
@@ -106,7 +103,6 @@ totallyParseable {ℓA = ℓA} A =
 
 disjoint : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
 disjoint A B = A & B ⊢ ⊥
-
 
 module _ (dis : disjoint A B) (e : C ⊢ A) where
   disjoint⊢ : disjoint C B
@@ -131,27 +127,27 @@ module _ (dis : disjoint A B) (A≅C : A ≅ C) where
     disjoint≅2 = disjoint≅ ∘g id ,&p B≅D .inv
 
 disjoint⊕l : disjoint (A ⊕ B) C → disjoint A C
-disjoint⊕l dis = disjoint⊢ dis ⊕-inl
+disjoint⊕l dis = disjoint⊢ dis inl
 
 disjoint⊕r : disjoint (A ⊕ B) C → disjoint B C
-disjoint⊕r dis = disjoint⊢ dis ⊕-inr
+disjoint⊕r dis = disjoint⊢ dis inr
 
 open StrongEquivalence
 
-opaque
-  unfolding ⊤-intro
-  totallyParseable→unambiguous' :
-    totallyParseable A → unambiguous' A
-  totallyParseable→unambiguous' parseable =
-    Mono∘g ⊕-inl _
-      (isStrongEquivalence→isMono
-        (parseable .snd .fun)
-        (StrongEquivalence→isStrongEquivalence _ _ (parseable .snd)))
-      isMono-⊕-inl
-totallyParseable→unambiguous :
-  totallyParseable A → unambiguous A
-totallyParseable→unambiguous parseable =
-  unambiguous'→unambiguous (totallyParseable→unambiguous' parseable)
+-- opaque
+--   unfolding ⊤-intro
+--   totallyParseable→unambiguous' :
+--     totallyParseable A → unambiguous' A
+--   totallyParseable→unambiguous' parseable =
+--     Mono∘g inl _
+--       (isStrongEquivalence→isMono
+--         (parseable .snd .fun)
+--         (StrongEquivalence→isStrongEquivalence _ _ (parseable .snd)))
+--       isMono-⊕-inl
+-- totallyParseable→unambiguous :
+--   totallyParseable A → unambiguous A
+-- totallyParseable→unambiguous parseable =
+--   unambiguous'→unambiguous (totallyParseable→unambiguous' parseable)
 
 parser : Grammar ℓA → Type (ℓ-suc ℓA)
 parser {ℓA = ℓA} A =
@@ -193,25 +189,22 @@ unambiguousRetract→StrongEquivalence f f' ret unambB
 module _ {A : Grammar ℓA} where
   &⊤≅ : A ≅ A & ⊤
   &⊤≅ .fun = id ,& ⊤-intro
-  &⊤≅ .inv = &-π₁
+  &⊤≅ .inv = π₁
   &⊤≅ .sec = the-sec
     where
     opaque
-      unfolding &-intro ⊤-intro
+      unfolding &-intro ⊤-intro π₁
       the-sec : &⊤≅ .fun ∘g &⊤≅ .inv ≡ id
       the-sec = refl
   &⊤≅ .ret = the-ret
     where
     opaque
-      unfolding &-intro ⊤-intro
+      unfolding &-intro ⊤-intro π₁
       the-ret : &⊤≅ .inv ∘g &⊤≅ .fun ≡ id
       the-ret = refl
 
-module _
-  {A : Grammar ℓA}
-  {B : Grammar ℓB}
-  (unambig-A : unambiguous A)
-  (unambig-B : unambiguous B)
+module _ {A : Grammar ℓA} {B : Grammar ℓB}
+  (unambig-A : unambiguous A) (unambig-B : unambiguous B)
   (A≈B : A ≈ B)
   where
 

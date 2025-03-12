@@ -10,8 +10,11 @@ open import Cubical.Functions.Embedding
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
 
-open import Grammar Alphabet
-open import Term Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.Top.Base Alphabet
+open import Grammar.String.Base Alphabet
+open import Grammar.Properties Alphabet
+open import Term.Base Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 
 private

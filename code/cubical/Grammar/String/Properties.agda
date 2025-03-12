@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
@@ -13,7 +12,7 @@ open import Cubical.Data.List.Properties
 open import Cubical.Data.List.More
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sigma.MoreMore
-open import Cubical.Data.Sum as Sum hiding (rec)
+import Cubical.Data.Sum as Sum
 open import Cubical.Data.Sum.More
 open import Cubical.Data.Maybe hiding (rec)
 open import Cubical.Data.FinSet
@@ -25,31 +24,28 @@ open import Cubical.Relation.Nullary.Base
 open import Grammar.Base Alphabet
 open import Grammar.Equalizer Alphabet
 open import Grammar.Product Alphabet
-open import Grammar.Product.Properties Alphabet
+open import Grammar.Product.Binary.Cartesian Alphabet
+open import Grammar.Sum Alphabet
+open import Grammar.Sum.Binary.Cartesian Alphabet
 open import Grammar.HLevels Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom Alphabet
-open import Grammar.Dependent.Base Alphabet
-open import Grammar.Dependent.Properties Alphabet
-open import Grammar.Dependent.Unambiguous Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.Top Alphabet
-open import Grammar.Sum Alphabet
-open import Grammar.Sum.Properties Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Lift.Properties Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.Literal.Properties Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
-open import Grammar.KleeneStar Alphabet
-open import Grammar.KleeneStar.Properties Alphabet
+open import Grammar.KleeneStar.Inductive Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Inductive.Properties Alphabet
+open import Grammar.Distributivity Alphabet
 
 open import Term.Base Alphabet
 open import Helper
@@ -65,6 +61,8 @@ private
 
 open StrongEquivalence
 
+-- TODO : clean up this file into submodules
+
 opaque
   unfolding literal
   char-length1 : ∀ w → char w → length w ≡ 1
@@ -74,7 +72,7 @@ opaque
 
 module _ (c : ⟨ Alphabet ⟩) where
   literal→char : ＂ c ＂ ⊢ char
-  literal→char = ⊕ᴰ-in c
+  literal→char = σ c
 
 opaque
   unfolding literal
@@ -274,16 +272,16 @@ opaque
   unambiguous-string = EXTERNAL.isLang→unambiguous isLang-string
 
 char-⊗⊕-distL⁻ : (char ⊗ A) ⊕ (char ⊗ B) ⊢ char ⊗ (A ⊕ B)
-char-⊗⊕-distL⁻ = ⊕-elim (id ,⊗ ⊕-inl) (id ,⊗ ⊕-inr)
+char-⊗⊕-distL⁻ = ⊕-elim (id ,⊗ inl) (id ,⊗ inr)
 
 char-⊗⊕-distR⁻ : (A ⊗ char) ⊕ (B ⊗ char) ⊢ (A ⊕ B) ⊗ char
-char-⊗⊕-distR⁻ = ⊕-elim (⊕-inl ,⊗ id) (⊕-inr ,⊗ id)
+char-⊗⊕-distR⁻ = ⊕-elim (inl ,⊗ id) (inr ,⊗ id)
 
 ⌈⌉-⊗⊕-distL⁻ : (⌈ w ⌉ ⊗ A) ⊕ (⌈ w ⌉ ⊗ B) ⊢ ⌈ w ⌉ ⊗ (A ⊕ B)
-⌈⌉-⊗⊕-distL⁻ = ⊕-elim (id ,⊗ ⊕-inl) (id ,⊗ ⊕-inr)
+⌈⌉-⊗⊕-distL⁻ = ⊕-elim (id ,⊗ inl) (id ,⊗ inr)
 
 ⌈⌉-⊗⊕-distR⁻ : (A ⊗ ⌈ w ⌉) ⊕ (B ⊗ ⌈ w ⌉) ⊢ (A ⊕ B) ⊗ ⌈ w ⌉
-⌈⌉-⊗⊕-distR⁻ = ⊕-elim (⊕-inl ,⊗ id) (⊕-inr ,⊗ id)
+⌈⌉-⊗⊕-distR⁻ = ⊕-elim (inl ,⊗ id) (inr ,⊗ id)
 
 char-⊗⊕-distL≅ : char ⊗ (A ⊕ B) ≅ (char ⊗ A) ⊕ (char ⊗ B)
 char-⊗⊕-distL≅ .fun = ⊗⊕-distL
@@ -293,15 +291,15 @@ char-⊗⊕-distL≅ {A = A} {B = B} .sec = the-sec
   opaque
     unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_
     the-sec : char-⊗⊕-distL≅ {A = A} {B = B} .fun ∘g char-⊗⊕-distL≅ .inv ≡ id
-    the-sec i w (inl p) = inl p
-    the-sec i w (inr p) = inr p
+    the-sec i w (Sum.inl p) = Sum.inl p
+    the-sec i w (Sum.inr p) = Sum.inr p
 char-⊗⊕-distL≅ .ret = the-ret
   where
   opaque
     unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_ _⊗_
     the-ret : char-⊗⊕-distL≅ {A = A} {B = B} .inv ∘g char-⊗⊕-distL≅ .fun ≡ id
-    the-ret i w (s , p , inl q) = s , p , inl q
-    the-ret i w (s , p , inr q) = s , p , inr q
+    the-ret i w (s , p , Sum.inl q) = s , p , Sum.inl q
+    the-ret i w (s , p , Sum.inr q) = s , p , Sum.inr q
 
 char-⊗⊕-distR≅ : (A ⊕ B) ⊗ char ≅ (A ⊗ char) ⊕ (B ⊗ char)
 char-⊗⊕-distR≅ .fun = ⊗⊕-distR
@@ -311,15 +309,15 @@ char-⊗⊕-distR≅ {A = A} {B = B} .sec = the-sec
   opaque
     unfolding ⊗-intro ⊕-elim ⊗⊕-distL _⊕_
     the-sec : char-⊗⊕-distR≅ {A = A} {B = B} .fun ∘g char-⊗⊕-distR≅ .inv ≡ id
-    the-sec i w (inl p) = inl p
-    the-sec i w (inr p) = inr p
+    the-sec i w (Sum.inl p) = Sum.inl p
+    the-sec i w (Sum.inr p) = Sum.inr p
 char-⊗⊕-distR≅ .ret = the-ret
   where
   opaque
     unfolding ⊗-intro ⊕-elim ⊗⊕-distR _⊕_ _⊗_
     the-ret : char-⊗⊕-distR≅ {A = A} {B = B} .inv ∘g char-⊗⊕-distR≅ .fun ≡ id
-    the-ret i w (s , inl p , q) = s , inl p , q
-    the-ret i w (s , inr p , q) = s , inr p , q
+    the-ret i w (s , Sum.inl p , q) = s , Sum.inl p , q
+    the-ret i w (s , Sum.inr p , q) = s , Sum.inr p , q
 
 opaque
   unfolding _⊗_ _&_ the-split literal
@@ -391,7 +389,7 @@ char-⊗&-distR≅ .inv = char-⊗&-distR⁻
 char-⊗&-distR≅ {A = A} {B = B} .sec = the-sec
   where
   opaque
-    unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR
+    unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR π₁
     the-sec : char-⊗&-distR≅ {A = A} {B = B} .fun ∘g char-⊗&-distR≅ .inv ≡ id
     the-sec = funExt λ w → funExt λ p →
       ΣPathP (refl ,
@@ -406,7 +404,7 @@ char-⊗&-distR≅ {A = A} {B = B} .sec = the-sec
 char-⊗&-distR≅ .ret = the-ret
   where
   opaque
-    unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR
+    unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR π₁
     the-ret : char-⊗&-distR≅ {A = A} {B = B} .inv ∘g char-⊗&-distR≅ .fun ≡ id
     the-ret {B = B} = funExt λ w → funExt λ p →
       ΣPathP (
@@ -428,7 +426,7 @@ char-⊗&-distR≅ .ret = the-ret
 ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .sec = the-sec
   where
   opaque
-    unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR
+    unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR π₁
     the-sec :
       ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .fun
       ∘g ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .inv ≡ id
@@ -448,7 +446,7 @@ char-⊗&-distR≅ .ret = the-ret
 ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .ret = the-ret
   where
   opaque
-    unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR
+    unfolding _⊗_ ⊗-intro _&_ the-split literal char-⊗&-distL⁻ &-intro unique-splitting-charR π₁
     the-ret :
       ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .inv
       ∘g ⌈⌉-⊗&-distR≅ {A = A} {B = B} {w = w} .fun ≡ id
@@ -725,9 +723,9 @@ whichString≅ .fun = rec _ the-alg _
   where
   the-alg : Algebra (*Ty char) λ _ → ⊕[ w ∈ String ] ⌈ w ⌉
   the-alg _ = ⊕ᴰ-elim (λ {
-      nil → ⊕ᴰ-in [] ∘g lowerG ∘g lowerG
+      nil → σ [] ∘g lowerG ∘g lowerG
     ; cons →
-      ⊕ᴰ-elim (λ w → ⊕ᴰ-elim (λ c → ⊕ᴰ-in (c ∷ w)) ∘g ⊕ᴰ-distL .fun)
+      ⊕ᴰ-elim (λ w → ⊕ᴰ-elim (λ c → σ (c ∷ w)) ∘g ⊕ᴰ-distL .fun)
       ∘g ⊕ᴰ-distR .fun
       ∘g (lowerG ,⊗ lowerG)
     })
@@ -776,10 +774,10 @@ unambiguous-⌈⌉⊗⌈⌉ w w' =
 
 Split++⌈⌉ :
   ∀ (w x y z u : String) →
-  (Split++ w x y z u ⊎ Split++ y z w x u) →
+  (Split++ w x y z u Sum.⊎ Split++ y z w x u) →
   Grammar ℓ-zero
-Split++⌈⌉ w x y z u (inl the-split) =
+Split++⌈⌉ w x y z u (Sum.inl the-split) =
   ⌈ w ⌉ ⊗ ⌈ u ⌉ ⊗ ⌈ z ⌉
-Split++⌈⌉ w x y z u (inr the-split) =
+Split++⌈⌉ w x y z u (Sum.inr the-split) =
   ⌈ y ⌉ ⊗ ⌈ u ⌉ ⊗ ⌈ x ⌉
 

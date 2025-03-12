@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -6,9 +5,10 @@ module Grammar.Equivalence.Combinators (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
+open import Grammar.Sum.Binary.Cartesian Alphabet
+open import Grammar.KleeneStar.Inductive Alphabet hiding (KL*)
 open import Grammar.Sum Alphabet
-open import Grammar.KleeneStar Alphabet hiding (KL*)
-open import Grammar.Dependent Alphabet
+open import Grammar.Product Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Equivalence.Base Alphabet
@@ -44,18 +44,18 @@ module _
     concat-strong-equiv .ret i = ⊗-intro (A≅B .ret i) (C≅D .ret i)
 
   opaque
-    unfolding ⊕-inl
+    unfolding inl
     disjunct-strong-equiv : StrongEquivalence (A ⊕ C) (B ⊕ D)
-    disjunct-strong-equiv .fun = ⊕-elim (⊕-inl ∘g A≅B .fun) (⊕-inr ∘g C≅D .fun)
-    disjunct-strong-equiv .inv = ⊕-elim (⊕-inl ∘g A≅B .inv) (⊕-inr ∘g C≅D .inv)
+    disjunct-strong-equiv .fun = ⊕-elim (inl ∘g A≅B .fun) (inr ∘g C≅D .fun)
+    disjunct-strong-equiv .inv = ⊕-elim (inl ∘g A≅B .inv) (inr ∘g C≅D .inv)
     disjunct-strong-equiv .sec =
       ⊕≡ _ _
-        (λ i → ⊕-inl ∘g A≅B .sec i)
-        (λ i → ⊕-inr ∘g C≅D .sec i)
+        (λ i → inl ∘g A≅B .sec i)
+        (λ i → inr ∘g C≅D .sec i)
     disjunct-strong-equiv .ret =
       ⊕≡ _ _
-        (λ i → ⊕-inl ∘g A≅B .ret i)
-        (λ i → ⊕-inr ∘g C≅D .ret i)
+        (λ i → inl ∘g A≅B .ret i)
+        (λ i → inr ∘g C≅D .ret i)
 
 module _
   {A B : Grammar ℓA}
@@ -66,13 +66,13 @@ module _
 
   the-A*-alg : Algebra (*Ty A) λ _ → B *
   the-A*-alg _ = ⊕ᴰ-elim (λ {
-      nil → roll ∘g ⊕ᴰ-in nil
-    ; cons → roll ∘g ⊕ᴰ-in cons ∘g (liftG ∘g A≅B .fun ∘g lowerG) ,⊗ id })
+      nil → roll ∘g σ nil
+    ; cons → roll ∘g σ cons ∘g (liftG ∘g A≅B .fun ∘g lowerG) ,⊗ id })
 
   the-B*-alg : Algebra (*Ty B) λ _ → A *
   the-B*-alg _ = ⊕ᴰ-elim λ {
-      nil → roll ∘g ⊕ᴰ-in nil
-    ; cons → roll ∘g ⊕ᴰ-in cons ∘g (liftG ∘g A≅B .inv ∘g lowerG) ,⊗ id }
+      nil → roll ∘g σ nil
+    ; cons → roll ∘g σ cons ∘g (liftG ∘g A≅B .inv ∘g lowerG) ,⊗ id }
 
   opaque
     unfolding _⊗_ ⊗-intro map-id

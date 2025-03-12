@@ -19,7 +19,8 @@ open import Grammar.Base Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
-open import Grammar.Dependent.Base Alphabet
+open import Grammar.Sum.Base Alphabet
+open import Grammar.Product.Base Alphabet
 
 open import Term.Base Alphabet
 open import Term.Bilinear Alphabet
@@ -144,12 +145,12 @@ module _ {X : Type ℓX}
       ∘g (roll
           ∘g map (F' x)
             (λ x' → eq-π (⊸-intro (e x')) (⊸-intro (e' x')))
-          ∘g ⊕ᴰ-in t) ,⊗ id ≡
+          ∘g σ t) ,⊗ id ≡
       e' x
       ∘g (roll
           ∘g map (F' x)
             (λ x' → eq-π (⊸-intro (e x')) (⊸-intro (e' x')))
-          ∘g ⊕ᴰ-in t) ,⊗ id)
+          ∘g σ t) ,⊗ id)
     where
     equalizer-ind-⊗l : ∀ (x : X) → e x ≡ e' x
     equalizer-ind-⊗l x =
@@ -173,7 +174,7 @@ module _ {X : Type ℓX}
                             (λ x' →
                               eq-π (⊸-intro (e x'))
                                    (⊸-intro (e' x')))
-                        ∘g ⊕ᴰ-in t}
+                        ∘g σ t}
                       i)
                 ) ∙
                 ⊸-β _ ∙
@@ -189,7 +190,7 @@ module _ {X : Type ℓX}
                             (λ x' →
                               eq-π (⊸-intro (e x'))
                                    (⊸-intro (e' x')))
-                        ∘g ⊕ᴰ-in t}
+                        ∘g σ t}
                       (~ i)))
                 )
             ))
@@ -205,12 +206,12 @@ module _ {X : Type ℓX}
       ∘g id ,⊗ (roll
           ∘g map (F' x)
             (λ x' → eq-π (⟜-intro (e x')) (⟜-intro (e' x')))
-          ∘g ⊕ᴰ-in t) ≡
+          ∘g σ t) ≡
       e' x
       ∘g id ,⊗ (roll
           ∘g map (F' x)
             (λ x' → eq-π (⟜-intro (e x')) (⟜-intro (e' x')))
-          ∘g ⊕ᴰ-in t))
+          ∘g σ t))
     where
     equalizer-ind-⊗r : ∀ (x : X) → e x ≡ e' x
     equalizer-ind-⊗r x =
@@ -234,7 +235,7 @@ module _ {X : Type ℓX}
                             (λ x' →
                               eq-π (⟜-intro (e x'))
                                    (⟜-intro (e' x')))
-                        ∘g ⊕ᴰ-in t}
+                        ∘g σ t}
                       i)
                 ) ∙
                 ⟜-β _ ∙
@@ -250,7 +251,7 @@ module _ {X : Type ℓX}
                             (λ x' →
                               eq-π (⟜-intro (e x'))
                                    (⟜-intro (e' x')))
-                        ∘g ⊕ᴰ-in t}
+                        ∘g σ t}
                       (~ i)))
                 )
             )

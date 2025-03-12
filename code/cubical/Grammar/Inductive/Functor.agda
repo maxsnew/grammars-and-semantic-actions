@@ -10,7 +10,8 @@ open import Cubical.Data.Unit
 open import Helper
 open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
-open import Grammar.Dependent.Base Alphabet
+open import Grammar.Sum.Base Alphabet
+open import Grammar.Product.Base Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
@@ -40,8 +41,8 @@ module _ where
         → ⟦ F ⟧ A ⊢ ⟦ F ⟧ B
   map (k A) f = liftG ∘g lowerG
   map (Var x) f = liftG ∘g f x ∘g lowerG
-  map (&e Y F) f = &ᴰ-in λ y → map (F y) f ∘g &ᴰ-π y
-  map (⊕e Y F) f = ⊕ᴰ-elim λ y → ⊕ᴰ-in y ∘g map (F y) f
+  map (&e Y F) f = &ᴰ-intro λ y → map (F y) f ∘g π y
+  map (⊕e Y F) f = ⊕ᴰ-elim λ y → σ y ∘g map (F y) f
   map (F ⊗e F') f = map F f ,⊗ map F' f
 
   module _ {X : Type ℓX} where
@@ -52,8 +53,8 @@ module _ where
         map F (λ x → id {A = A x}) ≡ id
       map-id (k A) i = id
       map-id (Var x) i = id
-      map-id (&e Y F) i = &ᴰ-in (λ y → map-id (F y) i ∘g &ᴰ-π y)
-      map-id (⊕e Y F) i = ⊕ᴰ-elim (λ y → ⊕ᴰ-in y ∘g map-id (F y) i)
+      map-id (&e Y F) i = &ᴰ-intro (λ y → map-id (F y) i ∘g π y)
+      map-id (⊕e Y F) i = ⊕ᴰ-elim (λ y → σ y ∘g map-id (F y) i)
       map-id (F ⊗e F') i = map-id F i ,⊗ map-id F' i
 
       map-∘ :  ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
@@ -62,8 +63,8 @@ module _ where
         → map F (λ x → f x ∘g f' x) ≡ map F f ∘g map F f'
       map-∘ (k A) f f' i = liftG ∘g lowerG
       map-∘ (Var x) f f' i = liftG ∘g f x ∘g f' x ∘g lowerG
-      map-∘ (&e Y F) f f' i = &ᴰ-in (λ y → map-∘ (F y) f f' i ∘g &ᴰ-π y)
-      map-∘ (⊕e Y F) f f' i = ⊕ᴰ-elim (λ y → ⊕ᴰ-in y ∘g map-∘ (F y) f f' i)
+      map-∘ (&e Y F) f f' i = &ᴰ-intro (λ y → map-∘ (F y) f f' i ∘g π y)
+      map-∘ (⊕e Y F) f f' i = ⊕ᴰ-elim (λ y → σ y ∘g map-∘ (F y) f f' i)
       map-∘ (F ⊗e F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
 
   module _ {X : Type ℓX} (F : X → Functor X) where

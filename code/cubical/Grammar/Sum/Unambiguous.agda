@@ -1,45 +1,43 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Dependent.Unambiguous (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Unambiguous (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
-open import Cubical.Data.FinSet
 import Cubical.Data.Empty as Empty
-
-open import Cubical.Foundations.Structure
+open import Cubical.Data.Maybe hiding (rec)
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
-open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Bottom Alphabet
-open import Grammar.Product Alphabet
-open import Grammar.LinearProduct Alphabet
-open import Grammar.LinearFunction Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Equalizer Alphabet
 open import Grammar.Properties Alphabet
-open import Grammar.Dependent.Base Alphabet
-open import Grammar.Dependent.Properties Alphabet
+open import Grammar.Sum.Base Alphabet
+open import Grammar.Sum.Properties Alphabet
+open import Grammar.Product.Binary.Cartesian.Base Alphabet
+open import Grammar.Equalizer Alphabet
+open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Term.Base Alphabet
-open import Grammar.Literal Alphabet
 
 private
   variable
-    ℓA ℓB ℓX : Level
+    ℓA ℓB ℓC ℓD ℓX ℓY : Level
+    A : Grammar ℓA
+    B : Grammar ℓB
+    C : Grammar ℓC
+    D : Grammar ℓD
 
 module _
   {X : Type ℓX} {A : X → Grammar ℓA}
   (isSetX : isSet X)
   where
 
-  isMono-⊕ᴰ-in : (x : X) → isMono (⊕ᴰ-in {A = A} x)
-  isMono-⊕ᴰ-in x e e' !∘e=!∘e' =
+  isMono-σ : (x : X) → isMono (σ {A = A} x)
+  isMono-σ x e e' !∘e=!∘e' =
     funExt λ w → funExt λ p →
       sym (transportRefl (e w p)) ∙
       Σ-contractFst (refl , (isSetX _ _ _)) .fst
@@ -49,10 +47,8 @@ module _
     unambiguous' (⊕[ x ∈ X ] A x) →
       (x : X)  → unambiguous' (A x)
   unambiguous'⊕ᴰ unambig⊕ x f f' !≡ =
-    isMono-⊕ᴰ-in x f f'
-      (unambig⊕ (⊕ᴰ-in x ∘g f) (⊕ᴰ-in x ∘g f')
-        -- Need to change the endpoints of !≡ to line up with the
-        -- ⊤-intro at the proper domain
+    isMono-σ x f f'
+      (unambig⊕ (σ x ∘g f) (σ x ∘g f')
         (unambiguous⊤ _ _ ∙ !≡ ∙ sym (unambiguous⊤ _ _)))
 
   unambiguous⊕ᴰ : unambiguous (⊕[ x ∈ X ] A x) → (x : X) →
@@ -68,15 +64,17 @@ module _
       unfolding _&_ ⊥
       hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
       hasDisjointSummands⊕ᴰ x y x≠y w (p , p') =
-        x≠y λ i → unambig⊕ (⊕ᴰ-in x ∘g &-π₁) (⊕ᴰ-in y ∘g &-π₂) i w (p , p') .fst
+        x≠y λ i → unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂) i w (p , p') .fst
 
+    -- TODO : double check that this reflects the axiom
+    -- faithfully
     equalizer→⊥ :
       (x y : X) →
       (x ≡ y → Empty.⊥) →
-      equalizer (⊕ᴰ-in x ∘g &-π₁) (⊕ᴰ-in y ∘g &-π₂) ⊢ ⊥
+      equalizer (σ x ∘g π₁) (σ y ∘g π₂) ⊢ ⊥
     equalizer→⊥ x y x≠y =
      hasDisjointSummands⊕ᴰ x y x≠y
-     ∘g eq-π (⊕ᴰ-in x ∘g &-π₁) (⊕ᴰ-in y ∘g &-π₂)
+     ∘g eq-π (σ x ∘g π₁) (σ y ∘g π₂)
 
 module _ {X : Type ℓX} {A : X → Grammar ℓA}
   (disjoint-summands : disjointSummands⊕ᴰ A)
@@ -95,6 +93,7 @@ module _ {X : Type ℓX} {A : X → Grammar ℓA}
         )
         (discX (x .fst) (y .fst))
 
+-- TODO
 module _ {X : Type ℓX} {A : X → Grammar ℓA}
   (disjoint-summands : disjointSummands⊕ᴰ A)
   (unambig-summands : ∀ x → unambiguous (A x))

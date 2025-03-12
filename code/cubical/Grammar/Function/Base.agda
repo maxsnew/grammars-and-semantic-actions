@@ -4,7 +4,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.Function.Base (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
-open import Grammar.Product Alphabet
+open import Grammar.Product.Binary.Cartesian.Base Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.Top.Base Alphabet
@@ -36,10 +36,10 @@ opaque
 ⇒-intro⁻ :
   A ⊢ B ⇒ C
   → A & B ⊢ C
-⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₁) &-π₂
+⇒-intro⁻ f = ⇒-app ∘g &-intro (f ∘g π₁) π₂
 
 opaque
-  unfolding _⇒_ _&_ &-intro ⇒-intro
+  unfolding _⇒_ _&_ &-intro ⇒-intro π₁
   ⇒-β :
     (e : A & B ⊢ C) →
     ⇒-intro⁻ (⇒-intro e) ≡ e
@@ -65,7 +65,7 @@ opaque
 term⇒ :
   A ⊢ B →
   ⊤ ⊢ A ⇒ B
-term⇒ f = ⇒-intro (f ∘g &-π₂)
+term⇒ f = ⇒-intro (f ∘g π₂)
 
 id⇒ : ⊤ ⊢ A ⇒ A
 id⇒ = term⇒ id
@@ -73,10 +73,9 @@ id⇒ = term⇒ id
 ⇐-intro :
   A & B ⊢ C →
   B ⊢ A ⇒ C
-⇐-intro e = ⇒-intro (e ∘g &-intro &-π₂ &-π₁)
+⇐-intro e = ⇒-intro (e ∘g &-intro π₂ π₁)
 
 ⇐-intro⁻ :
   B ⊢ A ⇒ C
   → A & B ⊢ C
-⇐-intro⁻ f = ⇒-app ∘g &-intro (f ∘g &-π₂) &-π₁
-
+⇐-intro⁻ f = ⇒-app ∘g &-intro (f ∘g π₂) π₁
