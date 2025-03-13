@@ -385,64 +385,6 @@ module Automaton where
             map⊕ᴰ (λ b → roll ∘g σ left ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun
             ∘g id ,⊗ eq-π-pf (l b (suc n) Opening) (r b (suc n) Opening) i ∘g lowerG ,⊗ lowerG
 
-          the-num-pf-] : (m : ℕ) → mk≡Ty b n Opening (σ num ∘g (liftG ∘g σ m) ,⊗ σ (just ]))
-          the-num-pf-] m =
-            π (n , Opening)
-            ∘g parse
-            ∘g print b (n , Opening)
-            ∘g roll ∘g σ num
-            ∘g (liftG ∘g σ m) ,⊗ σ (just ])
-            ∘g id ,⊗ ((liftG ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p id)
-              ≡⟨ refl ⟩
-            map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-            ∘g ⊕ᴰ-distR .fun
-            ∘g σ m ,⊗ id
-            ∘g id ,⊗ mkGuardPfs' n
-            ∘g id ,⊗ peek .fun
-            ∘g id ,⊗ (π₁ ∘g (parse ∘g print b (n , Closing) ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p id)
-              ≡⟨ (λ i →
-                    map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-                    ∘g ⊕ᴰ-distR .fun
-                    ∘g σ m ,⊗ id
-                    ∘g id ,⊗ mkGuardPfs' n
-                    ∘g id ,⊗ remember (just ]) (~ i)
-                    ∘g id ,⊗ ((parse ∘g print b (n , Closing) ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p lowerG)
-                  ) ⟩
-            map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-            ∘g ⊕ᴰ-distR .fun
-            ∘g σ m ,⊗ id
-            ∘g id ,⊗ mkGuardPfs' n
-            ∘g id ,⊗ σ (just ])
-            ∘g id ,⊗ ((parse ∘g print b (n , Closing) ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p lowerG)
-              ≡⟨ refl ⟩
-            map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-            ∘g ⊕ᴰ-distR .fun
-            ∘g σ m ,⊗ id
-            ∘g id ,⊗ (map⊕ᴰ (λ _ → σ (just ]) ∘g liftG ,&p liftG))
-            ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
-            ∘g id ,⊗ ((π (n , Closing) ∘g parse ∘g print b (n , Closing) ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p lowerG)
-              ≡⟨ (λ i →
-                   map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-                   ∘g ⊕ᴰ-distR .fun
-                   ∘g σ m ,⊗ id
-                   ∘g id ,⊗ (map⊕ᴰ (λ _ → σ (just ]) ∘g liftG ,&p liftG))
-                   ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
-                   ∘g id ,⊗ ((the-eq-π-pf b (n , Closing) i ∘g lowerG) ,&p lowerG)
-                 )
-              ⟩
-            map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-            ∘g ⊕ᴰ-distR .fun
-            ∘g σ m ,⊗ id
-            ∘g id ,⊗ (map⊕ᴰ (λ _ → σ (just ]) ∘g liftG ,&p liftG))
-            ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
-            ∘g id ,⊗ ((σ b ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p lowerG)
-              ≡⟨ refl ⟩ -- Is refl from unfolding ⇒-intro
-            σ b
-            ∘g roll ∘g σ num
-            ∘g (liftG ∘g σ m) ,⊗ σ (just ])
-            ∘g id ,⊗ ((liftG ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p id)
-            ∎
-
           the-num-pf' : (tok? : Maybe Tok) → (m : ℕ) → mk≡Ty b n Opening (σ num ∘g (liftG ∘g σ m) ,⊗ σ tok?)
           the-num-pf' tok? m =
             π (n , Opening)
@@ -559,24 +501,10 @@ module Automaton where
         (closeGood n-1 Eq.refl) → the-close-good-pf n-1
         (unexpectedC Eq.refl c) → unexpectedClosing≡ (suc n) c
           where
-          -- the-]-pf : (n-1 : ℕ) → mk≡Ty b (suc n-1) Closing (⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ σ ])
-          -- the-]-pf = {!!}
-
-          -- the-¬]-pf : (n-1 : ℕ) → mk≡Ty b (suc n-1) Closing (⊕ᴰ-in (closeGood n-1 Eq.refl) ∘g liftG ,⊗ σ ¬])
-          -- the-¬]-pf = {!!}
-
-          -- the-guard-pf :
-          --   (n-1 : ℕ) →
-          --   (g : Guard) →
-          --   mk≡Ty b (suc n-1) Closing (σ (closeGood n-1 Eq.refl) ∘g liftG ,⊗ ⊕ᴰ-in g)
-          -- the-guard-pf n-1 ] = the-]-pf n-1
-          -- the-guard-pf n-1 ¬] = the-¬]-pf n-1
-
           the-close-good-pf :
             (n-1 : ℕ) →
             mk≡Ty b (suc n-1) Closing (σ (closeGood n-1 Eq.refl))
           the-close-good-pf n-1 = {!!}
-          -- i = ⊕ᴰ-elim (λ g → the-guard-pf n-1 g i) ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
 
       Adding≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Adding
       Adding≡ b n = ⊕ᴰ≡ _ _ λ where
@@ -617,54 +545,54 @@ module Automaton where
           )
           (n , s)
 
--- -- Soundness : from every trace we can extract an LL⟨1⟩ parse
--- module Soundness where
---   open LL⟨1⟩
---   open Automaton
+-- Soundness : from every trace we can extract an LL⟨1⟩ parse
+module Soundness where
+  open LL⟨1⟩
+  open Automaton
 
---   Stk : ℕ → Grammar ℓ-zero
---   Stk zero = ε
---   Stk (suc n) = ＂ ] ＂ ⊗ (＂ + ＂ ⊗ ATOM) * ⊗ Stk n
+  Stk : ℕ → Grammar ℓ-zero
+  Stk zero = ε
+  Stk (suc n) = ＂ ] ＂ ⊗ (＂ + ＂ ⊗ ATOM) * ⊗ Stk n
 
---   ⟦_⟧State : ℕ × AutomatonState → Grammar ℓ-zero
---   ⟦ n , Opening ⟧State = EXP ⊗ Stk n
---   ⟦ n , Closing ⟧State = Stk n
---   ⟦ n , Adding ⟧State = (＂ + ＂ ⊗ ATOM) * ⊗ Stk n
+  ⟦_⟧State : ℕ × AutomatonState → Grammar ℓ-zero
+  ⟦ n , Opening ⟧State = EXP ⊗ Stk n
+  ⟦ n , Closing ⟧State = Stk n
+  ⟦ n , Adding ⟧State = (＂ + ＂ ⊗ ATOM) * ⊗ Stk n
 
---   buildExpAlg : Algebra (AutomatonTy true) ⟦_⟧State
---   buildExpAlg (n , Opening) =
---     ⊕ᴰ-elim λ where
---       left → ATOM*→EXP ,⊗ id ∘g ⊗-assoc ∘g ⊸3⊗ (⊸3-intro-ε PARENS) ∘g lowerG ,⊗ lowerG
---       num →
---         {!!}
---         -- (⊕ᴰ-elim λ where
---         --   ] → (DONE ∘g NUM) ,⊗ id ∘g id ,⊗ (lowerG ∘g π false)
---         --   ¬] → (ATOM*→EXP ∘g NUM ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ (lowerG ∘g π false)
---         -- )
---         -- ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
---   buildExpAlg (n , Closing) =
---     ⊕ᴰ-elim λ where
---       (closeGood n-1 Eq.refl) →
---         {!!}
---         -- (⊕ᴰ-elim λ where
---         --   ] →
---         --     id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻) ∘g id ,⊗ (lowerG ∘g π false)
---         --   ¬] → id ,⊗ (lowerG ∘g π false)
---         -- )
---         -- ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
---   buildExpAlg (n , Adding) =
---     ⊕ᴰ-elim λ where
---       (doneGood Eq.refl Eq.refl) → NIL ,⊗ id ∘g ⊗-unit-r⁻ ∘g lowerG
---       add →
---         ⊕-elim
---           (*-singleton _ ,⊗ id ∘g ⊗-assoc)
---           ((CONS ∘g ⊗-assoc) ,⊗ id ∘g ⊗-assoc)
---         ∘g ⊗⊕-distL
---         ∘g id ,⊗ (⊗⊕-distR ∘g unrollEXP ,⊗ id)
---         ∘g lowerG ,⊗ lowerG
+  buildExpAlg : Algebra (AutomatonTy true) ⟦_⟧State
+  buildExpAlg (n , Opening) =
+    ⊕ᴰ-elim λ where
+      left → ATOM*→EXP ,⊗ id ∘g ⊗-assoc ∘g ⊸3⊗ (⊸3-intro-ε PARENS) ∘g lowerG ,⊗ lowerG
+      num →
+        {!!}
+        -- (⊕ᴰ-elim λ where
+        --   ] → (DONE ∘g NUM) ,⊗ id ∘g id ,⊗ (lowerG ∘g π false)
+        --   ¬] → (ATOM*→EXP ∘g NUM ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ (lowerG ∘g π false)
+        -- )
+        -- ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
+  buildExpAlg (n , Closing) =
+    ⊕ᴰ-elim λ where
+      (closeGood n-1 Eq.refl) →
+        {!!}
+        -- (⊕ᴰ-elim λ where
+        --   ] →
+        --     id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻) ∘g id ,⊗ (lowerG ∘g π false)
+        --   ¬] → id ,⊗ (lowerG ∘g π false)
+        -- )
+        -- ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
+  buildExpAlg (n , Adding) =
+    ⊕ᴰ-elim λ where
+      (doneGood Eq.refl Eq.refl) → NIL ,⊗ id ∘g ⊗-unit-r⁻ ∘g lowerG
+      add →
+        ⊕-elim
+          (*-singleton _ ,⊗ id ∘g ⊗-assoc)
+          ((CONS ∘g ⊗-assoc) ,⊗ id ∘g ⊗-assoc)
+        ∘g ⊗⊕-distL
+        ∘g id ,⊗ (⊗⊕-distR ∘g unrollEXP ,⊗ id)
+        ∘g lowerG ,⊗ lowerG
 
---   buildExp : AutomatonG true (0 , Opening) ⊢ EXP
---   buildExp = ⊗-unit-r ∘g rec _ buildExpAlg (0 , Opening)
+  buildExp : AutomatonG true (0 , Opening) ⊢ EXP
+  buildExp = ⊗-unit-r ∘g rec _ buildExpAlg (0 , Opening)
 
 -- -- Completeness : every LL⟨1⟩ parse has a corresponding accepting trace
 -- -- module Completeness where
