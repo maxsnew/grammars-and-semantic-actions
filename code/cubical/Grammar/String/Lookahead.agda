@@ -66,9 +66,32 @@ peekInd =
 
 remember : ∀ {A : Grammar ℓ-zero} →
   (c? : Maybe ⟨ Alphabet ⟩) →
+  σ {X = Maybe ⟨ Alphabet ⟩} {A = λ c'? → A & PeekChar c'?} c?
+    ≡ peek .fun ∘g π₁
+remember {A = A} c? =
+  σ c?
+    ≡⟨ cong (_∘g σ c?) (sym (peek .sec)) ⟩
+  peek .fun ∘g peek .inv ∘g σ c?
+    ≡⟨ cong (peek .fun ∘g_) (peek⁻∘σ≡π₁ c?) ⟩
+  peek .fun ∘g π₁
+  ∎
+  where
+  -- TODO prove directly?
+  opaque
+    unfolding π₁ ⊕-elim
+    peek⁻∘σ≡π₁ :
+      ∀ (c? : Maybe ⟨ Alphabet ⟩) →
+      peek .inv
+      ∘g σ {X = Maybe ⟨ Alphabet ⟩} {A = λ c'? → A & PeekChar c'?} c?
+        ≡ π₁
+    peek⁻∘σ≡π₁ nothing = refl
+    peek⁻∘σ≡π₁ (just c) = refl
+
+rememberInd : ∀ {A : Grammar ℓ-zero} →
+  (c? : Maybe ⟨ Alphabet ⟩) →
   σ {X = Maybe ⟨ Alphabet ⟩} {A = λ c'? → A Ind&.& PeekChar c'?} c?
     ≡ peekInd .fun ∘g Ind&.π₁
-remember {A = A} c? =
+rememberInd {A = A} c? =
   σ c?
     ≡⟨ cong (_∘g σ c?) (sym (peekInd .sec)) ⟩
   peekInd .fun ∘g peekInd .inv ∘g σ c?
