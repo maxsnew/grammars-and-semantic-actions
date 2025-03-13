@@ -166,34 +166,6 @@ module Automaton where
   ua ] = startsWith ]
   ua aNum = anyNum ⊗ string
 
-  -- data Guard : Type where
-  --   ] ¬] : Guard
-
-  -- data NotRP : Type where
-  --   [ : NotRP       -- parens
-  --   + : NotRP       -- the binary operation
-  --   num : ℕ → NotRP -- constants
-
-  -- notRP : NotRP → Tok
-  -- notRP [ = [
-  -- notRP + = +
-  -- notRP (num x) = num x
-
-  -- guard : Guard → Grammar _
-  -- guard ] = ＂ ] ＂ ⊗ ⊤
-  -- guard ¬] = ε ⊕ (⊕ᴰ {X = NotRP} λ t → ＂ notRP t ＂ ⊗ ⊤)
-
-  -- Tok→Guard : Maybe Tok → Guard
-  -- Tok→Guard nothing = ¬]
-  -- Tok→Guard (just [) = ¬]
-  -- Tok→Guard (just ]) = ]
-  -- Tok→Guard (just +) = ¬]
-  -- Tok→Guard (just (num x)) = ¬]
-
-  -- Guard→State : Guard → AutomatonState
-  -- Guard→State ] = Closing
-  -- Guard→State ¬] = Adding
-  --
   Tok→State : Maybe Tok → AutomatonState
   Tok→State (just ]) = Closing
   Tok→State nothing = Adding
@@ -223,6 +195,15 @@ module Automaton where
   DoneOpeningFun : ℕ → Maybe Tok → Functor (ℕ × AutomatonState)
   DoneOpeningFun n tok? = &e Bool (DoneOpeningFun' n tok?)
 
+  module _ (n : ℕ) (tok? : Maybe Tok)
+    {A B : ℕ × AutomatonState → Grammar ℓ-zero}
+    (e : (nq : ℕ × AutomatonState) → A nq ⊢ B nq)
+    where
+    mapIs&Par : map (DoneOpeningFun n tok?) e ≡ (liftG ∘g e (n , Tok→State tok?) ∘g lowerG) ,&p id
+    mapIs&Par = &ᴰ≡ _ _ λ where
+      true → refl
+      false → refl
+
   DoneOpening : ℕ → Functor (ℕ × AutomatonState)
   DoneOpening n = ⊕e (Maybe Tok) (DoneOpeningFun n)
 
@@ -250,7 +231,6 @@ module Automaton where
   AutomatonG : Bool → ℕ × AutomatonState → Grammar ℓ-zero
   AutomatonG b = μ (AutomatonTy b)
 
-
   mkGuardPfs'' : (b : Bool) → (n : ℕ) → (tok? : Maybe Tok) → (L/R : Bool) →
     AutomatonG b (n , Tok→State tok?) & PeekChar tok?
       ⊢  ⟦ DoneOpeningFun' n tok? L/R ⟧ (AutomatonG b)
@@ -277,7 +257,7 @@ module Automaton where
     ⊕ᴰ-elim (λ tok? →
       map⊕ᴰ (λ b → σ tok? ∘g &ᴰ-intro (mkGuardPfs'' b n tok?))
       ∘g Ind&⊕ᴰ-distL≅ .fun
-      ∘g π (n , Tok→State tok?) ,&p id)
+      ∘g (π (n , Tok→State tok?) ∘g π₁) ,& π₂)
 
   -- Whenever we want to use a Guard, this cuts out
   -- the redundant work in checking the guardedness condition
@@ -450,14 +430,94 @@ module Automaton where
             -- ∘g id ,⊗ (print b (n , Closing) ∘g lowerG ∘g π₁)
             -- ∘g id ,⊗ map (DoneOpeningFun n (just ])) (the-eq-π b)
             --   ≡⟨ {!refl!} ⟩
+            -- map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+            -- ∘g ⊕ᴰ-distR .fun
+            -- ∘g σ m ,⊗ id
+            -- ∘g id ,⊗ mkGuardPfs' n
+            -- ∘g id ,⊗ peekInd .fun
+            -- ∘g id ,⊗ (π₁ {A = &Ind _ _} ∘g (parse ∘g print b (n , Closing) ∘g lowerG ∘g π₁) ,& π₂)
+            -- ∘g id ,⊗ map (DoneOpeningFun n (just ])) (the-eq-π b)
+              -- ≡⟨ (λ i →
+              --       map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+              --       ∘g ⊕ᴰ-distR .fun
+              --       ∘g σ m ,⊗ id
+              --       ∘g id ,⊗ mkGuardPfs' n
+              --       ∘g id ,⊗ (remember (just ]) (~ i))
+              --       ∘g id ,⊗ ((parse ∘g print b (n , Closing) ∘g lowerG ∘g π₁) ,& (lowerG ∘g π₂))
+              --       ∘g id ,⊗ map (DoneOpeningFun n (just ])) (the-eq-π b)
+              --     ) ⟩
+            --   ≡⟨ {!!} ⟩
+            -- map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+            -- ∘g ⊕ᴰ-distR .fun
+            -- ∘g σ m ,⊗ id
+            -- ∘g id ,⊗ mkGuardPfs' n
+            -- ∘g id ,⊗ (σ (just ]) ∘g (parse ∘g print b (n , Closing) ∘g lowerG ∘g π₁) ,& (lowerG ∘g π₂))
+            -- ∘g id ,⊗ map (DoneOpeningFun n (just ])) (the-eq-π b)
+            --   ≡⟨ (λ i →
+            --         map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+            --         ∘g ⊕ᴰ-distR .fun
+            --         ∘g σ m ,⊗ id
+            --         ∘g id ,⊗ (map⊕ᴰ (λ b → σ (just ]) ∘g &ᴰ-intro (mkGuardPfs'' b n (just ])))
+            --           ∘g Ind&⊕ᴰ-distL≅ .fun)
+            --         ∘g id ,⊗ (&par∘ {B = &Ind _ _} (parse ∘g print b (n , Closing) ∘g lowerG) lowerG (π (n , Closing)) id i)
+            --         ∘g id ,⊗ map (DoneOpeningFun n (just ])) (the-eq-π b)
+            --       ) ⟩
             map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
             ∘g ⊕ᴰ-distR .fun
             ∘g σ m ,⊗ id
-            ∘g id ,⊗ mkGuardPfs' n
-            ∘g id ,⊗ peekInd .fun
-            ∘g id ,⊗ (π₁ {A = &Ind _ _} ∘g (parse ∘g print b (n , Closing) ∘g lowerG ∘g π₁) ,& π₂)
+            ∘g id ,⊗ (map⊕ᴰ (λ b → σ (just ]) ∘g &ᴰ-intro (mkGuardPfs'' b n (just ])))
+              ∘g Ind&⊕ᴰ-distL≅ .fun)
+            ∘g id ,⊗ ((π (n , Closing) ∘g parse ∘g print b (n , Closing) ∘g lowerG) ,&p lowerG)
             ∘g id ,⊗ map (DoneOpeningFun n (just ])) (the-eq-π b)
+              ≡⟨ (λ i →
+                   map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+                   ∘g ⊕ᴰ-distR .fun
+                   ∘g σ m ,⊗ id
+                   ∘g id ,⊗ (map⊕ᴰ (λ b → σ (just ]) ∘g &ᴰ-intro (mkGuardPfs'' b n (just ])))
+                     ∘g Ind&⊕ᴰ-distL≅ .fun)
+                   ∘g id ,⊗ ((π (n , Closing) ∘g parse ∘g print b (n , Closing) ∘g lowerG) ,&p lowerG)
+                   ∘g id ,⊗ ((mapIs&Par n (just ]) (the-eq-π b)) i))
+              ⟩
+            map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+            ∘g ⊕ᴰ-distR .fun
+            ∘g σ m ,⊗ id
+            ∘g id ,⊗ (map⊕ᴰ (λ b → σ (just ]) ∘g &ᴰ-intro (mkGuardPfs'' b n (just ])))
+              ∘g Ind&⊕ᴰ-distL≅ .fun)
+            ∘g id ,⊗ ((π (n , Closing) ∘g parse ∘g print b (n , Closing) ∘g lowerG) ,&p lowerG)
+            ∘g id ,⊗ ((liftG ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p id)
+              ≡⟨ (λ i →
+                    map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+                    ∘g ⊕ᴰ-distR .fun
+                    ∘g σ m ,⊗ id
+                    ∘g id ,⊗ (map⊕ᴰ (λ b → σ (just ]) ∘g &ᴰ-intro (mkGuardPfs'' b n (just ])))
+                      ∘g Ind&⊕ᴰ-distL≅ .fun)
+                    ∘g id ,⊗
+                      (&par∘ {B = λ b' → ⟦ DoneOpeningFun' n (just ]) b' ⟧ (AutomatonG b)}
+                         (liftG ∘g the-eq-π b (n , Closing) ∘g lowerG) id
+                         (π (n , Closing) ∘g parse ∘g print b (n , Closing) ∘g lowerG) lowerG) i
+                 )
+              ⟩
+            map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+            ∘g ⊕ᴰ-distR .fun
+            ∘g σ m ,⊗ id
+            ∘g id ,⊗ (map⊕ᴰ (λ b → σ (just ]) ∘g &ᴰ-intro (mkGuardPfs'' b n (just ])))
+              ∘g Ind&⊕ᴰ-distL≅ .fun)
+            ∘g id ,⊗ ((π (n , Closing) ∘g parse ∘g print b (n , Closing) ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p lowerG)
               ≡⟨ {!!} ⟩
+            map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
+            ∘g ⊕ᴰ-distR .fun
+            ∘g σ m ,⊗ id
+            ∘g id ,⊗ (map⊕ᴰ (λ b → σ (just ]) ∘g &ᴰ-intro (mkGuardPfs'' b n (just ])))
+              ∘g Ind&⊕ᴰ-distL≅ .fun)
+            ∘g id ,⊗ (σ b ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p lowerG
+              ≡⟨ {!!} ⟩
+            σ b
+            ∘g roll ∘g σ num
+            ∘g (liftG ∘g σ m) ,⊗ σ (just ])
+            ∘g id ,⊗ ((liftG ∘g the-eq-π b (n , Closing) ∘g lowerG) ,&p id)
+              ≡⟨ (λ i → σ b ∘g roll ∘g σ num ∘g (liftG ∘g σ m) ,⊗ σ (just ])
+                ∘g id ,⊗ ((mapIs&Par n (just ]) (the-eq-π b)) (~ i)))
+               ⟩
             σ b
             ∘g roll ∘g σ num
             ∘g (liftG ∘g σ m) ,⊗ σ (just ])

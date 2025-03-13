@@ -15,10 +15,7 @@ open import Term.Base Alphabet
 private
   variable
     ℓA ℓB ℓC ℓD ℓX : Level
-    A : Grammar ℓA
-    B : Grammar ℓB
-    C : Grammar ℓC
-    D : Grammar ℓD
+    A B C D : Grammar ℓA
 
 open StrongEquivalence
 
@@ -58,6 +55,13 @@ module _ {A : Bool → Grammar ℓA} where
   _,&_ = &-intro
   infixr 20 _,&_
 
+module _ {A B : Bool → Grammar ℓA} where
+  &par : A true ⊢ B true → A false ⊢ B false → &ᴰ A ⊢ &ᴰ B
+  &par f f' = (f ∘g π₁) ,& (f' ∘g π₂)
+
+  _,&p_ = &par
+  infixr 20 _,&p_
+
 &-β₁ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) → π₁ {A = &Ind B C} ∘g (e₁ ,& e₂) ≡ e₁
 &-β₁ e₁ e₂ = refl
 
@@ -69,11 +73,15 @@ module _ {A : Bool → Grammar ℓA} where
   true → refl
   false → refl
 
-&par : A ⊢ B → C ⊢ D → A & C ⊢ B & D
-&par f f' = (f ∘g π₁) ,& (f' ∘g π₂)
 
-_,&p_ = &par
-infixr 20 _,&p_
+module _
+  {A B C : Bool → Grammar ℓA} 
+  (e : A true ⊢ B true) (f : A false ⊢ B false)
+  (g : B true ⊢ C true) (h : B false ⊢ C false) where
+  &par∘ : (&par {A = B} {B = C} g h) ∘g (&par {A = A} e f) ≡ (g ∘g e) ,&p (h ∘g f)
+  &par∘ = &ᴰ≡ _ _ λ where
+    true → refl
+    false → refl
 
 id&_ : B ⊢ C → A & B ⊢ A & C
 id& f = π₁ ,& (f ∘g π₂)
