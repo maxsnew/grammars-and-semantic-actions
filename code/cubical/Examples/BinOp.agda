@@ -685,3 +685,11 @@ module Completeness where
     ∘g id ,⊗ (σ nothing ∘g (liftG ∘g roll ∘g σ (doneGood Eq.refl Eq.refl) ∘g liftG) ,& liftG)
     ∘g ⊗-unit-r⁻ ∘g π 0 ∘g rec _ mkTraceAlg Exp
 
+open LogicalEquivalence
+
+AccTrace≈EXP : Automaton.Trace true (0 , Automaton.Opening) ≈ LL⟨1⟩.EXP
+AccTrace≈EXP .fun = Soundness.buildExp
+AccTrace≈EXP .inv = Completeness.mkTrace
+
+EXPParser : Parser LL⟨1⟩.EXP
+EXPParser = ≈Parser (Automaton.TraceParser (0 , Automaton.Opening)) AccTrace≈EXP

@@ -44,6 +44,7 @@ Alphabet = (Bracket , isSetBracket)
 
 open import Grammar Alphabet renaming (NIL to *NIL)
 open import Grammar.Coherence Alphabet
+open import Parser Alphabet
 open import Term Alphabet
 
 open StrongEquivalence
@@ -324,11 +325,23 @@ Trace≅String {n} = mkStrEq
         (σ-homo b)
         n)
 
+isUnambiguous⊕Trace : ∀ {n} → unambiguous (⊕[ b ∈ Bool ] Trace b n)
+isUnambiguous⊕Trace {n} = unambiguous≅ (sym≅ Trace≅String) unambiguous-string
+
 isUnambiguousTrace : ∀ {n b} → unambiguous (Trace b n)
-isUnambiguousTrace {n}{b} =
-  unambiguous⊕ᴰ isSetBool
-    (unambiguous≅ (sym-strong-equivalence Trace≅String) unambiguous-string)
-    b
+isUnambiguousTrace {n}{b} = unambiguous⊕ᴰ isSetBool isUnambiguous⊕Trace b
+
+open Parser
+
+TraceParser : ∀ n → Parser (Trace true n)
+TraceParser n .compl = Trace false n
+TraceParser n .compl-disjoint =
+  hasDisjointSummands⊕ᴰ isSetBool isUnambiguous⊕Trace true false true≢false
+TraceParser n .fun =
+  (⊕ᴰ-elim λ where
+    false → inr
+    true → inl)
+  ∘g π n ∘g parse
 
 {-
   Next, we establish that IndDyck and Trace true zero are strongly equivalent.
@@ -682,7 +695,7 @@ genRetr :
     rhs
 genRetr = equalizer-ind-unit (DyckTy tt) pf
 
-Dyck≅Trace : StrongEquivalence IndDyck (Trace true 0)
+Dyck≅Trace : IndDyck ≅ (Trace true 0)
 Dyck≅Trace =
   unambiguousRetract→StrongEquivalence
     (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g π 0 ∘g genBuildTrace 0)
@@ -703,3 +716,6 @@ Dyck≅Trace =
      ≡⟨ append-nil-r' ⟩
     id ∎)
     isUnambiguousTrace
+
+DyckParser : Parser IndDyck
+DyckParser = ≈Parser (TraceParser 0) (≅→≈ (sym≅ Dyck≅Trace))

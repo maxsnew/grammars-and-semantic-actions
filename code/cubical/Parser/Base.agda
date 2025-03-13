@@ -20,3 +20,12 @@ record Parser (A : Grammar ℓA) : Type (ℓ-suc ℓA) where
     compl : Grammar ℓA
     compl-disjoint : disjoint A compl
     fun : string ⊢ A ⊕ compl
+
+open Parser
+open LogicalEquivalence
+
+module _ {A B : Grammar ℓA} (P : Parser A) (A≈B : A ≈ B) where
+  ≈Parser : Parser B
+  ≈Parser .compl = P .compl
+  ≈Parser .compl-disjoint = disjoint≈ (P .compl-disjoint) A≈B
+  ≈Parser .fun = A≈B .fun ,⊕p id ∘g P .fun
