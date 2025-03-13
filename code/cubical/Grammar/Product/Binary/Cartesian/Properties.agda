@@ -11,6 +11,7 @@ open import Cubical.Data.Bool
 open import Grammar.Base Alphabet
 open import Grammar.Properties.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Product Alphabet
 open import Grammar.Product.Binary.Cartesian.Base Alphabet
@@ -26,6 +27,13 @@ private
     D : Grammar ℓD
 
 open StrongEquivalence
+
+module _ {A : Grammar ℓA} {B : Grammar ℓB}
+  (isSetA : isSetGrammar A) (isSetB : isSetGrammar B) where
+  opaque
+    unfolding _&_
+    isSetGrammar& : isSetGrammar (A & B)
+    isSetGrammar& w = isSet× (isSetA w) (isSetB w)
 
 -- TODO : derive from a general product unambiguity
 &unambiguous : unambiguous A → unambiguous B →

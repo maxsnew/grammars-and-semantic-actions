@@ -11,6 +11,7 @@ open import Grammar.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Product.Base Alphabet
+open import Grammar.Product.Binary.Cartesian.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
@@ -24,6 +25,7 @@ module _ where
     Var : (x : X) → Functor X -- reference one of the mutually inductive types being defined
     &e ⊕e : ∀ (Y : Type ℓX) → (F : Y → Functor X) → Functor X
     _⊗e_ : (F : Functor X) → (F' : Functor X) → Functor X
+    _&e2_ : (F : Functor X) → (F' : Functor X) → Functor X
 
   infixr 25 _⊗e_
 
@@ -34,6 +36,7 @@ module _ where
     ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ F ⊗e F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
+    ⟦ F &e2 F' ⟧ A = ⟦ F ⟧ A & ⟦ F' ⟧ A
 
   map : ∀ {X : Type ℓX}(F : Functor X) {A : X → Grammar ℓA}{B : X → Grammar ℓB}
         → (∀ x → A x ⊢ B x)
@@ -43,10 +46,11 @@ module _ where
   map (&e Y F) f = &ᴰ-intro λ y → map (F y) f ∘g π y
   map (⊕e Y F) f = ⊕ᴰ-elim λ y → σ y ∘g map (F y) f
   map (F ⊗e F') f = map F f ,⊗ map F' f
+  map (F &e2 F') f = map F f ,&p map F' f
 
   module _ {X : Type ℓX} where
     opaque
-      unfolding _⊗_ ⊗-intro
+      unfolding _⊗_ ⊗-intro &-intro π₁
 
       map-id : ∀ (F : Functor X) {A : X → Grammar ℓA} →
         map F (λ x → id {A = A x}) ≡ id
@@ -55,6 +59,7 @@ module _ where
       map-id (&e Y F) i = &ᴰ-intro (λ y → map-id (F y) i ∘g π y)
       map-id (⊕e Y F) i = ⊕ᴰ-elim (λ y → σ y ∘g map-id (F y) i)
       map-id (F ⊗e F') i = map-id F i ,⊗ map-id F' i
+      map-id (F &e2 F') i = map-id F i ,&p map-id F' i
 
       map-∘ :  ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
         (F : Functor X)
@@ -65,6 +70,7 @@ module _ where
       map-∘ (&e Y F) f f' i = &ᴰ-intro (λ y → map-∘ (F y) f f' i ∘g π y)
       map-∘ (⊕e Y F) f f' i = ⊕ᴰ-elim (λ y → σ y ∘g map-∘ (F y) f f' i)
       map-∘ (F ⊗e F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
+      map-∘ (F &e2 F') f f' i = map-∘ F f f' i ,&p map-∘ F' f f' i
 
   module _ {X : Type ℓX} (F : X → Functor X) where
     Algebra : (X → Grammar ℓA) → Type (ℓ-max ℓX ℓA)
