@@ -5,6 +5,7 @@ open import Cubical.Foundations.Structure
 module Grammar.String.Lookahead (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Maybe hiding (rec)
+open import Cubical.Data.Bool using (true ; false)
 
 open import Grammar.Base Alphabet
 open import Grammar.Product.Binary.Cartesian Alphabet
@@ -62,3 +63,26 @@ peekInd =
   ≅∙ ⊕ᴰ≅ λ where
     nothing → &≅Ind& _ _
     (just x) → &≅Ind& _ _
+
+remember : ∀ {A : Grammar ℓ-zero} →
+  (c? : Maybe ⟨ Alphabet ⟩) →
+  σ {X = Maybe ⟨ Alphabet ⟩} {A = λ c'? → A Ind&.& PeekChar c'?} c?
+    ≡ peekInd .fun ∘g Ind&.π₁
+remember {A = A} c? =
+  σ c?
+    ≡⟨ cong (_∘g σ c?) (sym (peekInd .sec)) ⟩
+  peekInd .fun ∘g peekInd .inv ∘g σ c?
+    ≡⟨ cong (peekInd .fun ∘g_) (peek⁻∘σ≡π₁ c?) ⟩
+  peekInd .fun ∘g Ind&.π₁ {A = Ind&.&Ind A (PeekChar c?)}
+  ∎
+  where
+  -- TODO prove directly?
+  opaque
+    unfolding π₁ ⊕-elim
+    peek⁻∘σ≡π₁ :
+      ∀ (c? : Maybe ⟨ Alphabet ⟩) →
+      peekInd .inv
+      ∘g σ {X = Maybe ⟨ Alphabet ⟩} {A = λ c'? → A Ind&.& PeekChar c'?} c?
+        ≡ Ind&.π₁
+    peek⁻∘σ≡π₁ nothing = refl
+    peek⁻∘σ≡π₁ (just c) = refl

@@ -31,17 +31,15 @@ A & B = &ᴰ (&Ind A B)
 
 infixr 27 _&_
 
-&-intro : A ⊢ B →
-  A ⊢ C →
-  A ⊢ B & C
-&-intro {A = A} {B = B} {C = C} e f = &ᴰ-intro &-intro'
-  where
-  &-intro' : (b : Bool) → A ⊢ &Ind B C b
-  &-intro' false = f
-  &-intro' true = e
+-- &-intro : A ⊢ B →
+--   A ⊢ C →
+--   A ⊢ B & C
+-- &-intro {A = A} {B = B} {C = C} e f = &ᴰ-intro &-intro'
+--   where
+--   &-intro' : (b : Bool) → A ⊢ &Ind B C b
+--   &-intro' false = f
+--   &-intro' true = e
 
-_,&_ = &-intro
-infixr 20 _,&_
 
 module _ {A : Bool → Grammar ℓA} where
   π₁ : &ᴰ A ⊢ A true
@@ -50,10 +48,20 @@ module _ {A : Bool → Grammar ℓA} where
   π₂ : &ᴰ A ⊢ A false
   π₂ = π false
 
-&-β₁ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) → π₁ ∘g (e₁ ,& e₂) ≡ e₁
+  &-intro : B ⊢ A true → B ⊢ A false → B ⊢ &ᴰ A
+  &-intro {B = B} e f = &ᴰ-intro &-intro'
+    where
+    &-intro' : (b : Bool) → B ⊢ A b
+    &-intro' true = e
+    &-intro' false = f
+
+  _,&_ = &-intro
+  infixr 20 _,&_
+
+&-β₁ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) → π₁ {A = &Ind B C} ∘g (e₁ ,& e₂) ≡ e₁
 &-β₁ e₁ e₂ = refl
 
-&-β₂ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) → π₂ ∘g (e₁ ,& e₂) ≡ e₂
+&-β₂ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) → π₂ {A = &Ind B C} ∘g (e₁ ,& e₂) ≡ e₂
 &-β₂ e₁ e₂ = refl
 
 &-η : (e : A ⊢ B & C) → (π₁ ∘g e) ,& (π₂ ∘g e) ≡ e
