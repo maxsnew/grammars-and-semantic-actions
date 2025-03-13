@@ -316,18 +316,19 @@ module Automaton where
   print b = rec (AutomatonTy b) (printAlg b)
 
   Trace≅string :
-    (n : ℕ) → (s : AutomatonState) →
-    (⊕[ b ∈ Bool ] AutomatonG b (n , s)) ≅ string
-  Trace≅string n s .fun = ⊕ᴰ-elim (λ b → print b (n , s))
-  Trace≅string n s .inv = π (n , s) ∘g parse
-  Trace≅string n s .sec = unambiguous-string _ _
-  Trace≅string n s .ret = the-ret
+    (nq : ℕ × AutomatonState) → ⊕[ b ∈ Bool ] AutomatonG b nq ≅ string
+  Trace≅string (n , s) .fun = ⊕ᴰ-elim (λ b → print b (n , s))
+  Trace≅string (n , s) .inv = π (n , s) ∘g parse
+  Trace≅string (n , s) .sec = unambiguous-string _ _
+  Trace≅string (n , s) .ret = the-ret
     where
     opaque
       unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro π₁ ⇒-app
       {--
       -- For speed of typechecking it is crucial to separate the equality
-      -- proofs into lemmas. It is also important to scaffold typechecking
+      -- proofs into lemmas.
+      --
+      -- It is also important to scaffold typechecking
       -- by limiting inference for the signatures of these lemmas
       --}
 
@@ -423,13 +424,6 @@ module Automaton where
                    ∘g id ,⊗ ((the-eq-π-pf b (n , Tok→State tok?) i ∘g lowerG) ,&p lowerG)
                  )
               ⟩
-            map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-            ∘g ⊕ᴰ-distR .fun
-            ∘g σ m ,⊗ id
-            ∘g id ,⊗ (map⊕ᴰ (λ _ → σ tok? ∘g liftG ,&p liftG))
-            ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
-            ∘g id ,⊗ ((σ b ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p lowerG)
-              ≡⟨ refl ⟩ -- Is refl from unfolding ⇒-intro
             σ b
             ∘g roll ∘g σ num
             ∘g (liftG ∘g σ m) ,⊗ σ tok?
@@ -501,10 +495,48 @@ module Automaton where
         (closeGood n-1 Eq.refl) → the-close-good-pf n-1
         (unexpectedC Eq.refl c) → unexpectedClosing≡ (suc n) c
           where
+
+          the-close-good-pf' : (n-1 : ℕ) → (tok? : Maybe Tok) →
+            mk≡Ty b (suc n-1) Closing (σ (closeGood n-1 Eq.refl) ∘g id ,⊗ σ tok?)
+          the-close-good-pf' n-1 tok? =
+            π (suc n-1 , Closing)
+            ∘g parse
+            ∘g print b (suc n-1 , Closing)
+            ∘g roll ∘g σ (closeGood n-1 Eq.refl)
+            ∘g id ,⊗ σ tok?
+            ∘g id ,⊗ ((liftG ∘g the-eq-π b (n-1 , Tok→State tok?) ∘g lowerG) ,&p id)
+              ≡⟨ (λ i →
+                    map⊕ᴰ (λ _ → roll ∘g σ (closeGood n-1 Eq.refl))
+                    ∘g ⊕ᴰ-distR .fun
+                    ∘g id ,⊗ mkGuardPfs' n-1
+                    ∘g id ,⊗ remember tok? (~ i)
+                    ∘g id ,⊗ ((parse ∘g print b (n-1 , Tok→State tok?) ∘g the-eq-π b (n-1 , Tok→State tok?) ∘g lowerG) ,&p lowerG)
+                  ) ⟩
+            map⊕ᴰ (λ _ → roll ∘g σ (closeGood n-1 Eq.refl))
+            ∘g ⊕ᴰ-distR .fun
+            ∘g id ,⊗ mkGuardPfs' n-1
+            ∘g id ,⊗ σ tok?
+            ∘g id ,⊗ ((parse ∘g print b (n-1 , Tok→State tok?) ∘g the-eq-π b (n-1 , Tok→State tok?) ∘g lowerG) ,&p lowerG)
+              ≡⟨ (λ i →
+                   map⊕ᴰ (λ _ → roll ∘g σ (closeGood n-1 Eq.refl))
+                   ∘g ⊕ᴰ-distR .fun
+                   ∘g id ,⊗ (map⊕ᴰ (λ _ → σ tok? ∘g liftG ,&p liftG))
+                   ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
+                   ∘g id ,⊗ ((the-eq-π-pf b (n-1 , Tok→State tok?) i ∘g lowerG) ,&p lowerG)
+                 )
+              ⟩
+            σ b
+            ∘g roll ∘g σ (closeGood n-1 Eq.refl)
+            ∘g id ,⊗ σ tok?
+            ∘g id ,⊗ ((liftG ∘g the-eq-π b (n-1 , Tok→State tok?) ∘g lowerG) ,&p id)
+            ∎
+
           the-close-good-pf :
             (n-1 : ℕ) →
             mk≡Ty b (suc n-1) Closing (σ (closeGood n-1 Eq.refl))
-          the-close-good-pf n-1 = {!!}
+          the-close-good-pf n-1 i =
+            ⊕ᴰ-elim (λ tok? → the-close-good-pf' n-1 tok? i)
+            ∘g ⊕ᴰ-distR .fun
 
       Adding≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Adding
       Adding≡ b n = ⊕ᴰ≡ _ _ λ where
@@ -544,6 +576,12 @@ module Automaton where
             (n , Adding) → Adding≡ b n
           )
           (n , s)
+
+  unambiguous-⊕Trace : ∀ (nq : ℕ × AutomatonState) → unambiguous (⊕[ b ∈ Bool ] AutomatonG b nq)
+  unambiguous-⊕Trace nq = unambiguous≅ (sym≅ (Trace≅string nq)) unambiguous-string
+
+  unambiguous-Trace : ∀ b nq → unambiguous (AutomatonG b nq)
+  unambiguous-Trace b nq = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace nq) b
 
 -- Soundness : from every trace we can extract an LL⟨1⟩ parse
 module Soundness where
