@@ -27,9 +27,12 @@ opaque
   TokRep : Iso Tok (Bool ⊎ (Unit ⊎ ℕ))
   TokRep =
       iso
-        (λ { [ → Sum.inl true ; ] → Sum.inl false ; + → Sum.inr (Sum.inl _) ; (num x) → Sum.inr (Sum.inr x)})
-        (λ { (Sum.inl false) → ] ; (Sum.inl true) → [ ; (Sum.inr (Sum.inl x)) → + ; (Sum.inr (Sum.inr x)) → num x})
-        (λ { (Sum.inl false) → refl ; (Sum.inl true) → refl ; (Sum.inr (Sum.inl x)) → refl ; (Sum.inr (Sum.inr x)) → refl})
+        (λ { [ → Sum.inl true ; ] → Sum.inl false
+           ; + → Sum.inr (Sum.inl _) ; (num x) → Sum.inr (Sum.inr x)})
+        (λ { (Sum.inl false) → ] ; (Sum.inl true) → [ ; (Sum.inr (Sum.inl x)) → +
+           ; (Sum.inr (Sum.inr x)) → num x})
+        (λ { (Sum.inl false) → refl ; (Sum.inl true) → refl ; (Sum.inr (Sum.inl x)) → refl
+           ; (Sum.inr (Sum.inr x)) → refl})
         λ { [ → refl ; ] → refl ; + → refl ; (num x) → refl}
 
   isSetTok : isSet Tok
@@ -41,6 +44,7 @@ Alphabet : hSet ℓ-zero
 Alphabet = Tok , isSetTok
 
 open import Grammar Alphabet hiding (_+)
+open import Parser Alphabet
 open import Term Alphabet
 
 open StrongEquivalence
@@ -213,17 +217,17 @@ module Automaton where
         add → k ＂ + ＂ ⊗e Var (n , Opening)
         (unexpectedA Eq.refl c) → k (ua c)
 
-  AutomatonG : Bool → ℕ × AutomatonState → Grammar ℓ-zero
-  AutomatonG b = μ (AutomatonTy b)
+  Trace : Bool → ℕ × AutomatonState → Grammar ℓ-zero
+  Trace b = μ (AutomatonTy b)
 
   -- After peeking, we choose a subsequent Guard and
   -- AutomatonState to transition to
   -- Here we ensure that the chosen guard and state match
   -- the ones prescribed by DoneOpening
   mkGuardPfs' : (n : ℕ) →
-    Peek (&[ nq ∈ ℕ × AutomatonState ] ⊕[ b ∈ Bool ] AutomatonG b nq)
+    Peek (&[ nq ∈ ℕ × AutomatonState ] ⊕[ b ∈ Bool ] Trace b nq)
     ⊢
-    ⊕[ b ∈ Bool ] ⊕[ tok? ∈ Maybe Tok ] ⟦ DoneOpeningFun n tok? ⟧ (AutomatonG b)
+    ⊕[ b ∈ Bool ] ⊕[ tok? ∈ Maybe Tok ] ⟦ DoneOpeningFun n tok? ⟧ (Trace b)
   mkGuardPfs' n =
     ⊕ᴰ-elim (λ tok? →
       map⊕ᴰ (λ b → σ tok? ∘g liftG ,&p liftG)
@@ -233,15 +237,15 @@ module Automaton where
   -- Whenever we want to use a Guard, this cuts out
   -- the redundant work in checking the guardedness condition
   mkGuardPfs : (n : ℕ) →
-    &[ nq ∈ ℕ × AutomatonState ] ⊕[ b ∈ Bool ] AutomatonG b nq
+    &[ nq ∈ ℕ × AutomatonState ] ⊕[ b ∈ Bool ] Trace b nq
     ⊢
-    ⊕[ b ∈ Bool ] ⊕[ tok? ∈ Maybe Tok ] ⟦ DoneOpeningFun n tok? ⟧ (AutomatonG b)
+    ⊕[ b ∈ Bool ] ⊕[ tok? ∈ Maybe Tok ] ⟦ DoneOpeningFun n tok? ⟧ (Trace b)
   mkGuardPfs n = mkGuardPfs' n ∘g peek .fun
 
   parse : string ⊢
     &[ nq ∈ ℕ × AutomatonState ]
     ⊕[ b ∈ Bool ]
-    AutomatonG b nq
+    Trace b nq
   parse = fold*r _
     -- nil
     ((&ᴰ-intro λ where
@@ -265,7 +269,8 @@ module Automaton where
         ⊕ᴰ-elim λ where
         [ → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ string-intro
         ] → σ false ∘g roll ∘g σ (closeBad Eq.refl Eq.refl) ∘g liftG ∘g id ,⊗ string-intro
-        + → σ false ∘g roll ∘g σ (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ string-intro
+        + → σ false ∘g roll ∘g σ (unexpectedC Eq.refl UnexpectedClosing.+)
+            ∘g liftG ∘g id ,⊗ string-intro
         (num x) → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum) ∘g liftG ∘g σ x  ,⊗ string-intro
       (suc n-1 , Closing) →
         ⊕ᴰ-elim λ where
@@ -273,7 +278,8 @@ module Automaton where
         ] → map⊕ᴰ (λ _ → roll ∘g σ (closeGood n-1 Eq.refl) ∘g liftG ,⊗ id)
             ∘g ⊕ᴰ-distR .fun
             ∘g id ,⊗ mkGuardPfs n-1
-        + → σ false ∘g roll ∘g σ (unexpectedC Eq.refl UnexpectedClosing.+) ∘g liftG ∘g id ,⊗ string-intro
+        + → σ false ∘g roll ∘g σ (unexpectedC Eq.refl UnexpectedClosing.+)
+            ∘g liftG ∘g id ,⊗ string-intro
         (num x) → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum) ∘g liftG ∘g σ x ,⊗ string-intro
       (n , Adding) → ⊕ᴰ-elim λ where
         [ → σ false ∘g roll ∘g σ (unexpectedA Eq.refl [) ∘g liftG ∘g id ,⊗ string-intro
@@ -312,11 +318,10 @@ module Automaton where
       (unexpectedA Eq.refl aNum) → CONS ∘g ⊕ᴰ-elim (literal→char ∘ num) ,⊗ id ∘g lowerG
 
   print : (b : Bool) → (ns : ℕ × AutomatonState) →
-    AutomatonG b ns ⊢ string
+    Trace b ns ⊢ string
   print b = rec (AutomatonTy b) (printAlg b)
 
-  Trace≅string :
-    (nq : ℕ × AutomatonState) → ⊕[ b ∈ Bool ] AutomatonG b nq ≅ string
+  Trace≅string : (nq : ℕ × AutomatonState) → ⊕[ b ∈ Bool ] Trace b nq ≅ string
   Trace≅string (n , s) .fun = ⊕ᴰ-elim (λ b → print b (n , s))
   Trace≅string (n , s) .inv = π (n , s) ∘g parse
   Trace≅string (n , s) .sec = unambiguous-string _ _
@@ -337,20 +342,19 @@ module Automaton where
       --}
       module _ where
         goal : ℕ → AutomatonState → Grammar ℓ-zero
-        goal n s = ⊕[ b ∈ Bool ] AutomatonG b (n , s)
+        goal n s = ⊕[ b ∈ Bool ] Trace b (n , s)
 
-        l : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
-          AutomatonG b (n , s) ⊢ goal n s
+        l : (b : Bool) → (n : ℕ) → (s : AutomatonState) → Trace b (n , s) ⊢ goal n s
         l b n s = π (n , s) ∘g parse ∘g print b (n , s)
 
-        r : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
-          AutomatonG b (n , s) ⊢ goal n s
+        r : (b : Bool) → (n : ℕ) → (s : AutomatonState) → Trace b (n , s) ⊢ goal n s
         r b n s = σ b
 
         the-eq : Bool → ℕ × AutomatonState → Grammar ℓ-zero
         the-eq b (n , s) = equalizer (l b n s) (r b n s)
 
-        the-eq-π : (b : Bool) → ((n , s) : ℕ × AutomatonState) → equalizer (l b n s) (r b n s) ⊢ AutomatonG b (n , s)
+        the-eq-π : (b : Bool) → ((n , s) : ℕ × AutomatonState) →
+          equalizer (l b n s) (r b n s) ⊢ Trace b (n , s)
         the-eq-π b (n , s) = eq-π (l b n s) (r b n s)
 
         the-eq-π-pf : (b : Bool) → ((n , s) : ℕ × AutomatonState) →
@@ -360,7 +364,6 @@ module Automaton where
         L : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
           ⟦ AutomatonTy b (n , s) ⟧ (the-eq b) ⊢ goal n s
         L b n s = l b n s ∘g roll ∘g map (AutomatonTy b (n , s)) (the-eq-π b)
-
 
         R : (b : Bool) → (n : ℕ) → (s : AutomatonState) →
           ⟦ AutomatonTy b (n , s) ⟧ (the-eq b) ⊢ goal n s
@@ -386,35 +389,30 @@ module Automaton where
             map⊕ᴰ (λ b → roll ∘g σ left ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun
             ∘g id ,⊗ eq-π-pf (l b (suc n) Opening) (r b (suc n) Opening) i ∘g lowerG ,⊗ lowerG
 
-          the-num-pf' : (tok? : Maybe Tok) → (m : ℕ) → mk≡Ty b n Opening (σ num ∘g (liftG ∘g σ m) ,⊗ σ tok?)
+          the-num-pf' : (tok? : Maybe Tok) → (m : ℕ) →
+            mk≡Ty b n Opening (σ num ∘g (liftG ∘g σ m) ,⊗ σ tok?)
           the-num-pf' tok? m =
-            π (n , Opening)
-            ∘g parse
-            ∘g print b (n , Opening)
-            ∘g roll ∘g σ num
-            ∘g (liftG ∘g σ m) ,⊗ σ tok?
+            π (n , Opening) ∘g parse ∘g print b (n , Opening)
+            ∘g roll ∘g σ num ∘g (liftG ∘g σ m) ,⊗ σ tok?
             ∘g id ,⊗ ((liftG ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p id)
               ≡⟨ (λ i →
                     map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-                    ∘g ⊕ᴰ-distR .fun
-                    ∘g σ m ,⊗ id
-                    ∘g id ,⊗ mkGuardPfs' n
+                    ∘g ⊕ᴰ-distR .fun ∘g σ m ,⊗ id ∘g id ,⊗ mkGuardPfs' n
                     ∘g id ,⊗ remember tok? (~ i)
-                    ∘g id ,⊗ ((parse ∘g print b (n , Tok→State tok?) ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p lowerG)
+                    ∘g id ,⊗ ((parse ∘g print b (n , Tok→State tok?)
+                               ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p lowerG)
                   ) ⟩
             map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-            ∘g ⊕ᴰ-distR .fun
-            ∘g σ m ,⊗ id
-            ∘g id ,⊗ mkGuardPfs' n
+            ∘g ⊕ᴰ-distR .fun ∘g σ m ,⊗ id ∘g id ,⊗ mkGuardPfs' n
             ∘g id ,⊗ σ tok?
-            ∘g id ,⊗ ((parse ∘g print b (n , Tok→State tok?) ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p lowerG)
+            ∘g id ,⊗ ((parse ∘g print b (n , Tok→State tok?)
+                       ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p lowerG)
               ≡⟨ refl ⟩
             map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
-            ∘g ⊕ᴰ-distR .fun
-            ∘g σ m ,⊗ id
-            ∘g id ,⊗ (map⊕ᴰ (λ _ → σ tok? ∘g liftG ,&p liftG))
+            ∘g ⊕ᴰ-distR .fun ∘g σ m ,⊗ id ∘g id ,⊗ (map⊕ᴰ (λ _ → σ tok? ∘g liftG ,&p liftG))
             ∘g id ,⊗ &⊕ᴰ-distL≅ .fun
-            ∘g id ,⊗ ((π (n , Tok→State tok?) ∘g parse ∘g print b (n , Tok→State tok?) ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p lowerG)
+            ∘g id ,⊗ ((π (n , Tok→State tok?) ∘g parse ∘g print b (n , Tok→State tok?)
+                      ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p lowerG)
               ≡⟨ (λ i →
                    map⊕ᴰ (λ _ → roll ∘g σ num ∘g liftG ,⊗ id)
                    ∘g ⊕ᴰ-distR .fun
@@ -425,62 +423,50 @@ module Automaton where
                  )
               ⟩
             σ b
-            ∘g roll ∘g σ num
-            ∘g (liftG ∘g σ m) ,⊗ σ tok?
+            ∘g roll ∘g σ num ∘g (liftG ∘g σ m) ,⊗ σ tok?
             ∘g id ,⊗ ((liftG ∘g the-eq-π b (n , Tok→State tok?) ∘g lowerG) ,&p id)
             ∎
 
           the-num-pf : mk≡Ty b n Opening (σ num)
           the-num-pf i =
-            ⊕ᴰ-elim (λ m →
-              ⊕ᴰ-elim (λ tok? → the-num-pf' tok? m i)
-              ∘g ⊕ᴰ-distR .fun
-            )
-            ∘g ⊕ᴰ-distL .fun
-            ∘g lowerG ,⊗ id
+            ⊕ᴰ-elim (λ m → ⊕ᴰ-elim (λ tok? → the-num-pf' tok? m i) ∘g ⊕ᴰ-distR .fun)
+            ∘g ⊕ᴰ-distL .fun ∘g lowerG ,⊗ id
 
-          the-unexpected]-pf :
-            mk≡Ty false n Opening (σ (unexpectedO Eq.refl ]))
-          the-unexpected]-pf =
-            cong (λ z → σ false ∘g roll ∘g σ (unexpectedO Eq.refl ]) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-              (unambiguous-string _ _)
+          the-unexpected]-pf : mk≡Ty false n Opening (σ (unexpectedO Eq.refl ]))
+          the-unexpected]-pf = cong (λ z → σ false ∘g roll ∘g σ (unexpectedO Eq.refl ]) ∘g liftG
+                                           ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
 
-          the-unexpected+-pf :
-            mk≡Ty false n Opening (σ (unexpectedO Eq.refl +))
-          the-unexpected+-pf =
-            cong (λ z → σ false ∘g roll ∘g σ (unexpectedO Eq.refl +) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-              (unambiguous-string _ _)
+          the-unexpected+-pf : mk≡Ty false n Opening (σ (unexpectedO Eq.refl +))
+          the-unexpected+-pf = cong (λ z → σ false ∘g roll ∘g σ (unexpectedO Eq.refl +)
+                                           ∘g liftG ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
 
-          the-unexpected-pf :
-            (c : UnexpectedOpening) →
+          the-unexpected-pf : (c : UnexpectedOpening) →
             mk≡Ty false n Opening (σ (unexpectedO Eq.refl c))
           the-unexpected-pf EOF = refl
           the-unexpected-pf ] = the-unexpected]-pf
           the-unexpected-pf + = the-unexpected+-pf
 
-      unexpectedClosing≡ :
-        (n : ℕ) →
-        (c : UnexpectedClosing) →
+      unexpectedClosing≡ : (n : ℕ) → (c : UnexpectedClosing) →
         mk≡Ty false n Closing (σ (unexpectedC Eq.refl c))
       unexpectedClosing≡ n EOF = refl
-      unexpectedClosing≡ zero [ =
-        cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-          (unambiguous-string _ _)
-      unexpectedClosing≡ (suc n) [ =
-        cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-          (unambiguous-string _ _)
-      unexpectedClosing≡ zero + =
-        cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl +) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-           (unambiguous-string _ _)
-      unexpectedClosing≡ (suc n) + =
-        cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl +) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-           (unambiguous-string _ _)
-      unexpectedClosing≡ zero aNum =
-        cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-           (unambiguous-string _ _)
-      unexpectedClosing≡ (suc n) aNum =
-        cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-              (unambiguous-string _ _)
+      unexpectedClosing≡ zero [ = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [)
+                                              ∘g liftG ∘g id ,⊗ z
+                                              ∘g lowerG) (unambiguous-string _ _)
+      unexpectedClosing≡ (suc n) [ = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [)
+                                                 ∘g liftG ∘g id ,⊗ z
+                                                 ∘g lowerG) (unambiguous-string _ _)
+      unexpectedClosing≡ zero + = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl +)
+                                              ∘g liftG ∘g id ,⊗ z
+                                              ∘g lowerG) (unambiguous-string _ _)
+      unexpectedClosing≡ (suc n) + = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl +)
+                                                 ∘g liftG ∘g id ,⊗ z
+                                                 ∘g lowerG) (unambiguous-string _ _)
+      unexpectedClosing≡ zero aNum = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum)
+                                                 ∘g liftG ∘g id ,⊗ z
+                                                 ∘g lowerG) (unambiguous-string _ _)
+      unexpectedClosing≡ (suc n) aNum = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum)
+                                                    ∘g liftG ∘g id ,⊗ z
+                                                    ∘g lowerG) (unambiguous-string _ _)
 
       Closing≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Closing
       Closing≡ b zero = ⊕ᴰ≡ _ _ λ where
@@ -488,9 +474,8 @@ module Automaton where
         (unexpectedC Eq.refl c) → unexpectedClosing≡ zero c
           where
           the-close-bad-pf : mk≡Ty false 0 Closing (σ (closeBad Eq.refl Eq.refl))
-          the-close-bad-pf =
-            cong (λ z → σ false ∘g roll ∘g σ (closeBad Eq.refl Eq.refl) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-              (unambiguous-string _ _)
+          the-close-bad-pf = cong (λ z → σ false ∘g roll ∘g σ (closeBad Eq.refl Eq.refl)
+                                         ∘g liftG ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
       Closing≡ b (suc n) = ⊕ᴰ≡ _ _ λ where
         (closeGood n-1 Eq.refl) → the-close-good-pf n-1
         (unexpectedC Eq.refl c) → unexpectedClosing≡ (suc n) c
@@ -510,13 +495,15 @@ module Automaton where
                     ∘g ⊕ᴰ-distR .fun
                     ∘g id ,⊗ mkGuardPfs' n-1
                     ∘g id ,⊗ remember tok? (~ i)
-                    ∘g id ,⊗ ((parse ∘g print b (n-1 , Tok→State tok?) ∘g the-eq-π b (n-1 , Tok→State tok?) ∘g lowerG) ,&p lowerG)
+                    ∘g id ,⊗ ((parse ∘g print b (n-1 , Tok→State tok?)
+                               ∘g the-eq-π b (n-1 , Tok→State tok?) ∘g lowerG) ,&p lowerG)
                   ) ⟩
             map⊕ᴰ (λ _ → roll ∘g σ (closeGood n-1 Eq.refl))
             ∘g ⊕ᴰ-distR .fun
             ∘g id ,⊗ mkGuardPfs' n-1
             ∘g id ,⊗ σ tok?
-            ∘g id ,⊗ ((parse ∘g print b (n-1 , Tok→State tok?) ∘g the-eq-π b (n-1 , Tok→State tok?) ∘g lowerG) ,&p lowerG)
+            ∘g id ,⊗ ((parse ∘g print b (n-1 , Tok→State tok?)
+                       ∘g the-eq-π b (n-1 , Tok→State tok?) ∘g lowerG) ,&p lowerG)
               ≡⟨ (λ i →
                    map⊕ᴰ (λ _ → roll ∘g σ (closeGood n-1 Eq.refl))
                    ∘g ⊕ᴰ-distR .fun
@@ -553,21 +540,19 @@ module Automaton where
           the-unexpected-pf :
             (c : UnexpectedAdding) →
             mk≡Ty false n Adding (σ (unexpectedA Eq.refl c))
-          the-unexpected-pf [ =
-            cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl [) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-              (unambiguous-string _ _)
-          the-unexpected-pf ] =
-            cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl ]) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-              (unambiguous-string _ _)
-          the-unexpected-pf aNum =
-            cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl aNum) ∘g liftG ∘g id ,⊗ z ∘g lowerG)
-              (unambiguous-string _ _)
+          the-unexpected-pf [ = cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl [)
+                                            ∘g liftG ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
+          the-unexpected-pf ] = cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl ])
+                                            ∘g liftG ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
+          the-unexpected-pf aNum = cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl aNum)
+                                               ∘g liftG ∘g id ,⊗ z
+                                               ∘g lowerG) (unambiguous-string _ _)
 
       the-ret : π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b (n , s)) ≡ id
       the-ret = ⊕ᴰ≡ _ _ λ b →
         equalizer-ind
           (AutomatonTy b)
-          (λ (n , s) → ⊕[ b ∈ Bool ] AutomatonG b (n , s))
+          (λ (n , s) → ⊕[ b ∈ Bool ] Trace b (n , s))
           (λ (n , s) → π (n , s) ∘g parse ∘g print b (n , s))
           (λ (n , s) → σ b)
           (λ where
@@ -577,11 +562,25 @@ module Automaton where
           )
           (n , s)
 
-  unambiguous-⊕Trace : ∀ (nq : ℕ × AutomatonState) → unambiguous (⊕[ b ∈ Bool ] AutomatonG b nq)
+  unambiguous-⊕Trace : ∀ (nq : ℕ × AutomatonState) → unambiguous (⊕[ b ∈ Bool ] Trace b nq)
   unambiguous-⊕Trace nq = unambiguous≅ (sym≅ (Trace≅string nq)) unambiguous-string
 
-  unambiguous-Trace : ∀ b nq → unambiguous (AutomatonG b nq)
+  unambiguous-Trace : ∀ b nq → unambiguous (Trace b nq)
   unambiguous-Trace b nq = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace nq) b
+
+  disjointAccRej : ∀ nq → disjoint (Trace true nq) (Trace false nq)
+  disjointAccRej nq = hasDisjointSummands⊕ᴰ isSetBool (unambiguous-⊕Trace nq) true false true≢false
+
+  open Parser
+
+  TraceParser : ∀ nq → Parser (Trace true nq)
+  TraceParser nq .compl = Trace false nq
+  TraceParser nq .compl-disjoint = disjointAccRej nq
+  TraceParser nq .fun =
+    (⊕ᴰ-elim λ where
+      false → inr
+      true → inl)
+    ∘g π nq ∘g parse
 
 -- Soundness : from every trace we can extract an LL⟨1⟩ parse
 module Soundness where
@@ -602,22 +601,23 @@ module Soundness where
     ⊕ᴰ-elim λ where
       left → ATOM*→EXP ,⊗ id ∘g ⊗-assoc ∘g ⊸3⊗ (⊸3-intro-ε PARENS) ∘g lowerG ,⊗ lowerG
       num →
-        {!!}
-        -- (⊕ᴰ-elim λ where
-        --   ] → (DONE ∘g NUM) ,⊗ id ∘g id ,⊗ (lowerG ∘g π false)
-        --   ¬] → (ATOM*→EXP ∘g NUM ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ (lowerG ∘g π false)
-        -- )
-        -- ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
+        (⊕ᴰ-elim λ where
+          nothing → (ATOM*→EXP ∘g NUM ,⊗ id) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ (lowerG ∘g π₁)
+          (just [) → ((ATOM*→EXP ∘g NUM ,⊗ id) ,⊗ id ∘g ⊗-assoc) ∘g id ,⊗ (lowerG ∘g π₁)
+          (just ]) → (DONE ∘g NUM) ,⊗ (lowerG ∘g π₁)
+          (just +) → ((ATOM*→EXP ∘g NUM ,⊗ id) ,⊗ id ∘g ⊗-assoc) ∘g id ,⊗ (lowerG ∘g π₁)
+          (just (num x)) → ((ATOM*→EXP ∘g NUM ,⊗ id) ,⊗ id ∘g ⊗-assoc) ∘g id ,⊗ (lowerG ∘g π₁))
+        ∘g ⊕ᴰ-distR .fun
+        ∘g lowerG ,⊗ id
   buildExpAlg (n , Closing) =
     ⊕ᴰ-elim λ where
       (closeGood n-1 Eq.refl) →
-        {!!}
-        -- (⊕ᴰ-elim λ where
-        --   ] →
-        --     id ,⊗ (NIL ,⊗ id ∘g ⊗-unit-l⁻) ∘g id ,⊗ (lowerG ∘g π false)
-        --   ¬] → id ,⊗ (lowerG ∘g π false)
-        -- )
-        -- ∘g ⊕ᴰ-distR .fun ∘g lowerG ,⊗ id
+        lowerG ,⊗ ⊕ᴰ-elim λ where
+          nothing → lowerG ∘g π₁
+          (just [) → lowerG ∘g π₁
+          (just ]) → NIL ,⊗ id ∘g ⊗-unit-l⁻ ∘g lowerG ∘g π₁
+          (just +) → lowerG ∘g π₁
+          (just (num x)) → lowerG ∘g π₁
   buildExpAlg (n , Adding) =
     ⊕ᴰ-elim λ where
       (doneGood Eq.refl Eq.refl) → NIL ,⊗ id ∘g ⊗-unit-r⁻ ∘g lowerG
@@ -629,7 +629,7 @@ module Soundness where
         ∘g id ,⊗ (⊗⊕-distR ∘g unrollEXP ,⊗ id)
         ∘g lowerG ,⊗ lowerG
 
-  buildExp : AutomatonG true (0 , Opening) ⊢ EXP
+  buildExp : Trace true (0 , Opening) ⊢ EXP
   buildExp = ⊗-unit-r ∘g rec _ buildExpAlg (0 , Opening)
 
 -- -- Completeness : every LL⟨1⟩ parse has a corresponding accepting trace
@@ -639,8 +639,8 @@ module Soundness where
 
 -- -- -- TODO : its not clear how to make a DoneOpening grammar
 -- --   ⟦_⟧Nonterminal : Nonterminal → Grammar ℓ-zero
--- --   ⟦ Exp ⟧Nonterminal = &[ n ∈ ℕ ] {!!} -- &[ n ∈ ℕ ] (DoneOpeningG true n ⊸ AutomatonG true (n , Opening))
--- --   ⟦ Atom ⟧Nonterminal = {!!} -- &[ n ∈ ℕ ] (DoneOpeningG true n ⊸ AutomatonG true (n , Opening))
+-- --   ⟦ Exp ⟧Nonterminal = &[ n ∈ ℕ ] {!!} -- &[ n ∈ ℕ ] (DoneOpeningG true n ⊸ Trace true (n , Opening))
+-- --   ⟦ Atom ⟧Nonterminal = {!!} -- &[ n ∈ ℕ ] (DoneOpeningG true n ⊸ Trace true (n , Opening))
 
 --   -- mkTraceAlg : Algebra BinOpTy ⟦_⟧Nonterminal
 --   -- mkTraceAlg Exp =
@@ -654,7 +654,7 @@ module Soundness where
 --   --     num → {!!}
 --   --     parens → {!!}
 
---   -- mkTrace : EXP ⊢ AutomatonG true (0 , Opening)
+--   -- mkTrace : EXP ⊢ Trace true (0 , Opening)
 --   -- mkTrace =
 --   --   ⊸-app
 --   --   ∘g id ,⊗ {!!}
