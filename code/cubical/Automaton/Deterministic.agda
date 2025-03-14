@@ -1,17 +1,16 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
 
 module Automaton.Deterministic (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 
-open import Cubical.Relation.Nullary.DecidablePropositions
-
-open import Cubical.Data.FinSet
 open import Cubical.Data.Bool
 import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
+open import Parser Alphabet
 open import Term Alphabet
 
 private
@@ -26,6 +25,18 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   data Tag : Type ℓ where
     stop step : Tag
+
+  open Iso
+
+  TagRep : Iso Tag Bool
+  TagRep = iso
+    (λ { stop → false ; step → true})
+    (λ { false → stop ; true → step})
+    (λ { false → refl ; true → refl})
+    (λ { stop → refl ; step → refl})
+
+  isSetTag : isSet Tag
+  isSetTag = isSetRetract (TagRep .fun) (TagRep .inv) (TagRep .leftInv) isSetBool
 
   TraceTy : Bool → (q : Q) → Functor Q
   TraceTy b q = ⊕e Tag λ {
@@ -64,8 +75,6 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   Trace≅string q .ret = the-ret
     where
     opaque
-      -- TODO : either replace the dist unfoldings, or
-      -- note clearly their use as a rudimentary solver
       unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
       the-ret : π q ∘g parse ∘g ⊕ᴰ-elim (λ b → print b q) ≡ id
       the-ret =
@@ -93,3 +102,21 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   unambiguous-Trace : ∀ b q → unambiguous (Trace b q)
   unambiguous-Trace b q = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace q) b
+
+  isSetGrammarTrace : ∀ b q → isSetGrammar (Trace b q)
+  isSetGrammarTrace b = isSetGrammarμ (TraceTy b) λ q →
+    isSetTag , λ where
+      stop → (isOfHLevelLift 2
+               (isSetRetract Eq.eqToPath Eq.pathToEq
+                Eq.pathToEq-eqToPath (isProp→isSet (isSetBool _ _)))) ,
+             λ _ → isSetGrammarε*
+      step → isOfHLevelLift 2 (Alphabet .snd) ,
+             λ (lift y) → (isSetGrammarLift (isSetGrammarLiteral _)) , _
+
+  open Parser
+
+  AccTraceParser : ∀ q → Parser (Trace true q)
+  AccTraceParser q .compl = Trace false q
+  AccTraceParser q .compl-disjoint =
+    hasDisjointSummands⊕ᴰ isSetBool (unambiguous-⊕Trace q) true false true≢false
+  AccTraceParser q .fun = Ind⊕→⊕ (λ b → Trace b q) ∘g π q ∘g parse

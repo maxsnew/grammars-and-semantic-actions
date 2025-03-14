@@ -33,11 +33,11 @@ private
 
 open StrongEquivalence
 
-module _ (A B : Grammar ℓA) where
-  Ind⊕→⊕ : A Ind⊕.⊕ B ⊢ A ⊕ B
+module _ (A : Bool → Grammar ℓA) where
+  Ind⊕→⊕ : ⊕ᴰ A ⊢ A true ⊕ A false
   Ind⊕→⊕ = Ind⊕.⊕-elim inl inr
 
-  ⊕→Ind⊕ : A ⊕ B ⊢ A Ind⊕.⊕ B
+  ⊕→Ind⊕ : A true ⊕ A false ⊢ ⊕ᴰ A
   ⊕→Ind⊕ = ⊕-elim Ind⊕.inl Ind⊕.inr
 
   private
@@ -50,7 +50,7 @@ module _ (A B : Grammar ℓA) where
 
       the-ret : Ind⊕→⊕ ∘g ⊕→Ind⊕ ≡ id
       the-ret = ⊕≡ _ _ refl refl
-  ⊕≅⊕Ind : A ⊕ B ≅ A Ind⊕.⊕ B
+  ⊕≅⊕Ind : A true ⊕ A false ≅ ⊕ᴰ A
   ⊕≅⊕Ind .fun = ⊕→Ind⊕
   ⊕≅⊕Ind .inv = Ind⊕→⊕
   ⊕≅⊕Ind .sec = the-sec
@@ -68,7 +68,7 @@ module _ {A B : Grammar ℓA}
       (λ where
         true true neq → Empty.rec (neq refl)
         false true neq → disjoint-summands ∘g &-swap
-        true false neq → disjoint-summands 
+        true false neq → disjoint-summands
         false false neq → Empty.rec (neq refl)
       )
       (λ where
@@ -77,26 +77,26 @@ module _ {A B : Grammar ℓA}
       _≟_
 
   unambiguous⊕ : unambiguous (A ⊕ B)
-  unambiguous⊕ = unambiguous≅ (sym≅ (⊕≅⊕Ind _ _)) unambiguousInd⊕
+  unambiguous⊕ = unambiguous≅ (sym≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B))) unambiguousInd⊕
 
 module _ {A B : Grammar ℓA} (unambig⊕ : unambiguous (A ⊕ B)) where
   unambig-⊕-is-disjoint : disjoint A B
   unambig-⊕-is-disjoint =
     disjoint≅2
       (hasDisjointSummands⊕ᴰ isSetBool
-        (unambiguous≅ (⊕≅⊕Ind A B) unambig⊕)
+        (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕)
         true false true≢false)
       id≅ id≅
 
   summand-L-is-unambig : unambiguous A
   summand-L-is-unambig =
     unambiguous≅ id≅
-      (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind _ _) unambig⊕) true)
+      (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕) true)
 
   summand-R-is-unambig : unambiguous B
   summand-R-is-unambig =
     unambiguous≅ id≅
-      (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind _ _) unambig⊕) false)
+      (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕) false)
 
 open StrongEquivalence
 open LogicalEquivalence

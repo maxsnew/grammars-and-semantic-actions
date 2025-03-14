@@ -1,0 +1,19 @@
+FROM cubical:latest
+
+ENV HOME=/home/$USER_NAME
+ENV AGDA_DIR=$HOME/.agda
+ENV AGDA_LIBS=$AGDA_DIR/libraries
+
+# Set up Agda configuration directories
+RUN mkdir -p $AGDA_DIR && touch $AGDA_LIBSb
+
+# Install Cubical Agda library
+WORKDIR $HOME
+RUN git clone https://github.com/agda/cubical --branch master
+WORKDIR $HOME/cubical
+RUN git checkout 581748b01bc43a25295993347bdc8c7cb2166090
+RUN echo "$HOME/cubical.agda-lib" >> $AGDA_LIBS
+
+WORKDIR /home/$USER_NAME/cubical
+
+CMD ["/bin/bash"]

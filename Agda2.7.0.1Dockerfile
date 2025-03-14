@@ -1,0 +1,17 @@
+FROM haskell:9.8.2
+
+ENV HOME=/home
+ENV AGDA_DIR=$HOME/.agda
+ENV AGDA_LIBS=$AGDA_DIR/libraries
+
+# Set up Agda configuration directories
+RUN mkdir -p $AGDA_DIR && touch $AGDA_LIBS
+
+WORKDIR $HOME
+
+# Install Agda
+RUN cabal update
+RUN cabal install Agda-2.7.0.1
+RUN ln -s $HOME/.local/bin/agda /usr/local/bin/agda
+
+CMD ["/bin/bash"]

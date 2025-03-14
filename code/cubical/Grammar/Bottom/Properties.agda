@@ -113,6 +113,8 @@ opaque
     p : ⊥-elim ≡ e' ∘g ⊥-elim
     p = is-initial→propHoms is-initial-⊥ _ _
 
+uninhabited→initial : uninhabited A → is-initial A
+uninhabited→initial = A⊢⊥→is-initial
 
 opaque
   unfolding ⊥*

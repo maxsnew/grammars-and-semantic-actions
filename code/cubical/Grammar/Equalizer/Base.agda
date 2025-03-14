@@ -124,6 +124,20 @@ eq-π-pf-⊸-intro f f' =
      ⊸-intro (f' ∘g eq-π (⊸-intro f) (⊸-intro f') ,⊗ id)
      ∎)
 
+eq-π-pf-⟜-intro :
+  (f f' : A ⊗ B ⊢ C) →
+  f ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f') ≡ f' ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f')
+eq-π-pf-⟜-intro f f' =
+  isoFunInjective ⟜UMP _ _
+    (⟜-intro (f ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f'))
+      ≡⟨ sym (⟜-intro-natural {f = f} {f' = eq-π (⟜-intro f) (⟜-intro f')}) ⟩
+    ⟜-intro f ∘g eq-π (⟜-intro f) (⟜-intro f')
+      ≡⟨ eq-π-pf (⟜-intro f) (⟜-intro f') ⟩
+    ⟜-intro f' ∘g eq-π (⟜-intro f) (⟜-intro f')
+      ≡⟨ ⟜-intro-natural {f = f'} {f' = eq-π (⟜-intro f) (⟜-intro f')} ⟩
+     ⟜-intro (f' ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f'))
+     ∎)
+
 module _ {X : Type ℓX}
     (tag : X → Type ℓX)
     (F : ∀ x → tag x → Functor X)

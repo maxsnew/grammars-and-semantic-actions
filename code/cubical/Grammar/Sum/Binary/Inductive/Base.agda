@@ -14,40 +14,37 @@ open import Term.Base Alphabet
 private
   variable
     ℓA ℓB ℓC ℓD ℓ ℓ' : Level
-    A : Grammar ℓA
-    B : Grammar ℓB
-    C : Grammar ℓC
-    D : Grammar ℓD
+    A B C D : Grammar ℓA
 
-private
-  ⊕Ind : Grammar ℓA → Grammar ℓA → Bool → Grammar ℓA
-  ⊕Ind A B true = A
-  ⊕Ind A B false = B
+⊕Ind : Grammar ℓA → Grammar ℓA → Bool → Grammar ℓA
+⊕Ind A B true = A
+⊕Ind A B false = B
 
 _⊕_ : Grammar ℓA → Grammar ℓA → Grammar ℓA
 A ⊕ B = ⊕ᴰ (⊕Ind A B)
 
 infixr 18 _⊕_
 
-inl : A ⊢ A ⊕ B
-inl = σ true
+module _ {A : Bool → Grammar ℓA} where
+  inl : A true ⊢ ⊕ᴰ A
+  inl = σ true
 
-inr : A ⊢ B ⊕ A
-inr = σ false
+  inr : A false ⊢ ⊕ᴰ A
+  inr = σ false
 
-⊕-elim : A ⊢ B → C ⊢ B → A ⊕ C ⊢ B
-⊕-elim {A = A} {B = B} {C = C} e f = ⊕ᴰ-elim ⊕-elim'
-  where
-  ⊕-elim' : (b : Bool) → ⊕Ind A C b ⊢ B
-  ⊕-elim' false = f
-  ⊕-elim' true = e
+  ⊕-elim : A true ⊢ B → A false ⊢ B → ⊕ᴰ A ⊢ B
+  ⊕-elim {B = B} e f = ⊕ᴰ-elim ⊕-elim'
+    where
+    ⊕-elim' : (b : Bool) → A b ⊢ B
+    ⊕-elim' false = f
+    ⊕-elim' true = e
 
 ⊕-βl : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
-  ⊕-elim e₁ e₂ ∘g inl ≡ e₁
+  ⊕-elim {A = ⊕Ind _ _} e₁ e₂ ∘g inl ≡ e₁
 ⊕-βl e₁ e₂ = refl
 
 ⊕-βr : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
-  ⊕-elim e₁ e₂ ∘g inr ≡ e₂
+  ⊕-elim {A = ⊕Ind _ _} e₁ e₂ ∘g inr ≡ e₂
 ⊕-βr e₁ e₂ = refl
 
 ⊕-η : (e : A ⊕ B ⊢ C) →
