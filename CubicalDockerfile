@@ -1,9 +1,5 @@
 FROM stvnschfr/agda2.7.0.1:v1.0
 
-# ENV HOME=/home/$USER_NAME
-# ENV AGDA_DIR=$HOME/.agda
-# ENV AGDA_LIBS=$AGDA_DIR/libraries
-
 WORKDIR $HOME
 
 # Install Cubical Agda library
