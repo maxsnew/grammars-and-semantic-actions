@@ -68,7 +68,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   print : ∀ b → (q : Q) → Trace b q ⊢ string
   print b q = rec (TraceTy b) (printAlg b) q
 
-  Trace≅string : (q : Q) → StrongEquivalence (⊕[ b ∈ Bool ] Trace b q) string
+  Trace≅string : (q : Q) → ⊕[ b ∈ Bool ] Trace b q ≅ string
   Trace≅string q .fun = ⊕ᴰ-elim (λ b → print b q)
   Trace≅string q .inv = π q ∘g parse
   Trace≅string q .sec = unambiguous-string _ _
