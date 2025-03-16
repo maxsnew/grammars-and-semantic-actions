@@ -2,7 +2,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
 
-module NFA.Determinization.Base (Alphabet : hSet ℓ-zero) where
+module Determinization.WeakEquivalence (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Equiv
 import Cubical.Foundations.Isomorphism as Isom
