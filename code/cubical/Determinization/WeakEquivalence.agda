@@ -263,19 +263,6 @@ module Determinization
       in
       q' , q'∈X , t , c≡ , src≡ , dst≡
 
-
-  -- TODO this should go elsewhere
-  witness-true :
-    (A : DecProp' ℓ) → A .fst →
-    true Eq.≡ Bool-iso-DecProp' .Isom.Iso.inv A
-  witness-true {ℓ} (ty , true , _) a = Eq.refl
-  witness-true {ℓ} (ty , false , snd₁) a = Empty.rec (snd₁ .fst a)
-
-  truth→witness :
-    (b : Bool) → true Eq.≡ b →
-    Isom.Iso.fun (Bool-iso-DecProp' {ℓ = ℓN}) b .fst
-  truth→witness true true≡b = lift tt
-
   ℙNAcc-DecProp' : (X : εClosedℙQ) → DecProp' ℓN
   ℙNAcc-DecProp' X =
     DecProp'∃ N.Q
