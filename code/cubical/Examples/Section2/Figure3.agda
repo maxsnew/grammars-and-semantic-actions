@@ -4,6 +4,8 @@ open import Examples.Section2.Alphabet
 open import Grammar Alphabet
 open import Term Alphabet
 
+-- Need to use ⊗-unit-r⁻ to manually insert an ε
+-- This step would be implicit on paper
 g : ＂ a ＂ ⊗ ＂ b ＂ ⊢ (＂ a ＂ *) ⊗ ＂ b ＂ ⊕ ＂ c ＂
 g = inl ∘g (CONS ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ id
 

@@ -92,6 +92,7 @@ module _ {A : Grammar ℓA} where
         ∙ π≡)
     unambiguous→Δ≅ .ret = &-β₁ id id
 
+-- TODO
 -- rename to "unambiguously parseable?"
 totallyParseable : Grammar ℓA → Type (ℓ-suc ℓA)
 totallyParseable {ℓA = ℓA} A =
