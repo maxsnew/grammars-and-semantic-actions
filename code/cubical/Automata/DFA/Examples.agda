@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module DFA.Examples where
+module Automata.DFA.Examples where
 
 open import Cubical.Foundations.Structure
 
@@ -27,7 +27,7 @@ Alphabet = (Alph , isSetAlph)
 
 open import Grammar Alphabet
 open import Term Alphabet
-open import DFA.Base Alphabet
+open import Automata.DFA.Base Alphabet
 
 open import String.Unicode
 open import Cubical.Data.Maybe

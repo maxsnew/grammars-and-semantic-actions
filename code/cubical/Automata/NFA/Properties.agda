@@ -2,12 +2,12 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
 
-module NFA.Properties (Alphabet : hSet ℓ-zero) where
+module Automata.NFA.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Bool
 import Cubical.Data.Equality as Eq
 
-open import NFA.Base Alphabet
+open import Automata.NFA.Base Alphabet
 open import Grammar Alphabet
 open import Term Alphabet
 

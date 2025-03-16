@@ -16,7 +16,7 @@ open import Cubical.Relation.Nullary.DecidablePropositions.More
 open import Grammar Alphabet
 open import Term Alphabet
 
-open import NFA.Base Alphabet
+open import Automata.NFA.Base Alphabet
 open import Thompson.Construction Alphabet
 
 open RegularExpression

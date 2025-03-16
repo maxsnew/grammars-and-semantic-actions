@@ -30,8 +30,8 @@ import Cubical.HITs.PropositionalTruncation.Monad as PTMonad
 
 open import Grammar Alphabet
 open import Term Alphabet
-open import NFA.Base Alphabet
-open import DFA Alphabet
+open import Automata.NFA.Base Alphabet
+open import Automata.DFA Alphabet
 
 open import Cubical.Data.Quiver.Base
 open import Cubical.Data.Quiver.Reachability

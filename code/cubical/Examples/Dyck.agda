@@ -42,7 +42,7 @@ Alphabet = (Bracket , isSetBracket)
 
 open import Grammar Alphabet renaming (NIL to *NIL)
 open import Grammar.Coherence Alphabet
-open import Automaton.Deterministic Alphabet
+open import Automata.Deterministic Alphabet
 open import Parser Alphabet
 open import Term Alphabet
 

@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module DFA.Regex (Alphabet : hSet ℓ-zero) where
+module Automata.DFA.Regex (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 
@@ -13,10 +13,10 @@ open import Cubical.Data.Bool
 open import Grammar Alphabet
 open import Term Alphabet
 
-open import DFA.Base Alphabet
-open import NFA.Base Alphabet
+open import Automata.DFA.Base Alphabet
+open import Automata.NFA.Base Alphabet
 open import Thompson.Base Alphabet
-open import NFA.Determinization Alphabet
+open import Determinization.WeakEquivalence Alphabet
 
 private
   variable

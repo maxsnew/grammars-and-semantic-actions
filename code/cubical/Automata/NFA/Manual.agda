@@ -3,7 +3,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
 
-module NFA.Manual (Alphabet : hSet ℓ-zero) where
+module Automata.NFA.Manual (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Isomorphism
 

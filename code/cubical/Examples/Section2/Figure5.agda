@@ -9,7 +9,7 @@ import Cubical.Data.Equality as Eq
 
 open import Examples.Section2.Alphabet
 open import Grammar Alphabet
-open import NFA.Base Alphabet
+open import Automata.NFA.Base Alphabet
 open import Term Alphabet
 
 

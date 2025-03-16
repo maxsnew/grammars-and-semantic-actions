@@ -3,7 +3,7 @@ open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
 open import Cubical.Data.FinSet
 
-module Turing.OneSided.Base
+module Automata.Turing.OneSided.Base
   (Alphabet : hSet ℓ-zero)
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
   where

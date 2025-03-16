@@ -27,7 +27,7 @@ open import Cubical.Data.Unit
 import Cubical.HITs.PropositionalTruncation as PT hiding (rec)
 
 open import Grammar Alphabet
-open import NFA.Base Alphabet
+open import Automata.NFA.Base Alphabet
 open import Term Alphabet
 
 open StrongEquivalence

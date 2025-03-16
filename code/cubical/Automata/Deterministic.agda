@@ -2,7 +2,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Automaton.Deterministic (Alphabet : hSet ℓ-zero) where
+module Automata.Deterministic (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 

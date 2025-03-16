@@ -5,9 +5,8 @@ module README where
 ------------------------------------------------------------------------
 
 ------------------------------------------------------------------------
--- Module Hierarchy
+-- Language Primitives
 ------------------------------------------------------------------------
-
 -- Definitions of strings as lists over an alphabet type
 import String.Everything
 
@@ -19,23 +18,42 @@ import Grammar.Everything
 -- Functions between formal grammars
 import Term.Everything
 
--- Encodings of Automata formalisms as formal grammars
-import DFA.Everything
-import Automaton.Everything
-import NFA.Everything
-import PDA.Everything
-import Turing.Everything
+-- Definition 4.4 of a parser
+import Parser.Everything
 
--- Some example parsers
+------------------------------------------------------------------------
+-- Encodings of automata formalisms as formal grammars
+------------------------------------------------------------------------
+-- Encodings of DFAs, NFAs,
+-- determinstic (but not necessarily finite) automata, Turing
+-- machines, and PDAs
+import Automata.Everything
+
+------------------------------------------------------------------------
+-- Examples
+------------------------------------------------------------------------
+-- Includes verified parsesrs for the Dyck grammar, a parser for
+-- a language of arithmetic expressions, and expanded examples from
+-- Section 2
 import Examples.Everything
 
+-- A verification of Thompson's construction
+-- From a regular expression r, construct a corresponding NFA
+-- and prove that NFA is strongly equivalent to r
+import Thompson.Everything
+
+-- A verification of the powerset construction. Given an NFA,
+-- build a corresponding DFA and prove that it recognizes the
+-- same language
+import Determinization.Everything
+
+------------------------------------------------------------------------
+-- Utilities
+------------------------------------------------------------------------
 -- A soft fork of the Cubical standard repository with the utilities
 -- we needed when building this library
 -- (ideally these get merged upstream at some point)
 import Cubical.Everything
-
--- Definition 4.4 of a Parser
-import Parser.Everything
 
 -- An attempt at defining a "Lexer" as a translation between alphabets
 -- This is very underdeveloped at the moment.
@@ -46,6 +64,5 @@ import Parser.Everything
 -- to only a subset of characters
 --
 -- It is *not* used in any examples mentioned in the paper, nor
--- is it imported in any of Grammar, Term, DFA, Automaton, NFA,
--- PDA, Turing, Examples, Cubical, or Parser
+-- is it a dependence for any of the other modules
 import Lexer.Everything
