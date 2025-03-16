@@ -34,12 +34,18 @@ import Examples.Everything
 -- (ideally these get merged upstream at some point)
 import Cubical.Everything
 
--- TODO : use this in examples
+-- Definition 4.4 of a Parser
 import Parser.Everything
 
--- TODO : remove this
 -- An attempt at defining a "Lexer" as a translation between alphabets
--- This is very underdeveloped at the moment, but it
--- is imported in a couple points in the String directory, so
--- we have not removed it
+-- This is very underdeveloped at the moment.
+--
+-- It is imported at a couple points in the String directory
+-- for some experiments on ergonomic changes we could make to
+-- the language, such as easily changing alphabets or reducing
+-- to only a subset of characters
+--
+-- It is *not* used in any examples mentioned in the paper, nor
+-- is it imported in any of Grammar, Term, DFA, Automaton, NFA,
+-- PDA, Turing, Examples, Cubical, or Parser
 import Lexer.Everything
