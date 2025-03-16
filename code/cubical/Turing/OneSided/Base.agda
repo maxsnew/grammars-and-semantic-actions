@@ -8,22 +8,18 @@ module Turing.OneSided.Base
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩)
   where
 
-open import Cubical.Foundations.Isomorphism
-
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Nat
+open import Cubical.Data.List hiding (init ; rec)
 open import Cubical.Data.Bool
+open import Cubical.Data.Maybe as Maybe
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Empty as Empty hiding (rec)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
-open import Cubical.Data.List hiding (init ; rec)
-open import Cubical.Data.List.FinData
-import Cubical.Data.Equality as Eq
 
 private
   variable ℓT : Level
@@ -43,7 +39,8 @@ opaque
     isFinSet⊎ (_ , isFinSetAlphabet) (Unit , isFinSetUnit)
 
 open import Grammar Alphabet
-import Grammar.Maybe Alphabet as MaybeG
+open import Grammar.Reify.Base Alphabet
+import Grammar.Maybe.Base Alphabet as MaybeG
 open import Term Alphabet
 
 data Shift : Type where
@@ -76,6 +73,16 @@ record TuringMachine : Type (ℓ-suc ℓ-zero) where
       (λ _ → tape m)
       (discreteℕ head m)
 
+  blankTape : Tape
+  blankTape n = blank
+
+  initHead : Head
+  initHead = 0
+
+  initTape : String → Tape
+  initTape [] = blankTape
+  initTape (c ∷ w) = consTape (Sum.inl c) (initTape w)
+
   mkTransition : ⟨ Q ⟩ → Tape → Head → ⟨ Q ⟩ → ⟨ TapeAlphabet ⟩ → Shift → ⟨ Q ⟩ × Tape × Head
   mkTransition q tape zero nextState toWrite L = nextState , writeTape tape zero toWrite , zero
   mkTransition q tape (suc head) nextState toWrite L = nextState , writeTape tape (suc head) toWrite , head
@@ -98,68 +105,46 @@ module _ (TM : TuringMachine) where
       TuringTrace b (transition q t h) →
       TuringTrace b (q , t , h)
 
-  blankTape : Tape
-  blankTape n = blank
+  AcceptingFrom : ⟨ Q ⟩ × Tape × Head → Type ℓ-zero
+  AcceptingFrom (q , t , h) = TuringTrace true (q , t , h)
 
-  initHead : Head
-  initHead = 0
+  RejectingFrom : ⟨ Q ⟩ × Tape × Head → Type ℓ-zero
+  RejectingFrom (q , t , h) = TuringTrace false (q , t , h)
 
-  Accepting : ⟨ Q ⟩ × Tape × Head → Type ℓ-zero
-  Accepting (q , t , h) = TuringTrace true (q , t , h)
+  Accepting : String → Type ℓ-zero
+  Accepting w = AcceptingFrom (init , initTape (rev w) , initHead)
 
-  data Tag : Type ℓ-zero where
-    nil snoc : Tag
+  Rejecting : String → Type ℓ-zero
+  Rejecting w = RejectingFrom (init , initTape (rev w) , initHead)
 
-  TuringTy : Tape → Functor Tape
-  TuringTy tape =
-    ⊕e Tag λ {
-      nil → k ε
-    ; snoc → ⊕e ⟨ Alphabet ⟩
-      λ c → ⊕e (Σ[ tape' ∈ Tape ] Tape≡ (consTape (Sum.inl c) tape') tape) (λ (tape' , _) → (Var tape') ⊗e (k (literal c))) }
+  -- A grammar that accepts a string if it is accepted by
+  -- a Turing machine
+  Turing : Grammar ℓ-zero
+  Turing = Reify Accepting
 
-  -- The grammar of strings thats form the tape that have the input string in the leftmost
-  -- entries of the tape
-  TuringG : Tape → Grammar ℓ-zero
-  TuringG tape = μ TuringTy tape
-
-  open StrongEquivalence
-  -- Linearly build the initial tape
-  parseInitTape : string ⊢ ⊕[ tape ∈ Tape ] TuringG tape
-  parseInitTape = fold*l' char (λ _ → ⊕ᴰ-elim (λ {
-        nil → σ blankTape ∘g roll ∘g σ nil ∘g lowerG
-      ; snoc → (⊕ᴰ-elim (λ tape →
-          ⊕ᴰ-elim (λ c → σ (consTape (Sum.inl c) tape)
-            ∘g roll ∘g σ snoc ∘g σ c ∘g σ (tape , λ _ → refl) ∘g liftG ,⊗ liftG)
-          ∘g ⊕ᴰ-distR .fun)
-        ∘g ⊕ᴰ-distL .fun) ∘g lowerG ,⊗ lowerG}))
-
-  -- From an input configuration, find an accepting trace, find a rejecting trace, or timeout
-  decide-bounded :
-    ∀ (fuel : ℕ) q t h → Maybe (Σ[ b ∈ Bool ] TuringTrace b (q , t , h))
+  decide-bounded : ∀ (fuel : ℕ) q t h → Maybe (AcceptingFrom (q , t , h))
   decide-bounded 0 q t h = nothing
   decide-bounded (suc n) q t h =
     decRec
-      (λ acc≡q → just(true , subst (λ z → TuringTrace true (z , t , h)) acc≡q (accept t h refl)))
-      (λ ¬acc≡q →
-        decRec
-          (λ rej≡q → just(false , subst (λ z → TuringTrace false (z , t , h)) rej≡q (reject t h refl)))
-          (λ ¬rej≡q →
-            let q' , t' , h' = transition q t h in
-            let maybeTrace = decide-bounded n q' t' h' in
-            map-Maybe (λ (b , trace) → b , move q t h trace) maybeTrace)
-          (isFinSet→Discrete (str Q) rej q))
+      (λ acc≡q → just (subst (λ z → TuringTrace true (z , t , h)) acc≡q (accept t h refl)))
+      (λ _ → nothing)
       (isFinSet→Discrete (str Q) acc q)
 
-  run :
-    (⊕[ tape ∈ Tape ] TuringG tape)
-      ⊢
-    &[ fuel ∈ ℕ ]
-    MaybeG.Maybe (⊕[ tape ∈ Tape ]
-                  ⊕[ b ∈ Bool ]
-                  ⊕[ trace ∈ TuringTrace b (init , tape , initHead) ] TuringG tape)
-  run = &ᴰ-intro λ fuel → ⊕ᴰ-elim (λ tape →
-    let maybeTrace = decide-bounded fuel init tape initHead in
-      Maybe.rec
-        MaybeG.nothing
-        (λ (b , trace) → MaybeG.return ∘g σ tape ∘g σ b ∘g σ trace)
-        maybeTrace)
+  decide-bounded' : ∀ (fuel : ℕ) → string ⊢ Reify λ w → Maybe (Accepting w)
+  decide-bounded' n =
+    readReify (λ w → Maybe (Accepting w))
+    (λ w → decide-bounded n init (initTape (rev w)) initHead)
+
+  -- Even though reification is powerful enough to describe
+  -- unrestricted grammars, their membership is undecidable
+  -- in general. The best algorithm that
+  -- we may hope for is some bounded search procedure
+  run : string ⊢ &[ fuel ∈ ℕ ] MaybeG.Maybe Turing
+  run = &ᴰ-intro λ fuel →
+    elimReify
+      (λ w → Maybe (Accepting w))
+      (λ w → Maybe.rec
+        (MaybeG.nothing {A = ⌈ w ⌉} w (mk⌈⌉ w))
+        λ accepts → MaybeG.just w (mkReify _ accepts)
+      )
+    ∘g decide-bounded' fuel
