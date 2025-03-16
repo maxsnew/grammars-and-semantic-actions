@@ -25,16 +25,16 @@ private
 
 record NFA ℓN : Type (ℓ-suc ℓN) where
   field
-    Q : FinSet ℓN
-    init : Q .fst
-    isAcc : Q .fst → Bool
-    transition : FinSet ℓN
-    src : ⟨ transition ⟩ → ⟨ Q ⟩
-    dst : ⟨ transition ⟩ → ⟨ Q ⟩
-    label : ⟨ transition ⟩ → ⟨ Alphabet ⟩
-    ε-transition : FinSet ℓN
-    ε-src : ⟨ ε-transition ⟩ → ⟨ Q ⟩
-    ε-dst : ⟨ ε-transition ⟩ → ⟨ Q ⟩
+    Q : FinSet ℓN -- finite set of states
+    init : ⟨ Q ⟩  -- initial state
+    isAcc : ⟨ Q ⟩ → Bool -- acceptance for states
+    transition : FinSet ℓN -- finite set of transitions
+    src : ⟨ transition ⟩ → ⟨ Q ⟩ -- source state of transition
+    dst : ⟨ transition ⟩ → ⟨ Q ⟩ -- destination state of transition
+    label : ⟨ transition ⟩ → ⟨ Alphabet ⟩ -- label of transition
+    ε-transition : FinSet ℓN -- finite set of ε transitions
+    ε-src : ⟨ ε-transition ⟩ → ⟨ Q ⟩ -- source of ε transition
+    ε-dst : ⟨ ε-transition ⟩ → ⟨ Q ⟩ -- destination of ε transition
 
   decEqQ : Discrete ⟨ Q ⟩
   decEqQ = isFinSet→Discrete (str Q)
