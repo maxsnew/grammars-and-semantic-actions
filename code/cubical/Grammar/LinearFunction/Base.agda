@@ -13,7 +13,6 @@ open import Grammar.HLevels.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Epsilon.Base Alphabet
 open import Term.Base Alphabet
-open import Term.Bilinear Alphabet
 open import Term.Nullary Alphabet
 
 private
@@ -46,26 +45,6 @@ opaque
   ⟜-app :
     A ⊗ (B ⟜ A) ⊢ B
   ⟜-app {B = B} _ p = subst B (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
-
-  ⟜-intro' :
-    A ,, B ⊢ C →
-    B ⊢ C ⟜ A
-  ⟜-intro' f w' p w q = f w w' q p
-
-  ⟜-app' :
-    A ,, (B ⟜ A) ⊢ B
-  ⟜-app' w1 w2 Ap f = f w1 Ap
-
---   -- this makes me think we don't want ⟜-app' and ⟜-intro' to be opaque...
-  ⟜-β' :
-    ∀ (f : A ,, B ⊢ C) →
-    _b∘r_ {B = C ⟜ A}{C = C} ⟜-app' (⟜-intro' f) ≡ f
-  ⟜-β' f = refl
-
-  ⟜-η' :
-    ∀ (f : A ⊢ B ⟜ C) → f ≡ ⟜-intro' (_b∘r_ {B = B ⟜ C}{C = B} ⟜-app' f)
-  ⟜-η' f = refl
-
 
 ⟜-intro-ε :
   A ⊢ C → ε ⊢ C ⟜ A
@@ -134,25 +113,6 @@ opaque
     (A ⊸ B) ⊗ A ⊢ B
   ⊸-app {B = B} _ (((w' , w'') , w≡w'++w'') , f , inp) =
     subst B (sym w≡w'++w'') (f _ inp)
-
-  ⊸-intro' :
-    A ,, B ⊢ C
-    → A ⊢ B ⊸ C
-  ⊸-intro' f w x w' x₁ = f w w' x x₁
-
-  ⊸-app' :
-    (A ⊸ B) ,, A ⊢ B
-  ⊸-app' w w' fp Ap = fp w' Ap
-
-  ⊸-β' :
-    ∀ (f : A ,, B ⊢ C) →
-    _b∘l_ {A = B ⊸ C}{C = C} ⊸-app' (⊸-intro' f) ≡ f
-  ⊸-β' f = refl
-
-  ⊸-η' :
-    ∀ (f : A ⊢ C ⊸ B) →
-    f ≡ ⊸-intro' (_b∘l_ {A = C ⊸ B}{C = B} ⊸-app' f)
-  ⊸-η' f = refl
 
 ⊸-intro⁻ :
   A ⊢ B ⊸ C →

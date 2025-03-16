@@ -16,7 +16,6 @@ open import Grammar.HLevels Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Term.Base Alphabet
-open import Term.Bilinear Alphabet
 open import Term.Category Alphabet
 
 private
