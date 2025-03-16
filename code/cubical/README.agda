@@ -25,8 +25,8 @@ import Parser.Everything
 -- Encodings of automata formalisms as formal grammars
 ------------------------------------------------------------------------
 -- Encodings of DFAs, NFAs,
--- determinstic (but not necessarily finite) automata, Turing
--- machines, and PDAs
+-- determinstic (but not necessarily finite) automata,
+-- and Turing machines
 import Automata.Everything
 
 ------------------------------------------------------------------------

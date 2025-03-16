@@ -199,7 +199,6 @@ module Automaton where
     add : AutomatonTag b n Adding
     unexpectedA : b Eq.≡ false → UnexpectedAdding → AutomatonTag b n Adding
 
-  -- TODO : rename
   DoneOpeningFun : ℕ → Maybe Tok → Functor (ℕ × AutomatonState)
   DoneOpeningFun n tok? = Var (n , Tok→State tok?) &e2 k (PeekChar tok?)
 
@@ -589,11 +588,7 @@ module Automaton where
   TraceParser : ∀ nq → Parser (Trace true nq)
   TraceParser nq .compl = Trace false nq
   TraceParser nq .compl-disjoint = disjointAccRej nq
-  TraceParser nq .fun =
-    (⊕ᴰ-elim λ where
-      false → inr
-      true → inl)
-    ∘g π nq ∘g parse
+  TraceParser nq .fun = Ind⊕→⊕ (λ b → Trace b nq) ∘g π nq ∘g parse
 
 -- Soundness : from every trace we can extract an LL⟨1⟩ parse
 module Soundness where

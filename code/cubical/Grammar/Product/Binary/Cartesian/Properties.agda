@@ -35,7 +35,6 @@ module _ {A : Grammar ℓA} {B : Grammar ℓB}
     isSetGrammar& : isSetGrammar (A & B)
     isSetGrammar& w = isSet× (isSetA w) (isSetB w)
 
--- TODO : derive from a general product unambiguity
 &unambiguous : unambiguous A → unambiguous B →
   unambiguous (A & B)
 &unambiguous uA uB e e' = &≡ e e' (uA _ _) (uB _ _)

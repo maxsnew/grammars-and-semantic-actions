@@ -92,12 +92,6 @@ module _ {A : Grammar ℓA} where
         ∙ π≡)
     unambiguous→Δ≅ .ret = &-β₁ id id
 
--- TODO
--- rename to "unambiguously parseable?"
-totallyParseable : Grammar ℓA → Type (ℓ-suc ℓA)
-totallyParseable {ℓA = ℓA} A =
-  Σ[ A' ∈ Grammar ℓA ] StrongEquivalence (A ⊕ A') ⊤
-
 disjoint : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
 disjoint A B = A & B ⊢ ⊥
 
@@ -130,21 +124,6 @@ disjoint⊕r : disjoint (A ⊕ B) C → disjoint B C
 disjoint⊕r dis = disjoint⊢ dis inr
 
 open StrongEquivalence
-
--- opaque
---   unfolding ⊤-intro
---   totallyParseable→unambiguous' :
---     totallyParseable A → unambiguous' A
---   totallyParseable→unambiguous' parseable =
---     Mono∘g inl _
---       (isStrongEquivalence→isMono
---         (parseable .snd .fun)
---         (StrongEquivalence→isStrongEquivalence _ _ (parseable .snd)))
---       isMono-⊕-inl
--- totallyParseable→unambiguous :
---   totallyParseable A → unambiguous A
--- totallyParseable→unambiguous parseable =
---   unambiguous'→unambiguous (totallyParseable→unambiguous' parseable)
 
 parser : Grammar ℓA → Type (ℓ-suc ℓA)
 parser {ℓA = ℓA} A =

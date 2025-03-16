@@ -25,6 +25,8 @@ open import Grammar.Epsilon Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Literal Alphabet
+open import Grammar.Function Alphabet
+open import Grammar.LinearFunction.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.KleeneStar.Inductive Alphabet
 open import Grammar.String.Base Alphabet
@@ -46,8 +48,9 @@ private
 
 open StrongEquivalence
 
--- TODO : clean up this file into submodules
-
+----------------------------------------------------------------------
+-- Axiomatize
+----------------------------------------------------------------------
 opaque
   unfolding literal
   char-length1 : ∀ w → char w → length w ≡ 1
@@ -513,10 +516,6 @@ unambiguous-unrolled-string' : unambiguous unrolled-string'
 unambiguous-unrolled-string' =
     unambiguous≅ unroll-string≅' unambiguous-string
 
-totallyParseable' : Grammar ℓA → Type (ℓ-suc ℓA)
-totallyParseable' {ℓA = ℓA} A =
-  Σ[ B ∈ Grammar ℓA ] StrongEquivalence (A ⊕ B) string
-
 disjoint-ε-char+' : disjoint ε (char +)
 disjoint-ε-char+' = unambig-⊕-is-disjoint unambiguous-unrolled-string
 
@@ -726,4 +725,3 @@ Split++⌈⌉ w x y z u (Sum.inl the-split) =
   ⌈ w ⌉ ⊗ ⌈ u ⌉ ⊗ ⌈ z ⌉
 Split++⌈⌉ w x y z u (Sum.inr the-split) =
   ⌈ y ⌉ ⊗ ⌈ u ⌉ ⊗ ⌈ x ⌉
-

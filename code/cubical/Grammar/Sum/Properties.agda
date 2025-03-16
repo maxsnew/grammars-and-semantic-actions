@@ -56,8 +56,6 @@ module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
     ⊕ᴰ-distR .sec = refl
     ⊕ᴰ-distR .ret = refl
 
-    -- TODO : axiomatize the β for these dists
-
 module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : X → Grammar ℓB}
   (A≅B : ∀ (x : X) → A x ≅ B x)
   where
@@ -79,7 +77,6 @@ module _
   nested⊕ᴰ≅ .sec = refl
   nested⊕ᴰ≅ .ret = refl
 
--- TODO
 module _
   {X : Type ℓX}
   (A : Grammar ℓA)

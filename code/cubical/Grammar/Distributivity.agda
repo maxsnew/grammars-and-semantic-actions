@@ -55,9 +55,6 @@ module _
   &ᴰ⊕ᴰ-dist≅ .sec = refl
   &ᴰ⊕ᴰ-dist≅ .ret = refl
 
--- TODO : derive the following as an instance of the arbitrary
--- distributivity above
-
 -- Distributivity of binary product over arbitrary sums
 module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : Grammar ℓB}
   where

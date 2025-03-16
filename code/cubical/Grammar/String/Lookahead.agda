@@ -76,7 +76,6 @@ remember {A = A} c? =
   peek .fun ∘g π₁
   ∎
   where
-  -- TODO prove directly?
   opaque
     unfolding π₁ ⊕-elim
     peek⁻∘σ≡π₁ :
@@ -99,7 +98,6 @@ rememberInd {A = A} c? =
   peekInd .fun ∘g Ind&.π₁ {A = Ind&.&Ind A (PeekChar c?)}
   ∎
   where
-  -- TODO prove directly?
   opaque
     unfolding π₁ ⊕-elim
     peek⁻∘σ≡π₁ :
