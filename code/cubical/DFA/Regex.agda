@@ -15,7 +15,7 @@ open import Term Alphabet
 
 open import DFA.Base Alphabet
 open import NFA.Base Alphabet
-open import NFA.Regex.Base Alphabet
+open import Thompson.Base Alphabet
 open import NFA.Determinization Alphabet
 
 private

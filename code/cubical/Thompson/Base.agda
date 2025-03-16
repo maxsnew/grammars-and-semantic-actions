@@ -1,28 +1,23 @@
 open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 
-module NFA.Regex.Base
-  (Alphabet : hSet ℓ-zero) where
+module Thompson.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.FinSet.More
 open import Cubical.Data.FinSet.Constructors
-open import Cubical.Data.SumFin
-open import Cubical.Data.Unit
 open import Cubical.Data.Bool
 
 open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 open import Grammar Alphabet
-open import Grammar.Equivalence.Combinators Alphabet
 open import Term Alphabet
 
 open import NFA.Base Alphabet
-open import NFA.Regex.Combinators Alphabet
+open import Thompson.Construction Alphabet
 
 open RegularExpression
 open NFA
@@ -106,23 +101,3 @@ isFinOrdεTransition (r *r) =
         )
         _ (isFinOrdεTransition r)))
 
-open StrongEquivalence
-regex≅NFA : (r : RegularExpression) →
-  StrongEquivalence
-    (Parse (regex→NFA r))
-    (RegularExpression→Grammar r)
-regex≅NFA εr = εNFA≅
-regex≅NFA ⊥r = ⊥NFA≅
-regex≅NFA (r ⊗r r') =
-  comp-strong-equiv
-    (⊗NFA≅ _ _)
-    (concat-strong-equiv (regex≅NFA r) (regex≅NFA r'))
-regex≅NFA (＂ c ＂r) = litNFA≅ c
-regex≅NFA (r ⊕r r') =
-  comp-strong-equiv
-    (⊕NFA≅ _ _)
-    (disjunct-strong-equiv (regex≅NFA r) (regex≅NFA r'))
-regex≅NFA (r *r) =
-  comp-strong-equiv
-    (*NFA≅ (regex→NFA r))
-    (star-strong-equiv (regex≅NFA r))
