@@ -71,7 +71,7 @@ module _
         x≠y (cong fst (funExt⁻ (funExt⁻ (eq-π-pf (σ {A = A} x ∘g π₁) (σ y ∘g π₂)) w) p))
 
     hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
-    hasDisjointSummands⊕ᴰ x y x≠y = 
+    hasDisjointSummands⊕ᴰ x y x≠y =
       equalizer→⊥ x y x≠y
       ∘g eq-intro {A = A x & A y}{B = ⊕[ x ∈ X ] A x}
         (σ x ∘g π₁) (σ y ∘g π₂) id

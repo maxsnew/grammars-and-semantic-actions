@@ -75,7 +75,7 @@ module _ {A B : Bool → Grammar ℓA} where
 
 
 module _
-  {A B C : Bool → Grammar ℓA} 
+  {A B C : Bool → Grammar ℓA}
   (e : A true ⊢ B true) (f : A false ⊢ B false)
   (g : B true ⊢ C true) (h : B false ⊢ C false) where
   &par∘ : (&par {A = B} {B = C} g h) ∘g (&par {A = A} e f) ≡ (g ∘g e) ,&p (h ∘g f)

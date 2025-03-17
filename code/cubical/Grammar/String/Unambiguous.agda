@@ -249,4 +249,3 @@ opaque
   unambiguous-string : unambiguous string
   unambiguous-string = EXTERNAL.isLang→unambiguous isLang-string
 
-

@@ -118,7 +118,7 @@ module UsingLibrary where
   the-nfa .transition = Fin 3 , isFinSetFin -- 3 labelled transitions
   the-nfa .src 0to2 = s0
   the-nfa .dst 0to2 = s2
-  the-nfa .label 0to2 = c 
+  the-nfa .label 0to2 = c
   the-nfa .src 1to1 = s1
   the-nfa .dst 1to1 = s1
   the-nfa .label 1to1 = a

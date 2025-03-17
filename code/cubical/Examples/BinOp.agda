@@ -173,7 +173,7 @@ module Automaton where
     [ ] aNum : UnexpectedAdding
 
   ua : UnexpectedAdding → Grammar _
-  ua [ = startsWith [ 
+  ua [ = startsWith [
   ua ] = startsWith ]
   ua aNum = anyNum ⊗ string
 
