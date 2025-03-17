@@ -19,7 +19,7 @@ If the compilation of `README.agda` doesn't immediately crash, and you can see i
 
 ## Project Layout
 This repository is split into the following directories 
-- `String` - contains the defintion as the list type over some fixed alphabet, and some associated utilities. `String := List ⟨ Alphabet ⟩`, where `Alphabet : hSet`
+- `String` - contains the definition as the list type over some fixed alphabet, and some associated utilities. `String := List ⟨ Alphabet ⟩`, where `Alphabet : hSet`
 - `Grammar` - defining the primitive linear types in Dependent Lambek Calculus. Linear types are encoded as functions from strings to types, written as `Grammar ℓA = String → Type ℓA`.
 - `Term` - defining parse transformers between grammars. A parse transformer between `A` and `B` is written as the type `A ⊢ B` (or `Term A B`).
 - `Parser` - the definition of a parser as described in definiton 4.4.
@@ -28,7 +28,6 @@ This repository is split into the following directories
 - `Thompson` - a verification of Thompson's construction: from a regular expression `r` construct an NFA and prove that it is strongly equivalent to `r`.
 - `Determinization` - a verification of the powerset construction for determinization. Given an NFA `N`, construct a DFA that is weakly equivalent to it.
 - `Cubical` - utilities that supplement the `Cubical` standard library. This is a soft fork of the `Cubical` standard library, and so we put these pieces of code under the same `Cubical` namespace. Ideally we will pull request these into the `Cubical` standard library, as they are general purpose utilities that are not grammar-specific.
-- `Lexer` - An experimental module that defines a lexer as a translation between alphabets. Used for experimenting with language ergonomics, but not a dependence to any claims presented.
 
 ## Dependent Lambek Calculus in Agda
 Dependent Lambek Calculus (`Lambekᴰ`) is a domain-specific dependent type theory for verified parsing and formal grammar theory. We use linear types as a syntax for formal grammars, and parsers can be written as linear terms. The linear typing restriction provides a form of intrinsic verification that a parser yields only valid parse trees for the input string. 
@@ -253,7 +252,7 @@ Given in `Grammar.Properties.Base` as `isUnambiguousRetract`.
 
 >If a disjunction `⊕[ x ∈ X ] A x` is unambiguous then each `A x` is unambiguous
 
-Given in `Grammar.Sum.Unambiguous` as `unambiguous⊕ᴰ`. This defintion requires that the map `σ : A x ⊢ ⊕[ x ∈ X ] A` is a monomorphism, which is axiomatized in the same file as `isMono-σ`.
+Given in `Grammar.Sum.Unambiguous` as `unambiguous⊕ᴰ`. This definition requires that the map `σ : A x ⊢ ⊕[ x ∈ X ] A` is a monomorphism, which is axiomatized in the same file as `isMono-σ`.
 
 ### Definition 4.4
 
@@ -420,9 +419,9 @@ The combinatory style has equivalent semantics to the full syntax in the paper, 
 We make use of the `TERMINATING` pragma in the following locations:
 
 - `Grammar.Inductive.HLevels` in the definitons of `encode` and `isRetract`.
-- `Grammar.Inductive.Indexed` in the defintions of `recHomo` and `μ-η'`.
+- `Grammar.Inductive.Indexed` in the definitions of `recHomo` and `μ-η'`.
 
-We use these pragmas because the way in which we roll our own encoding of inductive types is not structurally decreasing on their input. Because we have constructed the functors in `Grammar.Inductive.Functor` to be use their arguments strictly positively, we know that the naive recursion used in these definition does indeed terminate, but not in a manner that satisfies the termination checker.
+We use these pragmas because the way in which we roll our own encoding of inductive types is not structurally decreasing on their input. Because we have constructed the functors in `Grammar.Inductive.Functor` to be use their arguments strictly positively, we know that the naive recursion used in these definitions does indeed terminate, but not in a manner that satisfies the termination checker.
 
 Additonally we use a `NO_POSITIVITY_CHECK` pragma in:
 - `Grammar.Inductive.Indexed`
@@ -450,7 +449,7 @@ module _ (e : A ⊢ B) (f : B ⊢ C) (g : D ⊢ E) (h : E ⊢ F) where
   ψ = (f ,⊗ h) ∘g (e ,⊗ g)
 ```
 
-A priori, `ϕ` and `ψ` are not defintionally equal. We may derive their equality, but that involves manual reasoning every time that we compose maps in parallel. Instead, if we unfold the defintion of `⊗-intro`, then `ϕ` and `ψ` become definitonally equal. So while in the strictest sense, by unfolding `⊗-intro` could have accidentally invoked external reasoning that doesn't hold in `Lambekᴰ`; in practice, we use Agda's definitional equality as a rudimentary solver for `β`-equalities that hold in `Lambekᴰ`.
+A priori, `ϕ` and `ψ` are not definitionally equal. We may derive their equality, but that involves manual reasoning every time that we compose maps in parallel. Instead, if we unfold the definition of `⊗-intro`, then `ϕ` and `ψ` become definitonally equal. So while in the strictest sense, by unfolding `⊗-intro` could have accidentally invoked external reasoning that doesn't hold in `Lambekᴰ`; in practice, we use Agda's definitional equality as a rudimentary solver for `β`-equalities that hold in `Lambekᴰ`.
 
 We apply this same principle throughout all of our code. Any instance of unfolding is either a deliberate breaking of abstraction boundaries to build the language, or it is to have Agda solver for equalities that are derivable within `Lambekᴰ` anyway.
 
