@@ -1,6 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Transport
 
 module Grammar.LinearFunction.Base (Alphabet : hSet ℓ-zero) where
 
@@ -302,10 +303,34 @@ opaque
   isSetGrammar⟜ isSetB w = isSetΠ (λ w' → isSet→ (isSetB _))
 
 Element→Term : ↑ (A ⊸ B) → A ⊢ B
-Element→Term f =
+Element→Term {A = A} {B = B} f =
   ⊸-app
   ∘g ε-elim f ,⊗ id
   ∘g ⊗-unit-l⁻
 
 Term→Element : A ⊢ B → ↑ (A ⊸ B)
 Term→Element e = ⊸-intro (e ∘g ⊗-unit-l) [] ε-intro
+
+opaque
+  unfolding ε-elim
+  Term≅Element : Iso (A ⊢ B) (↑ (A ⊸ B))
+  Term≅Element {A = A} {B = B} =
+    iso Term→Element Element→Term
+      (λ b →
+        cong (λ z → ⊸-intro (⊸-app ∘g (ε-elim b) ,⊗ id ∘g z) [] ε-intro) ⊗-unit-ll⁻
+        ∙ cong (λ z → z [] ε-intro) (⊸-η (ε-elim b))
+        ∙ ε-β {A = A ⊸ B} b
+      )
+      (λ e →
+        ⊸-app ∘g ε-elim (⊸-intro (e ∘g ⊗-unit-l) ∘ε ε-intro) ,⊗ id ∘g ⊗-unit-l⁻
+          ≡⟨ cong (λ z → ⊸-app ∘g z ,⊗ id ∘g ⊗-unit-l⁻)
+              (sym (ε-elim-natural ε-intro (⊸-intro (e ∘g ⊗-unit-l))))⟩
+        ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l) ∘g ε-elim ε-intro) ,⊗ id ∘g ⊗-unit-l⁻
+          ≡⟨ cong (λ z → ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l) ∘g z) ,⊗ id ∘g ⊗-unit-l⁻)
+               (funExt λ w → funExt λ p → isSetString w [] (ε-elim {A = ε} ε-intro w p) p)⟩
+        ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l)) ,⊗ id ∘g ⊗-unit-l⁻
+          ≡⟨ cong (_∘g ⊗-unit-l⁻) (⊸-β (e ∘g ⊗-unit-l)) ⟩
+        e ∘g ⊗-unit-l ∘g ⊗-unit-l⁻
+          ≡⟨ cong (e ∘g_) ⊗-unit-l⁻l ⟩
+        e
+        ∎)

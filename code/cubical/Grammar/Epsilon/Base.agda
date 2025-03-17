@@ -28,6 +28,14 @@ opaque
   ε-elim : ∀ {A : Grammar ℓA} → ε⊢ A → ε ⊢ A
   ε-elim {A = A} A[] w w≡[] = subst A (sym w≡[]) A[]
 
+  ε-elim-natural : ∀ {A : Grammar ℓA} → (x : ε⊢ A) →
+    (f : A ⊢ B) →
+    f ∘g ε-elim {A = A} x ≡ ε-elim (f ∘ε x)
+  ε-elim-natural {B = B} {A = A} x f = funExt λ w → funExt λ p →
+    J (λ w' w'≡ → (f ∘g ε-elim x) w' (sym w'≡) ≡ ε-elim {A = B}(f ∘ε x) w' (sym w'≡))
+      (cong (f []) (transportRefl x) ∙ sym (substRefl {A = A []} {B = λ _ → B []} {x = x} (f [] x)))
+      (sym p)
+
   ε-β : ∀ (Ap : ε⊢ A) → ε-elim {A = A} Ap ∘ε ε-intro ≡ Ap
   ε-β {A = A} Ap = transportRefl Ap
 
