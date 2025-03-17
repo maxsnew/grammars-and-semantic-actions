@@ -246,7 +246,7 @@ Given in `Grammar.Properties.Base` as `isUnambiguousRetract`.
 
 >If a disjunction `⊕[ x ∈ X ] A x` is unambiguous then each `A x` is unambiguous
 
-Given in `Grammar.Sum.Unambiguous` as `unambiguous⊕ᴰ`. This defintion requires that the map `σ : A x ⊢ ⊕[ x ∈ X ] A` is a monomorphism, which is not proven internally but axiomatized in the same file as `isMono-σ`.
+Given in `Grammar.Sum.Unambiguous` as `unambiguous⊕ᴰ`. This defintion requires that the map `σ : A x ⊢ ⊕[ x ∈ X ] A` is a monomorphism, which is axiomatized in the same file as `isMono-σ`.
 
 ### Definition 4.4
 
@@ -260,8 +260,7 @@ The definiton of a parser is given in `Parser.Base`.
 
 > If `A ⊕ B` is unambiguous, then `A` and `B` are disjoint.
 
-TODO 
-Given for all indexed sums as `hasDisjointSummands⊕ᴰ` in `Grammar.Sum.Unambiguous`. This lemma is a consequence of the disjoint constructors axioms. This axiom is true in the semantics, as shown in `equalizer→⊥` from the same file. 
+Given for all indexed sums as `hasDisjointSummands⊕ᴰ` in `Grammar.Sum.Unambiguous`. This lemma is a consequence of the disjoint constructors axioms, which is encoded in the same file as `equalizer→⊥`.
 
 For the binary sums implemented in `Grammar.Sum.Binary.Cartesian`, we prove this lemma in `Grammar.Sum.Binary.Cartesian.Properties` under the name `unambig-⊕-is-disjoint`.
 
@@ -349,7 +348,7 @@ Turing : Grammar ℓ-zero
 Turing = Reify Accepting
 ```
 
-### Additonal Axioms Holds in the Semantic
+### Additonal Axioms Holds in the Semantics
 
 > Additive conjunction distributes over additive disjunction
 
@@ -358,6 +357,9 @@ Given in `Grammar.Distributivity`.
 > The constructors of sums are disjoint.
 
 Given as `equalizer→⊥` in `Grammar.Sum.Unambiguous`.
+
+> `⊤` is strong equivalent to `string`
+ 
 
 ## Caveats
 

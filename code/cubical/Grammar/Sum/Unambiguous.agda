@@ -36,12 +36,13 @@ module _
   (isSetX : isSet X)
   where
 
-  isMono-σ : (x : X) → isMono (σ {A = A} x)
-  isMono-σ x e e' !∘e=!∘e' =
-    funExt λ w → funExt λ p →
-      sym (transportRefl (e w p)) ∙
-      Σ-contractFst (refl , (isSetX _ _ _)) .fst
-        (PathΣ→ΣPathTransport _ _ (funExt⁻ (funExt⁻ !∘e=!∘e' w) p))
+  opaque
+    isMono-σ : (x : X) → isMono (σ {A = A} x)
+    isMono-σ x e e' σe=σe' =
+      funExt λ w → funExt λ p →
+        sym (transportRefl (e w p)) ∙
+        Σ-contractFst (refl , (isSetX _ _ _)) .fst
+          (PathΣ→ΣPathTransport _ _ (funExt⁻ (funExt⁻ σe=σe' w) p))
 
   unambiguous'⊕ᴰ :
     unambiguous' (⊕[ x ∈ X ] A x) →
@@ -62,19 +63,19 @@ module _
     where
     opaque
       unfolding _&_ ⊥
-      hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
-      hasDisjointSummands⊕ᴰ x y x≠y w (p , p') =
-        x≠y λ i → unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂) i w (p , p') .fst
+      equalizer→⊥ :
+        (x y : X) →
+        (x ≡ y → Empty.⊥) →
+        equalizer (σ {A = A} x ∘g π₁) (σ y ∘g π₂) ⊢ ⊥
+      equalizer→⊥ x y x≠y w p =
+        x≠y (cong fst (funExt⁻ (funExt⁻ (eq-π-pf (σ {A = A} x ∘g π₁) (σ y ∘g π₂)) w) p))
 
-    -- TODO : double check that this reflects the axiom
-    -- faithfully
-    equalizer→⊥ :
-      (x y : X) →
-      (x ≡ y → Empty.⊥) →
-      equalizer (σ x ∘g π₁) (σ y ∘g π₂) ⊢ ⊥
-    equalizer→⊥ x y x≠y =
-     hasDisjointSummands⊕ᴰ x y x≠y
-     ∘g eq-π (σ x ∘g π₁) (σ y ∘g π₂)
+    hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
+    hasDisjointSummands⊕ᴰ x y x≠y = 
+      equalizer→⊥ x y x≠y
+      ∘g eq-intro {A = A x & A y}{B = ⊕[ x ∈ X ] A x}
+        (σ x ∘g π₁) (σ y ∘g π₂) id
+        (unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂))
 
 module _ {X : Type ℓX} {A : X → Grammar ℓA}
   (disjoint-summands : disjointSummands⊕ᴰ A)
@@ -93,7 +94,6 @@ module _ {X : Type ℓX} {A : X → Grammar ℓA}
         )
         (discX (x .fst) (y .fst))
 
--- TODO
 module _ {X : Type ℓX} {A : X → Grammar ℓA}
   (disjoint-summands : disjointSummands⊕ᴰ A)
   (unambig-summands : ∀ x → unambiguous (A x))
