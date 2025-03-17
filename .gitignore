@@ -289,3 +289,4 @@ Everything.agda
 CubicalDockerfile
 Agda2.7.0.1Dockerfile
 CubicalCategoricalLogicDockerfile
+*.tar
