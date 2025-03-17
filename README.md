@@ -429,6 +429,10 @@ Additonally we use a `NO_POSITIVITY_CHECK` pragma in:
 
 This `NO_POSITIVITY_CHECK` is needed because our use of opacity in the connective `⊗` blocks the positivity checker for the definiton of `μ` in `Grammar.Inductive.Indexed`. If `⊗` were not opaque, [then this definiton would pass the positivity checker](https://github.com/agda/agda/issues/6970).
 
+### `-WnoUnsupportedIndexedMatch`
+
+We frequently suppress a warning introduced when pattern matching on [indexed inductive types](https://agda.readthedocs.io/en/latest/language/cubical.html#indexed-inductive-types) in Cubical Agda. Suppressing this warning is harmless, and suppression is even recommended in the linked documentation for most end users of Cubical.
+
 ### Opacity
 One of the benefits of using `opaque` definitons throughout the codebase is the enforcement of abstraction boundaries between the embedded language and Agda as a host language.
 
@@ -466,7 +470,7 @@ Here are the other terms that we unfold to solve for `β`-equalities:
 ### Runtime and IO
 In the paper we make no claims about the performance of parsers written in this implementation or the ergonomics of using them. In this work we have focused on the theory of `Lambekᴰ` rather than these practical concerns.
 
-One major drawback of embedding the language in Agda is that the Agda typechecker is now acting as a parser. This approach is many orders of magnitude slower than a comparable unverified parser written in `C`.
+One major drawback of embedding the language in Agda is that the Agda typechecker is now acting as a parser. This approach is orders of magnitude slower than a comparable unverified parser written in `C`. For the `Dyck` example, we ran some simple benchmarks in `Examples.Benchmark.Dyck`. The verified parser for `Dyck` takes `1m3s` to parse an input string that is `196544` characters long.
 
 Similarly, the parsers are not ergonomic to use. In particular, we have not plugged them into any of Agda's `IO` modules. Instead, all of our experiments have mocked the parsing input as its own Agda file that contains a string literal of the data to be parsed. 
 
