@@ -358,8 +358,45 @@ Given in `Grammar.Distributivity`.
 
 Given as `equalizer→⊥` in `Grammar.Sum.Unambiguous`.
 
-> `⊤` is strong equivalent to `string`
- 
+> We add a function `read : ↑ (⊤ ⊸ string)`.
+
+Given as `read` in `Grammar.String.Terminal`.
+
+> `⊤` is strong equivalent to `string`.
+
+Given as `string≅⊤` in `Grammar.String.Terminal`.
+
+## Evaluation
+
+We propose evaluating this codebase by running it through the Agda typechecker. To regenerate all the `Everything` files and check the entire project, from `code/Cubical` run
+
+``` console
+make clean
+make gen-and-check-everythings
+make
+```
+
+A successful compilation will complete with no errors. Once `agda` has typechecked a particular module, it will cache the result in the `_build/` directory. So repeated checks will be much faster.
+
+You may also choose to typecheck individual files, either interactively or from the command line with `agda`. For instance,
+
+``` console
+agda README.agda
+```
+
+will again check the entire project.
+
+``` console
+agda Grammar/Everything.agda
+```
+
+will check the `Grammar` submodule. Or,
+
+``` console
+agda Thompson/Construction/Literal.agda 
+```
+
+will only check only the file `Thompson/Construction/Literal.agda`.
 
 ## Caveats
 

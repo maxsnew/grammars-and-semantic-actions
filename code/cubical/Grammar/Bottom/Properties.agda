@@ -71,7 +71,7 @@ is-initial-⊥&A A .snd e = p ∙ cong (⊕-elim f e ∘g_) inl≡inr-⊥&A ∙ 
     q : e ≡ (⊕-elim f e) ∘g inr
     q = sym (⊕-βr f e)
 
-⊥&A≅⊥ : (A : Grammar ℓA) → StrongEquivalence (⊥ & A) ⊥
+⊥&A≅⊥ : (A : Grammar ℓA) → (⊥ & A) ≅ ⊥
 ⊥&A≅⊥ A .fun = is-initial-⊥&A A .fst
 ⊥&A≅⊥ A .inv = ⊥-elim
 ⊥&A≅⊥ A .sec = is-initial→propHoms is-initial-⊥ _ _

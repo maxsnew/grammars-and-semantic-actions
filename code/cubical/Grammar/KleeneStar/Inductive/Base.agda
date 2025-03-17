@@ -108,7 +108,7 @@ module _ (A : Grammar ℓA) where
   secAlg (lift zero) = eq-intro _ _ roll refl
   secAlg (lift (suc n)) = the-sec-alg-snd n
 
-  *continuous : StrongEquivalence KL* repeat
+  *continuous : KL* ≅ repeat
   *continuous .fun = grade
   *continuous .inv = ungrade
   *continuous .sec = the-sec

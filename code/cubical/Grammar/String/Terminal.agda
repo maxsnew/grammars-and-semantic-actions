@@ -24,27 +24,27 @@ private
 
 open StrongEquivalence
 
-⊤→string : ⊤ ⊢ string
-⊤→string w _ = ⌈w⌉→string {w = w} w (internalize w)
+read : ⊤ ⊢ string
+read w _ = ⌈w⌉→string {w = w} w (internalize w)
 
-⊤→string' : ⊤ ⊢ string
-⊤→string' w _ = mkstring' w
+read' : ⊤ ⊢ string
+read' w _ = mkstring' w
 
-⊤*→string : ∀ {ℓA} → ⊤* {ℓA} ⊢ string
-⊤*→string w _ = ⌈w⌉→string {w = w} w (internalize w)
+read* : ∀ {ℓA} → ⊤* {ℓA} ⊢ string
+read* w _ = ⌈w⌉→string {w = w} w (internalize w)
 
 string≅stringL : string ≅ stringL
 string≅stringL = *≅*L char
 
 string-intro : ∀ {ℓA} {A : Grammar ℓA} → A ⊢ string
-string-intro = ⊤→string ∘g ⊤-intro
+string-intro = read ∘g ⊤-intro
 
 stringL-intro : ∀ {ℓA} {A : Grammar ℓA} → A ⊢ stringL
 stringL-intro = string≅stringL .fun ∘g string-intro
 
-string≅⊤ : StrongEquivalence string ⊤
+string≅⊤ : string ≅ ⊤
 string≅⊤ .fun = ⊤-intro
-string≅⊤ .inv = ⊤→string'
+string≅⊤ .inv = read
 string≅⊤ .sec = unambiguous⊤ _ _
 string≅⊤ .ret = unambiguous-string _ _
 

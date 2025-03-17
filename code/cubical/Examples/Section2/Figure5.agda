@@ -35,14 +35,25 @@ module Handwritten where
 
   -- Defining the type of traces syntactically
   -- by specifying a strictly positive functor on Grammars
+  --
+  -- Note, by leveraging the equivalence between
+  -- ↑ (A ⊸ B) and A ⊢ B,
+  -- the constructors are represented below without
+  -- explicit mention to ⊸
   TraceTy : State → Functor State
   TraceTy s0 = ⊕e (Tag s0) λ where
+    -- 0to2 : ↑ (＂ c ＂ ⊸ Trace s2 ⊸ Trace s0)
     0to2 → k ＂ c ＂ ⊗e Var s2
+    -- 0to1 : ↑ (Trace s1 ⊸ s0)
     0to1 → Var s1
   TraceTy s1 = ⊕e (Tag s1) λ where
+    -- 1to1 : ↑ (＂ a ＂ ⊸ Trace s1 ⊸ Trace s1)
     1to1 → k ＂ a ＂ ⊗e Var s1
+    -- 1to2 : ↑ (＂ b ＂ ⊸ Trace s2 ⊸ Trace s1)
     1to2 → k ＂ b ＂ ⊗e Var s2
-  TraceTy s2 = ⊕e (Tag s2) λ where stop → k ε
+  TraceTy s2 = ⊕e (Tag s2) λ where
+    -- stop : ↑ (Trace s2)
+    stop → k ε
 
   -- The type of traces is the least fixed point
   -- for the above functor

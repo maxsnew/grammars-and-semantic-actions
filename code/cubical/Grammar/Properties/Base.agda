@@ -141,7 +141,7 @@ isUnambiguousRetract f f' ret unambB e e' =
   ∙ cong (f' ∘g_) (unambB _ _)
   ∙ cong (_∘g e') ret
 
-unambiguous≅ : StrongEquivalence A B → unambiguous A → unambiguous B
+unambiguous≅ : A ≅ B → unambiguous A → unambiguous B
 unambiguous≅ A≅B unambA = isUnambiguousRetract (A≅B .inv) (A≅B .fun) (A≅B .sec) unambA
   where open isStrongEquivalence
 
@@ -150,7 +150,7 @@ unambiguous→StrongEquivalence
   → unambiguous B
   → (A ⊢ B)
   → (B ⊢ A)
-  → StrongEquivalence A B
+  → A ≅ B
 unambiguous→StrongEquivalence unambA unambB f f' =
   mkStrEq f f' (unambB (f ∘g f') id) (unambA (f' ∘g f) id)
 
@@ -158,7 +158,7 @@ unambiguousRetract→StrongEquivalence
   : ∀ (f : A ⊢ B) (f' : B ⊢ A)
   → (f' ∘g f ≡ id)
   → unambiguous B
-  → StrongEquivalence A B
+  → A ≅ B
 unambiguousRetract→StrongEquivalence f f' ret unambB
   = unambiguous→StrongEquivalence (isUnambiguousRetract f f' ret unambB) unambB f f'
 
