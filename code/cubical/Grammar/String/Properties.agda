@@ -181,25 +181,6 @@ module _ (c c' : ⟨ Alphabet ⟩) where
         ∘g ⊗⊕-distL
         ∘g id ,⊗ unroll-string≅ .fun)
 
-  -- TODO
-  -- There's almost surely a way to do this in the logic
-  -- but I am just going to axiomatize it
-  opaque
-    unfolding literal _⊗_ _&_
-    same-first' :
-      startsWith c & startsWith c' ⊢
-        ⊕[ x ∈ (c ≡ c') ] startsWith c
-    same-first' w ((s , pc , str) , (s' , pc' , str')) =
-      c≡c' , s , (pc , str)
-      where
-      c≡c' : c ≡ c'
-      c≡c' =
-        cons-inj₁
-        (cong (_++ s .fst .snd) (sym pc)
-        ∙ (sym (s .snd)
-        ∙ (s' .snd))
-        ∙ cong (_++ s' .fst .snd) pc')
-
 unambiguous⌈⌉ : ∀ w → unambiguous ⌈ w ⌉
 unambiguous⌈⌉ w = EXTERNAL.isLang→unambiguous (isLang⌈⌉ w)
 

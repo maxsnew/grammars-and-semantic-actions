@@ -55,14 +55,3 @@ import Determinization.Everything
 -- (ideally these get merged upstream at some point)
 import Cubical.Everything
 
--- An attempt at defining a "Lexer" as a translation between alphabets
--- This is very underdeveloped at the moment.
---
--- It is imported at a couple points in the String directory
--- for some experiments on ergonomic changes we could make to
--- the language, such as easily changing alphabets or reducing
--- to only a subset of characters
---
--- It is *not* used in any examples mentioned in the paper, nor
--- is it a dependence for any of the other modules
-import Lexer.Everything
