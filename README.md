@@ -344,9 +344,9 @@ module _ (P : String → Type ℓA) where
   Reify = ⊕[ w ∈ String ] ⊕[ x ∈ P w ] ⌈ w ⌉
 ```
 
-In some sense, `Reify` is like a foreign function interface that allows one to use the faculties of the non-linear fragment when reasoning about parsers. That is, `Reify` allows the user to treat the non-linear type-valued function `P` as if it were a proper linear type. 
+`Reify` allows one to use the faculties of the non-linear fragment when reasoning about parsers. That is, `Reify` allows the user to treat the non-linear type-valued function `P` as if it were a proper linear type. 
 
-In `Automata.Turing.OneSided.Base`, we non-linear define a type of Turing machine specifications `TuringMachine`. Then for a fixed Turing machine `TM : TuringMachine`, we define a type of traces through that machine `TuringTrace`.
+In `Automata.Turing.OneSided.Base`, we non-linearly define a type of Turing machine specifications `TuringMachine`. Then for a fixed Turing machine `TM : TuringMachine`, we define a type of traces through that machine `TuringTrace`.
 
 We then define `Accepting : String → Type ℓ-zero` as the non-linear type of proofs that a given string is accepted by `TM` when ran from the initial state. Using `Reify`, we can then treat this non-linear function `Accepting` like it is a grammar.
 
