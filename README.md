@@ -9,9 +9,23 @@
 
 ## Getting Started
 
+### Loading the Docker Image
+
+After downloading the compressed Docker image `dependent-lambek-calculus.tar` from Zenodo, it may be loaded as
+
+``` console
+docker load -i dependent-lambek-calculus.tar
+```
+
+Then to run the container,
+
+``` console
+docker run -it dependent-lambek-calculus
+```
+
 ### Compiling the Repository
 
-From the `code/Cubical` directory, `make` will compile `README.agda` which imports the entirety of the project. This may take longer than 30 minutes, as it will also compile the dependencies from `cubical` and `cubical-categorical-logic` if they are not already built. You may also build `README.agda` interactively by loading the file with [agda-mode](https://agda.readthedocs.io/en/v2.7.0.1/tools/emacs-mode.html).
+Running `make` will compile `README.agda` which imports the entirety of the project. This may take longer than 30 minutes, as it will also compile the dependencies from `cubical` and `cubical-categorical-logic` if they are not already built. You may also build `README.agda` interactively by loading the file with [agda-mode](https://agda.readthedocs.io/en/v2.7.0.1/tools/emacs-mode.html).
 
 If the compilation of `README.agda` doesn't immediately crash, and you can see it checking submodules, it is very likely that the there will be no technical difficulties. We have also included the target `make litmus` which builds only the `Grammar` submodule as a shorter litmus test to check for issues of technical compatibility.
 
@@ -374,7 +388,7 @@ Given as `string≅⊤` in `Grammar.String.Terminal`.
 
 ## Evaluation
 
-We propose evaluating this codebase by running it through the Agda typechecker. To regenerate all the `Everything` files and check the entire project, from `code/Cubical` run
+We propose evaluating this codebase by running it through the Agda typechecker. To regenerate all the `Everything` files and check the entire project, run 
 
 ``` console
 make clean
