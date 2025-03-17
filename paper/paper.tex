@@ -1995,7 +1995,7 @@ data C : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
 data M : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   doneGood : (*@$\uparrow$@*)(M 0 true)
   doneBad : (*@$\uparrow$@*)(&[ n ] M (n + 1) false)
-  add : (*@$\uparrow$@*)(&[ n ] &[ b ] '(' (*@$\lto$@*) O n b (*@$\lto$@*) M n b)
+  add : (*@$\uparrow$@*)(&[ n ] &[ b ] '+' (*@$\lto$@*) O n b (*@$\lto$@*) M n b)
   unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')'(*@$\oplus$@*) NUM) (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) M n false)
 \end{lstlisting}
 \caption{Associative arithmetic expressions and a corresponding lookahead automaton}

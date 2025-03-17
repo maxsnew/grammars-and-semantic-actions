@@ -22,28 +22,22 @@ open import Cubical.Relation.Nullary.Base
 
 open import Grammar.Base Alphabet
 open import Grammar.Equalizer Alphabet
-open import Grammar.Product Alphabet
-open import Grammar.Product.Properties Alphabet
-open import Grammar.HLevels Alphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom Alphabet
-open import Grammar.Dependent.Base Alphabet
-open import Grammar.Dependent.Properties Alphabet
-open import Grammar.Dependent.Unambiguous Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.Epsilon.Properties Alphabet
 open import Grammar.Top Alphabet
 open import Grammar.Sum Alphabet
-open import Grammar.Sum.Properties Alphabet
+open import Grammar.Product Alphabet
+open import Grammar.Sum.Binary.Cartesian Alphabet
+open import Grammar.Product.Binary.Cartesian Alphabet
 open import Grammar.Lift Alphabet
-open import Grammar.Lift.Properties Alphabet
 open import Grammar.Literal Alphabet
-open import Grammar.Literal.Properties Alphabet
-open import Grammar.LinearProduct Alphabet
+open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.LinearFunction Alphabet
-open import Grammar.KleeneStar Alphabet
-open import Grammar.KleeneStar.Properties Alphabet
+open import Grammar.KleeneStar.Inductive Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.Equivalence.Base Alphabet
@@ -51,7 +45,6 @@ open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Inductive.Properties Alphabet
 
 open import Term.Base Alphabet
-open import Helper
 
 private
   variable
@@ -252,7 +245,7 @@ module _
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
          Σ[ x ∈ sameSplitting w s s' ]
-           splittingTrichotomyGTy w s s' (inl x)
+           splittingTrichotomyGTy w s s' (Sum.inl x)
          )
         (sameSplittingG w)
     splittingTrichotomyGTy-inl≅ w .fun (s , s' , x , p) =
@@ -274,7 +267,7 @@ module _
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
          Σ[ x ∈ splittingPrefix w s' s ]
-           splittingTrichotomyGTy w s s' (inr (inl x))
+           splittingTrichotomyGTy w s s' (Sum.inr (Sum.inl x))
          )
         (secondPrefixG w)
     splittingTrichotomyGTy-inr-inl≅ ww .fun
@@ -463,7 +456,7 @@ module _
         (Σ[ s ∈ Splitting w ]
          Σ[ s' ∈ Splitting w ]
          Σ[ x ∈ splittingPrefix w s s' ]
-           splittingTrichotomyGTy w s s' (inr (inr x))
+           splittingTrichotomyGTy w s s' (Sum.inr (Sum.inr x))
          )
         (firstPrefixG w)
     splittingTrichotomyGTy-inr-inr≅ ww .fun

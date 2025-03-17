@@ -18,8 +18,6 @@ open import Cubical.Data.Empty as Empty
 
 open import Cubical.Data.Sigma
 
-open import Helper
-
 String : Type ℓ-zero
 String = List ⟨ Alphabet ⟩
 

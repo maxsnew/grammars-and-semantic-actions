@@ -7,9 +7,7 @@ module Grammar.PropositionalTruncation.Base (Alphabet : hSet ℓ-zero) where
 import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.Data.Sigma
 
-open import Grammar Alphabet hiding (k)
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.HLevels.Properties Alphabet
+open import Grammar Alphabet
 
 open import Grammar.Subgrammar.Base Alphabet
 

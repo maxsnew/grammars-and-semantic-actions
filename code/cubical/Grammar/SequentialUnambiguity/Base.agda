@@ -4,18 +4,14 @@ open import Cubical.Foundations.Structure
 
 module Grammar.SequentialUnambiguity.Base (Alphabet : hSet ℓ-zero)where
 
-open import Cubical.Data.Sum as Sum hiding (rec)
+import Cubical.Data.Sum as Sum
 open import Cubical.Data.Sigma
 open import Cubical.Data.List hiding (rec)
 import Cubical.Data.Empty as Empty
 
 open import Cubical.Relation.Nullary.Base
 
-open import Grammar Alphabet hiding (k)
-open import Grammar.String.Properties Alphabet
-open import Grammar.KleeneStar.Properties Alphabet
-open import Grammar.Negation.Properties Alphabet
-open import Grammar.LinearProduct.SplittingTrichotomy Alphabet
+open import Grammar Alphabet
 open import Grammar.SequentialUnambiguity.Nullable Alphabet
 open import Grammar.SequentialUnambiguity.First Alphabet
 open import Grammar.SequentialUnambiguity.FollowLast Alphabet
@@ -38,7 +34,7 @@ open Powerset ⟨ Alphabet ⟩
 sequentiallyUnambiguous :
   Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
 sequentiallyUnambiguous A B =
-  ∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉FollowLast A ⟩ ⊎ ⟨ c ∉First B ⟩
+  ∀ (c : ⟨ Alphabet ⟩) → ⟨ c ∉FollowLast A ⟩ Sum.⊎ ⟨ c ∉First B ⟩
 
 syntax sequentiallyUnambiguous A B = A ⊛ B
 
@@ -51,8 +47,9 @@ module _
   ∉FollowLast→⊛ : A ⊛ startsWith c
   ∉FollowLast→⊛ c' =
     decRec
-      (λ c≡c' → inl (c∉FLA ∘g (id ,⊗ transportG (cong ＂_＂ (sym c≡c')) ,⊗ id) ,&p id))
-      (λ c≢c' → inr (⊕ᴰ-elim (λ c'≡c → Empty.rec (c≢c' (sym c'≡c))) ∘g same-first' c' c))
+      (J (λ c' c≡c' → ⟨ c' ∉FollowLast A ⟩ Sum.⊎ (disjoint (startsWith c') (startsWith c)))
+        (Sum.inl (c∉FLA)))
+      (λ c≢c' → Sum.inr (⊕ᴰ-elim (λ c'≡c → Empty.rec (c≢c' (sym c'≡c))) ∘g same-first' c' c))
       (disc c c')
 
 module _
@@ -76,11 +73,11 @@ module _
   ⊛-⊗ : A ⊛ (B ⊗ C)
   ⊛-⊗ c =
     Sum.rec
-      (λ x → inl x)
+      (λ x → Sum.inl x)
       (λ c∉FB →
         Sum.rec
-          inl
-          (λ c∉FC → inr (∉First⊗ c∉FB c∉FC))
+          Sum.inl
+          (λ c∉FC → Sum.inr (∉First⊗ c∉FB c∉FC))
           (seq-unambig-C c)
       )
       (seq-unambig-B c)
@@ -114,7 +111,7 @@ module _
   (seq-unambig : A ⊛ B)
   where
   ⊛-& : A ⊛ (B & C)
-  ⊛-& c = ⊛∘g-r seq-unambig &-π₁ c
+  ⊛-& c = ⊛∘g-r seq-unambig π₁ c
 
 module _
   (A : Grammar ℓA)
@@ -153,13 +150,13 @@ module _
               ∘g (c∉FlA ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
               ∘g ⌈⌉-⊗&-distR⁻ {w = x}
               ∘g id ,&p ⊗-assoc
-              ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
+              ∘g ((π₁ ∘g π₁) ,⊗ π₂) ,&p (π₁ ,⊗ π₂)
             )
             (λ c∉FC →
               ⊗⊥
               ∘g id ,⊗ (c∉FC ∘g &-swap)
-              ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
-              ∘g &-π₂
+              ∘g id ,⊗ (π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
+              ∘g π₂
             )
             (seq-unambig-C c)
         })))))
@@ -180,13 +177,13 @@ module _
               ∘g (c∉FlA ∘g (id ,⊗ id ,⊗ string-intro) ,&p id ∘g &-swap) ,⊗ id
               ∘g ⌈⌉-⊗&-distR⁻ {w = x}
               ∘g id ,&p ⊗-assoc
-              ∘g ((&-π₁ ∘g &-π₁) ,⊗ &-π₂) ,&p (&-π₁ ,⊗ &-π₂)
+              ∘g ((π₁ ∘g π₁) ,⊗ π₂) ,&p (π₁ ,⊗ π₂)
             )
             (λ c∉FB →
               ⊗⊥
               ∘g id ,⊗ (c∉FB ∘g &-swap)
-              ∘g id ,⊗ (&-π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
-              ∘g &-π₂
+              ∘g id ,⊗ (π₁ ,&p (id ,⊗ string-intro ∘g ⊗-assoc⁻))
+              ∘g π₂
             )
             (seq-unambig-B c)
         })))))
@@ -210,10 +207,10 @@ module _
     ≅∙ ⊥⊕≅ (A & A ⊗ B & C)
 
 seq-unambig-εL : ε ⊛ A
-seq-unambig-εL c = inl ((disjoint-ε-char+ ∘g id ,&p (literal→char c ,⊗ id ∘g ⊗-unit-l)) ∘g &-swap)
+seq-unambig-εL c = Sum.inl ((disjoint-ε-char+ ∘g id ,&p (literal→char c ,⊗ id ∘g ⊗-unit-l)) ∘g &-swap)
 
 seq-unambig-εR : A ⊛ ε
-seq-unambig-εR c = inr (disjoint-ε-char+ ∘g id ,&p literal→char c ,⊗ id ∘g &-swap)
+seq-unambig-εR c = Sum.inr (disjoint-ε-char+ ∘g id ,&p literal→char c ,⊗ id ∘g &-swap)
 
 module _
   (A : Grammar ℓA)
@@ -229,12 +226,12 @@ module _
         (λ c∉FL →
           c∉FL
           ∘g &-swap
-          ∘g id ,&p (id ,⊗ (id ,⊗ string-intro ∘g ⊗-assoc⁻ ∘g &-π₂ ,⊗ id))
+          ∘g id ,&p (id ,⊗ (id ,⊗ string-intro ∘g ⊗-assoc⁻ ∘g π₂ ,⊗ id))
         )
         (λ c∉FB →
           ⊗⊥
           ∘g id ,⊗ (⊥⊗ ∘g (c∉FB ∘g &-swap) ,⊗ id)
-          ∘g &-π₂
+          ∘g π₂
         )
         (seq-unambig c)
     )
@@ -304,12 +301,12 @@ module _
       (⊗⊥
       ∘g id ,⊗ c∉FB
       ∘g ⊗&-distL≅ A (＂ c ＂ ⊗ string) B (∉FollowLast→⊛ A c c∉FLA disc) seq-unambig .fun
-      ∘g ((⊗-unit-r ∘g id ,⊗ &-π₂) ,⊗ id ∘g ⊗-assoc) ,&p id)
+      ∘g ((⊗-unit-r ∘g id ,⊗ π₂) ,⊗ id ∘g ⊗-assoc) ,&p id)
       (⊕-elim
         (⊛→must-split A (B & char +) A⊛B+ ¬nullB+
         ∘g id ,&p id ,⊗ id ,⊗ string-intro
         ∘g &-swap
-        ∘g id ,&p (⊗-unit-r ∘g id ,⊗ &-π₂))
+        ∘g id ,&p (⊗-unit-r ∘g id ,⊗ π₂))
         (∉FollowLast-⊗¬null A (B & (char +)) ¬nullA ¬nullB+ A⊛B+ c c∉FLB+
         ∘g ⊗-assoc ,&p id)
       ∘g &⊕-distL
@@ -321,10 +318,10 @@ module _
     A⊛B+ = ⊛-& A B (char +) seq-unambig
 
     ¬nullB+ : ⟨ ¬Nullable (B & (char +)) ⟩
-    ¬nullB+ = ¬Nullable∘g &-π₂ ¬Nullable-char+
+    ¬nullB+ = ¬Nullable∘g π₂ ¬Nullable-char+
 
     c∉FLB+ : ⟨ c ∉FollowLast (B & (char +)) ⟩
-    c∉FLB+ = ∉FollowLast∘g &-π₁ c∉FLB
+    c∉FLB+ = ∉FollowLast∘g π₁ c∉FLB
 
 module _
   (A : Grammar ℓA)
@@ -332,8 +329,8 @@ module _
   (c : ⟨ Alphabet ⟩)
   (c∉FLA : ⟨ c ∉FollowLast A ⟩)
   (c∉FLB : ⟨ c ∉FollowLast B ⟩)
-  (¬nullB∨c∉FA : ⟨ ¬Nullable B ⟩ ⊎ ⟨ c ∉First A ⟩)
-  (¬nullA∨c∉FB : ⟨ ¬Nullable A ⟩ ⊎ ⟨ c ∉First B ⟩)
+  (¬nullB∨c∉FA : ⟨ ¬Nullable B ⟩ Sum.⊎ ⟨ c ∉First A ⟩)
+  (¬nullA∨c∉FB : ⟨ ¬Nullable A ⟩ Sum.⊎ ⟨ c ∉First B ⟩)
   (sep : A # B)
   where
   ∉FollowLast-⊕ : ⟨ c ∉FollowLast (A ⊕ B) ⟩
@@ -345,17 +342,17 @@ module _
           (λ ¬nullB →
             #→disjoint
               (#⊗l
-                (¬Nullable∘g &-π₂ ¬Nullable-char+)
-                (sym# (#∘g2 &-π₁ &-π₁ sep))
+                (¬Nullable∘g π₂ ¬Nullable-char+)
+                (sym# (#∘g2 π₁ π₁ sep))
               )
-              (inl (¬Nullable⊗l ¬Nullable-&char+))
-            ∘g (¬Nullable&char+≅ ¬nullB .fun ,⊗ id ∘g &-π₁) ,& &-π₂ ,& (¬Nullable→char+ (¬Nullable⊗l ¬nullB) ∘g &-π₁)
+              (Sum.inl (¬Nullable⊗l ¬Nullable-&char+))
+            ∘g (¬Nullable&char+≅ ¬nullB .fun ,⊗ id ∘g π₁) ,& π₂ ,& (¬Nullable→char+ (¬Nullable⊗l ¬nullB) ∘g π₁)
           )
           (λ c∉FA →
             ⊕-elim
               (c∉FA
-              ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id)
-              (#→disjoint (#⊗l ¬Nullable-&char+ (#∘g &-π₁ (sym# sep))) (inl (¬Nullable⊗l ¬Nullable-&char+)))
+              ∘g (⊗-unit-l ∘g π₂ ,⊗ id) ,&p id)
+              (#→disjoint (#⊗l ¬Nullable-&char+ (#∘g π₁ (sym# sep))) (Sum.inl (¬Nullable⊗l ¬Nullable-&char+)))
             ∘g &⊕-distR
             ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id
           )
@@ -366,17 +363,17 @@ module _
           (λ ¬nullA →
             #→disjoint
               (#⊗l
-                (¬Nullable∘g &-π₂ ¬Nullable-char+)
-                (#∘g2 &-π₁ &-π₁ sep)
+                (¬Nullable∘g π₂ ¬Nullable-char+)
+                (#∘g2 π₁ π₁ sep)
               )
-              (inl (¬Nullable⊗l ¬Nullable-&char+))
-            ∘g (¬Nullable&char+≅ ¬nullA .fun ,⊗ id ∘g &-π₁) ,& &-π₂ ,& (¬Nullable→char+ (¬Nullable⊗l ¬nullA) ∘g &-π₁)
+              (Sum.inl (¬Nullable⊗l ¬Nullable-&char+))
+            ∘g (¬Nullable&char+≅ ¬nullA .fun ,⊗ id ∘g π₁) ,& π₂ ,& (¬Nullable→char+ (¬Nullable⊗l ¬nullA) ∘g π₁)
           )
           (λ c∉FB →
             ⊕-elim
               (c∉FB
-              ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id)
-              (#→disjoint (#⊗l ¬Nullable-&char+ (#∘g &-π₁ sep)) (inl (¬Nullable⊗l ¬Nullable-&char+)))
+              ∘g (⊗-unit-l ∘g π₂ ,⊗ id) ,&p id)
+              (#→disjoint (#⊗l ¬Nullable-&char+ (#∘g π₁ sep)) (Sum.inl (¬Nullable⊗l ¬Nullable-&char+)))
             ∘g &⊕-distR
             ∘g (⊗⊕-distR ∘g &string-split≅ .fun ,⊗ id) ,&p id
           )
@@ -462,7 +459,7 @@ module _
     nil-pf =
       ⇒-intro
         (disjoint-ε-char+
-         ∘g id ,&p ((char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ∘g &-π₁))
+         ∘g id ,&p ((char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ∘g π₁))
 
     the-alg : Algebra (*Ty A) (λ _ → (¬G FollowLastG (A *) c) & (A *))
     the-alg _ =
@@ -471,7 +468,7 @@ module _
             nil-pf ,& NIL
             ∘g lowerG ∘g lowerG
         ; cons →
-           the-cons-pf ,& (CONS ∘g id ,⊗ &-π₂)
+           the-cons-pf ,& (CONS ∘g id ,⊗ π₂)
            ∘g lowerG ,⊗ lowerG
       }
       where
@@ -482,20 +479,20 @@ module _
       the-cons-pf =
         ⇒-intro
          (⊕-elim
-           (&-π₂
-           ∘g id ,&p (∉First* c∉FA ∘g (⊗-unit-l ∘g &-π₂ ,⊗ id) ,&p id))
+           (π₂
+           ∘g id ,&p (∉First* c∉FA ∘g (⊗-unit-l ∘g π₂ ,⊗ id) ,&p id))
            (⊕-elim
              (¬Nullable-char+
-             ∘g (&-π₂ ∘g &-π₂) ,& ((char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ∘g &-π₂ ∘g &-π₁))
+             ∘g (π₂ ∘g π₂) ,& ((char+⊗r→char+ ∘g id ,⊗ startsWith→char+) ∘g π₂ ∘g π₁))
              (⊗⊥
-             ∘g id ,⊗ (⇒-app ∘g (&-π₁ ∘g &-π₁ ∘g &-π₁) ,& (&-π₂ ,&p id))
+             ∘g id ,⊗ (⇒-app ∘g (π₁ ∘g π₁ ∘g π₁) ,& (π₂ ,&p id))
              ∘g ⊗&-distL≅ _ _ _
-                  (⊛∘g-r the-⊛-* (&-π₂ ∘g &-π₁))
+                  (⊛∘g-r the-⊛-* (π₂ ∘g π₁))
                   the-⊛-*
                   .fun
-             ∘g (&-π₁ ,⊗ id ∘g
+             ∘g (π₁ ,⊗ id ∘g
                  ⊗&-distL≅ _ _ _
-                  (⊛∘g-r the-⊛-* &-π₂)
+                  (⊛∘g-r the-⊛-* π₂)
                   (⊛-⊗ A (A *) (startsWith c) the-⊛-* (∉FollowLast→⊛ _ _ c∉FLA disc)) .fun
                   ∘g id ,&p ⊗-assoc⁻) ,&p nonmt-* .fun
              )
@@ -510,5 +507,5 @@ module _
   ∉FollowLast-* : ⟨ c ∉FollowLast (A *) ⟩
   ∉FollowLast-* =
     ⇒-app
-    ∘g (&-π₁ ∘g &-π₂) ,& (id ,&p &-π₂)
+    ∘g (π₁ ∘g π₂) ,& (id ,&p π₂)
     ∘g id ,&p rec _ the-alg _

@@ -185,7 +185,6 @@ translation =
 _ : 97 ≡ length translation
 _ = refl
 
--- TODO move this
 module _ {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'}
   (discA : Discrete A) where
   find : List (A × B) → (a : A) → Maybe B
@@ -214,7 +213,6 @@ opaque
 
   isFinSetASCII : isFinSet ASCIIChar
   isFinSetASCII = isFinSetFin {n = 97}
-
 
 DiscreteASCII : Discrete ASCIIChar
 DiscreteASCII = isFinSet→Discrete isFinSetASCII

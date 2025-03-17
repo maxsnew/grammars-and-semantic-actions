@@ -14,12 +14,12 @@ open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
-open import Grammar.Dependent.Base Alphabet
-open import Grammar.Literal Alphabet
-open import Grammar.Epsilon Alphabet
-open import Grammar.Product Alphabet
-open import Grammar.LinearProduct Alphabet
-open import Grammar.KleeneStar Alphabet
+open import Grammar.Sum.Base Alphabet
+open import Grammar.Literal.Base Alphabet
+open import Grammar.Epsilon.Base Alphabet
+open import Grammar.Product.Binary.Cartesian.Base Alphabet
+open import Grammar.LinearProduct.Base Alphabet
+open import Grammar.KleeneStar.Inductive.Base Alphabet
 open import Term.Base Alphabet
 
 private
@@ -31,7 +31,7 @@ char : Grammar ℓ-zero
 char = ⊕[ c ∈ ⟨ Alphabet ⟩ ] literal c
 
 char-intro : ∀ (c : ⟨ Alphabet ⟩) → char [ c ]
-char-intro c = (⊕ᴰ-in {A = λ c' → ＂ c' ＂} c) [ c ] lit-intro
+char-intro c = (σ {A = λ c' → ＂ c' ＂} c) [ c ] lit-intro
 
 string : Grammar ℓ-zero
 string = char *
@@ -83,7 +83,7 @@ opaque
 
   ⌈w⌉→string : ⌈ w ⌉ ⊢ string
   ⌈w⌉→string {[]} = NIL
-  ⌈w⌉→string {c ∷ w} = CONS ∘g ⊕ᴰ-in c ,⊗ ⌈w⌉→string {w}
+  ⌈w⌉→string {c ∷ w} = CONS ∘g σ c ,⊗ ⌈w⌉→string {w}
 
   mkstring : (s : String) → string s
   mkstring s = (⌈w⌉→string {w = s}) s (internalize s)
@@ -100,7 +100,6 @@ opaque
 
 ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
 ⌈⌉→≡ = uniquely-supported-⌈⌉
-
 
 mkstring' : (s : String) → string s
 mkstring' [] = NIL [] ε-intro

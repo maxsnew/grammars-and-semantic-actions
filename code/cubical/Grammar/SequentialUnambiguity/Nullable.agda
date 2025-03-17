@@ -5,7 +5,6 @@ open import Cubical.Foundations.Structure
 module Grammar.SequentialUnambiguity.Nullable (Alphabet : hSet ℓ-zero)where
 
 open import Grammar Alphabet
-open import Grammar.String.Properties Alphabet
 open import Term Alphabet
 
 private
@@ -28,7 +27,7 @@ NullableG A = ε & A
 ¬Nullable→char+ notnull =
   ⊕-elim
     (⊥-elim ∘g notnull ∘g &-swap)
-    &-π₂
+    π₂
   ∘g &string-split≅ .fun
 
 ¬Nullable&char+≅ : ⟨ ¬Nullable A ⟩ → (A ≅ (A & (char +)))
@@ -49,7 +48,7 @@ char+→¬Nullable e =
 ¬Nullable-char+ = disjoint-ε-char+
 
 ¬Nullable-&char+ : ⟨ ¬Nullable (A & (char +)) ⟩
-¬Nullable-&char+ = ¬Nullable∘g &-π₂ ¬Nullable-char+
+¬Nullable-&char+ = ¬Nullable∘g π₂ ¬Nullable-char+
 
 ¬Nullable-startsWith : ⟨ ¬Nullable (startsWith c) ⟩
 ¬Nullable-startsWith = ¬Nullable∘g startsWith→char+ ¬Nullable-char+

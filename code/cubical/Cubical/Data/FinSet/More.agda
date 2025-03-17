@@ -70,3 +70,7 @@ takeFirstFinOrd A (suc n , the-eq) x =
 
 isFinSet⊤ : isFinSet ⊤
 isFinSet⊤ = 1 , ∣ invEquiv ⊎-IdR-⊥-≃ ∣₁
+
+isContr→isFinOrd : ∀ {ℓ} → {A : Type ℓ} →
+  isContr A → isFinOrd A
+isContr→isFinOrd isContrA = 1 , isContr→Equiv isContrA isContrSumFin1

@@ -5,7 +5,7 @@ open import Cubical.Foundations.Structure
 module Grammar.Top.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
-open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Top.Base Alphabet
 open import Term.Base Alphabet

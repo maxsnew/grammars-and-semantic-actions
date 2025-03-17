@@ -4,7 +4,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.Lift.Base (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
-open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 

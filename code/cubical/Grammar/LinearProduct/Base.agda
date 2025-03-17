@@ -8,11 +8,10 @@ open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Lift Alphabet
-open import Grammar.HLevels Alphabet
-open import Grammar.Epsilon Alphabet
+open import Grammar.Lift.Base Alphabet
+open import Grammar.HLevels.Base Alphabet
+open import Grammar.Epsilon.Base Alphabet
 open import Term.Base Alphabet
-open import Term.Bilinear Alphabet
 
 private
   variable
@@ -34,35 +33,15 @@ private
     O : Grammar ℓO
     f f' f'' f''' f'''' f''''' : A ⊢ B
 
-_⊗'_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
-(A ⊗' B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
-infixr 25 _⊗'_
 opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
-  _⊗_ = _⊗'_
+  (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
 
   isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
   isSetGrammar⊗ isSetG isSetB w = isSetΣ (isSetSplitting w)
     λ _ → isSet× (isSetG _) (isSetB _)
 
 infixr 25 _⊗_
-
-opaque
-  unfolding _⊗_
-  ⊗-elim : A ,, B ⊢ C → A ⊗ B ⊢ C
-  ⊗-elim {C = C} f w (((w1 , w2) , w≡w1++w2) , gp , Bp) =
-    subst C (sym w≡w1++w2) (f w1 w2 gp Bp)
-
-  ⊗-intro' : A ,, B ⊢ (A ⊗ B)
-  ⊗-intro' w1 w2 gp Bp = splitting++ w1 w2 , gp , Bp
-
-  ⊗-β : ∀ (f : A ,, B ⊢ C)
-    → (⊗-elim {C = C} f ∘b ⊗-intro') ≡ f
-  ⊗-β {C = C} f i w1 w2 gp Bp = substRefl {B = C} (f w1 w2 gp Bp) i
-
-  -- ⊗-η : ∀ (f : A ⊗ B ⊢ C)
-  --   → f ≡ ⊗-elim {k = C} (f ∘b ⊗-intro')
-  -- ⊗-η f i w x = {!!}
 
 opaque
   unfolding _⊗_
@@ -299,13 +278,6 @@ opaque
     ⊗-unit-lr⁻ : ⊗-unit-l ∘g ⊗-unit-r⁻ ≡ id
     ⊗-unit-lr⁻ = funExt λ w → funExt λ p →
       isSetString w [] ((⊗-unit-l ∘g ⊗-unit-r⁻ ) w p) ((id {A = ε} w p))
-
-  ⊗-unit-r' :
-    A ⊗ ε ⊢ A
-  ⊗-unit-r' = ⊗-elim (ε-elim-r id)
-
-  ⊗-unit-r'⁻ : A ⊢ A ⊗ ε
-  ⊗-unit-r'⁻ = ⊗-intro' b∘εr ε-intro
 
   ⊗-assoc :
     A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
@@ -550,12 +522,6 @@ opaque
   ∙ ⊗-intro⊗-intro
   ∙ cong (id ,⊗_) ⊗-assoc⁻3⊗-unit-r⁻
 
--- ⊗-assoc⁻3⊗-intro :
---   ∀ {f f' f'' f'''} →
---   (⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g (f ,⊗ f' ,⊗ f'') ,⊗ f''')
---   ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ∘g (⊗-assoc⁻3 {g = B}{g' = B'}{g'' = B''}{g''' = B'''}))
--- ⊗-assoc⁻3⊗-intro =
---   {!!}
 opaque
   unfolding ⊗-intro ⊗-assoc
   ⊗-assoc⁻4⊗-intro :

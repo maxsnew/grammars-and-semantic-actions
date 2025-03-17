@@ -7,7 +7,11 @@ module Grammar.Literal.Properties (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.FinSet
 open import Cubical.Data.List
 
-open import Grammar Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.Properties Alphabet
+open import Grammar.Literal.Base Alphabet
+open import Grammar.Product.Binary.Cartesian Alphabet
+open import Grammar.Sum.Base Alphabet
 open import Grammar.HLevels.Properties Alphabet
 open import Term.Base Alphabet
 

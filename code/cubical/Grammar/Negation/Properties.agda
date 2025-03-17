@@ -11,7 +11,6 @@ open import Grammar.Negation.Base Alphabet
 open import Grammar.Bottom.Base Alphabet
 open import Grammar.Bottom.Properties Alphabet
 open import Grammar.Function Alphabet
-open import Grammar.Function.Properties Alphabet
 open import Term.Base Alphabet
 
 private

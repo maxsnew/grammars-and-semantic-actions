@@ -407,3 +407,15 @@ DecProp→isFinOrd A =
         (λ a → A .fst .snd _ _)))
     (λ ¬a → 0 , uninhabEquiv ¬a (λ x → x))
     (A .snd)
+
+witness-true :
+  (A : DecProp' ℓ) → A .fst →
+  true Eq.≡ Bool-iso-DecProp' .inv A
+witness-true {ℓ} (ty , true , _) a = Eq.refl
+witness-true {ℓ} (ty , false , snd₁) a = ⊥.rec (snd₁ .fst a)
+
+truth→witness :
+  ∀ {ℓ} →
+  (b : Bool) → true Eq.≡ b →
+  fun (Bool-iso-DecProp' {ℓ = ℓ}) b .fst
+truth→witness true true≡b = lift tt

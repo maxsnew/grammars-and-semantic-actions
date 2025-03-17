@@ -21,7 +21,6 @@ import Cubical.Data.Maybe as Maybe
 import Cubical.Data.Equality as Eq
 
 open import Lexer.Base
-open import Helper
 
 -- Pick out a subalphabet of another alphabet
 module _

@@ -33,6 +33,10 @@ fix-whitespace:
 check-whitespace:
 	$(FIX_WHITESPACE) --check
 
+.PHONY : litmus
+litmus :
+	$(AGDA) Grammar.agda
+
 # checking and generating Everything files
 
 .PHONY : check-everythings

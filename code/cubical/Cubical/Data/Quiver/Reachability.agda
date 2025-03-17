@@ -11,8 +11,9 @@ open import Cubical.Functions.Embedding
 
 open import Cubical.Data.Empty as ⊥ hiding (elim ; rec)
 open import Cubical.Data.FinData as FD
-open import Cubical.Data.FinData.More using (DecΣ ; Fin≡SumFin ; Fin≃Finℕ ; Fin≃SumFin)
+open import Cubical.Data.FinData.More
 open import Cubical.Data.FinSet
+open import Cubical.Data.FinSet.More
 open import Cubical.Data.FinSet.Cardinality
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Nat hiding (elim)
@@ -27,8 +28,7 @@ open import Cubical.HITs.PropositionalTruncation as PT hiding (elim ; rec ; map)
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
-
-open import Helper
+open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 private
   variable
