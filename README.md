@@ -121,7 +121,7 @@ The contexts in the implementation are unary, so the `Lambekᴰ` derivations of 
 #### `A ⊢ B` vs. `↑ (A ⊸ B)`
 In the paper syntax, we write `↑ (A ⊸ B)` to describe the parse transformers from `A` to `B`. 
 
-For a grammar `C`, `↑ C` denotes the parses of `C` in the empty context and we define this encoding in `Term.Nullary`. By leveraging the adjunction between `⊗` and `⊸`, and using the fact that `ε` is the unit for `⊗`, it is true that `↑ (A ⊸ B)` and `A ⊢ B` are equivalent types. However, in this implementation we almost exclusively use `A ⊢ B` to encode parser transformers. 
+For a grammar `C`, `↑ C` denotes the parses of `C` in the empty context and we define this encoding in `Term.Nullary`. By leveraging the adjunction between `⊗` and `⊸`, and using the fact that `ε` is the unit for `⊗`, it is true that `↑ (A ⊸ B)` and `A ⊢ B` are equivalent types. This equivalence is proven in `Grammar.LinearFunction.Base` with `Term≅Element`. However, in this implementation we almost exclusively use `A ⊢ B` to encode parser transformers instead of `↑ (A ⊸ B)`.
 
 Because the two types are equivalent, the choice of representation does affect any of the semantic claims. Additionally, the use of `A ⊢ B` is preferable as it has favorable definitional behavior over `↑ (A ⊸ B)`. 
 
@@ -160,7 +160,7 @@ g = inl ∘g (CONS ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ id
 
 Note, in this implementation the contexts `A , ·`, `· , A`, and `A` are encoded differently. On paper, the empty context is definitionally a unit for context extension, but in the term `g` above we must manually insert an empty piece of the context through the combinator `⊗-unit-r⁻ : ∀ {A : Grammar ℓA} → A ⊢ A ⊗ ε`.
 
-Further note that we write programs in this implementation via the composition operator `_∘g_`. Because of this, the parse transformers that we write are often read from right to left (or top to bottom when spanning multiple lines). This may be seen in the parse transformer given in `Examples.Section2.Figure4`
+Further note that we write programs in this implementation via the composition operator `_∘g_`. Because of this, the parse transformers that we write are often read from right to left (or bottom to top when spanning multiple lines). This may be seen in the parse transformer given in `Examples.Section2.Figure4`
 
 ``` agda
 h : (＂ a ＂ ⊗ ＂ a ＂) * ⊢ ＂ a ＂ *
@@ -399,6 +399,56 @@ agda Thompson/Construction/Literal.agda
 will only check only the file `Thompson/Construction/Literal.agda`.
 
 ## Caveats
+
+### Unsafe Pragmas
+
+We make use of the `TERMINATING` pragma in the following locations:
+
+- `Grammar.Inductive.HLevels` in the definitons of `encode` and `isRetract`.
+- `Grammar.Inductive.Indexed` in the defintions of `recHomo` and `μ-η'`.
+
+We use these pragmas because the way in which we roll our own encoding of inductive types is not structurally decreasing on their input. Because we have constructed the functors in `Grammar.Inductive.Functor` to be use their arguments strictly positively, we know that the naive recursion used in these definition does indeed terminate, but not in a manner that satisfies the termination checker.
+
+Additonally we use a `NO_POSITIVITY_CHECK` pragma in:
+- `Grammar.Inductive.Indexed`
+
+This `NO_POSITIVITY_CHECK` is needed because our use of opacity in the connective `⊗` blocks the positivity checker for the definiton of `μ` in `Grammar.Inductive.Indexed`. If `⊗` were not opaque, [then this definiton would pass the positivity checker](https://github.com/agda/agda/issues/6970).
+
+### Opacity
+
+One of the benefits of using `opaque` definitons throughout the codebase is the enforcement of abstraction boundaries between the embedded language and Agda as a host language.
+
+The most faithful encoding of `Lambekᴰ` would only break these abstraction boundaries when axiomatizing a language primitive. Usage of any language constructs, and proofs about any language constructs would then occur with any explicit `unfolding`. This strategy would guarantee that any proofs of equality between linear terms would follow from only from equational reasoning in `Lambekᴰ`. That is, there would be no possibility to "accidentally get an equality correct" by leveraging external reasoning available in Agda that isn't available in `Lambekᴰ`.
+
+We have kept this attitude in mind throughout the development and tried to unfolding minimally. However, by unfolding we also can enable Agda to solve for `β`-equalities within `Lambekᴰ` that would otherwise be long chains that have us manually invoke lemmas.
+
+#### An example with `⊗-intro`
+For example, consider the following two terms,
+
+``` agda
+module _ (e : A ⊢ B) (f : B ⊢ C) (g : D ⊢ E) (h : E ⊢ F) where
+  ϕ ψ : A ⊗ B ⊢ C ⊗ F
+  ϕ = (f ∘g e) ,⊗ (h ∘g g)
+  ψ = (f ,⊗ h) ∘g (e ,⊗ g)
+```
+
+A priori, `ϕ` and `ψ` are not defintionally equal. We may derive their equality, but that involves manual reasoning every time that we compose maps in parallel. Instead, if we unfold the defintion of `⊗-intro`, then `ϕ` and `ψ` become definitonally equal. So while in the strictest sense, by unfolding `⊗-intro` could have accidentally invoked external reasoning that doesn't hold in `Lambekᴰ`; in practice, we use Agda's definitional equality as a rudimentary solver for `β`-equalities that hold in `Lambekᴰ`.
+
+We apply this same principle throughout all of our code. Any instance of unfolding is either a deliberate breaking of abstraction boundaries to build the language, or it is to have Agda solver for equalities that are derivable within `Lambekᴰ` anyway.
+
+Here are the other terms that we unfold to solve for `β`-equalities:
+
+- `⊕-elim` from `Grammar.Sum.Binary.Cartesian` so that we can leverage the definitional equalities that hold over Agda's `Sum` type.
+- `π₁`/`π₂` from `Grammar.Product.Binary.Cartesian` so that we can leverage the definitional equalities that hold over Agda's `×` type.
+- `⊕ᴰ-distL`/`⊕ᴰ-distR` from `Grammar.Sum.Properties`, which are distributivity of sums over `⊗`. These make the equalities `⊕ᴰ-distL-β`/`⊕ᴰ-distR-β` hold definitionally. 
+- A combination of `⊗-intro`, `⊗-unit-l`/`⊗-unit-r`, `⊗-unit-l⁻`/`⊗-unit-r⁻` and `⊗-assoc` to use these equalities from `Grammar.LinearProduct.Base`:
+  - `⊗-assoc⁻4⊗-intro`
+  - `id,⊗id≡id`
+  - `⊗-unit-r⁻⊗-intro`
+  - `⊗-unit-l⁻⊗-intro`
+  - `⊗-assoc⁻⊗-intro`
+- `eq-intro` from `Grammar.Equalizer.Base` to expose that it is the identity on parse trees while additionally tagging a parse with a proof of equality.
+
 
 
 

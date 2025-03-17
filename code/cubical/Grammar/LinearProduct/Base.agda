@@ -33,9 +33,6 @@ private
     O : Grammar ℓO
     f f' f'' f''' f'''' f''''' : A ⊢ B
 
--- _⊗'_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
--- (A ⊗' B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
--- infixr 25 _⊗'_
 opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
@@ -525,12 +522,6 @@ opaque
   ∙ ⊗-intro⊗-intro
   ∙ cong (id ,⊗_) ⊗-assoc⁻3⊗-unit-r⁻
 
--- ⊗-assoc⁻3⊗-intro :
---   ∀ {f f' f'' f'''} →
---   (⊗-assoc⁻3 {g = g}{g' = g'}{g'' = g''}{g''' = g'''} ∘g (f ,⊗ f' ,⊗ f'') ,⊗ f''')
---   ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ∘g (⊗-assoc⁻3 {g = B}{g' = B'}{g'' = B''}{g''' = B'''}))
--- ⊗-assoc⁻3⊗-intro =
---   {!!}
 opaque
   unfolding ⊗-intro ⊗-assoc
   ⊗-assoc⁻4⊗-intro :

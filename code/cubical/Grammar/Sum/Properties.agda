@@ -47,14 +47,21 @@ module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
     ⊕ᴰ-distL .sec = refl
     ⊕ᴰ-distL .ret = refl
 
-    ⊕ᴰ-distR :
-      StrongEquivalence
-        (A ⊗ (⊕[ x ∈ X ] B x))
-        (⊕[ x ∈ X ] (A ⊗ B x))
+    ⊕ᴰ-distR : A ⊗ (⊕[ x ∈ X ] B x) ≅ ⊕[ x ∈ X ] (A ⊗ B x)
     ⊕ᴰ-distR .fun w (s , p , (x , q)) = x , ((s , (p , q)))
     ⊕ᴰ-distR .inv w (x , (s , (p , q))) = s , (p , (x , q))
     ⊕ᴰ-distR .sec = refl
     ⊕ᴰ-distR .ret = refl
+
+    opaque
+      unfolding ⊗-intro
+      ⊕ᴰ-distL-β : ∀ {x : X} →
+        ⊕ᴰ-distL .fun ∘g σ x ,⊗ id ≡ σ x
+      ⊕ᴰ-distL-β = refl
+
+      ⊕ᴰ-distR-β : ∀ {x : X} →
+        ⊕ᴰ-distR .fun ∘g id ,⊗ σ x ≡ σ x
+      ⊕ᴰ-distR-β = refl
 
 module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : X → Grammar ℓB}
   (A≅B : ∀ (x : X) → A x ≅ B x)
