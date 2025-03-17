@@ -22,7 +22,7 @@ This repository is split into the following directories
 - `String` - contains the definition as the list type over some fixed alphabet, and some associated utilities. `String := List ⟨ Alphabet ⟩`, where `Alphabet : hSet`
 - `Grammar` - defining the primitive linear types in Dependent Lambek Calculus. Linear types are encoded as functions from strings to types, written as `Grammar ℓA = String → Type ℓA`.
 - `Term` - defining parse transformers between grammars. A parse transformer between `A` and `B` is written as the type `A ⊢ B` (or `Term A B`).
-- `Parser` - the definition of a parser as described in definiton 4.4.
+- `Parser` - the definition of a parser as described in definition 4.4.
 - `Automata` - defining the following automata formalisms as grammars: DFAs, NFAs, deterministic (but not necessarily finite) automata, and Turing machines.
 - `Examples` - containing intrinsically verified parsers for the Dyck grammar and an arithmetic expression grammar. Additionally has the examples from the figures in Section 2 encoded.
 - `Thompson` - a verification of Thompson's construction: from a regular expression `r` construct an NFA and prove that it is strongly equivalent to `r`.
@@ -37,7 +37,7 @@ We build an implementation of Dependent Lambek Calculus by encoding its denotati
 ### Non-linear Types
 In the denotational semantics of `Lambekᴰ`, the non-linear types are interpreted in the category `Set`. In our implementation, we simply reuse Agda's type system to encode the non-linear fragment of the theory. That is, the universe of non-linear types `U` is interpreted in Agda as `Type ℓ` (at some level `ℓ`).
 
-Because we reuse the host language to encode the non-linear types, we give no embedded syntax for the non-linear fragment of `Lambekᴰ`. That is, the non-linear `Lambekᴰ` types `A B : U` are interpreted as Agda types `A B : Type ℓ`, and non-linear terms `A ⊢ B` of `Lambekᴰ` are interperted with the ordinary function type in Agda `A → B`.
+Because we reuse the host language to encode the non-linear types, we give no embedded syntax for the non-linear fragment of `Lambekᴰ`. That is, the non-linear `Lambekᴰ` types `A B : U` are interpreted as Agda types `A B : Type ℓ`, and non-linear terms `A ⊢ B` of `Lambekᴰ` are interpreted with the ordinary function type in Agda `A → B`.
 
 ### Linear Types
 In the denotational semantics, linear types are represented as type-valued functions over strings. We use that same encoding in this implementation with the `Grammar` type, given in `Grammar.Base`
@@ -193,7 +193,7 @@ defines a term `(＂ a ＂ ⊗ ＂ a ＂) ⊗ (＂ a ＂ *) ⊢ ＂ a ＂ *`, an
 ### Opacity
 Many of the definitions in this repository are marked as `opaque`. [Opacity](https://agda.readthedocs.io/en/v2.7.0.1/language/opaque-definitions.html) is a feature in Agda that allow selective unfolding of definitions. 
 
-When normalizing, a term defined in an `opaque` block will not reduce unless it is explicitly marked with an `unfolding`. Opacity is also infective in that any definition that wishes to unfold an `opaque` definiton must itself be marked as `opaque`.
+When normalizing, a term defined in an `opaque` block will not reduce unless it is explicitly marked with an `unfolding`. Opacity is also infective in that any definition that wishes to unfold an `opaque` definition must itself be marked as `opaque`.
 
 We use opacity for a few reasons:
 
@@ -219,7 +219,7 @@ Below, we include the code locations of the specific claims made in the paper.
 
 Defined in `Grammar.Equivalence.Base` as `LogicalEquivalence`, which we often write as `A ≈ B`. 
 
-The `Equivalence` module also contains a definiton named `isWeaklyEquivalent`, which is the characterization that two grammar are __semantically__ weakly equivalent, in the sense that they recognize the same sets of strings. 
+The `Equivalence` module also contains a definition named `isWeaklyEquivalent`, which is the characterization that two grammar are __semantically__ weakly equivalent, in the sense that they recognize the same sets of strings. 
 
 Despite the naming, the notion of "weak equivalence" from the paper is captured by the `LogicalEquivalence` type which is encoded using the equational theory of the embedded language, rather than a semantic characterization.
 
@@ -235,7 +235,7 @@ Defined in `Grammar.Equivalence.Base` as `StrongEquivalence`, often written as `
 
 > A grammar `A` is __unambiguous__ if for every linear type `B` and `f g : ↑ (B ⊸ A)` then `f ≡ g`.
 
-Defined as `umambiguous` in `Grammar.Properties.Base`. The same file also includes other equivalent characterizations of unambiguity for a grammar `A` that are provable in `Lambekᴰ`:
+Defined as `unambiguous` in `Grammar.Properties.Base`. The same file also includes other equivalent characterizations of unambiguity for a grammar `A` that are provable in `Lambekᴰ`:
 
 - The unique map `A ⊢ ⊤` being a monomorphism, where `⊤` is defined in `Grammar.Top.Base`.
 - The map `Δ : A ⊢ A & A` being an isomorphism, where `&` is a binary product defined in `Grammar.Product.Binary.Cartesian`.
@@ -258,9 +258,9 @@ Given in `Grammar.Sum.Unambiguous` as `unambiguous⊕ᴰ`. This definition requi
 
 > A parser for a linear type `A` is a function `↑ (string ⊸ A ⊕ B)` where `B` is a linear type that is __disjoint__ from `A` in that we can implement a function `↑ (A & B ⊸ 0)`
 
-This definiton of disjointness is given in `Grammar.Properties.Base`.
+This definition of disjointness is given in `Grammar.Properties.Base`.
 
-The definiton of a parser is given in `Parser.Base`.
+The definition of a parser is given in `Parser.Base`.
 
 ### Lemma 4.5
 
@@ -282,7 +282,7 @@ Defined as `≈Parser` in `Grammar.Parser.Base`.
 
 DFAs are defined in `Automata.DFA.Base`. The type `DFA` is implemented using a more general construction `DeterministicAutomaton` from `Automata.Deterministic`.
 
-`DeterministicAutomaton` encodes a determinstic labelled transition system over a type of states `Q : Type ℓ`. A `DFA` is then a `DeterministicAutomaton` where the type of states is a finite set. 
+`DeterministicAutomaton` encodes a deterministic labelled transition system over a type of states `Q : Type ℓ`. A `DFA` is then a `DeterministicAutomaton` where the type of states is a finite set. 
 
 A parser for a `DeterministicAutomaton` is given in `Automata.Deterministic` as `AccTraceParser`. Because `DFA` is just a special case of this more general automaton, `AccTraceParser` is also a parser for `DFA`s.
 
@@ -354,7 +354,7 @@ Turing : Grammar ℓ-zero
 Turing = Reify Accepting
 ```
 
-### Additonal Axioms Holds in the Semantics
+### Additional Axioms Holds in the Semantics
 
 > Additive conjunction distributes over additive disjunction
 
@@ -407,7 +407,7 @@ will only check only the file `Thompson/Construction/Literal.agda`.
 ## Caveats
 
 ### Combinators 
-As we discussed earlier, the parse tranformers built in this implementation must be written in a combinatory style.
+As we discussed earlier, the parse transformers built in this implementation must be written in a combinatory style.
 
 The combinatory style has the benefit of easily embedding terms in Agda that intrinsically respect the grammatical content of the underlying strings. That is, every parser written in the embedded language of this implementation is sound by construction.
 
@@ -418,22 +418,22 @@ The combinatory style has equivalent semantics to the full syntax in the paper, 
 ### Unsafe Pragmas
 We make use of the `TERMINATING` pragma in the following locations:
 
-- `Grammar.Inductive.HLevels` in the definitons of `encode` and `isRetract`.
+- `Grammar.Inductive.HLevels` in the definitions of `encode` and `isRetract`.
 - `Grammar.Inductive.Indexed` in the definitions of `recHomo` and `μ-η'`.
 
 We use these pragmas because the way in which we roll our own encoding of inductive types is not structurally decreasing on their input. Because we have constructed the functors in `Grammar.Inductive.Functor` to be use their arguments strictly positively, we know that the naive recursion used in these definitions does indeed terminate, but not in a manner that satisfies the termination checker.
 
-Additonally we use a `NO_POSITIVITY_CHECK` pragma in:
+Additionally we use a `NO_POSITIVITY_CHECK` pragma in:
 - `Grammar.Inductive.Indexed`
 
-This `NO_POSITIVITY_CHECK` is needed because our use of opacity in the connective `⊗` blocks the positivity checker for the definiton of `μ` in `Grammar.Inductive.Indexed`. If `⊗` were not opaque, [then this definiton would pass the positivity checker](https://github.com/agda/agda/issues/6970).
+This `NO_POSITIVITY_CHECK` is needed because our use of opacity in the connective `⊗` blocks the positivity checker for the definition of `μ` in `Grammar.Inductive.Indexed`. If `⊗` were not opaque, [then this definition would pass the positivity checker](https://github.com/agda/agda/issues/6970).
 
 ### `-WnoUnsupportedIndexedMatch`
 
 We frequently suppress a warning introduced when pattern matching on [indexed inductive types](https://agda.readthedocs.io/en/latest/language/cubical.html#indexed-inductive-types) in Cubical Agda. Suppressing this warning is harmless, and suppression is even recommended in the linked documentation for most end users of Cubical.
 
 ### Opacity
-One of the benefits of using `opaque` definitons throughout the codebase is the enforcement of abstraction boundaries between the embedded language and Agda as a host language.
+One of the benefits of using `opaque` definitions throughout the codebase is the enforcement of abstraction boundaries between the embedded language and Agda as a host language.
 
 The most faithful encoding of `Lambekᴰ` would only break these abstraction boundaries when axiomatizing a language primitive. Usage of any language constructs, and proofs about any language constructs would then occur with any explicit `unfolding`. This strategy would guarantee that any proofs of equality between linear terms would follow from only from equational reasoning in `Lambekᴰ`. That is, there would be no possibility to "accidentally get an equality correct" by leveraging external reasoning available in Agda that isn't available in `Lambekᴰ`.
 
@@ -449,7 +449,7 @@ module _ (e : A ⊢ B) (f : B ⊢ C) (g : D ⊢ E) (h : E ⊢ F) where
   ψ = (f ,⊗ h) ∘g (e ,⊗ g)
 ```
 
-A priori, `ϕ` and `ψ` are not definitionally equal. We may derive their equality, but that involves manual reasoning every time that we compose maps in parallel. Instead, if we unfold the definition of `⊗-intro`, then `ϕ` and `ψ` become definitonally equal. So while in the strictest sense, by unfolding `⊗-intro` could have accidentally invoked external reasoning that doesn't hold in `Lambekᴰ`; in practice, we use Agda's definitional equality as a rudimentary solver for `β`-equalities that hold in `Lambekᴰ`.
+A priori, `ϕ` and `ψ` are not definitionally equal. We may derive their equality, but that involves manual reasoning every time that we compose maps in parallel. Instead, if we unfold the definition of `⊗-intro`, then `ϕ` and `ψ` become definitionally equal. So while in the strictest sense, by unfolding `⊗-intro` could have accidentally invoked external reasoning that doesn't hold in `Lambekᴰ`; in practice, we use Agda's definitional equality as a rudimentary solver for `β`-equalities that hold in `Lambekᴰ`.
 
 We apply this same principle throughout all of our code. Any instance of unfolding is either a deliberate breaking of abstraction boundaries to build the language, or it is to have Agda solver for equalities that are derivable within `Lambekᴰ` anyway.
 
