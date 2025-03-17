@@ -472,7 +472,7 @@ In the paper we make no claims about the performance of parsers written in this 
 
 One major drawback of embedding the language in Agda is that the Agda typechecker is now acting as a parser. This approach is orders of magnitude slower than a comparable unverified parser written in `C`. For the `Dyck` example, we ran some simple benchmarks in `Examples.Benchmark.Dyck`. The verified parser for `Dyck` takes `1m3s` to parse an input string that is `196544` characters long.
 
-Similarly, the parsers are not ergonomic to use. In particular, we have not plugged them into any of Agda's `IO` modules. Instead, all of our experiments have mocked the parsing input as its own Agda file that contains a string literal of the data to be parsed. 
+Similarly, the parsers are not ergonomic to use. In particular, we have not plugged them into any of Agda's `IO` modules. Instead, all of our experiments have either mocked the parsing input as its own Agda file that contains a string literal of the data to be parsed or have a function that generates the input, as in `Examples.Benchmark.Dyck`. 
 
 
 
