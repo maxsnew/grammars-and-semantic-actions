@@ -585,9 +585,8 @@ module Automaton where
 
   open Parser
 
-  TraceParser : ∀ nq → Parser (Trace true nq)
-  TraceParser nq .compl = Trace false nq
-  TraceParser nq .compl-disjoint = disjointAccRej nq
+  TraceParser : ∀ nq → Parser (Trace true nq) (Trace false nq)
+  TraceParser nq .disj = disjointAccRej nq
   TraceParser nq .fun = Ind⊕→⊕ (λ b → Trace b nq) ∘g π nq ∘g parse
 
 -- Soundness : from every trace we can extract an LL⟨1⟩ parse
@@ -686,5 +685,5 @@ AccTrace≈EXP : Automaton.Trace true (0 , Automaton.Opening) ≈ LL⟨1⟩.EXP
 AccTrace≈EXP .fun = Soundness.buildExp
 AccTrace≈EXP .inv = Completeness.mkTrace
 
-EXPParser : Parser LL⟨1⟩.EXP
+EXPParser : Parser LL⟨1⟩.EXP (Automaton.Trace false (0 , Automaton.Opening))
 EXPParser = ≈Parser (Automaton.TraceParser (0 , Automaton.Opening)) AccTrace≈EXP

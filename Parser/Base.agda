@@ -18,19 +18,17 @@ private
     C : Grammar ℓC
     D : Grammar ℓD
 
-record Parser (A : Grammar ℓA) : Type (ℓ-suc ℓA) where
+record Parser (A : Grammar ℓA) (B : Grammar ℓB) : Type (ℓ-max ℓA ℓB) where
   field
-    compl : Grammar ℓA
-    compl-disjoint : disjoint A compl
-    fun : string ⊢ A ⊕ compl
+    disj : disjoint A B
+    fun : string ⊢ A ⊕ B
 
   -- Utilities to benchmark a Parser
   module _ where
     opaque
       unfolding _⊕_
-      run : (w : String) → (A w) Sum.⊎ (compl w)
+      run : (w : String) → (A w) Sum.⊎ (B w)
       run w = fun w (mkstring w)
-
 
     private
       is-inl? : ∀ {X : Type ℓX} {Y : Type ℓY} →
@@ -44,8 +42,8 @@ record Parser (A : Grammar ℓA) : Type (ℓ-suc ℓA) where
 open Parser
 open LogicalEquivalence
 
-module _ {A B : Grammar ℓA} (P : Parser A) (A≈B : A ≈ B) where
-  ≈Parser : Parser B
-  ≈Parser .compl = P .compl
-  ≈Parser .compl-disjoint = disjoint≈ (P .compl-disjoint) A≈B
-  ≈Parser .fun = A≈B .fun ,⊕p id ∘g P .fun
+module _ {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC}
+  (P : Parser A B) (A≈C : A ≈ C) where
+  ≈Parser : Parser C B
+  ≈Parser .disj = disjoint≈ (P .disj) A≈C
+  ≈Parser .fun = A≈C .fun ,⊕p id ∘g P .fun

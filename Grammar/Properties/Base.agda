@@ -125,13 +125,6 @@ disjoint⊕r dis = disjoint⊢ dis inr
 
 open StrongEquivalence
 
-parser : Grammar ℓA → Type (ℓ-suc ℓA)
-parser {ℓA = ℓA} A =
-  Σ[ A' ∈ Grammar ℓA ] (disjoint A A' × (⊤ ⊢ A ⊕ A'))
-
-decidable : Grammar ℓA → Type ℓA
-decidable A = ⊤ ⊢ A ⊕ ¬G A
-
 isUnambiguousRetract :
   ∀ (f : A ⊢ B) (f' : B ⊢ A)
   → (f' ∘g f ≡ id)

@@ -137,12 +137,12 @@ module _
 module _ {ℓA} {ℓB}
   {A : Grammar ℓA}
   {B : Grammar ℓB}
-  (A≅B : StrongEquivalence A B)
+  (A≅B : A ≅ B)
   where
 
   open StrongEquivalence
 
-  sym-strong-equivalence : StrongEquivalence B A
+  sym-strong-equivalence : B ≅ A
   sym-strong-equivalence .fun = A≅B .inv
   sym-strong-equivalence .inv = A≅B .fun
   sym-strong-equivalence .sec = A≅B .ret
@@ -154,13 +154,13 @@ module _ {ℓA} {ℓB} {ℓC}
   {A : Grammar ℓA}
   {B : Grammar ℓB}
   {C : Grammar ℓC}
-  (A≅B : StrongEquivalence A B)
-  (B≅C : StrongEquivalence B C)
+  (A≅B : A ≅ B)
+  (B≅C : B ≅ C)
   where
 
   open StrongEquivalence
 
-  comp-strong-equiv : StrongEquivalence A C
+  comp-strong-equiv : A ≅ C
   comp-strong-equiv .fun = B≅C .fun ∘g A≅B .fun
   comp-strong-equiv .inv = A≅B .inv ∘g B≅C .inv
   comp-strong-equiv .sec =
@@ -173,6 +173,38 @@ module _ {ℓA} {ℓB} {ℓC}
 _≅∙_ : A ≅ B → B ≅ C → A ≅ C
 _≅∙_ = comp-strong-equiv
 infixr 10 _≅∙_
+
+module _ {ℓA} {ℓB}
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  (A≈B : A ≈ B)
+  where
+
+  open LogicalEquivalence
+
+  sym-log-equivalence : B ≈ A
+  sym-log-equivalence .fun = A≈B .inv
+  sym-log-equivalence .inv = A≈B .fun
+
+  sym≈ = sym-log-equivalence
+
+module _ {ℓA} {ℓB} {ℓC}
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  {C : Grammar ℓC}
+  (A≈B : A ≈ B)
+  (B≈C : B ≈ C)
+  where
+
+  open LogicalEquivalence
+
+  comp-log-equiv : A ≈ C
+  comp-log-equiv .fun = B≈C .fun ∘g A≈B .fun
+  comp-log-equiv .inv = A≈B .inv ∘g B≈C .inv
+
+_≈∙_ : A ≈ B → B ≈ C → A ≈ C
+_≈∙_ = comp-log-equiv
+infixr 10 _≈∙_
 
 module _ {A : Grammar ℓA} where
   id≅ : A ≅ A

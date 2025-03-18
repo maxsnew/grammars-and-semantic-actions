@@ -115,8 +115,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   open Parser
 
-  AccTraceParser : ∀ q → Parser (Trace true q)
-  AccTraceParser q .compl = Trace false q
-  AccTraceParser q .compl-disjoint =
+  AccTraceParser : ∀ q → Parser (Trace true q) (Trace false q)
+  AccTraceParser q .disj =
     hasDisjointSummands⊕ᴰ isSetBool (unambiguous-⊕Trace q) true false true≢false
   AccTraceParser q .fun = Ind⊕→⊕ (λ b → Trace b q) ∘g π q ∘g parse

@@ -648,5 +648,5 @@ Dyck≅Trace =
 
 -- The equivalence between Dyck and Trace true (just 0) allows us to extend the
 -- Parser for Trace true (just 0) to a Parser for Dyck
-DyckParser : Parser Dyck
+DyckParser : Parser Dyck (Trace false (just 0))
 DyckParser = ≈Parser (AccTraceParser (just 0)) (≅→≈ (sym≅ Dyck≅Trace))
