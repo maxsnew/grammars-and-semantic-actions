@@ -46,7 +46,7 @@ This repository is split into the following directories
 ## Dependent Lambek Calculus in Agda
 Dependent Lambek Calculus (`Lambekᴰ`) is a domain-specific dependent type theory for verified parsing and formal grammar theory. We use linear types as a syntax for formal grammars, and parsers can be written as linear terms. The linear typing restriction provides a form of intrinsic verification that a parser yields only valid parse trees for the input string. 
 
-We build an implementation of Dependent Lambek Calculus by encoding its denotational semantics within Cubical Agda. The syntax is then interpreted via the following encodings:
+We build an implementation of Dependent Lambek Calculus by as a *shallow embedding* in Cubical Agda. That is, we define the constructs used in the denotational semantics and program directly using the denotations. The syntax is then interpreted via the following encodings:
 
 ### Non-linear Types
 In the denotational semantics of `Lambekᴰ`, the non-linear types are interpreted in the category `Set`. In our implementation, we simply reuse Agda's type system to encode the non-linear fragment of the theory. That is, the universe of non-linear types `U` is interpreted in Agda as `Type ℓ` (at some level `ℓ`).
@@ -94,9 +94,7 @@ The empty grammar `0 : L`, which is given as a nullary sum, is implemented in `G
 ⊥ _ = Empty.⊥
 ```
 
-The nullary additive sum above is more usually named `0`, as in the paper, while the name `⊥` is reserved for the nullary multiplicative sum. 
-
-We have not implemented the multiplicative sum `⅋` so this name clash has not yet been problematic for us, although we want to clarify that this development has used a nonstandard name.
+We use ⊥ to avoid a name clash with the number 0.
 
 ##### Products and Sums
 In `Grammar.Product.Base` we define indexed conjunction as a `Π`-type.
@@ -143,7 +141,7 @@ In the paper syntax, we write `↑ (A ⊸ B)` to describe the parse transformers
 
 For a grammar `C`, `↑ C` denotes the parses of `C` in the empty context and we define this encoding in `Term.Nullary`. By leveraging the adjunction between `⊗` and `⊸`, and using the fact that `ε` is the unit for `⊗`, it is true that `↑ (A ⊸ B)` and `A ⊢ B` are equivalent types. This equivalence is proven in `Grammar.LinearFunction.Base` with `Term≅Element`. However, in this implementation we almost exclusively use `A ⊢ B` to encode parser transformers instead of `↑ (A ⊸ B)`.
 
-Because the two types are equivalent, the choice of representation does affect any of the semantic claims. Additionally, the use of `A ⊢ B` is preferable as it has favorable definitional behavior over `↑ (A ⊸ B)`. 
+Because the two types are equivalent, the choice of representation does not affect any of the semantic claims. We prefer to use `A ⊢ B` in the formalization because it makes associativity and unit laws for composition hold definitionally in Agda.
 
 #### Some Example Linear Terms
 The linear terms in our implementation are written in a combinatory style, rather than in exactly the same syntax presented in the paper. The parse transformers in the implementation must then be built up from base combinators in a point-free style.
