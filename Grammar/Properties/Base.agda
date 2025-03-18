@@ -22,8 +22,8 @@ open import Grammar.Literal.Base Alphabet
 open import Grammar.Epsilon.Base Alphabet
 open import Grammar.Negation.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Sum.Binary.Cartesian.Base Alphabet
-open import Grammar.Product.Binary.Cartesian.Base Alphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 
@@ -103,8 +103,8 @@ module _ (dis : disjoint A B) (e : C ⊢ A) where
     disjoint⊢2 : disjoint C D
     disjoint⊢2 = disjoint⊢ ∘g id ,&p f
 
-open LogicalEquivalence
-module _ (dis : disjoint A B) (A≈C : LogicalEquivalence A C) where
+open WeakEquivalence
+module _ (dis : disjoint A B) (A≈C : A ≈ C) where
   disjoint≈ : disjoint C B
   disjoint≈ = disjoint⊢ dis (A≈C .inv)
 

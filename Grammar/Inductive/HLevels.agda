@@ -13,7 +13,7 @@ open import Grammar.Base Alphabet
 open import Grammar.HLevels Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Product Alphabet
-open import Grammar.Product.Binary.Cartesian Alphabet
+open import Grammar.Product.Binary.AsPrimitive Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct Alphabet
 open import Grammar.Lift Alphabet

@@ -8,10 +8,10 @@ open import Cubical.Data.Maybe hiding (rec)
 open import Cubical.Data.Bool using (true ; false)
 
 open import Grammar.Base Alphabet
-open import Grammar.Product.Binary.Cartesian Alphabet
-import Grammar.Product.Binary.Inductive Alphabet as Ind&
+open import Grammar.Product.Binary.AsPrimitive Alphabet
+import Grammar.Product.Binary.AsIndexed Alphabet as Ind&
 open import Grammar.Sum Alphabet
-open import Grammar.Sum.Binary.Cartesian Alphabet
+open import Grammar.Sum.Binary.AsPrimitive Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.Literal Alphabet

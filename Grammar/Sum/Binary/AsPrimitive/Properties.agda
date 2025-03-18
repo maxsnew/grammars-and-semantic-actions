@@ -2,7 +2,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 
-module Grammar.Sum.Binary.Cartesian.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Binary.AsPrimitive.Properties (Alphabet : hSet ℓ-zero) where
 
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool using (Bool ; false ; true ; _≟_ ; isSetBool ; true≢false)
@@ -16,11 +16,11 @@ open import Grammar.Bottom Alphabet
 open import Grammar.Lift Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Properties Alphabet
-open import Grammar.Sum.Binary.Cartesian.Base Alphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Distributivity Alphabet
-import Grammar.Sum.Binary.Inductive.Base Alphabet as Ind⊕
-open import Grammar.Product.Binary.Cartesian.Base Alphabet
+import Grammar.Sum.Binary.AsIndexed.Base Alphabet as Ind⊕
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
 open import Term.Base Alphabet
 
 private
@@ -99,7 +99,7 @@ module _ {A B : Grammar ℓA} (unambig⊕ : unambiguous (A ⊕ B)) where
       (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕) false)
 
 open StrongEquivalence
-open LogicalEquivalence
+open WeakEquivalence
 module _
   {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC} {D : Grammar ℓD}
   (A≈B : A ≈ B)

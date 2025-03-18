@@ -1,14 +1,14 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Sum.Binary.Cartesian.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Binary.AsPrimitive.Base (Alphabet : hSet ℓ-zero) where
 
 import Cubical.Data.Sum as Sum
 
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Product.Binary.Cartesian.Base Alphabet
-open import Grammar.Function.Cartesian.Base Alphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
+open import Grammar.Function.AsPrimitive.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Term.Base Alphabet
 

@@ -40,7 +40,7 @@ record Parser (A : Grammar ℓA) (B : Grammar ℓB) : Type (ℓ-max ℓA ℓB) w
     accept? w = is-inl? (run w)
 
 open Parser
-open LogicalEquivalence
+open WeakEquivalence
 
 module _ {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC}
   (P : Parser A B) (A≈C : A ≈ C) where

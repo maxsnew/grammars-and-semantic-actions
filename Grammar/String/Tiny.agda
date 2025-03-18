@@ -17,8 +17,8 @@ open import Grammar.String.Base Alphabet
 open import Grammar.String.Unambiguous Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Sum.Binary.Cartesian Alphabet
-open import Grammar.Product.Binary.Cartesian Alphabet
+open import Grammar.Sum.Binary.AsPrimitive Alphabet
+open import Grammar.Product.Binary.AsPrimitive Alphabet
 
 open import Term.Base Alphabet
 

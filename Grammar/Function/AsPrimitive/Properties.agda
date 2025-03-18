@@ -1,13 +1,13 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Function.Cartesian.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.Function.AsPrimitive.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.HLevels.Base Alphabet
 open import Grammar.HLevels.Properties Alphabet
-open import Grammar.Function.Cartesian.Base Alphabet
+open import Grammar.Function.AsPrimitive.Base Alphabet
 open import Term.Base Alphabet
 
 private

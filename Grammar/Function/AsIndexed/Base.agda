@@ -1,13 +1,13 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Function.Inductive.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Function.AsIndexed.Base (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Product.Binary.Inductive.Base Alphabet
-import Grammar.Function.Cartesian.Base Alphabet as Fun
-import Grammar.Product.Binary.Cartesian Alphabet as Prod
+open import Grammar.Product.Binary.AsIndexed.Base Alphabet
+import Grammar.Function.AsPrimitive.Base Alphabet as Fun
+import Grammar.Product.Binary.AsPrimitive Alphabet as Prod
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.Top.Base Alphabet

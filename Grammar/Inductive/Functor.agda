@@ -11,7 +11,7 @@ open import Grammar.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Product.Base Alphabet
-open import Grammar.Product.Binary.Cartesian.Base Alphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet

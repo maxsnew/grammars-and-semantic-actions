@@ -6,7 +6,7 @@ module Grammar.KleeneStar.Inductive.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Grammar.Base Alphabet
 open import Grammar.Sum Alphabet
-open import Grammar.Sum.Binary.Cartesian Alphabet
+open import Grammar.Sum.Binary.AsPrimitive Alphabet
 open import Grammar.Epsilon Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.KleeneStar.Inductive.Base Alphabet

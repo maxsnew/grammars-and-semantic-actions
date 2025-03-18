@@ -13,7 +13,7 @@ open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
 open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 open import Grammar.Base Alphabet
-open import Grammar.Product.Binary.Cartesian Alphabet
+open import Grammar.Product.Binary.AsPrimitive Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet

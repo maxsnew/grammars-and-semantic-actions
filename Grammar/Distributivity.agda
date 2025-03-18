@@ -12,12 +12,12 @@ open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.Product.Base Alphabet
-open import Grammar.Sum.Binary.Cartesian.Base Alphabet
-open import Grammar.Product.Binary.Cartesian Alphabet
-import Grammar.Sum.Binary.Inductive.Base Alphabet as Ind⊕
-import Grammar.Product.Binary.Inductive Alphabet as Ind&
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
+open import Grammar.Product.Binary.AsPrimitive Alphabet
+import Grammar.Sum.Binary.AsIndexed.Base Alphabet as Ind⊕
+import Grammar.Product.Binary.AsIndexed Alphabet as Ind&
 open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Function.Cartesian.Base Alphabet
+open import Grammar.Function.AsPrimitive.Base Alphabet
 open import Term.Base Alphabet
 
 private

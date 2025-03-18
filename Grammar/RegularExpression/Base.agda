@@ -10,7 +10,7 @@ open import Grammar.Epsilon Alphabet
 open import Grammar.Bottom Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.LinearProduct Alphabet
-open import Grammar.Sum.Binary.Cartesian Alphabet
+open import Grammar.Sum.Binary.AsPrimitive Alphabet
 open import Grammar.KleeneStar.Inductive Alphabet
 
 data RegularExpression  : Type ℓ-zero where

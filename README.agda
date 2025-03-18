@@ -33,8 +33,8 @@ import Automata.Everything
 -- Examples
 ------------------------------------------------------------------------
 -- Includes verified parsesrs for the Dyck grammar, a parser for
--- a language of arithmetic expressions, and expanded examples from
--- Section 2
+-- a language of arithmetic expressions,
+-- a regular expression parser, and expanded examples from Section 2
 import Examples.Everything
 
 -- A verification of Thompson's construction

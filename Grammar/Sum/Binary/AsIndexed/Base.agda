@@ -2,7 +2,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.Sum.Binary.Inductive.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Binary.AsIndexed.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Bool using (Bool ; true ; false)
 

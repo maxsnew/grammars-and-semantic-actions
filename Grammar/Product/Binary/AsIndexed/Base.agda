@@ -2,14 +2,13 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.Product.Binary.Inductive.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Product.Binary.AsIndexed.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Bool
 
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Product.Base Alphabet
-open import Grammar.Inductive.Indexed Alphabet
 open import Term.Base Alphabet
 
 private
@@ -27,16 +26,6 @@ _&_ : Grammar ℓA → Grammar ℓA → Grammar ℓA
 A & B = &ᴰ (&Ind A B)
 
 infixr 27 _&_
-
--- &-intro : A ⊢ B →
---   A ⊢ C →
---   A ⊢ B & C
--- &-intro {A = A} {B = B} {C = C} e f = &ᴰ-intro &-intro'
---   where
---   &-intro' : (b : Bool) → A ⊢ &Ind B C b
---   &-intro' false = f
---   &-intro' true = e
-
 
 module _ {A : Bool → Grammar ℓA} where
   π₁ : &ᴰ A ⊢ A true

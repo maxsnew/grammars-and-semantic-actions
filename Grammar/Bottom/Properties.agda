@@ -10,11 +10,11 @@ import Cubical.Data.Sum as Sum
 open import Grammar.Base Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom.Base Alphabet
-open import Grammar.Product.Binary.Cartesian.Base Alphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.LinearFunction Alphabet
 open import Grammar.Function Alphabet
-open import Grammar.Sum.Binary.Cartesian.Base Alphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Distributivity Alphabet
 

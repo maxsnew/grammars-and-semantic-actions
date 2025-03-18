@@ -445,7 +445,7 @@ module Determinization
       (subst (Walk' q) q'∈Singleton walk))) ∘g
     DFA→NFA (ε-closure (SingletonDecℙ N.Q N.init))
 
-  open LogicalEquivalence
+  open WeakEquivalence
 
   NFA≈DFA : NTrace.Trace true N.init ≈ ℙN.Trace true (ε-closure (SingletonDecℙ N.Q N.init))
   NFA≈DFA .fun = π (ε-closure-lift-∈ refl) ∘g π _ ∘g NFA→DFA N.init

@@ -2,7 +2,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.Product.Binary.Cartesian.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Product.Binary.AsPrimitive.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
