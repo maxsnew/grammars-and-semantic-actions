@@ -61,7 +61,7 @@ module Handwritten where
   Trace = μ TraceTy
 
   -- Application of each of the constructors
-  -- NOTE: the lifts here are artefacts of the
+  -- NOTE: the lifts here are artifacts of the
   -- way that we define Functor
   0TO2 : ＂ c ＂ ⊗ Trace s2 ⊢ Trace s0
   0TO2 = roll ∘g σ 0to2 ∘g liftG ,⊗ liftG

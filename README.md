@@ -41,7 +41,7 @@ This repository is split into the following directories
 - `Examples` - containing intrinsically verified parsers for the Dyck grammar and an arithmetic expression grammar. Additionally has the examples from the figures in Section 2 encoded.
 - `Thompson` - a verification of Thompson's construction: from a regular expression `r` construct an NFA and prove that it is strongly equivalent to `r`.
 - `Determinization` - a verification of the powerset construction for determinization. Given an NFA `N`, construct a DFA that is weakly equivalent to it.
-- `Cubical` - utilities that supplement the `Cubical` standard library. This is a soft fork of the `Cubical` standard library, and so we put these pieces of code under the same `Cubical` namespace. Ideally we will pull request these into the `Cubical` standard library, as they are general purpose utilities that are not grammar-specific.
+- `Cubical` - general purpose utilities that supplement the `Cubical` standard library in ways not specific to grammars.
 
 ## Dependent Lambek Calculus in Agda
 Dependent Lambek Calculus (`Lambekᴰ`) is a domain-specific dependent type theory for verified parsing and formal grammar theory. We use linear types as a syntax for formal grammars, and parsers can be written as linear terms. The linear typing restriction provides a form of intrinsic verification that a parser yields only valid parse trees for the input string. 
