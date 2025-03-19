@@ -304,7 +304,7 @@ system for verifying \emph{one} type of grammar formalism, but instead
 is a domain-specific language in which many grammar formalisms and
 their verified parsers can be implemented. For example, \theoryabbv is
 not a verified parser generator that compiles regular expressions to
-deterministic finite automata, but is instead is a domain specific
+deterministic finite automata, but is instead a domain specific
 language \emph{for writing} such a verified parser generator.
 
 The design of \theoryabbv
@@ -425,8 +425,9 @@ use type-theoretic syntax to represent disjunction $\oplus$ and concatenation
 $\otimes$ of
 grammars. Over an input string $\w$, a parse of the disjunction $\A \oplus \B$ is either
 a parse of $\A$ over the string $\w$ or a
-parse of $\B$ over the string $\w$. Similarly, $\w$ matches $\A \otimes \B$ if
-$\w$ can be split into two strings $\w_{\A}$ and $\w_{\B}$ that match $\A$
+parse of $\B$ over the string $\w$. Similarly, a parse of $\A \otimes \B$ for
+$\w$ is a splitting of $w$ into two strings $\w_{\A}$ and $\w_{\B}$ with
+parses for $\A$
 and $\B$, respectively.
 
 For a type $\A$, a parse tree of a string $\w$ is represented as a
@@ -454,14 +455,14 @@ f (a , b) = inl (a (*@$\otimes$@*) b)
       {~}
       {b : \literal b \vdash b : \literal b}
     }
-    {a : \literal a , b : \literal b \vdash a \otimes b : \literal a \otimes
+    {a : \literal a , b : \literal b \vdash (a , b) : \literal a \otimes
       \literal b}
   }
-  {a : \literal a , b : \literal b \vdash \texttt{f} := \inl(a \otimes b) :
+  {a : \literal a , b : \literal b \vdash \texttt{f} := \inl(a , b) :
     (\literal a \otimes \literal b) \oplus \literal c}
 \end{mathpar}
-\caption{\stringquote{ac} matches
-  $(\literal a \oplus \literal b) \otimes \literal c$}
+\caption{\stringquote{ab} is parsed by $(\literal a \oplus \literal b) \otimes \literal c$
+}
 \label{fig:fingram}
 \end{figure}
 For this interpretation of parse trees as terms to make sense, our
@@ -521,7 +522,7 @@ data A(*@$^*$@*) : L where
 
 Through repeated application of the Kleene star constructors,
 \cref{fig:kleenestarderivation} gives a derivation that shows
-\stringquote{ab} matches the regular expression $({\literal a}^{*}
+\stringquote{ab} is parsed by the regular expression $({\literal a}^{*}
 \otimes \literal b) \oplus \literal c$. The leaves of the proof tree
 that mention the arrow $\uparrow$ describe a cast from a non-linear
 type to a linear type.  For instance, the premise of the leaf
@@ -572,16 +573,15 @@ a value that may only be used a single time.
     {~}
     {b : {\literal b} \vdash b : {\literal b}}
   }
-  {a : {\literal a} , b : {\literal b} \vdash (\cons~a~\nil) \otimes b : {\literal a}^{*} \otimes {\literal b}}
+  {a : {\literal a} , b : {\literal b} \vdash (\cons~a~\nil , b) : {\literal a}^{*} \otimes {\literal b}}
 }
-{a : \literal a , b : \literal b \vdash \texttt{g} := \inl ((\cons~a~\nil)
-  \otimes b) : ({\literal a}^{*} \otimes \literal b) \oplus \literal c}
+{a : \literal a , b : \literal b \vdash \texttt{g} := \inl (\cons~a~\nil , b) : ({\literal a}^{*} \otimes \literal b) \oplus \literal c}
 \end{mathpar}
 \begin{lstlisting}
 g : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*) ('a'(*@$^*$@*) (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
-g (a , b) = inl (cons a' nil (*@$\otimes$@*) b')
+g (a , b) = inl (cons a nil (*@$\otimes$@*) b)
 \end{lstlisting}
-\caption{\stringquote{ab} matches
+\caption{\stringquote{ab} is parsed by
   $({\literal a}^{*} \otimes \literal b) \oplus \literal c$}
 \label{fig:kleenestarderivation}
 \end{figure}
@@ -621,9 +621,10 @@ explicit recursive call in the body of its definition.
       {
         \inferrule
         {~}
-        {a_1 : \A, a_2 : \A , a_{*} : \A^* \vdash \cons (a_1 , \cons(a_2 , a_{*})) : \A^*}
+        {a_1 : \A, a_2 : \A , a_{*} : \A^* \vdash \cons~a_1 (\cons~a_2~a_{*}) : \A^*}
       }
-      {a' : \A \otimes \A , a_{*} : \A^* \vdash g := \letin {a_1 \otimes a_2} {a'} {\cons (a_1 , \cons(a_2 , a_{*})) : \A^*}}
+      {a' : \A \otimes \A , a_{*} : \A^* \vdash g := \letin {a_1 \otimes a_2}
+        {a'} {\cons~a_1 (\cons~a_2~a_{*}) : \A^*}}
     }
     {\cdot \vdash f := \lamblto a {\lamblto {a_{*}} {\app {\app g a} {a_{*}} }} : (\A \otimes \A) \lto \A^* \lto \A^*}
   }
@@ -862,7 +863,7 @@ types is straightforward $\beta\eta$ equivalence and included in the
 appendix. First, the linear variable rule says that a linear variable
 can be used if it is the \emph{only} variable in the context.
 
-First, we cover the ``multiplicative'' connectives of non-commutative
+Next, we cover the ``multiplicative'' connectives of non-commutative
 linear logic. The linear unit ($\I$) and tensor product ($\otimes$)
 are standard for a non-commutative linear logic: when we construct a
 linear unit we cannot use any variables and when we construct a tensor
@@ -977,7 +978,7 @@ is empty.
     %
     \inferrule{\Gamma ; \Delta , a : A \vdash e : B}{\Gamma ; \Delta \vdash \lamblto a e : A\lto B}
     \and
-    \inferrule{\Gamma ; \Delta' \vdash e' : A \\ \Gamma ; \Delta \vdash e : A \lto B}{\Gamma ; \Delta, \Delta' \vdash \applto {e'} {e} : B}
+    \inferrule{\Gamma ; \Delta \vdash e : A \lto B \\ \Gamma ; \Delta' \vdash e' : A} {\Gamma ; \Delta, \Delta' \vdash \applto {e} {e'} : B}
     \\
     %
     \inferrule{\Gamma, x : X ; \Delta  \vdash e : A}
@@ -1249,7 +1250,7 @@ the parse trees of the two grammars are isomorphic
 these notions of equivalence in \theoryabbv.
 \begin{definition}
   \label{def:weakequiv}
-  Grammars $\A$ and $\B$ are \emph{weakly equivalent} if there exists
+  Grammars $\A$ and $\B$ are \emph{weakly equivalent} if there exist
   parse transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B
     \lto \A)}$. $\A$ is a \emph{retract} of $\B$ if $\A$ and $\B$ are
   weakly equivalent and $\lambda a. g(f(a)) \equiv \lambda a.a$. They
@@ -1298,7 +1299,7 @@ clever way:
 \end{definition}
 \cref{def:unambig} can be read more intuitively as stating that $\A$
 is unambiguous if there is at most one way to transform parses of any
-other grammar $\B$ into parse of $\A$. This notion of an unambiguous
+other grammar $\B$ into parses of $\A$. This notion of an unambiguous
 type is the analog for linear types of the definition of a (homotopy)
 \emph{proposition} in the terminology of homotopy type
 theory\cite{hottbook}. The most basic unambiguous types are $\top$ and
@@ -1370,7 +1371,7 @@ only in the case that a parse cannot be constructed.
 Here we replace $\top$ in our partial parser type with a type
 $A_{\neg}$ that we can think of as a negation of $A$. The function
 $\uparrow{(A \& A_{\neg} \lto 0)}$ ensures that it is impossible for
-$A$ and $A_{\neg}$ to match the same input string. This means that in
+$A$ and $A_{\neg}$ to parse the same input string. This means that in
 defining a parser, we will need to define a kind of negative grammar
 for strings that do not parse. Fortunately, we will see that
 deterministic automata naturally support such a notion with no
@@ -1434,7 +1435,7 @@ a verified regex parser.
 
 \newcommand{\N}{\texttt{N}}
 
-A regular expressions in \theoryabbv is a linear type constructed
+A regular expression in \theoryabbv is a linear type constructed
 using only the connectives $\literal c$, $0$, $\oplus$, $I$,
 $\otimes$, and Kleene star.  In \cref{sec:type-theory-examples}, we
 saw one particular NFA and its corresponding type of traces. More
@@ -1484,7 +1485,7 @@ for the accepting traces out of $N.init$.
 \begin{figure}
 \begin{lstlisting}
 data Trace(*@$_{\N}$@*) : (s : N.states) (*@$\to$@*) L where
-  nil : (*@$\uparrow$@*)(&[ s : N.states ] N.isAcc (*@$\to$@*) Trace(*@$_{\N}$@*) s)
+  nil : (*@$\uparrow$@*)(&[ s : N.states ] N.isAcc s (*@$\to$@*) Trace(*@$_{\N}$@*) s)
   cons : (*@$\uparrow$@*)(&[ t : N.transitions ]
     ('N.label t' (*@$\lto$@*) Trace(*@$_{\N}$@*) (N.dst t) (*@$\lto$@*) Trace(*@$_{\N}$@*) (N.src t)))
   (*@$\epsilon$@*)cons : (*@$\uparrow$@*)(&[ t : N.(*@$\epsilon$@*)transitions ]
@@ -1875,12 +1876,12 @@ grammars. Context-free grammars (CFG) can be encoded in our type
 theory in a similar way to regular expressions, as CFGs are equivalent
 to the formalism of \emph{$\mu$}-regular expressions, where the Kleene
 star is replaced by an arbitrary fixed point
-operation\cite{leis_towards_1992}.
+operation \cite{leis_towards_1992}.
 
 \newcommand{\balanced}{\mathtt{balanced}}
 \newcommand{\Dyck}{\mathtt{Dyck}}
 A simple example of a CFG is the Dyck grammar of balanced
-parentheses, which we define in \Cref{fig:dyckinductive}
+parentheses, which we define in \Cref{fig:dyckinductive}.
 $\Dyck$ is a grammar over the alphabet $\{ \stringquote{(}, \stringquote{)} \}$. The $\nil$ constructor shows that
 the empty string is balanced, and the $bal$ constructor builds a balanced
 parse by wrapping an already balanced parse in an additional set of parentheses
@@ -2172,7 +2173,7 @@ We now define our denotational semantics.
   \item For each non-linear context $\Gamma \isCtx$, we define a set $\sem \Gamma$.
   \item For each non-linear type $\Gamma \vdash X \isTy$, and element
     $\gamma \in \sem\Gamma$, we define a set $\sem X \gamma$.
-  \item For each linear type $\Gamma A \isLinTy$ and element $\gamma
+  \item For each linear type $\Gamma \vdash A \isLinTy$ and element $\gamma
     \in \sem\Gamma$, we define a formal grammar $\sem{A}\gamma$. We
     similarly define a formal grammar $\sem\Delta\gamma$ for each
     linear context $\Gamma \Delta\isLinCtx$.
