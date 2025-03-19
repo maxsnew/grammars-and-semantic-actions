@@ -18,7 +18,6 @@ open import Grammar.Product.Binary.AsPrimitive Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Sum.Binary.AsPrimitive Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
-open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom Alphabet
 open import Grammar.Epsilon.Base Alphabet
@@ -66,13 +65,6 @@ unrolled-stringL = ε ⊕ (stringL ⊗ char)
 unroll-string≅ : string ≅ unrolled-string
 unroll-string≅ = *≅ε⊕A⊗A* char
 
-unroll-string2≅ : string ≅ unrolled-string2
-unroll-string2≅ =
-  unroll-string≅
-  ≅∙ ⊕≅
-    id≅
-    {!!}
-
 unroll-string2Retract : (char ⊕ ((char ⊗ char) ⊗ string)) isRetractOf (char ⊗ string)
 unroll-string2Retract .weak .fun =
    ⊕-elim (id ,⊗ NIL ∘g ⊗-unit-r⁻) (id ,⊗ CONS ∘g ⊗-assoc⁻)
@@ -110,15 +102,31 @@ unroll-string2Retract .ret = the-ret
                                                 (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
                            ∘g id ,⊗ CONS
                            ∘g id ,⊗ id ,⊗ eq-π {B = char ⊕ (char ⊗ char) ⊗ string ⟜ char ⊗ char}
-                                            (⟜-intro (unroll-string2Retract .weak inv ∘g unroll-string2Retract .weak .fun))
-                                            (⟜-intro id)
+                                            (⟜-intro (unroll-string2Retract .weak .inv ∘g unroll-string2Retract .weak .fun ∘g inr))
+                                            (⟜-intro inr)
                            ∘g id ,⊗ lowerG ,⊗ lowerG)
                     (⊗-assoc∘⊗-assoc⁻≡id)
               )
-            ∙ λ i → inr ∘g id ,⊗ unambiguous-string _ _ i
+            ∙ λ i → inr ∘g id ,⊗ unambiguous-string
+                                 (string-intro
+                                 ∘g fold*r char (⟜-intro {A = char}(inl ∘g ⊗-unit-r))
+                                                (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
+                                 ∘g CONS ∘g id ,⊗ eq-π _ _
+                                 ∘g lowerG ,⊗ lowerG
+                                 )
+                                 ((CONS ∘g id ,⊗ eq-π _ _) ∘g lowerG ,⊗ lowerG)
+                                 i
         )
         _
       )
+
+unambiguous-char⊕char+ : unambiguous (char ⊕ ((char ⊗ char) ⊗ string))
+unambiguous-char⊕char+ =
+  isUnambiguousRetract unroll-string2Retract
+    (summand-R-is-unambig (unambiguous≅ unroll-string≅ unambiguous-string))
+
+unambiguous-char : unambiguous char
+unambiguous-char = summand-L-is-unambig unambiguous-char⊕char+
 
 disjoint-ε-char+ : disjoint ε (char +)
 disjoint-ε-char+ = unambig-⊕-is-disjoint (unambiguous≅ unroll-string≅ unambiguous-string)

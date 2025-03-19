@@ -58,20 +58,6 @@ opaque
 
 opaque
   unfolding _⟜_ _⊗_ ⊗-intro ⊗≡
-  ⟜-intro∘⟜-intro⁻≡id :
-    (e : A ⊢ B ⟜ C) →
-    ⟜-intro {A = C}{B = A}{C = B}(⟜-intro⁻ e) ≡ e
-  ⟜-intro∘⟜-intro⁻≡id e = funExt λ w → funExt λ pA →
-    funExt λ w' → funExt λ pB → transportRefl _
-
-  ⟜-intro⁻∘⟜-intro≡id :
-    (e : A ⊗ B ⊢ C) →
-    ⟜-intro⁻ {A = B}{B = C}{C = A}(⟜-intro e) ≡ e
-  ⟜-intro⁻∘⟜-intro≡id {C = C} e =
-    funExt λ w → funExt λ p⊗ →
-      fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-        (⊗PathP (≡-× refl refl) (≡-× refl refl)))
-
   -- THE ORDER SWAPS!
   ⟜-curry :
     A ⟜ (B ⊗ C) ⊢ (A ⟜ B) ⟜ C
@@ -145,7 +131,6 @@ opaque
 
 opaque
   unfolding ⊸-intro
-
   ⊸-mapCod-precomp : (e : A ⊢ B)(f : C ⊗ D ⊢ A) →
     ⊸-mapCod e ∘g ⊸-intro f ≡ ⊸-intro (e ∘g f)
   ⊸-mapCod-precomp {A = A}{B = B}{D = D} e f =
@@ -168,7 +153,6 @@ opaque
 ⟜-mapDom f = ⟜-intro (⟜-app ∘g f ,⊗ id)
 
 opaque
-  -- why do we need to unfold ⊸-intro here?
   unfolding ⊸-intro
   ⊸-mapDom-precomp : (e : A ⊢ B)(f : C ⊗ B ⊢ B) →
     ⊸-mapDom e ∘g ⊸-intro f ≡ ⊸-intro (f ∘g id ,⊗ e)

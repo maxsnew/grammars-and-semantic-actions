@@ -241,7 +241,7 @@ The non-linear types of `Lambekᴰ` are embedded by reusing Agda's type system. 
 
 Because we reuse the host language to encode the non-linear types, we give no embedded syntax for the non-linear fragment of `Lambekᴰ`. That is, the non-linear `Lambekᴰ` types `X Y : U` are interpreted as Agda types `X Y : Type ℓ`. The non-linear terms from `Γ , X ⊢ Y` from `Lambekᴰ` are interpreted by the type of dependent functions between `X` and `Y`. Non-linear variables are scoped by Agda, so the non-linear context `Γ` is implicitly managed by Agda.
 
-In the denotational semantics of `Lambekᴰ`, `U` is interpreted in the category `Set`. Therefore, in this implementation it is more precise to interpret the non-linear types into `hSet ℓ`, Agda's type of homotopy sets. In Cubical Agda, a set `X : hSet ℓ` is a pair of an underlying type `⟨ X ⟩` and a proof `isSet ⟨ X ⟩` encoding that `⟨ X ⟩` is a set. Instead of parametrizing the constructs in our implementation by sets, we instead often write them more generally to only be parametrized by types. Then when programming in `Lambekᴰ` we provide the `isSet` proof as a side condition.
+In the denotational semantics of `Lambekᴰ`, `U` is interpreted in the category `Set`. Therefore, in this implementation it is more precise to interpret the non-linear types into `hSet ℓ`, Agda's type of homotopy sets. In Cubical Agda, a set `X : hSet ℓ` is a pair of an underlying type `⟨ X ⟩` and a proof `isSet ⟨ X ⟩` encoding that `⟨ X ⟩` is a set. Instead of parameterizing the constructs in our implementation by sets, we instead often write them more generally to only be parameterized by types. Then when programming in `Lambekᴰ` we provide the `isSet` proof as a side condition.
 
 ### Non-commutative Linear Types
 The non-commutative linear types of `Lambekᴰ` are interpreted as functions from a type of strings into the universe of Agda's types. Precisely, we fix a set of characters `Alphabet : hSet ℓ-zero` and define `String` as `List ⟨ Alphabet ⟩`. Then in `Grammar.Base` we give the interpretation of linear types,
@@ -378,7 +378,7 @@ The parse transformers built in this implementation must be written in a combina
 
 The two systems have equivalent semantics, so this difference does not affect any of the claims supported by this artifact.
 
-To bridge the gap between the paper syntax and this codebase, in the future we may write an ordered, linear typechecker that elaborates the full sytnax into a combinatory core language.
+To bridge the gap between the paper syntax and this codebase, in the future we may write an ordered, linear typechecker that elaborates the full syntax into a combinatory core language.
 
   
 ### Opacity
@@ -426,6 +426,7 @@ We make use of the `TERMINATING` pragma in the following locations:
 
 - `Grammar.Inductive.HLevels` in the definitions of `encode` and `isRetract`.
 - `Grammar.Inductive.Indexed` in the definitions of `recHomo` and `μ-η'`.
+- `Examples.Benchmark.Dyck` to generate strings. The string generation code is untrusted and only used to create tests.
 
 In `Grammar.Inductive.Functor`, we define a type of strictly positive functors that act on grammars. We then define the least fixed point `μ` of these functors in `Grammar.Inductive.Indexed` in a manner that does not satisfy Agda's termination checker, so we use the `TERMINATING` pragma to suppress the termination checker.
 

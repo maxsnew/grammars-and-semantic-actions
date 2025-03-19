@@ -445,12 +445,13 @@ module Automaton where
             ∘g ⊕ᴰ-distL .fun ∘g lowerG ,⊗ id
 
           the-unexpected]-pf : mk≡Ty false n Opening (σ (unexpectedO Eq.refl ]))
-          the-unexpected]-pf = cong (λ z → σ false ∘g roll ∘g σ (unexpectedO Eq.refl ]) ∘g liftG
-                                           ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
-
+          the-unexpected]-pf i =
+            σ false ∘g roll ∘g σ (unexpectedO Eq.refl ])
+            ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
           the-unexpected+-pf : mk≡Ty false n Opening (σ (unexpectedO Eq.refl +))
-          the-unexpected+-pf = cong (λ z → σ false ∘g roll ∘g σ (unexpectedO Eq.refl +)
-                                           ∘g liftG ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
+          the-unexpected+-pf i =
+            σ false ∘g roll ∘g σ (unexpectedO Eq.refl +)
+            ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
 
           the-unexpected-pf : (c : UnexpectedOpening) →
             mk≡Ty false n Opening (σ (unexpectedO Eq.refl c))
@@ -461,24 +462,24 @@ module Automaton where
       unexpectedClosing≡ : (n : ℕ) → (c : UnexpectedClosing) →
         mk≡Ty false n Closing (σ (unexpectedC Eq.refl c))
       unexpectedClosing≡ n EOF = refl
-      unexpectedClosing≡ zero [ = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [)
-                                              ∘g liftG ∘g id ,⊗ z
-                                              ∘g lowerG) (unambiguous-string _ _)
-      unexpectedClosing≡ (suc n) [ = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl [)
-                                                 ∘g liftG ∘g id ,⊗ z
-                                                 ∘g lowerG) (unambiguous-string _ _)
-      unexpectedClosing≡ zero + = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl +)
-                                              ∘g liftG ∘g id ,⊗ z
-                                              ∘g lowerG) (unambiguous-string _ _)
-      unexpectedClosing≡ (suc n) + = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl +)
-                                                 ∘g liftG ∘g id ,⊗ z
-                                                 ∘g lowerG) (unambiguous-string _ _)
-      unexpectedClosing≡ zero aNum = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum)
-                                                 ∘g liftG ∘g id ,⊗ z
-                                                 ∘g lowerG) (unambiguous-string _ _)
-      unexpectedClosing≡ (suc n) aNum = cong (λ z → σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum)
-                                                    ∘g liftG ∘g id ,⊗ z
-                                                    ∘g lowerG) (unambiguous-string _ _)
+      unexpectedClosing≡ zero [ i =
+        σ false ∘g roll ∘g σ (unexpectedC Eq.refl [)
+        ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
+      unexpectedClosing≡ (suc n) [ i =
+        σ false ∘g roll ∘g σ (unexpectedC Eq.refl [)
+        ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
+      unexpectedClosing≡ zero + i =
+        σ false ∘g roll ∘g σ (unexpectedC Eq.refl +)
+        ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
+      unexpectedClosing≡ (suc n) + i =
+        σ false ∘g roll ∘g σ (unexpectedC Eq.refl +)
+        ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
+      unexpectedClosing≡ zero aNum i =
+        σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum)
+        ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
+      unexpectedClosing≡ (suc n) aNum i =
+        σ false ∘g roll ∘g σ (unexpectedC Eq.refl aNum)
+        ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
 
       Closing≡ : (b : Bool) → (n : ℕ) → the-≡-ty b n Closing
       Closing≡ b zero = ⊕ᴰ≡ _ _ λ where
@@ -486,8 +487,9 @@ module Automaton where
         (unexpectedC Eq.refl c) → unexpectedClosing≡ zero c
           where
           the-close-bad-pf : mk≡Ty false 0 Closing (σ (closeBad Eq.refl Eq.refl))
-          the-close-bad-pf = cong (λ z → σ false ∘g roll ∘g σ (closeBad Eq.refl Eq.refl)
-                                         ∘g liftG ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
+          the-close-bad-pf i =
+            σ false ∘g roll ∘g σ (closeBad Eq.refl Eq.refl)
+            ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
       Closing≡ b (suc n) = ⊕ᴰ≡ _ _ λ where
         (closeGood n-1 Eq.refl) → the-close-good-pf n-1
         (unexpectedC Eq.refl c) → unexpectedClosing≡ (suc n) c
@@ -552,13 +554,15 @@ module Automaton where
           the-unexpected-pf :
             (c : UnexpectedAdding) →
             mk≡Ty false n Adding (σ (unexpectedA Eq.refl c))
-          the-unexpected-pf [ = cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl [)
-                                            ∘g liftG ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
-          the-unexpected-pf ] = cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl ])
-                                            ∘g liftG ∘g id ,⊗ z ∘g lowerG) (unambiguous-string _ _)
-          the-unexpected-pf aNum = cong (λ z → σ false ∘g roll ∘g σ (unexpectedA Eq.refl aNum)
-                                               ∘g liftG ∘g id ,⊗ z
-                                               ∘g lowerG) (unambiguous-string _ _)
+          the-unexpected-pf [ i =
+            σ false ∘g roll ∘g σ (unexpectedA Eq.refl [)
+            ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
+          the-unexpected-pf ] i =
+            σ false ∘g roll ∘g σ (unexpectedA Eq.refl ])
+            ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
+          the-unexpected-pf aNum i =
+            σ false ∘g roll ∘g σ (unexpectedA Eq.refl aNum)
+            ∘g liftG ∘g id ,⊗ unambiguous-string string-intro id i ∘g  lowerG
 
       the-ret : π (n , s) ∘g parse ∘g ⊕ᴰ-elim (λ b → print b (n , s)) ≡ id
       the-ret = ⊕ᴰ≡ _ _ λ b →

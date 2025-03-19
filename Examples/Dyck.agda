@@ -624,7 +624,7 @@ genRetr = equalizer-ind-unit (DyckTy tt) pf
 
 Dyck≅Trace : Dyck ≅ (Trace true (just 0))
 Dyck≅Trace =
-  unambiguousRetract→StrongEquivalence
+  unambiguousRetract'→StrongEquivalence
     (⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g π 0 ∘g genBuildTrace 0)
     mkTree
     (mkTree ∘g ⊸-app ∘g id ,⊗ EOF ∘g ⊗-unit-r⁻ ∘g π 0 ∘g buildTrace

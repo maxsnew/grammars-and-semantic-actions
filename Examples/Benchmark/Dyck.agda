@@ -49,19 +49,19 @@ mkInput (suc (suc n)) with n mod 2
 -- _ = refl
 
 opaque
-  unfolding run ⊕-elim inr mkstring ⊗-intro ⊸-intro ⟜-intro ⌈w⌉→string ⊕ᴰ-distL ⊕ᴰ-distR
+  unfolding run ⊕-elim inr ⊗-intro ⊸-intro ⟜-intro ⊕ᴰ-distL ⊕ᴰ-distR
   -- Uncomment these individually to run
   --
   -- Each benchmark below is run with the length checks above
   -- commented out. Those are only there to sanity check size
 
   -- immediate
-  _ : accept? (mkInput 10) ≡ true
-  _ = refl
+  -- _ : accept? (mkInput 10) ≡ true
+  -- _ = refl
 
   -- 10s
-  -- _ : accept? (mkInput 25) ≡ true
-  -- _ = refl
+  _ : accept? (mkInput 25) ≡ true
+  _ = refl
 
   -- 10s
   -- _ : accept? (mkInput 25 ++ [ RP ]) ≡ false

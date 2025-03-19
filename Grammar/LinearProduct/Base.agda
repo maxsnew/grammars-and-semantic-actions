@@ -101,29 +101,6 @@ opaque
     → p ≡ p'
   ⊗≡ p p' s≡ p≡ = ⊗PathP s≡ p≡
 
-  opaque
-    unfolding _⊗_
-    ⊗≡' : ∀ {A : Grammar ℓA}{B : Grammar ℓB}
-      → (e f : A ⊗ B ⊢ C ⊗ D)
-      → (se≡ :
-        ∀ (w : String)
-        → (p : (A ⊗ B) w)
-        → same-splits {w = λ _ → w} p (e w p))
-      → (sf≡ :
-        ∀ (w : String)
-        → (p : (A ⊗ B) w)
-        → same-splits {w = λ _ → w} p (f w p))
-      → (p≡ : ∀ (w : String)
-         → (p : (A ⊗ B) w)
-         → same-parses {A = λ _ → C} {B = λ _ → D} {w = λ _ → w} (e w p) (f w p)
-           (sym (se≡ w p) ∙ sf≡ w p))
-      → e ≡ f
-    ⊗≡' e f se≡ sf≡ p≡ = funExt λ w → funExt λ p →
-      ΣPathP (
-        ΣPathP ((sym (se≡ w p) ∙ sf≡ w p) ,
-          isProp→PathP (λ i → isSetString _ _) _ _) ,
-        (p≡ w p))
-
 opaque
   unfolding _⊗_
   ⊗-intro :
@@ -132,12 +109,6 @@ opaque
     A ⊗ C ⊢ B ⊗ D
   ⊗-intro e e' _ p =
     p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
-
-opaque
-  unfolding _⊗_
-  ⊗-in : {w w' : String} →
-    A w → B w' → (A ⊗ B) (w ++ w')
-  ⊗-in p q = (_ , refl) , (p , q)
 
 opaque
   unfolding _⊗_ the-split ⊗-intro ⊗≡

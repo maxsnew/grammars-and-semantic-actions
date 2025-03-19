@@ -3,8 +3,10 @@ module Examples.Section2.Alphabet where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Structure
 
 open import Cubical.Data.SumFin
+open import Cubical.Data.FinSet
 
 data Alphabet' : Type where
   a b c : Alphabet'
@@ -37,3 +39,6 @@ isSetAlphabet' =
 
 Alphabet : hSet ℓ-zero
 Alphabet = Alphabet' , isSetAlphabet'
+
+isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩
+isFinSetAlphabet = EquivPresIsFinSet (isoToEquiv (invIso Alphabet'Rep)) isFinSetFin
