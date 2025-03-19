@@ -1,4 +1,4 @@
-module README where
+module Evaluate where
 
 ------------------------------------------------------------------------
 -- A library for building intrinsically verified parsers in Cubical Agda
