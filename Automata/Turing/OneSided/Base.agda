@@ -15,7 +15,6 @@ open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Nat
 open import Cubical.Data.List hiding (init ; rec)
 open import Cubical.Data.Bool
-open import Cubical.Data.Maybe as Maybe
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Empty as Empty hiding (rec)
 open import Cubical.Data.Sigma
@@ -122,29 +121,3 @@ module _ (TM : TuringMachine) where
   Turing : Grammar ℓ-zero
   Turing = Reify Accepting
 
-  decide-bounded : ∀ (fuel : ℕ) q t h → Maybe (AcceptingFrom (q , t , h))
-  decide-bounded 0 q t h = nothing
-  decide-bounded (suc n) q t h =
-    decRec
-      (λ acc≡q → just (subst (λ z → TuringTrace true (z , t , h)) acc≡q (accept t h refl)))
-      (λ _ → nothing)
-      (isFinSet→Discrete (str Q) acc q)
-
-  decide-bounded' : ∀ (fuel : ℕ) → string ⊢ Reify λ w → Maybe (Accepting w)
-  decide-bounded' n =
-    readReify (λ w → Maybe (Accepting w))
-    (λ w → decide-bounded n init (initTape (rev w)) initHead)
-
-  -- Even though reification is powerful enough to describe
-  -- unrestricted grammars, their membership is undecidable
-  -- in general. The best algorithm that
-  -- we may hope for is some bounded search procedure
-  run : string ⊢ &[ fuel ∈ ℕ ] MaybeG.Maybe Turing
-  run = &ᴰ-intro λ fuel →
-    elimReify
-      (λ w → Maybe (Accepting w))
-      (λ w → Maybe.rec
-        (MaybeG.nothing {A = ⌈ w ⌉} w (mk⌈⌉ w))
-        λ accepts → MaybeG.just w (mkReify _ accepts)
-      )
-    ∘g decide-bounded' fuel
