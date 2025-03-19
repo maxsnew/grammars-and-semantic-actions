@@ -25,13 +25,10 @@ private
 open StrongEquivalence
 
 read : ⊤ ⊢ string
-read w _ = ⌈w⌉→string {w = w} w (internalize w)
-
-read' : ⊤ ⊢ string
-read' w _ = mkstring' w
+read w _ = mkstring w
 
 read* : ∀ {ℓA} → ⊤* {ℓA} ⊢ string
-read* w _ = ⌈w⌉→string {w = w} w (internalize w)
+read* = read ∘g ⊤-intro
 
 string≅stringL : string ≅ stringL
 string≅stringL = *≅*L char
@@ -42,9 +39,10 @@ string-intro = read ∘g ⊤-intro
 stringL-intro : ∀ {ℓA} {A : Grammar ℓA} → A ⊢ stringL
 stringL-intro = string≅stringL .fun ∘g string-intro
 
+-- This is assumed as an axiom on paper, and
+-- it holds semantically
 string≅⊤ : string ≅ ⊤
 string≅⊤ .fun = ⊤-intro
 string≅⊤ .inv = read
 string≅⊤ .sec = unambiguous⊤ _ _
 string≅⊤ .ret = unambiguous-string _ _
-

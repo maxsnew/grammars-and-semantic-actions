@@ -411,7 +411,7 @@ We apply this same principle throughout all of our code. Any instance of unfoldi
 Here are the other terms that we unfold to solve for `β`-equalities:
 - `⊕-elim` from `Grammar.Sum.Binary.AsPrimitive` so that we can leverage the definitional equalities that hold over Agda's `Sum` type.
 - `π₁`/`π₂` from `Grammar.Product.Binary.AsPrimitive` so that we can leverage the definitional equalities that hold over Agda's `×` type.
-- `⊕ᴰ-distL`/`⊕ᴰ-distR` from `Grammar.Sum.Properties`, which are distributivity of sums over `⊗`. These make the equalities `⊕ᴰ-distL-β`/`⊕ᴰ-distR-β` hold definitionally. 
+- `⊕ᴰ-distL`/`⊕ᴰ-distR` from `Grammar.Sum.Properties` and their counterparts from `Grammar.Sum.Binary.AsPrimitive`. Unfolding these allows distributivity of sums over `⊗` to reduce. 
 - A combination of `⊗-intro`, `⊗-unit-l`/`⊗-unit-r`, `⊗-unit-l⁻`/`⊗-unit-r⁻` and `⊗-assoc` to use these equalities from `Grammar.LinearProduct.Base`:
   - `⊗-assoc⁻4⊗-intro`
   - `id,⊗id≡id`

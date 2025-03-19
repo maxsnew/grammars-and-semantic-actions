@@ -9,7 +9,10 @@ open import Cubical.Data.FinSet
 
 open import Grammar.Base Alphabet
 open import Grammar.Epsilon.Base Alphabet
+open import Grammar.Lift.Base Alphabet
+open import Grammar.Sum.Binary.AsPrimitive Alphabet
 open import Grammar.Properties Alphabet
+open import Grammar.String.Properties Alphabet
 open import Grammar.HLevels.Properties Alphabet
 open import Term Alphabet
 
@@ -20,17 +23,7 @@ private
     B : Grammar ℓB
 
 unambiguousε : unambiguous ε
-unambiguousε = ans
-  where
-  opaque
-    unfolding ε
-    ans : unambiguous ε
-    ans = EXTERNAL.isLang→unambiguous isLangε
+unambiguousε = summand-L-is-unambig (unambiguous≅ unroll-string≅ unambiguous-string)
 
 unambiguousε* : ∀ {ℓ} → unambiguous (ε* {ℓ})
-unambiguousε* {ℓ = ℓ} = ans
-  where
-  opaque
-    unfolding ε
-    ans : unambiguous (ε* {ℓ})
-    ans = EXTERNAL.isLang→unambiguous λ w → isOfHLevelLift 1 (isLangε w)
+unambiguousε* {ℓ = ℓ} = unambiguous≅ (LiftG≅ ℓ ε) unambiguousε

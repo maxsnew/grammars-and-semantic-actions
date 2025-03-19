@@ -46,9 +46,6 @@ PeekChar (just c) = startsWith c
 Peek : Grammar ℓA → Grammar ℓA
 Peek A = ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A & PeekChar c?)
 
-PeekInd : Grammar ℓ-zero → Grammar ℓ-zero
-PeekInd A = ⊕[ c? ∈ Maybe ⟨ Alphabet ⟩ ] (A Ind&.& PeekChar c?)
-
 peek : A ≅ Peek A
 peek =
   firstChar≅
@@ -56,13 +53,6 @@ peek =
   ≅∙ ⊕ᴰ≅ λ where
     nothing → sym≅ (LiftG≅ _ _)
     (just x) → sym≅ (LiftG≅ _ _)
-
-peekInd : A ≅ PeekInd A
-peekInd =
-  peek
-  ≅∙ ⊕ᴰ≅ λ where
-    nothing → &≅Ind& _ _
-    (just x) → &≅Ind& _ _
 
 remember : ∀ {A : Grammar ℓ-zero} →
   (c? : Maybe ⟨ Alphabet ⟩) →
@@ -86,24 +76,3 @@ remember {A = A} c? =
     peek⁻∘σ≡π₁ nothing = refl
     peek⁻∘σ≡π₁ (just c) = refl
 
-rememberInd : ∀ {A : Grammar ℓ-zero} →
-  (c? : Maybe ⟨ Alphabet ⟩) →
-  σ {X = Maybe ⟨ Alphabet ⟩} {A = λ c'? → A Ind&.& PeekChar c'?} c?
-    ≡ peekInd .fun ∘g Ind&.π₁
-rememberInd {A = A} c? =
-  σ c?
-    ≡⟨ cong (_∘g σ c?) (sym (peekInd .sec)) ⟩
-  peekInd .fun ∘g peekInd .inv ∘g σ c?
-    ≡⟨ cong (peekInd .fun ∘g_) (peek⁻∘σ≡π₁ c?) ⟩
-  peekInd .fun ∘g Ind&.π₁ {A = Ind&.&Ind A (PeekChar c?)}
-  ∎
-  where
-  opaque
-    unfolding π₁ ⊕-elim
-    peek⁻∘σ≡π₁ :
-      ∀ (c? : Maybe ⟨ Alphabet ⟩) →
-      peekInd .inv
-      ∘g σ {X = Maybe ⟨ Alphabet ⟩} {A = λ c'? → A Ind&.& PeekChar c'?} c?
-        ≡ Ind&.π₁
-    peek⁻∘σ≡π₁ nothing = refl
-    peek⁻∘σ≡π₁ (just c) = refl

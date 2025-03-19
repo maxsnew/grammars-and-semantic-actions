@@ -7,7 +7,7 @@ module Grammar.KleeneStar.Inductive.Properties (Alphabet : hSet ℓ-zero) where
 open import Grammar.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Sum.Binary.AsPrimitive Alphabet
-open import Grammar.Epsilon Alphabet
+open import Grammar.Epsilon.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.KleeneStar.Inductive.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet
@@ -60,7 +60,7 @@ module _ (A : Grammar ℓA) where
         })
 
   *≅ε⊕A⊗A* : (A *) ≅ (ε ⊕ A ⊗ (A *))
-  *≅ε⊕A⊗A* = comp-strong-equiv (*≅unrolled* A) unrolled*≅ε⊕A⊗A*
+  *≅ε⊕A⊗A* = *≅unrolled* A ≅∙ unrolled*≅ε⊕A⊗A*
 
   *≅ε⊕A*⊗A : (A *) ≅ (ε ⊕ (A * ⊗ A))
   *≅ε⊕A*⊗A =

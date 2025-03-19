@@ -10,13 +10,13 @@ open import Cubical.Data.Unit
 open import Cubical.Data.W.Indexed
 
 open import Grammar.Base Alphabet
-open import Grammar.HLevels Alphabet
+open import Grammar.HLevels.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Product Alphabet
 open import Grammar.Product.Binary.AsPrimitive Alphabet
-open import Grammar.Epsilon Alphabet
-open import Grammar.LinearProduct Alphabet
-open import Grammar.Lift Alphabet
+open import Grammar.Epsilon.Base Alphabet
+open import Grammar.LinearProduct.Base Alphabet
+open import Grammar.Lift.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet as Inductive
 open import Term.Base Alphabet
 

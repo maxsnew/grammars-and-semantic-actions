@@ -21,10 +21,12 @@ open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.HLevels.Properties Alphabet
 open import Grammar.Properties Alphabet
 open import Grammar.Bottom Alphabet
-open import Grammar.Epsilon Alphabet
+open import Grammar.Epsilon.Base Alphabet
+open import Grammar.Equalizer.Base Alphabet
 open import Grammar.Lift Alphabet
-open import Grammar.Literal Alphabet
+open import Grammar.Literal.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
+open import Grammar.LinearFunction.Base Alphabet
 open import Grammar.KleeneStar.Inductive Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet
@@ -33,7 +35,6 @@ open import Grammar.Distributivity Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.String.Terminal Alphabet public
 open import Grammar.String.Unambiguous Alphabet public
-open import Grammar.String.Tiny Alphabet public
 
 open import Term.Base Alphabet
 
@@ -47,18 +48,14 @@ private
     D : Grammar ℓD
 
 open StrongEquivalence
-
-opaque
-  unfolding _&_ _⊗_ ε literal
-  disjoint-ε-char+ : disjoint ε (char +)
-  disjoint-ε-char+ [] (pε , s , (c , pc) , p*) =
-    Empty.rec
-      (¬cons≡nil (sym (s .snd ∙ cong (_++ s .fst .snd) pc)))
-  disjoint-ε-char+ (x ∷ w) (pε , s , _ , p*) =
-    Empty.rec (¬cons≡nil pε)
+open WeakEquivalence
+open _isRetractOf_
 
 unrolled-string : Grammar ℓ-zero
 unrolled-string = ε ⊕ char ⊗ string
+
+unrolled-string2 : Grammar ℓ-zero
+unrolled-string2 = ε ⊕ char ⊕ (char ⊗ char +)
 
 unrolled-string' : Grammar ℓ-zero
 unrolled-string' = ε ⊕ (string ⊗ char)
@@ -68,6 +65,63 @@ unrolled-stringL = ε ⊕ (stringL ⊗ char)
 
 unroll-string≅ : string ≅ unrolled-string
 unroll-string≅ = *≅ε⊕A⊗A* char
+
+unroll-string2≅ : string ≅ unrolled-string2
+unroll-string2≅ =
+  unroll-string≅
+  ≅∙ ⊕≅
+    id≅
+    {!!}
+
+unroll-string2Retract : (char ⊕ ((char ⊗ char) ⊗ string)) isRetractOf (char ⊗ string)
+unroll-string2Retract .weak .fun =
+   ⊕-elim (id ,⊗ NIL ∘g ⊗-unit-r⁻) (id ,⊗ CONS ∘g ⊗-assoc⁻)
+unroll-string2Retract .weak .inv =
+  ⟜-intro⁻ (fold*r char
+    (⟜-intro (inl ∘g ⊗-unit-r))
+    (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
+unroll-string2Retract .ret = the-ret
+  where
+  opaque
+    unfolding ⊕-elim ⊗-intro ⊗-assoc⁻
+    the-ret : unroll-string2Retract .weak .inv ∘g unroll-string2Retract .weak .fun ≡ id
+    the-ret =
+      ⊕≡ _ _
+      (cong (_∘g ⊗-unit-r⁻) (⟜-β (inl ∘g ⊗-unit-r))
+      ∙ cong (inl ∘g_) (⊗-unit-r⁻r))
+      (equalizer-ind-⊗r (λ _ → *Tag char) _ _ _ _ _
+        (λ _ → λ where
+          nil →
+            (cong (_∘g (⊗-assoc⁻ ∘g id ,⊗ (⟜-intro (inl ∘g ⊗-unit-r) ∘g lowerG ∘g lowerG)))
+                    (⟜-β (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
+            ∙ (cong (λ z →
+                    inr {B = char} ∘g id ,⊗ string-intro ∘g z
+                    ∘g id ,⊗ (⟜-intro {A = char}(inl {B = (char ⊗ char) ⊗ string} ∘g ⊗-unit-r) ∘g lowerG ∘g lowerG))
+                    ⊗-assoc∘⊗-assoc⁻≡id)
+            ∙ (cong (λ z → inr {B = char} ∘g ⊗-intro {A = (char ⊗ char)} id z) (unambiguous-string _ _))
+          cons →
+            (cong (_∘g (⊗-assoc⁻ ∘g id ,⊗ fold*r char (⟜-intro (inl ∘g ⊗-unit-r))
+                                                      (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
+                        ∘g id ,⊗ CONS
+                        ∘g id ,⊗ id ,⊗ eq-π _ _ ∘g id ,⊗ lowerG ,⊗ lowerG))
+                    (⟜-β (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
+            ∙ (cong (λ z → inr {B = char} ∘g id ,⊗ string-intro ∘g z
+                           ∘g id ,⊗ fold*r char (⟜-intro {A = char}(inl ∘g ⊗-unit-r))
+                                                (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
+                           ∘g id ,⊗ CONS
+                           ∘g id ,⊗ id ,⊗ eq-π {B = char ⊕ (char ⊗ char) ⊗ string ⟜ char ⊗ char}
+                                            (⟜-intro (unroll-string2Retract .weak inv ∘g unroll-string2Retract .weak .fun))
+                                            (⟜-intro id)
+                           ∘g id ,⊗ lowerG ,⊗ lowerG)
+                    (⊗-assoc∘⊗-assoc⁻≡id)
+              )
+            ∙ λ i → inr ∘g id ,⊗ unambiguous-string _ _ i
+        )
+        _
+      )
+
+disjoint-ε-char+ : disjoint ε (char +)
+disjoint-ε-char+ = unambig-⊕-is-disjoint (unambiguous≅ unroll-string≅ unambiguous-string)
 
 unroll-string≅' : string ≅ unrolled-string'
 unroll-string≅' = *≅ε⊕A*⊗A char
@@ -105,19 +159,6 @@ unambiguous-char+ = summand-R-is-unambig unambiguous-unrolled-string
 
 unambiguous-char+L : unambiguous (char +L)
 unambiguous-char+L = summand-R-is-unambig unambiguous-unrolled-string'
-
-unroll-char+≅ : (char +) ≅ (char ⊕ (char ⊗ char +))
-unroll-char+≅ =
-  ⊗≅ id≅ unroll-string≅
-  ≅∙ char-⊗⊕-distL≅
-  ≅∙ ⊕≅ (sym≅ εr≅) id≅
-
-unambiguous-char⊗char+ : unambiguous (char ⊗ char +)
-unambiguous-char⊗char+ =
-  summand-R-is-unambig (unambiguous≅ unroll-char+≅ unambiguous-char+)
-
-disjoint-char-char⊗char+ : disjoint char (char ⊗ char +)
-disjoint-char-char⊗char+ = unambig-⊕-is-disjoint (unambiguous≅ unroll-char+≅ unambiguous-char+)
 
 &string≅ : A ≅ A & string
 &string≅ = &⊤≅ ≅∙ &≅ id≅ (sym≅ string≅⊤)
@@ -166,115 +207,3 @@ module _ {c : ⟨ Alphabet ⟩}
   startsWith→char+ : startsWith c ⊢ char +
   startsWith→char+ = literal→char c ,⊗ id
 
-module _ (c c' : ⟨ Alphabet ⟩) where
-  same-first :
-    ＂ c ＂ & startsWith c' ⊢ ⊕[ x ∈ (c ≡ c') ] ＂ c ＂
-  same-first =
-    ⊕-elim
-      (same-literal c c')
-      (⊥-elim
-      ∘g disjoint-char-char⊗char+
-      ∘g literal→char c ,&p id)
-    ∘g &⊕-distL
-    ∘g id ,&p
-      ((⊗-unit-r ,⊕p (literal→char c' ,⊗ id))
-        ∘g ⊗⊕-distL
-        ∘g id ,⊗ unroll-string≅ .fun)
-
-unambiguous⌈⌉ : ∀ w → unambiguous ⌈ w ⌉
-unambiguous⌈⌉ w = EXTERNAL.isLang→unambiguous (isLang⌈⌉ w)
-
-hasUniqueSplit :
-  (A : Grammar ℓA) →
-  (B : Grammar ℓB) →
-  Type (ℓ-max ℓA ℓB)
-hasUniqueSplit A B =
-  ∀ (w w' v v' : String) →
-    ((A & ⌈ w ⌉) ⊗ (B & ⌈ w' ⌉))
-      & ((A & ⌈ v ⌉) ⊗ (B & ⌈ v' ⌉))
-    ⊢
-    (⊕[ x ∈ w ≡ v ] (A & ⌈ w ⌉) ⊗ (⊕[ x ∈ w' ≡ v' ] B & ⌈ v ⌉))
-
-literal→⌈⌉ : (c : ⟨ Alphabet ⟩) → ＂ c ＂ ⊢ ⌈ [ c ] ⌉
-literal→⌈⌉ c = ⊗-unit-r⁻
-
-opaque
-  unfolding _&_
-  sameString : ∀ w w' → ⌈ w ⌉ & ⌈ w' ⌉ ⊢ ⊕[ x ∈ (w ≡ w') ] (⌈ w ⌉ & ⌈ w' ⌉)
-  sameString w w' w'' (p , q) =
-    uniquely-supported-⌈⌉ w w'' p
-    ∙ sym (uniquely-supported-⌈⌉ w' w'' q) ,
-    p , q
-
-isLang⊕⌈⌉ : isLang (⊕[ w ∈ String ] ⌈ w ⌉)
-isLang⊕⌈⌉ w x y =
-  Σ≡Prop
-    (λ w' → isLang⌈⌉ w' w)
-    (uniquely-supported-⌈⌉ (x .fst) w (x .snd)
-     ∙ sym (uniquely-supported-⌈⌉ (y .fst) w (y .snd)))
-
-unambiguous⊕⌈⌉ : unambiguous (⊕[ w ∈ String ] ⌈ w ⌉)
-unambiguous⊕⌈⌉ = EXTERNAL.isLang→unambiguous isLang⊕⌈⌉
-
-whichString≅ : string ≅ ⊕[ w ∈ String ] ⌈ w ⌉
-whichString≅ .fun = rec _ the-alg _
-  where
-  the-alg : Algebra (*Ty char) λ _ → ⊕[ w ∈ String ] ⌈ w ⌉
-  the-alg _ = ⊕ᴰ-elim (λ {
-      nil → σ [] ∘g lowerG ∘g lowerG
-    ; cons →
-      ⊕ᴰ-elim (λ w → ⊕ᴰ-elim (λ c → σ (c ∷ w)) ∘g ⊕ᴰ-distL .fun)
-      ∘g ⊕ᴰ-distR .fun
-      ∘g (lowerG ,⊗ lowerG)
-    })
-whichString≅ .inv = ⊕ᴰ-elim (λ w → ⌈w⌉→string {w = w})
-whichString≅ .sec = unambiguous⊕⌈⌉ _ _
-whichString≅ .ret = unambiguous-string _ _
-
-whichString≅' : A ≅ ⊕[ w ∈ String ] (A & ⌈ w ⌉)
-whichString≅' =
-  &string≅
-  ≅∙ &≅ id≅ whichString≅
-  ≅∙ &⊕ᴰ-distR≅
-
-++⌈⌉ : ∀ w w' → ⌈ w ⌉ ⊗ ⌈ w' ⌉ ⊢ ⌈ w ++ w' ⌉
-++⌈⌉ [] w' = ⊗-unit-l
-++⌈⌉ (c ∷ w) w' = id ,⊗ (++⌈⌉ w w') ∘g ⊗-assoc⁻
-
-++⌈⌉⁻ : ∀ w w' →
- ⌈ w ++ w' ⌉
- ⊢
- ⌈ w ⌉ ⊗ ⌈ w' ⌉
-++⌈⌉⁻ [] w' = ⊗-unit-l⁻
-++⌈⌉⁻ (x ∷ w) w' =
-  ⊗-assoc
-  ∘g id ,⊗ ++⌈⌉⁻ w w'
-
-++⌈⌉≅ : ∀ w w' → ⌈ w ⌉ ⊗ ⌈ w' ⌉ ≅ ⌈ w ++ w' ⌉
-++⌈⌉≅ w w' .fun = ++⌈⌉ w w'
-++⌈⌉≅ w w' .inv = ++⌈⌉⁻ w w'
-++⌈⌉≅ w w' .sec = unambiguous⌈⌉ (w ++ w') _ _
-++⌈⌉≅ [] w' .ret = ⊗-unit-ll⁻
-++⌈⌉≅ (x ∷ w) w' .ret =
-  the-ret
-  where
-  opaque
-    unfolding ⊗-intro
-    the-ret :
-      ++⌈⌉≅ (x ∷ w) w' .inv ∘g ++⌈⌉≅ (x ∷ w) w' .fun ≡ id
-    the-ret =
-      (λ i → ⊗-assoc ∘g id ,⊗ ++⌈⌉≅ w w' .ret i ∘g ⊗-assoc⁻)
-      ∙ ⊗-assoc∘⊗-assoc⁻≡id
-
-unambiguous-⌈⌉⊗⌈⌉ : ∀ w w' → unambiguous (⌈ w ⌉ ⊗ ⌈ w' ⌉)
-unambiguous-⌈⌉⊗⌈⌉ w w' =
-  unambiguous≅ (sym≅ (++⌈⌉≅ w w')) (unambiguous⌈⌉ (w ++ w'))
-
-Split++⌈⌉ :
-  ∀ (w x y z u : String) →
-  (Split++ w x y z u Sum.⊎ Split++ y z w x u) →
-  Grammar ℓ-zero
-Split++⌈⌉ w x y z u (Sum.inl the-split) =
-  ⌈ w ⌉ ⊗ ⌈ u ⌉ ⊗ ⌈ z ⌉
-Split++⌈⌉ w x y z u (Sum.inr the-split) =
-  ⌈ y ⌉ ⊗ ⌈ u ⌉ ⊗ ⌈ x ⌉

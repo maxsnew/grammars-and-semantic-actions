@@ -7,12 +7,14 @@ open import Cubical.Relation.Nullary.Base hiding (¬_)
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Cubical.Data.List
+open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
 open import Cubical.Data.Empty as Empty
 
 open import Cubical.Foundations.Structure
 
 open import Grammar.Base Alphabet
+open import Grammar.Equivalence.Base Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Literal.Base Alphabet
@@ -30,8 +32,9 @@ private
 char : Grammar ℓ-zero
 char = ⊕[ c ∈ ⟨ Alphabet ⟩ ] literal c
 
-char-intro : ∀ (c : ⟨ Alphabet ⟩) → char [ c ]
-char-intro c = (σ {A = λ c' → ＂ c' ＂} c) [ c ] lit-intro
+module _ (c : ⟨ Alphabet ⟩) where
+  literal→char : ＂ c ＂ ⊢ char
+  literal→char = σ c
 
 string : Grammar ℓ-zero
 string = char *
@@ -41,7 +44,6 @@ module _ (c : ⟨ Alphabet ⟩)
   startsWith : Grammar ℓ-zero
   startsWith = ＂ c ＂ ⊗ string
 
-
 stringL : Grammar ℓ-zero
 stringL = *L char
 
@@ -49,11 +51,20 @@ stringL = *L char
 ⌈ [] ⌉ = ε
 ⌈ c ∷ w ⌉ = literal c ⊗ ⌈ w ⌉
 
+⌈_⌉' : String → Grammar ℓ-zero
+⌈ w ⌉' w' = w ≡ w'
+
 opaque
-  unfolding ⊗-intro
+  unfolding ⊗-intro ε literal
   mk⌈⌉ : ∀ w → ⌈ w ⌉ w
-  mk⌈⌉ [] = ε-intro
-  mk⌈⌉ (c ∷ w) = (_ , refl) , (lit-intro , (mk⌈⌉ w))
+  mk⌈⌉ [] = refl
+  mk⌈⌉ (c ∷ w) = (_ , refl) , (refl , (mk⌈⌉ w))
+
+mk⌈⌉' : ∀ w → ⌈ w ⌉' w
+mk⌈⌉' w = refl
+
+isLang⌈⌉' : ∀ w → isLang (⌈ w ⌉')
+isLang⌈⌉' = isSetString
 
 opaque
   unfolding ε _⊗_ literal
@@ -72,39 +83,41 @@ opaque
     w≡ : x ∷ p .fst .fst .snd ≡ y ∷ w'
     w≡ = ( (sym (cong (_++ p .fst .fst .snd) (p .snd .fst))) ∙ sym (p .fst .snd))
 
-pick-parse : ∀ (w : String) → (B : Grammar ℓB) → B w → ⌈ w ⌉ ⊢ B
-pick-parse w B pB w' p⌈⌉ = subst B (uniquely-supported-⌈⌉ w w' p⌈⌉) pB
-
-opaque
-  unfolding ε literal _⊗_
-  internalize : (w : String) → ⌈ w ⌉ w
-  internalize [] = refl
-  internalize (c ∷ w) = (([ c ] , w) , refl) , refl , internalize w
-
-  ⌈w⌉→string : ⌈ w ⌉ ⊢ string
-  ⌈w⌉→string {[]} = NIL
-  ⌈w⌉→string {c ∷ w} = CONS ∘g σ c ,⊗ ⌈w⌉→string {w}
-
-  mkstring : (s : String) → string s
-  mkstring s = (⌈w⌉→string {w = s}) s (internalize s)
-
-opaque
-  unfolding _&_
-  mk&⌈⌉ :
-    (A : Grammar ℓA) →
-    {w : String} →
-    (p : A w) →
-    (A & ⌈ w ⌉) w
-  mk&⌈⌉ A {w = w} p =
-    p , (mk⌈⌉ w)
-
 ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
 ⌈⌉→≡ = uniquely-supported-⌈⌉
 
-mkstring' : (s : String) → string s
-mkstring' [] = NIL [] ε-intro
-mkstring' (c ∷ w) =
-  CONS (c ∷ w) (⊗-in (char-intro c) (mkstring' w))
+⌈⌉→⌈⌉' : ∀ w → ⌈ w ⌉ ⊢ ⌈ w ⌉'
+⌈⌉→⌈⌉' = ⌈⌉→≡
 
-parse-string : {A : Grammar ℓA} → string ⊢ A → (s : String) → A s
-parse-string e s = e s (mkstring' s)
+opaque
+  unfolding ε _⊗_ uniquely-supported-⌈⌉ mk⌈⌉
+  ⌈⌉'→⌈⌉ : ∀ w → ⌈ w ⌉' ⊢ ⌈ w ⌉
+  ⌈⌉'→⌈⌉ [] = λ _ → sym
+  ⌈⌉'→⌈⌉ (c ∷ w) w' cw≡w' = J (λ w'' cw≡w'' → (＂ c ＂ ⊗ ⌈ w ⌉) w'') (mk⌈⌉ (c ∷ w)) cw≡w'
+
+  open StrongEquivalence
+  ⌈⌉≅⌈⌉' : ∀ w → ⌈ w ⌉ ≅ ⌈ w ⌉'
+  ⌈⌉≅⌈⌉' w .fun = ⌈⌉→⌈⌉' w
+  ⌈⌉≅⌈⌉' w .inv = ⌈⌉'→⌈⌉ w
+  ⌈⌉≅⌈⌉' w .sec = funExt λ w' → funExt λ p → isSetString w w' _ _
+  ⌈⌉≅⌈⌉' [] .ret = funExt λ w' → funExt λ p → isSetString w' [] _ _
+  ⌈⌉≅⌈⌉' (c ∷ w) .ret = funExt λ w' → funExt λ p →
+    Σ≡Prop
+     (λ s → isProp× (isLangLiteral c (s .fst .fst))
+                    (isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w) (s .fst .snd)))
+     (Splitting≡ (≡-× (transportRefl [ c ] ∙ sym (p .snd .fst))
+                 (transportRefl w ∙ ⌈⌉→⌈⌉' w _ (p .snd .snd))))
+
+isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
+isLang⌈⌉ w = isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w)
+
+pick-parse : ∀ (w : String) → (B : Grammar ℓB) → B w → ⌈ w ⌉ ⊢ B
+pick-parse w B pB w' p⌈⌉ = subst B (uniquely-supported-⌈⌉ w w' p⌈⌉) pB
+
+⌈⌉→string : ∀ w → ⌈ w ⌉ ⊢ string
+⌈⌉→string [] = NIL
+⌈⌉→string (c ∷ w) = CONS ∘g σ c ,⊗ ⌈⌉→string w
+
+mkstring : (w : String) → string w
+mkstring w = (⌈⌉→string w) w (mk⌈⌉ w)
+

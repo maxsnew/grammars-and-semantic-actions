@@ -77,32 +77,36 @@ module _
         (σ x ∘g π₁) (σ y ∘g π₂) id
         (unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂))
 
-module _ {X : Type ℓX} {A : X → Grammar ℓA}
-  (disjoint-summands : disjointSummands⊕ᴰ A)
-  (isLang-summands : ∀ x → isLang (A x))
-  (discX : Discrete X)
-  where
+-- -- TODO
+-- -- mkIsLang⊕ᴰ and mkUnambiguous⊕ᴰ below are external, semantic reasoning
+-- -- and are only use for axiomatizing some properties in the Grammar.String
+-- -- module that go into proving string ≅ ⊤
+-- module _ {X : Type ℓX} {A : X → Grammar ℓA}
+--   (disjoint-summands : disjointSummands⊕ᴰ A)
+--   (isLang-summands : ∀ x → isLang (A x))
+--   (discX : Discrete X)
+--   where
 
-  opaque
-    unfolding ⊥ _&_
-    mkIsLang⊕ᴰ : isLang (⊕[ x ∈ X ] A x)
-    mkIsLang⊕ᴰ w x y =
-      decRec
-        (λ x₁≡y₁ → Σ≡Prop (λ a → isLang-summands a w) x₁≡y₁)
-        (λ ¬x₁≡y₁ →
-          Empty.rec (disjoint-summands (x .fst) (y .fst) ¬x₁≡y₁ w (x .snd , y .snd))
-        )
-        (discX (x .fst) (y .fst))
+--   opaque
+--     unfolding ⊥ _&_
+--     mkIsLang⊕ᴰ : isLang (⊕[ x ∈ X ] A x)
+--     mkIsLang⊕ᴰ w x y =
+--       decRec
+--         (λ x₁≡y₁ → Σ≡Prop (λ a → isLang-summands a w) x₁≡y₁)
+--         (λ ¬x₁≡y₁ →
+--           Empty.rec (disjoint-summands (x .fst) (y .fst) ¬x₁≡y₁ w (x .snd , y .snd))
+--         )
+--         (discX (x .fst) (y .fst))
 
-module _ {X : Type ℓX} {A : X → Grammar ℓA}
-  (disjoint-summands : disjointSummands⊕ᴰ A)
-  (unambig-summands : ∀ x → unambiguous (A x))
-  (discX : Discrete X)
-  where
+-- module _ {X : Type ℓX} {A : X → Grammar ℓA}
+--   (disjoint-summands : disjointSummands⊕ᴰ A)
+--   (unambig-summands : ∀ x → unambiguous (A x))
+--   (discX : Discrete X)
+--   where
 
-  mkUnambiguous⊕ᴰ : unambiguous (⊕[ x ∈ X ] A x)
-  mkUnambiguous⊕ᴰ =
-    EXTERNAL.isLang→unambiguous
-      (mkIsLang⊕ᴰ disjoint-summands
-        (λ a → EXTERNAL.unambiguous→isLang
-          (unambig-summands a)) discX)
+--   mkUnambiguous⊕ᴰ : unambiguous (⊕[ x ∈ X ] A x)
+--   mkUnambiguous⊕ᴰ =
+--     EXTERNAL.isLang→unambiguous
+--       (mkIsLang⊕ᴰ disjoint-summands
+--         (λ a → EXTERNAL.unambiguous→isLang
+--           (unambig-summands a)) discX)

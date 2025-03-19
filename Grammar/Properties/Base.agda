@@ -125,17 +125,22 @@ disjoint⊕r dis = disjoint⊢ dis inr
 
 open StrongEquivalence
 
-isUnambiguousRetract :
+isUnambiguousRetract' :
   ∀ (f : A ⊢ B) (f' : B ⊢ A)
   → (f' ∘g f ≡ id)
   → unambiguous B → unambiguous A
-isUnambiguousRetract f f' ret unambB e e' =
+isUnambiguousRetract' f f' ret unambB e e' =
   cong (_∘g e) (sym ret)
   ∙ cong (f' ∘g_) (unambB _ _)
   ∙ cong (_∘g e') ret
 
+open _isRetractOf_
+isUnambiguousRetract : A isRetractOf B → unambiguous B → unambiguous A
+isUnambiguousRetract the-ret =
+  isUnambiguousRetract' (the-ret .weak .fun) (the-ret .weak .inv) (the-ret .ret)
+
 unambiguous≅ : A ≅ B → unambiguous A → unambiguous B
-unambiguous≅ A≅B unambA = isUnambiguousRetract (A≅B .inv) (A≅B .fun) (A≅B .sec) unambA
+unambiguous≅ A≅B unambA = isUnambiguousRetract' (A≅B .inv) (A≅B .fun) (A≅B .sec) unambA
   where open isStrongEquivalence
 
 unambiguous→StrongEquivalence
@@ -147,13 +152,20 @@ unambiguous→StrongEquivalence
 unambiguous→StrongEquivalence unambA unambB f f' =
   mkStrEq f f' (unambB (f ∘g f') id) (unambA (f' ∘g f) id)
 
-unambiguousRetract→StrongEquivalence
+unambiguousRetract'→StrongEquivalence
   : ∀ (f : A ⊢ B) (f' : B ⊢ A)
   → (f' ∘g f ≡ id)
   → unambiguous B
   → A ≅ B
-unambiguousRetract→StrongEquivalence f f' ret unambB
-  = unambiguous→StrongEquivalence (isUnambiguousRetract f f' ret unambB) unambB f f'
+unambiguousRetract'→StrongEquivalence f f' ret unambB
+  = unambiguous→StrongEquivalence (isUnambiguousRetract' f f' ret unambB) unambB f f'
+
+unambiguousRetract→StrongEquivalence :
+  A isRetractOf B → unambiguous B → A ≅ B
+unambiguousRetract→StrongEquivalence the-ret unambB =
+  unambiguous→StrongEquivalence
+    (isUnambiguousRetract the-ret unambB) unambB
+    (the-ret .weak .fun) (the-ret .weak .inv)
 
 module _ {A : Grammar ℓA} where
   &⊤≅ : A ≅ A & ⊤

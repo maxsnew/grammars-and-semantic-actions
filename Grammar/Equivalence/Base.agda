@@ -77,20 +77,6 @@ _≈_ : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
 A ≈ B = WeakEquivalence A B
 infix 1 _≈_
 
-module _
-  (A : Grammar ℓA)
-  (B : Grammar ℓB)
-  (pwIso : ∀ w → Iso (A w) (B w))
-  where
-  open StrongEquivalence
-  open Iso
-
-  pointwiseIso→≅ : A ≅ B
-  pointwiseIso→≅ .fun w = pwIso w .fun
-  pointwiseIso→≅ .inv w = pwIso w .inv
-  pointwiseIso→≅ .sec = funExt λ w → funExt (pwIso w .rightInv)
-  pointwiseIso→≅ .ret = funExt λ w → funExt (pwIso w .leftInv)
-
 module _ {ℓA} {ℓB}
   {A : Grammar ℓA}
   {B : Grammar ℓB}
@@ -172,6 +158,8 @@ record _isRetractOf_ (A : Grammar ℓA) (B : Grammar ℓB) : Type (ℓ-max ℓA 
   field
     weak : A ≈ B
     ret : weak .inv ∘g weak .fun ≡ id
+
+infixr 10 _isRetractOf_
 
 hasRetraction→isMono :
   (e : A ⊢ B) →

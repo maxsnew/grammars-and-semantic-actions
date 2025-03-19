@@ -56,29 +56,6 @@ module _ (A : Bool → Grammar ℓA) where
   ⊕≅⊕Ind .sec = the-sec
   ⊕≅⊕Ind .ret = the-ret
 
-module _ {A B : Grammar ℓA}
-  (disjoint-summands : disjoint A B)
-  (unambig-A : unambiguous A)
-  (unambig-B : unambiguous B)
-  where
-
-  unambiguousInd⊕ : unambiguous (A Ind⊕.⊕ B)
-  unambiguousInd⊕ =
-    mkUnambiguous⊕ᴰ
-      (λ where
-        true true neq → Empty.rec (neq refl)
-        false true neq → disjoint-summands ∘g &-swap
-        true false neq → disjoint-summands
-        false false neq → Empty.rec (neq refl)
-      )
-      (λ where
-        true → unambig-A
-        false → unambig-B)
-      _≟_
-
-  unambiguous⊕ : unambiguous (A ⊕ B)
-  unambiguous⊕ = unambiguous≅ (sym≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B))) unambiguousInd⊕
-
 module _ {A B : Grammar ℓA} (unambig⊕ : unambiguous (A ⊕ B)) where
   unambig-⊕-is-disjoint : disjoint A B
   unambig-⊕-is-disjoint =
