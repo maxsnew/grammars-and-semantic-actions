@@ -185,12 +185,15 @@ frame=single
   \usebox{\logoagdabox}}%
 
 \newif\ifdraft
-\draftfalse
+\drafttrue
 \newcommand{\steven}[1]{\ifdraft{\color{orange}[{\bf Steven says}: #1]}\fi}
 \renewcommand{\max}[1]{\ifdraft{\color{blue}[{\bf Max says}: #1]}\fi}
 \newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro says}: #1]}\fi}
 \newcommand{\nathan}[1]{\ifdraft{\color{green}[{\bf Nathan says}: #1]}\fi}
 \newcommand{\pipe}{\,|\,}
+
+\newtheorem{axiom}{Axiom}[section]
+\newtheorem{construction}{Construction}
 
 \newif\ifappendix
 \appendixtrue
@@ -441,7 +444,7 @@ typing derivation to define a parse for a finite grammar.
 \begin{figure}
 \begin{lstlisting}
 f : (*@$\uparrow$@*)('a' (*@$\otimes$@*) 'b' (*@$\lto$@*) ('a' (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
-f (a , b) = inl (a (*@$\otimes$@*) b)
+f (a , b) = inl (a , b)
 \end{lstlisting}\begin{mathpar}
   \inferrule
   {
@@ -579,7 +582,7 @@ a value that may only be used a single time.
 \end{mathpar}
 \begin{lstlisting}
 g : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*) ('a'(*@$^*$@*) (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
-g (a , b) = inl (cons a nil (*@$\otimes$@*) b)
+g (a , b) = inl (cons a nil , b)
 \end{lstlisting}
 \caption{\stringquote{ab} is parsed by
   $({\literal a}^{*} \otimes \literal b) \oplus \literal c$}
@@ -633,7 +636,7 @@ explicit recursive call in the body of its definition.
 \begin{lstlisting}
 h : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
 h nil = nil
-h (cons (a1 (*@$\otimes$@*) a2) as) = cons a1 (cons a2 (h as))
+h (cons (a1 , a2) as) = cons a1 (cons a2 (h as))
 \end{lstlisting}
 \caption{A parse transformer for abstract grammars}
 \label{fig:kleeneabstractproof}
@@ -928,46 +931,60 @@ logic.
 \paragraph{Distributivity}
 First, we need that additive conjunction \emph{distributes}
 over additive disjunction --- e.g., in the finitary case that $0 \& A
-\cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. In its most
-general form, the axiom says that the definable function
-${\bigoplus\limits_{f : \prod_{x:X}
-    Y(x)}\bigamp\limits_{x:X}A\,x\,(f\,x) \lto
-  \bigamp\limits_{x:X}\bigoplus\limits_{y:Y(x)}A\,x\,y}$ has an
-inverse.
+\cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. In its most general form,
 
-\steven{Maybe this detail should go closer to the actual example
-We use distributivity to encode the lookahead of the LL(1) parser in
-\cref{thm:exp-parser}. At parse time, an LL(1) automaton peeks at the next
-character of a string and uses the peeked character to inform its next
-transition. Our automaton from \cref{fig:binop-inductive} chooses which state to
-transition to dependent on if the next character is $\stringquote{)}$.
+\begin{axiom}[Distributivity]
+\label{ax:dist}
+For any $A : (x : X) \to Y x \to L$, the function
 
-TODO
+\[
+ \lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}} : \ltonl {\left(  \LinSigTyLimit{f}{\prod\limits_{x : X} . Y (x)}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
+\LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}} \right)}
+\]
 
-the proof obligation is
+has an inverse.
+\end{axiom}
 
-$\Char \otimes \LinPiTy{s}{state}{Trace s true}$ which is iso to
-$(\literal{)} \otimes \top \oplus NotStatsWithRP) \otimes
-\LinPiTy{s}{state}{Trace s true}$.
+Our primary use of distributivity is to define an equivalence that
+expresses a linear type $A$ as a sum over which character it starts with, if any,
+\(
+A \cong \left(A \& I \right) \oplus \LinSigTyLimit{c}{\Sigma_0}{A \& \left( \literal{c} \otimes \top \right)}
+\). We use this equivalence when building a parser for the traces of the lookahead
+automaton in \cref{fig:binop-inductive}.
 
-However, without distributivity we get stuck and can go further to actually use
-$lookaheadRP$ or $lookaheadNot$.
-
-}
+\begin{corollary}
+  \label{cor:binary-mono}
+  Distributivity implies that the coprojections $\inl : A \to A \oplus B$,
+  $\inr : B \to A \oplus B$ of a binary sum are monomorphisms.
+\end{corollary}
 
 \paragraph{Disjointness of Constructors}
 Second, we need that the different constructors of
-$\bigoplus$ are disjoint. We add this by adding the axiom that for any
-$A : X \to L$ and $x \neq x' : X$ there is a function
-$\uparrow(\equalizer{b}{\sigma\,x \circ \pi_1}{\sigma\,x'\circ \pi_2}
-\lto 0)$ where $b: A(x) \& A(x')$, i.e., the grammar of pairs of an
+$\bigoplus$ are disjoint. That is, we want to enforce that $\sigma~x~a$ and
+$\sigma~x'~a'$ of type $\LinSigTyLimit{x}{X}{A\,x}$ are not equal whenever $x \neq x'$.
+However, because these are linear terms we cannot state their disequality
+directly. Instead, we encode the disequality via a function out of an equalizer,
+
+\begin{axiom}[$\sigma$-Disjointness]
+\label{ax:disjointness}
+For any $A : X \to L$ and $x \neq x' : X$ there is a function,
+\[
+  \uparrow(\equalizer{b}{\sigma\,x \circ \pi_1}{\sigma\,x'\circ \pi_2}
+  \lto 0)
+\]
+  where $b: A(x) \& A(x')$. That is, the grammar of pairs of an
 $a:A(x)$ and an $a': A(x')$ such that $\sigma\,x\,a = \sigma\,x'\,a'$
 is empty.
+\end{axiom}
 
-\pedro{imo, since we are providing an Agda implementation, we can
-  be looser with the explanation of the meaning of the disjointness axioms.
-  As it stands, it's a bit hard do follow along. Is there a simpler example
-  we could point to?}
+\steven{need to get cref to cite this as a lemma}
+We use $\sigma$-disjointness in \cref{lem:unambig-to-disjoint} to proof that
+unambiguous sums have disjoint summands.
+
+% \pedro{imo, since we are providing an Agda implementation, we can
+%   be looser with the explanation of the meaning of the disjointness axioms.
+%   As it stands, it's a bit hard do follow along. Is there a simpler example
+%   we could point to?}
 
 \begin{figure}
   \begin{footnotesize}
@@ -1335,8 +1352,8 @@ also that $\I$ and literals $\literal c$ are unambiguous. To see this, first, we
 establish two useful properties of unambiguity.
 \begin{lemma}[\agdalogo]
   If $\B$ is unambiguous and $\A$ is a retract of $\B$ then $\A$ is unambiguous.
-  If a disjunction $\bigoplus\limits_{x:X} A(x)$ is unambiguous then
-  each $A(x)$ is unambiguous.
+  As a consequence of \steven{fix cref} \cref{cor:binary-mono}, if a binary disjunction $A \oplus B$ is unambiguous then
+  $A$ and $B$ are each unambiguous.
 \end{lemma}
 From the first principle, we can prove that $\String$ is unambiguous,
 since it is a retract of $\top$. In fact, observe that if $\A$ is a
@@ -1346,7 +1363,8 @@ are strongly equivalent, as the equation $\lambda b. f(g(b)) \equiv
 $\String$ is also strongly equivalent to $\top$. Next, since $\String$ is
 defined as a Kleene star, we can easily show that $\String \cong \I
 \oplus \Char \oplus (\Char \otimes \Char \otimes \String)$. Then by
-the second principle we have that $\I$ and $\Char$ and each literal
+the second principle, we have that $\I$ and
+$\Char$ and each literal
 $\literal c$ are unambiguous as well.
 
 % \paragraph{A Grammar of Strings}
@@ -1388,27 +1406,40 @@ parse, but is far too weak as a specification: we can trivially
 implement a parser for any type by always returning $\inr$. The
 correct notion of a parser should be one that allows for failure, but
 only in the case that a parse cannot be constructed.
+
 \begin{definition}
-  A parser for a linear type $A$ is a function $\uparrow{(\String \lto
-    A \oplus A_{\neg})}$, where $A_{\neg}$ is a linear type that is
-  \emph{disjoint} from $A$ in that we can implement a function
-  $\uparrow{(A \& A_{\neg} \lto 0)}$.
+  Linear types $A$ and $B$ are \emph{disjoint} if there is a function
+  $\ltonl {\left( A \& B \lto 0 \right)}$.
+\end{definition}
+
+\begin{definition}
+  A parser for a linear type $A$ is the choice a type $A_{\neg}$ disjoint from
+  $A$ and function $\uparrow{(\String \lto
+    A \oplus A_{\neg})}$.
 \end{definition}
 Here we replace $\top$ in our partial parser type with a type
 $A_{\neg}$ that we can think of as a negation of $A$. The function
 $\uparrow{(A \& A_{\neg} \lto 0)}$ ensures that it is impossible for
 $A$ and $A_{\neg}$ to parse the same input string. This means that in
 defining a parser, we will need to define a kind of negative grammar
-for strings that do not parse. Fortunately, we will see that
+for strings that do not parse.
+
+Fortunately, we will see that
 deterministic automata naturally support such a notion with no
 additional effort: the negative grammar is simply the grammar for
 traces that end in a rejecting state. This follows from the following
-principle, a consequence of our axiom that $\oplus$ constructors are
-disjoint.
+principle, a consequence of \cref{ax:disjointness}.
+
+\steven{
 \begin{lemma}[\agdalogo]
-  If $A \oplus A_{\neg}$ is unambiguous, then $A$ and $A_{\neg}$ are
+  \label{lem:unambig-to-disjoint}
+  If $\LinSigTyLimit{x}{X}{A\,x}$ is unambiguous, then for $x \neq x'$, $A\,x$ and $A,\y$ are
   disjoint.
+
+  In particular, if the binary product $A \oplus A_{\neg}$ is unambiguous, then
+  $A$ and $A_{\neg}$ are disjoint.
 \end{lemma}
+}
 
 Writing a parser as a linear term in this way is an intrinsic
 verification of the \emph{soundness} of the parser completely for free
@@ -1971,6 +2002,26 @@ unambiguous.
   \caption{Automaton $M$ for the Dyck grammar}
   \label{fig:DyckAutomaton}
 \end{figure}
+
+\steven{Maybe this detail should go closer to the actual example
+We use distributivity to encode the of the LL(1) parser in
+\cref{thm:exp-parser}. At parse time, an LL(1) automaton peeks at the next
+character of a string and uses the peeked character to inform its next
+transition. Our automaton from \cref{fig:binop-inductive} chooses which state to
+transition to dependent on if the next character is $\stringquote{)}$.
+
+TODO
+
+the proof obligation is
+
+$\Char \otimes \LinPiTy{s}{state}{Trace s true}$ which is iso to
+$(\literal{)} \otimes \top \oplus NotStatsWithRP) \otimes
+\LinPiTy{s}{state}{Trace s true}$.
+
+However, without distributivity we get stuck and can go further to actually use
+$lookaheadRP$ or $lookaheadNot$.
+
+}
 
 Our final example is of a simple grammar of arithmetic expressions
 with an associative operation. Here we take the alphabet to be $\{

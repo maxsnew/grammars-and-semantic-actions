@@ -1,0 +1,43 @@
+#+title: Todos
+* Syntax
+** TODO the reverse linear function arrow application is backwards
+** TODO "LL" vs "\textrm{LL}"
+** TODO Please extend the paper or appendix so that a complete description of the language and its static semantics - a full grammar and all typing rules for both universes should appear somehow across these two documents.
+*** Include the full grammar of non-linear types in the appendix.
+*** Include the full grammar of linear types in Section 3.
+** TODO Add rules for `⊤` to Fig. 8 or Fig. 17.
+** TODO Add rules for `0` to Fig. 8 or Fig. 17.
+** TODO Update Fig. 6 to more clearly delineate the well-formedness judgements.
+** TODO Move Fig. 9 to appendix or to be near the other denotational semantics discussion in 5.2.
+* Terminology
+** TODO "constuction" instead of "theorem"
+** TODO specify what we mean by "linear" early, even if it is nonstandard
+* Function Extensionality
+** TODO Please add a discussion of function extensionality.
+* Future work
+** TODO Clarify the status of our current evaluation as an initial exploration, and discuss more throughly the algorithms (LL, LALR) that we aim to verify in the future
+* Related work
+** TODO Please add a comparison with the categorical semantics in the paper mentioned by Reviewer C as [*].
+** TODO Please expand the comment on [9] as described in your response to reviewer D, and in particular acknowledge that a verified greedy parser remains future work.
+** TODO Correct comparison with [24] to reflect both systems.
+* Axioms
+** DONE binary products have monomorphic coprojections
+** TODO Clear up what equational axioms are referred to in 896-898 and signpost that the equational theory is in the appendix
+** TODO Please add a discussion of why the axioms are needed where they are introduced (or forward references there to where these are dicussed elsewhere in the paper) and add the missing discussion of their verification.
+*** TODO signpost their usage at the point of introduction for the axioms
+*** TODO expand on their usage when relevant (i.e. in the lookahead example, elaborate on the usage of distributivity)
+** TODO Add to the appendix the proofs that the axioms from 3.2 hold in the semantics
+** TODO usage of dist near lookahead
+** TODO usage of disjointness near dyck
+* Implementation
+** TODO Clarify early on that the code presented is pseudocode that differs from the current implementation.
+** TODO Please provide additional details of the embedding in Agda and an example of the combinator-style representation (or pointers to appropriate examples in the development).
+*** Need to look up how to link. I guess the artifact isn't exactly the right thing to link to, because it is just a docker image
+* Clarifications
+** TODO Around line 134 establish the correspondence between "`A` derives `w`" and the sequents used in Lambek^D.
+** TODO Line 326 mention explicitly that the elided rule may be found in the appendix.
+* Citations
+** TODO Update Luo's citation [24].
+** TODO Clean up pass over all Bibtex
+* Sanity checks
+** TODO go over all of the reviewers questions/comments and assess if any misunderstandings can be clarified altogether
