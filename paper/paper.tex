@@ -923,14 +923,40 @@ indexed inductive types.
 
 In addition to these type-theoretic principles, we need two additional
 axioms that do not generally hold in systems based on linear
-logic. First, we need that additive conjunction \emph{distributes}
+logic.
+
+\paragraph{Distributivity}
+First, we need that additive conjunction \emph{distributes}
 over additive disjunction --- e.g., in the finitary case that $0 \& A
 \cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. In its most
 general form, the axiom says that the definable function
 ${\bigoplus\limits_{f : \prod_{x:X}
     Y(x)}\bigamp\limits_{x:X}A\,x\,(f\,x) \lto
   \bigamp\limits_{x:X}\bigoplus\limits_{y:Y(x)}A\,x\,y}$ has an
-inverse. Second, we need that the different constructors of
+inverse.
+
+\steven{Maybe this detail should go closer to the actual example
+We use distributivity to encode the lookahead of the LL(1) parser in
+\cref{thm:exp-parser}. At parse time, an LL(1) automaton peeks at the next
+character of a string and uses the peeked character to inform its next
+transition. Our automaton from \cref{fig:binop-inductive} chooses which state to
+transition to dependent on if the next character is $\stringquote{)}$.
+
+TODO
+
+the proof obligation is
+
+$\Char \otimes \LinPiTy{s}{state}{Trace s true}$ which is iso to
+$(\literal{)} \otimes \top \oplus NotStatsWithRP) \otimes
+\LinPiTy{s}{state}{Trace s true}$.
+
+However, without distributivity we get stuck and can go further to actually use
+$lookaheadRP$ or $lookaheadNot$.
+
+}
+
+\paragraph{Disjointness of Constructors}
+Second, we need that the different constructors of
 $\bigoplus$ are disjoint. We add this by adding the axiom that for any
 $A : X \to L$ and $x \neq x' : X$ there is a function
 $\uparrow(\equalizer{b}{\sigma\,x \circ \pi_1}{\sigma\,x'\circ \pi_2}
@@ -1668,6 +1694,10 @@ induction hypothesis and build a parse transformer
   \DtoN : \ltonl {\left( \Trace_{\D}~\X~\true \lto \bigoplus\limits_{s : \N.\mathsf{states}}\bigoplus\limits_{\texttt{sInX} : \X \ni \s} \Trace_{\N}~s~\true \right)}
 \]
 
+\steven{To define $\DtoN$, we take the smallest trace through $\N$ subject to an
+  ordering on its states and transitions, where the ordering is supplied
+  non-linearly. In essence, the given ordering specifies a disambiguation strategy.}
+
 %% For a moment, let us turn our attention to the content behind the traces in $\D$.
 %% Traces from subset $\X$ to subset $\Y$ describes the \emph{existence} of some trace
 %% in the $\N$ from some $\x \in \X$ to some $\y \in \Y$. In general it is not clear how
@@ -1968,6 +1998,7 @@ straightforward to implement a parser for this lookahead automaton,
 generalizing the approach for deterministic automata.
 
 \begin{theorem}[\agdalogo]
+  \label{thm:exp-parser}
   We construct a parser for $\mathsf{Exp}$ by showing it is weakly
   equivalent to $\mathsf{O}~0~\true$.
 \end{theorem}
@@ -3095,7 +3126,12 @@ and parsers, and it is unclear if these could be implemented in their calculus.
 %% \subsubsection{Typed Grammars}
 The usage of a simple type system to reason about regular expressions up to weak
 equivalence was
-introduced by Frisch and Cardelli \cite{frischCardelli}. Henglein and Nielsen
+introduced by Frisch and Cardelli \cite{frischCardelli}. \steven{Frisch and
+  Caredilli also define a linear time greedy parser for regular expressions. We
+  have not yet tried to verify a greedy algorithm, however the approach used in
+  \cref{thm:determinization} would apply to their algorithm.
+  \cref{thm:determinization} requires a choice function for traces through an
+  NFA (i.e. a disambiguation strategy) which may be instantiated to encode greediness. } Henglein and Nielsen
 \cite{henglein_regular_2011} later adapt this approach by providing a type
 system for regular expressions whose semantics were in one-to-one correspondence
 with the set of parse trees.
