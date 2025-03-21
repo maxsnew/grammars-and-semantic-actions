@@ -30,6 +30,8 @@
 ** TODO Add to the appendix the proofs that the axioms from 3.2 hold in the semantics
 ** DONE usage of dist near lookahead
 ** DONE usage of disjointness near dyck
+* CFGs
+** DONE BinOp figure
 * Implementation
 ** TODO Clarify early on that the code presented is pseudocode that differs from the current implementation.
 ** TODO Please provide additional details of the embedding in Agda and an example of the combinator-style representation (or pointers to appropriate examples in the development).
@@ -43,3 +45,4 @@
 * Sanity checks
 ** TODO go over all of the reviewers questions/comments and assess if any misunderstandings can be clarified altogether
 ** TODO go over syntax in all figures
+** TODO inconsistent usage \mathsf, \textrm, and \texttt for constructors/etc

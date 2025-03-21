@@ -2038,11 +2038,11 @@ unambiguous.
 
 \begin{figure}
   \begin{tikzpicture}[node distance = 17mm ]
-    \node[state, initial, accepting] (0) {$0$};
+    \node[state, initial above, accepting] (0) {$0$};
     \node[state, right of=0] (1) {$1$};
     \node[state, right of=1] (2) {$2$};
     \node[right of=2] (3) {$\dots$};
-    \node[state, below of=0] (fail) {$fail$};
+    \node[state, left of=0] (fail) {$fail$};
 
     \path[->] (0) edge[above, bend left] node{\stringquote{(}} (1)
               (1) edge[below, bend left] node{\stringquote{)}} (0)
@@ -2050,63 +2050,70 @@ unambiguous.
               (2) edge[below, bend left] node{\stringquote{)}} (1)
               (2) edge[above, bend left] node{\stringquote{(}} (3)
               (3) edge[below, bend left] node{\stringquote{)}} (2)
-              (fail) edge[loop right] node{\stringquote{(}, \stringquote{)}} (fail)
-              (0) edge[left] node{\stringquote{)}} (fail);
+              (fail) edge[loop left] node{\stringquote{(}, \stringquote{)}} (fail)
+              (0) edge[above] node{\stringquote{)}} (fail);
   \end{tikzpicture}
   \caption{Automaton $M$ for the Dyck grammar}
   \label{fig:DyckAutomaton}
 \end{figure}
 
-\steven{Maybe this detail should go closer to the actual example
-We use distributivity to encode the of the LL(1) parser in
-\cref{thm:exp-parser}. At parse time, an LL(1) automaton peeks at the next
-character of a string and uses the peeked character to inform its next
-transition. Our automaton from \cref{fig:binop-inductive} chooses which state to
-transition to dependent on if the next character is $\stringquote{)}$.
-
-TODO
-
-the proof obligation is
-
-$\CharGram \otimes \LinPiTy{s}{state}{Trace s true}$ which is iso to
-$(\literal{)} \otimes \top \oplus NotStatsWithRP) \otimes
-\LinPiTy{s}{state}{Trace s true}$.
-
-However, without distributivity we get stuck and can go further to actually use
-$lookaheadRP$ or $lookaheadNot$.
-
-}
-
 Our final example is of a simple grammar of arithmetic expressions
 with an associative operation. Here we take the alphabet to be $\{
 \stringquote{(}, \stringquote{)}, \stringquote{+} , \stringquote{NUM}
-\}$. In \Cref{fig:binop-inductive} we define it using two mutually
+\}$. In \Cref{fig:binop-inductive} we define the expression grammar
+using two mutually
 recursive types, corresponding to the two non-terminals we would use
 in a CFG syntax. The syntactic structure encodes that the binary
 operation is right associative. In the same figure, we define the
-traces of an automaton with one token of lookahead. The automaton has
+traces of an automaton with one token of lookahead. The automaton\footnote{In
+  the automaton definition,
+  $\texttt{NotStartsWithLP}$ is defined as
+  \(I \oplus
+  (\literal{)} \oplus \literal{+} \oplus \mathtt{NUM}) \otimes \top
+  \). Similarly,
+  $\texttt{NotStartsWithRP}$ is defined as
+  \(I \oplus
+  (\literal{(} \oplus \literal{+} \oplus \mathtt{NUM}) \otimes \top
+  \).
+} has
 four different ``states'', each with access to a natural number
-``stack''. The ``opening'' state $O$ expects either an open paren, in
+``stack''. The ``opening'' state $O$ expects either an left paren, in
 which case it increments the stack and stays in the opening state, or
 sees a number and proceeds to the $D$ state. The ``done opening''
 state $D$ is where lookahead is used: if the next token will be a
-right paren, then we proceed to $C$, otherwise we proceed to $M$. Here
-$\mathsf{NotStartsWithRP}$ is defined as
-$\I \oplus (({\literal{(}} \oplus {\literal {+}}
-\oplus \mathsf{NUM}) \otimes \top)$. In the ``closing'' state $C$ if
-we observe a close paren we decrement the count and continue to the
-$D$ state. In the ``multiplying'' state $M$, we succeed if the string
-ends and the count is $0$, and if we see a plus we continue to the $O$
-state. Additionally, since the automaton need also parse all of the
-incorrect strings, we add additional failing cases. It is
-straightforward to implement a parser for this lookahead automaton,
-generalizing the approach for deterministic automata.
+right paren, then we proceed to $C$; otherwise, we proceed to $A$.
+In the ``closing'' state $C$ if
+we observe a right paren, then we decrement the count and continue to the
+$D$ state. In the ``adding'' state $A$, we succeed if the string
+ends and the count is $0$; otherwise, if we see a plus we continue to the $O$
+state. Additionally, since the automaton need parse all of the
+incorrect strings, we add all of the failing cases.
 
 \begin{theorem}[\agdalogo]
   \label{thm:exp-parser}
   We construct a parser for $\mathsf{Exp}$ by showing it is weakly
   equivalent to $\mathsf{O}~0~\true$.
 \end{theorem}
+
+\steven{
+With \cref{ax:dist}, it is straightforward to implement a parser for this lookahead automaton,
+generalizing the approach for deterministic automata. Without access to
+distributivity, we may define a rudimentary lookahead operation via the chain of
+equivalences,
+
+\[
+  A~n~b \cong (A~n~b) \& \top \cong (A~n~b)\,\& \left(\left(\literal{)} \otimes \top \right) \oplus \texttt{NotStartsWithRP}\right)
+\]
+
+When defining a parser, if the lookahead character is a right paren we would
+like to apply $\texttt{lookAheadRP}$; otherwise, apply $\texttt{lookAheadNot}$.
+However, without distributivity we have no means of relating the bit of
+information learned by looking ahead to the input $A~n~b$ parse.
+That is, to choose which constructor to apply we would need the end of this
+chain of equivalences to be a binary sum rather than a binary product,
+necessitating the distributivity axiom.
+}
+
 \begin{figure}
 \begin{lstlisting}
 data Exp : L where
@@ -2118,22 +2125,20 @@ data Atom : L where
 
 data O : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   left : (*@$\uparrow$@*)(&[ n ] &[ b ] '(' (*@$\lto$@*) O (n + 1) b (*@$\lto$@*) O n b)
-  num : (*@$\uparrow$@*)(&[ n ] &[ b ] NUM (*@$\lto$@*) DO n b (*@$\lto$@*) O n b)
-  done : (*@$\uparrow$@*)(&[ n ] O n false)
-  unexpected : (*@$\uparrow$@*)(&[ n ] (')' (*@$\oplus$@*) '+') (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) O n false)
+  num : (*@$\uparrow$@*)(&[ n ] &[ b ] NUM (*@$\lto$@*) D n b (*@$\lto$@*) O n b)
+  unexpected : (*@$\uparrow$@*)(&[ n ] (NotStartsWithLP (*@$\lto$@*) O n false)
 data D : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
-  lookAheadRP  : (*@$\uparrow$@*)(&[ n ] &[ b ] ((')' (*@$\otimes$@*) (*@$\top$@*)) (*@$\&$@*) C n b) (*@$\lto$@*) D n b)
-  lookAheadNot  : (*@$\uparrow$@*)(&[ n ] &[ b ] (NotStartsWithRP (*@$\&$@*) M n b) (*@$\lto$@*) D n b)
+  lookAheadRP : (*@$\uparrow$@*)(&[ n ] &[ b ] ((')' (*@$\otimes$@*) (*@$\top$@*)) (*@$\&$@*) C n b) (*@$\lto$@*) D n b)
+  lookAheadNot : (*@$\uparrow$@*)(&[ n ] &[ b ] (NotStartsWithRP (*@$\&$@*) A n b) (*@$\lto$@*) D n b)
 data C : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   closeGood : (*@$\uparrow$@*)(&[ n ] &[ b ] ')' (*@$\lto$@*) D n b (*@$\lto$@*) C (n + 1) b)
-  closeBad : (*@$\uparrow$@*)(&[ n ] ')' (*@$\lto$@*) C 0 b)
-  done : (*@$\uparrow$@*)(&[ n ] C n false)
-  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) '+' (*@$\oplus$@*) NUM) (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) C n false)
-data M : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
-  doneGood : (*@$\uparrow$@*)(M 0 true)
-  doneBad : (*@$\uparrow$@*)(&[ n ] M (n + 1) false)
-  add : (*@$\uparrow$@*)(&[ n ] &[ b ] '+' (*@$\lto$@*) O n b (*@$\lto$@*) M n b)
-  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')'(*@$\oplus$@*) NUM) (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) M n false)
+  closeBad : (*@$\uparrow$@*)(')' (*@$\lto$@*) C 0 false)
+  unexpected : (*@$\uparrow$@*)(&[ n ] NotStartsWithRP (*@$\lto$@*) C n false)
+data A : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
+  doneGood : (*@$\uparrow$@*)(A 0 true)
+  doneBad : (*@$\uparrow$@*)(&[ n ] A (n + 1) false)
+  add : (*@$\uparrow$@*)(&[ n ] &[ b ] '+' (*@$\lto$@*) O n b (*@$\lto$@*) A n b)
+  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')'(*@$\oplus$@*) NUM) (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) A n false)
 \end{lstlisting}
 \caption{Associative arithmetic expressions and a corresponding lookahead automaton}
 \label{fig:binop-inductive}
