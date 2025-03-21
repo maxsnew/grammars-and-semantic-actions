@@ -2174,16 +2174,17 @@ $\lceil c :: w \rceil = \literal c \otimes \lceil w \rceil$.
 This reification operation on functions $\StringSem \to U$ is incredibly expressive,
 as it allows to sidestep our linear typing connectives and utilize the whole of nonlinear
 dependent type theory to define a grammar. For example, given a
-Turing machine $Tur$ one may
-define a non-linear predicate $accepts : \StringSem \to U$ such that $accept~w$ is equal to $\top$ if
-$T$ accepts $w$ and equal to $0$ otherwise. Then, $Reify~accepts$ is a linear
-type that captures precisely the strings accepted by $Tur$. That is,
+Turing machine $T$ one may
+define a non-linear predicate $accepts : \StringSem \to U$ that encodes that $T$
+halts and accepts an input string. Then, $Reify~accepts$ is a linear type that
+captures precisely the string the same language as $T$. That is,
 $Lang(Reify~accepts)$ is recursively enumerable --- the most general class of
 languages in the Chomsky hierarchy.
-\begin{theorem}[\Agda]
-  For any Turing machine, we can construct a grammar in \theoryabbv
-  that accepts the same language as the Turing machine.
-\end{theorem}
+\begin{construction}[\Agda]
+  \label{cons:turing}
+  For any Turing machine $T$, we can construct a grammar in \theoryabbv
+  that accepts the same language as $T$.
+\end{construction}
 
 \section{Denotational Semantics and Implementation}
 \label{sec:semantics-and-metatheory}
