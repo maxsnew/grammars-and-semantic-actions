@@ -11,6 +11,7 @@
 ** TODO Move Fig. 9 to appendix or to be near the other denotational semantics discussion in 5.2.
 * Terminology
 ** TODO "constuction" instead of "theorem"
+*** This is changed for things that are actually constructions. As written, it makes sense for theorems 4.9 and 4.13 to remain theorems as they are proofs about data that is already built.
 ** TODO specify what we mean by "linear" early, even if it is nonstandard
 * Function Extensionality
 ** TODO Please add a discussion of function extensionality.
@@ -27,8 +28,8 @@
 *** TODO signpost their usage at the point of introduction for the axioms
 *** TODO expand on their usage when relevant (i.e. in the lookahead example, elaborate on the usage of distributivity)
 ** TODO Add to the appendix the proofs that the axioms from 3.2 hold in the semantics
-** TODO usage of dist near lookahead
-** TODO usage of disjointness near dyck
+** DONE usage of dist near lookahead
+** DONE usage of disjointness near dyck
 * Implementation
 ** TODO Clarify early on that the code presented is pseudocode that differs from the current implementation.
 ** TODO Please provide additional details of the embedding in Agda and an example of the combinator-style representation (or pointers to appropriate examples in the development).
@@ -41,3 +42,4 @@
 ** TODO Clean up pass over all Bibtex
 * Sanity checks
 ** TODO go over all of the reviewers questions/comments and assess if any misunderstandings can be clarified altogether
+** TODO go over syntax in all figures
