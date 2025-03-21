@@ -1764,7 +1764,7 @@ Because the states of $D$ are $\epsilon$-closed subsets of $N.\states$, if two
 states $s$ and $s'$ belong to the the same $\epsilon$-closed subset
 $X : \mathbb{P}_{\epsilon}(N.\states)$ then there exists a $\epsilon$-path in
 $N$ between the two, but we do not necessarily know which one. Similarly, the
-data contained in the type $\Trace_{\D}}~X~true$ is the \emph{existence} of an accepting trace in
+data contained in the type $\Trace_{\D}~X~true$ is the \emph{existence} of an accepting trace in
 $\N$ beginning at some state in $\D$.
 
 To define $\DtoN$, we need a choice function that extracts out a trace in $N$
@@ -3233,20 +3233,11 @@ semantics. Further, we provide several examples showing that
 and parsers, and it is unclear if these could be implemented in their calculus.
 
 %% \subsubsection{Typed Grammars}
-The usage of a simple type system to reason about regular expressions up to weak
-equivalence was
-introduced by Frisch and Cardelli \cite{frischCardelli}. \steven{Frisch and
-  Caredilli also define a linear time greedy parser for regular expressions. We
-  have not yet tried to verify a greedy algorithm, however the approach used in
-  \cref{thm:determinization} would apply to their algorithm.
-  \cref{thm:determinization} requires a choice function for traces through an
-  NFA (i.e. a disambiguation strategy) which may be instantiated to encode greediness. } Henglein and Nielsen
-\cite{henglein_regular_2011} later adapt this approach by providing a type
-system for regular expressions whose semantics were in one-to-one correspondence
-with the set of parse trees.
-Elliott \cite{elliottSymbolicAutomaticDifferentiation2021} gives a similar
-semantic interpretation of regular grammars as type-level predicates on strings. The type system of \theoryabbv extends these semantic interpretations of to a broader class of grammars and also gives a formal syntax and equational theory for the parse transformers that these prior works lack.
+Frisch and Cardelli introduced the use of a simple type system to reason about regular expressions up to weak equivalence \cite{frischCardelli}.
+Henglein and Nielsen build on this type-theoretic view of grammars, pointing out that the values of the types correspond precisely to the parse trees \cite{henglein_regular_2011}.
+Our design of \theoryabbv extends this view of grammars as types to a much broader class of grammars, as well as providing a syntax and equational theory for \emph{parse transformers}, showing that the terms can be viewed not just as parse trees, but as intrinsically verified parsers.
 
+Elliott \cite{elliottSymbolicAutomaticDifferentiation2021} uses essentially the same denotational semantics as ours, interpreting regular expressions as type-valued functions on strings. Our denotational semantics of \theoryabbv extends this to a much broader class of grammars.
 %% Krishnaswami and Yallop \cite{krishnaswami_typed_2019} provide a type system for
 %% demonstrating that carries proves of the LL(1) condition for context-free
 %% grammars. Despite being a type system over formal grammars, their interpretation
@@ -3320,19 +3311,45 @@ separation logic for verifying imperative implementations of
 parsers. This could be implemented by modifying an existing separation
 logic implementation or embedding the logic within \theoryabbv.
 
+
+\subsection{Future Work}
+
+In this work we have demonstrated feasibility of \theoryabbv for the
+verification of formal grammar theory and sound-by-construction parsers. In
+future work, we aim to extend \theoryabbv to be a practical tool for developing
+verified parsing components of larger verified software systems.
+
+\paragraph{Verified Parser Generators}
+
+We aim to extend our work on parsing to verify other algorithms. For instance,
+our regular expression parser makes somewhat arbitrary choices in what parse to
+produce when the grammar is ambiguous. In the future we aim to verify Frisch and
+Cardelli's \emph{greedy} algorithm for regular expression
+disambiguation. Defining this algorithm in \theoryabbv would provide soundness
+by construction, but it is not obvious if the greediness property could be
+verified easily as well.
+
+We also aim to adapt the approach used for our context-free grammar parserss for
+LL and LR/LALR with the aim of developing a shared library of intrinsically
+verified parsing utilities that can be usefully shared across different
+parsers. We would also like to investigate how high-performance verified parsers
+can be implemented in \theoryabbv. This might be done by developing an efficient
+compiler for \theoryabbv directly or by developing a verified compiler to an
+imperative system within \theoryabbv itself.
+
 \paragraph{Semantic Actions}
 
-Our verification has mainly focused on the verification that a parser
-outputs a correct concrete syntax tree for a grammar. However, in
-practice, parsers are combined with a \emph{semantic action} that
-emits an \emph{abstract} syntax tree that omits superfluous syntactic
-details that aren't needed in later stages of the overall program. We
-can define a semantic action in \theoryabbv for a linear type $A$ with
-semantic outputs in a non-linear type $X$ to be a function $\ltonl {(A
-  \lto \bigoplus_{\_:X} \top)}$. That is, a semantic action is a
-function that produces a semantic element of $X$ from the concrete
-parses of $A$. In future work, we aim to study the question of
-verifying efficient implementations of parsers with semantic actions.
+Our verification has mainly focused on the verification that a parser outputs a
+correct concrete syntax tree for a grammar. However, in practice, parsers are
+combined with a \emph{semantic action} that emits an \emph{abstract} syntax tree
+that omits superfluous syntactic details that are unneeded in later stages of
+the overall program. We can define a semantic action in \theoryabbv for a linear
+type $A$ with semantic outputs in a non-linear type $X$ to be a function $\ltonl
+{(A \lto \bigoplus_{\_:X} \top)}$. That is, a semantic action is a function that
+produces a semantic element of $X$ from the concrete parses of $A$. In future
+work, we aim to study the question of verifying efficient implementations of
+parsers with semantic actions, and integrating them into larger verified
+systems.
 
 \paragraph{Implementation}
 
