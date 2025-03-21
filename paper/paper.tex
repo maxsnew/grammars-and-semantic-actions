@@ -820,10 +820,6 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
     \inferrule{\linctxwff \Gamma \Delta \and \linctxwffjdg \Gamma A}{\linctxwff
       {\Gamma} {\Delta , a : A}}
 
-    \boxed{\Gamma \vdash X \isSmall}
-
-    \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash X \isSmall}
-
     \\
 
     \boxed{\ctxwffjdg \Gamma X}
@@ -846,21 +842,25 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
 
     \inferrule{\nonlinterm \Gamma M U}{\ctxwffjdg \Gamma {\unquoteTy M}}
 
-    \\
-
     \inferrule{\linctxwffjdg \Gamma A}{\ctxwffjdg \Gamma {\ltonl A}}
 
-    \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg \Gamma Y}{\ctxwffjdg \Gamma {X \equiv Y}}
+    \\
 
-    \inferrule{\nonlinterm \Gamma M X \and \nonlinterm \Gamma N X}{\ctxwffjdg \Gamma {M \equiv N}}
+    \boxed{\ctxwffjdg \Gamma {X \equiv Y}}
 
+    \inferrule{\nonlinterm \Gamma {X \equiv Y} {U}}{\ctxwffjdg \Gamma {X \equiv Y}}
 
+    \boxed{\Gamma \vdash X \isSmall}
+
+    \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash X \isSmall}
 
     \\
 
     \boxed{\linctxwffjdg \Gamma A}
 
     \inferrule{~}{\linctxwffjdg \Gamma I}
+
+    \inferrule{c \in \Sigma}{\linctxwffjdg \Gamma {\literal{c}}}
 
     \inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg
       \Gamma {A \otimes B}}
@@ -882,19 +882,58 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
 
     \inferrule{\nonlinterm \Gamma M L}{\linctxwffjdg \Gamma {\unquoteTy M}}
 
-    \inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg
+    \\
+
+    \boxed{\linctxwffjdg \Gamma {A \equiv B}}
+
+    \inferrule{\nonlinterm \Gamma {A \equiv B} L}{\linctxwffjdg
       \Gamma {A \equiv B}}
+
+    \inferrule{\lintctxwffjdg \Gamma A}{\linctxwffjdg \Gamma {\unquoteTy
+        {\quoteTy A} \equiv A}}
   \end{mathpar}
   \caption{Formation rules}
   \label{fig:formation}
 \end{figure}
 
+\steven{need to write the rules for the equalities of codes
+  $M \equiv \quoteTy {\unquoteTy M} : U$ in an equational theory figure for
+  non-linear stuff? Same for the codes in universe $L$.
+
+  I will put the nonlinear equational rules, which are so
+  unnecessary, in the appendix}
 \begin{figure}
   \begin{mathpar}
   \footnotesize
     \boxed{\nonlinterm \Gamma M X}
 
-    \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\unquoteTy X} U}
+    \inferrule{~}{\nonlinterm {\Gamma , x : X , \Gamma'} {x} {X}}
+
+    \inferrule{\nonlinterm \Gamma M Y \and \ctxwffjdg \Gamma {X \equiv Y}}{\nonlinterm {\Gamma} {M} {X}}
+
+    \inferrule{~}{\nonlinterm {\Gamma} {tt} {1}}
+
+    \inferrule{\nonlinterm \Gamma M X \and \nonlinterm \Gamma {N} {\subst Y {M}
+        {x}}}{\nonlinterm {\Gamma} {(M , N)} {\SigTyLimit {x} {X} {Y}}}
+
+    \inferrule{\nonlinterm {\Gamma} {M} {\SigTyLimit {x} {X} {Y}}}
+              {\nonlinterm {\Gamma} {M.fst} X}
+
+    \inferrule{\nonlinterm {\Gamma} {M} {\SigTyLimit {x} {X} {Y}}}
+              {\nonlinterm {\Gamma} {M.snd} {\subst Y {M.fst} {x}}}
+
+    \inferrule{\ctxwffjdg \Gamma {\PiTyLimit {x} {X} {Y}} \and \nonlinterm
+      {\Gamma , x : X} {M} {Y}}
+              {\nonlinterm {\Gamma} {\lamb {x} {M}} {\PiTyLimit {x} {X} {Y}}}
+
+    \inferrule{\nonlinterm {\Gamma} {M} {\PiTyLimit {x} {X} {Y}} \and
+      \nonlinterm \Gamma N X}
+              {\nonlinterm \Gamma {M~N} {\subst Y {N} {x}}}
+
+    \inferrule{\nonlinterm \Gamma {M \equiv N} X}{\nonlinterm {\Gamma} {refl} {M
+      =_{X} N}}
+
+    \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\quoteTy X} U}
 
     \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
 
@@ -978,8 +1017,9 @@ linear logic or the persistence modality $\square$ of separation logic
 \end{figure}
 \subsection{Linear Typing}
 
+\steven{todo}
 We give an overview of the linear types and terms in
-\Cref{fig:linear-types-and-terms}. The equational theory for these
+\Cref{fig:linear-terms}. The equational theory for these
 types is straightforward $\beta\eta$ equivalence and included in the
 appendix. First, the linear variable rule says that a linear variable
 can be used if it is the \emph{only} variable in the context.
@@ -1105,11 +1145,13 @@ unambiguous sums have disjoint summands.
 %   we could point to?}
 
 \begin{figure}
-  \begin{footnotesize}
+  \footnotesize
   \begin{mathpar}
     \boxed{\linterm \Gamma \Delta {e} {A}}
 
     \inferrule{~}{\Gamma ; a : A \vdash a : A}
+    \and
+    \inferrule{\nonlinterm \Gamma {M} {\ltonl A}}{\linterm {\Gamma} {\cdot} {M} {A}}
     \and
     \inferrule{\Gamma ; \Delta \vdash e : B \\ \linctxwffjdg \Gamma {A \equiv B}}{\Gamma ; \Delta \vdash e : A}
     %
@@ -1135,7 +1177,8 @@ unambiguous sums have disjoint summands.
     %
     \inferrule{\Gamma ; a : A , \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lambtol a e : B\tol A}
     \and
-    \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta', \Delta \vdash \apptol e {e'} : B}
+    \inferrule{\Gamma ; \Delta \vdash e : A \\ \Gamma ; \Delta' \vdash e'
+      : B \tol A}{\Gamma ; \Delta, \Delta' \vdash \apptol {e'} {e} : B}
     \\
     %
     \inferrule{\Gamma, x : X ; \Delta  \vdash e : A}
@@ -1151,7 +1194,7 @@ unambiguous sums have disjoint summands.
     %
     \inferrule{\Gamma ; \Delta_2 \vdash e : \bigoplus\limits_{x:X} A \quad \Gamma, x : X ; \Delta_1, a : A, \Delta_3 \vdash e' : C}{\Gamma; \Delta_1, \Delta_2, \Delta_3 \vdash \letin {\sigma\,x\,a} e {e'}: C}
     %
-    \and
+    \\
     %
     \inferrule
     { \Gamma ; \Delta \vdash e : A \\
@@ -1163,10 +1206,9 @@ unambiguous sums have disjoint summands.
     \inferrule
     {\Gamma ; \Delta \vdash e : \equalizer{a}{f}{g}}
     {\Gamma ; \Delta \vdash \equalizerpi {e} : A}
-  \end{mathpar}    
-  \end{footnotesize}
+  \end{mathpar}
   \caption{Linear terms}
-  \label{fig:linear-types-and-terms}
+  \label{fig:linear-terms}
 \end{figure}
 
 \subsection{Indexed Inductive Linear Types}

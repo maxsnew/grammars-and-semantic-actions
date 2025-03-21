@@ -1,14 +1,17 @@
 #+title: Todos
 * Syntax
-** TODO the reverse linear function arrow application is backwards
+** DONE the reverse linear function arrow application is backwards
 ** TODO "LL" vs "\textrm{LL}"
 ** TODO Please extend the paper or appendix so that a complete description of the language and its static semantics - a full grammar and all typing rules for both universes should appear somehow across these two documents.
 *** Include the full grammar of non-linear types in the appendix.
 *** Include the full grammar of linear types in Section 3.
-** TODO Add rules for `⊤` to Fig. 8 or Fig. 17.
-** TODO Add rules for `0` to Fig. 8 or Fig. 17.
-** TODO Update Fig. 6 to more clearly delineate the well-formedness judgements.
-*** TODO caption, formation rule of what?
+*** HOLD This is a work in progres while I eat
+** DONE Add rules for `⊤` to Fig. 8 or Fig. 17.
+*** its a nullary product, don't need to
+** DONE Add rules for `0` to Fig. 8 or Fig. 17.
+*** its a nullary sum, don't need to
+** DONE Update Fig. 6 to more clearly delineate the well-formedness judgements.
+*** DONE caption, formation rule of what?
 ** TODO Move Fig. 9 to appendix or to be near the other denotational semantics discussion in 5.2.
 * Terminology
 ** DONE "constuction" instead of "theorem"
