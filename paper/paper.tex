@@ -3272,6 +3272,22 @@ Elliott \cite{elliottSymbolicAutomaticDifferentiation2021} uses essentially the 
 %% information than merely inequalities, we were able to extend Kleene
 %% algebra to reason about parsing as well.
 
+\paragraph{Dependent Linear Types}
+
+Our syntax for non-commutative dependent linear type theory is based on the
+dependent commutative linear type theory of
+\citet{krishnaswami_integrating_2015}, itself an extension of Benton and
+Wadler's linear-non-linear calculus \cite{bentonMixedLinearNonlinear1995}. A
+distinct feature of these systems is that linear types and non-linear types are
+distinct sorts, so the linear logic $!$ operator is not a primitive, but is
+instead definable. Vakar develops a dependent linear type theory where instead
+the non-linear types are accessed using the $!$ modality, similar to Girard's
+original approach \cite{vakar,girard_linear_1987}. Additionally, Vakar develops
+a general categorical semantics for their system, whereas we have only developed
+a single denotational model. It appears straightforward to adapt Vakar's general
+semantics approach to a non-commutative variant that would apply to
+\theoryabbv. This may have applications in finding alternative models, or
+developing logical relations proofs categorically.
 
 %%    - verified imperative implementation: Lambek logic ala separation
 %%      logic?
@@ -3310,7 +3326,6 @@ future work: to develop a program logic based on non-commutative
 separation logic for verifying imperative implementations of
 parsers. This could be implemented by modifying an existing separation
 logic implementation or embedding the logic within \theoryabbv.
-
 
 \subsection{Future Work}
 
