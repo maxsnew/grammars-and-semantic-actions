@@ -7,6 +7,7 @@
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
 \usepackage{xspace}
+\usepackage[nounderscore]{syntax}
 \usepackage{thmtools} % needed for sane cleveref naming of theorems
 
 \usepackage[LGR,T1]{fontenc}
@@ -159,6 +160,8 @@ frame=single
 \newcommand{\apptol}[2]{#1 \mathop{{}^{\tol}} #2}
 \newcommand{\PiTy}[3]{\textstyle\prod (#1 : #2). #3}
 \newcommand{\SigTy}[3]{\textstyle\sum (#1 : #2). #3}
+\newcommand{\PiTyLimit}[3]{\textstyle\prod\limits_{#1 : #2} #3}
+\newcommand{\SigTyLimit}[3]{\textstyle\sum\limits_{#1 : #2} #3}
 \newcommand{\LinPiTy}[3]{\textstyle\bigamp (#1 : #2). #3}
 \newcommand{\LinPiTyLimit}[3]{\bigwith\limits_{#1 : #2} #3}
 \newcommand{\LinSigTy}[3]{\textstyle\bigoplus (#1 : #2). #3}
@@ -175,6 +178,8 @@ frame=single
 \newcommand{\ctxwffjdg}[2]{#1 \vdash #2 \isTy}
 \newcommand{\linctxwff}[2]{#1 \vdash #2 \isLinCtx}
 \newcommand{\linctxwffjdg}[2]{#1 \vdash #2 \isLinTy}
+\newcommand{\nonlinterm}[3]{#1 \vdash #2 : #3}
+\newcommand{\linterm}[4]{#1 ; #2 \vdash #3 : #4}
 
 \newsavebox{\logoagdabox}
 \sbox{\logoagdabox}{%
@@ -469,10 +474,11 @@ $\w$ is a splitting of $w$ into two strings $\w_{\A}$ and $\w_{\B}$ with
 parses for $\A$
 and $\B$, respectively.
 
-For a type $\A$, a parse tree of a string $\w$ is represented as a
-term of type $\A$ in the context $\internalize \w$, where
-$\internalize \w$ is a context with one variable for each character of
-$\w$. For example, to define a parse tree for \stringquote{ab}, we use
+A grammar $A$ derives the word $w$ if there exists a derivation
+$\internalize{w} \vdash a : A$,
+where $\internalize \w$ is a context with one variable for each character of
+$\w$. The term $a : A$ represents a \emph{parse tree} of $w$ for the grammar $A$. For
+example, to define a parse tree for \stringquote{ab}, we use
 the context $\internalize{\stringquote{ab}} = a : \literal a , b :
 \literal b$. In \Cref{fig:fingram}, we give a lambda term and its
 typing derivation to define a parse for a finite grammar.
@@ -798,39 +804,116 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
 
 \begin{figure}
   \begin{mathpar}
-    \inferrule{~}{\ctxwff \Gamma}
+    \footnotesize
+    \boxed{\ctxwff \Gamma}
 
-    \inferrule{\ctxwff \Gamma}{\ctxwffjdg \Gamma X}
+    \inferrule{~}{\ctxwff \cdot}
+
+    \inferrule{\ctxwff \Gamma \and \ctxwffjdg \Gamma X}{\ctxwff {\Gamma , x : X}}
+
+    \\
+
+    \boxed{\linctxwff \Gamma \Delta}
+
+    \inferrule{~}{\linctxwff \Gamma \cdot}
+
+    \inferrule{\linctxwff \Gamma \Delta \and \linctxwffjdg \Gamma A}{\linctxwff
+      {\Gamma} {\Delta , a : A}}
+
+    \boxed{\Gamma \vdash X \isSmall}
 
     \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash X \isSmall}
 
+    \\
+
+    \boxed{\ctxwffjdg \Gamma X}
+
+    \inferrule{~}{\ctxwffjdg \Gamma {Bool}}
+
+    \inferrule{~}{\ctxwffjdg \Gamma 1}
+
+    \inferrule{~}{\ctxwffjdg \Gamma \bot}
+
+    \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
+
+    \inferrule{~}{\ctxwffjdg \Gamma {U}}
+
+    \inferrule{~}{\ctxwffjdg \Gamma {L}}
+
+    \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\PiTyLimit {x}{X}{Y}}}
+
+    \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\SigTyLimit {x}{X}{Y}}}
+
+    \inferrule{\nonlinterm \Gamma M U}{\ctxwffjdg \Gamma {\unquoteTy M}}
+
+    \\
+
+    \inferrule{\linctxwffjdg \Gamma A}{\ctxwffjdg \Gamma {\ltonl A}}
+
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg \Gamma Y}{\ctxwffjdg \Gamma {X \equiv Y}}
 
-    \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash M : X}
+    \inferrule{\nonlinterm \Gamma M X \and \nonlinterm \Gamma N X}{\ctxwffjdg \Gamma {M \equiv N}}
 
-    \inferrule{\Gamma \vdash M : X \and \Gamma \vdash N : X}{\Gamma \vdash M \equiv N : X}
 
-    \inferrule{\ctxwff \Gamma}{\linctxwff \Gamma \Delta}
 
-    \inferrule{\ctxwff \Gamma}{\Gamma \vdash A \isLinTy}
+    \\
 
-    \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \equiv B}
+    \boxed{\linctxwffjdg \Gamma A}
 
-    \inferrule{\Gamma \vdash \Delta \isLinCtx \and \Gamma \vdash A \isLinTy}{\Gamma;\Delta\vdash e : A}
+    \inferrule{~}{\linctxwffjdg \Gamma I}
 
-    \inferrule{\Gamma; \Delta \vdash e : A \and \Gamma;\Delta \vdash f : A}{\Gamma;\Delta\vdash e \equiv f : A}
+    \inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg
+      \Gamma {A \otimes B}}
+
+    \inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg
+      \Gamma {A \lto B}}
+
+    \inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg
+      \Gamma {A \tol B}}
+
+    \inferrule{\linctxwffjdg {\Gamma, x : X} A}{\linctxwffjdg
+      \Gamma {\LinSigTyLimit{x}{X}{A}}}
+
+    \inferrule{\linctxwffjdg {\Gamma, x : X} A}{\linctxwffjdg
+      \Gamma {\LinPiTyLimit{x}{X}{A}}}
+
+    \inferrule{\nonlinterm \Gamma f {\ltonl{(A \lto B)}} \and
+      \nonlinterm \Gamma g {\ltonl{(A \lto B)}}}{\linctxwffjdg \Gamma {\equalizer {a}{f}{g}}}
+
+    \inferrule{\nonlinterm \Gamma M L}{\linctxwffjdg \Gamma {\unquoteTy M}}
+
+    \inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg
+      \Gamma {A \equiv B}}
   \end{mathpar}
   \caption{Formation rules}
   \label{fig:formation}
+\end{figure}
+
+\begin{figure}
+  \begin{mathpar}
+  \footnotesize
+    \boxed{\nonlinterm \Gamma M X}
+
+    \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\unquoteTy X} U}
+
+    \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
+
+    \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
+  \end{mathpar}
+  \caption{Non-linear Typing}
+  \label{fig:non-linear-typing}
 \end{figure}
 
 \subsection{Non-linear Typing}
 The non-linear types of \theoryabbv include the standard dependent
 types for $\Pi,\Sigma$, extensional equality, natural numbers,
 booleans, unit and empty types, and we assume function
-extensionality\cite{Hofmann_1997}. We present the
-other non-linear type constructions in
-\Cref{fig:non-linear-types}. First, we include universe types $U$ of
+extensionality\cite{Hofmann_1997}. We present a selection of
+the non-linear type constructions in
+\Cref{fig:non-linear-types} and provide the rest in
+\cref{fig:full-non-linear-types} \steven{Do we all need non-linear terms? That seems
+extra} of the appendix.
+First, we include universe types $U$ of
 small non-linear types and $L$ of linear types. These are defined as
 universes ``ala Coquand'' in that we define a judgment saying when a
 non-linear type is small and define the universe to internalize
@@ -893,7 +976,6 @@ linear logic or the persistence modality $\square$ of separation logic
   \caption{Non-linear types (selection)}
   \label{fig:non-linear-types}
 \end{figure}
-
 \subsection{Linear Typing}
 
 We give an overview of the linear types and terms in
@@ -921,7 +1003,8 @@ Because we are non-commutative, there are two function types: $A \lto
 B$ and $B \tol A$, which have similar $\lambda$ introduction forms and
 application elimination forms. The difference between these is that
 the introduction rule for $A \lto B$ adds a variable to the right side
-of the context, whereas the introduction rule (elided) for $B \tol A$ adds a
+of the context, whereas the introduction rule\footnote{Rules for $\tol$ elided
+  here, but found in the appendix in \cref{fig:extend-lin-terms}.} for $B \tol A$ adds a
 variable to the left side of the context. In our experience, because
 by convention parsing algorithms parse from left-to-right, we rarely
 need to use the $B \tol A$ connective. As we have already seen, the
@@ -1024,17 +1107,8 @@ unambiguous sums have disjoint summands.
 \begin{figure}
   \begin{footnotesize}
   \begin{mathpar}
-    \inferrule{}{\Gamma \vdash \I \isLinTy}\and
-    \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \otimes B \isLinTy}\and
-    \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \lto B \isLinTy}\and
-    \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \tol B \isLinTy}\and
-    \inferrule{\Gamma,x:X \vdash A \isLinTy}{\Gamma \vdash \bigoplus\limits_{x:X} A \isLinTy}\and
-    \inferrule{\Gamma,x:X \vdash A \isLinTy}{\Gamma \vdash \bigamp\limits_{x:X} A \isLinTy}\and
-    \inferrule
-    {\Gamma \vdash f : \ltonl {(A \lto B)} \and \Gamma \vdash g : \ltonl { (A \lto B) }}
-    {\Gamma \vdash \equalizer {a}{f}{g} \isLinTy}
-  \end{mathpar}
-\begin{mathpar}
+    \boxed{\linterm \Gamma \Delta {e} {A}}
+
     \inferrule{~}{\Gamma ; a : A \vdash a : A}
     \and
     \inferrule{\Gamma ; \Delta \vdash e : B \\ \linctxwffjdg \Gamma {A \equiv B}}{\Gamma ; \Delta \vdash e : A}
@@ -1057,6 +1131,11 @@ unambiguous sums have disjoint summands.
     \inferrule{\Gamma ; \Delta , a : A \vdash e : B}{\Gamma ; \Delta \vdash \lamblto a e : A\lto B}
     \and
     \inferrule{\Gamma ; \Delta \vdash e : A \lto B \\ \Gamma ; \Delta' \vdash e' : A} {\Gamma ; \Delta, \Delta' \vdash \applto {e} {e'} : B}
+    \\
+    %
+    \inferrule{\Gamma ; a : A , \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lambtol a e : B\tol A}
+    \and
+    \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta', \Delta \vdash \apptol e {e'} : B}
     \\
     %
     \inferrule{\Gamma, x : X ; \Delta  \vdash e : A}
@@ -1086,7 +1165,7 @@ unambiguous sums have disjoint summands.
     {\Gamma ; \Delta \vdash \equalizerpi {e} : A}
   \end{mathpar}    
   \end{footnotesize}
-  \caption{Linear types and terms (selection)}
+  \caption{Linear terms}
   \label{fig:linear-types-and-terms}
 \end{figure}
 
@@ -3428,6 +3507,67 @@ framework for verified type checking and static analysis.
 \appendix
 
 \section{Syntax}
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{~}{\ctxwff \Gamma}
+
+    \inferrule{\ctxwff \Gamma}{\ctxwffjdg \Gamma X}
+
+    \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash X \isSmall}
+
+    \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg \Gamma Y}{\ctxwffjdg \Gamma {X \equiv Y}}
+
+    \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash M : X}
+
+    \inferrule{\Gamma \vdash M : X \and \Gamma \vdash N : X}{\Gamma \vdash M \equiv N : X}
+
+    \inferrule{\ctxwff \Gamma}{\linctxwff \Gamma \Delta}
+
+    \inferrule{\ctxwff \Gamma}{\Gamma \vdash A \isLinTy}
+
+    \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \equiv B}
+
+    \inferrule{\Gamma \vdash \Delta \isLinCtx \and \Gamma \vdash A \isLinTy}{\Gamma;\Delta\vdash e : A}
+
+    \inferrule{\Gamma; \Delta \vdash e : A \and \Gamma;\Delta \vdash f : A}{\Gamma;\Delta\vdash e \equiv f : A}
+  \end{mathpar}
+  \caption{Type formation rules}
+  \label{fig:formation}
+\end{figure}
+
+
+\begin{figure}
+  \begin{footnotesize}
+    \begin{mathpar}
+    \inferrule{}{\Gamma \vdash U \isTy}\and
+    \inferrule
+    {\Gamma \vdash M : U}
+    {\Gamma \vdash \unquoteTy M \isTy}\and
+    \inferrule
+    {\Gamma \vdash X \isTy}
+    {\Gamma \vdash \quoteTy X : U}\and
+    \unquoteTy{\quoteTy{X}} \equiv X \and \inferrule{\Gamma \vdash M : U}{\Gamma\vdash \quoteTy{\unquoteTy{M}}\equiv M : U}
+
+    \inferrule{}{\Gamma \vdash L \isTy}\and
+    \inferrule
+    {\Gamma \vdash M : L}
+    {\Gamma \vdash \unquoteTy M \isLinTy}\and
+    \inferrule
+    {\Gamma \vdash A \isLinTy}
+    {\Gamma \vdash \quoteTy A : L}\and
+    \unquoteTy{\quoteTy{A}} \equiv A \and \inferrule{\Gamma \vdash M : U}{\Gamma\vdash \quoteTy{\unquoteTy{M}}\equiv M : U}
+
+    \inferrule
+    {\Gamma \vdash A \isLinTy}
+    {\Gamma \vdash \ltonl { A } \isTy}
+    \and
+    \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash e : \ltonl A}\and
+    \inferrule{\Gamma \vdash M : \ltonl A}{\Gamma ; \cdot \vdash M : A} \and
+  \end{mathpar}
+  \end{footnotesize}
+  \caption{Non-linear types}
+  \label{fig:full-non-linear-types}
+\end{figure}
 
 \begin{figure}
   \begin{align*}
@@ -3510,11 +3650,9 @@ substitution.
 \begin{figure}
   \begin{mathpar}
     %
-    \inferrule{\Gamma ; a : A , \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lambtol a e : B\tol A}
-    \and
-    \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta', \Delta \vdash \apptol e {e'} : B}
   \end{mathpar}
   \caption{Linear terms (extended)}
+  \label{fig:extend-lin-terms}
 \end{figure}
 
 \begin{figure}

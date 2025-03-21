@@ -8,11 +8,12 @@
 ** TODO Add rules for `⊤` to Fig. 8 or Fig. 17.
 ** TODO Add rules for `0` to Fig. 8 or Fig. 17.
 ** TODO Update Fig. 6 to more clearly delineate the well-formedness judgements.
+*** TODO caption, formation rule of what?
 ** TODO Move Fig. 9 to appendix or to be near the other denotational semantics discussion in 5.2.
 * Terminology
-** TODO "constuction" instead of "theorem"
+** DONE "constuction" instead of "theorem"
 *** This is changed for things that are actually constructions. As written, it makes sense for theorems 4.9 and 4.13 to remain theorems as they are proofs about data that is already built.
-** TODO specify what we mean by "linear" early, even if it is nonstandard
+** DONE specify what we mean by "linear" early, even if it is nonstandard
 * Function Extensionality
 ** TODO Please add a discussion of function extensionality.
 * Future work
@@ -32,13 +33,15 @@
 ** DONE usage of disjointness near dyck
 * CFGs
 ** DONE BinOp figure
+* Turing Machine
+** DONE don't be too classical
 * Implementation
 ** TODO Clarify early on that the code presented is pseudocode that differs from the current implementation.
 ** TODO Please provide additional details of the embedding in Agda and an example of the combinator-style representation (or pointers to appropriate examples in the development).
 *** Need to look up how to link. I guess the artifact isn't exactly the right thing to link to, because it is just a docker image
 * Clarifications
-** TODO Around line 134 establish the correspondence between "`A` derives `w`" and the sequents used in Lambek^D.
-** TODO Line 326 mention explicitly that the elided rule may be found in the appendix.
+** DONE Around line 134 establish the correspondence between "`A` derives `w`" and the sequents used in Lambek^D.
+** DONE Line 326 mention explicitly that the elided rule may be found in the appendix.
 * Citations
 ** TODO Update Luo's citation [24].
 ** TODO Clean up pass over all Bibtex
