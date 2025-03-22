@@ -77,7 +77,7 @@ frame=single
 \usepackage{pdfpages}
 
 \newcommand{\Subst}{\textrm{Subst}}
-\newcommand{\SPF}{\mathsf{SPF}}
+\newcommand{\SPF}{SPF}
 \newcommand{\Var}{\mathsf{Var}}
 \newcommand{\K}{\mathsf{K}}
 \newcommand{\map}{\mathsf{map}}
@@ -180,6 +180,15 @@ frame=single
 \newcommand{\linctxwffjdg}[2]{#1 \vdash #2 \isLinTy}
 \newcommand{\nonlinterm}[3]{#1 \vdash #2 : #3}
 \newcommand{\linterm}[4]{#1 ; #2 \vdash #3 : #4}
+\newcommand{\nonlineq}[4]{#1 \vdash #2 \equiv #3 : #4}
+\newcommand{\lineq}[5]{#1 ; #2 \vdash #3 \equiv #4 : #5}
+
+\newcommand{\LLL}{\textrm{LL}}
+\newcommand{\LRR}{\textrm{LR}}
+\newcommand{\LALRR}{\textrm{LALR}}
+\newcommand{\LL}[1]{\LLL(#1)}
+\newcommand{\LR}[1]{\LRR(#1)}
+\newcommand{\LALR}[1]{\LALRR(#1)}
 
 \newsavebox{\logoagdabox}
 \sbox{\logoagdabox}{%
@@ -318,7 +327,7 @@ undermine the overall correctness theorem for a verified system: an
 incorrectly parsed C program will be compiled correctly but this is
 not very useful if it did not correctly correspond to the actual
 source program. Eventually, a correct parser was implemented using an
-automaton that is formally verified to implement an LR grammar
+automaton that is formally verified to implement an $\LR{1}$ grammar
 \cite{jourdanValidatingLRParsers2012}.
 
 It is entirely understandable from an engineering perspective
@@ -333,7 +342,7 @@ matchers have done for many decades in unverified software.
 
 Prior approaches to verified parsing focus on verification of a
 particular grammar formalism such as non-left-recursive grammars or
-LL(1) grammars
+$\LL{1}$ grammars
 \cite{lasserCoStarVerifiedALL2021,EdelmannZippy2020,danielssonTotalParserCombinators2010}.
 Each new grammar formalism is extended with its own independent
 verified implementation.
@@ -385,7 +394,7 @@ as a shallowly embedded domain-specific language in the Cubical Agda
 proof assistant \cite{VezzosiMortbergAbel2019}. We have implemented many example
 grammars and parsers in our system including regular expressions,
 non-deterministic and deterministic automata, as well as some example
-context-free grammars and parsers based on LL(1) and LR(1)
+context-free grammars and parsers based on $\LL{1}$ and $\LR{1}$
 automata. Throughout this paper, we will use \agdalogo~ to mark
 results that are mechanized in our Agda development.
 
@@ -799,7 +808,7 @@ terms. These contexts, types and terms are allowed to depend on an
 ambient non-linear context $\Gamma$, but note that linear types $A$
 cannot depend on any \emph{linear} variables in $\Delta$. We include
 definitional equality judgments for both kinds of type and term
-judgments as well. Additionally, we have a judgment $\Gamma\vdash X
+judgments as well. Additionally, we have a judgment $\Gamma \vdash X
 \isSmall$ which is used in the definition of universe types.
 
 \begin{figure}
@@ -811,30 +820,31 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
 
     \inferrule{\ctxwff \Gamma \and \ctxwffjdg \Gamma X}{\ctxwff {\Gamma , x : X}}
 
-    \\
-
     \boxed{\linctxwff \Gamma \Delta}
 
     \inferrule{~}{\linctxwff \Gamma \cdot}
 
     \inferrule{\linctxwff \Gamma \Delta \and \linctxwffjdg \Gamma A}{\linctxwff
       {\Gamma} {\Delta , a : A}}
+  \end{mathpar}
+  \caption{Context well-formedness rules}
+\end{figure}
 
-    \\
 
+\begin{figure}
+  \begin{mathpar}
+    \footnotesize
     \boxed{\ctxwffjdg \Gamma X}
 
-    \inferrule{~}{\ctxwffjdg \Gamma {Bool}}
+    \inferrule{~}{\ctxwffjdg \Gamma {U}}
+
+    \inferrule{~}{\ctxwffjdg \Gamma {L}}
 
     \inferrule{~}{\ctxwffjdg \Gamma 1}
 
     \inferrule{~}{\ctxwffjdg \Gamma \bot}
 
     \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
-
-    \inferrule{~}{\ctxwffjdg \Gamma {U}}
-
-    \inferrule{~}{\ctxwffjdg \Gamma {L}}
 
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\PiTyLimit {x}{X}{Y}}}
 
@@ -844,11 +854,16 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
 
     \inferrule{\linctxwffjdg \Gamma A}{\ctxwffjdg \Gamma {\ltonl A}}
 
+    \inferrule{\ctxwffjdg \Gamma X \and \nonlinterm \Gamma M X \and \nonlinterm \Gamma N X}{\ctxwffjdg \Gamma {M =_{X} N}}
+
     \\
 
     \boxed{\ctxwffjdg \Gamma {X \equiv Y}}
 
     \inferrule{\nonlinterm \Gamma {X \equiv Y} {U}}{\ctxwffjdg \Gamma {X \equiv Y}}
+
+    \inferrule{\linctxwffjdg \Gamma X}{\linctxwffjdg \Gamma {\unquoteTy
+        {\quoteTy X} \equiv X}}
 
     \boxed{\Gamma \vdash X \isSmall}
 
@@ -889,76 +904,48 @@ judgments as well. Additionally, we have a judgment $\Gamma\vdash X
     \inferrule{\nonlinterm \Gamma {A \equiv B} L}{\linctxwffjdg
       \Gamma {A \equiv B}}
 
-    \inferrule{\lintctxwffjdg \Gamma A}{\linctxwffjdg \Gamma {\unquoteTy
+    \inferrule{\linctxwffjdg \Gamma A}{\linctxwffjdg \Gamma {\unquoteTy
         {\quoteTy A} \equiv A}}
   \end{mathpar}
-  \caption{Formation rules}
+  \caption{Type formation rules}
   \label{fig:formation}
 \end{figure}
 
-\steven{need to write the rules for the equalities of codes
-  $M \equiv \quoteTy {\unquoteTy M} : U$ in an equational theory figure for
-  non-linear stuff? Same for the codes in universe $L$.
-
-  I will put the nonlinear equational rules, which are so
-  unnecessary, in the appendix}
 \begin{figure}
   \begin{mathpar}
   \footnotesize
     \boxed{\nonlinterm \Gamma M X}
-
-    \inferrule{~}{\nonlinterm {\Gamma , x : X , \Gamma'} {x} {X}}
-
-    \inferrule{\nonlinterm \Gamma M Y \and \ctxwffjdg \Gamma {X \equiv Y}}{\nonlinterm {\Gamma} {M} {X}}
-
-    \inferrule{~}{\nonlinterm {\Gamma} {tt} {1}}
-
-    \inferrule{\nonlinterm \Gamma M X \and \nonlinterm \Gamma {N} {\subst Y {M}
-        {x}}}{\nonlinterm {\Gamma} {(M , N)} {\SigTyLimit {x} {X} {Y}}}
-
-    \inferrule{\nonlinterm {\Gamma} {M} {\SigTyLimit {x} {X} {Y}}}
-              {\nonlinterm {\Gamma} {M.fst} X}
-
-    \inferrule{\nonlinterm {\Gamma} {M} {\SigTyLimit {x} {X} {Y}}}
-              {\nonlinterm {\Gamma} {M.snd} {\subst Y {M.fst} {x}}}
-
-    \inferrule{\ctxwffjdg \Gamma {\PiTyLimit {x} {X} {Y}} \and \nonlinterm
-      {\Gamma , x : X} {M} {Y}}
-              {\nonlinterm {\Gamma} {\lamb {x} {M}} {\PiTyLimit {x} {X} {Y}}}
-
-    \inferrule{\nonlinterm {\Gamma} {M} {\PiTyLimit {x} {X} {Y}} \and
-      \nonlinterm \Gamma N X}
-              {\nonlinterm \Gamma {M~N} {\subst Y {N} {x}}}
-
-    \inferrule{\nonlinterm \Gamma {M \equiv N} X}{\nonlinterm {\Gamma} {refl} {M
-      =_{X} N}}
 
     \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\quoteTy X} U}
 
     \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
 
     \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
+
+    \inferrule{\nonlinterm \Gamma {M \equiv N} {X}}
+      {\nonlinterm \Gamma {refl} {M =_{X} N}}
   \end{mathpar}
-  \caption{Non-linear Typing}
-  \label{fig:non-linear-typing}
+  \caption{Non-linear typing (selection)}
+  \label{fig:non-linear-types}
 \end{figure}
 
 \subsection{Non-linear Typing}
 The non-linear types of \theoryabbv include the standard dependent
-types for $\Pi,\Sigma$, extensional equality, natural numbers,
-booleans, unit and empty types, and we assume function
+types for $\Pi$,$\Sigma$, extensional equality, natural numbers,
+\steven{,just take Booleans to be implemented via $1$ and $\Sigma$,} unit, and empty types, and we assume function
 extensionality\cite{Hofmann_1997}. We present a selection of
 the non-linear type constructions in
 \Cref{fig:non-linear-types} and provide the rest in
-\cref{fig:full-non-linear-types} \steven{Do we all need non-linear terms? That seems
-extra} of the appendix.
+\cref{fig:full-non-linear-types, fig:jdg-eq-nonlinear} of the appendix.
 First, we include universe types $U$ of
 small non-linear types and $L$ of linear types. These are defined as
 universes ``ala Coquand'' in that we define a judgment saying when a
 non-linear type is small and define the universe to internalize
 precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. These universe
 types are needed so that we can define types by recursion on natural
-numbers. Next, we include a non-linear type $\ltonl A$ where $A$ is a
+numbers. As in \cite{krishnaswami_integrating_2015}, the extensional equality type
+$M =_{X} N$ used here has the introduction form $refl$, but no
+elimination due to the presence of equality reflection. Next, we include a non-linear type $\ltonl A$ where $A$ is a
 linear type. The intuition for this type is that its elements are the
 linear terms that are ``resource free'': its introduction rule says we
 can construct an $\ltonl A$ when we have a linear term of type $A$
@@ -967,59 +954,10 @@ examples, playing a similar role to the $!$ modality of ordinary
 linear logic or the persistence modality $\square$ of separation logic
 \cite{girard_linear_1987,jung_higher-order_2016}.
 
-%% \begin{figure}
-%%   \[
-%%   \begin{array}{rrcl}
-%%     \textrm{non-linear contexts} & \Gamma & ::= & \cdot \pipe \Gamma,x:X \\
-%%     \textrm{non-linear types} & X , Y , Z & ::= & \mathsf{Nat} \pipe
-%%                                                   \mathsf{Bool} \pipe
-%%                                                   \mathsf{Empty} \pipe
-%%                                                   \mathsf{Unit} \pipe
-%%                                                   \mathsf{SPF}\,X\pipe U \pipe L
-%%                                                   \pipe \ltonl A \pipe \sum\limits_{x:X} Y
-%%                                                   \pipe \prod\limits_{x:X} Y\pipe M =_A
-%%                                                   N
-%%   \end{array}
-%%   \]
-%%   \caption{Non-linear Types}
-%% \end{figure}
-\begin{figure}
-  \begin{footnotesize}
-    \begin{mathpar}
-    \inferrule{}{\Gamma \vdash U \isTy}\and
-    \inferrule
-    {\Gamma \vdash M : U}
-    {\Gamma \vdash \unquoteTy M \isTy}\and
-    \inferrule
-    {\Gamma \vdash X \isTy}
-    {\Gamma \vdash \quoteTy X : U}\and
-    \unquoteTy{\quoteTy{X}} \equiv X \and \inferrule{\Gamma \vdash M : U}{\Gamma\vdash \quoteTy{\unquoteTy{M}}\equiv M : U}
-
-    \inferrule{}{\Gamma \vdash L \isTy}\and
-    \inferrule
-    {\Gamma \vdash M : L}
-    {\Gamma \vdash \unquoteTy M \isLinTy}\and
-    \inferrule
-    {\Gamma \vdash A \isLinTy}
-    {\Gamma \vdash \quoteTy A : L}\and
-    \unquoteTy{\quoteTy{A}} \equiv A \and \inferrule{\Gamma \vdash M : U}{\Gamma\vdash \quoteTy{\unquoteTy{M}}\equiv M : U}
-
-    \inferrule
-    {\Gamma \vdash A \isLinTy}
-    {\Gamma \vdash \ltonl { A } \isTy}
-    \and
-    \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash e : \ltonl A}\and
-    \inferrule{\Gamma \vdash M : \ltonl A}{\Gamma ; \cdot \vdash M : A} \and
-  \end{mathpar}
-  \end{footnotesize}
-  \caption{Non-linear types (selection)}
-  \label{fig:non-linear-types}
-\end{figure}
 \subsection{Linear Typing}
-
-\steven{todo}
-We give an overview of the linear types and terms in
-\Cref{fig:linear-terms}. The equational theory for these
+We give the rules for linear type
+formation in \cref{fig:formation} and the definition of linear terms in
+\cref{fig:linear-terms}. The equational theory for these
 types is straightforward $\beta\eta$ equivalence and included in the
 appendix. First, the linear variable rule says that a linear variable
 can be used if it is the \emph{only} variable in the context.
@@ -1043,8 +981,7 @@ Because we are non-commutative, there are two function types: $A \lto
 B$ and $B \tol A$, which have similar $\lambda$ introduction forms and
 application elimination forms. The difference between these is that
 the introduction rule for $A \lto B$ adds a variable to the right side
-of the context, whereas the introduction rule\footnote{Rules for $\tol$ elided
-  here, but found in the appendix in \cref{fig:extend-lin-terms}.} for $B \tol A$ adds a
+of the context, whereas the introduction rule for $B \tol A$ adds a
 variable to the left side of the context. In our experience, because
 by convention parsing algorithms parse from left-to-right, we rarely
 need to use the $B \tol A$ connective. As we have already seen, the
@@ -1101,15 +1038,14 @@ For any $A : (x : X) \to Y x \to L$, the function
 has an inverse.
 \end{axiom}
 
-\begin{corollary}
+\steven{I'm not sure if this is the proper way to cite the corollary, especially
+because the citation is a reference, not the originator of the idea}
+\begin{corollary}[\cite{Cockett_1993}]
   \label{cor:binary-mono}
   Distributivity implies that the coprojections $\inl : A \to A \oplus B$,
   $\inr : B \to A \oplus B$ of a binary sum are monomorphisms --- i.e. if
   $\inl\,a \equiv \inl\,a'$, then $a \equiv a'$.
 \end{corollary}
-
-\steven{cite reference for distributivity implies coprojections mono. Cockett
-  ``Introduction to Distributive Categories''? Awodey?}
 
 Our primary use of distributivity is to define an equivalence that
 expresses a linear type $A$ as a sum over which character it starts with, if any,
@@ -1336,12 +1272,18 @@ Then we add a function $\mathsf{read} :
 \ltonl{(\top\lto \StringGram)}$ that intuitively ``reads'' the input
 string from the input and makes it available. It is important that the
 input type of $\mathsf{read}$ is $\top$, which can control any amount
-of resources, and not $\I$ which controls no resources. Further, we
-add an axiom that $\lambda s. \mathsf{read}(!(s)) \equiv \lambda
-s. s$ where $!$ is the unique function $\ltonl(\StringGram\lto \top)$,
-i.e., that if we have a string, but then throw it away and read
-it from the input, then in fact that is equivalent to the string we
-were given originally. This ensures that the elements of the $\StringGram$
+of resources, and not $\I$ which controls no resources.
+
+
+\begin{axiom}
+  \label{ax:string-top}
+   $\lambda s. \mathsf{read}(!(s)) \equiv \lambda
+s. s$ where $!$ is the unique function $\ltonl(\StringGram\lto \top)$. That is, $\StringGram$ is strongly equivalent to $\top$.
+\end{axiom}
+
+If we have a string, but then throw it away and read
+it from the input, then we, in fact, recover the original string.
+This ensures that the elements of the $\StringGram$
 type always stand for the actual input string in our reasoning. In the
 next section, we will show how these basic principles are enough to
 provide a basis for verified parsing and formal grammar theory.
@@ -2217,7 +2159,6 @@ incorrect strings, we add all of the failing cases.
   equivalent to $\mathsf{O}~0~\true$.
 \end{theorem}
 
-\steven{
 With \cref{ax:dist}, it is straightforward to implement a parser for this lookahead automaton,
 generalizing the approach for deterministic automata. Without access to
 distributivity, we may define a rudimentary lookahead operation via the chain of
@@ -2234,7 +2175,6 @@ information learned by looking ahead to the input $A~n~b$ parse.
 That is, to choose which constructor to apply we would need the end of this
 chain of equivalences to be a binary sum rather than a binary product,
 necessitating the distributivity axiom.
-}
 
 \begin{figure}
 \begin{lstlisting}
@@ -2480,24 +2420,32 @@ $\sem{g}$.
 The universe $L$ of linear types is interpreted as the set of all
 small grammars.
 \begin{figure}
+  \begin{minipage}[t]{.5\textwidth}
   \begin{footnotesize}
-    \begin{align*}
-    \sem{c}\gamma\,w &= \{ c | w = c\}\\
-    \sem{I}\gamma\,w &= \{ () \pipe w = \varepsilon \}\\
-    \sem{A \otimes B}\gamma\,w &= \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
-    \sem{A \lto B}\gamma\,w &= \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,ww'\\
-    \sem{B \tol A}\gamma\,w &= \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'w\\
-    \sem{\bigoplus_{x:X} A}\gamma\,w &= \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}\\
-    \sem{\bigwith_{x:X} A}\gamma\,w &= \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w\\
-    \sem{\uparrow A}\gamma &= \sem{A}\gamma\,\varepsilon\\
-    \sem{\equalizer{a}{f}{g}}\gamma\,w &= \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
-    \sem{L}\gamma &= \Grammar_0\\
-    \sem{\SPF\,X}\gamma &= \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)\\
-    \sem{\el(F)}\gamma\,G &= \sem{F}\gamma\,G\\
-    \sem{\map(F)}\gamma\,f &= \sem{F}\gamma\,f\\
-    \sem{\mu A}\gamma &= \mu (\sem{A}\gamma)\\
-  \end{align*}
+    \begin{flalign*}
+    &\sem{c}\gamma\,w = \{ c | w = c\}\\
+    &\sem{I}\gamma\,w = \{ () \pipe w = \varepsilon \}\\
+    &\sem{A \otimes B}\gamma\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
+    &\sem{A \lto B}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,ww'\\
+    &\sem{B \tol A}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'w\\
+    &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}\\
+    &\sem{\bigwith_{x:X} A}\gamma\,w = \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w
+  \end{flalign*}
   \end{footnotesize}
+  \end{minipage}%
+  \begin{minipage}[t]{.5\textwidth}
+  \begin{footnotesize}
+    \begin{flalign*}
+    &\sem{\uparrow A}\gamma = \sem{A}\gamma\,\varepsilon\\
+    &\sem{\equalizer{a}{f}{g}}\gamma\,w = \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
+    &\sem{L}\gamma = \Grammar_0\\
+    &\sem{SPF\,X}\gamma = \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)\\
+    &\sem{\el(F)}\gamma\,G = \sem{F}\gamma\,G\\
+    &\sem{\map(F)}\gamma\,f = \sem{F}\gamma\,f\\
+    &\sem{\mu A}\gamma = \mu (\sem{A}\gamma)
+  \end{flalign*}
+  \end{footnotesize}
+  \end{minipage}
   \caption{Grammar Semantics}
   \label{fig:semantics}
 \end{figure}
@@ -2551,7 +2499,8 @@ algebra structure is used to interpret $\roll, \fold$ and the
 corresponding axioms.
 
 The remaining details of the interpretation of linear terms as parse
-transformers and verification of the equational axioms is a relatively
+transformers and verification of the equational axioms --- as well as
+\cref{ax:dist,ax:disjointness,ax:string-top} --- is a relatively
 straightforward extension of existing semantics of linear logic in
 monoidal categories, and is included in the appendix\cite{seely89}.
 
@@ -3346,8 +3295,9 @@ can only express parse trees, and so cannot be used to express
 verified parsers.
 
 The most similar prior work to our own is Luo's Lambek calculus with
-dependent types \cite{luo}. Their design differs from our own in
-allowing linear types to depend on other linear types and supporting
+dependent types \cite{luo}. They present two systems: one like ours where linear
+types may only depend on non-linear ones, and another that
+allows linear types to depend on other linear types and supports
 directed $\Pi$ and $\Sigma$ types that have no analog in our
 system. They do not provide a semantics for these connectives, and it
 is unclear how to interpret their connectives in our grammar
@@ -3356,7 +3306,14 @@ semantics. Further, we provide several examples showing that
 and parsers, and it is unclear if these could be implemented in their calculus.
 
 %% \subsubsection{Typed Grammars}
-Frisch and Cardelli introduced the use of a simple type system to reason about regular expressions up to weak equivalence \cite{frischCardelli}.
+Frisch and Cardelli introduced the use of a simple type system to reason about
+regular expressions up to weak equivalence \cite{frischCardelli}. \steven{They
+  use their system in the design of a linear-time algorithm for greedy regular
+  expression matching. It is yet unclear if greediness can be encoded in
+  \theoryname; however, it appears that our approach in determinizing an NFA is
+  quite similar to their algorithm. The biggest difference being that our
+  approach uses a global disambiguation strategy while theirs is a local, greedy strategy.
+}
 Henglein and Nielsen build on this type-theoretic view of grammars, pointing out that the values of the types correspond precisely to the parse trees \cite{henglein_regular_2011}.
 Our design of \theoryabbv extends this view of grammars as types to a much broader class of grammars, as well as providing a syntax and equational theory for \emph{parse transformers}, showing that the terms can be viewed not just as parse trees, but as intrinsically verified parsers.
 
@@ -3468,7 +3425,7 @@ by construction, but it is not obvious if the greediness property could be
 verified easily as well.
 
 We also aim to adapt the approach used for our context-free grammar parserss for
-LL and LR/LALR with the aim of developing a shared library of intrinsically
+$\LLL$ and $\LRR$/$\LALRR$ with the aim of developing a shared library of intrinsically
 verified parsing utilities that can be usefully shared across different
 parsers. We would also like to investigate how high-performance verified parsers
 can be implemented in \theoryabbv. This might be done by developing an efficient
@@ -3547,70 +3504,7 @@ framework for verified type checking and static analysis.
 
 \ifappendix
 \appendix
-
 \section{Syntax}
-\begin{figure}
-  \begin{mathpar}
-    \inferrule{~}{\ctxwff \Gamma}
-
-    \inferrule{\ctxwff \Gamma}{\ctxwffjdg \Gamma X}
-
-    \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash X \isSmall}
-
-    \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg \Gamma Y}{\ctxwffjdg \Gamma {X \equiv Y}}
-
-    \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash M : X}
-
-    \inferrule{\Gamma \vdash M : X \and \Gamma \vdash N : X}{\Gamma \vdash M \equiv N : X}
-
-    \inferrule{\ctxwff \Gamma}{\linctxwff \Gamma \Delta}
-
-    \inferrule{\ctxwff \Gamma}{\Gamma \vdash A \isLinTy}
-
-    \inferrule{\Gamma \vdash A \isLinTy \and \Gamma \vdash B \isLinTy}{\Gamma \vdash A \equiv B}
-
-    \inferrule{\Gamma \vdash \Delta \isLinCtx \and \Gamma \vdash A \isLinTy}{\Gamma;\Delta\vdash e : A}
-
-    \inferrule{\Gamma; \Delta \vdash e : A \and \Gamma;\Delta \vdash f : A}{\Gamma;\Delta\vdash e \equiv f : A}
-  \end{mathpar}
-  \caption{Type formation rules}
-  \label{fig:formation}
-\end{figure}
-
-
-\begin{figure}
-  \begin{footnotesize}
-    \begin{mathpar}
-    \inferrule{}{\Gamma \vdash U \isTy}\and
-    \inferrule
-    {\Gamma \vdash M : U}
-    {\Gamma \vdash \unquoteTy M \isTy}\and
-    \inferrule
-    {\Gamma \vdash X \isTy}
-    {\Gamma \vdash \quoteTy X : U}\and
-    \unquoteTy{\quoteTy{X}} \equiv X \and \inferrule{\Gamma \vdash M : U}{\Gamma\vdash \quoteTy{\unquoteTy{M}}\equiv M : U}
-
-    \inferrule{}{\Gamma \vdash L \isTy}\and
-    \inferrule
-    {\Gamma \vdash M : L}
-    {\Gamma \vdash \unquoteTy M \isLinTy}\and
-    \inferrule
-    {\Gamma \vdash A \isLinTy}
-    {\Gamma \vdash \quoteTy A : L}\and
-    \unquoteTy{\quoteTy{A}} \equiv A \and \inferrule{\Gamma \vdash M : U}{\Gamma\vdash \quoteTy{\unquoteTy{M}}\equiv M : U}
-
-    \inferrule
-    {\Gamma \vdash A \isLinTy}
-    {\Gamma \vdash \ltonl { A } \isTy}
-    \and
-    \inferrule{\Gamma ; \cdot \vdash e : A}{\Gamma \vdash e : \ltonl A}\and
-    \inferrule{\Gamma \vdash M : \ltonl A}{\Gamma ; \cdot \vdash M : A} \and
-  \end{mathpar}
-  \end{footnotesize}
-  \caption{Non-linear types}
-  \label{fig:full-non-linear-types}
-\end{figure}
-
 \begin{figure}
   \begin{align*}
     \el(\Var\,M) B &= B\,M\\
@@ -3633,68 +3527,94 @@ substitution.
 
 \begin{figure}
   \begin{mathpar}
-    \inferrule{~}{\ctxwff \cdot}
-    \and
-    \inferrule{\ctxwff \Gamma \\ \ctxwffjdg \Gamma X}{\ctxwff {\Gamma, x : X}}
-    \inferrule{\Gamma \vdash X : U_i}{\ctxwffjdg \Gamma X}
+  \footnotesize
+    \boxed{\nonlinterm \Gamma M X}
 
-    \boxed{\linctxwffjdg \Gamma A}
+    \inferrule{~}{\nonlinterm {\Gamma , x : X , \Gamma'} {x} {X}}
 
-    \inferrule{~}{\linctxwff \Gamma \cdot}
-    \and
-    \inferrule{\linctxwff \Gamma \Delta \\ \linctxwffjdg \gamma A}{\linctxwff \Gamma {\Delta, a : A}}
+    \inferrule{\nonlinterm \Gamma M Y \and \ctxwffjdg \Gamma {X \equiv Y}}{\nonlinterm {\Gamma} {M} {X}}
+
+    \inferrule{~}{\nonlinterm {\Gamma} {tt} {1}}
+
+    \inferrule
+    {\nonlinterm \Gamma M \bot \and \ctxwffjdg \Gamma X}
+    {\nonlinterm \Gamma {()} {\bot}}
+
+    \inferrule{~}{\nonlinterm {\Gamma} {0} {Nat}}
+
+    \inferrule{\nonlinterm {\Gamma} {n} {Nat}}{\nonlinterm {\Gamma} {suc~n} {Nat}}
+
+    \inferrule{\ctxwffjdg {\Gamma , n : Nat} {X(n)} \and
+           \nonlinterm {\Gamma} {M_0} {X(0)} \and
+           \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}}
+          {\nonlinterm {\Gamma} {elim_{Nat}(X,M_0,M_{suc})(n)} {X(n)}}
+
+    \inferrule{\nonlinterm \Gamma M X \and \nonlinterm \Gamma {N} {\subst Y {M}
+        {x}}}{\nonlinterm {\Gamma} {(M , N)} {\SigTyLimit {x} {X} {Y}}}
+
+    \inferrule{\nonlinterm {\Gamma} {M} {\SigTyLimit {x} {X} {Y}}}
+              {\nonlinterm {\Gamma} {M.fst} X}
+
+    \inferrule{\nonlinterm {\Gamma} {M} {\SigTyLimit {x} {X} {Y}}}
+              {\nonlinterm {\Gamma} {M.snd} {\subst Y {M.fst} {x}}}
+
+    \inferrule{\ctxwffjdg \Gamma {\PiTyLimit {x} {X} {Y}} \and \nonlinterm
+      {\Gamma , x : X} {M} {Y}}
+              {\nonlinterm {\Gamma} {\lamb {x} {M}} {\PiTyLimit {x} {X} {Y}}}
+
+    \inferrule{\nonlinterm {\Gamma} {M} {\PiTyLimit {x} {X} {Y}} \and
+      \nonlinterm \Gamma N X}
+              {\nonlinterm \Gamma {M~N} {\subst Y {N} {x}}}
+
+    \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\quoteTy X} U}
+
+    \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
+
+    \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
   \end{mathpar}
-  \caption{Context rules}
+  \caption{Non-linear Typing}
+  \label{fig:full-non-linear-types}
 \end{figure}
-
-%% \begin{figure}
-%%   \begin{mathpar}
-%%   \boxed{\Gamma \vdash M : X}
-
-%%   \inferrule{~}{\Gamma, x : X, \Gamma' \vdash x : X}
-%%   %
-%%   \and
-%%   %
-%%   \inferrule{\Gamma \vdash M : Y \quad \ctxwffjdg \Gamma {X \equiv Y}}{\Gamma \vdash M : X}
-%%   %
-%%   \and
-%%   %
-%%   \inferrule{~}{\Gamma \vdash () : 1}
-%%   %
-%%   \and
-%%   %
-%%   \inferrule{\Gamma \vdash M : X \\ \Gamma \vdash N : \subst Y M x}{\Gamma \vdash (M, N) : \SigTy x X Y}
-%%   %
-%%   \and
-%% %
-%%   \inferrule{\Gamma \vdash M : \SigTy x X Y}{\Gamma \vdash \pi_1\, M : X}
-%%   %
-%%   \and
-%%   %
-%%   \inferrule{\Gamma \vdash M : \SigTy x X Y}{\Gamma \vdash \pi_2\, M : \subst Y {\pi_1\, M} x}
-%%   \and
-%%   \inferrule{\Gamma, x : X \vdash M : Y}{\Gamma \vdash \lamb x M : \PiTy x X Y}
-%%   %
-%%   \and
-%%   %
-%%   \inferrule{\Gamma \vdash M : \PiTy x X Y \\ \Gamma \vdash N : X}{\Gamma \vdash \app M {N} : \subst Y {N} x}
-%%   %
-%%   \and
-%%   %
-%%   \inferrule{\Gamma \vdash M \equiv N : X}{\Gamma \vdash \mathsf{refl} : M =_X N}
-%%   \and
-%%   \textrm{TODO: inductive types (boolean, nat) with their eliminators allowed in }
-%%   \end{mathpar}
-%%   \caption{Intuitionistic typing}
-%%   \label{fig:inttyping}
-%% \end{figure}
 
 \begin{figure}
   \begin{mathpar}
-    %
+  \boxed{\nonlinterm \Gamma {M \equiv N} {X}}
+
+  \inferrule{\nonlinterm \Gamma M 1 \and \nonlinterm \Gamma N 1}{\nonlineq \Gamma M N 1}
+
+  \inferrule{\nonlinterm \Gamma M \bot \and \nonlinterm \Gamma N \bot}{\nonlineq \Gamma M N \bot}
+
+  \inferrule{\nonlinterm {\Gamma , x : X} {M} {Y} \and \nonlinterm {\Gamma} {N} {X}}{\nonlineq \Gamma {\left(\lamb {x} {M} \right)~N} {\subst M {N}
+      {x}} {X}}
+
+  \inferrule{\nonlinterm \Gamma M {\PiTyLimit {x}{X}{Y}}}{\nonlineq \Gamma {M} {\lamb {x} {M~x}} {\PiTyLimit{x}{X}{Y}}}
+
+  \inferrule{\nonlinterm \Gamma M {X} \and \nonlinterm {\Gamma , x : X} {N}
+    {\subst Y {M} {x}}}{\nonlineq \Gamma {(M , N).fst} {M} {X}}
+
+  \inferrule{\nonlinterm \Gamma M {X} \and \nonlinterm {\Gamma , x : X} {N}
+    {\subst Y {M} {x}}}{\nonlineq \Gamma {(M , N).snd} {N} {\subst Y {M} {x}}}
+
+  \inferrule{\nonlinterm \Gamma {M} {\SigTy {x} {X} {Y}}}{\nonlineq \Gamma {(M.fst , M.snd)} {M} {\SigTyLimit{x}{X}{Y}}}
+
+  \inferrule{\nonlinterm {\Gamma} {M_0} {X(0)} \and
+      \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}}
+      {\nonlineq {\Gamma} {elim_{Nat}(X,M_0,M_{suc})(0)} {M_0} {X(0)}}
+
+  \inferrule{\nonlinterm {\Gamma} {M_0} {X(0)} \and
+      \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)} \and
+      \nonlinterm {\Gamma} {n} {Nat}}
+      {\nonlineq {\Gamma} {elim_{Nat}(X,M_0,M_{suc})(suc~n)} {M_{suc}(n ,
+          elim_{Nat}(X,M_0,M_{suc})(n))} {X(suc~n)}}
+
+  \inferrule{\nonlinterm \Gamma M U}{\nonlineq \Gamma {\quoteTy {\unquoteTy {M}}}
+  {M} {U}}
+
+  \inferrule{\nonlinterm \Gamma M L}{\nonlineq \Gamma {\quoteTy {\unquoteTy {M}}}
+  {M} {L}}
   \end{mathpar}
-  \caption{Linear terms (extended)}
-  \label{fig:extend-lin-terms}
+  \caption{Judgmental equality for non-linear terms}
+  \label{fig:jdg-eq-nonlinear}
 \end{figure}
 
 \begin{figure}
@@ -3712,11 +3632,11 @@ substitution.
 %
     \and
 %
-    \inferrule{\Gamma ; a : A , \Delta \vdash e : C \\ \Gamma ; \Delta' \vdash e' : A }{\Gamma; \Delta , \Delta' \vdash \app {(\lambtol a e)} {e'} \equiv \subst e {e'} a : C}
+    \inferrule{\Gamma ; a : A , \Delta \vdash e : C \\ \Gamma ; \Delta' \vdash e' : A }{\Gamma; \Delta , \Delta' \vdash \apptol {(\lambtol a e)} {e'} \equiv \subst e {e'} a : C}
 %
     \and
 %
-    \inferrule{\Gamma ; \Delta \vdash e : B \tol A}{\Gamma; \Delta \vdash e \equiv \lambtol a {\app e a} : B \tol A}
+    \inferrule{\Gamma ; \Delta \vdash e : B \tol A}{\Gamma; \Delta \vdash e \equiv \lambtol a {\apptol e a} : B \tol A}
 %
     \and
 %
@@ -3777,7 +3697,6 @@ substitution.
   \caption{Judgmental equality for linear terms}
   \label{fig:jdgeq}
 \end{figure}
-\steven{Need to include premises for the judgmental equality rules}
 
 \begin{definition}
   The set of (non-linear) substitutions $\gamma \in
@@ -3809,24 +3728,24 @@ substitution.
 \begin{figure}
   \begin{mathpar}
     \inferrule
-    {\Gamma \vdash X \isTy}
-    {\Gamma' \vdash X[\gamma] \isTy}
+    {\ctxwffjdg \Gamma X}
+    {\ctxwffjdg {\Gamma'} {X[\gamma]}}
 
     \inferrule
     {\Gamma \vdash X \isSmall}
     {\Gamma' \vdash X[\gamma] \isSmall}
 
     \inferrule
-    {\Gamma \vdash X \equiv Y}
-    {\Gamma' \vdash X[\gamma] \equiv Y[\gamma]}
+    {\ctxwffjdg \Gamma {X \equiv Y}}
+    {\ctxwffjdg {\Gamma'} {X[\gamma] \equiv Y[\gamma]}}
 
     \inferrule
-    {\Gamma \vdash M : X}
-    {\Gamma' \vdash M[\gamma] : X[\gamma]}
+    {\nonlinterm \Gamma {M} {X}}
+    {\nonlinterm {\Gamma'} {M[\gamma]} {X[\gamma]}}
 
     \inferrule
-    {\Gamma \vdash M \equiv N : X}
-    {\Gamma' \vdash M[\gamma] \equiv N[\gamma] : X[\gamma]}
+    {\nonlineq \Gamma {M} {N} {X}}
+    {\nonlineq {\Gamma'} {M[\gamma]} {N[\gamma]} {X[\gamma]}}
 
     \inferrule
     {\Gamma \vdash \Delta \isLinCtx}
@@ -3837,16 +3756,16 @@ substitution.
     {\Gamma' \vdash A[\gamma] \isLinTy}
 
     \inferrule
-    {\Gamma \vdash A \equiv B}
-    {\Gamma' \vdash A[\gamma] \equiv B[\gamma]}
+    {\linctxwffjdg \Gamma {A \equiv B}}
+    {\linctxwffjdg {\Gamma'} {A[\gamma] \equiv B[\gamma]}}
 
     \inferrule
     {\Gamma;\Delta \vdash e : A}
-    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] : A[\gamma]}j
+    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] : A[\gamma]}
 
     \inferrule
     {\Gamma;\Delta \vdash e \equiv f : A}
-    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] \equiv f[\gamma] : A[\gamma]}j
+    {\Gamma'; \Delta[\gamma] \vdash e[\gamma] \equiv f[\gamma] : A[\gamma]}
   \end{mathpar}  
   \caption{Non-linear substitution}
   \label{fig:non-linear-substitution}
@@ -3896,8 +3815,6 @@ substitution.
 \caption{Action of substitution on linear terms}
 \label{fig:substact}
 \end{figure}
-\steven{captilizataion should be consistent over all figures. idk if all caps or
-all lowercase is beter?}
 
 \begin{definition}
   Given any $\Gamma ; \Delta \vdash e : A$ and $\delta \in
@@ -4504,5 +4421,56 @@ The $\eta$ rule for $\equalizer e f g$ is given as,
 \end{tikzcd}
 \end{center}
 \end{proof}
+
+
+\subsection{Grammar Semantics Respects Additional Axioms}
+We verify that the denotational semantics verfies each of the axioms we have
+assumed.
+
+\paragraph{\cref{ax:dist}}
+\begin{theorem}
+  In $\Grammar$, $\semg{\lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}}}$ has
+  an inverse.
+\end{theorem}
+\begin{proof}
+  \steven{Double check this}.
+  The following map forms the desired inverse,
+
+  \[
+    \lamb {\gamma} {\lamb {w} {\lamb {p} {(\lamb {\lamb {x} {(p~x).fst}} , \lamb {x} {(p~x).snd})}}}
+  \]
+\end{proof}
+
+\paragraph{\cref{ax:disjointness}}
+\begin{theorem}
+  In $\Grammar$, $\semg{\sigma x}$ and $\semg{\sigma x'}$ are disjoint for
+  $x \neq x'$.
+\end{theorem}
+\begin{proof}
+  This is trivially true, as the denotation of linear sum types is as $\Sigma$
+  types in $\Grammar$. For any input, the first projections of $\semg{\sigma x}$
+  is $x$ and the first projection of
+  $\semg{\sigma x'}$ is $x'$. Because $x \neq x'$, the images of
+  $\semg{\sigma x}$ and $\semg{\sigma x'}$ cannot agree.
+\end{proof}
+
+\paragraph{\cref{ax:string-top}}
+\begin{theorem}
+  In $\Grammar$, $\semg{!}$ has an inverse.
+\end{theorem}
+\begin{proof}
+  Because $\semgg{\top}\gamma\,w$ is a singleton set, it suffices to show that
+  $\semg{\StringGram}\gamma\,w$ is likewise a singleton set for all $\gamma$ and
+  $w$.
+
+  First, we prove by induction on $w$ that $\semg{\StringGram}$ is a retract of
+  $\semg{\LinSigTyLimit{w}{\StringSem}{\internalize{w}}}$. Then, again by
+  induction on $w$, we show that
+  $\semg{\LinSigTyLimit{w}{\StringSem}{\internalize{w}}}$ is isomorphic to
+  $\semg{\top}$. Thus, $\semg{\StringGram}$ is a retract of $\semg{\top}$. In particular,
+  so $\semg{\StringGram}\gamma\,w$ is a singleton, and thus
+  $\semg{\StringGram}\gamma\,w \cong \semg{\top}\gamma\,w$ in $\Set$.
+\end{proof}
+
 \fi
 \end{document}

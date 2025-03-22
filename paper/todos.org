@@ -1,18 +1,19 @@
 #+title: Todos
 * Syntax
 ** DONE the reverse linear function arrow application is backwards
-** TODO "LL" vs "\textrm{LL}"
-** TODO Please extend the paper or appendix so that a complete description of the language and its static semantics - a full grammar and all typing rules for both universes should appear somehow across these two documents.
+** DONE "LL" vs "\textrm{LL}"
+** DONE Please extend the paper or appendix so that a complete description of the language and its static semantics - a full grammar and all typing rules for both universes should appear somehow across these two documents.
 *** Include the full grammar of non-linear types in the appendix.
 *** Include the full grammar of linear types in Section 3.
-*** HOLD This is a work in progres while I eat
+*** DONE equality types
 ** DONE Add rules for `⊤` to Fig. 8 or Fig. 17.
 *** its a nullary product, don't need to
 ** DONE Add rules for `0` to Fig. 8 or Fig. 17.
 *** its a nullary sum, don't need to
 ** DONE Update Fig. 6 to more clearly delineate the well-formedness judgements.
 *** DONE caption, formation rule of what?
-** TODO Move Fig. 9 to appendix or to be near the other denotational semantics discussion in 5.2.
+** HOLD Move Fig. 9 to appendix or to be near the other denotational semantics discussion in 5.2.
+*** I don't think I actually want to do this
 * Terminology
 ** DONE "constuction" instead of "theorem"
 *** This is changed for things that are actually constructions. As written, it makes sense for theorems 4.9 and 4.13 to remain theorems as they are proofs about data that is already built.
@@ -20,18 +21,18 @@
 * Function Extensionality
 ** TODO Please add a discussion of function extensionality.
 * Future work
-** TODO Clarify the status of our current evaluation as an initial exploration, and discuss more throughly the algorithms (LL, LALR) that we aim to verify in the future
+** DONE Clarify the status of our current evaluation as an initial exploration, and discuss more throughly the algorithms (LL, LALR) that we aim to verify in the future
 * Related work
-** TODO Please add a comparison with the categorical semantics in the paper mentioned by Reviewer C as [*].
-** TODO Please expand the comment on [9] as described in your response to reviewer D, and in particular acknowledge that a verified greedy parser remains future work.
-** TODO Correct comparison with [24] to reflect both systems.
+** DONE Please add a comparison with the categorical semantics in the paper mentioned by Reviewer C as [*].
+** HOLD Please expand the comment on [9] as described in your response to reviewer D, and in particular acknowledge that a verified greedy parser remains future work.
+** DONE Correct comparison with [24] to reflect both systems.
 * Axioms
 ** DONE binary products have monomorphic coprojections
-** TODO Clear up what equational axioms are referred to in 896-898 and signpost that the equational theory is in the appendix
-** TODO Please add a discussion of why the axioms are needed where they are introduced (or forward references there to where these are dicussed elsewhere in the paper) and add the missing discussion of their verification.
-*** TODO signpost their usage at the point of introduction for the axioms
-*** TODO expand on their usage when relevant (i.e. in the lookahead example, elaborate on the usage of distributivity)
-** TODO Add to the appendix the proofs that the axioms from 3.2 hold in the semantics
+** DONE Clear up what equational axioms are referred to in 896-898 and signpost that the equational theory is in the appendix
+** DONE Please add a discussion of why the axioms are needed where they are introduced (or forward references there to where these are dicussed elsewhere in the paper) and add the missing discussion of their verification.
+*** DONE signpost their usage at the point of introduction for the axioms
+*** DONE expand on their usage when relevant (i.e. in the lookahead example, elaborate on the usage of distributivity)
+** DONE Add to the appendix the proofs that the axioms from 3.2 hold in the semantics
 ** DONE usage of dist near lookahead
 ** DONE usage of disjointness near dyck
 * CFGs
@@ -52,3 +53,5 @@
 ** TODO go over all of the reviewers questions/comments and assess if any misunderstandings can be clarified altogether
 ** TODO go over syntax in all figures
 ** TODO inconsistent usage \mathsf, \textrm, and \texttt for constructors/etc
+* Visual
+** TODO Grammar semantics figure "\SPF" had to change to "SPF". Standardize this throughout
