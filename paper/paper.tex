@@ -3307,13 +3307,7 @@ and parsers, and it is unclear if these could be implemented in their calculus.
 
 %% \subsubsection{Typed Grammars}
 Frisch and Cardelli introduced the use of a simple type system to reason about
-regular expressions up to weak equivalence \cite{frischCardelli}. \steven{They
-  use their system in the design of a linear-time algorithm for greedy regular
-  expression matching. It is yet unclear if greediness can be encoded in
-  \theoryname; however, it appears that our approach in determinizing an NFA is
-  quite similar to their algorithm. The biggest difference being that our
-  approach uses a global disambiguation strategy while theirs is a local, greedy strategy.
-}
+regular expressions up to weak equivalence \cite{frischCardelli}.
 Henglein and Nielsen build on this type-theoretic view of grammars, pointing out that the values of the types correspond precisely to the parse trees \cite{henglein_regular_2011}.
 Our design of \theoryabbv extends this view of grammars as types to a much broader class of grammars, as well as providing a syntax and equational theory for \emph{parse transformers}, showing that the terms can be viewed not just as parse trees, but as intrinsically verified parsers.
 
@@ -3423,6 +3417,17 @@ Cardelli's \emph{greedy} algorithm for regular expression
 disambiguation. Defining this algorithm in \theoryabbv would provide soundness
 by construction, but it is not obvious if the greediness property could be
 verified easily as well.
+
+\steven{
+  Is any of this detail useful here, or nah?
+
+  They
+  use their system in the design of a linear-time algorithm for greedy regular
+  expression matching. It is yet unclear if greediness can be encoded in
+  \theoryname; however, it appears that our approach in determinizing an NFA is
+  quite similar to their algorithm. The biggest difference being that our
+  approach uses a global disambiguation strategy while theirs is a local, greedy strategy.
+}
 
 We also aim to adapt the approach used for our context-free grammar parserss for
 $\LLL$ and $\LRR$/$\LALRR$ with the aim of developing a shared library of intrinsically
