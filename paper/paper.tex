@@ -3372,11 +3372,11 @@ Wadler's linear-non-linear calculus \cite{bentonMixedLinearNonlinear1995}. A
 distinct feature of these systems is that linear types and non-linear types are
 distinct sorts, so the linear logic $!$ operator is not a primitive, but is
 instead definable, for instance in \theoryabbv as $!A = \bigoplus_{\_:\ltonl A}
-I$. Vakar develops a dependent linear type theory where instead the non-linear
+I$. V\'ak\'ar develops a dependent linear type theory where instead the non-linear
 types are accessed using the $!$ modality, similar to Girard's original approach
-\cite{vakar,girard_linear_1987}. Additionally, Vakar develops a general
+\cite{vakar,girard_linear_1987}. Additionally, V\'ak\'ar develops a general
 categorical semantics for their system, whereas we have only developed a single
-denotational model. It appears straightforward to adapt Vakar's general
+denotational model. It appears straightforward to adapt V\'ak\'ar's general
 semantics approach to a non-commutative variant that would apply to
 \theoryabbv. This may have applications in finding alternative models, or
 developing logical relations proofs categorically.
@@ -3446,6 +3446,8 @@ verified easily as well.
   quite similar to their algorithm. The biggest difference being that our
   approach uses a global disambiguation strategy while theirs is a local, greedy strategy.
 }
+
+\pedr{I think that it's fine not to include these details}
 
 We also aim to adapt the approach used for our context-free grammar parserss for
 $\LLL$ and $\LRR$/$\LALRR$ with the aim of developing a shared library of intrinsically
