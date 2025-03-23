@@ -740,16 +740,8 @@ the functions are mutually inverse, this shows they are \emph{strongly
 equivalent} as grammars.
 
 \begin{figure}
-  \begin{tikzpicture}[node distance = 25mm ]
-    \node[state, initial] (0) {$\0$};
-    \node[state, below left of=0] (1) {$\1$};
-    \node[state, right of=1, accepting] (2) {$\2$};
-
-    \path[->] (0) edge[above] node{$\epsilon$} (1)
-              (0) edge[right] node{$\stringquote{c}$} (2)
-              (1) edge[loop left] node{$\stringquote{a}$} (1)
-              (1) edge[below] node{$\stringquote{b}$} (2);
-  \end{tikzpicture}
+  \begin{minipage}[t]{.6\textwidth}
+    \vspace{0pt}
   \begin{lstlisting}
 data Trace : (s : Fin 3) (*@$\to$@*) L where
   stop : (*@$\uparrow$@*)(Trace 2)
@@ -762,6 +754,21 @@ k : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*)  Trace 0)
 k (a , b) = 0to1 (1to1 a (1to2 b stop))
 
 \end{lstlisting}
+  \end{minipage}%
+  \begin{minipage}[t]{.4\textwidth}
+  \vspace{0pt}
+  \hspace{10pt}
+  \begin{tikzpicture}[node distance = 25mm ]
+    \node[state, initial] (0) {$\0$};
+    \node[state, below left of=0] (1) {$\1$};
+    \node[state, right of=1, accepting] (2) {$\2$};
+
+    \path[->] (0) edge[above] node{$\epsilon$} (1)
+              (0) edge[right] node{$\stringquote{c}$} (2)
+              (1) edge[loop left] node{$\stringquote{a}$} (1)
+              (1) edge[below] node{$\stringquote{b}$} (2);
+  \end{tikzpicture}
+  \end{minipage}%
   \caption{NFA for $(\a^{*} \otimes \b) \oplus \c$ and its corresponding type}
   \label{fig:exampleNFA}
 \end{figure}
@@ -830,6 +837,11 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
   \caption{Context well-formedness rules}
 \end{figure}
 
+\steven{TODO define general inductives as the least fixed point of strictly
+  positive endofunctors on $U$}
+
+\steven{TODO linear $\mu$ in the type formation rules? nonlinear $\mu$ in the
+  type formation rules?}
 
 \begin{figure}
   \begin{mathpar}
@@ -844,7 +856,7 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
 
     \inferrule{~}{\ctxwffjdg \Gamma \bot}
 
-    \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
+    % \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
 
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\PiTyLimit {x}{X}{Y}}}
 
@@ -931,9 +943,15 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
 
 \subsection{Non-linear Typing}
 The non-linear types of \theoryabbv include the standard dependent
-types for $\Pi$,$\Sigma$, extensional equality, natural numbers,
-\steven{,just take Booleans to be implemented via $1$ and $\Sigma$,} unit, and empty types, and we assume function
-extensionality\cite{Hofmann_1997}. We present a selection of
+types for $\Pi$,$\Sigma$, extensional equality, unit and empty types, and
+inductive types that are defined strictly positively. We may also assume function
+extensionality\cite{Hofmann_1997}; Function
+extensionality is holds in Cubical Agda, and in our implementation we make heavy use of it of when
+validating that the denotational semantics respects the equational theory of
+\theoryabbv. However, it is not necessary to assume function extensionality for
+the non-linear types in \theoryabbv, as we don't utilize it in any of our constructions.
+
+We present a selection of
 the non-linear type constructions in
 \Cref{fig:non-linear-types} and provide the rest in
 \cref{fig:full-non-linear-types, fig:jdg-eq-nonlinear} of the appendix.
@@ -3545,14 +3563,14 @@ substitution.
     {\nonlinterm \Gamma M \bot \and \ctxwffjdg \Gamma X}
     {\nonlinterm \Gamma {()} {\bot}}
 
-    \inferrule{~}{\nonlinterm {\Gamma} {0} {Nat}}
+    % \inferrule{~}{\nonlinterm {\Gamma} {0} {Nat}}
 
-    \inferrule{\nonlinterm {\Gamma} {n} {Nat}}{\nonlinterm {\Gamma} {suc~n} {Nat}}
+    % \inferrule{\nonlinterm {\Gamma} {n} {Nat}}{\nonlinterm {\Gamma} {suc~n} {Nat}}
 
-    \inferrule{\ctxwffjdg {\Gamma , n : Nat} {X(n)} \and
-           \nonlinterm {\Gamma} {M_0} {X(0)} \and
-           \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}}
-          {\nonlinterm {\Gamma} {elim_{Nat}(X,M_0,M_{suc})(n)} {X(n)}}
+    % \inferrule{\ctxwffjdg {\Gamma , n : Nat} {X(n)} \and
+    %        \nonlinterm {\Gamma} {M_0} {X(0)} \and
+    %        \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}}
+    %       {\nonlinterm {\Gamma} {elim_{Nat}(X,M_0,M_{suc})(n)} {X(n)}}
 
     \inferrule{\nonlinterm \Gamma M X \and \nonlinterm \Gamma {N} {\subst Y {M}
         {x}}}{\nonlinterm {\Gamma} {(M , N)} {\SigTyLimit {x} {X} {Y}}}
@@ -4464,7 +4482,7 @@ assumed.
   In $\Grammar$, $\semg{!}$ has an inverse.
 \end{theorem}
 \begin{proof}
-  Because $\semgg{\top}\gamma\,w$ is a singleton set, it suffices to show that
+  Because $\semg{\top}\gamma\,w$ is a singleton set, it suffices to show that
   $\semg{\StringGram}\gamma\,w$ is likewise a singleton set for all $\gamma$ and
   $w$.
 

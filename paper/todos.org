@@ -12,6 +12,7 @@
 *** its a nullary sum, don't need to
 ** DONE Update Fig. 6 to more clearly delineate the well-formedness judgements.
 *** DONE caption, formation rule of what?
+** TODO swap out nats for general inductives
 ** HOLD Move Fig. 9 to appendix or to be near the other denotational semantics discussion in 5.2.
 *** I don't think I actually want to do this
 * Terminology
