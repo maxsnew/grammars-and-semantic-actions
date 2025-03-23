@@ -677,7 +677,7 @@ explicit recursive call in the body of its definition.
         {~}
         {a_1 : \A, a_2 : \A , a_{*} : \A^* \vdash \cons~a_1 (\cons~a_2~a_{*}) : \A^*}
       }
-      {a' : \A \otimes \A , a_{*} : \A^* \vdash g := \letin {a_1 \otimes a_2}
+      {a' : \A \otimes \A , a_{*} : \A^* \vdash g := \letin {(a_1 , a_2)}
         {a'} {\cons~a_1 (\cons~a_2~a_{*}) : \A^*}}
     }
     {\cdot \vdash f := \lamblto a {\lamblto {a_{*}} {\app {\app g a} {a_{*}} }} : (\A \otimes \A) \lto \A^* \lto \A^*}
@@ -837,16 +837,12 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
   \caption{Context well-formedness rules}
 \end{figure}
 
-\steven{TODO define general inductives as the least fixed point of strictly
-  positive endofunctors on $U$}
-
-\steven{TODO linear $\mu$ in the type formation rules? nonlinear $\mu$ in the
-  type formation rules?}
+\subsection{Non-linear Typing}
 
 \begin{figure}
   \begin{mathpar}
-    \footnotesize
-    \boxed{\ctxwffjdg \Gamma X}
+  \footnotesize
+    \boxed{\inferrule{\ctxwff\Gamma}{\ctxwffjdg \Gamma X}}
 
     \inferrule{~}{\ctxwffjdg \Gamma {U}}
 
@@ -856,7 +852,7 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
 
     \inferrule{~}{\ctxwffjdg \Gamma \bot}
 
-    % \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
+    \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
 
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\PiTyLimit {x}{X}{Y}}}
 
@@ -870,20 +866,75 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
 
     \\
 
-    \boxed{\ctxwffjdg \Gamma {X \equiv Y}}
+    \boxed{\inferrule{\ctxwffjdg\Gamma X \and \ctxwffjdg\Gamma Y}{\ctxwffjdg \Gamma {X \equiv Y}}}
 
     \inferrule{\nonlinterm \Gamma {X \equiv Y} {U}}{\ctxwffjdg \Gamma {X \equiv Y}}
 
     \inferrule{\linctxwffjdg \Gamma X}{\linctxwffjdg \Gamma {\unquoteTy
         {\quoteTy X} \equiv X}}
 
-    \boxed{\Gamma \vdash X \isSmall}
-
-    \inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash X \isSmall}
+    \boxed{\inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash X \isSmall}}
 
     \\
+    \boxed{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma M X}
 
-    \boxed{\linctxwffjdg \Gamma A}
+    \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\quoteTy X} U}
+
+    \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
+
+    \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
+
+    \inferrule{\nonlinterm \Gamma {M \equiv N} {X}}
+      {\nonlinterm \Gamma {refl} {M =_{X} N}}
+
+    \\
+    \boxed{\inferrule{\nonlinterm\Gamma M X \and \nonlinterm \Gamma N X}{\nonlinterm \Gamma {M \equiv N} X}}
+
+    \inferrule{\nonlinterm \Gamma P {M =_{X} N}}{\nonlinterm\Gamma{M \equiv N} X}
+  \end{mathpar}
+  \caption{Non-linear Formation and Typing Rules (selection)}
+  \label{fig:non-linear-types}
+\end{figure}
+
+We present a selection of the non-linear type constructions in
+\Cref{fig:non-linear-types} and provide the rest in
+\cref{fig:full-non-linear-types, fig:jdg-eq-nonlinear} of the appendix.  First,
+we include universe types $U$ of small non-linear types and $L$ of linear
+types. These are defined as
+universes ``ala Coquand'' in that we define a judgment saying when a
+non-linear type is small and define the universe to internalize
+precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. These universe
+types are needed so that we can define types by recursion on natural
+numbers. 
+Next, we include standard $\Sigma,\Pi$, empty, unit and natural number types.
+
+We use an \emph{extensional} equality type $M =_{X} N$ with introduction form
+$refl$, but no elimination form. Instead we have the equality reflection rule
+which allows us to conclude a definitional equality $M =_{X} N$ from an
+arbitrary typal equality proof $P$.  The usage of an extensional equality type
+matches our implementation, which interprets both judgmental and typal equality
+as Cubical Agda's \texttt{Path} type, and so naturally supports the equality
+reflection rule. Extensional equality makes type checking of our syntax as such
+undecidable because the conversion rule may require an arbitrarily complex
+equality proof with no explicit proof term, but in our Agda implementation we
+must provide all of these equalities manually, and so the extensionality does
+not raise any issues \cite{Hofmann_1997}.
+
+Lastly, we include a non-linear type $\ltonl A$ where $A$ is a linear type. The
+intuition for this type is that its elements are the linear terms that are
+``resource free'': its introduction rule says we can construct an $\ltonl A$
+when we have a linear term of type $A$ with no free linear
+variables. Semantically, this is the type of parses of the empty string. This
+type is used extensively in our examples, playing a similar role to the $!$
+modality of ordinary linear logic or the persistence modality $\square$ of
+separation logic \cite{girard_linear_1987,jung_higher-order_2016}.
+
+\subsection{Linear Typing}
+
+\begin{figure}
+  \begin{mathpar}
+    \footnotesize
+    \boxed{\inferrule{\ctxwff\Gamma}{\linctxwffjdg \Gamma A}}
 
     \inferrule{~}{\linctxwffjdg \Gamma I}
 
@@ -910,8 +961,7 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
     \inferrule{\nonlinterm \Gamma M L}{\linctxwffjdg \Gamma {\unquoteTy M}}
 
     \\
-
-    \boxed{\linctxwffjdg \Gamma {A \equiv B}}
+    \boxed{\inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg \Gamma {A \equiv B}}}
 
     \inferrule{\nonlinterm \Gamma {A \equiv B} L}{\linctxwffjdg
       \Gamma {A \equiv B}}
@@ -919,62 +969,12 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
     \inferrule{\linctxwffjdg \Gamma A}{\linctxwffjdg \Gamma {\unquoteTy
         {\quoteTy A} \equiv A}}
   \end{mathpar}
-  \caption{Type formation rules}
-  \label{fig:formation}
+  \caption{Linear Type Formers, Type Equivalence}
+  \label{fig:linear-formation}
 \end{figure}
 
-\begin{figure}
-  \begin{mathpar}
-  \footnotesize
-    \boxed{\nonlinterm \Gamma M X}
-
-    \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\quoteTy X} U}
-
-    \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
-
-    \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
-
-    \inferrule{\nonlinterm \Gamma {M \equiv N} {X}}
-      {\nonlinterm \Gamma {refl} {M =_{X} N}}
-  \end{mathpar}
-  \caption{Non-linear typing (selection)}
-  \label{fig:non-linear-types}
-\end{figure}
-
-\subsection{Non-linear Typing}
-The non-linear types of \theoryabbv include the standard dependent
-types for $\Pi$,$\Sigma$, extensional equality, unit and empty types, and
-inductive types that are defined strictly positively. We may also assume function
-extensionality\cite{Hofmann_1997}; Function
-extensionality is holds in Cubical Agda, and in our implementation we make heavy use of it of when
-validating that the denotational semantics respects the equational theory of
-\theoryabbv. However, it is not necessary to assume function extensionality for
-the non-linear types in \theoryabbv, as we don't utilize it in any of our constructions.
-
-We present a selection of
-the non-linear type constructions in
-\Cref{fig:non-linear-types} and provide the rest in
-\cref{fig:full-non-linear-types, fig:jdg-eq-nonlinear} of the appendix.
-First, we include universe types $U$ of
-small non-linear types and $L$ of linear types. These are defined as
-universes ``ala Coquand'' in that we define a judgment saying when a
-non-linear type is small and define the universe to internalize
-precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. These universe
-types are needed so that we can define types by recursion on natural
-numbers. As in \cite{krishnaswami_integrating_2015}, the extensional equality type
-$M =_{X} N$ used here has the introduction form $refl$, but no
-elimination due to the presence of equality reflection. Next, we include a non-linear type $\ltonl A$ where $A$ is a
-linear type. The intuition for this type is that its elements are the
-linear terms that are ``resource free'': its introduction rule says we
-can construct an $\ltonl A$ when we have a linear term of type $A$
-with no free linear variables. This type is used extensively in our
-examples, playing a similar role to the $!$ modality of ordinary
-linear logic or the persistence modality $\square$ of separation logic
-\cite{girard_linear_1987,jung_higher-order_2016}.
-
-\subsection{Linear Typing}
 We give the rules for linear type
-formation in \cref{fig:formation} and the definition of linear terms in
+formation in \cref{fig:linear-formation} and the definition of linear terms in
 \cref{fig:linear-terms}. The equational theory for these
 types is straightforward $\beta\eta$ equivalence and included in the
 appendix. First, the linear variable rule says that a linear variable
@@ -1056,12 +1056,11 @@ For any $A : (x : X) \to Y x \to L$, the function
 has an inverse.
 \end{axiom}
 
-\steven{I'm not sure if this is the proper way to cite the corollary, especially
-because the citation is a reference, not the originator of the idea}
-\begin{corollary}[\cite{Cockett_1993}]
+The following corollary is a well known consequence of distributivity \cite{Cockett_1993}.
+\begin{corollary}
   \label{cor:binary-mono}
-  Distributivity implies that the coprojections $\inl : A \to A \oplus B$,
-  $\inr : B \to A \oplus B$ of a binary sum are monomorphisms --- i.e. if
+  Distributivity implies that the constructors $\inl : A \to A \oplus B$,
+  $\inr : B \to A \oplus B$ of a binary sum are injective --- i.e. if
   $\inl\,a \equiv \inl\,a'$, then $a \equiv a'$.
 \end{corollary}
 
@@ -3372,11 +3371,12 @@ dependent commutative linear type theory of
 Wadler's linear-non-linear calculus \cite{bentonMixedLinearNonlinear1995}. A
 distinct feature of these systems is that linear types and non-linear types are
 distinct sorts, so the linear logic $!$ operator is not a primitive, but is
-instead definable. Vakar develops a dependent linear type theory where instead
-the non-linear types are accessed using the $!$ modality, similar to Girard's
-original approach \cite{vakar,girard_linear_1987}. Additionally, Vakar develops
-a general categorical semantics for their system, whereas we have only developed
-a single denotational model. It appears straightforward to adapt Vakar's general
+instead definable, for instance in \theoryabbv as $!A = \bigoplus_{\_:\ltonl A}
+I$. Vakar develops a dependent linear type theory where instead the non-linear
+types are accessed using the $!$ modality, similar to Girard's original approach
+\cite{vakar,girard_linear_1987}. Additionally, Vakar develops a general
+categorical semantics for their system, whereas we have only developed a single
+denotational model. It appears straightforward to adapt Vakar's general
 semantics approach to a non-commutative variant that would apply to
 \theoryabbv. This may have applications in finding alternative models, or
 developing logical relations proofs categorically.
@@ -3548,6 +3548,7 @@ In this section we include the elided syntactic forms, as well as
 definitions and basic properties of linear and non-linear
 substitution.
 
+\max{TODO: include the rest of the rules}
 \begin{figure}
   \begin{mathpar}
   \footnotesize
@@ -3594,6 +3595,7 @@ substitution.
     \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
 
     \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
+
   \end{mathpar}
   \caption{Non-linear Typing}
   \label{fig:full-non-linear-types}
