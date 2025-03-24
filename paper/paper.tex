@@ -807,7 +807,7 @@ instead add base types and axioms to the system specifically to model
 formal grammars and parsing.
 
 The formation rules for the judgments of \theoryabbv are shown in
-\Cref{fig:formation}. $\Gamma$ stands for non-linear contexts; $X,Y,Z$
+\Cref{fig:contexts,fig:non-linear-types,fig:linear-formation}. $\Gamma$ stands for non-linear contexts; $X,Y,Z$
 stand for non-linear types; $M,N$ stand for non-linear terms, these
 act as in an ordinary dependent type theory; $\Delta$ stands for
 linear contexts; $A,B,C$ for linear types; and, $e,f,g$ for linear
@@ -835,6 +835,7 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
       {\Gamma} {\Delta , a : A}}
   \end{mathpar}
   \caption{Context well-formedness rules}
+  \label{fig:contexts}
 \end{figure}
 
 \subsection{Non-linear Typing}
@@ -851,6 +852,8 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
     \inferrule{~}{\ctxwffjdg \Gamma 1}
 
     \inferrule{~}{\ctxwffjdg \Gamma \bot}
+
+    \inferrule{~}{\ctxwffjdg \Gamma {Bool}}
 
     \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
 
@@ -876,7 +879,7 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
     \boxed{\inferrule{\ctxwffjdg \Gamma X}{\Gamma \vdash X \isSmall}}
 
     \\
-    \boxed{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma M X}
+    \boxed{\inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma M X}}
 
     \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\quoteTy X} U}
 
@@ -906,7 +909,7 @@ non-linear type is small and define the universe to internalize
 precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. These universe
 types are needed so that we can define types by recursion on natural
 numbers. 
-Next, we include standard $\Sigma,\Pi$, empty, unit and natural number types.
+Next, we include standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number types.
 
 We use an \emph{extensional} equality type $M =_{X} N$ with introduction form
 $refl$, but no elimination form. Instead we have the equality reflection rule
@@ -1056,7 +1059,7 @@ For any $A : (x : X) \to Y x \to L$, the function
 has an inverse.
 \end{axiom}
 
-The following corollary is a well known consequence of distributivity \cite{Cockett_1993}.
+The following corollary is a well known consequence of distributivity \cite{Cockett_1993}, which we use in \cref{lem:unambig-to-disjoint} to prove that unambiguous binary sums have unambiguous summands.
 \begin{corollary}
   \label{cor:binary-mono}
   Distributivity implies that the constructors $\inl : A \to A \oplus B$,
@@ -3436,19 +3439,6 @@ disambiguation. Defining this algorithm in \theoryabbv would provide soundness
 by construction, but it is not obvious if the greediness property could be
 verified easily as well.
 
-\steven{
-  Is any of this detail useful here, or nah?
-
-  They
-  use their system in the design of a linear-time algorithm for greedy regular
-  expression matching. It is yet unclear if greediness can be encoded in
-  \theoryname; however, it appears that our approach in determinizing an NFA is
-  quite similar to their algorithm. The biggest difference being that our
-  approach uses a global disambiguation strategy while theirs is a local, greedy strategy.
-}
-
-\pedro{I think that it's fine not to include these details}
-
 We also aim to adapt the approach used for our context-free grammar parserss for
 $\LLL$ and $\LRR$/$\LALRR$ with the aim of developing a shared library of intrinsically
 verified parsing utilities that can be usefully shared across different
@@ -3564,16 +3554,32 @@ substitution.
 
     \inferrule
     {\nonlinterm \Gamma M \bot \and \ctxwffjdg \Gamma X}
-    {\nonlinterm \Gamma {()} {\bot}}
+    {\nonlinterm \Gamma {elim_{\bot,X}(M)} {X}}
 
-    % \inferrule{~}{\nonlinterm {\Gamma} {0} {Nat}}
+    \inferrule{~}{\nonlinterm \Gamma {true} {Bool}}
 
-    % \inferrule{\nonlinterm {\Gamma} {n} {Nat}}{\nonlinterm {\Gamma} {suc~n} {Nat}}
+    \inferrule{~}{\nonlinterm \Gamma {false} {Bool}}
 
-    % \inferrule{\ctxwffjdg {\Gamma , n : Nat} {X(n)} \and
-    %        \nonlinterm {\Gamma} {M_0} {X(0)} \and
-    %        \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}}
-    %       {\nonlinterm {\Gamma} {elim_{Nat}(X,M_0,M_{suc})(n)} {X(n)}}
+    \inferrule{\ctxwffjdg {\Gamma , b : Bool} {X(b)}}
+      {\nonlinterm
+        {\Gamma, x_0 : X(false), x_1 : X(true), b : Bool}
+        {if\,b\,then\,x_0\,else\,x_1}
+        {X(b)}
+      }
+
+    \\
+
+    \inferrule{~}{\nonlinterm {\Gamma} {0} {Nat}}
+
+    \inferrule{\nonlinterm {\Gamma} {n} {Nat}}{\nonlinterm {\Gamma} {suc~n} {Nat}}
+
+    \inferrule{\ctxwffjdg {\Gamma , n : Nat} {X(n)} \and
+           \nonlinterm {\Gamma} {M_0} {X(0)} \and
+           \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}}
+         {\nonlinterm
+           {\Gamma, n : Nat}
+           {elim_{Nat}(X,M_0,M_{suc})(n)}
+           {X(n)}}
 
     \inferrule{\nonlinterm \Gamma M X \and \nonlinterm \Gamma {N} {\subst Y {M}
         {x}}}{\nonlinterm {\Gamma} {(M , N)} {\SigTyLimit {x} {X} {Y}}}
@@ -3624,14 +3630,30 @@ substitution.
 
   \inferrule{\nonlinterm \Gamma {M} {\SigTy {x} {X} {Y}}}{\nonlineq \Gamma {(M.fst , M.snd)} {M} {\SigTyLimit{x}{X}{Y}}}
 
+  \inferrule{\ctxwffjdg {\Gamma , b : Bool} {X(b)}}
+        {\nonlineq
+        {\Gamma, x_0 : X(false), x_1 : X(true)}
+        {if\,false\,then\,x_0\,else\,x_1}
+        {x_0}
+        {X(false)}
+      }
+
+  \inferrule{\ctxwffjdg {\Gamma , b : Bool} {X(b)}}
+        {\nonlineq
+        {\Gamma, x_0 : X(false), x_1 : X(true)}
+        {if\,true\,then\,x_0\,else\,x_1}
+        {x_1}
+        {X(true)}
+      }
+
   \inferrule{\nonlinterm {\Gamma} {M_0} {X(0)} \and
       \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}}
       {\nonlineq {\Gamma} {elim_{Nat}(X,M_0,M_{suc})(0)} {M_0} {X(0)}}
 
   \inferrule{\nonlinterm {\Gamma} {M_0} {X(0)} \and
-      \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)} \and
-      \nonlinterm {\Gamma} {n} {Nat}}
-      {\nonlineq {\Gamma} {elim_{Nat}(X,M_0,M_{suc})(suc~n)} {M_{suc}(n ,
+      \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}
+    }
+      {\nonlineq {\Gamma, n : Nat} {elim_{Nat}(X,M_0,M_{suc})(suc~n)} {M_{suc}(n ,
           elim_{Nat}(X,M_0,M_{suc})(n))} {X(suc~n)}}
 
   \inferrule{\nonlinterm \Gamma M U}{\nonlineq \Gamma {\quoteTy {\unquoteTy {M}}}
