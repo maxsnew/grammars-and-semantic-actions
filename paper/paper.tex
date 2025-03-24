@@ -83,7 +83,7 @@ frame=single
 \newcommand{\fold}{\mathsf{fold}}
 \newcommand{\inl}{\mathsf{inl}}
 \newcommand{\inr}{\mathsf{inr}}
-\newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
+\newcommand{\sem}[1]{\left\llbracket{#1}\right\rrbracket}
 \newcommand{\semg}[1]{\sem{#1}\gamma}
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
@@ -157,13 +157,13 @@ frame=single
 \newcommand{\app}[2]{#1 \, #2}
 \newcommand{\applto}[2]{#1 \, #2}
 \newcommand{\apptol}[2]{#1 \mathop{{}^{\tol}} #2}
-\newcommand{\PiTy}[3]{\textstyle\prod (#1 : #2). #3}
-\newcommand{\SigTy}[3]{\textstyle\sum (#1 : #2). #3}
+\newcommand{\PiTy}[3]{\textstyle\prod_{#1 : #2} #3}
+\newcommand{\SigTy}[3]{\textstyle\sum_{#1 : #2} #3}
 \newcommand{\PiTyLimit}[3]{\textstyle\prod\limits_{#1 : #2} #3}
 \newcommand{\SigTyLimit}[3]{\textstyle\sum\limits_{#1 : #2} #3}
-\newcommand{\LinPiTy}[3]{\textstyle\bigamp (#1 : #2). #3}
+\newcommand{\LinPiTy}[3]{\textstyle\bigamp_{#1 : #2} #3}
 \newcommand{\LinPiTyLimit}[3]{\bigwith\limits_{#1 : #2} #3}
-\newcommand{\LinSigTy}[3]{\textstyle\bigoplus (#1 : #2). #3}
+\newcommand{\LinSigTy}[3]{\textstyle\bigoplus_{#1 : #2} #3}
 \newcommand{\LinSigTyLimit}[3]{\bigoplus\limits_{#1 : #2} #3}
 %% \newcommand{\DepWith}[2]{{\textstyle\bigamp}\limits_{#1}{#2}
 %% \newcommand{\DepPlus}[2]{{\textstyle\bigoplus}\limits_{#1}{#2}
@@ -402,10 +402,11 @@ results that are mechanized in our Agda development and provide a link to their
 implementation.
 
 Our Agda prototype is based on a \emph{denotational semantics} of
-\theoryabbv. The core idea of the denotational semantics is
-\cite{elliottSymbolicAutomaticDifferentiation2021}, Elliott describes
-a formal grammar as type-level predicates on strings that prove
-language membership. That is, a \emph{formal grammar} $A$ is a
+\theoryabbv. The core idea of the denotational semantics stems from an observation of Elliott:
+% The core idea of the denotational semantics is
+% \cite{elliottSymbolicAutomaticDifferentiation2021}, Elliott describes
+a formal grammar is a type-level predicate on strings that proves
+language membership \cite{elliottSymbolicAutomaticDifferentiation2021}. That is, a \emph{formal grammar} $A$ is a
 function $\StringSem \to \Set$ such that for a string $w$, $A~w$ is the
 set of ``proofs'' showing that $w$ belongs to the language recognized
 by $A$. We show that all linear types in \theoryabbv can be so
@@ -428,20 +429,20 @@ Our contributions are then:% \max{This contribution section needs to be punchier
   \item The design of \theoryname (\theoryabbv): A dependent
     linear-non-linear type theory for building verified parsers, which
     extends prior work on dependent linear-non-linear type theory to
-    support inductive linear types
-  \item Demonstration of how to encode many common grammar formalisms
+    support inductive linear types.
+  \item A demonstration of how to encode many common grammar formalisms
     (regular expressions, (non-)deterministic automata, context-free
     grammars) and parser formalisms within our type theory.
   \item A prototype implementation of \theoryabbv in Agda with all
     examples mechanized.
   \item A denotational semantics for \theoryabbv that shows that the
-    parsers are in fact verified to be correct and soundness of the
+    parsers are in fact verified to be correct, and the soundness of the
     equational theory.
 \end{itemize}
 
 This paper begins in \cref{sec:type-theory-examples} by studying small
 example programs from \theoryabbv to build intuition.  From there, in
-\cref{sec:tt} we provide the syntax, typing and equational theory of
+\cref{sec:tt} we provide the syntax, typing, and equational theory of
 \theoryname. In \cref{sec:applications} we demonstrate the
 applicability of \theoryabbv for relating familiar grammar and
 automata formalisms as well as building concrete parsers.  Then in
@@ -532,7 +533,6 @@ erroneous derivations,
 \[
   a : \literal a , b : \literal b \not \vdash a : \literal a \qquad a : \literal a , b : \literal b \not \vdash (a, a) : \literal a \otimes \literal a
 \]
-
 %
 Finally, the ordering of characters in a string cannot be ignored while
 parsing, so we omit the exchange rule because it would allow
@@ -557,7 +557,7 @@ parse of $\A^{*}$. This linear consumption is defined by the linear
 function type $\lto$. The linear function type $\A \lto \B$ defines functions that
 take in parses of $\A$ as input, \emph{consume} the input, and return a parse of
 $\B$ as output. The arrow, $\uparrow$, wrapping these
-constructors means that the constructors by themselves are not consumed
+constructors means that the constructors are not consumed
 upon usage, and so are \emph{non-linear} values themselves. That is, the
 names $\nil$ and $\cons$ are function symbols that may be reused as many times
 as we wish.
@@ -655,7 +655,7 @@ by the variable $a$. Thus, the term $\texttt{h}$ from
 \cref{fig:kleeneabstractproof} is not a parse of a string, and
 it is more
 appropriate to think of it as a parse \textit{transformer} --- a function from
-parses of $(\A \otimes \A)^{*}$ to parse of $\A^{*}$.
+parses of $(\A \otimes \A)^{*}$ to parses of $\A^{*}$.
 
 We define $\texttt{h}$ by recursion on terms of type $(\A \otimes \A)^{*}$.
 This recursion is expressed in the derivation tree by invoking the
@@ -665,6 +665,7 @@ of \cref{fig:kleeneabstractproof} by pattern matching on the input and making an
 explicit recursive call in the body of its definition.
 
 \begin{figure}
+\footnotesize
 \begin{mathpar}
   \inferrule
   {
@@ -678,14 +679,15 @@ explicit recursive call in the body of its definition.
       {
         \inferrule
         {~}
-        {a_1 : \A, a_2 : \A , a_{*} : \A^* \vdash \cons~a_1 (\cons~a_2~a_{*}) : \A^*}
+        {a_1 : \A, a_2 : \A , as : \A^* \vdash \cons~a_1 (\cons~a_2~as) : \A^*}
       }
-      {a' : \A \otimes \A , a_{*} : \A^* \vdash g := \letin {(a_1 , a_2)}
-        {a'} {\cons~a_1 (\cons~a_2~a_{*}) : \A^*}}
+      {aa : \A \otimes \A , as : \A^* \vdash \letin {(a_1 , a_2)}
+        {aa} {\cons~a_1 (\cons~a_2~as)} : \A^*}
     }
-    {\cdot \vdash f := \lamblto a {\lamblto {a_{*}} {\app {\app g a} {a_{*}} }} : (\A \otimes \A) \lto \A^* \lto \A^*}
+    {\cdot \vdash f := \lamblto {aa} {\lamblto {as} {\letin {(a_1 , a_2)}
+        {aa} {\cons~a_1 (\cons~a_2~as)}}} : (\A \otimes \A) \lto \A^* \lto \A^*}
   }
-  {a : (\A \otimes \A)^* \vdash \texttt{h} := \fold(\nil , f)(a) : \A^* }
+  {aas : (\A \otimes \A)^* \vdash \texttt{h} := \fold(\nil , f)(aas) : \A^* }
 \end{mathpar}
 \begin{lstlisting}
 h : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
@@ -791,7 +793,7 @@ k (a , b) = 0to1 (1to1 a (1to2 b stop))
 
 The design of \theoryabbv is based on the dependent
 linear-non-linear calculus (\lnld) and Lambek calculus, also known as
-non-commutative linear logic.
+non-commutative linear logic
 \cite{krishnaswami_integrating_2015,lambek58}. As in \lnld,
 \theoryabbv includes both non-linear dependent types, as well as
 linear types, which are allowed to depend on the non-linear types, but
@@ -904,7 +906,7 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
 
 We present a selection of the non-linear type constructions in
 \Cref{fig:non-linear-types} and provide the rest in
-\cref{fig:full-non-linear-types, fig:jdg-eq-nonlinear} of the appendix.  First,
+\cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of the appendix.  First,
 we include universe types $U$ of small non-linear types and $L$ of linear
 types. These are defined as
 universes ``ala Coquand'' in that we define a judgment saying when a
@@ -1053,12 +1055,10 @@ over additive disjunction --- e.g., in the finitary case that $0 \& A
 \begin{axiom}[Distributivity]
 \label{ax:dist}
 For any $A : (x : X) \to Y x \to L$, the function
-
 \[
- \lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}} : \ltonl {\left(  \LinSigTyLimit{f}{\prod\limits_{x : X} . Y (x)}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
+ \lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}} : \ltonl {\left(  \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
 \LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}} \right)}
 \]
-
 has an inverse.
 \end{axiom}
 
@@ -1073,13 +1073,13 @@ The following corollary is a well known consequence of distributivity \cite{Cock
 Our primary use of distributivity is to define an equivalence that
 expresses a linear type $A$ as a sum over which character it starts with, if any,
 \(
-A \cong \left(A \& I \right) \oplus \LinSigTyLimit{c}{\Sigma_0}{\left( A \& \left( \literal{c} \otimes \top \right) \right)}
+A \cong \left(A \& I \right) \oplus \LinSigTy{c}{\Sigma_0}{\left( A \& \left( \literal{c} \otimes \top \right) \right)}
 \). We use this equivalence when building a parser for the traces of the lookahead
 automaton in \cref{fig:binop-inductive}.
 
 Second, we need that the different constructors of
 $\bigoplus$ are disjoint. That is, we want to enforce that $\sigma~x~a$ and
-$\sigma~x'~a'$ of type $\LinSigTyLimit{x}{X}{A\,x}$ are not equal whenever $x \neq x'$.
+$\sigma~x'~a'$ of type $\LinSigTy{x}{X}{A\,x}$ are not equal whenever $x \neq x'$.
 However, because these are linear terms we cannot state their disequality
 directly. Instead, we encode the disequality via a function out of an equalizer,
 
@@ -1216,12 +1216,12 @@ constructors.
 
     \inferrule*[right=Ind$\beta$]
     {\Gamma \vdash f : \prod_{x:X}\ltonl{(\el(F\,x)(A) \lto A\,x)} \and \Gamma; \Delta \vdash e : \el(F\,x)(\mu\,F)}
-    {\Gamma;\Delta \vdash \fold\,F\,f\,x\,(\roll e) \equiv f\,x\,(\map(F\,x)\,(\fold\,F\,f)) : A\,x}
+    {\Gamma;\Delta \vdash \fold\,F\,f\,x\,(\roll\,e) \equiv f\,x\,(\map(F\,x)\,(\fold\,F\,f)) : A\,x}
 
     \inferrule*[right=Ind$\eta$]
     {\Gamma \vdash f : \prod_{x:X}\ltonl{(\el(F\,x)(A) \lto A\,x)}
      \and \Gamma \vdash e : \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}\\\\
-      \Gamma,x:X;a:\el(F\,x)(\mu F) \vdash e\,x\,(\roll a) \equiv f\,x\,(\map(F\,x)\,e) : A\,x }
+      \Gamma,x:X;a:\el(F\,x)(\mu F) \vdash e\,x\,(\roll\,a) \equiv f\,x\,(\map(F\,x)\,e) : A\,x }
     {\fold\,F\,f\equiv e' : \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}}
   \end{mathpar}
   \end{footnotesize}
@@ -1848,7 +1848,6 @@ inductive hypothesis and build a parse transformer
 \[
   \DtoN : \ltonl {\left( \Trace_{\D}~\X~\true \lto \bigoplus\limits_{s : \N.\states}\bigoplus\limits_{\texttt{sInX} : \X \ni \s} \Trace_{\N}~s~\true \right)}
 \]
-
 Because the states of $D$ are $\epsilon$-closed subsets of $N.\states$, if two
 states $s$ and $s'$ belong to the the same $\epsilon$-closed subset
 $X : \mathbb{P}_{\epsilon}(N.\states)$ then there exists a $\epsilon$-path in
@@ -2188,11 +2187,9 @@ With \cref{ax:dist}, it is straightforward to implement a parser for this lookah
 generalizing the approach for deterministic automata. Without access to
 distributivity, we may define a rudimentary lookahead operation via the chain of
 equivalences,
-
 \[
   A~n~b \cong (A~n~b) \& \top \cong (A~n~b)\,\& \left(\left(\literal{)} \otimes \top \right) \oplus \texttt{NotStartsWithRP}\right)
 \]
-
 When defining a parser, if the lookahead character is a right paren we would
 like to apply $\texttt{lookAheadRP}$; otherwise, apply $\texttt{lookAheadNot}$.
 However, without distributivity we have no means of relating the bit of
@@ -2290,7 +2287,7 @@ The most common definition of a formal grammar is as generative
 grammars, defined by a set of non-terminals, a specified start symbol
 and set of production rules. We instead use a more abstract
 formulation that is closer in spirit to the standard definition of a
-formal \emph{language}\cite{elliottSymbolicAutomaticDifferentiation2021}:
+formal \emph{language} \cite{elliottSymbolicAutomaticDifferentiation2021}:
 \begin{definition}
   A \emph{formal language} $L$ is a function from strings to propositions.
   A (small) \emph{formal grammar} $A$ is a function from strings to (small) sets.
@@ -2453,14 +2450,14 @@ small grammars.
     &\sem{A \otimes B}\gamma\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
     &\sem{A \lto B}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,ww'\\
     &\sem{B \tol A}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'w\\
-    &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}\\
-    &\sem{\bigwith_{x:X} A}\gamma\,w = \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w
+    &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}
   \end{flalign*}
   \end{footnotesize}
   \end{minipage}%
   \begin{minipage}[t]{.5\textwidth}
   \begin{footnotesize}
     \begin{flalign*}
+    &\sem{\bigwith_{x:X} A}\gamma\,w = \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w \\
     &\sem{\uparrow A}\gamma = \sem{A}\gamma\,\varepsilon\\
     &\sem{\equalizer{a}{f}{g}}\gamma\,w = \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
     &\sem{L}\gamma = \Grammar_0\\
@@ -2474,7 +2471,6 @@ small grammars.
   \caption{Grammar Semantics}
   \label{fig:semantics}
 \end{figure}
-
 The most complex part of the semantics is the interpretation of
 strictly positive functors and indexed inductive linear types.  We
 interpret a strictly positive functor as a \emph{dependent polynomial
@@ -2533,7 +2529,7 @@ monoidal categories, and is included in the appendix\cite{seely89}.
 
 This denotational semantics in grammars and parse transformers serves
 as the basis for our prototype implementation of \theoryabbv in
-cubical Agda. The implementation is a shallow embedding, meaning that
+Cubical Agda. The implementation is a shallow embedding, meaning that
 rather than formalizing a syntax of \theoryabbv types and terms, we
 work directly with Agda types and a definition of a formal grammar as
 a function $\StringSem \to \Set$. Then we implement each of the type and
@@ -3370,17 +3366,15 @@ Elliott \cite{elliottSymbolicAutomaticDifferentiation2021} uses essentially the 
 %% treatment and allowing the ``order structure'' to encode more
 %% information than merely inequalities, we were able to extend Kleene
 %% algebra to reason about parsing as well.
-
 \paragraph{Dependent Linear Types}
-
 Our syntax for non-commutative dependent linear type theory is based on the
 dependent commutative linear type theory of
 \citet{krishnaswami_integrating_2015}, itself an extension of Benton and
 Wadler's linear-non-linear calculus \cite{bentonMixedLinearNonlinear1995}. A
 distinct feature of these systems is that linear types and non-linear types are
 distinct sorts, so the linear logic $!$ operator is not a primitive, but is
-instead definable, for instance in \theoryabbv as $!A = \bigoplus_{\_:\ltonl A}
-I$. V\'ak\'ar develops a dependent linear type theory where instead the non-linear
+instead definable, for instance in \theoryabbv as $!A = \LinSigTy{\_}{\ltonl A}{I}$.
+V\'ak\'ar develops a dependent linear type theory where instead the non-linear
 types are accessed using the $!$ modality, similar to Girard's original approach
 \cite{vakar,girard_linear_1987}. Additionally, V\'ak\'ar develops a general
 categorical semantics for their system, whereas we have only developed a single
@@ -3428,14 +3422,12 @@ parsers. This could be implemented by modifying an existing separation
 logic implementation or embedding the logic within \theoryabbv.
 
 \subsection{Future Work}
-
 In this work we have demonstrated feasibility of \theoryabbv for the
 verification of formal grammar theory and sound-by-construction parsers. In
 future work, we aim to extend \theoryabbv to be a practical tool for developing
 verified parsing components of larger verified software systems.
 
 \paragraph{Verified Parser Generators}
-
 We aim to extend our work on parsing to verify other algorithms. For instance,
 our regular expression parser makes somewhat arbitrary choices in what parse to
 produce when the grammar is ambiguous. In the future we aim to verify Frisch and
@@ -3445,7 +3437,7 @@ by construction, but it is not obvious if the greediness property could be
 verified easily as well.
 
 We also aim to adapt the approach used for our context-free grammar parsers for
-$\LLL$ and $\LRR$/$\LALRR$ with the aim of developing a shared library of intrinsically
+$\LLL$ and $\LRR$/$\LALRR$ parsers, with the aim of developing a shared library of intrinsically
 verified parsing utilities that can be usefully shared across different
 parsers. We would also like to investigate how high-performance verified parsers
 can be implemented in \theoryabbv. This might be done by developing an efficient
@@ -3460,7 +3452,7 @@ combined with a \emph{semantic action} that emits an \emph{abstract} syntax tree
 that omits superfluous syntactic details that are unneeded in later stages of
 the overall program. We can define a semantic action in \theoryabbv for a linear
 type $A$ with semantic outputs in a non-linear type $X$ to be a function $\ltonl
-{(A \lto \bigoplus_{\_:X} \top)}$. That is, a semantic action is a function that
+{(A \lto \LinSigTy{\_}{X}{\top})}$. That is, a semantic action is a function that
 produces a semantic element of $X$ from the concrete parses of $A$. In future
 work, we aim to study the question of verifying efficient implementations of
 parsers with semantic actions, and integrating them into larger verified
@@ -3991,7 +3983,6 @@ Note that the denotation of a singleton context $a : A$ is given as
 \[
   \semg{a : A} = \semg{\cdot , a : A} = I \otimes \semg{A}
 \]
-
 So for $a: A \vdash a : A$, the denotation of a single variable term
 $\semg{a} : \semg{a : A} \to \semg{A}$ is given by the left unitor
 \[
@@ -4121,7 +4112,6 @@ The desired $\beta$ equality for $\otimes$ is,
 \[
   \semg{\letin {(a,b)} {(a',b')} {f}} = \semg{f[a'/a,b'/b]}
 \]
-
 \begin{proof}
 The left hand side reduces as follows,
 \begin{align*}
@@ -4144,7 +4134,6 @@ The desired $\eta$ equality for $\otimes$ is,
 \[
   \semg{\letin {(a,b)} {c'} {f[(a,b)/c]}} = \semg{f[c'/c]}
 \]
-
 \begin{proof}
 \begin{align*}
   \semg{\letin {(a,b)} {c'} {f[(a,b)/c]}}
@@ -4168,11 +4157,9 @@ $\semg{\lamblto a e} : \semg{\Delta} \to \semg{A \lto B}$ is defined using the
 natural isomorphism
 $\phi : Hom(\semg{\Delta} \otimes \semg{A}, \semg{B}) \to Hom(\semg{\Delta}, \semg{A \lto B})$
 that is provided by the adjunction between $\semg{- \otimes A}$ and $\semg{A \lto -}$.
-
 \[
 \semg{\lamblto a e} = \phi\left( \semg{e} \right)
 \]
-
 \paragraph{$\lto$-Elimination}
 $\semg{\applto {e'} {e}} : \semg{\Delta,\Delta'} \to \semg{B}$ is defined by the
 diagram,
@@ -4214,7 +4201,6 @@ The $\eta$ rule for $\lto$ is given by,
 \[
   \semg{\lamblto {a} {\applto e a}} = \semg{e}
 \]
-
 \begin{proof}
 \begin{align*}
   \semg{\lamblto {a} {\applto e a}}
@@ -4450,11 +4436,9 @@ $\semg{\equalizerin{e}}$ to be this map.
 \paragraph{Equalizer Elimination}
 $\semg{\equalizerpi e} : \semg{\Delta} \to \semg{A}$ is defined using the map
 $\pi_{eq}$ from $Eq(\semg{f} , \semg{g})$ to the domain of $f$ and $g$.
-
 \[
   \semg{\equalizerpi e} = \pi_{eq} \circ \semg{e}
 \]
-
 \paragraph{Equalizer $\beta$}
 The $\beta$ rule for $\equalizer e f g$ is given as,
 \[
@@ -4515,7 +4499,6 @@ assumed.
 \begin{proof}
   Distributivity is true in the denotational semantics, as the category $\Grammar$ is a topos, which are well-known to be distributive.
   The following map forms the desired inverse,
-
   \[
     \lamb {\gamma} {\lamb {w} {\lamb {p} {(\lamb {\left( \lamb {x} {(p~x).fst} \right)} , \lamb {x} {(p~x).snd})}}}
   \]

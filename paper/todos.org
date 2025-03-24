@@ -12,9 +12,6 @@
 *** its a nullary sum, don't need to
 ** DONE Update Fig. 6 to more clearly delineate the well-formedness judgements.
 *** DONE caption, formation rule of what?
-** TODO swap out nats for general inductives
-** TODO nonlinear inductives in formation figure
-** TODO linear inductives in formation figure
 ** HOLD Move Fig. 9 to appendix or to be near the other denotational semantics discussion in 5.2.
 *** I don't think I actually want to do this
 * Terminology
@@ -43,8 +40,8 @@
 * Turing Machine
 ** DONE don't be too classical
 * Implementation
-** TODO Clarify early on that the code presented is pseudocode that differs from the current implementation.
-** TODO Please provide additional details of the embedding in Agda and an example of the combinator-style representation (or pointers to appropriate examples in the development).
+** HOLD Clarify early on that the code presented is pseudocode that differs from the current implementation.
+** DONE Please provide additional details of the embedding in Agda and an example of the combinator-style representation (or pointers to appropriate examples in the development).
 *** Need to look up how to link. I guess the artifact isn't exactly the right thing to link to, because it is just a docker image
 *** Add placeholder links that will point to the implementation
 **** Because the artifact is a docker image, maybe this hsould point to our git repository? Need to check
@@ -60,4 +57,6 @@
 ** TODO go over syntax in all figures
 ** TODO inconsistent usage \mathsf, \textrm, and \texttt for constructors/etc
 * Visual
-** TODO Grammar semantics figure "\SPF" had to change to "SPF". Standardize this throughout
+** DONE Grammar semantics figure "\SPF" had to change to "SPF". Standardize this throughout
+*** This is fine because "\SPF" and "SPF" share the same font now
+*** because of some weird minipage issue, I can't use "\SPF" in Figure 16 without "SPF" converting to capital greek letters
