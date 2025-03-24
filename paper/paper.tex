@@ -759,7 +759,7 @@ k (a , b) = 0to1 (1to1 a (1to2 b stop))
 \end{lstlisting}
   \end{minipage}%
   \begin{minipage}[t]{.4\textwidth}
-  \vspace{0pt}
+  \vspace{8pt}
   \hspace{10pt}
   \begin{tikzpicture}[node distance = 25mm ]
     \node[state, initial] (0) {$\0$};
@@ -1745,9 +1745,8 @@ We prove this is a retraction by induction on traces.
 \begin{lstlisting}
 parse(*@$_D$@*) : (*@$\uparrow$@*)(String (*@$\lto$@*) &[ s : D.states ] (*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\D}$@*) s b)
 parse(*@$_D$@*) String.nil s = (*@$\sigma$@*) (D.isAcc s) (Trace(*@$_{\D}$@*).nil s)
-parse(*@$_D$@*) (String.cons ((*@$\sigma$@*) c a) w) s =
-   let (*@$\sigma$@*) b t = parse w (D.(*@$\delta$@*) c s) in
-   (*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c s b a t)
+parse(*@$_D$@*) (String.cons ((*@$\sigma$@*) c a) w) s = let (*@$\sigma$@*) b t = parse w (D.(*@$\delta$@*) c s) in
+                                   (*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c s b a t)
 
 print(*@$_D$@*) : (s : D.states) (*@$\to$@*) (*@$\uparrow$@*)(((*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\D}$@*) s b) (*@$\lto$@*) String)
 print(*@$_D$@*) s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).nil .s)) = String.nil
