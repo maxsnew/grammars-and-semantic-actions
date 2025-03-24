@@ -1614,7 +1614,7 @@ NFA $N(A)$ and a corresponding DFA $D(A)$ such that $A$ is strongly
 equivalent to the traces of $N(A)$ and weakly equivalent to the
 accepting traces of $D(A)$. Then we can easily construct a parser for
 traces of $D(A)$ and combine this using \Cref{lem:wk-eqv-parse} to get
-a verified regex parser.
+a verified regular expression parser.
 
 A regular expression in \theoryabbv is a linear type constructed
 using only the connectives $\literal c$, $0$, $\oplus$, $I$,
@@ -1652,7 +1652,7 @@ NFA $\N$. $\Trace_{\N}$ is an inductive type indexed by the starting
 state of the trace $\s : \N.\states$. Traces in $\N$ may be built
 through one of three constructors. We may terminate a trace at an
 accepting state with the constructor $\nil$. Here we use an Agda-style
-unicode syntax for $\bigamp$, as well as using the function arrow to
+Unicode syntax for $\bigamp$, as well as using the function arrow to
 mean a non-dependent version of $\bigamp$. If we had a trace beginning
 at the destination state of a transition, then we may use the $\cons$
 constructor to linearly combine that trace with a parse of the label
@@ -1985,7 +1985,7 @@ We use a variant of Thompson's construction
 %%   & \equiv cons~t~true~c~tr \\
 %% \end{align*}
 
-%% The first two equalities are by defintion. The third equality holds because
+%% The first two equalities are by definition. The third equality holds because
 %% $\literal c$ is unambiguous and
 %% $let~a~\otimes~()~=~c~\otimes~fromN_{c}~1~tr~in~a$ and $c$ have type
 %% $\literal c$. The final equality holds because our inductive hypothesis states
@@ -2070,7 +2070,7 @@ We use a variant of Thompson's construction
 \end{corollary}
 \begin{proof}
 We combine the strong equivalence of \cref{cons:thompson} with the weak
-equivalance of \cref{cons:determinization} to show that $\R$ is weakly
+equivalence of \cref{cons:determinization} to show that $\R$ is weakly
 equivalent to the traces of its determinized automaton. Then, we use
 \cref{lem:wk-eqv-parse} to extend the parser from \cref{thm:dfa-parser}
 with respect to this weak equivalence.
@@ -2167,7 +2167,7 @@ traces of an automaton with one token of lookahead. The automaton\footnote{In
   \).
 } has
 four different ``states'', each with access to a natural number
-``stack''. The ``opening'' state $O$ expects either an left paren, in
+``stack''. The ``opening'' state $O$ expects either a left paren, in
 which case it increments the stack and stays in the opening state, or
 sees a number and proceeds to the $D$ state. The ``done opening''
 state $D$ is where lookahead is used: if the next token will be a
@@ -3445,7 +3445,7 @@ disambiguation. Defining this algorithm in \theoryabbv would provide soundness
 by construction, but it is not obvious if the greediness property could be
 verified easily as well.
 
-We also aim to adapt the approach used for our context-free grammar parserss for
+We also aim to adapt the approach used for our context-free grammar parsers for
 $\LLL$ and $\LRR$/$\LALRR$ with the aim of developing a shared library of intrinsically
 verified parsing utilities that can be usefully shared across different
 parsers. We would also like to investigate how high-performance verified parsers
@@ -4505,7 +4505,7 @@ The $\eta$ rule for $\equalizer e f g$ is given as,
 
 
 \subsection{Grammar Semantics Respects Additional Axioms}
-We verify that the denotational semantics verfies each of the axioms we have
+We verify that the denotational semantics validates each of the axioms we have
 assumed.
 
 \paragraph{\cref{ax:dist}} Distributivity
