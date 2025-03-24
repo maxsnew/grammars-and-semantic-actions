@@ -858,8 +858,6 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
 
     \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
 
-    \inferrule{\ctxwffjdg \Gamma X}{\ctxwffjdg \Gamma {\listTy{X}}}
-
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\PiTyLimit {x}{X}{Y}}}
 
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\SigTyLimit {x}{X}{Y}}}
@@ -1106,7 +1104,10 @@ unambiguous sums have disjoint summands.
 \begin{figure}
   \footnotesize
   \begin{mathpar}
-    \boxed{\linterm \Gamma \Delta {e} {A}}
+    \boxed{
+      \inferrule
+      {\linctxwff \Gamma \Delta \and \linctxwffjdg \Gamma \A}
+      {\linterm \Gamma \Delta {e} {A}}}
 
     \inferrule{~}{\Gamma ; a : A \vdash a : A}
     \and
@@ -3549,7 +3550,7 @@ substitution.
 \begin{figure}
   \begin{mathpar}
   \footnotesize
-    \boxed{\nonlinterm \Gamma M X}
+    \boxed{\inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma M X}}
 
     \inferrule{~}{\nonlinterm {\Gamma , x : X , \Gamma'} {x} {X}}
 
@@ -3559,18 +3560,23 @@ substitution.
 
     \inferrule
     {\nonlinterm \Gamma M \bot \and \ctxwffjdg \Gamma X}
-    {\nonlinterm \Gamma {elim_{\bot,X}(M)} {X}}
+    {\nonlinterm \Gamma {elim_{\bot}(X, M)} {X}}
 
     \inferrule{~}{\nonlinterm \Gamma {true} {Bool}}
 
     \inferrule{~}{\nonlinterm \Gamma {false} {Bool}}
 
-    \inferrule{\ctxwffjdg {\Gamma , b : Bool} {X(b)}}
-      {\nonlinterm
-        {\Gamma, x_0 : X(false), x_1 : X(true), b : Bool}
-        {if\,b\,then\,x_0\,else\,x_1}
+    \inferrule
+    {
+      \ctxwffjdg {\Gamma , b : Bool} {X(b)} \and
+      \nonlinterm \Gamma {M_{0}} {X(false)} \and
+      \nonlinterm \Gamma {M_{1}} {X(true)}
+    }
+    {\nonlinterm
+        {\Gamma, b : Bool}
+        {elim_{Bool}(X, M_0, M_1)(b)}
         {X(b)}
-      }
+    }
 
     \\
 
@@ -3585,32 +3591,6 @@ substitution.
            {\Gamma, n : Nat}
            {elim_{Nat}(X,M_0,M_{suc})(n)}
            {X(n)}}
-
-    \\
-
-    \inferrule{~}{\nonlinterm \Gamma {nil} {\listTy{X}}}
-
-    \inferrule
-    { \nonlinterm \Gamma {x} {X}
-      \and
-      \nonlinterm \Gamma {M} {\listTy{X}}}
-    {\nonlinterm \Gamma {cons(x,M)} {\listTy{X}}}
-
-    \inferrule
-    {
-      \ctxwffjdg {\Gamma, xs : \listTy{X}} {Y(xs)} \and
-      \nonlinterm {\Gamma} {M} {Y (nil)} \and
-      \nonlinterm {\Gamma} {N}
-      {\PiTyLimit {x} {X}
-        {\PiTyLimit {xs} {\listTy{X}}
-          {\PiTyLimit {ys} {Y(xs)} {Y(cons(x,xs))}}}}
-    }
-    {
-      \nonlinterm
-      {\Gamma, xs : \listTy{X}}
-      {fold(M,N)(xs)}
-      {Y(xs)}
-    }
 
     \\
 
@@ -3644,11 +3624,15 @@ substitution.
 
 \begin{figure}
   \begin{mathpar}
-  \boxed{\nonlinterm \Gamma {M \equiv N} {X}}
+    \boxed{
+      \inferrule
+      {\nonlinterm \Gamma M X \and
+       \nonlinterm \Gamma N X}
+      {\nonlinterm \Gamma {M \equiv N} {X}}}
 
   \inferrule{\nonlinterm \Gamma M 1 \and \nonlinterm \Gamma N 1}{\nonlineq \Gamma M N 1}
 
-  \inferrule{\nonlinterm \Gamma M \bot \and \nonlinterm \Gamma N \bot}{\nonlineq \Gamma M N \bot}
+  % \inferrule{\nonlinterm \Gamma M \bot \and \nonlinterm \Gamma N \bot}{\nonlineq \Gamma M N \bot}
 
   \inferrule{\nonlinterm {\Gamma , x : X} {M} {Y} \and \nonlinterm {\Gamma} {N} {X}}{\nonlineq \Gamma {\left(\lamb {x} {M} \right)~N} {\subst M {N}
       {x}} {X}}
@@ -3663,21 +3647,30 @@ substitution.
 
   \inferrule{\nonlinterm \Gamma {M} {\SigTy {x} {X} {Y}}}{\nonlineq \Gamma {(M.fst , M.snd)} {M} {\SigTyLimit{x}{X}{Y}}}
 
-  \inferrule{\ctxwffjdg {\Gamma , b : Bool} {X(b)}}
-        {\nonlineq
-        {\Gamma, x_0 : X(false), x_1 : X(true)}
-        {if\,false\,then\,x_0\,else\,x_1}
-        {x_0}
-        {X(false)}
-      }
 
-  \inferrule{\ctxwffjdg {\Gamma , b : Bool} {X(b)}}
-        {\nonlineq
-        {\Gamma, x_0 : X(false), x_1 : X(true)}
-        {if\,true\,then\,x_0\,else\,x_1}
-        {x_1}
-        {X(true)}
-      }
+  \inferrule
+  {
+    \nonlinterm \Gamma {M_{0}} {X(false)} \and
+    \nonlinterm \Gamma {M_{1}} {X(true)}
+  }
+  {\nonlineq
+      {\Gamma}
+      {elim_{Bool}(X, M_0,M_1)(false)}
+      {M_0}
+      {X(b)}
+  }
+
+  \inferrule
+  {
+    \nonlinterm \Gamma {M_{0}} {X(false)} \and
+    \nonlinterm \Gamma {M_{1}} {X(true)}
+  }
+  {\nonlineq
+      {\Gamma}
+      {elim_{Bool}(X, M_0,M_1)(true)}
+      {M_1}
+      {X(b)}
+  }
 
   \inferrule{\nonlinterm {\Gamma} {M_0} {X(0)} \and
       \nonlinterm {\Gamma, n : Nat, x : X(n)} {M_{suc}(n , x)} {X(suc~n)}}
@@ -3688,38 +3681,6 @@ substitution.
     }
       {\nonlineq {\Gamma, n : Nat} {elim_{Nat}(X,M_0,M_{suc})(suc~n)} {M_{suc}(n ,
           elim_{Nat}(X,M_0,M_{suc})(n))} {X(suc~n)}}
-
-  \inferrule
-    {
-      \nonlinterm {\Gamma} {M} {Y (nil)} \and
-      \nonlinterm {\Gamma} {N}
-      {\PiTyLimit {x} {X}
-        {\PiTyLimit {xs} {\listTy{X}}
-          {\PiTyLimit {ys} {Y(xs)} {Y(cons(x,xs))}}}}
-    }
-    {
-      \nonlineq
-      {\Gamma}
-      {fold(M,N)(nil)}
-      {y_{nil}}
-      {Y(nil)}
-    }
-
-  \inferrule
-    {
-      \nonlinterm {\Gamma} {M} {Y (nil)} \and
-      \nonlinterm {\Gamma} {N}
-      {\PiTyLimit {x} {X}
-        {\PiTyLimit {xs} {\listTy{X}}
-          {\PiTyLimit {ys} {Y(xs)} {Y(cons(x,xs))}}}}
-    }
-    {
-      \nonlineq
-      {\Gamma, x : X, xs : \listTy{X}}
-      {fold(M,N)(cons(x , xs))}
-      {N(x)(xs)(fold(M,N)(xs))}
-      {Y(cons(x , xs))}
-    }
 
   \inferrule{\nonlinterm \Gamma M U}{\nonlineq \Gamma {\quoteTy {\unquoteTy {M}}}
   {M} {U}}
@@ -3733,7 +3694,11 @@ substitution.
 
 \begin{figure}
   \begin{mathpar}
-    \boxed{\Gamma ; \Delta \vdash e \equiv e' : A}
+    \boxed{
+      \inferrule
+      {\linterm \Gamma \Delta e A \and
+       \linterm \Gamma \Delta e' A}
+      {\Gamma ; \Delta \vdash e \equiv e' : A}}
 
     % \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
 %
