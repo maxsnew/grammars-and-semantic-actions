@@ -90,7 +90,7 @@ frame=single
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
 \newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
-\newcommand{\StringSem}{\textbf{String}}
+\newcommand{\StringSem}{\mathbf{String}}
 \newcommand{\CharGram}{\texttt{Char}}
 \newcommand{\StringGram}{\texttt{String}}
 \newcommand{\Set}{\mathbf{Set}}
@@ -142,6 +142,7 @@ frame=single
 \newcommand{\literal}[1]{\texttt{\textquotesingle#1\textquotesingle}}
 \newcommand{\stringquote}[1]{\texttt{\textquotedbl#1\textquotedbl}}
 \newcommand{\internalize}[1]{\lceil#1\rceil}
+\newcommand{\listTy}[1]{List\left( #1 \right)}
 
 \newcommand{\oplusinj}[2]{\sigma\,#1\,#2}
 \newcommand{\withprj}[2]{\pi\,#1\,#2}
@@ -199,7 +200,7 @@ frame=single
   \usebox{\logoagdabox}}%
 
 \newif\ifdraft
-\drafttrue
+\draftfalse
 \newcommand{\steven}[1]{\ifdraft{\color{orange}[{\bf Steven says}: #1]}\fi}
 \renewcommand{\max}[1]{\ifdraft{\color{blue}[{\bf Max says}: #1]}\fi}
 \newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro says}: #1]}\fi}
@@ -856,6 +857,8 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
     \inferrule{~}{\ctxwffjdg \Gamma {Bool}}
 
     \inferrule{~}{\ctxwffjdg \Gamma {Nat}}
+
+    \inferrule{\ctxwffjdg \Gamma X}{\ctxwffjdg \Gamma {\listTy{X}}}
 
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\PiTyLimit {x}{X}{Y}}}
 
@@ -3541,6 +3544,8 @@ definitions and basic properties of linear and non-linear
 substitution.
 
 \max{TODO: include the rest of the rules}
+\steven{I added rules for Bool, Nat, and List. What else do we need?}
+
 \begin{figure}
   \begin{mathpar}
   \footnotesize
@@ -3580,6 +3585,34 @@ substitution.
            {\Gamma, n : Nat}
            {elim_{Nat}(X,M_0,M_{suc})(n)}
            {X(n)}}
+
+    \\
+
+    \inferrule{~}{\nonlinterm \Gamma {nil} {\listTy{X}}}
+
+    \inferrule
+    { \nonlinterm \Gamma {x} {X}
+      \and
+      \nonlinterm \Gamma {M} {\listTy{X}}}
+    {\nonlinterm \Gamma {cons(x,M)} {\listTy{X}}}
+
+    \inferrule
+    {
+      \ctxwffjdg {\Gamma, xs : \listTy{X}} {Y(xs)} \and
+      \nonlinterm {\Gamma} {M} {Y (nil)} \and
+      \nonlinterm {\Gamma} {N}
+      {\PiTyLimit {x} {X}
+        {\PiTyLimit {xs} {\listTy{X}}
+          {\PiTyLimit {ys} {Y(xs)} {Y(cons(x,xs))}}}}
+    }
+    {
+      \nonlinterm
+      {\Gamma, xs : \listTy{X}}
+      {fold(M,N)(xs)}
+      {Y(xs)}
+    }
+
+    \\
 
     \inferrule{\nonlinterm \Gamma M X \and \nonlinterm \Gamma {N} {\subst Y {M}
         {x}}}{\nonlinterm {\Gamma} {(M , N)} {\SigTyLimit {x} {X} {Y}}}
@@ -3655,6 +3688,38 @@ substitution.
     }
       {\nonlineq {\Gamma, n : Nat} {elim_{Nat}(X,M_0,M_{suc})(suc~n)} {M_{suc}(n ,
           elim_{Nat}(X,M_0,M_{suc})(n))} {X(suc~n)}}
+
+  \inferrule
+    {
+      \nonlinterm {\Gamma} {M} {Y (nil)} \and
+      \nonlinterm {\Gamma} {N}
+      {\PiTyLimit {x} {X}
+        {\PiTyLimit {xs} {\listTy{X}}
+          {\PiTyLimit {ys} {Y(xs)} {Y(cons(x,xs))}}}}
+    }
+    {
+      \nonlineq
+      {\Gamma}
+      {fold(M,N)(nil)}
+      {y_{nil}}
+      {Y(nil)}
+    }
+
+  \inferrule
+    {
+      \nonlinterm {\Gamma} {M} {Y (nil)} \and
+      \nonlinterm {\Gamma} {N}
+      {\PiTyLimit {x} {X}
+        {\PiTyLimit {xs} {\listTy{X}}
+          {\PiTyLimit {ys} {Y(xs)} {Y(cons(x,xs))}}}}
+    }
+    {
+      \nonlineq
+      {\Gamma, x : X, xs : \listTy{X}}
+      {fold(M,N)(cons(x , xs))}
+      {N(x)(xs)(fold(M,N)(xs))}
+      {Y(cons(x , xs))}
+    }
 
   \inferrule{\nonlinterm \Gamma M U}{\nonlineq \Gamma {\quoteTy {\unquoteTy {M}}}
   {M} {U}}
@@ -4476,22 +4541,22 @@ The $\eta$ rule for $\equalizer e f g$ is given as,
 We verify that the denotational semantics verfies each of the axioms we have
 assumed.
 
-\paragraph{\cref{ax:dist}}
-\begin{theorem}
+\paragraph{\cref{ax:dist}} Distributivity
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{\lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}}}$ has
   an inverse.
 \end{theorem}
 \begin{proof}
-  \steven{Double check this}.
+  Distributivity is true in the denotational semantics, as the category $\Grammar$ is a topos, which are well-known to be distributive.
   The following map forms the desired inverse,
 
   \[
-    \lamb {\gamma} {\lamb {w} {\lamb {p} {(\lamb {\lamb {x} {(p~x).fst}} , \lamb {x} {(p~x).snd})}}}
+    \lamb {\gamma} {\lamb {w} {\lamb {p} {(\lamb {\left( \lamb {x} {(p~x).fst} \right)} , \lamb {x} {(p~x).snd})}}}
   \]
 \end{proof}
 
-\paragraph{\cref{ax:disjointness}}
-\begin{theorem}
+\paragraph{\cref{ax:disjointness}} $\sigma$-Disjointness
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{\sigma x}$ and $\semg{\sigma x'}$ are disjoint for
   $x \neq x'$.
 \end{theorem}
@@ -4503,22 +4568,26 @@ assumed.
   $\semg{\sigma x}$ and $\semg{\sigma x'}$ cannot agree.
 \end{proof}
 
-\paragraph{\cref{ax:string-top}}
-\begin{theorem}
+\paragraph{\cref{ax:string-top}} String is strongly equivalent to $\top$.
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{!}$ has an inverse.
 \end{theorem}
 \begin{proof}
-  Because $\semg{\top}\gamma\,w$ is a singleton set, it suffices to show that
-  $\semg{\StringGram}\gamma\,w$ is likewise a singleton set for all $\gamma$ and
-  $w$.
+  Because $\semg{\top}w$ is a singleton set for all $\gamma$ and $w$, it suffices to show that
+  $\semg{\StringGram}w$ is likewise a singleton.
 
-  First, we prove by induction on $w$ that $\semg{\StringGram}$ is a retract of
-  $\semg{\LinSigTyLimit{w}{\StringSem}{\internalize{w}}}$. Then, again by
+  First, we prove by induction on $w$ that $\semg{\StringGram}w$ is a retract of
+  $\semg{\LinSigTy{w}{\StringSem}{\internalize{w}}}w$, a sum over a nonlinear
+  type of strings. Then, again by
   induction on $w$, we show that
-  $\semg{\LinSigTyLimit{w}{\StringSem}{\internalize{w}}}$ is isomorphic to
-  $\semg{\top}$. Thus, $\semg{\StringGram}$ is a retract of $\semg{\top}$. In particular,
-  so $\semg{\StringGram}\gamma\,w$ is a singleton, and thus
-  $\semg{\StringGram}\gamma\,w \cong \semg{\top}\gamma\,w$ in $\Set$.
+  $\semg{\LinSigTy{w}{\StringSem}{\internalize{w}}}w$ is isomorphic to
+  $\semg{\top}w$.
+
+  Each $\semg{\internalize{w}}w'$ is inhabited if and only if $w$ is equal to
+  $w'$, and the parses of $w$ for $\semg{\internalize{w}}$ are unique. That is,
+  $\semg{\LinSigTy{w}{\StringSem}{\internalize{w}}}w$ is a singleton set.
+  So, $\semg{\StringGram}w$ is a retract of a singleton set, and is itself
+  singleton. Thus, $\semg{\StringGram}w \cong \semg{\top}w$ in $\Set$.
 \end{proof}
 
 \fi
