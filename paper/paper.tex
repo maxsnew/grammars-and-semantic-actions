@@ -3518,18 +3518,24 @@ framework for verified type checking and static analysis.
 \appendix
 \section{Syntax}
 \begin{figure}
+\begin{minipage}[t]{.35\textwidth}
   \begin{align*}
-    \el(\Var\,M) B &= B\,M\\
-    \el(\mathsf{K}\,A) B &= A\\
-    \el(\bigoplus A) B &= \bigoplus_{y:Y}\el(A y)B\\
-    \el(\bigamp A) B &= \bigamp_{y:Y}\el(A y)B\\
-    \el(A \otimes A') B &= \el(A)B \otimes \el(A')B\\\\
-    \map(\Var\,M)\,f &= f\,M\\
-    \map(\K\,A)\,f &= \lambda a. a\\
-    \map(\bigoplus A)\,f &= \lambda a. \letin{\oplusinj y {a_y}}{a}{\oplusinj y {\map(A\,y)\,f\,a_y}}\\
-    \map(\bigwith\,A)\,f &= \lambda a. \withlamb{y}{\map(A\,y)\,f\,(\withprj y a)}\\
-    \map(A \otimes A')\,f &= \lambda b. \letin{(a,a')}{b}{(\map(A)\,f\,a,\map(A')\,f\,a')}
+    \el\left(\Var\,M\right) B &= B\,M\\
+    \el\left(\mathsf{K}\,A\right) B &= A\\
+    \el\left(\bigoplus A\right) B &= \bigoplus_{y:Y}\el(A y)B\\
+    \el\left(\bigamp A\right) B &= \bigamp_{y:Y}\el(A y)B\\
+    \el\left(A \otimes A'\right) B &= \el(A)B \otimes \el(A')B
   \end{align*}
+\end{minipage}%
+\begin{minipage}[t]{.65\textwidth}
+\begin{align*}
+    \map\left(\Var\,M\right)\,f &= f\,M\\
+    \map\left(\K\,A\right)\,f &= \lambda a. a\\
+    \map\left(\bigoplus A\right)\,f &= \lambda a. \letin{\oplusinj y {a_y}}{a}{\oplusinj y {\map(A\,y)\,f\,a_y}}\\
+    \map\left(\bigwith\,A\right)\,f &= \lambda a. \withlamb{y}{\map(A\,y)\,f\,(\withprj y a)}\\
+    \map\left(A \otimes A'\right)\,f &= \lambda b. \letin{(a,a')}{b}{(\map(A)\,f\,a,\map(A')\,f\,a')}
+  \end{align*}
+\end{minipage}%
   \caption{Strictly positive functors functorial actions}
 \end{figure}
 
@@ -3686,6 +3692,7 @@ substitution.
 \end{figure}
 
 \begin{figure}
+  \footnotesize
   \begin{mathpar}
     \boxed{
       \inferrule
@@ -3716,7 +3723,7 @@ substitution.
 %
     \and
 %
-    \inferrule{\Gamma ; \Delta \vdash e : \LinPiTy {x} {X} {A}}{\Gamma; \Delta \vdash e \equiv \dlamb x {\app e x} : \LinPiTy x X A}
+    \inferrule{\Gamma ; \Delta \vdash e : \LinPiTyLimit {x} {X} {A}}{\Gamma; \Delta \vdash e \equiv \dlamb x {\app e x} : \LinPiTyLimit x X A}
 %
     \and
 %
@@ -3752,7 +3759,7 @@ substitution.
     %
     \and
     %
-    \inferrule{\Gamma ; \Delta_1, y : \LinSigTy {x} {X} {A}, \Delta_2 \vdash e' : C \\ \Gamma ; \Delta_2 \vdash e : \LinSigTy {x} {X} {A}}{\Gamma; \Delta_1 , \Delta_2 , \Delta_3 \vdash \letin {\sigma~x~a} e {\subst {e'} {\sigma~x~a} y} \equiv \subst {e'} e y : C}
+    \inferrule{\Gamma ; \Delta_1, y : \LinSigTyLimit {x} {X} {A}, \Delta_2 \vdash e' : C \\ \Gamma ; \Delta_2 \vdash e : \LinSigTyLimit {x} {X} {A}}{\Gamma; \Delta_1 , \Delta_2 , \Delta_3 \vdash \letin {\sigma~x~a} e {\subst {e'} {\sigma~x~a} y} \equiv \subst {e'} e y : C}
     \and
     %
     \inferrule
