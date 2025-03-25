@@ -17,8 +17,8 @@ In particular, around Corollary 3.2 and each of Axioms
 3.1, 3.3, and 3.4, we now have brief discussions of their importance and/or
 references to where each is used.
 
-We have tried to make this relationship bidirectional and refer back to each
-axiom at its usage site. That is, Lemma 4.4 is
+We also refer back to each
+axiom when it is used. That is, Lemma 4.4 is
 updated to highlight its dependence on Corollary 3.2, Lemma 4.7 is updated to
 reference Axiom 3.3, and Theorem 4.14 is updated to reference Axiom 3.1.
 
@@ -34,12 +34,32 @@ constructions. Instead we keep a brief discussion of function extensionality in 
 5.3 to highlight the convenience of function extensionality when working in the
 shallow embedding, rather than a theoretical dependence on it.
 
-## Comparison with the Categorical Semantics of Vákár
+## Comparisons with Related Work
 
-## Expand on the Greediness of Frisch and Cardelli
+### Luo's Lambek Calculus with Dependent Types
+In Section 6.1, we correct our citation (Luo 2018) to reference both of his systems.
+
+### Vákár's Categorical Semantics 
+In Section 6.1, we add a paragraph discussing dependent linear types. We
+contrast the way that different works, including (Vákár 2015), have encoded the `!` modality in a
+dependent linear setting. Further, we discuss Vákár's general categorical
+semantics and mention that a similar approach would likely apply when describing
+a general categorical model of our system.
+
+### Frisch and Cardelli's Greedy Parser
+We split our discussion of (Frisch and Cardelli 2004) into two parts. The first,
+in Section 6.1,
+is a discussion of their type system for regular expressions, which is similar
+to our discussion in the original submission.
+
+The second is in 6.2 in an added paragraph on verified parser generators. We
+discuss our intention to verify additional parsing algorithms with our theory,
+including Frisch
+and Cardelli's greedy algorithm. We mention that it is not obvious if this
+greediness property could be verified easily.
 
 ## Additional Details on Implementation
-In Section 5.3 we express the program from Figure 4 in our combinatory style and
+In Section 5.3 we express the program from Figure 4 in our combinator style and
 give a brief discussion the strengths and drawbacks of our current
 implementation.
 
