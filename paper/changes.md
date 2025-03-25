@@ -27,12 +27,18 @@ denotational semantics validates Axioms 3.1, 3.3, and 3.4. This is mentioned at
 the end of Section 5.2.
 
 ## Discussion of Extensionality
-We expand our discussion of the non-linear theory in Section 3.1. We clarify the
-extensional equality type used, and we remove any assumption that the non-linear
-theory has function extensionality because we don't use it in any
-constructions. Instead we keep a brief discussion of function extensionality in Section
-5.3 to highlight the convenience of function extensionality when working in the
-shallow embedding, rather than a theoretical dependence on it.
+
+We expand our discussion of the non-linear theory in Section 3.1. We
+clarify that the equality type we use is an extensional equality type
+with an equality reflection rule, and why this does not cause any
+issues with our implementation method. We mention that equality
+reflection implies function extensionality and so porting our
+development to an intensional type theory may require a setoid construction.
+
+We also have a brief discussion of function extensionality in Section
+5.3, explaining why uniqueness of identity proofs holds for the
+shallowly embedded types and note the convenience of function
+extensionality in verifying the equations of the shallow embedding.
 
 ## Comparisons with Related Work
 

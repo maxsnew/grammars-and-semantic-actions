@@ -961,10 +961,12 @@ arbitrary typal equality proof $P$.  The usage of an extensional equality type
 matches our implementation, which interprets both judgmental and typal equality
 as Cubical Agda's \texttt{Path} type, and so naturally supports the equality
 reflection rule. Extensional equality makes type checking of our syntax as such
-undecidable because the conversion rule may require an arbitrarily complex
+undecidable \citep{Hofmann_1997} because the conversion rule may require an arbitrarily complex
 equality proof with no explicit proof term, but in our Agda implementation we
 must provide all of these equalities manually, and so the extensionality does
-not raise any issues \cite{Hofmann_1997}.
+not raise any issues for our implementation. This makes
+\theoryabbv into an extensional theory, supporting function extensionality and
+the uniqueness of identity proofs. The development could be ported to an intensional type theory in the future, possibly requiring the use of setoids to handle function extensionality.
 
 Lastly, we include a non-linear type $\ltonl A$ where $A$ is a linear type. The
 intuition for this type is that its elements are the linear terms that are
@@ -2574,14 +2576,13 @@ as the basis for our prototype implementation of \theoryabbv in
 Cubical Agda. The implementation is a shallow embedding, meaning that
 rather than formalizing a syntax of \theoryabbv types and terms, we interpret
 the non-linear universe $U$ as Cubical Agda's universe of (homotopy) sets (at
-some universe level $\ell$), $\hSet~\ell$, and the linear universe $L$ as the
+xsome universe level $\ell$), $\hSet~\ell$, and the linear universe $L$ as the
 function type
-$\StringSem \to \hSet~\ell$. Then we implement each of the type and
+$\StringSem \to \hSet~\ell$. We use $\hSet~\ell$ as it ensures that uniqueness of identity proofs holds for the interpretation of all types in \theoryabbv, as it does in any extensional type theory. Then we implement each of the type and
 term constructors of \theoryabbv as combinators on formal grammars or
 parse transformers, and use Cubical Agda's equality type to model the
 term equalities. Cubical Agda is convenient for this purpose as it has
-built-in support for function extensionality which we use
-extensively. Axioms such as distributivity of $\oplus/\&$ and
+built-in support for function extensionality which is convenient for the verification of equality rules. Axioms such as distributivity of $\oplus/\&$ and
 disjointness of constructors are then provable directly in Agda, and
 we are careful to only construct grammars, terms and proofs using
 constructs that are possible in \theoryabbv.
