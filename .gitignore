@@ -292,8 +292,6 @@ CubicalCategoricalLogicDockerfile
 *.tar
 
 paper-difforigin/*
-submission.tex
-diff.tex
 /paper/diff.txt
 /paper/paper-oldtmp-26829.tex
 /paper/paper-oldtmp-*.tex
