@@ -1580,13 +1580,12 @@ function \(
 We then compose with the function in \cref{ax:disjointness} to prove that $A\,x$ and $A\,x'$ are disjoint.
 \end{proof}
 
-Writing a parser as a linear term is an intrinsic
-verification of the \emph{soundness} of the parser completely for free
-from the typing: any $\inl$ parse that we return \emph{must}
-correspond to a parse tree of the input string. Further, if we verify
-the disjointness property of \cref{def:parser} we then also get the \emph{completeness} of
-the parser as well, that it never fails to generate an $A$ parse when
-it is possible.
+Writing a parser as a linear term intrinsically verifies the \emph{soundness} of
+the parser for free from the typing: any $\inl$ parse that we return \emph{must}
+correspond to a parse tree of the input string. Further, if we verify the
+disjointness property of \cref{def:parser} we then also get the
+\emph{completeness} of the parser as well, that when the parser rejects the
+input that there are no valid parses.
 
 Our main method for constructing verified parsers is to show that a
 grammar $A$ is weakly equivalent to a grammar for a deterministic
@@ -3297,8 +3296,10 @@ existing proof assistant.
 %% \pedro{We should conclude this section by explaining the relevance of the canonicity
 %% theorem. Could also be done before stating the theorem.}
 
-\section{Discussion and Future Work}
+\section{Related and Future Work}
 \label{sec:discussion}
+
+\subsection{Related Work}
 \paragraph{Grammars as (Linear) Types}
 Lambek's original syntactic calculus \cite{lambek58} describes a
 logical system for linguistic derivations, and it can be given
