@@ -131,6 +131,7 @@ frame=single
 \newcommand{\StringGram}{\texttt{String}}
 \newcommand{\stringNL}{String'}
 \newcommand{\Set}{\mathbf{Set}}
+\newcommand{\hSet}{\mathbf{hSet}}
 \newcommand{\Syn}{\mathbf{Synx}}
 \newcommand{\SemAct}{\mathbf{SemAct}}
 \newcommand{\Gr}{\mathbf{Gr}}
@@ -2164,6 +2165,7 @@ unambiguous.
 %%   the state of the art.}
 
 \begin{figure}
+  \footnotesize
   \begin{tikzpicture}[node distance = 17mm ]
     \node[state, initial above, accepting] (0) {$0$};
     \node[state, right of=0] (1) {$1$};
@@ -2565,14 +2567,16 @@ transformers and verification of the equational axioms --- as well as
 straightforward extension of existing semantics of linear logic in
 monoidal categories, and is included in the appendix\cite{seely89}.
 
-\subsection{Agda Implementation}
+\subsection{Agda Implementation \Agda{\fillerlink}}
 \label{subsec:impl}
 This denotational semantics in grammars and parse transformers serves
 as the basis for our prototype implementation of \theoryabbv in
 Cubical Agda. The implementation is a shallow embedding, meaning that
-rather than formalizing a syntax of \theoryabbv types and terms, we
-work directly with Agda types and a definition of a formal grammar as
-a function $\StringSem \to \Set$. Then we implement each of the type and
+rather than formalizing a syntax of \theoryabbv types and terms, we interpret
+the non-linear universe $U$ as Cubical Agda's universe of (homotopy) sets (at
+some universe level $\ell$), $\hSet~\ell$, and the linear universe $L$ as the
+function type
+$\StringSem \to \hSet~\ell$. Then we implement each of the type and
 term constructors of \theoryabbv as combinators on formal grammars or
 parse transformers, and use Cubical Agda's equality type to model the
 term equalities. Cubical Agda is convenient for this purpose as it has
@@ -2580,16 +2584,31 @@ built-in support for function extensionality which we use
 extensively. Axioms such as distributivity of $\oplus/\&$ and
 disjointness of constructors are then provable directly in Agda, and
 we are careful to only construct grammars, terms and proofs using
-constructs that are possible in \theoryabbv. The main difference
+constructs that are possible in \theoryabbv.
+
+The main difference
 between our shallow embedding and \theoryabbv is that our linear terms
 are written in a combinator-style, without being able to use named
-variables in linear terms. We give examples of this style in
-\cref{fig:kleeneabstractproof} and the linked Agda code \agdalogo.
+variables in linear terms. For example, the function $h$ from
+\cref{fig:kleeneabstractproof} would be written with the fold combinator applied
+to subexpressions for the $nil$ and $cons$ cases,
+\(
+h = fold~nil~(cons \circ id \otimes cons \circ assoc^{-1})
+\). Notice in the $cons$ case of the fold, we manually reassociate
+$(\literal{a} \otimes \literal{a}) \otimes \literal{a}^{*}$ to
+$\literal{a} \otimes (\literal{a} \otimes \literal{a}^{*})$, then act on the
+left by the identity and on the right by $cons$ to get a parse
+$\literal{a} \otimes \literal{a}^{*}$, and finally we act again by $cons$ to
+finally produce a parse of $\literal{a}^{*}$.
+
 A benefit of this shallow embedding is that
 the parsers are immediately available to a larger Agda development, as
-they are just normal Agda code. In future work we will look to
+they are just normal Agda code. Although, even in the small example from
+\cref{fig:kleeneabstractproof} we must manage additional complexity --- such as
+manually reassociations --- and
+this only grows more complex in larger programs. In future work we will look to
 implement a type checker for a syntax closer to the presentation in
-this paper, but with the goal of still making it integrate with an
+this paper, while maintaining the goal of integration with an
 existing proof assistant.
 
 %% That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
