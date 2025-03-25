@@ -1,5 +1,39 @@
 % -*- fill-column: 80; -*-
-\documentclass[review,anonymous,screen,acmsmall,nonacm]{acmart}
+%% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
+\documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+%% For final camera-ready submission, w/ required CCS and ACM Reference
+%\documentclass[acmsmall]{acmart}\settopmatter{}
+
+
+%% Journal information
+%% Supplied to authors by publisher for camera-ready submission;
+%% use defaults for review submission.
+\acmJournal{PACMPL}
+\acmVolume{1}
+\acmNumber{CONF} % CONF = POPL or ICFP or OOPSLA
+\acmArticle{1}
+\acmYear{2018}
+\acmMonth{1}
+\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
+\startPage{1}
+
+%% Copyright information
+%% Supplied to authors (based on authors' rights management selection;
+%% see authors.acm.org) by publisher for camera-ready submission;
+%% use 'none' for review submission.
+\setcopyright{none}
+%\setcopyright{acmcopyright}
+%\setcopyright{acmlicensed}
+%\setcopyright{rightsretained}
+%\copyrightyear{2018}           %% If different from \acmYear
+
+%% Bibliography style
+\bibliographystyle{ACM-Reference-Format}
+%% Citation style
+%% Note: author/year citations are required for papers published as an
+%% issue of PACMPL.
+%% \citestyle{acmauthoryear}   %% For author/year citations
+\citestyle{acmnumeric}
 \usepackage{mathpartir}
 \usepackage{tikz-cd}
 \usepackage{lipsum}
@@ -3343,7 +3377,7 @@ regular expressions up to weak equivalence \cite{frischCardelli}.
 Henglein and Nielsen build on this type-theoretic view of grammars, pointing out that the values of the types correspond precisely to the parse trees \cite{henglein_regular_2011}.
 Our design of \theoryabbv extends this view of grammars as types to a much broader class of grammars, as well as providing a syntax and equational theory for \emph{parse transformers}, showing that the terms can be viewed not just as parse trees, but as intrinsically verified parsers.
 
-Elliott \cite{elliottSymbolicAutomaticDifferentiation2021} uses essentially the same denotational semantics as ours, interpreting regular expressions as type-valued functions on strings. Our denotational semantics of \theoryabbv extends this to a much broader class of grammars.
+\citet{elliottSymbolicAutomaticDifferentiation2021} uses essentially the same denotational semantics as ours, interpreting regular expressions as type-valued functions on strings. Our denotational semantics of \theoryabbv extends this to a much broader class of grammars.
 %% Krishnaswami and Yallop \cite{krishnaswami_typed_2019} provide a type system for
 %% demonstrating that carries proves of the LL(1) condition for context-free
 %% grammars. Despite being a type system over formal grammars, their interpretation
@@ -3520,7 +3554,6 @@ framework for verified type checking and static analysis.
 % type elaborator           ~~ semantic actions
 
 
-\bibliographystyle{plain}
 \bibliography{refs.bib}
 
 \pagebreak
