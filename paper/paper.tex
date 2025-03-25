@@ -79,7 +79,7 @@ escapeinside={(*@}{@*)}
 }
 \lstset{
 language=Agda,
-basicstyle=\ttfamily\small,
+basicstyle=\ttfamily\footnotesize,
 keywordstyle=\color{blue},
 keywordstyle=[2]\color{teal},
 identifierstyle=\color{black},
@@ -121,9 +121,15 @@ frame=single
 \newcommand{\cat}[1]{\mathbf{#1}}
 \newcommand{\lto}{\multimap}
 \newcommand{\tol}{\mathrel{\rotatebox[origin=c]{180}{$\lto$}}}
+
+\newcommand{\String}{\textbf{String}}
+\newcommand{\Char}{\textbf{Char}}
+\newcommand{\stringg}{\texttt{String}}
+\newcommand{\charg}{\mathtt{Char}}
 \newcommand{\StringSem}{\mathbf{String}}
 \newcommand{\CharGram}{\texttt{Char}}
 \newcommand{\StringGram}{\texttt{String}}
+\newcommand{\stringNL}{String'}
 \newcommand{\Set}{\mathbf{Set}}
 \newcommand{\Syn}{\mathbf{Synx}}
 \newcommand{\SemAct}{\mathbf{SemAct}}
@@ -137,7 +143,7 @@ frame=single
 \newcommand{\false}{\mathtt{false}}
 \newcommand{\nat}{\mathbb{N}}
 \newcommand{\theoryname}{Dependent Lambek Calculus\xspace}
-\newcommand{\theoryabbv}{$\textrm{Lambek}^D$~}
+\newcommand{\theoryabbv}{$\textrm{Lambek}^D$\xspace}
 \newcommand{\lnld}{$\textrm{LNL}_D$}
 
 \newcommand{\isTy}{\textrm{ type}}
@@ -534,6 +540,7 @@ typing derivation to define a parse for a finite grammar.
 f : (*@$\uparrow$@*)('a' (*@$\otimes$@*) 'b' (*@$\lto$@*) ('a' (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
 f (a , b) = inl (a , b)
 \end{lstlisting}\begin{mathpar}
+  \footnotesize
   \inferrule
   {
     \inferrule
@@ -563,16 +570,17 @@ for variables to go unused, while contraction allows for the same
 variable to be used twice, but in a parse tree, every character must
 be accounted for exactly once. That is, we want to prevent the following
 erroneous derivations,
-\[
-  a : \literal a , b : \literal b \not \vdash a : \literal a \qquad a : \literal a , b : \literal b \not \vdash (a, a) : \literal a \otimes \literal a
-\]
-%
+\(
+{a : \literal a , b : \literal b \not \vdash a : \literal a}\) and
+\({a : \literal a , b : \literal b \not \vdash (a, a) : \literal a \otimes \literal a}
+\).
+
 Finally, the ordering of characters in a string cannot be ignored while
 parsing, so we omit the exchange rule because it would allow
-for variables in the context to be reordered,
-\[
-  a : \literal a , b : \literal b \not \vdash (b , a) : \literal b \otimes \literal a
-\]
+for variables in the context to be reordered. Likewise, we prevent the following derivation,
+\(
+  {a : \literal a , b : \literal b \not \vdash (b , a) : \literal b \otimes \literal a}
+\).
 % otherwise we would have that $\inl(x\otimes y)$ is a valid
 % term in context $y:b,x:a$, but there should be no parses of $ba$ in
 % this grammar.
@@ -601,11 +609,6 @@ data A(*@$^*$@*) : L where
   nil : (*@$\uparrow$@*)(A(*@$^*$@*))
   cons : (*@$\uparrow$@*)(A (*@$\lto$@*) A(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
 \end{lstlisting}
-% \begin{align*}
-% \data &~A^{*} : L~\where\\
-%       & \nil : \ltonl {A^{*}} \\
-%       & \cons : \ltonl {(A \lto A^{*} \lto A^{*})}
-% \end{align*}
 \caption{Kleene Star as an inductive type}
 \label{fig:kleenestarinductive}
 \end{figure}
@@ -697,13 +700,6 @@ as $\fold$. The parse transformer $h$ is more compactly presented in the pseudoc
 of \cref{fig:kleeneabstractproof} by pattern matching on the input and making an
 explicit recursive call in the body of its definition.
 
-At the bottom of
-\cref{fig:kleeneabstractproof}, we give a defintion of the same function as it
-appears in our current Agda implementation \cite{?}. $h'$ is written as a
-composition of combinators,
-each without any pattern matching or introduction
-of named linear variables. More discussion of our implementation is given in \cref{subsec:impl}.
-
 \begin{figure}
 \footnotesize
 \begin{mathpar}
@@ -733,10 +729,6 @@ of named linear variables. More discussion of our implementation is given in \cr
 h : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
 h nil = nil
 h (cons (a1 , a2) as) = cons a1 (cons a2 (h as))
-\end{lstlisting}
-\begin{lstlisting}
-h' : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
-h' = fold*r nil (cons (*@$\circ$@*) id (*@$\otimes$@*) cons (*@$\circ$@*) assoc(*@$^{-1}$@*))
 \end{lstlisting}
 \caption{(\Agda{\fillerlink}) A parse transformer for abstract grammars}
 \label{fig:kleeneabstractproof}
@@ -908,6 +900,8 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\PiTyLimit {x}{X}{Y}}}
 
     \inferrule{\ctxwffjdg \Gamma X \and \ctxwffjdg {\Gamma , x : X} {Y}}{\ctxwffjdg \Gamma {\SigTyLimit {x}{X}{Y}}}
+
+    \\
 
     \inferrule{\nonlinterm \Gamma M U}{\ctxwffjdg \Gamma {\unquoteTy M}}
 
@@ -1097,11 +1091,16 @@ over additive disjunction --- e.g., in the finitary case that $0 \& A
 
 \begin{axiom}[Distributivity]
 \label{ax:dist}
-For any $A : (x : X) \to Y x \to L$, the function
-\[
- \lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}} : \ltonl {\left(  \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
-\LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}} \right)}
-\]
+For any $A : (x : X) \to Y(x) \to L$, the definable distribuitivity function
+%%%%%%%%%% An attempt to inline
+% \(
+%  {\LinSigTy{f}{\left(\PiTy{x}{X}{Y(x)}\right)}{\LinPiTy{x}{X}{A\,x\,(f\,x)}} \lto
+% \LinPiTy{x}{X}{\LinSigTy{y}{Y(x)}{A\,x\,y}} \right)}
+% \)
+\(
+ \lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}} : \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
+\LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}}
+\)
 has an inverse.
 \end{axiom}
 
@@ -1828,13 +1827,13 @@ DFA is unambiguous even if the NFA is not.
   We demonstrate the weak equivalence between $Parse_{N}$ and
   $Parse_{D}$ by constructing parse transformers between the two
   grammars. To build the parse transformer
-  $\ltonl{(Parse_{N} \lto Parse_{D})}$, we strengthen our inductive hypothesis
+  $\ltonl{(Parse_{N} \lto Parse_{D})}$, we strengthen our inductive hypothesis to quantify over every start state
   and build a term
 \newcommand{\NtoD}{\texttt{NtoD}}
 \newcommand{\DtoN}{\texttt{DtoN}}
-  \[
-    \NtoD : \ltonl {\left(\Trace_{\N}~\s~\true \lto \bigwith\limits_{\X : \D.\states} \bigwith\limits_{\texttt{sInX} : \X \ni \s} \Trace_{\D}~\X~\true \right)}
-  \]
+  \(
+    \NtoD : \ltonl {\left(\Trace_{\N}~\s~\true \lto \LinPiTy{\X}{\D.\states}{\LinPiTy{\texttt{sInX}}{\X \ni \s}{ \Trace_{\D}~\X~\true}} \right) }
+  \)
   that maps a trace in $\N$ from an arbitrary state $\s$ to a trace in $\D$
   that may begin at any subset of states $\X$ that contains $\s$. $\NtoD$ may then be instantiated at
   $\s = \N.\init$ and $\X = D.\mathsf{init}$ to get the desired
@@ -1886,10 +1885,10 @@ DFA is unambiguous even if the NFA is not.
 %% $\N.\epssrc~t$ is in $X$. This concludes the construction of $\NtoD$.
 
 To construct a term from DFA traces to NFA traces, we similarly strengthen our
-inductive hypothesis and build a parse transformer
-\[
-  \DtoN : \ltonl {\left( \Trace_{\D}~\X~\true \lto \bigoplus\limits_{s : \N.\states}\bigoplus\limits_{\texttt{sInX} : \X \ni \s} \Trace_{\N}~s~\true \right)}
-\]
+inductive hypothesis and build a parse transformer that ranges over arbitrary $\epsilon$-closed subsets $X : \mathbb{P}_{\epsilon}{\N.\states}$,
+\(
+  \DtoN : \ltonl {\left( \Trace_{\D}~\X~\true \lto \LinSigTy{s}{\N.\states}{\LinSigTy{\texttt{sInX}}{\X \ni \s}{ \Trace_{\N}~s~\true}} \right)}
+\).
 Because the states of $D$ are $\epsilon$-closed subsets of $N.\states$, if two
 states $s$ and $s'$ belong to the the same $\epsilon$-closed subset
 $X : \mathbb{P}_{\epsilon}(N.\states)$ then there exists a $\epsilon$-path in
@@ -1902,7 +1901,7 @@ from the mere existence of one. We achieve this by choosing the smallest trace
 through $\N$ subject to an ordering on the non-linear types $N.\states$,
 $N.\transitions$, and $N.\epstransitions$. In essence, the given orderings
 specify a global disambiguation strategy.
-
+\end{proof}
 %% For a moment, let us turn our attention to the content behind the traces in $\D$.
 %% Traces from subset $\X$ to subset $\Y$ describes the \emph{existence} of some trace
 %% in the $\N$ from some $\x \in \X$ to some $\y \in \Y$. In general it is not clear how
@@ -1928,7 +1927,6 @@ specify a global disambiguation strategy.
 %% combined with the parse of $\c$ to build an $\N$ trace. This concludes the
 %% definition of $\DtoN$, thus showing that $Parse_{N}$ and $Parse_{D}$ are
 %% weakly equivalent.
-\end{proof}
 
 Finally, given any regular expression we can construct a
 \emph{strongly} equivalent NFA. While only weak equivalence is
@@ -1944,7 +1942,7 @@ that other aspects of formal grammar theory are also verifiable in
 \begin{proof}
 We use a variant of Thompson's construction
 \cite{thompsonProgrammingTechniquesRegular1968}, showing that NFAs are, up to strong equivalence, closed under each type operation for regular expressions.
-
+\end{proof}
 %% In this paper we will walk through
 %% some of the cases of this proof. The remaining cases
 %% follow
@@ -2103,7 +2101,6 @@ We use a variant of Thompson's construction
 %% Further, we are eliding the needed NFAs for the cases where the regular
 %% expression is $I$, $0$, a Kleene star, or a concatenation. All of these
 %% elided details may be found in the Agda formalization.
-\end{proof}
 
 \begin{corollary}[\Agda{\fillerlink}]
   We may build a parser for every regular expression $\R$.
@@ -2289,9 +2286,9 @@ correspond to $P$.
 %% We view the image of $P$ as a set of parse trees for each input string, and thus
 %% $P$ carries the structure of a formal grammar. However, even though $P$ describes this grammatical data, it is not
 %% a first-class linear type in \theoryabbv. 
-\[
-Reify~P = \LinSigTyLimit {w} {\StringSem} {\LinSigTyLimit {x} {P~w} {~\lceil w \rceil}}
-\]
+\(
+Reify~P = \LinSigTy{w} {\StringSem} {\LinSigTy {x} {P~w} {~\lceil w \rceil}}
+\)
 %% \steven{Probably put this ceiling business around the discussion of the linear
 %%   type of strings. Is this in section 3?}
 where $\lceil \stringquote{} \rceil = I$ and
@@ -2476,7 +2473,8 @@ except the $B$ parse is for the reversed concatenation $w'w$.
 The set $\uparrow A$ is the set of parse for the empty string for
 $A$. This definition means that $\sem{\uparrow (A \lto B)}$ (or $\sem{\uparrow (B \tol A)}$) is
 equivalent to the set of parse transformers:
-\[ \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\varepsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\]
+\( \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\varepsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\).
+
 Next, a parse in the equalizer $\equalizer{a}{f}{g}$ is defined as
 a parse in $\sem{A}$ that is mapped to the same parse by the parse transformers $\sem{f}$ and
 $\sem{g}$.
@@ -3667,6 +3665,7 @@ substitution.
 \end{figure}
 
 \begin{figure}
+  \footnotesize
   \begin{mathpar}
     \boxed{
       \inferrule
@@ -3850,6 +3849,7 @@ substitution.
 \end{definition}
 
 \begin{figure}
+  \footnotesize
   \begin{mathpar}
     \inferrule
     {\ctxwffjdg \Gamma X}
@@ -3917,6 +3917,7 @@ substitution.
 \end{definition}
 
 \begin{figure}
+  \footnotesize
   \begin{align*}
     a[e/a] &= e\\
     (e_1,e_2)[\delta_1,\delta_2] &= (e_1[\delta_1], e_2[\delta_2])\\

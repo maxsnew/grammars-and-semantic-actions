@@ -4,3 +4,4 @@ clean:
 	latexmk -C
 diff:
 	latexdiff --math-markup=fine --graphics-markup=both --allow-spaces submission.tex paper.tex > diff.tex
+	latexmx -pdf diff
