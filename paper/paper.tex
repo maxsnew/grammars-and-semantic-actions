@@ -952,7 +952,7 @@ non-linear type is small and define the universe to internalize
 precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. These universe
 types are needed so that we can define types by recursion on natural
 numbers. 
-Next, we include standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number types.
+Next, we include standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number types. More complex inductive types --- such as sum types, list types, and $Fin~n$ --- can be defined in terms of these primitives, and we give their encoding in \cref{TODO} of the appendix.
 
 We use an \emph{extensional} equality type $M =_{X} N$ with introduction form
 $refl$, but no elimination form. Instead we have the equality reflection rule
@@ -3605,9 +3605,30 @@ In this section we include the elided syntactic forms, as well as
 definitions and basic properties of linear and non-linear
 substitution.
 
+\subsection{Non-linear Types}
+We define sum types, list types, and $Fin~n$ from primitve non-linear types.
+
+For $X , Y : U$, define the sum type $X + Y$ as,
+
+\[
+X + Y = \SigTyLimit{b}{Bool}{elim_{Bool}(U, X, Y)(b)}
+\]
+
+For $n : Nat$, define $Fin~n$ as,
+
+\begin{align*}
+  Fin~0 &= \bot \\
+  Fin~(suc n) &= 1 + (Fin~n)
+\end{align*}
+
+For $X : U$, define $List~X$ as,
+
+\[
+  List~X = \SigTyLimit{n}{Nat}{\PiTyLimit{k}{Fin~n}{X}}
+\]
+
 \max{TODO: include the rest of the rules}
 \steven{I added rules for Bool, Nat, and List. What else do we need?}
-
 \begin{figure}
   \begin{mathpar}
   \footnotesize
@@ -3840,6 +3861,7 @@ substitution.
   \label{fig:jdgeq}
 \end{figure}
 
+\subsection{Substitutions}
 \begin{definition}
   The set of (non-linear) substitutions $\gamma \in
   \textrm{Subst}(\Gamma,\Gamma')$ where $\Gamma \isCtx$ and $\Gamma'
