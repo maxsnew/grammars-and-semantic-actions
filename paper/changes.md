@@ -46,11 +46,9 @@ extensionality in verifying the equations of the shallow embedding.
 In Section 6.1, we correct our citation (Luo 2018) to reference both of his systems.
 
 ### Vákár's Categorical Semantics 
-In Section 6.1, we add a paragraph discussing dependent linear types. We
-contrast the way that different works, including (Vákár 2015), have encoded the `!` modality in a
-dependent linear setting. Further, we discuss Vákár's general categorical
-semantics and mention that a similar approach would likely apply when describing
-a general categorical model of our system.
+In Section 6.1, we add a paragraph discussing prior work on dependent linear
+ types, including (Vákár 2015) and its categorical semantics.
+ 
 
 ### Frisch and Cardelli's Greedy Parser
 We split our discussion of (Frisch and Cardelli 2004) into two parts. The first,
