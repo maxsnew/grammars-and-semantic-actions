@@ -151,6 +151,7 @@ frame=single
 \newcommand{\isCtx}{\textrm{ ctx}}
 \newcommand{\isSmall}{\textrm{ small}}
 \newcommand{\isLinTy}{\textrm{ lin. type}}
+\newcommand{\isSmallLin}{\textrm{ small lin.}}
 \newcommand{\isLinCtx}{\textrm{ lin. ctx.}}
 
 \newcommand{\quoteTy}[1]{\lceil{#1}\rceil}
@@ -924,9 +925,9 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
     \\
     \boxed{\inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma M X}}
 
-    \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\quoteTy X} U}
+    \inferrule{\Gamma \vdash  X \isSmall}{\nonlinterm \Gamma {\quoteTy X} U}
 
-    \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
+    \inferrule{\Gamma \vdash A \isSmallLin}{\nonlinterm \Gamma {\quoteTy A} L}
 
     \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
 
@@ -947,11 +948,11 @@ We present a selection of the non-linear type constructions in
 \cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of the appendix.  First,
 we include universe types $U$ of small non-linear types and $L$ of linear
 types. These are defined as
-universes ``ala Coquand'' in that we define a judgment saying when a
-non-linear type is small and define the universe to internalize
-precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. These universe
-types are needed so that we can define types by recursion on natural
-numbers. 
+universes ``ala Coquand'' in that we define judgments saying when
+non-linear and linear types are \emph{small} and define the universes to internalize
+precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. The definition of smallness is simply that all types are small as long as their sub-formulae are, with the exception of the two universe types themselves. These universe
+types are needed so that we can define non-linear and linear types by recursion on natural
+numbers.
 Next, we include standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number types. More complex inductive types --- such as sum types, list types, and $Fin~n$ --- can be defined in terms of these primitives, and we give their encoding in \cref{TODO} of the appendix.
 
 We use an \emph{extensional} equality type $M =_{X} N$ with introduction form
@@ -1007,6 +1008,8 @@ separation logic \cite{girard_linear_1987,jung_higher-order_2016}.
       \nonlinterm \Gamma g {\ltonl{(A \lto B)}}}{\linctxwffjdg \Gamma {\equalizer {a}{f}{g}}}
 
     \inferrule{\nonlinterm \Gamma M L}{\linctxwffjdg \Gamma {\unquoteTy M}}
+
+    \boxed{\inferrule{\linctxwffjdg \Gamma A}{\Gamma \vdash A \isSmallLin}}
 
     \\
     \boxed{\inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg \Gamma {A \equiv B}}}
@@ -3571,10 +3574,21 @@ framework for verified type checking and static analysis.
 % Uniqueness of derivations ~~ unambiguous grammar
 % type elaborator           ~~ semantic actions
 
+%% \pagebreak
+
+\begin{acks}
+  This material is based upon work supported by the
+  \grantsponsor{GS100000001}{National Science
+    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
+  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
+  No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
+  conclusions or recommendations expressed in this material are those
+  of the author and do not necessarily reflect the views of the
+  National Science Foundation.
+\end{acks}
 
 \bibliography{refs.bib}
 
-\pagebreak
 
 \ifappendix
 \appendix
@@ -3625,10 +3639,28 @@ For $X : U$, define $List~X$ as,
 
 \[
   List~X = \SigTyLimit{n}{Nat}{\PiTyLimit{k}{Fin~n}{X}}
-\]
+  \]
 
-\max{TODO: include the rest of the rules}
-\steven{I added rules for Bool, Nat, and List. What else do we need?}
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{\Gamma \vdash M : U}{\Gamma \vdash \unquoteTy M \isSmall}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash Y \isSmall}{\Gamma \vdash \PiTyLimit {x}{X}{Y} \isSmall}
+    \cdots
+  \end{mathpar}
+  \caption{Small Non-linear Types}
+\end{figure}
+
+\begin{figure}
+  \begin{mathpar}
+    \inferrule{\Gamma \vdash M : L}{\Gamma \vdash \unquoteTy M \isSmallLin}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash A \isSmallLin}{\Gamma \vdash \LinPiTyLimit {x}{X}{A} \isSmallLin}
+    \cdots
+  \end{mathpar}
+  \caption{Small Linear Types}
+\end{figure}
+
 \begin{figure}
   \begin{mathpar}
   \footnotesize
