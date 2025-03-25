@@ -156,41 +156,20 @@
 	address = {Berlin, Heidelberg},
 	title = {Validating {LR}(1) {Parsers}},
 	volume = {7211},
-	isbn = {978-3-642-28868-5 978-3-642-28869-2},
-	url = {http://link.springer.com/10.1007/978-3-642-28869-2_20},
-	abstract = {An LR(1) parser is a ﬁnite-state automaton, equipped with a stack, which uses a combination of its current state and one lookahead symbol in order to determine which action to perform next. We present a validator which, when applied to a context-free grammar G and an automaton A, checks that A and G agree. Validating the parser provides the correctness guarantees required by veriﬁed compilers and other high-assurance software that involves parsing. The validation process is independent of which technique was used to construct A. The validator is implemented and proved correct using the Coq proof assistant. As an application, we build a formally-veriﬁed parser for the C99 language.},
-	language = {en},
-	urldate = {2024-04-22},
 	booktitle = {Programming {Languages} and {Systems}},
-	publisher = {Springer Berlin Heidelberg},
 	author = {Jourdan, Jacques-Henri and Pottier, François and Leroy, Xavier},
-	editor = {Hutchison, David and Kanade, Takeo and Kittler, Josef and Kleinberg, Jon M. and Mattern, Friedemann and Mitchell, John C. and Naor, Moni and Nierstrasz, Oscar and Pandu Rangan, C. and Steffen, Bernhard and Sudan, Madhu and Terzopoulos, Demetri and Tygar, Doug and Vardi, Moshe Y. and Weikum, Gerhard and Seidl, Helmut},
 	year = {2012},
 	doi = {10.1007/978-3-642-28869-2_20},
-	note = {Series Title: Lecture Notes in Computer Science},
 	pages = {397--416},
-	file = {Jourdan et al. - 2012 - Validating LR(1) Parsers.pdf:/Users/stevenschaefer/Zotero/storage/UJQGN33D/Jourdan et al. - 2012 - Validating LR(1) Parsers.pdf:application/pdf},
 }
 
-@incollection{bentonMixedLinearNonlinear1995,
-	address = {Berlin, Heidelberg},
-	title = {A mixed linear and non-linear logic: {Proofs}, terms and models: {Extended} abstract},
-	volume = {933},
-	isbn = {978-3-540-60017-6 978-3-540-49404-1},
-	shorttitle = {A mixed linear and non-linear logic},
-	url = {http://link.springer.com/10.1007/BFb0022251},
-	abstract = {Intuitionistic linear logic regains the expressive power of intuitionistic logic through the ! ('of course') modality. Benton, Bierman, Hyland and de Paiva have given a term assignment system for ILL and an associated notion of categorical model in which the ! modality is modelled by a comonad satisfying certain extra conditions. Ordinary intuitionistic logic is then modelled in a cartesian dosed category which arises as a full subcategory of the category of coalgebras for the comonad. This paper attempts to explain the connection between ILL and IL more directly and symmetricallyby giving a logic, term calculus and categorical model for a system in which the linear and non-linear worlds exist on an equal footing, with operations allowing one to pass in both directions. We start from the categorical model of ILL given by Benton, Bierman, Hyland and de Paiva and show that this is equivalent to having a symmetric monoidal adjunction between a symmetric monoidal dosed category and a cartesian closed category. We then derive both a sequent calculus and a natural deduction presentation of the logic corresponding to the new notion of model.},
-	language = {en},
-	urldate = {2024-04-27},
-	booktitle = {Computer {Science} {Logic}},
-	publisher = {Springer Berlin Heidelberg},
-	author = {Benton, P. N.},
-	editor = {Goos, Gerhard and Hartmanis, Juris and Van Leeuwen, Jan and Pacholski, Leszek and Tiuryn, Jerzy},
-	year = {1995},
-	doi = {10.1007/BFb0022251},
-	note = {Series Title: Lecture Notes in Computer Science},
-	pages = {121--135},
-	file = {BFb0022251.pdf:/Users/stevenschaefer/Downloads/BFb0022251.pdf:application/pdf},
+@inproceedings{benton1994,
+  author       = {P. N. Benton},
+  title        = {A Mixed Linear and Non-Linear Logic: Proofs, Terms and Models (Extended Abstract)},
+  booktitle    = {Computer Science Logic, 8th International Workshop, {CSL} '94, Kazimierz, Poland},
+  year         = {1994},
+  url          = {https://doi.org/10.1007/BFb0022251},
+
 }
 
 @article{brzozowskiDerivativesRegularExpressions1964,
@@ -551,20 +530,12 @@ isbn="978-3-540-47285-8"
 }
 
 @InProceedings{frischCardelli,
-author="Frisch, Alain
-and Cardelli, Luca",
-editor="D{\'i}az, Josep
-and Karhum{\"a}ki, Juhani
-and Lepist{\"o}, Arto
-and Sannella, Donald",
+author="Frisch, Alain and Cardelli, Luca",
 title="Greedy Regular Expression Matching",
 booktitle="Automata, Languages and Programming",
 year="2004",
-publisher="Springer Berlin Heidelberg",
-address="Berlin, Heidelberg",
 pages="618--629",
-abstract="This paper studies the problem of matching sequences against regular expressions in order to produce structured values.",
-isbn="978-3-540-27836-8"
+doi={10.1007/978-3-540-27836-8_53}
 }
 
 @inproceedings{firsovCertifiedNormalizationContextFree2015,
@@ -736,7 +707,7 @@ MRREVIEWER = {G.\ E.\ Mints and M.\ Gordin},
 @unpublished{coquandPresheafModel,
 author = {Thierry Coquand},
 title = {Presheaf model of type theory},
-URL = {https://www.cse.chalmers.se/~coquand/presheaf.pdf}
+note = {\url{https://www.cse.chalmers.se/~coquand/presheaf.pdf}}
 }
 
 
@@ -844,35 +815,21 @@ URL = {https://www.cse.chalmers.se/~coquand/presheaf.pdf}
 @inproceedings{gambino_wellfounded_2004,
 	address = {Berlin, Heidelberg},
 	title = {Wellfounded {Trees} and {Dependent} {Polynomial} {Functors}},
-	isbn = {978-3-540-24849-1},
 	doi = {10.1007/978-3-540-24849-1_14},
-	abstract = {We set out to study the consequences of the assumption of types of wellfounded trees in dependent type theories. We do so by investigating the categorical notion of wellfounded tree introduced in [16]. Our main result shows that wellfounded trees allow us to define initial algebras for a wide class of endofunctors on locally cartesian closed categories.},
-	language = {en},
 	booktitle = {Types for {Proofs} and {Programs}},
-	publisher = {Springer},
 	author = {Gambino, Nicola and Hyland, Martin},
-	editor = {Berardi, Stefano and Coppo, Mario and Damiani, Ferruccio},
 	year = {2004},
-	keywords = {Forgetful Functor, Left Adjoint, Monoidal Category, Natural Transformation, Type Theory},
 	pages = {210--225},
-	file = {Full Text PDF:/Users/maxsnew/Zotero/storage/6FMSQHE3/Gambino and Hyland - 2004 - Wellfounded Trees and Dependent Polynomial Functors.pdf:application/pdf},
 }
 
 @article{altenkirch_indexed_2015,
 	title = {Indexed containers},
 	volume = {25},
-	issn = {0956-7968, 1469-7653},
-	url = {https://www.cambridge.org/core/journals/journal-of-functional-programming/article/indexed-containers/FB9C7DC88A65E7529D39554379D9765F},
 	doi = {10.1017/S095679681500009X},
-	abstract = {We show that the syntactically rich notion of strictly positive families can be reduced to a core type theory with a fixed number of type constructors exploiting the novel notion of indexed containers. As a result, we show indexed containers provide normal forms for strictly positive families in much the same way that containers provide normal forms for strictly positive types. Interestingly, this step from containers to indexed containers is achieved without having to extend the core type theory. Most of the construction presented here has been formalized using the Agda system.},
-	language = {en},
-	urldate = {2024-11-14},
 	journal = {Journal of Functional Programming},
 	author = {Altenkirch, Thorsten and Ghani, Neil and Hancock, Peter and Mcbride, Conor and Morris, Peter},
 	month = jan,
 	year = {2015},
-	pages = {e5},
-	file = {Full Text PDF:/Users/maxsnew/Zotero/storage/N9FBLA7U/Altenkirch et al. - 2015 - Indexed containers.pdf:application/pdf},
 }
 
 @software{The_Agda_Community_Cubical_Agda_Library_2024,
@@ -921,22 +878,13 @@ year = {2024}
 }
 
 @incollection{buszkowskiTypeLogicsGrammar2003,
-	address = {Dordrecht},
 	title = {Type {Logics} in {Grammar}},
 	volume = {21},
-	isbn = {978-90-481-6414-1 978-94-017-3598-8},
-	url = {http://link.springer.com/10.1007/978-94-017-3598-8_12},
-	language = {en},
-	urldate = {2024-08-07},
+	pages = {337--382},
 	booktitle = {Trends in {Logic}},
-	publisher = {Springer Netherlands},
 	author = {Buszkowski, W.},
-	editor = {Wójcicki, Ryszard and Mundici, Daniele and Orłowska, Ewa and Priest, Graham and Segerberg, Krister and Urquhart, Alasdair and Wansing, Heinrich and Hendricks, Vincent F. and Malinowski, Jacek},
 	year = {2003},
 	doi = {10.1007/978-94-017-3598-8_12},
-	note = {Series Title: Trends in Logic},
-	pages = {337--382},
-	file = {Buszkowski - 2003 - Type Logics in Grammar.pdf:/Users/stevenschaefer/Zotero/storage/LU7PLCX5/Buszkowski - 2003 - Type Logics in Grammar.pdf:application/pdf},
 }
 @book{ranta-2011,
 author = {Ranta, Aarne},
@@ -947,12 +895,13 @@ publisher = {Center for the Study of Language and Information/SRI},
 abstract = {Grammatical Framework is a programming language designed for writing grammars, which has the capability of addressing several languages in parallel. This thorough introduction demonstrates how to write grammars in Grammatical Framework and use them in applications such as tourist phrasebooks, spoken dialogue systems, and natural language interfaces. The examples and exercises presented here address several languages, and the readers are shown how to look at their own languages from the computational perspective.}
 }
 
-@booklet{luo,
+@inproceedings{luo,
   author    = {Zhaohui Luo},
   title     = {Substructural Calculi with Dependent Types},
+  booktitle = {Linearity \& TLLA Joint Workshop},
   doi       = {10.29007/qrqp},
-  howpublished = {EasyChair Preprint 421},
-  year      = {EasyChair, 2018}}
+  year      = {2018}
+}
 
 @Inbook{lambek1988categorial,
 author="Lambek, J.",

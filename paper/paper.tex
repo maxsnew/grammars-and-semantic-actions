@@ -3370,13 +3370,13 @@ Elliott \cite{elliottSymbolicAutomaticDifferentiation2021} uses essentially the 
 Our syntax for non-commutative dependent linear type theory is based on the
 dependent commutative linear type theory of
 \citet{krishnaswami_integrating_2015}, itself an extension of Benton and
-Wadler's linear-non-linear calculus \cite{bentonMixedLinearNonlinear1995}. A
+Wadler's linear-non-linear calculus \cite{benton1994}. A
 distinct feature of these systems is that linear types and non-linear types are
 distinct sorts, so the linear logic $!$ operator is not a primitive, but is
 instead definable, for instance in \theoryabbv as $!A = \LinSigTy{\_}{\ltonl A}{I}$.
 V\'ak\'ar develops a dependent linear type theory where instead the non-linear
 types are accessed using the $!$ modality, similar to Girard's original approach
-\cite{vakar,girard_linear_1987}. Additionally, V\'ak\'ar develops a general
+\cite{vakar2015,girard_linear_1987}. Additionally, V\'ak\'ar develops a general
 categorical semantics for their system, whereas we have only developed a single
 denotational model. It appears straightforward to adapt V\'ak\'ar's general
 semantics approach to a non-commutative variant that would apply to
