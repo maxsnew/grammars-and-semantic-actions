@@ -3613,11 +3613,19 @@ framework for verified type checking and static analysis.
   \end{align*}
 \end{minipage}%
   \caption{Strictly positive functors functorial actions}
+  \label{fig:spf-act}
 \end{figure}
 
 In this section we include the elided syntactic forms, as well as
 definitions and basic properties of linear and non-linear
 substitution.
+
+In \cref{fig:spf-act}, we provide the functorial actions for the strictly
+positive functors defined in \cref{fig:iilt}. We also include the full set of
+rules for non-linear types in \cref{fig:full-non-linear-types}, and we provide
+their judgmental equalities in \cref{fig:jdg-eq-nonlinear}. Finally,
+\cref{fig:jdgeq} contains the judgmental equalities between linear terms in
+\theoryabbv.
 
 \subsection{Non-linear Types}
 We define sum types, list types, and $Fin~n$ from primitve non-linear types.
@@ -3917,7 +3925,7 @@ For $X : U$, define $List~X$ as,
   It is straightforward, but laborious to establish that all forms in
   the type theory that are parameterized by a non-linear context
   $\Gamma$ support the admissible actions of a substitution $\gamma
-  \in \Subst(\Gamma',\Gamma)$ in \Cref{fig:non-linear-substitution}.
+  \in \Subst(\Gamma',\Gamma)$ given in \cref{fig:non-linear-substitution,fig:substact}.
   %% Further, these all satisfy identity and composition equations M[\Gamma] = M and M[\gamma][\gamma'] = M[(\gamma \circ \gamma')]
 \end{definition}
 
