@@ -1,10 +1,11 @@
 # Changes Made in Revisions
 
-Aside from minor typo fixes and changes in phrasing, these are the changes to
-the paper.
+In addition to minor typo fixes and changes in phrasing, the following
+revisions have been made to the paper to address the reviewers'
+conditions.
 
 ## Including Full Typing Rules of Both Universes
-The revised paper now contains a complete description of the language, including
+The revised paper and appendix now contain a complete description of the language, including
 both the non-linear and linear fragments.
 
 We now provide context well-formedness rules in Figure 6; include the non-linear
@@ -35,10 +36,10 @@ issues with our implementation method. We mention that equality
 reflection implies function extensionality and so porting our
 development to an intensional type theory may require a setoid construction.
 
-We also have a brief discussion of function extensionality in Section
-5.3, explaining why uniqueness of identity proofs holds for the
-shallowly embedded types and note the convenience of function
-extensionality in verifying the equations of the shallow embedding.
+We also have a brief discussion of extensionality in Section 5.3. We
+explain why uniqueness of identity proofs holds for the shallowly
+embedded types and note the convenience of function extensionality in
+verifying the equations of the shallow embedding.
 
 ## Comparisons with Related Work
 
@@ -71,6 +72,4 @@ We more precisely describe the mapping from our universes into Cubical Agda.
 
 We also give links to the Agda implementation. These are currently redacted for
 double-blind reviewing, but we will later fill them in appropriately. 
-
-
 
