@@ -3650,21 +3650,57 @@ For $X : U$, define $List~X$ as,
   \]
 
 \begin{figure}
+  \footnotesize
   \begin{mathpar}
-    \inferrule{\Gamma \vdash M : U}{\Gamma \vdash \unquoteTy M \isSmall}
+    \inferrule{~}{\Gamma \vdash 1 \isSmall}
+
+    \inferrule{~}{\Gamma \vdash Bool \isSmall}
+
+    \inferrule{~}{\Gamma \vdash \bot \isSmall}
+
+    \inferrule{~}{\Gamma \vdash Nat \isSmall}
 
     \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash Y \isSmall}{\Gamma \vdash \PiTyLimit {x}{X}{Y} \isSmall}
-    \cdots
+
+    \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash Y \isSmall}{\Gamma \vdash \SigTyLimit {x}{X}{Y} \isSmall}
+
+    \inferrule{\Gamma \vdash M : U}{\Gamma \vdash \unquoteTy M \isSmall}
+
+    \inferrule{\Gamma \vdash A \isSmallLin}{\Gamma \vdash {\ltonl A} \isSmall}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \nonlinterm \Gamma M X \and
+      \nonlinterm \Gamma N X}{\Gamma \vdash {M =_{X} N} \isSmall}
   \end{mathpar}
   \caption{Small Non-linear Types}
 \end{figure}
 
 \begin{figure}
+  \footnotesize
   \begin{mathpar}
-    \inferrule{\Gamma \vdash M : L}{\Gamma \vdash \unquoteTy M \isSmallLin}
+    \inferrule{~}{\Gamma \vdash I \isSmallLin}
+
+    \inferrule{c \in \Sigma}{\Gamma \vdash {\literal{c}} \isSmallLin}
+
+    \inferrule{\Gamma \vdash A \isSmallLin \and \Gamma \vdash B \isSmallLin}{
+      \Gamma \vdash {A \otimes B} \isSmallLin}
+
+    \inferrule{\Gamma \vdash A \isSmallLin \and \Gamma \vdash B \isSmallLin}{
+      \Gamma \vdash {A \lto B} \isSmallLin}
+
+    \inferrule{\Gamma \vdash A \isSmallLin \and \Gamma \vdash B \isSmallLin}{
+      \Gamma \vdash {A \tol B} \isSmallLin}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash A \isSmallLin}{\Gamma \vdash \LinSigTyLimit {x}{X}{A} \isSmallLin}
 
     \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash A \isSmallLin}{\Gamma \vdash \LinPiTyLimit {x}{X}{A} \isSmallLin}
-    \cdots
+
+    \inferrule{\Gamma \vdash A \isSmallLin \and
+      \Gamma \vdash B \isSmallLin \and
+      \nonlinterm \Gamma f {\ltonl{(A \lto B)}} \and
+      \nonlinterm \Gamma g {\ltonl{(A \lto B)}}}{\Gamma \vdash {\equalizer
+        {a}{f}{g}} \isSmallLin}
+
+    \inferrule{\Gamma \vdash M : L}{\Gamma \vdash \unquoteTy M \isSmallLin}
   \end{mathpar}
   \caption{Small Linear Types}
 \end{figure}
