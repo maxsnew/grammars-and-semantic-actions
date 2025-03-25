@@ -657,12 +657,17 @@ it is more
 appropriate to think of it as a parse \textit{transformer} --- a function from
 parses of $(\A \otimes \A)^{*}$ to parses of $\A^{*}$.
 
-We define $\texttt{h}$ by recursion on terms of type $(\A \otimes \A)^{*}$.
+We define $h$ by recursion on terms of type $(\A \otimes \A)^{*}$.
 This recursion is expressed in the derivation tree by invoking the
 elimination principle for Kleene star, written
-as $\fold$. The parse transformer $\texttt{h}$ is more compactly presented in the pseudocode
+as $\fold$. The parse transformer $h$ is more compactly presented in the pseudocode
 of \cref{fig:kleeneabstractproof} by pattern matching on the input and making an
-explicit recursive call in the body of its definition.
+explicit recursive call in the body of its definition. At the bottom of
+\cref{fig:kleeneabstractproof}, we give a defintion of the same function as it
+appears in our current implementation. $h'$ is written via combinators,
+without any pattern matching or introduction
+of named linear variables. Further, when written in this style, we must
+explicitly invoke combinators that explicitly reassociate $\otimes$. \steven{What else to say here?}
 
 \begin{figure}
 \footnotesize
@@ -693,6 +698,10 @@ explicit recursive call in the body of its definition.
 h : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
 h nil = nil
 h (cons (a1 , a2) as) = cons a1 (cons a2 (h as))
+\end{lstlisting}
+\begin{lstlisting}
+h' : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
+h' = fold*r nil (cons (*@$\circ$@*) id (*@$\otimes$@*) cons (*@$\circ$@*) assoc(*@$^{-1}$@*))
 \end{lstlisting}
 \caption{(\Agda{\fillerlink}) A parse transformer for abstract grammars}
 \label{fig:kleeneabstractproof}
@@ -757,7 +766,6 @@ data Trace : (s : Fin 3) (*@$\to$@*) L where
 
 k : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*)  Trace 0)
 k (a , b) = 0to1 (1to1 a (1to2 b stop))
-
 \end{lstlisting}
   \end{minipage}%
   \begin{minipage}[t]{.4\textwidth}
@@ -2542,7 +2550,9 @@ we are careful to only construct grammars, terms and proofs using
 constructs that are possible in \theoryabbv. The main difference
 between our shallow embedding and \theoryabbv is that our linear terms
 are written in a combinator-style, without being able to use named
-variables in linear terms. A benefit of this shallow embedding is that
+variables in linear terms. We give examples of this style in
+\cref{fig:kleeneabstractproof} and the linked Agda code \agdalogo.
+A benefit of this shallow embedding is that
 the parsers are immediately available to a larger Agda development, as
 they are just normal Agda code. In future work we will look to
 implement a type checker for a syntax closer to the presentation in
