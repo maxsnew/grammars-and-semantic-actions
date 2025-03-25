@@ -9,8 +9,8 @@ The revised paper and appendix now contain a complete description of the languag
 both the non-linear and linear fragments.
 
 We now provide context well-formedness rules in Figure 6; include the non-linear
-rules in Figures 7, 18, and 19; include the linear rules in Figures
-8, 9, and 20; and, include substitution rules in Figures 21 and 22.
+rules in Figures 7, 18, 20, and 21; include the linear rules in Figures
+8, 9, 19, and 22; and, include substitution rules in Figures 23 and 24.
 
 We have also expanded on the explanation of smallness, and included
 the full details in the appendix of when a type is small. In doing so we found a typo in the non-linear type former figure, which should require that the input type is small before it can be quoted.
