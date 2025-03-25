@@ -696,12 +696,14 @@ This recursion is expressed in the derivation tree by invoking the
 elimination principle for Kleene star, written
 as $\fold$. The parse transformer $h$ is more compactly presented in the pseudocode
 of \cref{fig:kleeneabstractproof} by pattern matching on the input and making an
-explicit recursive call in the body of its definition. At the bottom of
+explicit recursive call in the body of its definition.
+
+At the bottom of
 \cref{fig:kleeneabstractproof}, we give a defintion of the same function as it
-appears in our current implementation. $h'$ is written via combinators,
-without any pattern matching or introduction
-of named linear variables. Further, when written in this style, we must
-explicitly invoke combinators that explicitly reassociate $\otimes$. \steven{What else to say here?}
+appears in our current Agda implementation \cite{?}. $h'$ is written as a
+composition of combinators,
+each without any pattern matching or introduction
+of named linear variables. More discussion of our implementation is given in \cref{subsec:impl}.
 
 \begin{figure}
 \footnotesize
@@ -2567,7 +2569,7 @@ straightforward extension of existing semantics of linear logic in
 monoidal categories, and is included in the appendix\cite{seely89}.
 
 \subsection{Agda Implementation}
-
+\label{subsec:impl}
 This denotational semantics in grammars and parse transformers serves
 as the basis for our prototype implementation of \theoryabbv in
 Cubical Agda. The implementation is a shallow embedding, meaning that
