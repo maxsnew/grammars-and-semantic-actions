@@ -3432,13 +3432,13 @@ Our design of \theoryabbv extends this view of grammars as types to a much broad
 \paragraph{Dependent Linear Types}
 Our syntax for non-commutative dependent linear type theory is based on the
 dependent commutative linear type theory of
-\citet{krishnaswami_integrating_2015}, itself an extension of Benton and
-Wadler's linear-non-linear calculus \cite{benton1994}. A
-distinct feature of these systems is that linear types and non-linear types are
-distinct sorts, so the linear logic $!$ operator is not a primitive, but is
-instead definable, for instance in \theoryabbv as $!A = \LinSigTy{\_}{\ltonl A}{I}$.
-V\'ak\'ar develops a dependent linear type theory where instead the non-linear
-types are accessed using the $!$ modality, similar to Girard's original approach
+\citet{krishnaswami_integrating_2015}, itself an extension of Benton's
+linear-non-linear calculus \cite{benton1994}. A distinct feature of these
+systems is that linear types and non-linear types are distinct sorts, so the
+linear logic $!$ operator is not a primitive, but is instead definable, for
+instance in \theoryabbv as $!A = \LinSigTy{\_}{\ltonl A}{I}$.  V\'ak\'ar
+develops a dependent linear type theory where instead the non-linear types are
+accessed using the $!$ modality, similar to Girard's original approach
 \cite{vakar2015,girard_linear_1987}. Additionally, V\'ak\'ar develops a general
 categorical semantics for their system, whereas we have only developed a single
 denotational model. It appears straightforward to adapt V\'ak\'ar's general
