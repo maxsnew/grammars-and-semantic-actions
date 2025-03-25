@@ -12,6 +12,9 @@ We now provide context well-formedness rules in Figure 6; include the non-linear
 rules in Figures 7, 18, and 19; include the linear rules in Figures
 8, 9, and 20; and, include substitution rules in Figures 21 and 22.
 
+We have also expanded on the explanation of smallness, and included
+the full details in the appendix of when a type is small. In doing so we found a typo in the non-linear type former figure, which should require that the input type is small before it can be quoted.
+
 ## Discussion of Axioms
 Each axiom is now distinguished with an axiom environment. 
 In particular, around Corollary 3.2 and each of Axioms
