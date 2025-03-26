@@ -1,7 +1,7 @@
 % -*- fill-column: 80; -*-
 %DIF LATEXDIFF DIFFERENCE FILE
 %DIF DEL submission.tex   Tue Mar 25 11:26:41 2025
-%DIF ADD paper.tex        Tue Mar 25 12:47:33 2025
+%DIF ADD paper.tex        Tue Mar 25 21:46:00 2025
 %DIF 2c2-36
 %DIF < \documentclass[review,anonymous,screen,acmsmall,nonacm]{acmart}
 %DIF -------
@@ -38,8 +38,8 @@
 %% Citation style %DIF > 
 %% Note: author/year citations are required for papers published as an %DIF > 
 %% issue of PACMPL. %DIF > 
-%% \citestyle{acmauthoryear}   %% For author/year citations %DIF > 
-\citestyle{acmnumeric} %DIF > 
+\citestyle{acmauthoryear}   %% For author/year citations %DIF > 
+%% \citestyle{acmnumeric} %DIF > 
 %DIF -------
 \usepackage{mathpartir}
 \usepackage{tikz-cd}
@@ -190,6 +190,9 @@ frame=single
 \newcommand{\isCtx}{\textrm{ ctx}}
 \newcommand{\isSmall}{\textrm{ small}}
 \newcommand{\isLinTy}{\textrm{ lin. type}}
+%DIF 115a154
+\newcommand{\isSmallLin}{\textrm{ small lin.}} %DIF > 
+%DIF -------
 \newcommand{\isLinCtx}{\textrm{ lin. ctx.}}
 
 \newcommand{\quoteTy}[1]{\lceil{#1}\rceil}
@@ -219,7 +222,7 @@ frame=single
 \newcommand{\literal}[1]{\texttt{\textquotesingle#1\textquotesingle}}
 \newcommand{\stringquote}[1]{\texttt{\textquotedbl#1\textquotedbl}}
 \newcommand{\internalize}[1]{\lceil#1\rceil}
-%DIF 144a183
+%DIF 144a184
 \newcommand{\listTy}[1]{List\left( #1 \right)} %DIF > 
 %DIF -------
 
@@ -238,7 +241,7 @@ frame=single
 \newcommand{\app}[2]{#1 \, #2}
 \newcommand{\applto}[2]{#1 \, #2}
 \newcommand{\apptol}[2]{#1 \mathop{{}^{\tol}} #2}
-%DIF 160-162c200-204
+%DIF 160-162c201-205
 %DIF < \newcommand{\PiTy}[3]{\textstyle\prod (#1 : #2). #3}
 %DIF < \newcommand{\SigTy}[3]{\textstyle\sum (#1 : #2). #3}
 %DIF < \newcommand{\LinPiTy}[3]{\textstyle\bigamp (#1 : #2). #3}
@@ -250,7 +253,7 @@ frame=single
 \newcommand{\LinPiTy}[3]{\textstyle\bigamp_{#1 : #2} #3} %DIF > 
 %DIF -------
 \newcommand{\LinPiTyLimit}[3]{\bigwith\limits_{#1 : #2} #3}
-%DIF 164c206
+%DIF 164c207
 %DIF < \newcommand{\LinSigTy}[3]{\textstyle\bigoplus (#1 : #2). #3}
 %DIF -------
 \newcommand{\LinSigTy}[3]{\textstyle\bigoplus_{#1 : #2} #3} %DIF > 
@@ -268,14 +271,14 @@ frame=single
 \newcommand{\ctxwffjdg}[2]{#1 \vdash #2 \isTy}
 \newcommand{\linctxwff}[2]{#1 \vdash #2 \isLinCtx}
 \newcommand{\linctxwffjdg}[2]{#1 \vdash #2 \isLinTy}
-%DIF 178a220-223
+%DIF 178a221-224
 \newcommand{\nonlinterm}[3]{#1 \vdash #2 : #3} %DIF > 
 \newcommand{\linterm}[4]{#1 ; #2 \vdash #3 : #4} %DIF > 
 \newcommand{\nonlineq}[4]{#1 \vdash #2 \equiv #3 : #4} %DIF > 
 \newcommand{\lineq}[5]{#1 ; #2 \vdash #3 \equiv #4 : #5} %DIF > 
 %DIF -------
 
-%DIF 179a225-231
+%DIF 179a226-232
 \newcommand{\LLL}{\textrm{LL}} %DIF > 
 \newcommand{\LRR}{\textrm{LR}} %DIF > 
 \newcommand{\LALRR}{\textrm{LALR}} %DIF > 
@@ -292,7 +295,7 @@ frame=single
 \newcommand{\agdalogo}{%
   \usebox{\logoagdabox}}%
 
-%DIF 187a240-242
+%DIF 187a241-243
 \newcommand{\fillerlink}{http://localhost:1313} %DIF > 
 \newcommand{\Agda}[1]{\href{#1}{\agdalogo}} %DIF > 
  %DIF > 
@@ -304,7 +307,7 @@ frame=single
 \newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro says}: #1]}\fi}
 \newcommand{\nathan}[1]{\ifdraft{\color{green}[{\bf Nathan says}: #1]}\fi}
 \newcommand{\pipe}{\,|\,}
-%DIF 194a250-287
+%DIF 194a251-288
  %DIF > 
 \newcommand{\states}{\mathtt{states}} %DIF > 
 \newcommand{\labelt}{label} %DIF > 
@@ -1245,9 +1248,9 @@ judgments as well. Additionally, we have a judgment \DIFdelbegin \DIFdel{$\Gamma
     \\
     \boxed{\inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma M X}}
 
-    \inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma {\quoteTy X} U}
+    \inferrule{\Gamma \vdash  X \isSmall}{\nonlinterm \Gamma {\quoteTy X} U}
 
-    \inferrule{\linctxwffjdg \Gamma A}{\nonlinterm \Gamma {\quoteTy A} L}
+    \inferrule{\Gamma \vdash A \isSmallLin}{\nonlinterm \Gamma {\quoteTy A} L}
 
     \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
 
@@ -1282,12 +1285,17 @@ other non-linear }\DIFdelend type constructions in
 of the appendix}\DIFaddend .  First,
 we include universe types $U$ of small non-linear types and $L$ of linear
 types. These are defined as
-universes ``ala Coquand'' in that we define a judgment saying when a
-non-linear type is small and define the universe to internalize
-precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. These universe
-types are needed so that we can define types by recursion on natural
-numbers. 
-Next, we include \DIFdelbegin \DIFdel{a }\DIFdelend \DIFaddbegin \DIFadd{standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number types.
+universes ``ala Coquand'' in that we define \DIFdelbegin \DIFdel{a judgment saying when
+a
+}\DIFdelend \DIFaddbegin \DIFadd{judgments saying when
+}\DIFaddend non-linear \DIFdelbegin \DIFdel{type is small and define the universe }\DIFdelend \DIFaddbegin \DIFadd{and linear types are }\emph{\DIFadd{small}} \DIFadd{and define the universes }\DIFaddend to internalize
+precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. \DIFaddbegin \DIFadd{The definition of smallness is simply that all types are small as long as their sub-formulae are, with the exception of the two universe types themselves. }\DIFaddend These universe
+types are needed so that we can define \DIFaddbegin \DIFadd{non-linear and linear }\DIFaddend types by recursion on natural
+numbers.
+Next, we include \DIFdelbegin \DIFdel{a }\DIFdelend \DIFaddbegin \DIFadd{standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number
+types. More complex inductive types --- such as sum types, list types, and
+$Fin~n$ --- can be defined in terms of these primitives, and we give their
+encoding in the appendix.
 }
 
 \DIFadd{We use an }\emph{\DIFadd{extensional}} \DIFadd{equality type $M =_{X} N$ with introduction form
@@ -1297,12 +1305,14 @@ arbitrary typal equality proof $P$.  The usage of an extensional equality type
 matches our implementation, which interprets both judgmental and typal equality
 as Cubical Agda's }\texttt{\DIFadd{Path}} \DIFadd{type, and so naturally supports the equality
 reflection rule. Extensional equality makes type checking of our syntax as such
-undecidable because the conversion rule may require an arbitrarily complex
+undecidable \mbox{%DIFAUXCMD
+\citep{Hofmann_1997} }\hskip0pt%DIFAUXCMD
+because the conversion rule may require an arbitrarily complex
 equality proof with no explicit proof term, but in our Agda implementation we
 must provide all of these equalities manually, and so the extensionality does
-not raise any issues \mbox{%DIFAUXCMD
-\cite{Hofmann_1997}}\hskip0pt%DIFAUXCMD
-.
+not raise any issues for our implementation. This makes
+}\theoryabbv \DIFadd{into an extensional theory, supporting function extensionality and
+the uniqueness of identity proofs. The development could be ported to an intensional type theory in the future, possibly requiring the use of setoids to handle function extensionality.
 }
 
 \DIFadd{Lastly, we include a }\DIFaddend non-linear type $\ltonl A$ where $A$ is a linear type. The
@@ -1391,6 +1401,8 @@ separation logic \cite{girard_linear_1987,jung_higher-order_2016}.
       \nonlinterm \Gamma g {\ltonl{(A \lto B)}}}{\linctxwffjdg \Gamma {\equalizer {a}{f}{g}}}
 
     \inferrule{\nonlinterm \Gamma M L}{\linctxwffjdg \Gamma {\unquoteTy M}}
+
+    \boxed{\inferrule{\linctxwffjdg \Gamma A}{\Gamma \vdash A \isSmallLin}}
 
     \\
     \boxed{\inferrule{\linctxwffjdg \Gamma A \and \linctxwffjdg \Gamma B}{\linctxwffjdg \Gamma {A \equiv B}}}
@@ -1929,7 +1941,7 @@ these notions of equivalence in \theoryabbv.
   Grammars $\A$ and $\B$ are \emph{weakly equivalent} if there \DIFdelbegin \DIFdel{exists
   }\DIFdelend \DIFaddbegin \DIFadd{exist
   }\DIFaddend parse transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B
-    \lto \A)}$. $\A$ is a \emph{retract} of $\B$ if $\A$ and $\B$ are
+    \lto \A)}$. $\A$ is a \emph{retract} of $\B$ if \DIFdelbegin \DIFdel{$\A$ and $\B$ }\DIFdelend \DIFaddbegin \DIFadd{they }\DIFaddend are
   weakly equivalent and $\lambda a. g(f(a)) \equiv \lambda a.a$. They
   are \emph{strongly equivalent} if further the other composition is
   the identity, i.e., $\lambda b. f(g(b)) \equiv \lambda b.b$.
@@ -3234,7 +3246,7 @@ containers and we have verified the construction in Agda.
 We use dependent polynomials functors on sets as these are guaranteed
 to have initial algebras. Further, these initial algebras are readily
 constructed in our Agda implementation as an inductive type of $IW$
-trees which are already available in the cubical library of Agda
+trees which are already available in the \DIFdelbegin \DIFdel{cubical }\DIFdelend \DIFaddbegin \DIFadd{Cubical }\DIFaddend library of Agda
 \cite{The_Agda_Community_Cubical_Agda_Library_2024}.  Then an element $F \in \sem{X \to
   \SPF\,X}\gamma$ is an $\sem{X}\gamma$-indexed family of polynomial
 functors from $\sem{X}\gamma\times \Sigma^*$ to $\Sigma^*$, and taking
@@ -3260,16 +3272,16 @@ monoidal categories, and is included in the appendix\cite{seely89}.
 \DIFaddend This denotational semantics in grammars and parse transformers serves
 as the basis for our prototype implementation of \theoryabbv in
 \DIFdelbegin \DIFdel{cubical }\DIFdelend \DIFaddbegin \DIFadd{Cubical }\DIFaddend Agda. The implementation is a shallow embedding, meaning that
-rather than formalizing a syntax of \theoryabbv types and terms, we \DIFdelbegin \DIFdel{work directly with Agdatypes and a definition of a formal grammar as a function $\String \to \Set$}\DIFdelend \DIFaddbegin \DIFadd{interpret
+rather than formalizing a syntax of \theoryabbv types and terms, we \DIFdelbegin \DIFdel{work directly with Agdatypes and a definition of a formal grammar as a function $\String \to \Set$. }\DIFdelend \DIFaddbegin \DIFadd{interpret
 the non-linear universe $U$ as Cubical Agda's universe of (homotopy) sets (at
 some universe level $\ell$), $\hSet~\ell$, and the linear universe $L$ as the
 function type
-$\StringSem \to \hSet~\ell$}\DIFaddend . Then we implement each of the type and
+$\StringSem \to \hSet~\ell$. We use $\hSet~\ell$ as it ensures that uniqueness of identity proofs holds for the interpretation of all types in }\theoryabbv\DIFadd{, as it does in any extensional type theory. }\DIFaddend Then we implement each of the type and
 term constructors of \theoryabbv as combinators on formal grammars or
 parse transformers, and use \DIFdelbegin \DIFdel{cubical }\DIFdelend \DIFaddbegin \DIFadd{Cubical }\DIFaddend Agda's equality type to model the
 term equalities. Cubical Agda is convenient for this purpose as it has
-built-in support for function extensionality which we use
-extensively. Axioms such as distributivity of $\oplus/\&$ and
+built-in support for function extensionality which \DIFdelbegin \DIFdel{we use
+extensively}\DIFdelend \DIFaddbegin \DIFadd{is convenient for the verification of equality rules}\DIFaddend . Axioms such as distributivity of $\oplus/\&$ and
 disjointness of constructors are then provable directly in Agda, and
 we are careful to only construct grammars, terms and proofs using
 constructs that are possible in \theoryabbv.
@@ -3291,9 +3303,7 @@ $\literal{a} \otimes (\literal{a} \otimes \literal{a}^{*})$, then act on the
 left by the identity and on the right by $cons$ to get a parse
 $\literal{a} \otimes \literal{a}^{*}$, and finally we act again by $cons$ to
 finally produce a parse of $\literal{a}^{*}$.
-}
-
-\DIFaddend A benefit of this shallow embedding is that
+}\DIFaddend A benefit of this shallow embedding is that
 the parsers are immediately available to a larger Agda development, as
 they are just normal Agda code. \DIFaddbegin \DIFadd{Although, even in the small example from
 \mbox{%DIFAUXCMD
@@ -4070,8 +4080,8 @@ of grammar formalism has gone by the names Lambek calculus or
 context-free grammars.  The existing works on categorial grammar are
 different in nature to our approach: they are based on non-commutative
 linear logic, but their terms do not include elimination rules, and so
-can only express parse trees, and so cannot be used to express
-verified parsers.
+can only express parse trees, \DIFdelbegin \DIFdel{and so cannot be used to express
+}\DIFdelend \DIFaddbegin \DIFadd{not }\DIFaddend verified parsers.
 
 The most similar prior work to our own is Luo's Lambek calculus with
 dependent types \cite{luo}. \DIFdelbegin \DIFdel{Their design differs from our own in
@@ -4145,15 +4155,15 @@ uses essentially the same denotational semantics as ours, interpreting regular e
 dependent commutative linear type theory of
 \mbox{%DIFAUXCMD
 \citet{krishnaswami_integrating_2015}}\hskip0pt%DIFAUXCMD
-, itself an extension of Benton and
-Wadler's linear-non-linear calculus \mbox{%DIFAUXCMD
+, itself an extension of Benton's
+linear-non-linear calculus \mbox{%DIFAUXCMD
 \cite{benton1994}}\hskip0pt%DIFAUXCMD
-. A
-distinct feature of these systems is that linear types and non-linear types are
-distinct sorts, so the linear logic $!$ operator is not a primitive, but is
-instead definable, for instance in }\theoryabbv \DIFadd{as $!A = \LinSigTy{\_}{\ltonl A}{I}$.
-V\'ak\'ar develops a dependent linear type theory where instead the non-linear
-types are accessed using the $!$ modality, similar to Girard's original approach
+. A distinct feature of these
+systems is that linear types and non-linear types are distinct sorts, so the
+linear logic $!$ operator is not a primitive, but is instead definable, for
+instance in }\theoryabbv \DIFadd{as $!A = \LinSigTy{\_}{\ltonl A}{I}$.  V\'ak\'ar
+develops a dependent linear type theory where instead the non-linear types are
+accessed using the $!$ modality, similar to Girard's original approach
 \mbox{%DIFAUXCMD
 \cite{vakar2015,girard_linear_1987}}\hskip0pt%DIFAUXCMD
 . Additionally, V\'ak\'ar develops a general
@@ -4293,14 +4303,29 @@ framework for verified type checking and static analysis.
 % Uniqueness of derivations ~~ unambiguous grammar
 % type elaborator           ~~ semantic actions
 
-
 \DIFdelbegin %DIFDELCMD < \bibliographystyle{plain}
+%DIFDELCMD < \bibliography{refs.bib}
 %DIFDELCMD < %%%
-\DIFdelend \bibliography{refs.bib}
+\DIFdelend \DIFaddbegin \newpage
+\DIFaddend 
 
-\pagebreak
+\DIFdelbegin %DIFDELCMD < \pagebreak
+%DIFDELCMD < %%%
+\DIFdelend %DIF >  \begin{acks}
+%DIF >    This material is based upon work supported by the
+%DIF >    \grantsponsor{GS100000001}{National Science
+%DIF >      Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
+%DIF >    No.~\grantnum{GS100000001}{nnnnnnn} and Grant
+%DIF >    No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
+%DIF >    conclusions or recommendations expressed in this material are those
+%DIF >    of the author and do not necessarily reflect the views of the
+%DIF >    National Science Foundation.
+%DIF >  \end{acks}
 
-\ifappendix
+\DIFaddbegin \bibliography{refs.bib}
+
+\newpage
+\DIFaddend \ifappendix
 \appendix
 \DIFdelbegin %DIFDELCMD < 
 
@@ -4331,50 +4356,103 @@ framework for verified type checking and static analysis.
   \end{align*}
 \DIFaddbeginFL \end{minipage}%DIF > 
   \DIFaddendFL \caption{Strictly positive functors functorial actions}
-\end{figure}
+  \DIFaddbeginFL \label{fig:spf-act}
+\DIFaddendFL \end{figure}
 
 In this section we include the elided syntactic forms, as well as
 definitions and basic properties of linear and non-linear
 substitution.
 
-\DIFaddbegin \DIFadd{\max{TODO: include the rest of the rules}
-}\steven{I added rules for Bool, Nat, and List. What else do we need?}
+\DIFaddbegin \DIFadd{In \mbox{%DIFAUXCMD
+\cref{fig:spf-act}}\hskip0pt%DIFAUXCMD
+, we provide the functorial actions for the strictly
+positive functors defined in \mbox{%DIFAUXCMD
+\cref{fig:iilt}}\hskip0pt%DIFAUXCMD
+. We also include the full set of
+rules for non-linear types in \mbox{%DIFAUXCMD
+\cref{fig:full-non-linear-types}}\hskip0pt%DIFAUXCMD
+, and we provide
+their judgmental equalities in \mbox{%DIFAUXCMD
+\cref{fig:jdg-eq-nonlinear}}\hskip0pt%DIFAUXCMD
+. Finally,
+\mbox{%DIFAUXCMD
+\cref{fig:jdgeq} }\hskip0pt%DIFAUXCMD
+contains the judgmental equalities between linear terms in
+}\theoryabbv\DIFadd{.
+}
+
+\subsection{\DIFadd{Non-linear Types}}
+\DIFadd{We define sum types, list types, and $Fin~n$ from primitve non-linear types.
+}
+
+\DIFadd{For $X , Y : U$, define the sum type $X + Y$ as,
+}
+
+\[
+\DIFadd{X + Y = }\SigTyLimit{b}{Bool}{elim_{Bool}(U, X, Y)(b)}
+\]
+
+\DIFadd{For $n : Nat$, define $Fin~n$ as,
+}
+
+\begin{align*}
+  \DIFadd{Fin~0 }&\DIFadd{= \bot }\\
+  \DIFadd{Fin~(suc~n) }&\DIFadd{= 1 + (Fin~n)
+}\end{align*}
+
+\DIFadd{For $X : U$, define $List~X$ as,
+}
+
+\[
+  \DIFadd{List~X = }\SigTyLimit{n}{Nat}{\PiTyLimit{k}{Fin~n}{X}}
+  \]
 
 \DIFaddend \begin{figure}
-  \begin{mathpar}
-  \DIFdelbeginFL %DIFDELCMD < \inferrule{~}{\ctxwff \cdot}
+  \DIFaddbeginFL \footnotesize
+  \DIFaddendFL \begin{mathpar}
+    \DIFdelbeginFL %DIFDELCMD < \inferrule{~}{\ctxwff \cdot}
 %DIFDELCMD <     \and
 %DIFDELCMD <     \inferrule{\ctxwff \Gamma \\ \ctxwffjdg \Gamma X}{\ctxwff {\Gamma, x : X}}
 %DIFDELCMD <     \inferrule{\Gamma \vdash X : U_i}{\ctxwffjdg \Gamma X}
 %DIFDELCMD < %%%
-\DIFdelendFL \DIFaddbeginFL \footnotesize
-    \boxed{\inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma M X}}
+\DIFdelendFL \DIFaddbeginFL \inferrule{~}{\Gamma \vdash 1 \isSmall}
 \DIFaddendFL 
 
     \DIFdelbeginFL %DIFDELCMD < \boxed{\linctxwffjdg \Gamma A}
 %DIFDELCMD < %%%
-\DIFdelendFL \DIFaddbeginFL \inferrule{~}{\nonlinterm {\Gamma , x : X , \Gamma'} {x} {X}}
+\DIFdelendFL \DIFaddbeginFL \inferrule{~}{\Gamma \vdash Bool \isSmall}
 \DIFaddendFL 
 
     \DIFdelbeginFL %DIFDELCMD < \inferrule{~}{\linctxwff \Gamma \cdot}
 %DIFDELCMD <     \and
 %DIFDELCMD <     \inferrule{\linctxwff \Gamma \Delta \\ \linctxwffjdg \gamma A}{\linctxwff \Gamma {\Delta, a : A}}
-%DIFDELCMD <   \end{mathpar}
 %DIFDELCMD <   %%%
-%DIFDELCMD < \caption{%
-{%DIFAUXCMD
-\DIFdelFL{Context rules}}
-%DIFAUXCMD
-%DIFDELCMD < \end{figure}
-%DIFDELCMD < %%%
-\DIFdelend \DIFaddbegin \inferrule{\nonlinterm \Gamma M Y \and \ctxwffjdg \Gamma {X \equiv Y}}{\nonlinterm {\Gamma} {M} {X}}
-\DIFaddend 
+\DIFdelendFL \DIFaddbeginFL \inferrule{~}{\Gamma \vdash \bot \isSmall}
 
-    %DIF < % \begin{figure}
+    \inferrule{~}{\Gamma \vdash Nat \isSmall}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash Y \isSmall}{\Gamma \vdash \PiTyLimit {x}{X}{Y} \isSmall}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash Y \isSmall}{\Gamma \vdash \SigTyLimit {x}{X}{Y} \isSmall}
+
+    \inferrule{\Gamma \vdash M : U}{\Gamma \vdash \unquoteTy M \isSmall}
+
+    \inferrule{\Gamma \vdash A \isSmallLin}{\Gamma \vdash {\ltonl A} \isSmall}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \nonlinterm \Gamma M X \and
+      \nonlinterm \Gamma N X}{\Gamma \vdash {M =_{X} N} \isSmall}
+  \DIFaddendFL \end{mathpar}
+  \caption{\DIFdelbeginFL \DIFdelFL{Context rules}\DIFdelendFL \DIFaddbeginFL \DIFaddFL{Small Non-linear Types}\DIFaddendFL }
+\end{figure}
+
+%DIF < % \begin{figure}
 %DIF < %   \begin{mathpar}
 %DIF < %   \boxed{\Gamma \vdash M : X}
-\DIFaddbegin \inferrule{~}{\nonlinterm {\Gamma} {tt} {1}}
-\DIFaddend 
+\DIFaddbegin \begin{figure}
+  \footnotesize
+  \begin{mathpar}
+    \inferrule{~}{\Gamma \vdash I \isSmallLin}
+\DIFaddendFL 
 
     %DIF < %   \inferrule{~}{\Gamma, x : X, \Gamma' \vdash x : X}
 %DIF < %   %
@@ -4413,12 +4491,54 @@ substitution.
 %DIF < %   \caption{Intuitionistic typing}
 %DIF < %   \label{fig:inttyping}
 %DIF < % \end{figure}
-\DIFaddbegin \inferrule
+\DIFaddbeginFL \inferrule{c \in \Sigma}{\Gamma \vdash {\literal{c}} \isSmallLin}
+\DIFaddendFL 
+
+    \DIFaddbeginFL \inferrule{\Gamma \vdash A \isSmallLin \and \Gamma \vdash B \isSmallLin}{
+      \Gamma \vdash {A \otimes B} \isSmallLin}
+
+    \inferrule{\Gamma \vdash A \isSmallLin \and \Gamma \vdash B \isSmallLin}{
+      \Gamma \vdash {A \lto B} \isSmallLin}
+
+    \inferrule{\Gamma \vdash A \isSmallLin \and \Gamma \vdash B \isSmallLin}{
+      \Gamma \vdash {A \tol B} \isSmallLin}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash A \isSmallLin}{\Gamma \vdash \LinSigTyLimit {x}{X}{A} \isSmallLin}
+
+    \inferrule{\Gamma \vdash X \isSmall \and \Gamma,x:X \vdash A \isSmallLin}{\Gamma \vdash \LinPiTyLimit {x}{X}{A} \isSmallLin}
+
+    \inferrule{\Gamma \vdash A \isSmallLin \and
+      \Gamma \vdash B \isSmallLin \and
+      \nonlinterm \Gamma f {\ltonl{(A \lto B)}} \and
+      \nonlinterm \Gamma g {\ltonl{(A \lto B)}}}{\Gamma \vdash {\equalizer
+        {a}{f}{g}} \isSmallLin}
+
+    \inferrule{\Gamma \vdash M : L}{\Gamma \vdash \unquoteTy M \isSmallLin}
+  \end{mathpar}
+  \caption{\DIFaddFL{Small Linear Types}}
+\end{figure}
+
+\DIFaddend \begin{figure}
+  \begin{mathpar}
+  %DIF < 
+    \DIFdelbeginFL %DIFDELCMD < \inferrule{\Gamma ; a : A , \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lambtol a e : B\tol A}
+%DIFDELCMD <     \and
+%DIFDELCMD <     \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta', \Delta \vdash \apptol e {e'} : B}
+%DIFDELCMD <   %%%
+\DIFdelendFL \DIFaddbeginFL \footnotesize
+    \boxed{\inferrule{\ctxwffjdg \Gamma X}{\nonlinterm \Gamma M X}}
+
+    \inferrule{~}{\nonlinterm {\Gamma , x : X , \Gamma'} {x} {X}}
+
+    \inferrule{\nonlinterm \Gamma M Y \and \ctxwffjdg \Gamma {X \equiv Y}}{\nonlinterm {\Gamma} {M} {X}}
+
+    \inferrule{~}{\nonlinterm {\Gamma} {tt} {1}}
+
+    \inferrule
     {\nonlinterm \Gamma M \bot \and \ctxwffjdg \Gamma X}
     {\nonlinterm \Gamma {elim_{\bot}(X, M)} {X}}
-\DIFaddend 
 
-    \DIFaddbegin \inferrule{~}{\nonlinterm \Gamma {true} {Bool}}
+    \inferrule{~}{\nonlinterm \Gamma {true} {Bool}}
 
     \inferrule{~}{\nonlinterm \Gamma {false} {Bool}}
 
@@ -4473,26 +4593,24 @@ substitution.
 
     \inferrule{\linterm \Gamma \cdot e A}{\nonlinterm \Gamma e \ltonl{A}}
 
-  \end{mathpar}
-  \caption{\DIFadd{Non-linear Typing}}
-  \label{fig:full-non-linear-types}
-\end{figure}
+  \DIFaddendFL \end{mathpar}
+  \caption{\DIFdelbeginFL \DIFdelFL{Linear terms (extended)}\DIFdelendFL \DIFaddbeginFL \DIFaddFL{Non-linear Typing}\DIFaddendFL }
+  \DIFaddbeginFL \label{fig:full-non-linear-types}
+\DIFaddendFL \end{figure}
 
-\DIFaddend \begin{figure}
+\begin{figure}
   \DIFaddbeginFL \footnotesize
   \DIFaddendFL \begin{mathpar}
-    %DIF < 
-    \DIFdelbeginFL %DIFDELCMD < \inferrule{\Gamma ; a : A , \Delta \vdash e : B}{\Gamma ; \Delta \vdash \lambtol a e : B\tol A}
-%DIFDELCMD <     \and
-%DIFDELCMD <     \inferrule{\Gamma ; \Delta \vdash e : B \tol A \\ \Gamma ; \Delta' \vdash e' : A}{\Gamma ; \Delta', \Delta \vdash \apptol e {e'} : B}
-%DIFDELCMD <   %%%
+    \DIFdelbeginFL %DIFDELCMD < \boxed{\Gamma ; \Delta \vdash e \equiv e' : A}
+%DIFDELCMD < %%%
 \DIFdelendFL \DIFaddbeginFL \boxed{
       \inferrule
       {\nonlinterm \Gamma M X \and
        \nonlinterm \Gamma N X}
       {\nonlinterm \Gamma {M \equiv N} {X}}}
+\DIFaddendFL 
 
-  \inferrule{\nonlinterm \Gamma M 1 \and \nonlinterm \Gamma N 1}{\nonlineq \Gamma M N 1}
+  \DIFaddbeginFL \inferrule{\nonlinterm \Gamma M 1 \and \nonlinterm \Gamma N 1}{\nonlineq \Gamma M N 1}
 
   %DIF >  \inferrule{\nonlinterm \Gamma M \bot \and \nonlinterm \Gamma N \bot}{\nonlineq \Gamma M N \bot}
 
@@ -4549,24 +4667,21 @@ substitution.
 
   \inferrule{\nonlinterm \Gamma M L}{\nonlineq \Gamma {\quoteTy {\unquoteTy {M}}}
   {M} {L}}
-  \DIFaddendFL \end{mathpar}
-  \caption{\DIFdelbeginFL \DIFdelFL{Linear }\DIFdelendFL \DIFaddbeginFL \DIFaddFL{Judgmental equality for non-linear }\DIFaddendFL terms\DIFdelbeginFL \DIFdelFL{(extended)}\DIFdelendFL }
-  \DIFaddbeginFL \label{fig:jdg-eq-nonlinear}
-\DIFaddendFL \end{figure}
+  \end{mathpar}
+  \caption{\DIFaddFL{Judgmental equality for non-linear terms}}
+  \label{fig:jdg-eq-nonlinear}
+\end{figure}
 
 \begin{figure}
-  \DIFaddbeginFL \footnotesize
-  \DIFaddendFL \begin{mathpar}
-    \DIFdelbeginFL %DIFDELCMD < \boxed{\Gamma ; \Delta \vdash e \equiv e' : A}
-%DIFDELCMD < %%%
-\DIFdelendFL \DIFaddbeginFL \boxed{
+  \footnotesize
+  \begin{mathpar}
+    \boxed{
       \inferrule
       {\linterm \Gamma \Delta e A \and
        \linterm \Gamma \Delta e' A}
       {\Gamma ; \Delta \vdash e \equiv e' : A}}
-\DIFaddendFL 
 
-    % \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
+    \DIFaddendFL % \inferrule{~}{\Gamma; \cdot \vdash G^{-1}\, (G \, t ) \equiv t: A}
 %
 %
     \inferrule{\Gamma ; \Delta , a : A \vdash e : C \\ \Gamma ; \Delta' \vdash e' : A }{\Gamma; \Delta,\Delta' \vdash \app {(\lamblto a e)} {e'} \equiv \subst e {e'} a : C}
@@ -4654,7 +4769,8 @@ substitution.
 %DIFDELCMD < %%%
 \DIFdelend 
 
-\begin{definition}
+\DIFaddbegin \subsection{\DIFadd{Substitutions}}
+\DIFaddend \begin{definition}
   The set of (non-linear) substitutions $\gamma \in
   \textrm{Subst}(\Gamma,\Gamma')$ where $\Gamma \isCtx$ and $\Gamma'
   \isCtx$ is defined by recursion on $\Gamma$:
@@ -4677,7 +4793,11 @@ substitution.
   It is straightforward, but laborious to establish that all forms in
   the type theory that are parameterized by a non-linear context
   $\Gamma$ support the admissible actions of a substitution $\gamma
-  \in \Subst(\Gamma',\Gamma)$ in \Cref{fig:non-linear-substitution}.
+  \in \Subst(\Gamma',\Gamma)$ \DIFdelbegin \DIFdel{in \mbox{%DIFAUXCMD
+\Cref{fig:non-linear-substitution}}\hskip0pt%DIFAUXCMD
+}\DIFdelend \DIFaddbegin \DIFadd{given in \mbox{%DIFAUXCMD
+\cref{fig:non-linear-substitution,fig:substact}}\hskip0pt%DIFAUXCMD
+}\DIFaddend .
   %% Further, these all satisfy identity and composition equations M[\Gamma] = M and M[\gamma][\gamma'] = M[(\gamma \circ \gamma')]
 \end{definition}
 
