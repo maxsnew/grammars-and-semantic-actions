@@ -49,7 +49,7 @@ module _
     decRec
       (J (λ c' c≡c' → ⟨ c' ∉FollowLast A ⟩ Sum.⊎ (disjoint (startsWith c') (startsWith c)))
         (Sum.inl (c∉FLA)))
-      (λ c≢c' → Sum.inr (⊕ᴰ-elim (λ c'≡c → Empty.rec (c≢c' (sym c'≡c))) ∘g same-first' c' c))
+      (λ c≢c' → Sum.inr (⊕ᴰ-elim (λ c'≡c → Empty.rec (c≢c' (sym c'≡c))) ∘g same-first c' c))
       (disc c c')
 
 module _

@@ -14,6 +14,7 @@ open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
 
 open import Grammar Alphabet
+open import Grammar.External.HLevels Alphabet
 open import Term Alphabet
 
 private

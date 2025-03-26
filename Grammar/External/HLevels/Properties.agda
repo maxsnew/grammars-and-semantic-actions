@@ -3,7 +3,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Equiv
 
-module Grammar.HLevels.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.External.HLevels.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Functions.Embedding
 

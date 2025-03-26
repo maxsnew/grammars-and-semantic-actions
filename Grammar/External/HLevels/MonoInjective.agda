@@ -3,7 +3,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Equiv
 
-module Grammar.HLevels.MonoInjective (Alphabet : hSet ℓ-zero) where
+module Grammar.External.HLevels.MonoInjective (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Functions.Embedding
 
@@ -14,7 +14,7 @@ open import Grammar.Base Alphabet
 open import Grammar.String.Base Alphabet
 open import Term Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
-open import Grammar.HLevels.Properties Alphabet
+open import Grammar.External.HLevels.Properties Alphabet
 open import Grammar.String.Properties Alphabet
 
 private
