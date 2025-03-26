@@ -1471,7 +1471,7 @@ these notions of equivalence in \theoryabbv.
   \label{def:weakequiv}
   Grammars $\A$ and $\B$ are \emph{weakly equivalent} if there exist
   parse transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B
-    \lto \A)}$. $\A$ is a \emph{retract} of $\B$ if $\A$ and $\B$ are
+    \lto \A)}$. $\A$ is a \emph{retract} of $\B$ if they are
   weakly equivalent and $\lambda a. g(f(a)) \equiv \lambda a.a$. They
   are \emph{strongly equivalent} if further the other composition is
   the identity, i.e., $\lambda b. f(g(b)) \equiv \lambda b.b$.
@@ -3381,8 +3381,7 @@ of grammar formalism has gone by the names Lambek calculus or
 context-free grammars.  The existing works on categorial grammar are
 different in nature to our approach: they are based on non-commutative
 linear logic, but their terms do not include elimination rules, and so
-can only express parse trees, and so cannot be used to express
-verified parsers.
+can only express parse trees, not verified parsers.
 
 The most similar prior work to our own is Luo's Lambek calculus with
 dependent types \cite{luo}. They present two systems: one like ours where linear
