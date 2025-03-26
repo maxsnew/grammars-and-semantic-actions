@@ -51,7 +51,7 @@ private
         )
         ∘g &⊕ᴰ-distR≅ .fun
         ∘g id ,&
-          (same-first' c c' ∘g
+          (same-first c c' ∘g
           (id ,&p ((id ,⊗ string-intro ∘g ⊗-assoc⁻) ∘g π₂ ,⊗ id)))
       )
       ∘g &⊕ᴰ-distR≅ .fun

@@ -250,8 +250,7 @@ module _
   where
   unambiguous-prop : B ⊢ Ω
   unambiguous-prop w x .fst = A w
-  unambiguous-prop w x .snd =
-    EXTERNAL.unambiguous→isLang unambig-A w
+  unambiguous-prop w x .snd = unambiguous→isLang unambig-A w
 
   unambiguous→subgrammar : Grammar (ℓ-max ℓA ℓB)
   unambiguous→subgrammar = subgrammar unambiguous-prop

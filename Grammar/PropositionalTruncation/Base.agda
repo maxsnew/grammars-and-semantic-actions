@@ -27,11 +27,11 @@ trunc : A ⊢ ∥ A ∥
 trunc w x = PT.∣ x ∣₁
 
 unambiguous∥∥ : unambiguous ∥ A ∥
-unambiguous∥∥ = EXTERNAL.isLang→unambiguous λ w → PT.isPropPropTrunc
+unambiguous∥∥ = isLang→unambiguous λ w → PT.isPropPropTrunc
 
 elim∥∥ : unambiguous A → B ⊢ A → ∥ B ∥ ⊢ A
 elim∥∥ unambig-A f w =
-  PT.rec (EXTERNAL.unambiguous→isLang unambig-A w) (f w)
+  PT.rec (unambiguous→isLang unambig-A w) (f w)
 
 open StrongEquivalence
 
@@ -40,7 +40,7 @@ open StrongEquivalence
   pointwiseIso→≅ _ _
     (λ w → pathToIso
       (sym (PT.propTruncIdempotent
-             (EXTERNAL.unambiguous→isLang unambig-A w))))
+             (unambiguous→isLang unambig-A w))))
 
 module ∃Subgrammar (A : Grammar ℓA) (B : Grammar ℓB) where
   -- The subgrammar of g such that there exists an h parse
