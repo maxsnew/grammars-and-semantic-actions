@@ -1,26 +1,17 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Structure
 
 module String.SubAlphabet where
-
-open import Cubical.Foundations.Structure
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Foundations.Equiv
-
-open import Cubical.Functions.Embedding
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 
-open import Agda.Builtin.Char
-open import Agda.Builtin.String
-
 open import Cubical.Data.Bool
 open import Cubical.Data.List
-import Cubical.Data.Maybe as Maybe
-import Cubical.Data.Equality as Eq
+open import Cubical.Data.Maybe
 
-open import Lexer.Base
+open import String.Base
 
 -- Pick out a subalphabet of another alphabet
 module _
@@ -42,23 +33,22 @@ module _
   SubAlphabet .fst = SubAlphabet'
   SubAlphabet .snd = isSetSubAlphabet
 
-  SubAlphabet→Alphabet : Lexer SubAlphabet Alphabet
+  SubAlphabet→Alphabet : String SubAlphabet → Maybe (String Alphabet)
   SubAlphabet→Alphabet [] = Maybe.just []
   SubAlphabet→Alphabet (c ∷ w) =
-    Maybe.map-Maybe
+    map-Maybe
       (c .fst ∷_)
       (SubAlphabet→Alphabet w)
 
-  Alphabet→SubAlphabet : Lexer Alphabet SubAlphabet
+  Alphabet→SubAlphabet : String Alphabet → Maybe (String SubAlphabet)
   Alphabet→SubAlphabet [] = Maybe.just []
   Alphabet→SubAlphabet (c ∷ w) =
     decRec
-      (λ is-true → Maybe.map-Maybe ((c , is-true) ∷_) (Alphabet→SubAlphabet w))
+      (λ is-true → map-Maybe ((c , is-true) ∷_) (Alphabet→SubAlphabet w))
       (λ _ → Maybe.nothing)
       (charFun c ≟ true)
 
-  Alphabet→SubAlphabet' :
-    List ⟨ Alphabet ⟩ → List ⟨ SubAlphabet ⟩
+  Alphabet→SubAlphabet' : String Alphabet → String SubAlphabet
   Alphabet→SubAlphabet' [] = []
   Alphabet→SubAlphabet' (c ∷ w) =
     decRec

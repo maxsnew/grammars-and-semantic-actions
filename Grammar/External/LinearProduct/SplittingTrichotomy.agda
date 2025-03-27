@@ -41,6 +41,7 @@ open import Grammar.KleeneStar.Inductive Alphabet
 open import Grammar.String.Base Alphabet
 open import Grammar.String.Properties Alphabet
 open import Grammar.Equivalence.Base Alphabet
+open import Grammar.External.Equivalence Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
 open import Grammar.Inductive.Properties Alphabet
 
@@ -79,6 +80,17 @@ private
 --   |    k     |         l          |
 --
 --}
+
+opaque
+  unfolding _&_
+  mk&⌈⌉ :
+    (A : Grammar ℓA) →
+    {w : String} →
+    (p : A w) →
+    (A & ⌈ w ⌉) w
+  mk&⌈⌉ A {w = w} p =
+    p , (mk⌈⌉ w)
+
 module _
   (A : Grammar ℓA)
   (B : Grammar ℓB)

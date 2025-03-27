@@ -9,25 +9,14 @@ open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Powerset.More
 
 open import Cubical.Data.FinSet
-open import Cubical.Data.List as List hiding (rec)
 open import Cubical.Data.Sigma
-open import Cubical.Data.Nat
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool hiding (_⊕_)
-import Cubical.Data.Empty as Empty
 import Cubical.Data.Equality as Eq
-
-import Cubical.HITs.PropositionalTruncation as PT
-
-open import Cubical.Relation.Nullary.Base
-open import Cubical.Relation.Nullary.DecidablePropositions
-open import Cubical.Relation.Nullary.DecidablePropositions.Powerset.Base
+import Cubical.Data.Empty as Empty
 
 open import Grammar Alphabet
-open import Grammar.PropositionalTruncation.Base Alphabet
-
 open import Grammar.SequentialUnambiguity Alphabet
-open import Grammar.Subgrammar.Base Alphabet renaming (true to trueG ; false to falseG)
 
 open import Term Alphabet
 
@@ -157,6 +146,7 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   sound¬First ＂ c' ＂dr c c∈¬F =
     ⊕ᴰ-elim (λ c'≡c → Empty.rec (c∈¬F c'≡c))
     ∘g same-first c' c
+    ∘g (id ,⊗ string-intro ∘g ⊗-unit-r⁻) ,&p (id ,⊗ string-intro)
     ∘g &-swap
   sound¬First (dr ⊗DR[ _ ] _) c c∉F =
     ∉First⊗l (sound¬Nullable dr) (sound¬First dr c c∉F)

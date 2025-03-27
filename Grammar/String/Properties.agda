@@ -120,13 +120,19 @@ unroll-string2Retract .ret = the-ret
         _
       )
 
-unambiguous-char⊕char+ : unambiguous (char ⊕ ((char ⊗ char) ⊗ string))
-unambiguous-char⊕char+ =
+unambiguous-char⊕char⊗char+' : unambiguous (char ⊕ ((char ⊗ char) ⊗ string))
+unambiguous-char⊕char⊗char+' =
   isUnambiguousRetract unroll-string2Retract
     (summand-R-is-unambig (unambiguous≅ unroll-string≅ unambiguous-string))
 
+unambiguous-char⊕char⊗char+ : unambiguous (char ⊕ (char ⊗ char +))
+unambiguous-char⊕char⊗char+ = unambiguous≅ (⊕≅ id≅ (sym≅ ⊗-assoc≅)) unambiguous-char⊕char⊗char+'
+
 unambiguous-char : unambiguous char
-unambiguous-char = summand-L-is-unambig unambiguous-char⊕char+
+unambiguous-char = summand-L-is-unambig unambiguous-char⊕char⊗char+
+
+disjoint-char-char⊗char+ : disjoint char (char ⊗ char +)
+disjoint-char-char⊗char+ = unambig-⊕-is-disjoint unambiguous-char⊕char⊗char+
 
 disjoint-ε-char+ : disjoint ε (char +)
 disjoint-ε-char+ = unambig-⊕-is-disjoint (unambiguous≅ unroll-string≅ unambiguous-string)

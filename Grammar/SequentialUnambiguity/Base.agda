@@ -16,6 +16,8 @@ open import Grammar.SequentialUnambiguity.Nullable Alphabet
 open import Grammar.SequentialUnambiguity.First Alphabet
 open import Grammar.SequentialUnambiguity.FollowLast Alphabet
 open import Grammar.PropositionalTruncation.Base Alphabet
+open import Grammar.External.LinearProduct.SplittingTrichotomy Alphabet
+open import Grammar.External.String.Tiny Alphabet
 open import Term Alphabet
 
 open import Cubical.Foundations.Powerset.More

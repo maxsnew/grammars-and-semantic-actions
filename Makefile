@@ -1,5 +1,7 @@
 AGDA_BIN?=agda
 AGDA_FLAGS?=-W error
+SRC_DIR=.
+README_AGDA=./README.agda
 AGDA_EXEC?=$(AGDA_BIN) $(AGDA_FLAGS)
 FIX_WHITESPACE?=fix-whitespace
 RTS_OPTIONS=+RTS -M8G -RTS
@@ -8,7 +10,7 @@ RUNHASKELL?=runhaskell
 EVERYTHINGS=$(RUNHASKELL) ./Everythings.hs
 
 # Finds all .agda files in the current directory and subdirectories
-FIND_AGDA_FILES = find . -name "*.agda"
+FIND_AGDA_FILES = find $(SRC_DIR) -name "*.agda"
 AGDA_FILES = $(shell $(FIND_AGDA_FILES))
 
 # The targets are the .agdai files corresponding to the .agda files
@@ -18,12 +20,55 @@ all : test
 
 .PHONY : litmus
 litmus :
-	$(AGDA) Grammar.agda
+	$(AGDA) $(SRC_DIR)/Grammar.agda
 
 .PHONY : test
 test :
-	$(AGDA) Evaluate.agda
+	$(MAKE) AGDA_EXEC=$(AGDA_BIN) gen-everythings check
+
+.PHONY : checks
+checks : check-whitespace gen-and-check-everythings check-README check
+
+# checking and generating Everything files
+
+.PHONY : check-everythings
+check-everythings:
+	$(EVERYTHINGS) check-except
+
+.PHONY : gen-everythings
+gen-everythings:
+	$(EVERYTHINGS) gen-except
+
+.PHONY : gen-and-check-everythings
+gen-and-check-everythings:
+	$(EVERYTHINGS) gen-except
+	$(EVERYTHINGS) check-except
+
+.PHONY : check-README
+check-README:
+	$(EVERYTHINGS) check-README
+
+# typechecking and generating listings for all files imported in README
+
+.PHONY : check
+check: gen-everythings
+	$(AGDA) $(README_AGDA)
 
 .PHONY : clean
 clean:
-	find . -type f -name '*.agdai' -delete
+	find $(SRC_DIR) -type f -name '*.agdai' -delete
+	find $(SRC_DIR) -type f -name "Everything.agda" -delete
+	rm -rf ./_build
+
+.PHONY: debug
+debug : ## Print debug information.
+	@echo "AGDA_BIN              = $(AGDA_BIN)"
+	@echo "AGDA_FLAGS            = $(AGDA_FLAGS)"
+	@echo "AGDA_EXEC             = $(AGDA_EXEC)"
+	@echo "AGDA                  = $(AGDA)"
+	@echo "SRC_DIR               = $(SRC_DIR)"
+	@echo "README_AGDA           = $(README_AGDA)"
+
+.PHONY: check-line-lengths
+check-line-lengths:
+	bash check-line-lengths.sh

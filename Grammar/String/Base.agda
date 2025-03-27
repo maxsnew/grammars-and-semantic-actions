@@ -28,6 +28,7 @@ private
   variable
     w : String
     ℓA ℓB : Level
+    A : Grammar ℓA
 
 char : Grammar ℓ-zero
 char = ⊕[ c ∈ ⟨ Alphabet ⟩ ] literal c
@@ -39,8 +40,7 @@ module _ (c : ⟨ Alphabet ⟩) where
 string : Grammar ℓ-zero
 string = char *
 
-module _ (c : ⟨ Alphabet ⟩)
-  where
+module _ (c : ⟨ Alphabet ⟩) where
   startsWith : Grammar ℓ-zero
   startsWith = ＂ c ＂ ⊗ string
 
@@ -111,8 +111,8 @@ opaque
 isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
 isLang⌈⌉ w = isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w)
 
-pick-parse : ∀ (w : String) → (B : Grammar ℓB) → B w → ⌈ w ⌉ ⊢ B
-pick-parse w B pB w' p⌈⌉ = subst B (uniquely-supported-⌈⌉ w w' p⌈⌉) pB
+pick-parse : ∀ (w : String) → (A : Grammar ℓA) → A w → ⌈ w ⌉ ⊢ A
+pick-parse w A pA w' p⌈⌉ = subst A (uniquely-supported-⌈⌉ w w' p⌈⌉) pA
 
 ⌈⌉→string : ∀ w → ⌈ w ⌉ ⊢ string
 ⌈⌉→string [] = NIL
