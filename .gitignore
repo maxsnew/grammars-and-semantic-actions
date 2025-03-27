@@ -290,3 +290,8 @@ CubicalDockerfile
 Agda2.7.0.1Dockerfile
 CubicalCategoricalLogicDockerfile
 *.tar
+
+paper-difforigin/*
+/paper/diff.txt
+/paper/paper-oldtmp-26829.tex
+/paper/paper-oldtmp-*.tex
