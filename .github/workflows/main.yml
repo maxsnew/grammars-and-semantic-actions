@@ -93,14 +93,6 @@ jobs:
       ## INSTALLATION STEPS
       ########################################################################
 
-      - name: Download and install fix-whitespace
-        if: steps.cache-external-restore.outputs.cache-hit != 'true'
-        run: |
-          git clone https://github.com/agda/fix-whitespace --depth=1
-          cd fix-whitespace
-          ${{ env.CABAL_INSTALL }} fix-whitespace.cabal
-          cd ..
-
       - name: Download and install Agda from github
         if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run: |
@@ -194,8 +186,7 @@ jobs:
       - name: Test grammars-and-semantic-actions
         run: |
           cd src && make test \
-            AGDA_EXEC='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
-            FIX_WHITESPACE='~/.cabal/bin/fix-whitespace'
+            AGDA_EXEC='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error'
 
       - name: Save library cache
         if: steps.cache-library-restore.outputs.cache-hit != 'true'
