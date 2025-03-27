@@ -26,7 +26,7 @@ WORKDIR $HOME/cubical-categorical-logic
 RUN git checkout 4e7b1c3a2ba7ed528b3cd9a4c3a5e7be3ff3449d
 RUN echo "$HOME/cubical-categorical-logic/cubical-categorical-logic.agda-lib" >> $AGDA_LIBS
 
-COPY . $HOME/dependent-lambek-calculus
+COPY ./src $HOME/dependent-lambek-calculus
 
 WORKDIR /home/$USER_NAME/dependent-lambek-calculus
 

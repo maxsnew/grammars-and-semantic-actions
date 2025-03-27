@@ -8,10 +8,18 @@
 
 ## Getting Started
 ### Compiling the Repository
+Running `make` from the `src` directory will compile `README.agda` which imports
+the entirety of the project. This may take longer than 30 minutes, as it will
+also compile the dependencies from `cubical` and `cubical-categorical-logic` if
+they are not already built. You may also build `README.agda` interactively by
+loading the file with
+[agda-mode](https://agda.readthedocs.io/en/v2.7.0.1/tools/emacs-mode.html). 
 
-Running `make` will compile `README.agda` which imports the entirety of the project. This may take longer than 30 minutes, as it will also compile the dependencies from `cubical` and `cubical-categorical-logic` if they are not already built. You may also build `README.agda` interactively by loading the file with [agda-mode](https://agda.readthedocs.io/en/v2.7.0.1/tools/emacs-mode.html).
-
-If the compilation of `README.agda` doesn't immediately crash, and you can see it checking submodules, it is very likely that the there will be no technical difficulties. We have also included the target `make litmus` which builds only the `Grammar` submodule as a shorter litmus test to check for issues of technical compatibility.
+If the compilation of `README.agda` doesn't immediately crash, and you can see
+it checking submodules, it is very likely that the there will be no technical
+difficulties. We have also included the target `make litmus` which builds only
+the `Grammar` submodule as a shorter litmus test to check for issues of
+technical compatibility. 
 
 ## Claims
 
@@ -170,7 +178,7 @@ Given as `read` in `Grammar.String.Terminal`.
 Given as `string≅⊤` in `Grammar.String.Terminal`.
 
 ## Project Layout
-This repository is split into the following directories 
+The codebase is in the `src` directory, and it is split into the following submodules, 
 - `String` - contains the definition as the list type over some fixed alphabet, and some associated utilities. `String := List ⟨ Alphabet ⟩`, where `Alphabet : hSet ℓ-zero`
 - `Grammar` - defining the primitive linear types in Dependent Lambek Calculus. Linear types are encoded as functions from strings to types, written as `Grammar ℓA = String → Type ℓA`.
 - `Term` - defining parse transformers between grammars. A parse transformer between `A` and `B` is written as the type `A ⊢ B` (or `Term A B`).

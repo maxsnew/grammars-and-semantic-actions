@@ -139,7 +139,7 @@ jobs:
           touch ~/.agda/libraries
           echo "$CUBICAL_DIR/cubical.agda-lib" >> ~/.agda/libraries
           echo "$CATLOG_DIR/cubical-categorical-logic.agda-lib" >> ~/.agda/libraries
-          echo "$GITHUB_WORKSPACE/code/cubical/grammar.agda-lib" >> ~/.agda/libraries
+          echo "$GITHUB_WORKSPACE/src/grammar.agda-lib" >> ~/.agda/libraries
 
       - name: Save external dependencies cache
         if: steps.cache-external-restore.outputs.cache-hit != 'true'
@@ -165,8 +165,8 @@ jobs:
         uses: actions/cache/restore@v3
         id: cache-library-restore
         with:
-          path: ./code/cubical/_build
-          key: GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('code/cubical/**') }}
+          path: ./src/_build
+          key: GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('src/**') }}
           restore-keys: |
             GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
 
@@ -193,7 +193,7 @@ jobs:
 
       - name: Test grammars-and-semantic-actions
         run: |
-          cd code/cubical && make test \
+          cd src && make test \
             AGDA_EXEC='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error' \
             FIX_WHITESPACE='~/.cabal/bin/fix-whitespace'
 
@@ -202,7 +202,7 @@ jobs:
         uses: actions/cache/save@v3
         id: cache-library-save
         with:
-          path: ./code/cubical/_build
+          path: ./src/_build
           key: ${{ steps.cache-library-restore.outputs.cache-primary-key }}
 
       - name: Save Cubical library cache

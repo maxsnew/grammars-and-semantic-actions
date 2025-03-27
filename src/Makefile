@@ -3,7 +3,6 @@ AGDA_FLAGS?=-W error
 SRC_DIR=.
 README_AGDA=./README.agda
 AGDA_EXEC?=$(AGDA_BIN) $(AGDA_FLAGS)
-FIX_WHITESPACE?=fix-whitespace
 RTS_OPTIONS=+RTS -M8G -RTS
 AGDA=$(AGDA_EXEC) $(RTS_OPTIONS)
 RUNHASKELL?=runhaskell
@@ -18,6 +17,10 @@ AGDAI_FILES = $(AGDA_FILES:.agda=.agdai)
 .PHONY : all
 all : test
 
+.PHONY : README_only
+README-only :
+	$(AGDA) $(README_AGDA)
+
 .PHONY : litmus
 litmus :
 	$(AGDA) $(SRC_DIR)/Grammar.agda
@@ -27,7 +30,7 @@ test :
 	$(MAKE) AGDA_EXEC=$(AGDA_BIN) gen-everythings check
 
 .PHONY : checks
-checks : check-whitespace gen-and-check-everythings check-README check
+checks : gen-and-check-everythings check-README check
 
 # checking and generating Everything files
 
@@ -48,8 +51,6 @@ gen-and-check-everythings:
 check-README:
 	$(EVERYTHINGS) check-README
 
-# typechecking and generating listings for all files imported in README
-
 .PHONY : check
 check: gen-everythings
 	$(AGDA) $(README_AGDA)
@@ -69,6 +70,3 @@ debug : ## Print debug information.
 	@echo "SRC_DIR               = $(SRC_DIR)"
 	@echo "README_AGDA           = $(README_AGDA)"
 
-.PHONY: check-line-lengths
-check-line-lengths:
-	bash check-line-lengths.sh
