@@ -250,7 +250,7 @@ frame=single
 \newcommand{\pipe}{\,|\,}
 
 \newif\ifappendix
-\appendixtrue
+\appendixfalse
 
 \newcommand{\states}{\mathtt{states}}
 \newcommand{\labelt}{label}
@@ -362,11 +362,11 @@ Parsing structured data from untrusted input is a ubiquitous task in
 computing. Any formally verified software system that interacts with
 the outside world must contain some parsing component. For example, in
 an extensive experiment finding bugs in C compilers
-\cite{yangFindingUnderstandingBugs}, an early version of the formally
-verified CompCert C compiler only contained bugs in the then
+\cite{yangFindingUnderstandingBugs}, an early version of CompCert, the formally
+verified C compiler, only contained bugs in the then
 unverified parsing component \cite{leroy_formal_2009}. Bugs in parsers
 undermine the overall correctness theorem for a verified system: an
-incorrectly parsed C program will be compiled correctly but this is
+incorrectly parsed C program will be compiled correctly, but this is
 not very useful if it did not correctly correspond to the actual
 source program. Eventually, a correct parser was implemented using an
 automaton that is formally verified to implement an $\LR{1}$ grammar
@@ -422,12 +422,12 @@ dependent'' type theory with \emph{commutative} linear logic to model
 imperative programming \cite{krishnaswami_integrating_2015}.
 
 The substructural nature of \theoryabbv is well-aligned with the
-requirements intrinsic to parsing and to the theory of formal
-languages, where strings constitute a very clear notion of resource
+requirements intrinsic to parsing and the theory of formal
+languages, where strings constitute a clear notion of resource
 that cannot be duplicated, reordered, or dropped. Moreover, the constructive
 aspect of \theoryabbv ensures that verification of parsers written in the
-calculus are \emph{correct-by-construction}. The type system is powerful enough
-that derivations of a term type checking carry intrinsic proofs of correctness.
+calculus are \emph{orrect-by-construction}. That is, our type system is rich
+enough that typing derivations carry intrinsic proofs of correctness.
 Parsers written in \theoryabbv take on a linear functional style, which makes
 them familiar to write and amenable to compositional verification techniques.
 
@@ -437,7 +437,7 @@ proof assistant \cite{VezzosiMortbergAbel2019}. We have implemented many example
 grammars and parsers in our system including regular expressions,
 non-deterministic and deterministic automata, as well as some example
 context-free grammars and parsers based on $\LL{1}$ and $\LR{1}$
-automata. Throughout this paper, \Agda~ will mark
+automata. Throughout this paper \Agda~ will mark
 results that are mechanized in our Agda development and provide a link to their
 implementation.
 
@@ -470,9 +470,9 @@ Our contributions are then:% \max{This contribution section needs to be punchier
     linear-non-linear type theory for building verified parsers, which
     extends prior work on dependent linear-non-linear type theory to
     support inductive linear types.
-  \item A demonstration of how to encode many common grammar formalisms
+  \item A demonstration of how to encode many common grammar and parser formalisms
     (regular expressions, (non-)deterministic automata, context-free
-    grammars) and parser formalisms within our type theory.
+    grammars) within our type theory.
   \item A prototype implementation of \theoryabbv in Agda with all
     examples mechanized.
   \item A denotational semantics for \theoryabbv that shows that the
@@ -742,9 +742,12 @@ h (cons (a1 , a2) as) = cons a1 (cons a2 (h as))
 \newcommand{\2}{\texttt{2}}
 Regular expressions are a compact formalism for defining a formal grammar,
 but an expression such as
-$({\literal a}^{*} \otimes \literal b) \oplus \literal c$ does not give a very operational perspective of how to parse
-it. For this reason, most parsers are based on compiling a grammar to a corresponding notion of automaton, which is readily implemented. To implement
-these algorithms in \theoryabbv, we need a way to represent automata as types in the same way we can represent regular expressions.
+$({\literal a}^{*} \otimes \literal b) \oplus \literal c$ does not give an
+operationalized method for parsing. For this reason, most parsers are
+implemented by
+compiling a grammar to a corresponding automaton, which is readily
+implemented. To implement
+these algorithms in \theoryabbv, we represent automata as types in the same way we can represent regular expressions.
 
 Finite automata are precisely the class of machines that recognize regular
 expressions. \cref{fig:exampleNFA} shows a non-deterministic
@@ -971,9 +974,9 @@ matches our implementation, which interprets both judgmental and typal equality
 as Cubical Agda's \texttt{Path} type, and so naturally supports the equality
 reflection rule. Extensional equality makes type checking of our syntax as such
 undecidable \citep{Hofmann_1997} because the conversion rule may require an arbitrarily complex
-equality proof with no explicit proof term, but in our Agda implementation we
-must provide all of these equalities manually, and so the extensionality does
-not raise any issues for our implementation. This makes
+equality proof with no explicit proof term. However, in our Agda implementation we
+must provide all of these equalities manually, so the extensionality does
+not raise any issues. This makes
 \theoryabbv into an extensional theory, supporting function extensionality and
 the uniqueness of identity proofs. The development could be ported to an intensional type theory in the future, possibly requiring the use of setoids to handle function extensionality.
 
@@ -1036,11 +1039,12 @@ We give the rules for linear type
 formation in \cref{fig:linear-formation} and the definition of linear terms in
 \cref{fig:linear-terms}. The equational theory for these
 types is straightforward $\beta\eta$ equivalence and is included in
-\ifappendix{\cref{fig:jdgeq} of \cref{sec:denotational}}\else{the appendix}\fi. First, the
-linear variable rule says that a linear variable
-can be used if it is the \emph{only} variable in the context.
+\ifappendix{\cref{fig:jdgeq} of \cref{sec:denotational}}\else{the appendix}\fi.
 
-Next, we cover the ``multiplicative'' connectives of non-commutative
+First, the
+linear variable rule says that a linear variable
+can be used if it is the \emph{only} variable in the context. Next, we cover the
+``multiplicative'' connectives of non-commutative
 linear logic. The linear unit ($\I$) and tensor product ($\otimes$)
 are standard for a non-commutative linear logic: when we construct a
 linear unit we cannot use any variables and when we construct a tensor
@@ -1780,10 +1784,10 @@ Because DFAs are deterministic, we are able to prove that their type
 of traces are unambiguous and define a parser for them. In particular
 we show that for any start state $s$, ${\LinSigTy {b} {\Bool}
   \Trace_{D}~s~b}$ is a retract of $\StringGram$ and apply \cref{lem:retract} to
-derive unambiguity. That is, first we
+derive unambiguity. That is, we first
 construct a function $\pparse_{D}$ that is a parser for
 $\Trace_D~{s}~{true}$, with $\Trace_D~{s}~{false}$ being the disjoint
-type used. The fact that these trace types are disjoint follows from the
+type used, with disjointness following from the
 unambiguity of $\LinSigTy {b} {\Bool} {\Trace_{D}~s~b}$ by \cref{lem:unambig-sum}.
 
 The parser,
@@ -1838,12 +1842,12 @@ DFA is unambiguous even if the NFA is not.
 \newcommand{\x}{\texttt{x}}
 \newcommand{\y}{\texttt{y}}
 \begin{proof}
-  Define the states of $\D$ to be the $\mathbb{P}_{\epsilon}(\N.\states)$ --- the type
+  Define the states of $\D$ to be $\mathbb{P}_{\epsilon}(\N.\states)$ --- the type
   of $\epsilon$-closed\footnote{A subset of states $\X$ is $\epsilon$-closed if
     for every $\s \in \X$ and $\epsilon$-transition $\s \overset{\epsilon}{\to} \s'$ we have $\s' \in \X$.} subsets of
   $\N.\states$. A subset is accepting in $\D$ if it contains an accepting state
   from $\N$. Construct the initial state of $\D$ as the
-  $\epsilon$-closure of $\N.\init$. Lastly define the transition function
+  $\epsilon$-closure of $\N.\init$. Lastly, define the transition function
   of $\D$ to send the subset $X$ under the character $\c$ to the
   $\epsilon$-closure of all the states reachable from $X$ via a transition
   labeled with the character $\c$.
@@ -2465,9 +2469,9 @@ We now define our denotational semantics.
   \item For each linear type $\Gamma \vdash A \isLinTy$ and element $\gamma
     \in \sem\Gamma$, we define a formal grammar $\sem{A}\gamma$. We
     similarly define a formal grammar $\sem\Delta\gamma$ for each
-    linear context $\Gamma \Delta\isLinCtx$.
+    linear context $\linctxwff \Gamma \Delta$.
   \item For each non-linear term $\Gamma \vdash M : X$ and $\gamma \in \sem{\Gamma}$, we define an element $\sem{M}\gamma \in \sem{X}\gamma$.
-  \item For each linear term $\Gamma; \Delta \vdash e : A$ and $\gamma \in \sem{\Gamma}$ we define a parse transformer from $\sem{\Delta}\gamma$ to $\sem{A}\gamma$.
+  \item For each linear term $\Gamma; \Delta \vdash e : A$ and $\gamma \in \sem{\Gamma}$, we define a parse transformer from $\sem{\Delta}\gamma$ to $\sem{A}\gamma$.
   \end{enumerate}
   And we verify the following conditions:
   \begin{enumerate}
@@ -2507,29 +2511,30 @@ $\sem{g}$.
 The universe $L$ of linear types is interpreted as the set of all
 small grammars.
 \begin{figure}
-  \begin{minipage}[t]{.5\textwidth}
+  \begin{minipage}[t]{.3\textwidth}
   \begin{footnotesize}
     \begin{flalign*}
     &\sem{c}\gamma\,w = \{ c | w = c\}\\
     &\sem{I}\gamma\,w = \{ () \pipe w = \varepsilon \}\\
-    &\sem{A \otimes B}\gamma\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
+    &\sem{\uparrow A}\gamma = \sem{A}\gamma\,\varepsilon\\
     &\sem{A \lto B}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,ww'\\
     &\sem{B \tol A}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'w\\
-    &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}
-  \end{flalign*}
-  \end{footnotesize}
-  \end{minipage}%
-  \begin{minipage}[t]{.5\textwidth}
-  \begin{footnotesize}
-    \begin{flalign*}
-    &\sem{\bigwith_{x:X} A}\gamma\,w = \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w \\
-    &\sem{\uparrow A}\gamma = \sem{A}\gamma\,\varepsilon\\
-    &\sem{\equalizer{a}{f}{g}}\gamma\,w = \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
-    &\sem{L}\gamma = \Grammar_0\\
-    &\sem{SPF\,X}\gamma = \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)\\
     &\sem{\el(F)}\gamma\,G = \sem{F}\gamma\,G\\
     &\sem{\map(F)}\gamma\,f = \sem{F}\gamma\,f\\
     &\sem{\mu A}\gamma = \mu (\sem{A}\gamma)
+  \end{flalign*}
+  \end{footnotesize}
+  \end{minipage}%
+  \begin{minipage}[t]{.7\textwidth}
+  \begin{footnotesize}
+    \begin{flalign*}
+    &\sem{A \otimes B}\gamma\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
+    &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma
+      \wedge a \in \sem{A}(\gamma,x)w \} \\
+    &\sem{\bigwith_{x:X} A}\gamma\,w = \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w \\
+    &\sem{\equalizer{a}{f}{g}}\gamma\,w = \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
+    &\sem{L}\gamma = \Grammar_0\\
+    &\sem{SPF\,X}\gamma = \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)
   \end{flalign*}
   \end{footnotesize}
   \end{minipage}
@@ -2607,7 +2612,7 @@ term equalities. Cubical Agda is convenient for this purpose as it has
 built-in support for function extensionality which is convenient for the verification of equality rules. Axioms such as distributivity of $\oplus/\&$ and
 disjointness of constructors are then provable directly in Agda, and
 we are careful to only construct grammars, terms and proofs using
-constructs that are possible in \theoryabbv.
+constructs from \theoryabbv.
 
 The main difference
 between our shallow embedding and \theoryabbv is that our linear terms
