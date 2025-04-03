@@ -939,7 +939,7 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
   \label{fig:non-linear-types}
 \end{figure}
 
-We present a selection of the non-linear type constructions in
+We present a selection of the non-linear type constructors in
 \Cref{fig:non-linear-types} and provide the rest in
 \ifappendix{\cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of
     \cref{sec:syntax}}\else{the appendix}\fi.  First,
@@ -947,7 +947,12 @@ we include universe types $U$ of small non-linear types and $L$ of linear
 types. These are defined as
 universes ``ala Coquand'' in that we define judgments saying when
 non-linear and linear types are \emph{small} and define the universes to internalize
-precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. The definition of smallness is simply that all types are small as long as their sub-formulae are, with the exception of the two universe types themselves. These universe
+precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. The definition of
+smallness is simply that all types are small as long as their sub-formulae are,
+with the exception of the two universe types themselves. A formal
+description of smallness is given in
+\ifappendix{\cref{fig:small-nonlin-ty,fig:small-lin-ty} of
+    \cref{sec:syntax}}\else{the appendix}\fi. These universe
 types are needed so that we can define non-linear and linear types by recursion on natural
 numbers.
 Next, we include standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number
@@ -3624,12 +3629,18 @@ In this section we include the elided syntactic forms, as well as
 definitions and basic properties of linear and non-linear
 substitution.
 
-In \cref{fig:spf-act}, we provide the functorial actions for the strictly
-positive functors defined in \cref{fig:iilt}. We also include the full set of
-rules for non-linear types in \cref{fig:full-non-linear-types}, and we provide
-their judgmental equalities in \cref{fig:jdg-eq-nonlinear}. Finally,
-\cref{fig:jdgeq} contains the judgmental equalities between linear terms in
-\theoryabbv.
+\begin{itemize}
+\item In \cref{fig:spf-act}, we provide the functorial actions of the $\el$
+  and $\map$ operations used to define the indexed inductive types in
+  \cref{fig:iilt}.
+\item In \cref{fig:small-nonlin-ty,fig:small-lin-ty} we give the inference rules
+  for the smallness judgements on nonlinear types and linear types, respectively.
+\item In \cref{fig:full-non-linear-types}, we include the full set of rules for
+  non-linear types, and in \cref{fig:jdg-eq-nonlinear} we provide their
+  judgmental equalities.
+\item In \cref{fig:jdgeq}, we give the judgmental equalities between
+  linear terms in \theoryabbv.
+\end{itemize}
 
 \subsection{Non-linear Types}
 \label{subsec:nonlinty}
@@ -3677,6 +3688,7 @@ For $X : U$, define $List~X$ as,
       \nonlinterm \Gamma N X}{\Gamma \vdash {M =_{X} N} \isSmall}
   \end{mathpar}
   \caption{Small Non-linear Types}
+  \label{fig:small-nonlin-ty}
 \end{figure}
 
 \begin{figure}
@@ -3708,6 +3720,7 @@ For $X : U$, define $List~X$ as,
     \inferrule{\Gamma \vdash M : L}{\Gamma \vdash \unquoteTy M \isSmallLin}
   \end{mathpar}
   \caption{Small Linear Types}
+  \label{fig:small-lin-ty}
 \end{figure}
 
 \begin{figure}
