@@ -1,8 +1,8 @@
 % -*- fill-column: 80; -*-
 %% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
-\documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
-%% For final camera-ready submission, w/ required CCS and ACM Reference
-%\documentclass[acmsmall]{acmart}\settopmatter{}
+% \documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+% For final camera-ready submission, w/ required CCS and ACM Reference
+\documentclass[acmsmall]{acmart}\settopmatter{}
 
 
 %% Journal information
@@ -233,13 +233,13 @@ frame=single
 \newsavebox{\logoagdabox}
 \sbox{\logoagdabox}{%
   %
-  \raisebox{-2pt}{\includegraphics[height=1em,natheight=500,natwidth=500]{logo-agda.pdf}}%
+  \raisebox{-2pt}{\includegraphics[height=1em]{logo-agda.pdf}}%
 }
 \newcommand{\agdalogo}{%
   \usebox{\logoagdabox}}%
 
-\newcommand{\fillerlink}{http://localhost:1313}
-\newcommand{\Agda}[1]{\href{#1}{\agdalogo}}
+\newcommand{\zenodolink}{https://zenodo.org/records/15049780}
+\newcommand{\Agda}{\href{\zenodolink}{\agdalogo}}
 
 \newif\ifdraft
 \draftfalse
@@ -557,7 +557,7 @@ f (a , b) = inl (a , b)
   {a : \literal a , b : \literal b \vdash \texttt{f} := \inl(a , b) :
     (\literal a \otimes \literal b) \oplus \literal c}
 \end{mathpar}
-\caption{(\Agda{fillerlink}) \stringquote{ab} is parsed by $(\literal a \oplus \literal b) \otimes \literal c$
+\caption{(\Agda) \stringquote{ab} is parsed by $(\literal a \oplus \literal b) \otimes \literal c$
 }
 \label{fig:fingram}
 \end{figure}
@@ -672,7 +672,7 @@ a value that may only be used a single time.
 g : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*) ('a'(*@$^*$@*) (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
 g (a , b) = inl (cons a nil , b)
 \end{lstlisting}
-\caption{(\Agda{\fillerlink}) \stringquote{ab} is parsed by
+\caption{(\Agda) \stringquote{ab} is parsed by
   $({\literal a}^{*} \otimes \literal b) \oplus \literal c$}
 \label{fig:kleenestarderivation}
 \end{figure}
@@ -728,7 +728,7 @@ h : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
 h nil = nil
 h (cons (a1 , a2) as) = cons a1 (cons a2 (h as))
 \end{lstlisting}
-\caption{(\Agda{\fillerlink}) A parse transformer for abstract grammars}
+\caption{(\Agda) A parse transformer for abstract grammars}
 \label{fig:kleeneabstractproof}
 \end{figure}
 
@@ -807,7 +807,7 @@ k (a , b) = 0to1 (1to1 a (1to2 b stop))
               (1) edge[below] node{$\stringquote{b}$} (2);
   \end{tikzpicture}
   \end{minipage}%
-  \caption{(\Agda{\fillerlink}) NFA for $(\a^{*} \otimes \b) \oplus \c$ and its corresponding type}
+  \caption{(\Agda) NFA for $(\a^{*} \otimes \b) \oplus \c$ and its corresponding type}
   \label{fig:exampleNFA}
 \end{figure}
 
@@ -1099,8 +1099,16 @@ In addition to these type-theoretic principles, we need two additional
 axioms that do not generally hold in systems based on linear
 logic. First, we need that additive conjunction \emph{distributes}
 over additive disjunction --- e.g., in the finitary case that $0 \& A
-\cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. In its most general form,
-
+\cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. More generally, we assume
+\cref{ax:dist}.
+% Comment from shepherd
+% - The pagebreaks and figures make the explanation of axiom 3.1 a
+% little confusing to read (with the text "In its most general form,"
+% separated from the axiom it is intended to introduce by a pagebreak
+% and a figure). You could fiddle with the layout a bit, or just revise
+% that sentence to "More generally, we assume Axiom 3.1.", or similar.
+%
+% - If I understand it correctly, axiom 3.1 itself is using "e" as a variable name, which is confusing since it's also used as a metavariable for terms - I suggest picking a different variable name.
 \begin{axiom}[Distributivity]
 \label{ax:dist}
 For any $A : (x : X) \to Y(x) \to L$, the definable distribuitivity function
@@ -1110,7 +1118,7 @@ For any $A : (x : X) \to Y(x) \to L$, the definable distribuitivity function
 % \LinPiTy{x}{X}{\LinSigTy{y}{Y(x)}{A\,x\,y}} \right)}
 % \)
 \(
- \lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}} : \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
+ \lamblto{b}{\letin{\sigma\,f\,b'}{b}{\withlamb{x}{b'\,.\pi\,x}}} : \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
 \LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}}
 \)
 has an inverse.
@@ -1530,11 +1538,11 @@ $0$, and in a system of classical logic all unambiguous types would
 have to be equivalent to one of these, but with our axioms we can show
 also that $\I$ and literals $\literal c$ are unambiguous. To see this, first, we
 establish two useful properties of unambiguity.
-\begin{lemma}[\Agda{\fillerlink}]
+\begin{lemma}[\Agda]
   \label{lem:retract}
   If $\B$ is unambiguous and $\A$ is a retract of $\B$ then $\A$ is unambiguous.
 \end{lemma}
-\begin{lemma}[\Agda{\fillerlink}]
+\begin{lemma}[\Agda]
   \label{lem:unambig-sum}
   As a consequence of \cref{cor:binary-mono}, if a binary disjunction $A \oplus B$ is unambiguous then
   $A$ and $B$ are each unambiguous.
@@ -1616,7 +1624,7 @@ additional effort: the negative grammar is simply the grammar for
 traces that end in a rejecting state. This follows from the following
 principle, a consequence of \cref{ax:disjointness}.
 
-\begin{lemma}[\Agda{\fillerlink}]
+\begin{lemma}[\Agda]
   \label{lem:unambig-to-disjoint}
   If $\LinSigTy{x}{X}{A\,x}$ is unambiguous, then for $x \neq x'$, $A\,x$ and $A\,x'$ are
   disjoint. In particular, if the binary product $A \oplus A_{\neg}$ is unambiguous, then
@@ -1648,7 +1656,7 @@ automaton. Parsers for deterministic automata are simple to implement
 by stepping through the states of the automaton, with the rejecting
 traces serving as the negative grammar. This is sufficient due to the
 following:
-\begin{lemma}[\Agda{\fillerlink}]
+\begin{lemma}[\Agda]
   \label{lem:wk-eqv-parse}
   If $\A$ is weakly equivalent to $\B$ then any parser for $\A$ extends to a
   parser for $\B$.
@@ -1790,7 +1798,7 @@ string and recurses.
 %
 We prove this is a retraction by induction on traces.
 
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   \label{thm:dfa-parser}
   $\pparse_D s$ is a parser for $\Trace_D~s~\true$.
 \end{theorem}
@@ -1817,7 +1825,7 @@ Scott's classic powerset construction
 \cite{rabinFiniteAutomataTheir1959}. Here we note that this is
 \emph{only} a weak equivalence and not a strong equivalence, as the
 DFA is unambiguous even if the NFA is not.
-\begin{construction}[Determinization, \Agda{\fillerlink}]
+\begin{construction}[Determinization, \Agda]
   \label{cons:determinization}
   Given an NFA $N$, we construct a DFA $D$ such that
   $Parse_{N}$ is weakly equivalent to $Parse_{D}$.
@@ -1947,7 +1955,7 @@ required to construct a parser, proving the strong equivalence shows
 that other aspects of formal grammar theory are also verifiable in
 \theoryabbv.
 \newcommand{\R}{\texttt{R}}
-\begin{construction}[Thompson's Construction, \Agda{\fillerlink}]
+\begin{construction}[Thompson's Construction, \Agda]
   \label{cons:thompson}
   Given a regular expression $\R$, we build an NFA $\N$ such that $\R$ is
   strongly equivalent to $\Trace_{N}(\N.\init)$.
@@ -2115,7 +2123,7 @@ We use a variant of Thompson's construction
 %% expression is $I$, $0$, a Kleene star, or a concatenation. All of these
 %% elided details may be found in the Agda formalization.
 
-\begin{corollary}[\Agda{\fillerlink}]
+\begin{corollary}[\Agda]
   We may build a parser for every regular expression $\R$.
 \end{corollary}
 \begin{proof}
@@ -2163,7 +2171,7 @@ analogously to the parser and printer for DFAs, and so $\LinSigTy {s}
 {M.states} {\LinSigTy {b}{Bool} {Trace_{M}~s~b}}$ is likewise
 unambiguous.
 
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   \label{thm:dyck}
   $Dyck$ and $Parse_{M}$ are strongly equivalent. And therefore we can construct a parser for $\Dyck$.
 \end{theorem}
@@ -2230,7 +2238,7 @@ ends and the count is $0$; otherwise, if we see a plus we continue to the $O$
 state. Additionally, since the automaton need parse all of the
 incorrect strings, we add all of the failing cases.
 
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   \label{thm:exp-parser}
   We construct a parser for $\mathsf{Exp}$ by showing it is weakly
   equivalent to $\mathsf{O}~0~\true$.
@@ -2317,7 +2325,7 @@ halts and accepts an input string. Then, $Reify~accepts$ is a linear type that
 captures precisely the string the same language as $T$. That is,
 $Lang(Reify~accepts)$ is recursively enumerable --- the most general class of
 languages in the Chomsky hierarchy.
-\begin{construction}[\Agda{\fillerlink}]
+\begin{construction}[\Agda]
   \label{cons:turing}
   For any Turing machine $T$, we can construct a grammar in \theoryabbv
   that accepts the same language as $T$.
@@ -2580,7 +2588,7 @@ linear logic in monoidal categories \cite{seely89}. In
 of linear terms and prove that our semantics respects the equational theory of
 \theoryabbv --- as well as \cref{ax:dist,ax:disjointness,ax:string-top}.
 
-\subsection{Agda Implementation \Agda{\fillerlink}}
+\subsection{Agda Implementation \Agda}
 \label{subsec:impl}
 This denotational semantics in grammars and parse transformers serves
 as the basis for our prototype implementation of \theoryabbv in
@@ -4681,7 +4689,7 @@ We verify that the denotational semantics validates each of the axioms we have
 assumed.
 
 \paragraph{\cref{ax:dist}} Distributivity
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{\lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}}}$ has
   an inverse.
 \end{theorem}
@@ -4694,7 +4702,7 @@ assumed.
 \end{proof}
 
 \paragraph{\cref{ax:disjointness}} $\sigma$-Disjointness
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{\sigma x}$ and $\semg{\sigma x'}$ are disjoint for
   $x \neq x'$.
 \end{theorem}
@@ -4707,7 +4715,7 @@ assumed.
 \end{proof}
 
 \paragraph{\cref{ax:string-top}} String is strongly equivalent to $\top$.
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{!}$ has an inverse.
 \end{theorem}
 \begin{proof}
