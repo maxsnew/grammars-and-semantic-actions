@@ -233,7 +233,7 @@ frame=single
 \newsavebox{\logoagdabox}
 \sbox{\logoagdabox}{%
   %
-  \raisebox{-2pt}{\includegraphics[height=1em]{logo-agda.pdf}}%
+  \raisebox{-2pt}{\includegraphics[height=1em,natheight=500,natwidth=500]{logo-agda.pdf}}%
 }
 \newcommand{\agdalogo}{%
   \usebox{\logoagdabox}}%
@@ -248,6 +248,10 @@ frame=single
 \newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro says}: #1]}\fi}
 \newcommand{\nathan}[1]{\ifdraft{\color{green}[{\bf Nathan says}: #1]}\fi}
 \newcommand{\pipe}{\,|\,}
+
+\newif\ifappendix
+% \appendixfalse
+\appendixtrue
 
 \newcommand{\states}{\mathtt{states}}
 \newcommand{\labelt}{label}
@@ -284,15 +288,7 @@ frame=single
 \crefname{corollary}{Corollary}{Corollarys}
 \crefname{construction}{Construction}{Constructions}
 
-% \newtheorem{axiom}{Axiom}[section]
-% \newtheorem{construction}{Construction}
-
-\newif\ifappendix
-\appendixtrue
-
 \begin{document}
-
-%\pagestyle{plain}
 
 \pagebreak
 
@@ -751,7 +747,7 @@ Finite automata are precisely the class of machines that recognize regular
 expressions. \cref{fig:exampleNFA} shows a non-deterministic
 finite automaton (NFA) for the regular expression
 $({\literal a}^{*} \otimes \literal b) \oplus \literal c$, along with a type $\Trace$, an \emph{indexed} inductive linear type of traces through this automaton. Defining an indexed inductive type can be thought
-of as defining a family of mutually recursive inductive types, one for each element of the indexing type. Here $\Trace$ 
+of as defining a family of mutually recursive inductive types, one for each element of the indexing type. Here $\Trace$
 uses an index $\s : \texttt{Fin 3}$ which picks out which
 state in the automaton a trace begins at --- where $\texttt{Fin 3}$ is the
 finite type containing inhabitants $\{\0 , \1 , \2\}$. We can think of this as defining three mutually recursive inductive types $\Trace~\0$,
@@ -945,7 +941,8 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
 
 We present a selection of the non-linear type constructions in
 \Cref{fig:non-linear-types} and provide the rest in
-\cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of the appendix.  First,
+\ifappendix{\cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of
+    \cref{sec:syntax}}\else{the appendix}\fi.  First,
 we include universe types $U$ of small non-linear types and $L$ of linear
 types. These are defined as
 universes ``ala Coquand'' in that we define judgments saying when
@@ -956,7 +953,7 @@ numbers.
 Next, we include standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number
 types. More complex inductive types --- such as sum types, list types, and
 $Fin~n$ --- can be defined in terms of these primitives, and we give their
-encoding in the appendix.
+encoding in \ifappendix{\cref{sec:syntax}}\else{the appendix}\fi.
 
 We use an \emph{extensional} equality type $M =_{X} N$ with introduction form
 $refl$, but no elimination form. Instead we have the equality reflection rule
@@ -1030,8 +1027,9 @@ separation logic \cite{girard_linear_1987,jung_higher-order_2016}.
 We give the rules for linear type
 formation in \cref{fig:linear-formation} and the definition of linear terms in
 \cref{fig:linear-terms}. The equational theory for these
-types is straightforward $\beta\eta$ equivalence and included in the
-appendix. First, the linear variable rule says that a linear variable
+types is straightforward $\beta\eta$ equivalence and is included in
+\ifappendix{\cref{fig:jdgeq} of \cref{sec:denotational}}\else{the appendix}\fi. First, the
+linear variable rule says that a linear variable
 can be used if it is the \emph{only} variable in the context.
 
 Next, we cover the ``multiplicative'' connectives of non-commutative
@@ -1244,7 +1242,8 @@ transformers. The $\SPF\,X$ type supports constructors for a reference
 $\Var~x$ to one of the linear type variables, a constant expression
 that doesn't mention any type variables $K$, as well as tensor
 products and additive conjunction and disjunction of type expressions.
-We additionally add equations in the appendix that say that the
+Further, we add equations in \ifappendix{\cref{fig:spf-act} of \cref{sec:syntax}
+  }\else{the appendix }\fi that say that the
 $\el$/$\map$ operations correspond to these descriptions of the
 constructors.
 
@@ -2295,7 +2294,7 @@ correspond to $P$.
 %% dependent on $\StringSem$.
 %% We view the image of $P$ as a set of parse trees for each input string, and thus
 %% $P$ carries the structure of a formal grammar. However, even though $P$ describes this grammatical data, it is not
-%% a first-class linear type in \theoryabbv. 
+%% a first-class linear type in \theoryabbv.
 \(
 Reify~P = \LinSigTy{w} {\StringSem} {\LinSigTy {x} {P~w} {~\lceil w \rceil}}
 \)
@@ -2570,10 +2569,11 @@ algebra structure is used to interpret $\roll, \fold$ and the
 corresponding axioms.
 
 The remaining details of the interpretation of linear terms as parse
-transformers and verification of the equational axioms --- as well as
-\cref{ax:dist,ax:disjointness,ax:string-top} --- is a relatively
-straightforward extension of existing semantics of linear logic in
-monoidal categories, and is included in the appendix\cite{seely89}.
+transformers is a relatively straightforward extension of existing semantics for
+linear logic in monoidal categories \cite{seely89}. In
+\ifappendix{\cref{sec:denotational}}\else{the appendix}\fi, we include the denotations
+of linear terms and prove that our semantics respects the equational theory of
+\theoryabbv --- as well as \cref{ax:dist,ax:disjointness,ax:string-top}.
 
 \subsection{Agda Implementation \Agda{\fillerlink}}
 \label{subsec:impl}
@@ -3595,6 +3595,8 @@ framework for verified type checking and static analysis.
 \ifappendix
 \appendix
 \section{Syntax}
+\label{sec:syntax}
+
 \begin{figure}
 \begin{minipage}[t]{.35\textwidth}
   \begin{align*}
@@ -3630,6 +3632,7 @@ their judgmental equalities in \cref{fig:jdg-eq-nonlinear}. Finally,
 \theoryabbv.
 
 \subsection{Non-linear Types}
+\label{subsec:nonlinty}
 We define sum types, list types, and $Fin~n$ from primitve non-linear types.
 
 For $X , Y : U$, define the sum type $X + Y$ as,
@@ -4009,7 +4012,7 @@ For $X : U$, define $List~X$ as,
     \inferrule
     {\Gamma;\Delta \vdash e \equiv f : A}
     {\Gamma'; \Delta[\gamma] \vdash e[\gamma] \equiv f[\gamma] : A[\gamma]}
-  \end{mathpar}  
+  \end{mathpar}
   \caption{Non-linear substitution}
   \label{fig:non-linear-substitution}
 \end{figure}
@@ -4032,7 +4035,7 @@ For $X : U$, define $List~X$ as,
   \Subst(\Delta_1', \Delta_1)$ and $\delta_2 \in \Subst(\Delta_2',
   \Delta_2)$.
   %% Again for any $\Gamma \vdash \Delta$, we can define an identity
-  %% substitution mapping each variable to itself. Additionally we can define composition of 
+  %% substitution mapping each variable to itself. Additionally we can define composition of
 \end{definition}
 
 \begin{figure}
@@ -4081,6 +4084,7 @@ For $X : U$, define $List~X$ as,
 \end{definition}
 
 \section{Denotational Semantics}
+\label{sec:denotational}
 Here we extend the denotational semantics from
 \cref{sec:semantics-and-metatheory} to cover all of \theoryname
 syntax. Here we will freely use that the category of grammars is a
