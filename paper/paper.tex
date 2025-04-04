@@ -2,6 +2,8 @@
 \newif\ifarxiv
 \arxivtrue
 
+\PassOptionsToPackage{prologue,dvipsnames}{xcolor}
+
 \ifarxiv
 \documentclass[acmsmall,nonacm]{acmart}
 \else
@@ -46,7 +48,6 @@
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
 \usepackage{xspace}
-\usepackage[dvipsnames]{xcolor}
 \usepackage{thmtools} % needed for sane cleveref naming of theorems
 \usepackage{hyperref}
 \usepackage[capitalise]{cleveref}
@@ -311,7 +312,12 @@ frame=single
 
 \pagebreak
 
+\ifarxiv
+\title{Intrinsic Verification of Parsers and Formal Grammar Theory in Dependent
+  Lambek Calculus (Extended Version)}
+\else
 \title{Intrinsic Verification of Parsers and Formal Grammar Theory in Dependent Lambek Calculus}
+\fi
 
 \author{Steven Schaefer}
 \affiliation{\department{Electrical Engineering and Computer Science}
