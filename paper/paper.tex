@@ -2550,8 +2550,8 @@ small grammars.
   \begin{footnotesize}
     \begin{flalign*}
     &\sem{A \otimes B}\gamma\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
-    &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma
-      \wedge a \in \sem{A}(\gamma,x)w \} \\
+    % &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \} \\
+    &\sem{\bigoplus_{x:X} A}\gamma\,w = \coprod_{x \in \sem{X}\gamma} \sem{A}(\gamma, x)\,w \\
     &\sem{\bigwith_{x:X} A}\gamma\,w = \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w \\
     &\sem{\equalizer{a}{f}{g}}\gamma\,w = \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
     &\sem{L}\gamma = \Grammar_0\\
@@ -4305,7 +4305,7 @@ $\semg{(e_{1}, e_{2})} : \semg{\Delta,\Delta'} \to \semg{A \otimes B}$ is given
 by the diagram
 
 \begin{center}
-\begin{tikzcd}
+\begin{tikzcd}[column sep = 1in]
   \semg{\Delta,\Delta'} \arrow[r, "m_{\Delta,\Delta'}"] &
   \semg{\Delta} \otimes \semg{\Delta'} \arrow[r, "\semg{e_1} \otimes \semg{e_2}"] &
   \semg{A} \otimes \semg{G}
@@ -4388,7 +4388,7 @@ $\semg{\applto {e'} {e}} : \semg{\Delta,\Delta'} \to \semg{B}$ is defined by the
 diagram,
 
 \begin{center}
-\begin{tikzcd}
+\begin{tikzcd}[column sep=.75in]
   \semg{\Delta,\Delta'} \arrow[r , "m_{\Delta,\Delta'}"] &
   \semg{\Delta} \otimes \semg{\Delta'} \arrow[r , "id \otimes \semg{e}"] &
   \semg{\Delta} \otimes \semg{A} \arrow[r , "\phi^{-1}\left( \semg{e'} \right)"]
@@ -4446,7 +4446,7 @@ induced by this adjunction. In particular, $\semg{\lambtol a e}$ is given by $\p
 acting on the following diagram
 
 \begin{center}
-\begin{tikzcd}
+\begin{tikzcd}[column sep=.75in]
   \semg{A} \otimes \semg{\Delta} \arrow[r , "\lambda^{-1} \otimes id"] &
   \semg{a : A} \otimes \semg{\Delta} \arrow[r , "m^{-1}_{a : A , \Delta}"] &
   \semg{a : A , \Delta} \arrow[r , "\semg{e}"] &
@@ -4459,7 +4459,7 @@ The application of a $\tol$-function,
 $\semg{\apptol {e} {e'}} : \semg{\Delta',\Delta} \to \semg{B}$ defined by the diagram
 
 \begin{center}
-\begin{tikzcd}
+\begin{tikzcd}[column sep=.75in]
   \semg{\Delta',\Delta} \arrow[r , "m_{\Delta',\Delta}"] &
   \semg{\Delta'} \otimes \semg{\Delta} \arrow[r , "\semg{e'} \otimes id"] &
   \semg{A} \otimes \semg{\Delta} \arrow[r , "\psi^{-1}\left( \semg{e} \right)"] &
@@ -4508,10 +4508,10 @@ The $\eta$ rule for $\tol$ is given by,
 \subsubsection{$\bigamp$-Products}
 % Products
 \paragraph{$\bigamp$-Introduction}
-$\semg{\dlamb x e} : \semg{\Delta} \to \prod_{x : X} {\sem{A}(\gamma , x)}$ is
+$\semg{\dlamb x e} : \semg{\Delta} \to \prod_{x : \semg{X}} {\sem{A}(\gamma , x)}$ is
 defined by the universal property of the product
 \[
-\semg{\dlamb x e} = \left( \sem{e}(\gamma , x) \right)_{(x : X)}
+\semg{\dlamb x e} = \left( \sem{e}(\gamma , x) \right)_{(x : \semg{X})}
 \]
 
 \paragraph{$\bigamp$-Elimination}
@@ -4521,7 +4521,7 @@ projection out of the product,
 \begin{center}
 \begin{tikzcd}
   \semg{\Delta} \arrow[r , "\semg{e}"] &
-  \prod_{x : X} {\sem{A}(\gamma , x)} \arrow[r , "\pi_M"] &
+  \prod_{x : \semg{X}} {\sem{A}(\gamma , x)} \arrow[r , "\pi_M"] &
   \sem{A}(\gamma , M)
 \end{tikzcd}
 \end{center}
@@ -4535,7 +4535,7 @@ The $\beta$ law for $\bigamp$ is given by,
 \begin{align*}
   \semg{(\dlamb x e).\pi~M}
   & = \pi_{M} \circ \semg{\dlamb x e} \\
-  & = \pi_{M} \circ (\sem{e}(\gamma , x))_{(x : X)} \\
+  & = \pi_{M} \circ (\sem{e}(\gamma , x))_{(x : \semg{X})} \\
   & = \sem{e}(\gamma , M)
 \end{align*}
 by the universal property of the product.
@@ -4556,8 +4556,8 @@ The $\eta$ law for $\bigamp$ is given by,
 \begin{proof}
 \begin{align*}
   \semg{(\dlamb x {e.\pi~x})}
-  & = (\semg{e.\pi~x})_{x : X} \\
-  & = (\pi_x \circ \semg{e})_{x : X} \\
+  & = (\semg{e.\pi~x})_{x : \semg{X}} \\
+  & = (\pi_x \circ \semg{e})_{x : \semg{X}} \\
   & = \semg{e}
 \end{align*}
 \end{proof}
@@ -4566,13 +4566,13 @@ by the universal property of the product.
 \subsubsection{$\bigoplus$-Sums}
 % Sums
 \paragraph{$\bigoplus$-Introduction}
-$\semg{\sigma~M~e} : \semg{\Delta} \to \coprod_{x : X} \sem{A}(\gamma, x)$
+$\semg{\sigma~M~e} : \semg{\Delta} \to \coprod_{x : \semg{X}} \sem{A}(\gamma, x)$
 
 \begin{center}
 \begin{tikzcd}
   \semg{\Delta} \arrow[r , "\semg{e}"] &
   \sem{A}(\gamma, M) \arrow[r , "i_M"] &
-  \coprod_{x : X} {\sem{A}(\gamma , x)}
+  \coprod_{x : \semg{X}} {\sem{A}(\gamma , x)}
 \end{tikzcd}
 \end{center}
 
@@ -4584,9 +4584,9 @@ is defined in the diagram
 % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAB124YBbAc2CcAIjAY46AcgD6ARlLDR4+exFjJUgEwBfEFtLpMufIRRzK1es1aIOXXgIVrpcx+K0ACThDw94nu-yCKorq2rr6IBjYeAREcjJUtIwsbJwMMABmOAAU-tyBruoyHl4+fpz5DsFqJewATlh8ABY4AJT+3li+cHn2Qari0mF6BtHGcaQaiZYpNpwAMlhgAMqNACoAnos8uO7AAB4ewAAaRxW8-SHOpHTuiO4AgsoDoVrZnHx0PDy3pO77rR0I0ihhiJhIk2myWstkWK3WWy6uwOR1OezSmRyvR4lycsjeHy+P3cfwBHTKcHYYHcNNp5xxDwJ7E+31+-3anAazTa5K65QCuMGmiZLOJpMB4VGRliKDICQs0NS7HSWVy9KqL2ctU63X8cNWfE222Rhz2aKC+WAjPezKJbIBtS5LQ57B1-MqgtekpBYxlyDkAGYoVYlZaAMIiu3i71RaXgshBhUhuYBAQR3SJGBQPjwIigDJ1CA8JBkEA4CBIORJZMgHhSYA2zWyZ4hVotvFhagMOgAI1EAAVQeMbCqcN6C0XK9Ry0gNEnZrX64VroUtKU+T0sFAQF3ewOhzKQKPx4Xi4g52WK4gAKzzmHZLe83Xq4AwLQut2b7e7vsMQe+kwj0xE9J0QANpyvAA2O82GQbFXwkSNWRJdl3Aoetsn2O53GOCUf33AC2GPYEJzPAAWCCkHA6sFx4AA9YAAFpigw5dmzoRAHjbNjOyPPc-wPQDiIiUikFvS8kAomiYR3Pjf3-OMiOAkjTyQaCJMQAB2LQKC0IA
 \begin{tikzcd}[column sep =large]
 {\semg{\Delta'_1,\Delta,\Delta'_2}} \arrow[r, "{m_{(\Delta'_1,\Delta),\Delta'_2}}"]                                                                                                           & {\semg{\Delta'_1,\Delta} \otimes \semg{\Delta'_2}} \arrow[d, "{m_{\Delta'_1,\Delta}\otimes id}"]                             \\
-{\left( \semg{\Delta'_1} \otimes \coprod_{x:X} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, "d"]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
-{\coprod_{x : X} {\left( \sem{\Delta'_1}(\gamma , x) \otimes
-      \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, "\coprod_{x:X}({m^{-1}_{(\Delta'_1,a:A),\Delta'_2}})"] & {\coprod_{x : X} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : X)}}"]     \\
+{\left( \semg{\Delta'_1} \otimes \coprod_{x:\semg{X}} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, "d"]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
+{\coprod_{x : \semg{X}} {\left( \sem{\Delta'_1}(\gamma , x) \otimes
+      \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, outer sep=.15cm, "\coprod_{x:\semg{X}}({m^{-1}_{(\Delta'_1,a:A),\Delta'_2}})"] & {\coprod_{x : \semg{X}} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}}"]     \\
 \semg{C}                                                                                                                                                                                      & {\sem{C}(\gamma, x)} \arrow[l]
 \end{tikzcd}
 \end{center}
@@ -4603,12 +4603,12 @@ The $\beta$ rule for $\bigoplus$ is given by,
   \begin{align*}
   \llbracket \mathsf{let}\, {\sigma~x~a} = & {\sigma~M~a'} \, \mathsf{in}\, {e'} \rrbracket \gamma \\
   % \semg{\letin {\sigma~x~a} {\sigma~M~a'} {e'}}
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}} \circ \coprod_{x:\semg{X}}(m^{-1}) \circ d \circ (id
   \otimes \semg{\sigma~M~a'}) \otimes id \circ m \otimes id \circ m \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X}m^{-1} \circ d \circ (id
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}} \circ \coprod_{x:\semg{X}}m^{-1} \circ d \circ (id
   \otimes (i_M \circ \semg{a'})) \otimes id \circ m \otimes id \circ m \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X} m^{-1} \circ d \circ (id \otimes i_M) \otimes id \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X} m^{-1} \circ i_M \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}} \circ \coprod_{x:\semg{X}} m^{-1} \circ d \circ (id \otimes i_M) \otimes id \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}} \circ \coprod_{x:\semg{X}} m^{-1} \circ i_M \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
   & = \sem{e'}(\gamma , M) \circ m^{-1} (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
   & = \sem{e'}(\gamma , M) \tag{coherence}
   \end{align*}
@@ -4632,18 +4632,18 @@ First, expanding the left hand side, we have.
 \begin{proof}
   \begin{align*}
     \llbracket \mathsf{let}\, {\sigma~x~a} = {c'} & \, \mathsf{in}\, {f[(\sigma~x~a)/c]} \rrbracket \gamma \\
-    &= [ \semg{f[(\sigma~x~a)/c]} ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
-    &= [ \semg{f} \circ (id \otimes i_x) \otimes id ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
-    &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    &= [ \semg{f[(\sigma~x~a)/c]} ]_{(x : \semg{X})} \circ \coprod_{x:\semg{X}}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    &= [ \semg{f} \circ (id \otimes i_x) \otimes id ]_{(x : \semg{X})} \circ \coprod_{x:\semg{X}}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : \semg{X})} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
   \end{align*}
 Since the domain has the universal property of a coproduct (due to distributivity), to prove
 this is equal to $\semg{f}$, it is sufficient to prove they are equal
 when composed with the injections:
 
 \begin{align*}
-  \semg{f} &\circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id\\
-  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d  \circ (id \otimes i_y) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
-  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ i_y \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
+  \semg{f} &\circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : \semg{X})} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id\\
+  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : \semg{X})} \circ d  \circ (id \otimes i_y) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
+  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : \semg{X})} \circ i_y \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
   &= \semg{f} \circ (id \otimes i_y) \otimes id \circ (m^{-1}) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \\
   &= \semg{f} \circ (m^{-1}) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id \\
   &= \semg{f} \circ (id \otimes i_y) \otimes id \tag{coherence}\\
