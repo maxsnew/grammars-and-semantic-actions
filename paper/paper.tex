@@ -46,6 +46,7 @@
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
 \usepackage{xspace}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{thmtools} % needed for sane cleveref naming of theorems
 \usepackage{hyperref}
 \usepackage[capitalise]{cleveref}
@@ -62,31 +63,49 @@
 \usepackage{mathastext}
 \renewcommand{\familydefault}{\rmdefault}
 
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\colorlet{keywordcolor}{blue}
+\colorlet{nonlintycolor}{RubineRed}
+\colorlet{lintycolor}{Green}
+\colorlet{nonlinconstructorcolor}{nonlintycolor}
+\colorlet{linconstructorcolor}{lintycolor}
+\colorlet{alphabetcolor}{black}
+\colorlet{funarrowcolor}{black}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
 
 \usepackage{listings}
 \lstdefinelanguage{Agda}{
+alsoletter={012=\&},
 keywords={data, where, module, import, open, public,
 record, field, let, in, if, then, else, case, of, with,
 do, postulate, primitive, mutual, abstract, private,
 forall, exists, cong, set, prop, sort, Level, Data, Type,
 Renamer},
-morekeywords=[2]{Set, Type, Prop, moduleFuncs, instance, Named},
+morekeywords=[2]{L, Bool, Nat, Fin},
+morekeywords=[3]{String, Char, Dyck, Trace, Exp, Atom, O, D, C, A, NotStartsWithLP, NotStartsWithRP},
+morekeywords=[4]{bal, .nil, .cons, cons, nil, inl, inr, stop, 1to1, 1to2, 0to2, 0to1},
+morekeywords=[5]{.states, states, .isAcc, isAcc, transitions, src, dst, .transitions, .dst,
+  .src, label},
+morekeywords=[6]{NUM},
+morekeywords=[7]{= , \&},
 sensitive=true,
 comment=[l]{--},
 morecomment=[s]{\{-}{-\}},
 morestring=[b]",
 mathescape=true,
-escapeinside={(*@}{@*)}
+escapeinside={(*@}{@*)},
+escapebegin=\color{funarrowcolor},
+escapeend={}
 }
 \lstset{
 language=Agda,
 basicstyle=\ttfamily\footnotesize,
-keywordstyle=\color{blue},
-keywordstyle=[2]\color{teal},
+keywordstyle=\color{keywordcolor},
+keywordstyle=[2]\color{nonlintycolor},
+keywordstyle=[3]\color{lintycolor},
+keywordstyle=[4]\color{linconstructorcolor},
+keywordstyle=[5]\color{nonlinconstructorcolor},
+keywordstyle=[6]\color{alphabetcolor},
+keywordstyle=[7]\color{funarrowcolor},
 identifierstyle=\color{black},
 commentstyle=\color{gray}\textit,
 stringstyle=\color{orange},
@@ -560,7 +579,7 @@ typing derivation to define a parse for a finite grammar.
 
 \begin{figure}
 \begin{lstlisting}
-f : (*@$\uparrow$@*)('a' (*@$\otimes$@*) 'b' (*@$\lto$@*) ('a' (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
+f : (*@$\uparrow$@*)('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)' (*@$\lto$@*) ('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\oplus$@*) '(*@\color{alphabetcolor}c@*)')
 f (a , b) = inl (a , b)
 \end{lstlisting}\begin{mathpar}
   \footnotesize
@@ -694,7 +713,7 @@ a value that may only be used a single time.
 {a : \literal a , b : \literal b \vdash \texttt{g} := \inl (\cons~a~\nil , b) : ({\literal a}^{*} \otimes \literal b) \oplus \literal c}
 \end{mathpar}
 \begin{lstlisting}
-g : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*) ('a'(*@$^*$@*) (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
+g : (*@$\uparrow$@*)(('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\lto$@*) ('(*@\color{alphabetcolor}a@*)'(*@$^*$@*) (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\oplus$@*) '(*@\color{alphabetcolor}c@*)')
 g (a , b) = inl (cons a nil , b)
 \end{lstlisting}
 \caption{(\Agda) \stringquote{ab} is parsed by
@@ -812,12 +831,12 @@ equivalent} as grammars.
   \begin{lstlisting}
 data Trace : (s : Fin 3) (*@$\to$@*) L where
   stop : (*@$\uparrow$@*)(Trace 2)
-  1to1 : (*@$\uparrow$@*)('a' (*@$\lto$@*) Trace 1 (*@$\lto$@*) Trace 1)
-  1to2 : (*@$\uparrow$@*)('b' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 1)
-  0to2 : (*@$\uparrow$@*)('c' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 0)
+  1to1 : (*@$\uparrow$@*)('(*@\color{alphabetcolor}a@*)' (*@$\lto$@*) Trace 1 (*@$\lto$@*) Trace 1)
+  1to2 : (*@$\uparrow$@*)('(*@\color{alphabetcolor}b@*)' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 1)
+  0to2 : (*@$\uparrow$@*)('(*@\color{alphabetcolor}c@*)' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 0)
   0to1 : (*@$\uparrow$@*)(Trace 1 (*@$\lto$@*) Trace 0)
 
-k : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*)  Trace 0)
+k : (*@$\uparrow$@*)(('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\lto$@*)  Trace 0)
 k (a , b) = 0to1 (1to1 a (1to2 b stop))
 \end{lstlisting}
   \end{minipage}%
@@ -1761,17 +1780,17 @@ for the accepting traces out of $N.init$.
 \newcommand{\D}{\texttt{D}}
 \begin{figure}
 \begin{lstlisting}
-data Trace(*@$_{\N}$@*) : (s : N.states) (*@$\to$@*) L where
-  nil : (*@$\uparrow$@*)(&[ s : N.states ] N.isAcc s (*@$\to$@*) Trace(*@$_{\N}$@*) s)
-  cons : (*@$\uparrow$@*)(&[ t : N.transitions ]
-    ('N.label t' (*@$\lto$@*) Trace(*@$_{\N}$@*) (N.dst t) (*@$\lto$@*) Trace(*@$_{\N}$@*) (N.src t)))
-  (*@$\epsilon$@*)cons : (*@$\uparrow$@*)(&[ t : N.(*@$\epsilon$@*)transitions ]
-    (Trace(*@$_{\N}$@*) (N.(*@$\epsilon$@*)dst t) (*@$\lto$@*) Trace(*@$_{\N}$@*)(N.(*@$\epsilon$@*)src t)))
+data Trace(*@$_{\color{black}\N}$@*) : (s : N .states) (*@$\to$@*) L where
+  nil : (*@$\uparrow$@*)(&[ s : N .states ] N .isAcc s (*@$\to$@*) Trace(*@$_{\color{black}\N}$@*) s)
+  cons : (*@$\uparrow$@*)(&[ t : N .transitions ]
+    ('N .label t' (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .dst t) (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .src t)))
+  (*@$\color{linconstructorcolor}\epsilon$@*)cons : (*@$\uparrow$@*)(&[ t : N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)transitions ]
+    (Trace(*@$_{\color{black}\N}$@*) (N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)dst t) (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)src t)))
 
-data Trace(*@$_{\D}$@*) : (s : D.states) (b : Bool) (*@$\to$@*) L where
-  nil : (*@$\uparrow$@*)(&[ s : D.states ] Trace(*@$_{\D}$@*) s D.isAcc s)
-  cons : (*@$\uparrow$@*)(&[ c : Char ] &[ s : D.states ] &[ b : Bool ]
-  ('c' (*@$\lto$@*) Trace(*@$_{\D}$@*) (D.(*@$\delta$@*) c s) b (*@$\lto$@*) Trace(*@$_{\D}$@*) s b))
+data Trace(*@$_{\color{black}\D}$@*) : (s : (*@\color{black}D@*) .states) (b : Bool) (*@$\to$@*) L where
+  nil : (*@$\uparrow$@*)(&[ s : (*@\color{black}D@*) .states ] Trace(*@$_{\color{black}\D}$@*) s (*@\color{black}D@*) .isAcc s)
+  cons : (*@$\uparrow$@*)(&[ c : Char ] &[ s : (*@\color{black}D@*) .states ] &[ b : Bool ]
+  ('(*@\color{alphabetcolor}c@*)' (*@$\lto$@*) Trace(*@$_{\color{black}\D}$@*) ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c s) b (*@$\lto$@*) Trace(*@$_{\color{black}\D}$@*) s b))
 \end{lstlisting}
 \caption{Traces of an NFA $N$ and a DFA $D$}
 \label{fig:nfatrace}
@@ -1839,15 +1858,15 @@ We prove this is a retraction by induction on traces.
 
 \begin{figure}
 \begin{lstlisting}
-parse(*@$_D$@*) : (*@$\uparrow$@*)(String (*@$\lto$@*) &[ s : D.states ] (*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\D}$@*) s b)
-parse(*@$_D$@*) String.nil s = (*@$\sigma$@*) (D.isAcc s) (Trace(*@$_{\D}$@*).nil s)
-parse(*@$_D$@*) (String.cons ((*@$\sigma$@*) c a) w) s = let (*@$\sigma$@*) b t = parse w (D.(*@$\delta$@*) c s) in
-                                   (*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c s b a t)
+parse(*@$\color{black}_D$@*) : (*@$\uparrow$@*)(String (*@$\lto$@*) &[ s : (*@\color{black}D@*) .states ] (*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\color{black}\D}$@*) s b)
+parse(*@$\color{black}_D$@*) String .nil s = (*@$\color{linconstructorcolor}\sigma$@*) ((*@\color{black}D@*) .isAcc s) (Trace(*@$_{\color{black}\D}$@*) .nil s)
+parse(*@$\color{black}_D$@*) (String .cons ((*@$\color{linconstructorcolor}\sigma$@*) c a) w) s = let (*@$\color{linconstructorcolor}\sigma$@*) b t = parse w ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c s) in
+                                    (*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .cons c s b a t)
 
-print(*@$_D$@*) : (s : D.states) (*@$\to$@*) (*@$\uparrow$@*)(((*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\D}$@*) s b) (*@$\lto$@*) String)
-print(*@$_D$@*) s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).nil .s)) = String.nil
-print(*@$_D$@*) s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c (D.(*@$\delta$@*) c .s) b a trace)) =
-  String.cons ((*@$\sigma$@*) c a) (print(*@$_D$@*) (D.(*@$\delta$@*) c s) ((*@$\sigma$@*) b trace))
+print(*@$\color{black}_D$@*) : (s : (*@\color{black}D@*) .states) (*@$\to$@*) (*@$\uparrow$@*)(((*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\color{black}\D}$@*) s b) (*@$\lto$@*) String)
+print(*@$\color{black}_D$@*) s ((*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .nil .s)) = String .nil
+print(*@$\color{black}_D$@*) s ((*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .cons c ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c .s) b a trace)) =
+  String .cons ((*@$\color{linconstructorcolor}\sigma$@*) c a) (print(*@$\color{black}_D$@*) ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c s) ((*@$\color{linconstructorcolor}\sigma$@*) b trace))
 \end{lstlisting}
 \caption{Parser/printer for DFA traces}
 \label{fig:printdfa}
@@ -2202,7 +2221,7 @@ automaton, in \Cref{fig:DyckAutomaton}. Here the state is a ``stack''
 counting how many open parentheses have been seen so far. Functions
 $parse_{M}$ and $print_{M}$ for this automaton can be defined
 analogously to the parser and printer for DFAs, and so $\LinSigTy {s}
-{M.states} {\LinSigTy {b}{Bool} {Trace_{M}~s~b}}$ is likewise
+{M .states} {\LinSigTy {b}{Bool} {Trace_{M}~s~b}}$ is likewise
 unambiguous.
 
 \begin{theorem}[\Agda]
@@ -2252,14 +2271,14 @@ traces of an automaton with one token of lookahead. The automaton\footnote{In
   the automaton definition,
   $\texttt{NotStartsWithLP}$ is defined as
   \(I \oplus
-  (\literal{)} \oplus \literal{+} \oplus \mathtt{NUM}) \otimes \top
+  (\literal{)} \oplus \literal{+} \oplus \literal{NUM}) \otimes \top
   \). Similarly,
   $\texttt{NotStartsWithRP}$ is defined as
   \(I \oplus
-  (\literal{(} \oplus \literal{+} \oplus \mathtt{NUM}) \otimes \top
+  (\literal{(} \oplus \literal{+} \oplus \literal{NUM}) \otimes \top
   \).
-} has
-four different ``states'', each with access to a natural number
+}
+has four different ``states'', each with access to a natural number
 ``stack''. The ``opening'' state $O$ expects either a left paren, in
 which case it increments the stack and stays in the opening state, or
 sees a number and proceeds to the $D$ state. The ``done opening''
@@ -2307,7 +2326,7 @@ data O : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   num : (*@$\uparrow$@*)(&[ n ] &[ b ] 'NUM' (*@$\lto$@*) D n b (*@$\lto$@*) O n b)
   unexpected : (*@$\uparrow$@*)(&[ n ] (NotStartsWithLP (*@$\lto$@*) O n false)
 data D : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
-  lookAheadRP : (*@$\uparrow$@*)(&[ n ] &[ b ] ((')' (*@$\otimes$@*) (*@$\top$@*)) (*@$\&$@*) C n b) (*@$\lto$@*) D n b)
+  lookAheadRP : (*@$\uparrow$@*)(&[ n ] &[ b ] ((')' (*@$\otimes$@*) (*@$\color{lintycolor}\top$@*)) (*@$\&$@*) C n b) (*@$\lto$@*) D n b)
   lookAheadNot : (*@$\uparrow$@*)(&[ n ] &[ b ] (NotStartsWithRP (*@$\&$@*) A n b) (*@$\lto$@*) D n b)
 data C : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   closeGood : (*@$\uparrow$@*)(&[ n ] &[ b ] ')' (*@$\lto$@*) D n b (*@$\lto$@*) C (n + 1) b)
@@ -2317,7 +2336,7 @@ data A : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   doneGood : (*@$\uparrow$@*)(A 0 true)
   doneBad : (*@$\uparrow$@*)(&[ n ] A (n + 1) false)
   add : (*@$\uparrow$@*)(&[ n ] &[ b ] '+' (*@$\lto$@*) O n b (*@$\lto$@*) A n b)
-  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')'(*@$\oplus$@*) 'NUM') (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) A n false)
+  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')' (*@$\oplus$@*) 'NUM') (*@$\lto$@*) (*@$\color{lintycolor} \top$@*) (*@$\lto$@*) A n false)
 \end{lstlisting}
 \caption{Associative arithmetic expressions and a corresponding lookahead automaton}
 \label{fig:binop-inductive}
