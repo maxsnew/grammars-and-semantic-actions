@@ -1377,8 +1377,11 @@ formalization.
 So far, our calculus is a somewhat generic combination of dependent
 types with non-commutative linear types. In order to carry out formal
 grammar theory and define parsers, we need only add a few
-grammar-specific constructions. First, for each character in our
-alphabet, we add a corresponding linear type $c$. We can then define a
+grammar-specific constructions.
+
+\theoryabbv is parameterized by a fixed, finite alphabet $\Sigma$ from which we
+build our strings.  For each character $c \in \Sigma$,
+we add a corresponding linear type $\literal{c}$. We can then define a
 non-linear type $\CharGram$ as the disjunction of all of these characters,
 and define a type $\StringGram$ as the Kleene star of $\CharGram$, i.e. as an
 inductive linear type.
