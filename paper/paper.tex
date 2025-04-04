@@ -3643,24 +3643,18 @@ framework for verified type checking and static analysis.
 \label{sec:syntax}
 
 \begin{figure}
-\begin{minipage}[t]{.35\textwidth}
   \begin{align*}
     \el\left(\Var\,M\right) B &= B\,M\\
     \el\left(\mathsf{K}\,A\right) B &= A\\
     \el\left(\bigoplus A\right) B &= \bigoplus_{y:Y}\el(A y)B\\
     \el\left(\bigamp A\right) B &= \bigamp_{y:Y}\el(A y)B\\
-    \el\left(A \otimes A'\right) B &= \el(A)B \otimes \el(A')B
-  \end{align*}
-\end{minipage}%
-\begin{minipage}[t]{.65\textwidth}
-\begin{align*}
+    \el\left(A \otimes A'\right) B &= \el(A)B \otimes \el(A')B \\
     \map\left(\Var\,M\right)\,f &= f\,M\\
     \map\left(\K\,A\right)\,f &= \lambda a. a\\
     \map\left(\bigoplus A\right)\,f &= \lambda a. \letin{\oplusinj y {a_y}}{a}{\oplusinj y {\map(A\,y)\,f\,a_y}}\\
     \map\left(\bigwith\,A\right)\,f &= \lambda a. \withlamb{y}{\map(A\,y)\,f\,(\withprj y a)}\\
     \map\left(A \otimes A'\right)\,f &= \lambda b. \letin{(a,a')}{b}{(\map(A)\,f\,a,\map(A')\,f\,a')}
   \end{align*}
-\end{minipage}%
   \caption{Strictly positive functors functorial actions}
   \label{fig:spf-act}
 \end{figure}
@@ -4607,7 +4601,8 @@ The $\beta$ rule for $\bigoplus$ is given by,
 \]
 \begin{proof}
   \begin{align*}
-  \semg{\letin {\sigma~x~a} {\sigma~M~a'} {e'}}
+  \llbracket \mathsf{let}\, {\sigma~x~a} = & {\sigma~M~a'} \, \mathsf{in}\, {e'} \rrbracket \gamma \\
+  % \semg{\letin {\sigma~x~a} {\sigma~M~a'} {e'}}
   & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id
   \otimes \semg{\sigma~M~a'}) \otimes id \circ m \otimes id \circ m \\
   & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X}m^{-1} \circ d \circ (id
@@ -4628,13 +4623,16 @@ The $\beta$ rule for $\bigoplus$ is given by,
 \paragraph{$\bigoplus\eta$}
 It suffices to show
 \[
-  \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}} = \semg{f[c'/c]} = \semg{f}
+  \semg{\letin {\sigma~x~a} {c'} {f[(\sigma~x~a)/c]}} = \semg{f[c'/c]} = \semg{f}
   \]
 First, expanding the left hand side, we have.
+% \newcommand{\sem}[1]{\left\llbracket{#1}\right\rrbracket}
+% \newcommand{\semg}[1]{\sem{#1}\gamma}
+% \newcommand{\letin}[3]{\mathsf{let}\, #1 = #2 \, \mathsf{in}\, #3}
 \begin{proof}
   \begin{align*}
-    \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}}
-    &= [ \semg{f[\sigma~x~a/c]} ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    \llbracket \mathsf{let}\, {\sigma~x~a} = {c'} & \, \mathsf{in}\, {f[(\sigma~x~a)/c]} \rrbracket \gamma \\
+    &= [ \semg{f[(\sigma~x~a)/c]} ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
     &= [ \semg{f} \circ (id \otimes i_x) \otimes id ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
     &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
   \end{align*}
@@ -4770,3 +4768,8 @@ assumed.
 
 \fi
 \end{document}
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: t
+%%% End:
