@@ -174,7 +174,7 @@ frame=single
 \newcommand{\nil}{\texttt{nil}}
 \newcommand{\ident}{\texttt{id}}
 \newcommand{\cons}{\texttt{cons}}
-\newcommand{\epscons}{\varepsilon\texttt{cons}}
+\newcommand{\epscons}{\epsilon\texttt{cons}}
 \newcommand{\data}{\mathsf{data}}
 \newcommand{\where}{\mathsf{where}}
 \newcommand{\Trace}{\texttt{Trace}}
@@ -250,7 +250,7 @@ frame=single
 \newcommand{\pipe}{\,|\,}
 
 \newif\ifappendix
-\appendixfalse
+\appendixtrue
 
 \newcommand{\states}{\mathtt{states}}
 \newcommand{\labelt}{label}
@@ -383,13 +383,14 @@ unverified parsing component \cite{leroy_formal_2009}. Bugs in parsers
 undermine the overall correctness theorem for a verified system: an
 incorrectly parsed C program will be compiled correctly, but this is
 not very useful if it did not correctly correspond to the actual
-source program. Eventually, a correct parser was implemented using an
-automaton that is formally verified to implement an $\LR{1}$ grammar
+source program. Eventually, CompCert
+was updated to use a verified parser that implements
+an $\LR{1}$ grammar
 \cite{jourdanValidatingLRParsers2012}.
 
 It is entirely understandable from an engineering perspective
 \emph{why} verified parsing was not part of the initial releases of
-CompCert: parsing algorithms and formal grammars are a complex area,
+CompCert: parsing algorithms are a complex area,
 featuring a variety of domain-specific formalisms such as context-free
 grammars and various automata. These formalisms have little relation
 to the main components of a verified compiler. For this reason, it is
@@ -398,10 +399,10 @@ verified library, just as parser generators and regular expression
 matchers have done for many decades in unverified software.
 
 Prior approaches to verified parsing focus on verification of a
-particular grammar formalism such as non-left-recursive grammars or
+particular grammar formalism, such as non-left-recursive grammars or
 $\LL{1}$ grammars
 \cite{lasserCoStarVerifiedALL2021,EdelmannZippy2020,danielssonTotalParserCombinators2010}.
-Each new grammar formalism is extended with its own independent
+This has led to a series of isolated solutions, as each new grammar formalism is extended with its own independent
 verified implementation.
 
 In this work, we present the design of \theoryname (\theoryabbv), a
@@ -441,8 +442,8 @@ requirements intrinsic to parsing and the theory of formal
 languages, where strings constitute a clear notion of resource
 that cannot be duplicated, reordered, or dropped. Moreover, the constructive
 aspect of \theoryabbv ensures that verification of parsers written in the
-calculus are \emph{orrect-by-construction}. That is, our type system is rich
-enough that typing derivations carry intrinsic proofs of correctness.
+calculus are \emph{correct-by-construction}. That is, our type system is rich
+enough that typing derivations carry intrinsic proofs of parser correctness.
 Parsers written in \theoryabbv take on a linear functional style, which makes
 them familiar to write and amenable to compositional verification techniques.
 
@@ -874,8 +875,10 @@ terms. These contexts, types and terms are allowed to depend on an
 ambient non-linear context $\Gamma$, but note that linear types $A$
 cannot depend on any \emph{linear} variables in $\Delta$. We include
 definitional equality judgments for both kinds of type and term
-judgments as well. Additionally, we have a judgment $\Gamma \vdash X
-\isSmall$ which is used in the definition of universe types.
+judgments as well. Additionally, we have judgments $\Gamma \vdash X
+\isSmall$ and $\Gamma \vdash A \isSmallLin$ which are used in the definition of
+universe types.
+
 
 \begin{figure}
   \begin{mathpar}
@@ -1374,7 +1377,7 @@ formalization.
 So far, our calculus is a somewhat generic combination of dependent
 types with non-commutative linear types. In order to carry out formal
 grammar theory and define parsers, we need only add a few
-grammar-specific constructions. First for each character in our
+grammar-specific constructions. First, for each character in our
 alphabet, we add a corresponding linear type $c$. We can then define a
 non-linear type $\CharGram$ as the disjunction of all of these characters,
 and define a type $\StringGram$ as the Kleene star of $\CharGram$, i.e. as an
@@ -1555,7 +1558,7 @@ is unambiguous if there is at most one way to transform parses of any
 other grammar $\B$ into parses of $\A$. This notion of an unambiguous
 type is the analog for linear types of the definition of a (homotopy)
 \emph{proposition} in the terminology of homotopy type
-theory\cite{hottbook}. The most basic unambiguous types are $\top$ and
+theory \cite{hottbook}. The most basic unambiguous types are $\top$ and
 $0$, and in a system of classical logic all unambiguous types would
 have to be equivalent to one of these, but with our axioms we can show
 also that $\I$ and literals $\literal c$ are unambiguous. To see this, first, we
@@ -1800,9 +1803,9 @@ of traces are unambiguous and define a parser for them. In particular
 we show that for any start state $s$, ${\LinSigTy {b} {\Bool}
   \Trace_{D}~s~b}$ is a retract of $\StringGram$ and apply \cref{lem:retract} to
 derive unambiguity. That is, we first
-construct a function $\pparse_{D}$ that is a parser for
-$\Trace_D~{s}~{true}$, with $\Trace_D~{s}~{false}$ being the disjoint
-type used, with disjointness following from the
+construct a function $\pparse_{D}$ which is a parser for
+$\Trace_D~{s}~{true}$ with $\Trace_D~{s}~{false}$ being the disjoint
+type used, and disjointness follows from the
 unambiguity of $\LinSigTy {b} {\Bool} {\Trace_{D}~s~b}$ by \cref{lem:unambig-sum}.
 
 The parser,
@@ -2517,7 +2520,7 @@ except the $B$ parse is for the reversed concatenation $w'w$.
 The set $\uparrow A$ is the set of parse for the empty string for
 $A$. This definition means that $\sem{\uparrow (A \lto B)}$ (or $\sem{\uparrow (B \tol A)}$) is
 equivalent to the set of parse transformers:
-\( \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\varepsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\).
+\( \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\epsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\).
 
 Next, a parse in the equalizer $\equalizer{a}{f}{g}$ is defined as
 a parse in $\sem{A}$ that is mapped to the same parse by the parse transformers $\sem{f}$ and
@@ -2530,8 +2533,8 @@ small grammars.
   \begin{footnotesize}
     \begin{flalign*}
     &\sem{c}\gamma\,w = \{ c | w = c\}\\
-    &\sem{I}\gamma\,w = \{ () \pipe w = \varepsilon \}\\
-    &\sem{\uparrow A}\gamma = \sem{A}\gamma\,\varepsilon\\
+    &\sem{I}\gamma\,w = \{ () \pipe w = \epsilon \}\\
+    &\sem{\uparrow A}\gamma = \sem{A}\gamma\,\epsilon\\
     &\sem{A \lto B}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,ww'\\
     &\sem{B \tol A}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'w\\
     &\sem{\el(F)}\gamma\,G = \sem{F}\gamma\,G\\
@@ -3434,7 +3437,7 @@ and parsers, and it is unclear if these could be implemented in their calculus.
 Frisch and Cardelli introduced the use of a simple type system to reason about
 regular expressions up to weak equivalence \cite{frischCardelli}.
 Henglein and Nielsen build on this type-theoretic view of grammars, pointing out that the values of the types correspond precisely to the parse trees \cite{henglein_regular_2011}.
-Our design of \theoryabbv extends this view of grammars as types to a much broader class of grammars, as well as providing a syntax and equational theory for \emph{parse transformers}, showing that the terms can be viewed not just as parse trees, but as intrinsically verified parsers.
+\theoryabbv extends this view of grammars as types to a much broader class of grammars, as well as providing a syntax and equational theory for \emph{parse transformers}, showing that the terms can be viewed not just as parse trees, but as intrinsically verified parsers.
 
 \citet{elliottSymbolicAutomaticDifferentiation2021} uses essentially the same denotational semantics as ours, interpreting regular expressions as type-valued functions on strings. Our denotational semantics of \theoryabbv extends this to a much broader class of grammars.
 %% Krishnaswami and Yallop \cite{krishnaswami_typed_2019} provide a type system for
@@ -3533,17 +3536,17 @@ verified parsing components of larger verified software systems.
 
 \paragraph{Verified Parser Generators}
 We aim to extend our work on parsing to verify other algorithms. For instance,
-our regular expression parser makes somewhat arbitrary choices in what parse to
-produce when the grammar is ambiguous. In the future we aim to verify Frisch and
+our regular expression parser makes somewhat arbitrary choices
+when the grammar is ambiguous. In the future we aim to verify Frisch and
 Cardelli's \emph{greedy} algorithm for regular expression
 disambiguation. Defining this algorithm in \theoryabbv would provide soundness
 by construction, but it is not obvious if the greediness property could be
 verified easily as well.
 
-We also aim to adapt the approach used for our context-free grammar parsers for
-$\LLL$ and $\LRR$/$\LALRR$ parsers, with the aim of developing a shared library of intrinsically
-verified parsing utilities that can be usefully shared across different
-parsers. We would also like to investigate how high-performance verified parsers
+We also aim to adapt the approach used for our context-free grammar parsers to
+$\LLL$ and $\LRR$/$\LALRR$ parsers, with the aim of developing a shared library
+of intrinsically verified parsing utilities.
+We would also like to investigate how high-performance verified parsers
 can be implemented in \theoryabbv. This might be done by developing an efficient
 compiler for \theoryabbv directly or by developing a verified compiler to an
 imperative system within \theoryabbv itself.
