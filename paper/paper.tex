@@ -1,9 +1,14 @@
 % -*- fill-column: 80; -*-
-%% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
-%% \documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
-%% For final camera-ready submission, w/ required CCS and ACM Reference
-\documentclass[acmsmall]{acmart}\settopmatter{}
+\newif\ifarxiv
+\arxivtrue
 
+\ifarxiv
+\documentclass[acmsmall,nonacm]{acmart}
+\else
+\documentclass[acmsmall]{acmart}
+\fi
+
+\settopmatter{}
 
 %% Journal information
 %% Supplied to authors by publisher for camera-ready submission;
@@ -166,7 +171,6 @@ frame=single
 \DeclareMathOperator*{\bigamp}{\scalerel*{\&}{\bigoplus}}
 \DeclareMathOperator*{\bigwith}{\scalerel*{\&}{\bigoplus}}
 
-
 \newcommand{\bang}{~\textbf{!}~}
 % Tentatively using uparrow for linear to non-linear to be in line with
 % Pfennings adjoint functional programming
@@ -248,9 +252,6 @@ frame=single
 \newcommand{\pedro}[1]{\ifdraft{\color{red}[{\bf Pedro says}: #1]}\fi}
 \newcommand{\nathan}[1]{\ifdraft{\color{green}[{\bf Nathan says}: #1]}\fi}
 \newcommand{\pipe}{\,|\,}
-
-\newif\ifappendix
-\appendixtrue
 
 \newcommand{\states}{\mathtt{states}}
 \newcommand{\labelt}{label}
@@ -367,7 +368,10 @@ frame=single
 
 %% Keywords
 %% comma separated list
+\ifarxiv
+\else
 \keywords{keyword1, keyword2, keyword3}  %% \keywords are mandatory in final camera-ready submission
+\fi
 
 \maketitle
 
@@ -504,8 +508,10 @@ applicability of \theoryabbv for relating familiar grammar and
 automata formalisms as well as building concrete parsers.  Then in
 \cref{sec:semantics-and-metatheory}, we give a denotational semantics
 that makes precise the connection between \theoryabbv syntax and
-formal grammars. Finally in \Cref{sec:discussion} we discuss related
+formal grammars. Finally, in \Cref{sec:discussion} we discuss related
 and future work.
+
+\ifarxiv\else {\textbf{Extended version:} An extended version of this paper is available in \citet{extendedLambekD}.}\fi
 
 \section{\theoryname by Example}
 \label{sec:type-theory-examples}
@@ -965,7 +971,7 @@ universe types.
 
 We present a selection of the non-linear type constructors in
 \Cref{fig:non-linear-types} and provide the rest in
-\ifappendix{\cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of
+\ifarxiv{\cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of
     \cref{sec:syntax}}\else{the appendix}\fi.  First,
 we include universe types $U$ of small non-linear types and $L$ of linear
 types. These are defined as
@@ -975,14 +981,14 @@ precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. The definition of
 smallness is simply that all types are small as long as their sub-formulae are,
 with the exception of the two universe types themselves. A formal
 description of smallness is given in
-\ifappendix{\cref{fig:small-nonlin-ty,fig:small-lin-ty} of
+\ifarxiv{\cref{fig:small-nonlin-ty,fig:small-lin-ty} of
     \cref{sec:syntax}}\else{the appendix}\fi. These universe
 types are needed so that we can define non-linear and linear types by recursion on natural
 numbers.
 Next, we include standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number
 types. More complex inductive types --- such as sum types, list types, and
 $Fin~n$ --- can be defined in terms of these primitives, and we give their
-encoding in \ifappendix{\cref{sec:syntax}}\else{the appendix}\fi.
+encoding in \ifarxiv{\cref{sec:syntax}}\else{the appendix}\fi.
 
 We use an \emph{extensional} equality type $M =_{X} N$ with introduction form
 $refl$, but no elimination form. Instead we have the equality reflection rule
@@ -1057,7 +1063,7 @@ We give the rules for linear type
 formation in \cref{fig:linear-formation} and the definition of linear terms in
 \cref{fig:linear-terms}. The equational theory for these
 types is straightforward $\beta\eta$ equivalence and is included in
-\ifappendix{\cref{fig:jdgeq} of \cref{sec:denotational}}\else{the appendix}\fi.
+\ifarxiv{\cref{fig:jdgeq} of \cref{sec:denotational}}\else{the appendix}\fi.
 
 First, the
 linear variable rule says that a linear variable
@@ -1280,7 +1286,7 @@ transformers. The $\SPF\,X$ type supports constructors for a reference
 $\Var~x$ to one of the linear type variables, a constant expression
 that doesn't mention any type variables $K$, as well as tensor
 products and additive conjunction and disjunction of type expressions.
-Further, we add equations in \ifappendix{\cref{fig:spf-act} of \cref{sec:syntax}
+Further, we add equations in \ifarxiv{\cref{fig:spf-act} of \cref{sec:syntax}
   }\else{the appendix }\fi that say that the
 $\el$/$\map$ operations correspond to these descriptions of the
 constructors.
@@ -2293,12 +2299,12 @@ data Exp : L where
   done : (*@$\uparrow$@*)(Atom (*@$\lto$@*) Exp)
   add : (*@$\uparrow$@*)(Atom (*@$\lto$@*) '+' (*@$\lto$@*) Exp (*@$\lto$@*) Exp)
 data Atom : L where
-  num : (*@$\uparrow$@*)(NUM (*@$\lto$@*) Atom)
+  num : (*@$\uparrow$@*)('NUM' (*@$\lto$@*) Atom)
   parens : (*@$\uparrow$@*)('(' (*@$\lto$@*) Exp (*@$\lto$@*) ')' (*@$\lto$@*) Atom)
 
 data O : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   left : (*@$\uparrow$@*)(&[ n ] &[ b ] '(' (*@$\lto$@*) O (n + 1) b (*@$\lto$@*) O n b)
-  num : (*@$\uparrow$@*)(&[ n ] &[ b ] NUM (*@$\lto$@*) D n b (*@$\lto$@*) O n b)
+  num : (*@$\uparrow$@*)(&[ n ] &[ b ] 'NUM' (*@$\lto$@*) D n b (*@$\lto$@*) O n b)
   unexpected : (*@$\uparrow$@*)(&[ n ] (NotStartsWithLP (*@$\lto$@*) O n false)
 data D : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   lookAheadRP : (*@$\uparrow$@*)(&[ n ] &[ b ] ((')' (*@$\otimes$@*) (*@$\top$@*)) (*@$\&$@*) C n b) (*@$\lto$@*) D n b)
@@ -2311,7 +2317,7 @@ data A : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
   doneGood : (*@$\uparrow$@*)(A 0 true)
   doneBad : (*@$\uparrow$@*)(&[ n ] A (n + 1) false)
   add : (*@$\uparrow$@*)(&[ n ] &[ b ] '+' (*@$\lto$@*) O n b (*@$\lto$@*) A n b)
-  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')'(*@$\oplus$@*) NUM) (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) A n false)
+  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')'(*@$\oplus$@*) 'NUM') (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) A n false)
 \end{lstlisting}
 \caption{Associative arithmetic expressions and a corresponding lookahead automaton}
 \label{fig:binop-inductive}
@@ -2613,7 +2619,7 @@ corresponding axioms.
 The remaining details of the interpretation of linear terms as parse
 transformers is a relatively straightforward extension of existing semantics for
 linear logic in monoidal categories \cite{seely89}. In
-\ifappendix{\cref{sec:denotational}}\else{the appendix}\fi, we include the denotations
+\ifarxiv{\cref{sec:denotational}}\else{the appendix}\fi, we include the denotations
 of linear terms and prove that our semantics respects the equational theory of
 \theoryabbv --- as well as \cref{ax:dist,ax:disjointness,ax:string-top}.
 
@@ -3637,7 +3643,7 @@ framework for verified type checking and static analysis.
 \bibliography{refs.bib}
 
 \newpage
-\ifappendix
+\ifarxiv
 \appendix
 \section{Syntax}
 \label{sec:syntax}
