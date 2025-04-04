@@ -1,7 +1,7 @@
 % -*- fill-column: 80; -*-
 %% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
-% \documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
-% For final camera-ready submission, w/ required CCS and ACM Reference
+%% \documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
+%% For final camera-ready submission, w/ required CCS and ACM Reference
 \documentclass[acmsmall]{acmart}\settopmatter{}
 
 
@@ -319,13 +319,20 @@ frame=single
 \orcid{0000-0002-8338-8973}
 
 \author{Max S. New}
-\affiliation{
-  \department{Electrical Engineering and Computer Science}
-  \institution{University of Michigan}
-  \country{USA}
-}
-\email{maxsnew@umich.edu}
+%% \authornote{with author1 note}          %% \authornote is optional;
+                                        %% can be repeated if necessary
 \orcid{0000-0001-8141-195X}
+\affiliation{
+  \position{Assistant Professor}
+  \department{Computer Science and Engineering}              %% \department is recommended
+  \institution{University of Michigan}            %% \institution is required
+  % \streetaddress{2260 Hayward St.}
+  \city{Ann Arbor}
+  \state{MI}
+  % \postcode{48109-2121}
+  \country{USA}                    %% \country is recommended
+}
+\email{maxsnew@umich.edu} %% \email is recommended
 
 \makeatletter
 \let\@authorsaddresses\@empty
@@ -353,6 +360,14 @@ frame=single
   the Agda proof assistant. All of our examples parsers have been
   implemented in this prototype implementation.
 \end{abstract}
+
+%% 2012 ACM Computing Classification System (CSS) concepts
+%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
+
+
+%% Keywords
+%% comma separated list
+\keywords{keyword1, keyword2, keyword3}  %% \keywords are mandatory in final camera-ready submission
 
 \maketitle
 
@@ -3600,16 +3615,17 @@ framework for verified type checking and static analysis.
 \newpage
 
 \begin{acks}
-  This material is based upon work supported by the
-  \grantsponsor{GS100000001}{National Science
-    Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
-  No.~\grantnum{GS100000001}{nnnnnnn} and Grant
-  No.~\grantnum{GS100000001}{mmmmmmm}. This work is also supported by
-  the ERC Consolidator Grant BLAST and the ARIA programme on Safeguarded AI.
-  Any opinions, findings, and conclusions or recommendations expressed in 
-  this material are those of the author and do not necessarily reflect the 
-  views of the National Science Foundation, the European Research Council or
-  the Advanced Research and Invention Agency.
+  This material is based upon work supported by the Air Force Office of
+  Scientific Research under Grant No.~\grantnum{}{FA9550-23-1-0760}.  Any
+  opinions, findings and conclusions or recommendations expressed in this
+  material are those of the authors and do not necessarily reflect the views of
+  the U.S. Department of Defense.
+  %
+  This work is also supported by the ERC Consolidator Grant BLAST and the ARIA
+  programme on Safeguarded AI.  Any opinions, findings, and conclusions or
+  recommendations expressed in this material are those of the author and do not
+  necessarily reflect the views of the National Science Foundation, the European
+  Research Council or the Advanced Research and Invention Agency.
 \end{acks}
 
 \bibliography{refs.bib}
