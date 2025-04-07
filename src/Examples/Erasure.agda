@@ -19,6 +19,16 @@ open import Grammar.Literal.Base ℕAlph
 open import Grammar.Epsilon.Base ℕAlph
 open import Grammar.LinearProduct.Base ℕAlph
 
+open import Agda.Builtin.IO
+open import Agda.Builtin.Unit
+import Agda.Builtin.String as BuiltinString
+
+postulate
+  putStrLn : BuiltinString.String → IO ⊤
+
+{-# FOREIGN GHC import qualified Data.Text.IO as Text #-}
+{-# COMPILE GHC putStrLn = Text.putStrLn #-}
+
 s : String
 s = 0 ∷ 1 ∷ []
 
@@ -36,5 +46,9 @@ opaque
   in-parse : (＂ 0 ＂ ⊗ ＂ 1 ＂) s
   in-parse = (((0 ∷ []) , (1 ∷ [])) , refl) , lit-intro , lit-intro
 
-main : ((＂ 0 ＂ ⊗  ε) ⊗ ＂ 1 ＂) s
-main = (h ∘g g ∘g f) s in-parse
+foo : ((＂ 0 ＂ ⊗  ε) ⊗ ＂ 1 ＂) s
+foo = (h ∘g g ∘g f) s in-parse
+
+
+main : IO ⊤
+main = putStrLn "Hello, World!"
