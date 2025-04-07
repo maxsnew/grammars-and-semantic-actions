@@ -11,7 +11,7 @@ The file contains:
 -}
 module Erased.Data.Sigma.Base where
 
-open import Cubical.Core.Primitives public
+open import Cubical.Core.Primitives
 
 open import Cubical.Foundations.Prelude
 open import Cubical.HITs.PropositionalTruncation.Base

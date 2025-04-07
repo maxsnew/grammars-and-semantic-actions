@@ -1,10 +1,12 @@
-open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.HLevels
+open import Erased.Foundations.Prelude
+open import Erased.Foundations.HLevels
 
-module Grammar.LinearProduct.Base (Alphabet : hSet ℓ-zero) where
+open import String.Alphabet
+module Grammar.LinearProduct.Base (Alphabet : Alphabet) where
 
-open import Cubical.Data.Sigma
-open import Cubical.Data.List
+open import Erased.Data.Sigma
+open import Erased.Data.List.Base
+open import Cubical.Data.List.Properties
 
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
@@ -37,7 +39,7 @@ opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
 
-  isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
+  @0 isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
   isSetGrammar⊗ isSetG isSetB w = isSetΣ (isSetSplitting w)
     λ _ → isSet× (isSetG _) (isSetB _)
 

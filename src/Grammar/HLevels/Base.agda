@@ -1,10 +1,9 @@
-open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.HLevels
+open import Erased.Foundations.Prelude
+open import Erased.Foundations.HLevels
 
 open import String.Alphabet
 module Grammar.HLevels.Base (Alphabet : Alphabet) where
 
-open import Data.Sigma.Base
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 

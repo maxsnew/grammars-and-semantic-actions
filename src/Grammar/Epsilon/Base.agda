@@ -1,4 +1,4 @@
-open import Cubical.Foundations.Prelude
+open import Erased.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
 open import String.Alphabet
@@ -40,21 +40,21 @@ opaque
   ε-β : ∀ (Ap : ε⊢ A) → ε-elim {A = A} Ap ∘ε ε-intro ≡ Ap
   ε-β {A = A} Ap = transportRefl Ap
 
-  isLangε : isLang ε
+  @0 isLangε : isLang ε
   isLangε _ _ _ = isSetString _ _ _ _
 
-  isSetGrammarε : isSetGrammar ε
+  @0 isSetGrammarε : isSetGrammar ε
   isSetGrammarε = isLang→isSetGrammar isLangε
 
-  ε-length0 : ∀ w → ε w → length w ≡ 0
+  @0 ε-length0 : ∀ w → ε w → length w ≡ 0
   ε-length0 [] p = refl
   ε-length0 (x ∷ w) p = Empty.rec (¬cons≡nil p)
 
 ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε
 
-isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
+@0 isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
 isLangε* = isLangLift isLangε
 
-isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
+@0 isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
 isSetGrammarε* = isLang→isSetGrammar isLangε*

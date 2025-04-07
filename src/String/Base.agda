@@ -14,7 +14,7 @@ open import Cubical.Relation.Nullary.Base
 open import Erased.Data.Sigma.Properties
 import Erased.Data.Equality.Base as Eq
 import Cubical.Data.Equality.Conversion as ConvertEq
-open import Erased.Data.Sigma.Base hiding (Σ-syntax)
+open import Erased.Data.Sigma.Base
 -- open import Cubical.Data.Sigma.Properties
 open import Erased.Data.List.Base
 open import Cubical.Data.List.Properties

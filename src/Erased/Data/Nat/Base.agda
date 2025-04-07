@@ -5,6 +5,7 @@ open import Agda.Builtin.Nat public
   using (zero; suc; _+_)
   renaming (Nat to ℕ; _-_ to _∸_; _*_ to _·_)
 
+open import Erased.Foundations.Prelude
 open import Erased.Data.Nat.Literals public
 open import Cubical.Data.Bool.Base
 open import Cubical.Data.Sum.Base hiding (elim)

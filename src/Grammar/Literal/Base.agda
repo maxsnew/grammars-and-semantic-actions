@@ -1,15 +1,15 @@
-open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.HLevels
+open import Erased.Foundations.Prelude
+open import Erased.Foundations.HLevels
 
-module Grammar.Literal.Base (Alphabet : hSet ℓ-zero) where
+open import String.Alphabet
+module Grammar.Literal.Base (Alphabet : Alphabet) where
 
 open import Cubical.Foundations.Structure
 
-open import Cubical.Data.List
-import Cubical.Data.Empty as Empty
+open import Erased.Data.List.Base
 
 open import Grammar.Base Alphabet
-open import Grammar.Lift Alphabet
+open import Grammar.Lift.Base Alphabet
 open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
 open import Term.Base Alphabet
 
@@ -23,13 +23,13 @@ opaque
   literal : ⟨ Alphabet ⟩ → Grammar ℓ-zero
   literal c w = w ≡ [ c ]
 
-  isLangLiteral : ∀ c → isLang (literal c)
+  @0 isLangLiteral : ∀ c → isLang (literal c)
   isLangLiteral c w = isSetString w [ c ]
 
 ＂_＂ : ⟨ Alphabet ⟩ → Grammar ℓ-zero
 ＂ c ＂ = literal c
 
-isSetGrammarLiteral : ∀ c → isSetGrammar (literal c)
+@0 isSetGrammarLiteral : ∀ c → isSetGrammar (literal c)
 isSetGrammarLiteral c = isLang→isSetGrammar (isLangLiteral c)
 
 -- This * here is a Cubical naming convention for

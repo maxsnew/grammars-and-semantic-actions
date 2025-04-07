@@ -1,5 +1,5 @@
-open import Cubical.Foundations.Prelude
-open import Cubical.Foundations.HLevels
+open import Erased.Foundations.Prelude
+open import Erased.Foundations.HLevels
 
 open import String.Alphabet
 module Grammar.Equivalence.Base (Alphabet : Alphabet) where
