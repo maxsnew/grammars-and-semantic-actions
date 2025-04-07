@@ -1,4 +1,4 @@
-{-# OPTIONS --erasure --erased-cubical #-}
+{-# OPTIONS --erasure --erased-cubical --allow-unsolved-metas #-}
 open import Erased.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
@@ -11,8 +11,13 @@ open import Cubical.Foundations.Structure
 
 open import Cubical.Relation.Nullary.Base
 
-open import Erased.Data.Sigma.Base
-open import Cubical.Data.List
+open import Erased.Data.Sigma.Properties
+import Erased.Data.Equality.Base as Eq
+import Cubical.Data.Equality.Conversion as ConvertEq
+open import Erased.Data.Sigma.Base hiding (Σ-syntax)
+-- open import Cubical.Data.Sigma.Properties
+open import Erased.Data.List.Base
+open import Cubical.Data.List.Properties
 -- open import Cubical.Data.Nat
 -- open import Cubical.Data.List.More
 open import Cubical.Data.FinSet
@@ -28,12 +33,8 @@ String = List (Alphabet .fst)
 -- -- NonEmptyString : Type ℓ-zero
 -- -- NonEmptyString = Σ[ w ∈ String ] (w ≡ [] → Empty.⊥)
 
--- record Splitting (w : String) : Type where
---   field
---     left right : String
---     @0 is-split : w ≡ left ++ right
 Splitting : String → Type ℓ-zero
-Splitting w = Σ0[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
+Splitting w = Σ0[ (w₁ , w₂) ∈ Σ String (λ _ → String) ] (w ≡ w₁ ++ w₂)
 
 @0 isSetString : isSet String
 isSetString = isOfHLevelList 0 (is-set (Alphabet .snd))
@@ -42,15 +43,17 @@ isSetString = isOfHLevelList 0 (is-set (Alphabet .snd))
 isGroupoidString = isSet→isGroupoid isSetString
 
 @0 isSetSplitting : (w : String) → isSet (Splitting w)
-isSetSplitting w = {!!}
-  -- isSetΣ (isSet× isSetString isSetString)
-  --   λ s → isGroupoidString w (s .fst ++ s .snd)
+isSetSplitting w =
+  isOfHLevelRespectEquiv 2
+  (isoToEquiv erasureΣIso)
+  (isSetΣ (isSet× isSetString isSetString) (λ s → isGroupoidString w (s .fst ++ s .snd)))
 
--- @0 SplittingPathP :
---   ∀ {w : I → String}{s0 : Splitting (w i0)}{s1 : Splitting (w i1)}
---   → s0 .fst ≡ s1 .fst
---   → PathP (λ i → Splitting (w i)) s0 s1
--- SplittingPathP s≡ = ΣPathPProp (λ _ → isSetString _ _) s≡
+@0 SplittingPathP :
+  ∀ {w : I → String}{s0 : Splitting (w i0)}{s1 : Splitting (w i1)}
+  → s0 .fst ≡ s1 .fst
+  → PathP (λ i → Splitting (w i)) s0 s1
+SplittingPathP s≡ = {!!}
+-- ΣPathPProp (λ _ → isSetString _ _) s≡
 
 -- Splitting≡ : ∀ {w} → {s s' : Splitting w}
 --   → s .fst ≡ s' .fst

@@ -23,7 +23,7 @@ This file proves a variety of basic results about paths:
 module Erased.Foundations.Prelude where
 
 open import Agda.Primitive
-open import Cubical.Core.Primitives public
+open import Cubical.Core.Primitives hiding (Σ-syntax) public
 
 infixr 30 _∙_
 infixr 30 _∙₂_
@@ -42,6 +42,14 @@ private
     A : Type ℓ
     B : A → Type ℓ
     x y z w : A
+
+-- Σ-types
+infix 2 Σ-syntax
+
+Σ-syntax : ∀ {ℓ ℓ'} (A : Type ℓ) (B : A → Type ℓ') → Type (ℓ-max ℓ ℓ')
+Σ-syntax = Σ
+
+syntax Σ-syntax A (λ x → B) = Σ[ x ∈ A ] B
 
 refl : x ≡ x
 refl {x = x} _ = x
