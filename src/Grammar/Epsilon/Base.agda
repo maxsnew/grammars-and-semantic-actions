@@ -12,7 +12,7 @@ open import Grammar.Base Alphabet
 -- open import Grammar.HLevels.Base Alphabet
 -- open import Grammar.Lift.Base Alphabet
 open import Term.Base Alphabet
--- open import Term.Nullary Alphabet
+open import Term.Nullary Alphabet
 
 private
   variable
@@ -22,11 +22,10 @@ private
 
 opaque
   ε : Grammar ℓ-zero
-  ε w = w Eq.≡ []
-  -- ε w = w ≡ []
+  ε w = w ≡ []
 
---   ε-intro : ε⊢ ε
---   ε-intro = refl
+  ε-intro : ε⊢ ε
+  ε-intro = refl
 
 --   ε-elim : ∀ {A : Grammar ℓA} → ε⊢ A → ε ⊢ A
 --   ε-elim {A = A} A[] w w≡[] = subst A (sym w≡[]) A[]

@@ -5,9 +5,9 @@ open import String.Alphabet
 module Grammar.LinearProduct.Base (Alphabet : Alphabet) where
 
 open import Erased.Data.Sigma
-import Erased.Data.Equality.Base
+import Erased.Data.Equality.Base as Eq
 open import Erased.Data.List.Base
-open import Cubical.Data.List.Properties
+open import Erased.Data.List.Properties
 
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
@@ -40,9 +40,9 @@ opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
 
-  @0 isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
-  isSetGrammar⊗ isSetG isSetB w = isSetΣ (isSetSplitting w)
-    λ _ → isSet× (isSetG _) (isSetB _)
+  -- @0 isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
+  -- isSetGrammar⊗ isSetG isSetB w = isSetΣ (isSetSplitting w)
+  --   λ _ → isSet× (isSetG _) (isSetB _)
 
 infixr 25 _⊗_
 
@@ -55,8 +55,8 @@ opaque
     ∀ (w : String) → (p : (A ⊗ B) w) → (s : Splitting w) → Type ℓ-zero
   has-split w p s = s ≡ p .fst
 
-  @0 isProp-has-split : ∀ (w : String) (p : (A ⊗ B) w) → (s : Splitting w) → isProp (has-split w p s)
-  isProp-has-split w p s = isSetSplitting w _ _
+  -- @0 isProp-has-split : ∀ (w : String) (p : (A ⊗ B) w) → (s : Splitting w) → isProp (has-split w p s)
+  -- isProp-has-split w p s = isSetSplitting w _ _
 
   the-split :
     ∀ (w : String) → (p : (A ⊗ B) w) → Σ[ s ∈ Splitting w ] has-split w p s
@@ -87,22 +87,22 @@ opaque
   same-parses {A = A} {B = B} p q s≡ =
     PathP (λ i → A i (s≡ i .fst) × B i (s≡ i .snd)) (p .snd) (q .snd)
 
-  @0 ⊗PathP :
-    {A : I → Grammar ℓA}{B : I → Grammar ℓB}
-    {w : I → String}
-    → {p : (A i0 ⊗ B i0) (w i0)}
-    → {q : (A i1 ⊗ B i1) (w i1)}
-    → (s≡ : same-splits {w = w} p q)
-    → same-parses {A = A} {B = B} {w = w} p q s≡
-    → PathP (λ i → (A i ⊗ B i) (w i)) p q
-  ⊗PathP s≡ p≡ = {!!} -- ΣPathP (SplittingPathP s≡ , p≡)
+  -- @0 ⊗PathP :
+  --   {A : I → Grammar ℓA}{B : I → Grammar ℓB}
+  --   {w : I → String}
+  --   → {p : (A i0 ⊗ B i0) (w i0)}
+  --   → {q : (A i1 ⊗ B i1) (w i1)}
+  --   → (s≡ : same-splits {w = w} p q)
+  --   → same-parses {A = A} {B = B} {w = w} p q s≡
+  --   → PathP (λ i → (A i ⊗ B i) (w i)) p q
+  -- ⊗PathP s≡ p≡ = ΣPathP (SplittingPathP s≡ , p≡)
 
-  @0 ⊗≡ : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{w}
-    → (p p' : (A ⊗ B) w)
-    → (s≡ : same-splits {w = λ _ → w} p p')
-    → same-parses {A = λ _ → A} {B = λ _ → B} {w = λ _ → w} p p' s≡
-    → p ≡ p'
-  ⊗≡ p p' s≡ p≡ = ⊗PathP s≡ p≡
+  -- @0 ⊗≡ : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{w}
+  --   → (p p' : (A ⊗ B) w)
+  --   → (s≡ : same-splits {w = λ _ → w} p p')
+  --   → same-parses {A = λ _ → A} {B = λ _ → B} {w = λ _ → w} p p' s≡
+  --   → p ≡ p'
+  -- ⊗≡ p p' s≡ p≡ = ⊗PathP s≡ p≡
 
 opaque
   unfolding _⊗_
@@ -114,7 +114,7 @@ opaque
     p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
 
 opaque
-  unfolding _⊗_ the-split ⊗-intro ⊗≡
+  unfolding _⊗_ the-split ⊗-intro -- ⊗≡
   ⊗-intro⊗-intro
     : ∀ {f : A ⊢ B}{f' : C ⊢ D}
         {f'' : E ⊢ A}
@@ -124,20 +124,19 @@ opaque
   ⊗-intro⊗-intro = refl
 
   opaque
-    unfolding ε ⊗≡
+    unfolding ε -- ⊗≡
     ⊗-unit-r :
       A ⊗ ε ⊢ A
-    ⊗-unit-r w (((w' , w'') , s) , x , Erased.Data.Equality.Base.refl) = {!!}
-    -- ⊗-unit-r {A = A} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
-    --   subst A (sym (++-unit-r _)
-    --           ∙ cong (w' ++_) (sym []'≡[])
-    --           ∙ sym w≡w'++[]')
-    --         p⟨w'⟩
+    ⊗-unit-r {A = A} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
+      subst A (sym (++-unit-r _)
+              ∙ cong (w' ++_) (sym []'≡[])
+              ∙ sym w≡w'++[]')
+            p⟨w'⟩
 
---     ⊗-unit-r⁻ :
---       A ⊢ A ⊗ ε
---     ⊗-unit-r⁻ _ p =
---       ((_ , []) , (sym (++-unit-r _))) , (p , refl)
+    ⊗-unit-r⁻ :
+      A ⊢ A ⊗ ε
+    ⊗-unit-r⁻ _ p =
+      ((_ , []) , (sym (++-unit-r _))) , (p , refl)
 
 --     rectify :
 --       ∀ {w w'}{A : Grammar ℓA}
@@ -183,13 +182,13 @@ opaque
 --       subst (λ w≡w → subst A w≡w p ≡ p) (isSetString _ _ refl w≡w)
 --         (substRefl {B = A} p)
 
---     ⊗-unit-l :
---       ε ⊗ A ⊢ A
---     ⊗-unit-l {A = A} _ p =
---       transport
---         (cong A (cong (_++  p .fst .fst .snd)
---           (sym (p .snd .fst)) ∙ sym (p .fst .snd)))
---         (p .snd .snd)
+    -- ⊗-unit-l :
+      -- ε ⊗ A ⊢ A
+    -- ⊗-unit-l {A = A} _ (((w , w') , Eq.refl) , Eq.refl , x) = x
+      -- transport
+      --   (cong A (cong (_++  p .fst .fst .snd)
+      --     (sym (p .snd .fst)) ∙ sym (p .fst .snd)))
+      --   (p .snd .snd)
 
 --     ⊗-unit-l⁻ :
 --       A ⊢ ε ⊗ A

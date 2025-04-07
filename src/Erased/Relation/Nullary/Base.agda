@@ -1,6 +1,7 @@
 module Erased.Relation.Nullary.Base where
 
 open import Erased.Data.Empty.Base
+import Erased.Data.Equality.Base as Eq
 open import Erased.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Functions.Fixpoint
@@ -54,6 +55,9 @@ PStable A = ⟪ A ⟫ → A
 onAllPaths : (Type ℓ → Type ℓ) → Type ℓ → Type ℓ
 onAllPaths S A = (x y : A) → S (x ≡ y)
 
+onAllEqs : (Type ℓ → Type ℓ) → Type ℓ → Type ℓ
+onAllEqs S A = (x y : A) → S (x Eq.≡ y)
+
 Separated : Type ℓ → Type ℓ
 Separated = onAllPaths Stable
 
@@ -68,3 +72,6 @@ PStable≡ = onAllPaths PStable
 
 Discrete : Type ℓ → Type ℓ
 Discrete = onAllPaths Dec
+
+DiscreteEq : Type ℓ → Type ℓ
+DiscreteEq = onAllEqs Dec

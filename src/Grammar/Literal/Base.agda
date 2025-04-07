@@ -23,14 +23,17 @@ opaque
   literal : ⟨ Alphabet ⟩ → Grammar ℓ-zero
   literal c w = w ≡ [ c ]
 
-  @0 isLangLiteral : ∀ c → isLang (literal c)
-  isLangLiteral c w = isSetString w [ c ]
+  lit-intro : literal c [ c ]
+  lit-intro = refl
+
+  -- @0 isLangLiteral : ∀ c → isLang (literal c)
+  -- isLangLiteral c w = isSetString w [ c ]
 
 ＂_＂ : ⟨ Alphabet ⟩ → Grammar ℓ-zero
 ＂ c ＂ = literal c
 
-@0 isSetGrammarLiteral : ∀ c → isSetGrammar (literal c)
-isSetGrammarLiteral c = isLang→isSetGrammar (isLangLiteral c)
+-- @0 isSetGrammarLiteral : ∀ c → isSetGrammar (literal c)
+-- isSetGrammarLiteral c = isLang→isSetGrammar (isLangLiteral c)
 
 -- This * here is a Cubical naming convention for
 -- a lifted type, not a Kleene star
