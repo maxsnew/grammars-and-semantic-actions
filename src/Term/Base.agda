@@ -101,13 +101,13 @@ Mono∘g e e' mon-e mon-e' f f' e'ef≡e'ef' =
 -- EqtransportG {A = A}{B = B} Eq.refl =
 --   Eq.transport (λ B → A ⊢ B) Eq.refl id
 
--- invMoveR :
---   {f : A ⊢ B} {f⁻ : B ⊢ A}
---   {f' : C ⊢ A} {f'' : C ⊢ B}
---   → f⁻ ∘g f ≡ id
---   → f ∘g f' ≡ f''
---   → f' ≡ f⁻ ∘g f''
--- invMoveR {f = f}{f⁻}{f'}{f''} retr p =
---   f' ≡⟨ cong (_∘g f') (sym retr) ⟩
---   f⁻ ∘g f ∘g f' ≡⟨ cong (f⁻ ∘g_) p ⟩
---   f⁻ ∘g f'' ∎
+@0 invMoveR :
+  {f : A ⊢ B} {f⁻ : B ⊢ A}
+  {f' : C ⊢ A} {f'' : C ⊢ B}
+  → f⁻ ∘g f ≡ id
+  → f ∘g f' ≡ f''
+  → f' ≡ f⁻ ∘g f''
+invMoveR {f = f}{f⁻}{f'}{f''} retr p =
+  f' ≡⟨ cong (_∘g f') (sym retr) ⟩
+  f⁻ ∘g f ∘g f' ≡⟨ cong (f⁻ ∘g_) p ⟩
+  f⁻ ∘g f'' ∎
