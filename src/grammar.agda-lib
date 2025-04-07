@@ -1,4 +1,4 @@
 name: grammar
 include: .
 depend: cubical cubical-categorical-logic
-flags: --cubical
+flags: --erased-cubical --erasure

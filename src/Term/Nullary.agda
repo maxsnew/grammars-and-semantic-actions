@@ -1,7 +1,8 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Term.Nullary (Alphabet : hSet ℓ-zero) where
+open import String.Alphabet
+module Term.Nullary (Alphabet : Alphabet) where
 
 open import Cubical.Data.List
 open import Grammar.Base Alphabet

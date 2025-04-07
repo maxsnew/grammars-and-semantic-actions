@@ -1,7 +1,8 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Epsilon.Base (Alphabet : hSet ℓ-zero) where
+open import String.Alphabet
+module Grammar.Epsilon.Base (Alphabet : Alphabet) where
 
 open import Cubical.Data.List
 import Cubical.Data.Empty as Empty
