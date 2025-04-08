@@ -21,6 +21,7 @@
 @STRING{cacm =      "Communications of the {ACM}" }
 @STRING{jacm =      "Journal of the {ACM}" }
 @STRING{tcs =       "Theoretical Computer Science" }
+@STRING{eptcs =       "Electronic Proceedings in Theoretical Computer Science" }
 @STRING{jsl =       "Journal of Symbolic Logic" }
 @STRING{siamjc =    "SIAM Journal on Computing" }
 @STRING{mscs =      "Mathematical Structures in Computer Science" }
@@ -227,6 +228,7 @@
 @string{dls =       "Dynamic Languages Symposium (DLS)"}
 @STRING{esop =      "European Symposium on Programming (ESOP)" }
 @STRING{esop92 =    esop # ", Rennes, France" }
+@STRING{esop12 =    esop # ", Tallinn, Estonia" }
 @STRING{ecoop =     "{E}uropean {C}onference on {O}bject-{O}riented
                     {P}rogramming ({ECOOP})" }
 @STRING{ecoop97 =   ecoop }
@@ -250,184 +252,71 @@
 @STRING{fossacs09 = fossacs # ", Berlin"}
 @STRING{pacmpl = "Proceedings of the ACM on Programming Languages (PACMPL)"}
 
+@STRING{csl =      "Computer Science Logic" }
+@STRING{csl94 =    csl # ", Kazimierz, Poland" }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-@inproceedings{lautemann_logics_1995,
-	address = {Berlin, Heidelberg},
-	series = {Lecture {Notes} in {Computer} {Science}},
-	title = {Logics for context-free languages},
-	isbn = {978-3-540-49404-1},
-	doi = {10.1007/BFb0022257},
-	abstract = {We define matchings, and show that they capture the essence of context-freeness. More precisely, we show that the class of context-free languages coincides with the class of those sets of strings which can be defined by sentences of the form ∃ bϕ, where ϕ is first order, b is a binary predicate symbol, and the range of the second order quantifier is restricted to the class of matchings. Several variations and extensions are discussed.},
-	language = {en},
-	booktitle = {Computer {Science} {Logic}},
-	publisher = {Springer},
-	author = {Lautemann, Clemens and Schwentick, Thomas and Thérien, Denis},
-	editor = {Pacholski, Leszek and Tiuryn, Jerzy},
-	year = {1995},
-	pages = {205--216},
-	file = {Full Text PDF:/Users/stevenschaefer/Zotero/storage/K8WPLXLQ/Lautemann et al. - 1995 - Logics for context-free languages.pdf:application/pdf},
-}
-
-@article{henglein_regular_2011,
-	title = {Regular expression containment: coinductive axiomatization and computational interpretation},
-	volume = {46},
-	issn = {0362-1340},
-	shorttitle = {Regular expression containment},
-	url = {https://dl.acm.org/doi/10.1145/1925844.1926429},
-	doi = {10.1145/1925844.1926429},
-	abstract = {We present a new sound and complete axiomatization of regular expression containment. It consists of the conventional axiomatization of concatenation, alternation, empty set and (the singleton set containing) the empty string as an idempotent semiring, the fixed- point rule E* = 1 + E × E* for Kleene-star, and a general coinduction rule as the only additional rule. Our axiomatization gives rise to a natural computational interpretation of regular expressions as simple types that represent parse trees, and of containment proofs as coercions. This gives the axiom- atization a Curry-Howard-style constructive interpretation: Containment proofs do not only certify a language-theoretic contain- ment, but, under our computational interpretation, constructively transform a membership proof of a string in one regular expression into a membership proof of the same string in another regular expression. We show how to encode regular expression equivalence proofs in Salomaa's, Kozen's and Grabmayer's axiomatizations into our containment system, which equips their axiomatizations with a computational interpretation and implies completeness of our axiomatization. To ensure its soundness, we require that the computational interpretation of the coinduction rule be a hereditarily total function. Hereditary totality can be considered the mother of syn- tactic side conditions: it "explains" their soundness, yet cannot be used as a conventional side condition in its own right since it turns out to be undecidable. We discuss application of regular expressions as types to bit coding of strings and hint at other applications to the wide-spread use of regular expressions for substring matching, where classical automata-theoretic techniques are a priori inapplicable. Neither regular expressions as types nor subtyping interpreted coercively are novel per se. Somewhat surprisingly, this seems to be the first investigation of a general proof-theoretic framework for the latter in the context of the former, however.},
-	number = {1},
-	urldate = {2023-11-28},
-	journal = {ACM SIGPLAN Notices},
-	author = {Henglein, Fritz and Nielsen, Lasse},
-	month = jan,
-	year = {2011},
-	keywords = {axiomatization, coercion, coinduction, computational interpretation, containment, equivalence, regular expression, type},
-	pages = {385--398},
-	file = {Full Text PDF:/Users/stevenschaefer/Zotero/storage/ZUZHNIP8/Henglein and Nielsen - 2011 - Regular expression containment coinductive axioma.pdf:application/pdf},
-}
-
-@article{grathwohl_infinitary_2013,
-	title = {Infinitary {Axiomatization} of the {Equational} {Theory} of {Context}-{Free} {Languages}},
-	volume = {126},
-	issn = {2075-2180},
-	url = {http://arxiv.org/abs/1309.0893},
-	doi = {10.4204/EPTCS.126.4},
-	abstract = {We give a natural complete infinitary axiomatization of the equational theory of the context-free languages, answering a question of Lei\{{\textbackslash}ss\} (1992).},
-	urldate = {2023-11-28},
-	journal = {Electronic Proceedings in Theoretical Computer Science},
-	author = {Grathwohl, Niels Bjørn Bugge and Henglein, Fritz and Kozen, Dexter},
-	month = aug,
-	year = {2013},
-	note = {arXiv:1309.0893 [cs]},
-	keywords = {Computer Science - Formal Languages and Automata Theory, Computer Science - Logic in Computer Science},
-	pages = {44--55},
-	file = {arXiv Fulltext PDF:/Users/stevenschaefer/Zotero/storage/TJHAX5RI/Grathwohl et al. - 2013 - Infinitary Axiomatization of the Equational Theory.pdf:application/pdf;arXiv.org Snapshot:/Users/stevenschaefer/Zotero/storage/INYKMZZH/1309.html:text/html},
+@inproceedings{henglein_regular_2011,
+author = {Henglein, Fritz and Nielsen, Lasse},
+title = {Regular expression containment: coinductive axiomatization and computational interpretation},
+doi = {10.1145/1926385.1926429},
+year = {2011},
+month = jan,
+series = popl11,
 }
 
 @inproceedings{krishnaswami_integrating_2015,
-	address = {Mumbai India},
-	title = {Integrating {Linear} and {Dependent} {Types}},
-	isbn = {978-1-4503-3300-9},
-	url = {https://dl.acm.org/doi/10.1145/2676726.2676969},
-	doi = {10.1145/2676726.2676969},
-	abstract = {In this paper, we show how to integrate linear types with type dependency, by extending the linear/non-linear calculus of Benton to support type dependency.},
-	language = {en},
-	urldate = {2024-01-04},
-	booktitle = {Proceedings of the 42nd {Annual} {ACM} {SIGPLAN}-{SIGACT} {Symposium} on {Principles} of {Programming} {Languages}},
-	publisher = {ACM},
-	author = {Krishnaswami, Neelakantan R. and Pradic, Pierre and Benton, Nick},
-	month = jan,
-	year = {2015},
-	pages = {17--30},
-	file = {Krishnaswami et al. - 2015 - Integrating Linear and Dependent Types.pdf:/Users/stevenschaefer/Zotero/storage/867QYE2N/Krishnaswami et al. - 2015 - Integrating Linear and Dependent Types.pdf:application/pdf},
-}
-
-@article{hyland_glueing_2003,
-	title = {Glueing and orthogonality for models of linear logic},
-	volume = {294},
-	issn = {03043975},
-	url = {https://linkinghub.elsevier.com/retrieve/pii/S0304397501002419},
-	doi = {10.1016/S0304-3975(01)00241-9},
-	abstract = {We present the general theory of the method of glueing and associated technique of orthogonality for constructing categorical models of all the structure of linear logic: in particular we treat the exponentials in detail. We indicate simple applications of the methods and show that they cover familiar examples. c 2002 Elsevier Science B.V. All rights reserved.},
-	language = {en},
-	number = {1-2},
-	urldate = {2024-03-04},
-	journal = {Theoretical Computer Science},
-	author = {Hyland, Martin and Schalk, Andrea},
-	month = feb,
-	year = {2003},
-	pages = {183--231},
-	file = {Hyland and Schalk - 2003 - Glueing and orthogonality for models of linear log.pdf:/Users/stevenschaefer/Zotero/storage/EZ43SYGH/Hyland and Schalk - 2003 - Glueing and orthogonality for models of linear log.pdf:application/pdf},
-}
-
-@inproceedings{krishnaswami_typed_2019,
-	address = {Phoenix AZ USA},
-	title = {A typed, algebraic approach to parsing},
-	isbn = {978-1-4503-6712-7},
-	url = {https://dl.acm.org/doi/10.1145/3314221.3314625},
-	doi = {10.1145/3314221.3314625},
-	language = {en},
-	urldate = {2024-04-22},
-	booktitle = {Proceedings of the 40th {ACM} {SIGPLAN} {Conference} on {Programming} {Language} {Design} and {Implementation}},
-	publisher = {ACM},
-	author = {Krishnaswami, Neelakantan R. and Yallop, Jeremy},
-	month = jun,
-	year = {2019},
-	pages = {379--393},
-	file = {Krishnaswami and Yallop - 2019 - A typed, algebraic approach to parsing.pdf:/Users/stevenschaefer/Zotero/storage/HUS3NZFK/Krishnaswami and Yallop - 2019 - A typed, algebraic approach to parsing.pdf:application/pdf},
+author = {Krishnaswami, Neelakantan R. and Pradic, Pierre and Benton, Nick},
+title = {Integrating Linear and Dependent Types},
+month = jan,
+year = {2015},
+doi = {10.1145/2676726.2676969},
+series = popl15
 }
 
 @article{leroy_formal_2009,
-	title = {Formal verification of a realistic compiler},
-	volume = {52},
-	issn = {0001-0782, 1557-7317},
-	url = {https://dl.acm.org/doi/10.1145/1538788.1538814},
-	doi = {10.1145/1538788.1538814},
-	abstract = {This paper reports on the development and formal verification (proof of semantic preservation) of CompCert, a compiler from Clight (a large subset of the C programming language) to PowerPC assembly code, using the Coq proof assistant both for programming the compiler and for proving its correctness. Such a verified compiler is useful in the context of critical software and its formal verification: the verification of the compiler guarantees that the safety properties proved on the source code hold for the executable compiled code as well.},
-	language = {en},
-	number = {7},
-	urldate = {2024-04-22},
-	journal = {Communications of the ACM},
-	author = {Leroy, Xavier},
-	month = jul,
-	year = {2009},
-	pages = {107--115},
-	file = {Full Text PDF:/Users/stevenschaefer/Zotero/storage/UW7FUAX2/Leroy - 2009 - Formal verification of a realistic compiler.pdf:application/pdf},
-}
-
-@inproceedings{kumar_cakeml_2014,
-	address = {San Diego California USA},
-	title = {{CakeML}: a verified implementation of {ML}},
-	isbn = {978-1-4503-2544-8},
-	shorttitle = {{CakeML}},
-	url = {https://dl.acm.org/doi/10.1145/2535838.2535841},
-	doi = {10.1145/2535838.2535841},
-	abstract = {We have developed and mechanically veriﬁed an ML system called CakeML, which supports a substantial subset of Standard ML. CakeML is implemented as an interactive read-eval-print loop (REPL) in x86-64 machine code. Our correctness theorem ensures that this REPL implementation prints only those results permitted by the semantics of CakeML. Our veriﬁcation effort touches on a breadth of topics including lexing, parsing, type checking, incremental and dynamic compilation, garbage collection, arbitraryprecision arithmetic, and compiler bootstrapping.},
-	language = {en},
-	urldate = {2024-04-22},
-	booktitle = {Proceedings of the 41st {ACM} {SIGPLAN}-{SIGACT} {Symposium} on {Principles} of {Programming} {Languages}},
-	publisher = {ACM},
-	author = {Kumar, Ramana and Myreen, Magnus O. and Norrish, Michael and Owens, Scott},
-	month = jan,
-	year = {2014},
-	pages = {179--191},
-	file = {Kumar et al. - 2014 - CakeML a verified implementation of ML.pdf:/Users/stevenschaefer/Zotero/storage/L2QPEHF2/Kumar et al. - 2014 - CakeML a verified implementation of ML.pdf:application/pdf},
+author = {Leroy, Xavier},
+title = {Formal verification of a realistic compiler},
+month = jul,
+year = {2009},
+volume = {52},
+doi = {10.1145/1538788.1538814},
+journal = cacm,
+pages = {107–115},
 }
 
 @inproceedings{yangFindingUnderstandingBugs,
 author = {Yang, Xuejun and Chen, Yang and Eide, Eric and Regehr, John},
 title = {Finding and understanding bugs in C compilers},
+mon = jan,
 year = {2011},
-doi = {10.1145/1993498.1993532},
-booktitle = {Proceedings of the 32nd ACM SIGPLAN Conference on Programming Language Design and Implementation},
-pages = {283–294},
-numpages = {12},
-location = {San Jose, California, USA},
-series = {PLDI '11}
+doi = {10.1145/1993316.1993532},
+series = pldi11
 }
 
-@incollection{jourdanValidatingLRParsers2012,
-	address = {Berlin, Heidelberg},
-	title = {Validating {LR}(1) {Parsers}},
-	volume = {7211},
-	booktitle = {Programming {Languages} and {Systems}},
-	author = {Jourdan, Jacques-Henri and Pottier, François and Leroy, Xavier},
-	year = {2012},
-	doi = {10.1007/978-3-642-28869-2_20},
-	pages = {397--416},
+@inproceedings{jourdanValidatingLRParsers2012,
+title = {Validating {LR}(1) {Parsers}},
+author = {Jourdan, Jacques-Henri and Pottier, François and Leroy, Xavier},
+series = esop12,
+mon = mar,
+year = {2012},
+doi = {10.1007/978-3-642-28869-2_20},
 }
 
 @inproceedings{benton1994,
-  author       = {P. N. Benton},
-  title        = {A Mixed Linear and Non-Linear Logic: Proofs, Terms and Models (Extended Abstract)},
-  booktitle    = {Computer Science Logic, 8th International Workshop, {CSL} '94, Kazimierz, Poland},
-  year         = {1994},
-  url          = {https://doi.org/10.1007/BFb0022251},
-
+author       = {Benton, P. N.},
+title        = {A Mixed Linear and Non-Linear Logic: Proofs, Terms and Models},
+series       = csl94,
+mon          = sep,
+year         = {1994},
+url          = {https://doi.org/10.1007/BFb0022251},
 }
+
+% TODO : clean up the bibliography from here down
+
+
+
 
 @article{brzozowskiDerivativesRegularExpressions1964,
 	title = {Derivatives of {Regular} {Expressions}},
@@ -1221,4 +1110,20 @@ doi={10.1007/978-3-662-46678-0_7}
       archivePrefix={arXiv},
       primaryClass={cs.PL},
       url={https://arxiv.org/abs/2504.03995},
+}
+
+@software{schaefer_2025_15049780,
+  author       = {Schaefer, Steven and
+                  Varner, Nathan and
+                  Azevedo de Amorim, Pedro Henrique and
+                  New, Max S.},
+  title        = {Agda Formalization of "Intrinsic Verification of
+                   Parsers and Formal Grammar Theory in Dependent
+                   Lambek Calculus"
+                  },
+  month        = mar,
+  year         = 2025,
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.15049780},
+  url          = {https://doi.org/10.5281/zenodo.15049780},
 }
