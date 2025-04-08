@@ -1375,7 +1375,7 @@ types $A$ indexed by $X$, we can define a family of functions from
 $\mu F\,x \multimap A\,x$ if you specify how to interpret all of the
 constructors as operations on $A$ values. We add $\beta\eta$ equations
 that specify that this makes the family $\mu F$ into an \emph{initial
-algebra} for the functor $\el(F)$. That is the $\beta$ rule says that
+algebra} for the functor $\el(F)$. That is, the $\beta$ rule says that
 a $\mathsf{fold}$ applied to a $\mathsf{roll}$ is equivalent to
 $\mathsf{map}$ping the $\mathsf{fold}$ over all the sub-expressions,
 which means that $\mathsf{fold}$ interprets all of the constructors
@@ -1617,8 +1617,8 @@ $\StringGram$ is also strongly equivalent to $\top$. Next, since $\StringGram$ i
 defined as a Kleene star, we can easily show that $\StringGram \cong \I
 \oplus \CharGram \oplus (\CharGram \otimes \CharGram \otimes \StringGram)$. Then by
 \cref{lem:unambig-sum}, we have that $\I$ and
-$\CharGram$ --- and thus each literal
-$\literal c$ --- are unambiguous as well.
+$\CharGram$ are unambiguous as well. By the finiteness of the alphabet $\Sigma$,
+we additionally have that each literal $\literal c$ is likewise unambiguous.
 
 % \paragraph{A Grammar of Strings}
 % Define the character grammar $\CharGram$ to be the disjunction over characters in the alphabet $\Sigma$,
@@ -1744,7 +1744,7 @@ using only the connectives $\literal c$, $0$, $\oplus$, $I$,
 $\otimes$, and Kleene star.  In \cref{sec:type-theory-examples}, we
 saw one particular NFA and its corresponding type of traces. More
 generally we define the linear type of traces as in
-\Cref{fig:nfatrace}
+\Cref{fig:nfatrace}.
 
 %% The definition of the linear type of traces
 %% through this
