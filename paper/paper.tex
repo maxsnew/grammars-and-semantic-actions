@@ -576,9 +576,9 @@ parses for $\A$
 and $\B$, respectively.
 
 A grammar $A$ derives the word $w$ if there exists a derivation
-$\internalize{w} \vdash a : A$,
+$\internalize{w} \vdash e : A$,
 where $\internalize \w$ is a context with one variable for each character of
-$\w$. The term $a : A$ represents a \emph{parse tree} of $w$ for the grammar $A$. For
+$\w$. The term $e : A$ represents a \emph{parse tree} of $w$ for the grammar $A$. For
 example, to define a parse tree for \stringquote{ab}, we use
 the context $\internalize{\stringquote{ab}} = a : \literal a , b :
 \literal b$. In \Cref{fig:fingram}, we give a lambda term and its
