@@ -822,7 +822,7 @@ $\texttt{0to1}$ takes in a trace beginning at state $\1$ and returns a
 trace beginning at state $\0$ corresponding to the same underlying
 string.
 %
-Lastly, we give a lambda term that constructs an accepting trace
+Lastly, we give a $\lambda$ term that constructs an accepting trace
 starting at the initial state for the string \stringquote{ab}.  Later
 in \Cref{sec:applications}, we will show that we can actually
 construct mutually inverse functions between the regular expression
@@ -1168,16 +1168,17 @@ over additive disjunction --- e.g., in the finitary case that $0 \& A
 % - If I understand it correctly, axiom 3.1 itself is using "e" as a variable name, which is confusing since it's also used as a metavariable for terms - I suggest picking a different variable name.
 \begin{axiom}[Distributivity]
 \label{ax:dist}
-For any $A : (x : X) \to Y(x) \to L$, the definable distributivity function
-%%%%%%%%%% An attempt to inline
-% \(
-%  {\LinSigTy{f}{\left(\PiTy{x}{X}{Y(x)}\right)}{\LinPiTy{x}{X}{A\,x\,(f\,x)}} \lto
-% \LinPiTy{x}{X}{\LinSigTy{y}{Y(x)}{A\,x\,y}} \right)}
-% \)
-\(
- \lamblto{b}{\letin{\sigma\,f\,b'}{b}{\withlamb{x}{b'\,.\pi\,x}}} : \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
+For any $A : (x : X) \to Y(x) \to L$, the definable function distributing
+conjunction over disjunction
+% Just type
+\(\LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
 \LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}}
 \)
+% Term and Type
+% \(
+%  \lamblto{b}{\letin{\sigma\,f\,b'}{b}{\withlamb{x}{\sigma\,(f\,x)\,(b'\,.\pi\,x)}}} : \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
+% \LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}}
+% \)
 has an inverse.
 \end{axiom}
 
