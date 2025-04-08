@@ -1617,8 +1617,9 @@ $\StringGram$ is also strongly equivalent to $\top$. Next, since $\StringGram$ i
 defined as a Kleene star, we can easily show that $\StringGram \cong \I
 \oplus \CharGram \oplus (\CharGram \otimes \CharGram \otimes \StringGram)$. Then by
 \cref{lem:unambig-sum}, we have that $\I$ and
-$\CharGram$ are unambiguous as well. By the finiteness of the alphabet $\Sigma$,
-we additionally have that each literal $\literal c$ is likewise unambiguous.
+$\CharGram$ are unambiguous as well. Using the finiteness of the alphabet
+$\Sigma$ and the unambiguity of $\CharGram$,
+we have that each literal $\literal c$ is likewise unambiguous.
 
 % \paragraph{A Grammar of Strings}
 % Define the character grammar $\CharGram$ to be the disjunction over characters in the alphabet $\Sigma$,
@@ -2223,7 +2224,7 @@ data Dyck : L where
 
 The Dyck language is an example of an $\textrm{LL}(0)$ language, one
 that can be parsed top-down with no
-lookahead\cite{rosenkrantz_properties_1970}. This means we can
+lookahead \cite{rosenkrantz_properties_1970}. This means we can
 implement it simply as an \emph{infinite} state deterministic
 automaton, in \Cref{fig:DyckAutomaton}. Here the state is a ``stack''
 counting how many open parentheses have been seen so far. Functions
@@ -2234,7 +2235,7 @@ unambiguous.
 
 \begin{theorem}[\Agda]
   \label{thm:dyck}
-  $Dyck$ and $Parse_{M}$ are strongly equivalent. And therefore we can construct a parser for $\Dyck$.
+  $Dyck$ and $Parse_{M}$ are strongly equivalent, so we may build a parser for $\Dyck$.
 \end{theorem}
 
 %% We can build a $Dyck$ parser by utilizing
