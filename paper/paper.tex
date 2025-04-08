@@ -1,6 +1,6 @@
 % -*- fill-column: 80; -*-
 \newif\ifarxiv
-\arxivtrue
+\arxivfalse
 
 \PassOptionsToPackage{prologue,dvipsnames}{xcolor}
 
@@ -536,7 +536,8 @@ that makes precise the connection between \theoryabbv syntax and
 formal grammars. Finally, in \Cref{sec:discussion} we discuss related
 and future work.
 
-\ifarxiv\else {\textbf{Extended version:} An extended version of this paper is available in \citet{extendedLambekD}.}\fi
+\ifarxiv\else {Proofs and syntactic forms elided from this paper are presented
+    in full in the extended version of this paper \cite{schaefer2025intrinsicverificationparsersformal}.}\fi
 
 \section{\theoryname by Example}
 \label{sec:type-theory-examples}
@@ -1167,7 +1168,7 @@ over additive disjunction --- e.g., in the finitary case that $0 \& A
 % - If I understand it correctly, axiom 3.1 itself is using "e" as a variable name, which is confusing since it's also used as a metavariable for terms - I suggest picking a different variable name.
 \begin{axiom}[Distributivity]
 \label{ax:dist}
-For any $A : (x : X) \to Y(x) \to L$, the definable distribuitivity function
+For any $A : (x : X) \to Y(x) \to L$, the definable distributivity function
 %%%%%%%%%% An attempt to inline
 % \(
 %  {\LinSigTy{f}{\left(\PiTy{x}{X}{Y(x)}\right)}{\LinPiTy{x}{X}{A\,x\,(f\,x)}} \lto
@@ -3699,7 +3700,7 @@ substitution.
   and $\map$ operations used to define the indexed inductive types in
   \cref{fig:iilt}.
 \item In \cref{fig:small-nonlin-ty,fig:small-lin-ty} we give the inference rules
-  for the smallness judgements on nonlinear types and linear types, respectively.
+  for the smallness judgments on nonlinear types and linear types, respectively.
 \item In \cref{fig:full-non-linear-types}, we include the full set of rules for
   non-linear types, and in \cref{fig:jdg-eq-nonlinear} we provide their
   judgmental equalities.
@@ -3709,7 +3710,7 @@ substitution.
 
 \subsection{Non-linear Types}
 \label{subsec:nonlinty}
-We define sum types, list types, and $Fin~n$ from primitve non-linear types.
+We define sum types, list types, and $Fin~n$ from primitive non-linear types.
 
 For $X , Y : U$, define the sum type $X + Y$ as,
 
