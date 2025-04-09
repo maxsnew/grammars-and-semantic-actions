@@ -12,6 +12,10 @@
 
 \settopmatter{}
 
+\clubpenalty = 10000
+\widowpenalty = 10000
+\displaywidowpenalty = 10000
+
 %% Journal information
 %% Supplied to authors by publisher for camera-ready submission;
 %% use defaults for review submission.
@@ -1737,7 +1741,7 @@ then a DFA. That is, for each regular expression $A$, we construct an
 NFA $N(A)$ and a corresponding DFA $D(A)$ such that $A$ is strongly
 equivalent to the traces of $N(A)$ and weakly equivalent to the
 accepting traces of $D(A)$. Then we can easily construct a parser for
-traces of $D(A)$ and combine this using \Cref{lem:wk-eqv-parse} to get
+traces of $D(A)$ and apply \cref{lem:wk-eqv-parse} to get
 a verified regular expression parser.
 
 A regular expression in \theoryabbv is a linear type constructed
@@ -2354,7 +2358,7 @@ where $\lceil \stringquote{} \rceil = I$ and
 $\lceil c :: w \rceil = \literal c \otimes \lceil w \rceil$.
 
 This reification operation on functions $\StringSem \to U$ is incredibly expressive,
-as it allows to sidestep our linear typing connectives and utilize the whole of nonlinear
+as it sidesteps our linear typing connectives and utilizes the whole of nonlinear
 dependent type theory to define a grammar. For example, given a
 Turing machine $T$ one may
 define a non-linear predicate $accepts : \StringSem \to U$ that encodes that $T$
