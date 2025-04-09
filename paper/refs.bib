@@ -119,6 +119,8 @@
 @STRING{icfp16 =    icfp # ", Nara, Japan" }
 @STRING{icfp17 =    icfp # ", Oxford, United Kingdom" }
 @STRING{icfp18 =    icfp # ", St. Louis, Missouri" }
+@STRING{icfp19 =    icfp # ", Berlin, Germany" }
+@STRING{icfp21 =    icfp } % virtual. Add "Online Conference"?
 
 % ----
 @STRING{oopsla =    "{ACM} {S}ymposium on {O}bject {O}riented {P}rogramming:
@@ -129,7 +131,9 @@
 @STRING{oopsla08 =  oopsla # ", Nashville, Tennessee" }
 % ----
 @STRING{types = "Types for Proofs and Programs (TYPES)"}
+@STRING{types03 = types # ", Torino, Italy"}
 @STRING{types15 = types # ", Tallinn, Estonia"}
+@STRING{types21 = types }
 @STRING{oldLics =      "IEEE Symposium on Logic in Computer Science (LICS)" }
 @STRING{lics =      "ACM/IEEE Symposium on Logic in Computer Science (LICS)" }
 @STRING{lics89 =    oldLics # "Pacific Grove, California" }
@@ -190,6 +194,8 @@
 @STRING{pldi12 =    pldi # ", Beijing, China" }
 @STRING{pldi13 =    pldi # ", Seattle, Washington" }
 @STRING{pldi14 =    pldi # ", Edinburgh, Scotland" }
+@STRING{pldi20 =    pldi } % Virtual
+@STRING{pldi21 =    pldi } % Virtual
 % ----
 @STRING{lfp =       "ACM Symposium on Lisp and Functional Programming (LFP)" }
 @STRING{lfp84 =     lfp # ", Austin, Texas" }
@@ -236,6 +242,7 @@
 @STRING{flops =     "International Symposium on Functional and Logic Programming (FLOPS)" }
 @STRING{flops02 =   flops # ", Aizu, Japan" }
 @string{icalp =     "International Colloquium on Automata, Languages and Programming (ICALP)"}
+@STRING{icalp04 =    icalp # ", Turku, Finland" }
 @string{plpv =      "Programming Languages meets Program Verification (PLPV)"}
 @STRING{post =      "Principles of Security and Trust (POST)" }
 @string{ppdp =      "ACM Conference on Principles and Practice of Declarative Programming (PPDP)"}
@@ -254,16 +261,26 @@
 
 @STRING{csl =      "Computer Science Logic" }
 @STRING{csl94 =    csl # ", Kazimierz, Poland" }
+@STRING{csl91 =    csl # ", Berne, Switzerland" }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 @inproceedings{henglein_regular_2011,
 author = {Henglein, Fritz and Nielsen, Lasse},
 title = {Regular expression containment: coinductive axiomatization and computational interpretation},
-doi = {10.1145/1926385.1926429},
 year = {2011},
-month = jan,
-series = popl11,
+isbn = {9781450304900},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1926385.1926429},
+doi = {10.1145/1926385.1926429},
+abstract = {We present a new sound and complete axiomatization of regular expression containment. It consists of the conventional axiomatization of concatenation, alternation, empty set and (the singleton set containing) the empty string as an idempotent semiring, the fixed- point rule E* = 1 + E \texttimes{} E* for Kleene-star, and a general coinduction rule as the only additional rule.Our axiomatization gives rise to a natural computational interpretation of regular expressions as simple types that represent parse trees, and of containment proofs as coercions. This gives the axiom- atization a Curry-Howard-style constructive interpretation: Containment proofs do not only certify a language-theoretic contain- ment, but, under our computational interpretation, constructively transform a membership proof of a string in one regular expression into a membership proof of the same string in another regular expression.We show how to encode regular expression equivalence proofs in Salomaa's, Kozen's and Grabmayer's axiomatizations into our containment system, which equips their axiomatizations with a computational interpretation and implies completeness of our axiomatization. To ensure its soundness, we require that the computational interpretation of the coinduction rule be a hereditarily total function. Hereditary totality can be considered the mother of syn- tactic side conditions: it "explains" their soundness, yet cannot be used as a conventional side condition in its own right since it turns out to be undecidable.We discuss application of regular expressions as types to bit coding of strings and hint at other applications to the wide-spread use of regular expressions for substring matching, where classical automata-theoretic techniques are a priori inapplicable.Neither regular expressions as types nor subtyping interpreted coercively are novel per se. Somewhat surprisingly, this seems to be the first investigation of a general proof-theoretic framework for the latter in the context of the former, however.},
+booktitle = {Proceedings of the 38th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+pages = {385–398},
+numpages = {14},
+keywords = {type, regular expression, equivalence, containment, computational interpretation, coinduction, coercion, axiomatization},
+location = {Austin, Texas, USA},
+series = {POPL '11}
 }
 
 @inproceedings{krishnaswami_integrating_2015,
@@ -281,6 +298,7 @@ title = {Formal verification of a realistic compiler},
 month = jul,
 year = {2009},
 volume = {52},
+number = {7},
 doi = {10.1145/1538788.1538814},
 journal = cacm,
 pages = {107–115},
@@ -313,85 +331,17 @@ year         = {1994},
 url          = {https://doi.org/10.1007/BFb0022251},
 }
 
-% TODO : clean up the bibliography from here down
-
-
-
-
-@article{brzozowskiDerivativesRegularExpressions1964,
-	title = {Derivatives of {Regular} {Expressions}},
-	volume = {11},
-	issn = {0004-5411, 1557-735X},
-	url = {https://dl.acm.org/doi/10.1145/321239.321249},
-	doi = {10.1145/321239.321249},
-	language = {en},
-	number = {4},
-	urldate = {2024-04-29},
-	journal = {Journal of the ACM},
-	author = {Brzozowski, Janusz A.},
-	month = oct,
-	year = {1964},
-	pages = {481--494},
-	file = {Full Text PDF:/Users/stevenschaefer/Zotero/storage/CMQXUWQR/Brzozowski - 1964 - Derivatives of Regular Expressions.pdf:application/pdf},
-}
-
-@inproceedings{mightParsingDerivativesFunctional2011,
-	address = {Tokyo Japan},
-	title = {Parsing with derivatives: a functional pearl},
-	isbn = {978-1-4503-0865-6},
-	shorttitle = {Parsing with derivatives},
-	url = {https://dl.acm.org/doi/10.1145/2034773.2034801},
-	doi = {10.1145/2034773.2034801},
-	language = {en},
-	urldate = {2024-04-29},
-	booktitle = {Proceedings of the 16th {ACM} {SIGPLAN} international conference on {Functional} programming},
-	publisher = {ACM},
-	author = {Might, Matthew and Darais, David and Spiewak, Daniel},
-	month = sep,
-	year = {2011},
-	pages = {189--195},
-	file = {Full Text PDF:/Users/stevenschaefer/Zotero/storage/Y99XZYVR/Might et al. - 2011 - Parsing with derivatives a functional pearl.pdf:application/pdf},
-}
-
 @article{rabinFiniteAutomataTheir1959,
-	title = {Finite {Automata} and {Their} {Decision} {Problems}},
-	volume = {3},
-	issn = {0018-8646, 0018-8646},
-	url = {http://ieeexplore.ieee.org/document/5392601/},
-	doi = {10.1147/rd.32.0114},
-	abstract = {Finite automata are considered in this paper as instruments for classifying finite tapes. Each onetape automaton defines a set of tapes, a two-tape automaton defines a set of pairs of tapes, et cetera. The structure of the defined sets is studied. Various generalizations of the notion of an automaton are introduced and their relation to the classical automata is determined. Some decision problems concerning automata are shown to be solvable by effective algorithms; others turn out to be unsolvable by algorithms.},
-	language = {en},
-	number = {2},
-	urldate = {2024-04-29},
-	journal = {IBM Journal of Research and Development},
-	author = {Rabin, M. O. and Scott, D.},
-	month = apr,
-	year = {1959},
-	pages = {114--125},
-	file = {Rabin and Scott - 1959 - Finite Automata and Their Decision Problems.pdf:/Users/stevenschaefer/Zotero/storage/V4PSR9SW/Rabin and Scott - 1959 - Finite Automata and Their Decision Problems.pdf:application/pdf},
+title = {Finite {Automata} and {Their} {Decision} {Problems}},
+volume = {3},
+doi = {10.1147/rd.32.0114},
+number = {2},
+journal = {IBM Journal of Research and Development},
+author = {Rabin, M. O. and Scott, D.},
+month = apr,
+year = {1959},
+pages = {114--125},
 }
-
-
-@article{owensRegularexpressionDerivativesReexamined2009,
-	title = {Regular-expression derivatives re-examined},
-	volume = {19},
-	copyright = {https://www.cambridge.org/core/terms},
-	issn = {0956-7968, 1469-7653},
-	url = {https://www.cambridge.org/core/product/identifier/S0956796808007090/type/journal_article},
-	doi = {10.1017/S0956796808007090},
-	abstract = {Abstract
-            Regular-expression derivatives are an old, but elegant, technique for compiling regular expressions to deterministic finite-state machines. It easily supports extending the regular-expression operators with boolean operations, such as intersection and complement. Unfortunately, this technique has been lost in the sands of time and few computer scientists are aware of it. In this paper, we reexamine regular-expression derivatives and report on our experiences in the context of two different functional-language implementations. The basic implementation is simple and we show how to extend it to handle large character sets (e.g., Unicode). We also show that the derivatives approach leads to smaller state machines than the traditional algorithm given by McNaughton and Yamada.},
-	language = {en},
-	number = {2},
-	urldate = {2024-04-29},
-	journal = {Journal of Functional Programming},
-	author = {Owens, Scott and Reppy, John and Turon, Aaron},
-	month = mar,
-	year = {2009},
-	pages = {173--190},
-	file = {Owens et al. - 2009 - Regular-expression derivatives re-examined.pdf:/Users/stevenschaefer/Zotero/storage/PQB9TTVL/Owens et al. - 2009 - Regular-expression derivatives re-examined.pdf:application/pdf},
-}
-
 
 @article{thompsonProgrammingTechniquesRegular1968,
 	title = {Programming {Techniques}: {Regular} expression search algorithm},
@@ -399,52 +349,12 @@ url          = {https://doi.org/10.1007/BFb0022251},
 	issn = {0001-0782, 1557-7317},
 	shorttitle = {Programming {Techniques}},
 	url = {https://dl.acm.org/doi/10.1145/363347.363387},
-	doi = {10.1145/363347.363387},
-	abstract = {A method for locating specific character strings embedded in character text is described and an implementation of this method in the form of a compiler is discussed. The compiler accepts a regular expression as source language and produces an IBM 7094 program as object language. The object program then accepts the text to be searched as input and produces a signal every time an embedded string in the text matches the given regular expression. Examples, problems, and solutions are also presented.},
-	language = {en},
 	number = {6},
-	urldate = {2024-04-29},
-	journal = {Communications of the ACM},
+	journal = cacm,
 	author = {Thompson, Ken},
 	month = jun,
 	year = {1968},
 	pages = {419--422},
-	file = {Full Text PDF:/Users/stevenschaefer/Zotero/storage/6FRSL8GN/Thompson - 1968 - Programming Techniques Regular expression search .pdf:application/pdf},
-}
-
-
-@incollection{Bekić1984,
-	address = {Berlin, Heidelberg},
-	title = {Definable operations in general algebras, and the theory of automata and flowcharts},
-	isbn = {978-3-540-38933-0},
-	url = {https://doi.org/10.1007/BFb0048939},
-	abstract = {We study the class of operations definable from the given operations of an algebra of sets by union, composition, and fixed points; we obtain two theorems on definable operations that give us as special case the regular-equals-recognisable theorem of generalised finite automata theory. Definable operations arise also as the operations computable by charts; by translating into predicate logic, we obtain Manna's formulas for termination and correctness of flowcharts.},
-	booktitle = {Programming languages and their definition: {H}. {Bekič} (1936–1982)},
-	publisher = {Springer Berlin Heidelberg},
-	author = {Bekić, Hans},
-	editor = {Jones, C. B.},
-	year = {1984},
-	doi = {10.1007/BFb0048939},
-	pages = {30--55},
-}
-
-
-@article{zhangIntervalParsingGrammars2023,
-	title = {Interval {Parsing} {Grammars} for {File} {Format} {Parsing}},
-	volume = {7},
-	issn = {2475-1421},
-	url = {https://dl.acm.org/doi/10.1145/3591264},
-	doi = {10.1145/3591264},
-	abstract = {File formats specify how data is encoded for persistent storage. They cannot be formalized as context-free grammars since their specifications include context-sensitive patterns such as the random access pattern and the type-length-value pattern. We propose a new grammar mechanism called Interval Parsing Grammars IPGs) for file format specifications. An IPG attaches to every nonterminal/terminal an interval, which specifies the range of input the nonterminal/terminal consumes. By connecting intervals and attributes, the context-sensitive patterns in file formats can be well handled. In this paper, we formalize IPGs' syntax as well as its semantics, and its semantics naturally leads to a parser generator that generates a recursive-descent parser from an IPG. In general, IPGs are declarative, modular, and enable termination checking. We have used IPGs to specify a number of file formats including ZIP, ELF, GIF, PE, and part of PDF; we have also evaluated the performance of the generated parsers.},
-	language = {en},
-	number = {PLDI},
-	urldate = {2024-04-29},
-	journal = {Proceedings of the ACM on Programming Languages},
-	author = {Zhang, Jialun and Morrisett, Greg and Tan, Gang},
-	month = jun,
-	year = {2023},
-	pages = {1073--1095},
-	file = {Full Text PDF:/Users/stevenschaefer/Zotero/storage/4JNN3FNZ/Zhang et al. - 2023 - Interval Parsing Grammars for File Format Parsing.pdf:application/pdf},
 }
 
 @article{chom1963,
@@ -456,101 +366,6 @@ url          = {https://doi.org/10.1007/BFb0022251},
   pages        = {323--418},
 }
 
-@ARTICLE{chomThreeModels1956 ,
-  author={Chomsky, N.},
-  journal={IRE Transactions on Information Theory},
-  title={Three models for the description of language},
-  year={1956},
-  volume={2},
-  number={3},
-  pages={113-124},
-  keywords={Natural languages;Testing;Laboratories;Markov processes;Impedance matching;Kernel;Research and development},
-  doi={10.1109/TIT.1956.1056813}}
-
-@article{KNUTH1965607,
-title = {On the translation of languages from left to right},
-journal = {Information and Control},
-volume = {8},
-number = {6},
-pages = {607-639},
-year = {1965},
-issn = {0019-9958},
-doi = {https://doi.org/10.1016/S0019-9958(65)90426-2},
-url = {https://www.sciencedirect.com/science/article/pii/S0019995865904262},
-author = {Donald E. Knuth},
-abstract = {There has been much recent interest in languages whose grammar is sufficiently simple that an efficient left-to-right parsing algorithm can be mechanically produced from the grammar. In this paper, we define LR(k) grammars, which are perhaps the most general ones of this type, and they provide the basis for understanding all of the special tricks which have been used in the construction of parsing algorithms for languages with simple structure, e.g. algebraic languages. We give algorithms for deciding if a given grammar satisfies the LR(k) condition, for given k, and also give methods for generating recognizes for LR(k) grammars. It is shown that the problem of whether or not a grammar is LR(k) for some k is undecidable, and the paper concludes by establishing various connections between LR(k) grammars and deterministic languages. In particular, the LR(k) condition is a natural analogue, for grammars, of the deterministic condition, for languages.}
-}
-
-@article{Earley1970,
-author = {Earley, Jay},
-title = {An efficient context-free parsing algorithm},
-year = {1970},
-issue_date = {Feb 1970},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-volume = {13},
-number = {2},
-issn = {0001-0782},
-url = {https://doi.org/10.1145/362007.362035},
-doi = {10.1145/362007.362035},
-abstract = {A parsing algorithm which seems to be the most efficient general context-free algorithm known is described. It is similar to both Knuth's LR(k) algorithm and the familiar top-down algorithm. It has a time bound proportional to n3 (where n is the length of the string being parsed) in general; it has an n2 bound for unambiguous grammars; and it runs in linear time on a large class of grammars, which seems to include most practical context-free programming language grammars. In an empirical comparison it appears to be superior to the top-down and bottom-up algorithms studied by Griffiths and Petrick.},
-journal = {Commun. ACM},
-month = {feb},
-pages = {94–102},
-numpages = {9},
-keywords = {compilers, computational complexity, context-free grammar, parsing, syntax analysis}
-}
-@Techreport{ Johnsonyacc ,
-	title = "Yacc: Yet Another Compiler-Compiler",
-	author = "Stephen C. Johnson",
-	address = "Murray Hill, New Jersey 07974",
-	institution = "AT\&T Bell Laboratories",
-	pages = "PS1:15-1 - PS1:15-32",
-}
-
-@article{kozen1997kleene,
-  title={Kleene algebra with tests},
-  author={Kozen, Dexter},
-  journal={ACM Transactions on Programming Languages and Systems (TOPLAS)},
-  year={1997}
-}
-
-@techreport{angus2001kleene,
-  title={Kleene algebra with tests and program schematology},
-  author={Angus, Allegra and Kozen, Dexter},
-  year={2001},
-  institution={Cornell University}
-}
-
-@inproceedings{hoare2009concurrent,
-  title={Concurrent kleene algebra},
-  author={Hoare, CAR Tony and M{\"o}ller, Bernhard and Struth, Georg and Wehrman, Ian},
-  booktitle={CONCUR},
-  year={2009}
-}
-
-@inproceedings{anderson2014netkat,
-  title={NetKAT: Semantic foundations for networks},
-  author={Anderson, Carolyn Jane and Foster, Nate and Guha, Arjun and Jeannin, Jean-Baptiste and Kozen, Dexter and Schlesinger, Cole and Walker, David},
-  booktitle={Principles of Programming Languages (POPL)},
-  year={2014}
-}
-
-
-@article{KOZEN1994366,
-title = {A Completeness Theorem for Kleene Algebras and the Algebra of Regular Events},
-journal = {Information and Computation},
-volume = {110},
-number = {2},
-pages = {366-390},
-year = {1994},
-issn = {0890-5401},
-doi = {https://doi.org/10.1006/inco.1994.1037},
-url = {https://www.sciencedirect.com/science/article/pii/S0890540184710376},
-author = {D. Kozen},
-abstract = {We give a finitary axiomatization of the algebra of regular events involving only equations and equational implications. Unlike Salomaa′s axiomatizations, the axiomatization given here is sound for all interpretations over Kleene algebras.}
-}
-
 @phdthesis{day1970construction,
   title={Construction of biclosed categories},
   author={Day, Brian John},
@@ -558,254 +373,60 @@ abstract = {We give a finitary axiomatization of the algebra of regular events i
   school={University of New South Wales PhD thesis}
 }
 
-@article{kozen1994action,
-  title={On action algebras},
-  author={Kozen, Dexter},
-  journal={Logic and Information Flow},
-  year={1994}
-}
-
-@inproceedings{kozen2000certification,
-  title={Certification of compiler optimizations using Kleene algebra with tests},
-  author={Kozen, Dexter and Patron, Maria-Cristina},
-  booktitle={International Conference on Computational Logic},
-  pages={568--582},
-  year={2000},
-  organization={Springer}
-}
-
-@article{GIRARD19871,
-title = {Linear logic},
-journal = {Theoretical Computer Science},
-volume = {50},
-number = {1},
-pages = {1-101},
-year = {1987},
-issn = {0304-3975},
-doi = {https://doi.org/10.1016/0304-3975(87)90045-4},
-url = {https://www.sciencedirect.com/science/article/pii/0304397587900454},
-author = {Jean-Yves Girard},
-abstract = {The familiar connective of negation is broken into two operations: linear negation which is the purely negative part of negation and the modality “of course” which has the meaning of a reaffirmation. Following this basic discovery, a completely new approach to the whole area between constructive logics and programmation is initiated.}
-}
-@article{AhoIndexed,
-author = {Aho, Alfred V.},
-title = {Indexed Grammars—An Extension of Context-Free Grammars},
-year = {1968},
-issue_date = {Oct. 1968},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-volume = {15},
-number = {4},
-issn = {0004-5411},
-url = {https://doi.org/10.1145/321479.321488},
-doi = {10.1145/321479.321488},
-abstract = {A new type of grammar for generating formal languages, called an indexed grammar, is presented. An indexed grammar is an extension of a context-free grammar, and the class of languages generated by indexed grammars has closure properties and decidability results similar to those for context-free languages. The class of languages generated by indexed grammars properly includes all context-free languages and is a proper subset of the class of context-sensitive languages. Several subclasses of indexed grammars generate interesting classes of languages.},
-journal = {J. ACM},
-month = {oct},
-pages = {647–671},
-numpages = {25}
-}
-
-@InProceedings{leiss,
-author="Lei{\ss}, Haas",
-editor="B{\"o}rger, Egon
-and J{\"a}ger, Gerhard
-and Kleine B{\"u}ning, Hans
-and Richter, Michael M.",
-title="Towards Kleene Algebra with recursion",
-booktitle="Computer Science Logic",
-year="1992",
-publisher="Springer Berlin Heidelberg",
-address="Berlin, Heidelberg",
-pages="242--256",
-abstract="We extend Kozen's theory KA of Kleene Algebra to axiomatize parts of the equational theory of context-free languages, using a least fixed-point operator $\mu$ instead of Kleene's iteration operator*.",
-isbn="978-3-540-47285-8"
-}
-
-@inproceedings{yoshinaga2002formal,
-  title={A Formal Proof of Strong Equivalence for a Grammar Conversion from LTAG to HPSG-style},
-  author={Yoshinaga, Naoki and Miyao, Yusuke and Tsujii, Jun’ichi},
-  booktitle={Proceedings of the Sixth International Workshop on Tree Adjoining Grammar and Related Frameworks (TAG+ 6)},
-  pages={187--192},
-  year={2002}
-}
-
-@incollection{prattActionLogicPure1991,
-	address = {Berlin, Heidelberg},
-	title = {Action logic and pure induction},
-	volume = {478},
-	isbn = {978-3-540-53686-4 978-3-540-46982-7},
-	url = {http://link.springer.com/10.1007/BFb0018436},
-	abstract = {In Floyd-Hoare logic, programs are dynamic while assertions are static (hold at states). In action logic the two notions become one, with programs viewed as on-the-ﬂy assertions whose truth is evaluated along intervals instead of at states. Action logic is an equational theory ACT conservatively extending the equational theory REG of regular expressions with operations preimplication a→b (had a then b) and postimplication b←a (b if-ever a). Unlike REG, ACT is ﬁnitely based, makes a∗ reﬂexive transitive closure, and has an equivalent Hilbert system. The crucial axiom is that of pure induction, (a→a)∗ = a→a.},
-	language = {en},
-	urldate = {2024-07-10},
-	booktitle = {Logics in {AI}},
-	publisher = {Springer Berlin Heidelberg},
-	author = {Pratt, Vaughan},
-	editor = {Siekmann, J. and Goos, G. and Hartmanis, J. and Van Eijck, J.},
-	year = {1991},
-	doi = {10.1007/BFb0018436},
-	note = {Series Title: Lecture Notes in Computer Science},
-	pages = {97--120},
-	file = {Pratt - 1991 - Action logic and pure induction.pdf:/Users/stevenschaefer/Zotero/storage/U7JDF77Z/Pratt - 1991 - Action logic and pure induction.pdf:application/pdf},
-}
-
-@misc{vakarSyntaxSemanticsLinear2015,
-	title = {Syntax and {Semantics} of {Linear} {Dependent} {Types}},
-	url = {http://arxiv.org/abs/1405.0033},
-	abstract = {A type theory is presented that combines (intuitionistic) linear types with type dependency, thus properly generalising both intuitionistic dependent type theory and full linear logic. A syntax and complete categorical semantics are developed, the latter in terms of (strict) indexed symmetric monoidal categories with comprehension. Various optional type formers are treated in a modular way. In particular, we will see that the historically much-debated multiplicative quantiﬁers and identity types arise naturally from categorical considerations. These new multiplicative connectives are further characterised by several identities relating them to the usual connectives from dependent type theory and linear logic. Finally, one important class of models, given by families with values in some symmetric monoidal category, is investigated in detail.},
-	language = {en},
-	urldate = {2024-07-10},
-	publisher = {arXiv},
-	author = {Vákár, Matthijs},
-	month = jan,
-	year = {2015},
-	note = {arXiv:1405.0033 [cs, math]},
-	keywords = {Computer Science - Logic in Computer Science, Computer Science - Programming Languages, Mathematics - Category Theory},
-	file = {Vákár - 2015 - Syntax and Semantics of Linear Dependent Types.pdf:/Users/stevenschaefer/Zotero/storage/TZU67MKT/Vákár - 2015 - Syntax and Semantics of Linear Dependent Types.pdf:application/pdf},
-}
-
-@misc{fu2023twolevellineardependenttype,
-      title={A Two-Level Linear Dependent Type Theory},
-      author={Qiancheng Fu and Hongwei Xi},
-      year={2023},
-      eprint={2309.08673},
-      archivePrefix={arXiv},
-      primaryClass={cs.PL},
-      url={https://arxiv.org/abs/2309.08673},
-}
-
 @InProceedings{frischCardelli,
 author="Frisch, Alain and Cardelli, Luca",
 title="Greedy Regular Expression Matching",
-booktitle="Automata, Languages and Programming",
-year="2004",
-pages="618--629",
+series=icalp04,
+mon = jul,
+year={2004},
 doi={10.1007/978-3-540-27836-8_53}
 }
 
-@inproceedings{firsovCertifiedNormalizationContextFree2015,
-	address = {Mumbai India},
-	title = {Certified {Normalization} of {Context}-{Free} {Grammars}},
-	isbn = {978-1-4503-3296-5},
-	url = {https://dl.acm.org/doi/10.1145/2676724.2693177},
-	doi = {10.1145/2676724.2693177},
-	abstract = {Every context-free grammar can be transformed into an equivalent one in the Chomsky normal form by a sequence of four transformations. In this work on formalization of language theory, we prove formally in the Agda dependently typed programming language that each of these transformations is correct in the sense of making progress toward normality and preserving the language of the given grammar. Also, we show that the right sequence of these transformations leads to a grammar in the Chomsky normal form (since each next transformation preserves the normality properties established by the previous ones) that accepts the same language as the given grammar. As we work in a constructive setting, soundness and completeness proofs are functions converting between parse trees in the normalized and original grammars.},
-	language = {en},
-	urldate = {2024-05-13},
-	booktitle = {Proceedings of the 2015 {Conference} on {Certified} {Programs} and {Proofs}},
-	publisher = {ACM},
-	author = {Firsov, Denis and Uustalu, Tarmo},
-	month = jan,
-	year = {2015},
-	pages = {167--174},
-	file = {Firsov and Uustalu - 2015 - Certified Normalization of Context-Free Grammars.pdf:/Users/stevenschaefer/Zotero/storage/QIZVYCT2/Firsov and Uustalu - 2015 - Certified Normalization of Context-Free Grammars.pdf:application/pdf},
-}
-@INPROCEEDINGS{egolfVerbatim,
-  author={Egolf, Derek and Lasser, Sam and Fisher, Kathleen},
-  booktitle={2021 IEEE Security and Privacy Workshops (SPW)},
-  title={Verbatim: A Verified Lexer Generator},
-  year={2021},
-  volume={},
-  number={},
-  pages={92-100},
-  keywords={Performance evaluation;Privacy;Conferences;Tools;Software systems;Generators;Security;lexical analysis;interactive theorem proving},
-  doi={10.1109/SPW53761.2021.00022}}
-
-@article{Ouedraogo_2023,
-   title={Coqlex: Generating Formally Verified Lexers},
-   volume={8},
-   ISSN={2473-7321},
-   url={http://dx.doi.org/10.22152/programming-journal.org/2024/8/3},
-   DOI={10.22152/programming-journal.org/2024/8/3},
-   number={1},
-   journal={The Art, Science, and Engineering of Programming},
-   publisher={Aspect-Oriented Software Association (AOSA)},
-   author={Ouedraogo, Wendlasida and Scherer, Gabriel and Strassburger, Lutz},
-   year={2023},
-   month=jun }
-
 @inproceedings{danielssonTotalParserCombinators2010,
-  title = {Total Parser Combinators},
-  booktitle = {Proceedings of the 15th {{ACM SIGPLAN}} International Conference on {{Functional}} Programming},
-  author = {Danielsson, Nils Anders},
-  year = {2010},
-  month = sep,
-  pages = {285--296},
-  publisher = {ACM},
-  address = {Baltimore Maryland USA},
-  doi = {10.1145/1863543.1863585},
-  urldate = {2024-05-08},
-  isbn = {978-1-60558-794-3},
-  langid = {english},
+title = {Total Parser Combinators},
+seris = icfp10,
+author = {Danielsson, Nils Anders},
+year = {2010},
+month = sep,
+pages = {285--296},
+doi = {10.1145/1863543.1863585},
 }
 
 @inproceedings{lasserCoStarVerifiedALL2021,
-  title = {{{CoStar}}: A Verified {{ALL}}(*) Parser},
-  shorttitle = {{{CoStar}}},
-  booktitle = {Proceedings of the 42nd {{ACM SIGPLAN International Conference}} on {{Programming Language Design}} and {{Implementation}}},
-  author = {Lasser, Sam and Casinghino, Chris and Fisher, Kathleen and Roux, Cody},
-  year = {2021},
-  month = jun,
-  pages = {420--434},
-  publisher = {ACM},
-  address = {Virtual Canada},
-  doi = {10.1145/3453483.3454053},
-  urldate = {2024-05-01},
-  isbn = {978-1-4503-8391-2},
-  langid = {english},
+title = {{{CoStar}}: A Verified {{ALL}}(*) Parser},
+author = {Lasser, Sam and Casinghino, Chris and Fisher, Kathleen and Roux, Cody},
+series = pldi21,
+month = jun,
+year = {2021},
+pages = {420--434},
+doi = {10.1145/3453483.3454053},
 }
 
 @article{elliottSymbolicAutomaticDifferentiation2021,
-  title = {Symbolic and Automatic Differentiation of Languages},
-  author = {Elliott, Conal},
-  year = {2021},
-  month = aug,
-  journal = {Proceedings of the ACM on Programming Languages},
-  volume = {5},
-  number = {ICFP},
-  pages = {1--18},
-  issn = {2475-1421},
-  doi = {10.1145/3473583},
-  urldate = {2024-11-10},
-  abstract = {Formal languages are usually defined in terms of set theory. Choosing type theory instead gives us languages as type-level predicates over strings. Applying a language to a string yields a type whose elements are language membership proofs describing               how               a string parses in the language. The usual building blocks of languages (including union, concatenation, and Kleene closure) have precise and compelling specifications uncomplicated by operational strategies and are easily generalized to a few general domain-transforming and codomain-transforming operations on predicates.                          A simple characterization of languages (and indeed functions from lists to any type) captures the essential idea behind language ``differentiation'' as used for recognizing languages, leading to a collection of lemmas about type-level predicates. These lemmas are the heart of two dual parsing implementations---using (inductive) regular expressions and (coinductive) tries---each containing the same code but in dual arrangements (with representation and primitive operations trading places). The regular expression version corresponds to symbolic differentiation, while the trie version corresponds to automatic differentiation.             The relatively easy-to-prove properties of type-level languages transfer almost effortlessly to the decidable implementations. In particular, despite the inductive and coinductive nature of regular expressions and tries respectively, we need neither inductive nor coinductive/bisimulation arguments to prove algebraic properties.},
-  langid = {english},
+title = {Symbolic and Automatic Differentiation of Languages},
+author = {Elliott, Conal},
+year = {2021},
+month = aug,
+doi = {10.1145/3473583},
+series = icfp21
 }
+
 @inproceedings{EdelmannZippy2020,
 author = {Edelmann, Romain and Hamza, Jad and Kun\v{c}ak, Viktor},
 title = {Zippy LL(1) parsing with derivatives},
+mon = jun,
 year = {2020},
-isbn = {9781450376136},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3385412.3385992},
 doi = {10.1145/3385412.3385992},
-abstract = {In this paper, we present an efficient, functional, and formally verified parsing algorithm for LL(1) context-free expressions based on the concept of derivatives of formal languages. Parsing with derivatives is an elegant parsing technique, which, in the general case, suffers from cubic worst-case time complexity and slow performance in practice. We specialise the parsing with derivatives algorithm to LL(1) context-free expressions, where alternatives can be chosen given a single token of lookahead. We formalise the notion of LL(1) expressions and show how to efficiently check the LL(1) property. Next, we present a novel linear-time parsing with derivatives algorithm for LL(1) expressions operating on a zipper-inspired data structure. We prove the algorithm correct in Coq and present an implementation as a part of Scallion, a parser combinators framework in Scala with enumeration and pretty printing capabilities.},
-booktitle = {Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation},
-pages = {1036–1051},
-numpages = {16},
-keywords = {Zipper, Parsing, LL(1), Formal proof, Derivatives},
-location = {London, UK},
-series = {PLDI 2020}
+series = pldi20
 }
 
 @article{VezzosiMortbergAbel2019,
 author = {Vezzosi, Andrea and M\"{o}rtberg, Anders and Abel, Andreas},
 title = {Cubical Agda: A Dependently Typed Programming Language with Univalence and Higher Inductive Types},
-year = {2019},
-issue_date = {August 2019},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-volume = {3},
-number = {ICFP},
-url = {https://doi.org/10.1145/3341691},
-doi = {10.1145/3341691},
-abstract = {Proof assistants based on dependent type theory provide expressive languages for both programming and proving within the same system. However, all of the major implementations lack powerful extensionality principles for reasoning about equality, such as function and propositional extensionality. These principles are typically added axiomatically which disrupts the constructive properties of these systems. Cubical type theory provides a solution by giving computational meaning to Homotopy Type Theory and Univalent Foundations, in particular to the univalence axiom and higher inductive types. This paper describes an extension of the dependently typed functional programming language Agda with cubical primitives, making it into a full-blown proof assistant with native support for univalence and a general schema of higher inductive types. These new primitives make function and propositional extensionality as well as quotient types directly definable with computational content. Additionally, thanks also to copatterns, bisimilarity is equivalent to equality for coinductive types. This extends Agda with support for a wide range of extensionality principles, without sacrificing type checking and constructivity.},
-journal = {Proc. ACM Program. Lang.},
 month = {jul},
-articleno = {87},
-numpages = {29},
-keywords = {Univalence, Cubical Type Theory, Higher Inductive Types, Dependent Pattern Matching}
+year = {2019},
+doi = {10.1145/3341691},
+series = icfp19
 }
 
 @article{lambek58,
@@ -816,9 +437,7 @@ volume = {65},
 number = {3},
 pages = {154--170},
 year = {1958},
-publisher = {Taylor \& Francis},
 doi = {10.1080/00029890.1958.11989160},
-URL = {https://doi.org/10.1080/00029890.1958.11989160}
 }
 
 @inbook{Hofmann_1997,
@@ -857,116 +476,83 @@ title = {Presheaf model of type theory},
 note = {\url{https://www.cse.chalmers.se/~coquand/presheaf.pdf}}
 }
 
-
 @article{lmcs:7713,
   TITLE = {{Multimodal Dependent Type Theory}},
   AUTHOR = {Daniel Gratzer and G. A. Kavvos and Andreas Nuyts and Lars Birkedal},
-  URL = {https://lmcs.episciences.org/7713},
   DOI = {10.46298/lmcs-17(3:11)2021},
-  JOURNAL = {{Logical Methods in Computer Science}},
-  VOLUME = {{Volume 17, Issue 3}},
+  JOURNAL = lmcs,
+  VOLUME = 17,
+  number = 3,
   YEAR = {2021},
   MONTH = Jul,
-  KEYWORDS = {Computer Science - Logic in Computer Science},
 }
 
 @article{girard_linear_1987,
-	title = {Linear logic},
-	volume = {50},
-	issn = {0304-3975},
-	url = {https://www.sciencedirect.com/science/article/pii/0304397587900454},
-	doi = {https://doi.org/10.1016/0304-3975(87)90045-4},
-	abstract = {The familiar connective of negation is broken into two operations: linear negation which is the purely negative part of negation and the modality “of course” which has the meaning of a reaffirmation. Following this basic discovery, a completely new approach to the whole area between constructive logics and programmation is initiated.},
-	number = {1},
-	journal = {Theoretical Computer Science},
-	author = {Girard, Jean-Yves},
-	year = {1987},
-	pages = {1--101},
+title = {Linear logic},
+journal = tcs,
+volume = {50},
+number = {1},
+pages = {1-101},
+year = {1987},
+doi = {10.1016/0304-3975(87)90045-4},
+author = {Jean-Yves Girard},
 }
 
 @Book{hottbook,
-  author =    {The {Univalent Foundations Program}},
-  title =     {Homotopy Type Theory: Univalent Foundations of Mathematics},
-  publisher = {\url{https://homotopytypetheory.org/book}},
-  address =   {Institute for Advanced Study},
-  year =      2013}
+author =    {The {Univalent Foundations Program}},
+title =     {Homotopy Type Theory: Univalent Foundations of Mathematics},
+publisher = {\url{https://homotopytypetheory.org/book}},
+address =   {Institute for Advanced Study},
+year =      2013}
 
 @inproceedings{nakov_quantitative_2022,
-	title = {Quantitative {Polynomial} {Functors}},
-	copyright = {https://creativecommons.org/licenses/by/4.0/legalcode},
-	url = {https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.TYPES.2021.10},
-	doi = {10.4230/LIPIcs.TYPES.2021.10},
-	abstract = {We investigate containers and polynomial functors in Quantitative Type Theory, and give initial algebra semantics of inductive data types in the presence of linearity. We show that reasoning by induction is supported, and equivalent to initiality, also in the linear setting.},
-	language = {en},
-	urldate = {2024-11-13},
-	booktitle = {27th {International} {Conference} on {Types} for {Proofs} and {Programs} ({TYPES} 2021)},
-	publisher = {Schloss Dagstuhl – Leibniz-Zentrum für Informatik},
-	author = {Nakov, Georgi and Nordvall Forsberg, Fredrik},
-	year = {2022},
-	pages = {10:1--10:22},
-	file = {Full Text PDF:/Users/maxsnew/Zotero/storage/U45DLSHZ/Nakov and Nordvall Forsberg - 2022 - Quantitative Polynomial Functors.pdf:application/pdf},
+title = {Quantitative {Polynomial} {Functors}},
+doi = {10.4230/LIPIcs.TYPES.2021.10},
+series = types,
+author = {Nakov, Georgi and Nordvall Forsberg, Fredrik},
+month = jun,
+year = {2021},
 }
 
 @inproceedings{jung_higher-order_2016,
-	address = {New York, NY, USA},
-	series = {{ICFP} 2016},
-	title = {Higher-order ghost state},
-	isbn = {978-1-4503-4219-3},
-	url = {https://dl.acm.org/doi/10.1145/2951913.2951943},
-	doi = {10.1145/2951913.2951943},
-	abstract = {The development of concurrent separation logic (CSL) has sparked a long line of work on modular verification of sophisticated concurrent programs. Two of the most important features supported by several existing extensions to CSL are higher-order quantification and custom ghost state. However, none of the logics that support both of these features reap the full potential of their combination. In particular, none of them provide general support for a feature we dub "higher-order ghost state": the ability to store arbitrary higher-order separation-logic predicates in ghost variables.  In this paper, we propose higher-order ghost state as a interesting and useful extension to CSL, which we formalize in the framework of Jung et al.'s recently developed Iris logic. To justify its soundness, we develop a novel algebraic structure called CMRAs ("cameras"), which can be thought of as "step-indexed partial commutative monoids". Finally, we show that Iris proofs utilizing higher-order ghost state can be effectively formalized in Coq, and discuss the challenges we faced in formalizing them.},
-	urldate = {2024-11-14},
-	booktitle = {Proceedings of the 21st {ACM} {SIGPLAN} {International} {Conference} on {Functional} {Programming}},
-	publisher = {Association for Computing Machinery},
-	author = {Jung, Ralf and Krebbers, Robbert and Birkedal, Lars and Dreyer, Derek},
-	month = sep,
-	year = {2016},
-	pages = {256--269},
-	file = {Full Text PDF:/Users/maxsnew/Zotero/storage/T7F4GFGD/Jung et al. - 2016 - Higher-order ghost state.pdf:application/pdf},
+title = {Higher-order ghost state},
+doi = {10.1145/2951913.2951943},
+author = {Jung, Ralf and Krebbers, Robbert and Birkedal, Lars and Dreyer, Derek},
+month = sep,
+series = icfp16
 }
 
 @inproceedings{leis_towards_1992,
-	address = {Berlin, Heidelberg},
-	title = {Towards {Kleene} {Algebra} with recursion},
-	isbn = {978-3-540-47285-8},
-	doi = {10.1007/BFb0023771},
-	abstract = {We extend Kozen's theory KA of Kleene Algebra to axiomatize parts of the equational theory of context-free languages, using a least fixed-point operator μ instead of Kleene's iteration operator*.},
-	language = {en},
-	booktitle = {Computer {Science} {Logic}},
-	publisher = {Springer},
-	author = {Leiß, Haas},
-	editor = {Börger, Egon and Jäger, Gerhard and Kleine Büning, Hans and Richter, Michael M.},
-	year = {1992},
-	keywords = {Continuous Model, Equational Theory, Finite Automaton, Regular Expression, Regular Language},
-	pages = {242--256},
-	file = {Full Text PDF:/Users/maxsnew/Zotero/storage/ECBXMTEA/Leiß - 1992 - Towards Kleene Algebra with recursion.pdf:application/pdf},
+author="Lei{\ss}, Haas",
+title="Towards Kleene Algebra with recursion",
+series=csl91,
+mon = oct,
+year = {1991},
+doi={10.1007/BFb0023771}
 }
 
 @article{rosenkrantz_properties_1970,
-	title = {Properties of deterministic top-down grammars},
-	volume = {17},
-	issn = {0019-9958},
-	url = {https://www.sciencedirect.com/science/article/pii/S0019995870904468},
-	doi = {10.1016/S0019-9958(70)90446-8},
-	abstract = {The class of context-free grammars that can be deterministically parsed in a top down manner with a fixed amount of look-ahead is investigated. These grammars, called LL(k) grammars where k is the amount of look-ahead are defined and a procedure is given for determining if a context-free grammar is LL(k) for a given value of k. A procedure is given for eliminating the ε-rules from an LL(k) grammar at the cost of increasing k by 1. There exist cases in which this increase is inevitable. A procedure is given for obtaining a deterministic push-down machine to recognize a given LL(k) grammar and it is shown that the equivalence problem is decidable for LL(k) grammars. Additional properties are also given.},
-	number = {3},
-	urldate = {2024-11-14},
-	journal = {Information and Control},
-	author = {Rosenkrantz, D. J. and Stearns, R. E.},
-	month = oct,
-	year = {1970},
-	pages = {226--256},
-	file = {ScienceDirect Full Text PDF:/Users/maxsnew/Zotero/storage/GVZE42GJ/Rosenkrantz and Stearns - 1970 - Properties of deterministic top-down grammars.pdf:application/pdf;ScienceDirect Snapshot:/Users/maxsnew/Zotero/storage/BUBJ7YHA/S0019995870904468.html:text/html},
+title = {Properties of deterministic top-down grammars},
+volume = {17},
+doi = {10.1016/S0019-9958(70)90446-8},
+number = {3},
+urldate = {2024-11-14},
+journal = {Information and Control},
+author = {Rosenkrantz, D. J. and Stearns, R. E.},
+month = oct,
+year = {1970},
+pages = {226--256},
 }
 
+% TODO here down
+
 @inproceedings{gambino_wellfounded_2004,
-	address = {Berlin, Heidelberg},
-	title = {Wellfounded {Trees} and {Dependent} {Polynomial} {Functors}},
-	doi = {10.1007/978-3-540-24849-1_14},
-	booktitle = {Types for {Proofs} and {Programs}},
-	author = {Gambino, Nicola and Hyland, Martin},
-	year = {2004},
-	pages = {210--225},
+address = {Berlin, Heidelberg},
+title = {Wellfounded {Trees} and {Dependent} {Polynomial} {Functors}},
+doi = {10.1007/978-3-540-24849-1_14},
+booktitle = {Types for {Proofs} and {Programs}},
+author = {Gambino, Nicola and Hyland, Martin},
+year = {20033,
 }
 
 @article{altenkirch_indexed_2015,
