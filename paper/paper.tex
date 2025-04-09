@@ -1725,7 +1725,7 @@ following:
 \end{lemma}
 Here we need both directions of the weak equivalence. We need $A \lto
 B$ to extend the parser from $\StringGram \lto A \oplus A_{\neg}$ to
-$\StringGram \lto B \oplus A_{\neg}$ but then we also need $B \lto A$ to
+$\StringGram \lto B \oplus A_{\neg}$, but then we also need $B \lto A$ to
 establish that $A_{\neg}$ is disjoint from $B$.
 
 \subsection{Regular Expressions and Finite Automata}
@@ -1744,47 +1744,22 @@ A regular expression in \theoryabbv is a linear type constructed
 using only the connectives $\literal c$, $0$, $\oplus$, $I$,
 $\otimes$, and Kleene star.  In \cref{sec:type-theory-examples}, we
 saw one particular NFA and its corresponding type of traces. More
-generally we define the linear type of traces as in
-\Cref{fig:nfatrace}.
+generally, in \cref{fig:nfatrace} we define a linear type of traces through an
+arbitrary NFA $\N$.
 
-%% The definition of the linear type of traces
-%% through this
-%% NFA, as
-%% presented in \cref{fig:nfainductive}, inspects the concrete structure of the
-%% NFA.\ When generalizing from this example to an arbitrary NFA, we do not have the
-%% luxury of inspecting a concrete definition. Therefore, we abstract over the
-%% specification of an arbitrary NFA and define traces with respect to that
-%% specification.
-
-%% Let the data of an NFA $\N$ be given by the following nonlinear data,
-%% \begin{itemize}
-%% \item $\N.\states$ --- a finite set of states
-%% \item $\N.\init : \N.\states$ --- the initial state
-%% \item $\N.\isAcc : \N.\states \to \Bool$ --- a mapping marking which states are
-%%         accepting
-%% \item $\N.\transitions$ --- a finite set of labeled transitions
-%% \item $\N.\labelt : \N.\transitions \to \Sigma$ --- a mapping from $N.\transitions$ to the character labeling the transition
-%% \item $\N.\src , \N.\dst : \N.\transitions \to \N.\states$ --- mappings from
-%%         $\N.\transitions$ to the source and target states, respectively, of a labeled transition
-%% \item $\N.\epstransitions$ --- a finite set of $\varepsilon$-transitions
-%% \item $\N.\epssrc, \N.\epsdst : \N.\epstransitions \to \N.\states$ --- mappings
-%%         from $\N.\epstransitions$ to the source and target states of an $\epsilon$-transition
-%% \end{itemize}
-
-In \cref{fig:nfatrace} we define a linear type of traces through an
-NFA $\N$. $\Trace_{\N}$ is an inductive type indexed by the starting
-state of the trace $\s : \N.\states$. Traces in $\N$ may be built
+$\Trace_{\N}$ is an inductive type indexed by the starting
+state of the trace $\s : \N.\states$, and it may be built
 through one of three constructors. We may terminate a trace at an
 accepting state with the constructor $\nil$. Here we use an Agda-style
 Unicode syntax for $\bigamp$, as well as using the function arrow to
 mean a non-dependent version of $\bigamp$. If we had a trace beginning
 at the destination state of a transition, then we may use the $\cons$
-constructor to linearly combine that trace with a parse of the label
+constructor to combine that trace with a parse of the label
 of the transition to build a trace beginning at the source of the
 transition.  Finally, if we had a trace beginning at the destination
 of an $\epsilon$-transition then we may use $\epscons$ to pull it back
 along the $\epsilon$-transition and construct a trace beginning at the
-source of the $\epsilon$-transition. As a shorthand, write $Parse_{N}$
+source of the $\epsilon$-transition. As a shorthand, we write $Parse_{N}$
 for the accepting traces out of $N.init$.
 \newcommand{\D}{\texttt{D}}
 \begin{figure}
@@ -1848,13 +1823,13 @@ unambiguity of $\LinSigTy {b} {\Bool} {\Trace_{D}~s~b}$ by \cref{lem:unambig-sum
 The parser,
 $\pparse_{D}$,
 is defined by recursion on strings in \cref{fig:printdfa}. If this string is empty, then $\pparse_{D}$
-defines a linear function that terminates a trace at the input state $s$. If the
+terminates a trace at the input state $s$. If the
 string is nonempty, then $\pparse_{D}$ walks forward in $D$ from the input state $s$ by
 the character at the head of the string.
 %
 The inverse, $\print_{D}$ is defined by recursion on traces. If the trace is defined
 via $\nil$, then $\print_{D}$ returns the empty string. Otherwise, if the trace
-is defined by $\cons$ then $\pparse_{D}$ appends the character from the most
+is defined by $\cons$ then $\print_{D}$ appends the character from the most
 recent transition to the output
 string and recurses.
 %
@@ -2199,8 +2174,8 @@ with respect to this weak equivalence.
 \subsection{Context-free grammars}
 
 Next, we give two examples for parsing context-free
-grammars. Context-free grammars (CFG) can be encoded in our type
-theory in a similar way to regular expressions, as CFGs are equivalent
+grammars (CFGs). CFGs can be encoded in our type
+theory similarly to regular expressions, as CFGs are equivalent
 to the formalism of \emph{$\mu$}-regular expressions, where the Kleene
 star is replaced by an arbitrary fixed point
 operation \cite{leis_towards_1992}.
@@ -2229,7 +2204,7 @@ implement it simply as an \emph{infinite} state deterministic
 automaton, in \Cref{fig:DyckAutomaton}. Here the state is a ``stack''
 counting how many open parentheses have been seen so far. Functions
 $parse_{M}$ and $print_{M}$ for this automaton can be defined
-analogously to the parser and printer for DFAs, and so $\LinSigTy {s}
+analogously to those for DFAs, and so $\LinSigTy {s}
 {M .states} {\LinSigTy {b}{Bool} {Trace_{M}~s~b}}$ is likewise
 unambiguous.
 
