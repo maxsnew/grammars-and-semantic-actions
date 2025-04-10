@@ -16,17 +16,21 @@
 \widowpenalty = 10000
 \displaywidowpenalty = 10000
 
-%% Copyright information
-\setcopyright{none}
-% \setcopyright{cc}
-% \setcctype{by}
-
-%% Journal information
-%% Supplied to authors by publisher for camera-ready submission;
-%% use defaults for review submission.
+%%% The following is specific to PLDI '25 and the paper
+%%% 'Intrinsic Verification of Parsers and Formal Grammar Theory in Dependent Lambek Calculus'
+%%% by Steven Schaefer, Nathan Varner, Pedro Henrique Azevedo de Amorim, and Max S. New.
+%%%
+\setcopyright{cc}
+\setcctype{by}
+\acmDOI{10.1145/3729281}
+\acmYear{2025}
 \acmJournal{PACMPL}
-\acmYear{2025} \acmVolume{9} \acmNumber{PLDI} \acmArticle{178} \acmMonth{6} \acmPrice{}\acmDOI{10.1145/3729281}
-\startPage{1}
+\acmVolume{9}
+\acmNumber{PLDI}
+\acmArticle{178}
+\acmMonth{6}
+\received{2024-11-14}
+\received[accepted]{2025-03-06}
 
 
 %% Bibliography style
@@ -313,45 +317,40 @@ frame=single
 \fi
 
 \author{Steven Schaefer}
-\affiliation{\department{Electrical Engineering and Computer Science}
+\orcid{0009-0007-1258-9501}
+\affiliation{%
   \institution{University of Michigan}
+  \city{Ann Arbor}
   \country{USA}
 }
 \email{stschaef@umich.edu}
-\orcid{0009-0007-1258-9501}
 
 \author{Nathan Varner}
-\affiliation{\department{Electrical Engineering and Computer Science}
+\orcid{0009-0000-3031-4930}
+\affiliation{%
   \institution{University of Michigan}
+  \city{Ann Arbor}
   \country{USA}
 }
 \email{nmvarner@umich.edu}
-\orcid{0009-0000-3031-4930}
 
-\author{Pedro H. Azevedo de Amorim}
-\affiliation{
-  \department{Department of Computer Science}
-  \institution{University of Oxford}
-  \country{UK}
-}
-\email{pedro.azevedo.de.amorim@cs.ox.ac.uk}
+\author{Pedro Henrique Azevedo de Amorim}
 \orcid{0000-0002-8338-8973}
+\affiliation{%
+  \institution{University of Oxford}
+  \city{Oxford}
+  \country{United Kingdom}
+}
+\email{pedro.azevedodeamorim@cs.ox.ac.uk}
 
 \author{Max S. New}
-%% \authornote{with author1 note}          %% \authornote is optional;
-                                        %% can be repeated if necessary
 \orcid{0000-0001-8141-195X}
-\affiliation{
-  \position{Assistant Professor}
-  \department{Computer Science and Engineering}              %% \department is recommended
-  \institution{University of Michigan}            %% \institution is required
-  % \streetaddress{2260 Hayward St.}
+\affiliation{%
+  \institution{University of Michigan}
   \city{Ann Arbor}
-  \state{MI}
-  % \postcode{48109-2121}
-  \country{USA}                    %% \country is recommended
+  \country{USA}
 }
-\email{maxsnew@umich.edu} %% \email is recommended
+\email{maxsnew@umich.edu}
 
 \makeatletter
 \let\@authorsaddresses\@empty
