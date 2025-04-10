@@ -1550,7 +1550,7 @@ provide a basis for verified parsing and formal grammar theory.
 
 \section{Formal Grammar Theory in \theoryname}
 \label{sec:applications}
-This section explores the applications of \theoryabbv to conducting formal
+This section explores the applications of \theoryabbv to formal
 grammar theory. We demonstrate that several classical notions and constructions
 integral to the theory of formal languages are faithfully represented
 in \theoryname. By encoding well-established formal grammar concepts, we ensure
@@ -1902,9 +1902,9 @@ DFA is unambiguous even if the NFA is not.
   of $\epsilon$-closed\footnote{A subset of states $\X$ is $\epsilon$-closed if
     for every $\s \in \X$ and $\epsilon$-transition $\s \overset{\epsilon}{\to} \s'$ we have $\s' \in \X$.} subsets of
   $\N.\states$. A subset is accepting in $\D$ if it contains an accepting state
-  from $\N$. Construct the initial state of $\D$ as the
-  $\epsilon$-closure of $\N.\init$. Lastly, define the transition function
-  of $\D$ to send the subset $X$ under the character $\c$ to the
+  from $\N$. The initial state of $\D$ is the
+  $\epsilon$-closure of $\N.\init$. Lastly, the transition function
+  of $\D$ sends the subset $X$ under the character $\c$ to the
   $\epsilon$-closure of all the states reachable from $X$ via a transition
   labeled with the character $\c$.
 
@@ -2018,15 +2018,15 @@ required to construct a parser, proving the strong equivalence shows
 that other aspects of formal grammar theory are also verifiable in
 \theoryabbv.
 \newcommand{\R}{\texttt{R}}
-\begin{construction}[Thompson's Construction, \Agda]
+\begin{construction}[Thompson's Construction \cite{thompsonProgrammingTechniquesRegular1968}, \Agda]
   \label{cons:thompson}
   Given a regular expression $\R$, we build an NFA $\N$ such that $\R$ is
   strongly equivalent to $\Trace_{N}(\N.\init)$.
 \end{construction}
-\begin{proof}
-We use a variant of Thompson's construction
-\cite{thompsonProgrammingTechniquesRegular1968}, showing that NFAs are, up to strong equivalence, closed under each type operation for regular expressions.
-\end{proof}
+% \begin{proof}
+% We use a variant of Thompson's construction
+% \cite{thompsonProgrammingTechniquesRegular1968}, showing that NFAs are, up to strong equivalence, closed under each type operation for regular expressions.
+% \end{proof}
 %% In this paper we will walk through
 %% some of the cases of this proof. The remaining cases
 %% follow
