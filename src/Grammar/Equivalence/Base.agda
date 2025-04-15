@@ -50,16 +50,16 @@ module _ {ℓA} {ℓB}
     field
       fun : A ⊢ B
       inv : B ⊢ A
-      sec : fun ∘g inv ≡ id
-      ret : inv ∘g fun ≡ id
+      @0 sec : fun ∘g inv ≡ id
+      @0 ret : inv ∘g fun ≡ id
 
   record isStrongEquivalence (e : A ⊢ B) : Type (ℓ-max ℓA ℓB) where
     no-eta-equality
     constructor isStrEq
     field
       inv : B ⊢ A
-      sec : e ∘g inv ≡ id
-      ret : inv ∘g e ≡ id
+      @0 sec : e ∘g inv ≡ id
+      @0 ret : inv ∘g e ≡ id
 
   StrongEquivalence→isStrongEquivalence : (eq : StrongEquivalence) → isStrongEquivalence (eq .StrongEquivalence.fun)
   StrongEquivalence→isStrongEquivalence eq
@@ -157,7 +157,7 @@ open WeakEquivalence
 record _isRetractOf_ (A : Grammar ℓA) (B : Grammar ℓB) : Type (ℓ-max ℓA ℓB) where
   field
     weak : A ≈ B
-    ret : weak .inv ∘g weak .fun ≡ id
+    @0 ret : weak .inv ∘g weak .fun ≡ id
 
 infixr 10 _isRetractOf_
 
@@ -172,15 +172,14 @@ hasRetraction→isMono e inv ret f f' e∘f≡e∘f' =
   cong (_∘g f') ret
 
 open _isRetractOf_
-isRetractOf→isMono : (isRet : A isRetractOf B) → isMono (isRet .weak .fun)
+@0 isRetractOf→isMono : (isRet : A isRetractOf B) → isMono (isRet .weak .fun)
 isRetractOf→isMono isRet =
   hasRetraction→isMono (isRet .weak .fun) (isRet .weak .inv) (isRet .ret)
 
 open isStrongEquivalence
-isStrongEquivalence→isMono :
+@0 isStrongEquivalence→isMono :
   (e : A ⊢ B) →
   isStrongEquivalence _ _ e →
   isMono e
 isStrongEquivalence→isMono e streq =
   hasRetraction→isMono e (streq .inv) (streq .ret)
-

@@ -2,7 +2,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Epsilon.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Epsilon.AsEquality (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
 import Cubical.Data.Equality as Eq
@@ -23,9 +23,6 @@ private
 opaque
   ε : Grammar ℓ-zero
   ε w = w Eq.≡ []
-
-  @0 εPath : Grammar ℓ-zero
-  εPath w = w ≡ []
 
   ε-intro : ε⊢ ε
   ε-intro = Eq.refl
@@ -59,11 +56,3 @@ isLangε* = isLangLift isLangε
 
 @0 isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
 isSetGrammarε* = isLang→isSetGrammar isLangε*
-
-opaque
-  unfolding ε εPath
-  @0 ε→εPath : ε ⊢ εPath
-  ε→εPath w = Eq.eqToPath
-
-  @0 εPath→ε : εPath ⊢ ε
-  εPath→ε w = Eq.pathToEq

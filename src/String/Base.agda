@@ -59,6 +59,12 @@ isSetSplitting w =
     (λ s → isSetRetract Eq.eqToPath Eq.pathToEq
        Eq.pathToEq-eqToPath (isGroupoidString w (s .fst ++ s .snd)))
 
+@0 isSetSplittingPath : (w : String) → isSet (SplittingPath w)
+isSetSplittingPath w =
+  isSetΣ
+    (isSet× isSetString isSetString)
+    (λ s → (isGroupoidString w (s .fst ++ s .snd)))
+
 @0 SplittingPathP :
   ∀ {w : I → String}{s0 : Splitting (w i0)}{s1 : Splitting (w i1)}
   → s0 .fst ≡ s1 .fst

@@ -1,13 +1,12 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Literal.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Literal.AsEquality (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 
 open import Cubical.Data.List
 import Cubical.Data.Equality as Eq
-import Cubical.Data.Empty as Empty
 
 open import Grammar.Base Alphabet
 open import Grammar.Lift.Base Alphabet

@@ -16,16 +16,16 @@ module _ where
   isSetGrammar : Grammar ℓA → Type ℓA
   isSetGrammar A = ∀ w → isSet (A w)
 
-  isLang→isSetGrammar : ∀ {A : Grammar ℓA} → isLang A → isSetGrammar A
+  @0 isLang→isSetGrammar : ∀ {A : Grammar ℓA} → isLang A → isSetGrammar A
   isLang→isSetGrammar isLangA w = isProp→isSet (isLangA w)
 
   Lang : ∀ (ℓA : Level) →  Type (ℓ-suc ℓA)
   Lang ℓA = Σ[ A ∈ Grammar ℓA ] isLang A
 
-  SetGrammar : ∀ (ℓA : Level) →  Type (ℓ-suc ℓA)
+  @0 SetGrammar : ∀ (ℓA : Level) →  Type (ℓ-suc ℓA)
   SetGrammar ℓA = Σ[ A ∈ Grammar ℓA ] isSetGrammar A
 
-  Lang→SetGrammar : Lang ℓA → SetGrammar ℓA
+  @0 Lang→SetGrammar : Lang ℓA → SetGrammar ℓA
   Lang→SetGrammar A = A .fst , isLang→isSetGrammar (A .snd)
 
   -- Might be confusing but convenient
@@ -34,7 +34,7 @@ module _ where
 
   module _ {A : Grammar ℓA} {B : Grammar ℓB} (A≅B : A ≅ B) (isLang-A : isLang A) where
     open StrongEquivalence
-    isLang≅ : isLang B
+    @0 isLang≅ : isLang B
     isLang≅ w x y =
       sym (funExt⁻ (funExt⁻ (A≅B .sec) w) x)
       ∙ cong (A≅B .fun w) (isLang-A w (A≅B .inv w x) (A≅B .inv w y))
