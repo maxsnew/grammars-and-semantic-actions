@@ -63,6 +63,10 @@ opaque
     ∀ {w : String} → (p : (A ⊗ B) w) → Splitting w
   the-split p = p .fst
 
+  @0 the-splitPath :
+    ∀ {w : String} → (p : (A ⊗Path B) w) → SplittingPath w
+  the-splitPath p = p .fst
+
 opaque
   unfolding _⊗_ the-split
 
@@ -76,6 +80,16 @@ opaque
   same-parses {A = A} {B = B} p q s≡ =
     PathP (λ i → A i (s≡ i .fst .fst) × B i (s≡ i .fst .snd)) (p .snd) (q .snd)
 
+  @0 same-parsesPath :
+    {A : I → Grammar ℓA}{B : I → Grammar ℓB}
+    {w : I → String}
+    → (p : (A i0 ⊗Path B i0) (w i0))
+    → (q : (A i1 ⊗Path B i1) (w i1))
+    → (s≡ : PathP (λ i → SplittingPath (w i)) (the-splitPath p) (the-splitPath q))
+    → Type (ℓ-max ℓA ℓB)
+  same-parsesPath {A = A} {B = B} p q s≡ =
+    PathP (λ i → A i (s≡ i .fst .fst) × B i (s≡ i .fst .snd)) (p .snd) (q .snd)
+
   @0 ⊗PathP :
     {A : I → Grammar ℓA}{B : I → Grammar ℓB}
     {w : I → String}
@@ -85,6 +99,16 @@ opaque
     → same-parses {A = A} {B = B} {w = w} p q s≡
     → PathP (λ i → (A i ⊗ B i) (w i)) p q
   ⊗PathP s≡ p≡ = ΣPathP (SplittingPathP (λ i → (s≡ i .fst .fst) , (s≡ i .fst .snd)) , p≡)
+
+  @0 ⊗Path-PathP :
+    {A : I → Grammar ℓA}{B : I → Grammar ℓB}
+    {w : I → String}
+    → {p : (A i0 ⊗Path B i0) (w i0)}
+    → {q : (A i1 ⊗Path B i1) (w i1)}
+    → (s≡ : PathP (λ i → SplittingPath (w i)) (the-splitPath p) (the-splitPath q))
+    → same-parsesPath {A = A} {B = B} {w = w} p q s≡
+    → PathP (λ i → (A i ⊗Path B i) (w i)) p q
+  ⊗Path-PathP s≡ p≡ = ΣPathP (SplittingPath-PathP (λ i → (s≡ i .fst .fst) , (s≡ i .fst .snd)) , p≡)
 
   @0 ⊗≡ : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{w}
     → (p p' : (A ⊗ B) w)
@@ -100,6 +124,13 @@ opaque
     C ⊢ D →
     A ⊗ C ⊢ B ⊗ D
   ⊗-intro e e' _ p =
+    p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
+
+  @0 ⊗Path-intro :
+    A ⊢ B →
+    C ⊢ D →
+    A ⊗Path C ⊢ B ⊗Path D
+  ⊗Path-intro e e' _ p =
     p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
 
 opaque
@@ -119,18 +150,23 @@ opaque
     ⊗-unit-r {A = A} w ((_ , Eq.refl) , a , Eq.refl) =
       Eq.J (λ u v → A u) a (Eq.sym (++-unit-r-Eq _))
 
-    @0 ⊗-unit-rPath :
+    @0 ⊗Path-unit-r :
       A ⊗Path εPath ⊢ A
-    ⊗-unit-rPath {A = A} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
+    ⊗Path-unit-r {A = A} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
       subst A (sym (++-unit-r _)
               ∙ cong (w' ++_) (sym []'≡[])
               ∙ sym w≡w'++[]')
             p⟨w'⟩
 
---     ⊗-unit-r⁻ :
---       A ⊢ A ⊗ ε
---     ⊗-unit-r⁻ w p =
---       ((w , []) , Eq.sym (++-unit-r-Eq w)) , p , ε-intro
+    ⊗-unit-r⁻ :
+      A ⊢ A ⊗ ε
+    ⊗-unit-r⁻ w p =
+      ((w , []) , Eq.sym (++-unit-r-Eq w)) , p , ε-intro
+
+    @0 ⊗Path-unit-r⁻ :
+      A ⊢ A ⊗Path εPath
+    ⊗Path-unit-r⁻ _ p =
+      ((_ , []) , (sym (++-unit-r _))) , (p , refl)
 
 --     @0 rectify :
 --       ∀ {w w'}{A : Grammar ℓA}
