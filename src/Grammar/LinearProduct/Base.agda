@@ -40,6 +40,15 @@ opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
 
+  @0 _⊗Path_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
+  (A ⊗Path B) w = Σ[ s ∈ SplittingPath w ] A (s .fst .fst) × B (s .fst .snd)
+
+  @0 ⊗→⊗Path : A ⊗ B ⊢ A ⊗Path B
+  ⊗→⊗Path _ (s , a , b) = Splitting→SplittingPath _ s , a , b
+
+  @0 ⊗Path→⊗ : A ⊗Path B ⊢ A ⊗ B
+  ⊗Path→⊗ _ (s , a , b) = SplittingPath→Splitting _ s , a , b
+
   @0 isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
   isSetGrammar⊗ isSetG isSetB w = isSetΣ (isSetSplitting w)
     λ _ → isSet× (isSetG _) (isSetB _)
@@ -48,88 +57,75 @@ infixr 25 _⊗_
 
 opaque
   unfolding _⊗_
-  -- because ⊗ is opaque,
-  -- same-splits and same-parses are needed so that the interface of
-  -- ⊗ doesn't leak in the type signature of ⊗PathP
-  has-split :
-    ∀ (w : String) → (p : (A ⊗ B) w) → (s : Splitting w) → Type ℓ-zero
-  has-split w p s = s ≡ p .fst
-
-  @0 isProp-has-split : ∀ (w : String) (p : (A ⊗ B) w) → (s : Splitting w) → isProp (has-split w p s)
-  isProp-has-split w p s = isSetSplitting w _ _
-
+  -- Needed because ⊗ is opaque, so that the interface of
+  -- ⊗ doesn't leak in type signatures
   the-split :
-    ∀ (w : String) → (p : (A ⊗ B) w) → Σ[ s ∈ Splitting w ] has-split w p s
-  the-split w p = (p .fst) , refl
+    ∀ {w : String} → (p : (A ⊗ B) w) → Splitting w
+  the-split p = p .fst
 
--- same-splits :
---   {A : Grammar ℓA}
---   {B : Grammar ℓB}
---   {C : Grammar ℓC}
---   {D : Grammar ℓD}
---   {w : I → String}
---   → (p : (A ⊗ B) (w i0))
---   → (q : (C ⊗ D) (w i1))
---   → Type ℓ-zero
--- same-splits {w = w} p q =
---     (the-split (w i0) p .fst .fst) ≡ (the-split (w i1) q .fst .fst)
+opaque
+  unfolding _⊗_ the-split
 
--- opaque
---   unfolding _⊗_ the-split
+  same-parses :
+    {A : I → Grammar ℓA}{B : I → Grammar ℓB}
+    {w : I → String}
+    → (p : (A i0 ⊗ B i0) (w i0))
+    → (q : (A i1 ⊗ B i1) (w i1))
+    → (s≡ : PathP (λ i → Splitting (w i)) (the-split p) (the-split q))
+    → Type (ℓ-max ℓA ℓB)
+  same-parses {A = A} {B = B} p q s≡ =
+    PathP (λ i → A i (s≡ i .fst .fst) × B i (s≡ i .fst .snd)) (p .snd) (q .snd)
 
---   same-parses :
---     {A : I → Grammar ℓA}{B : I → Grammar ℓB}
---     {w : I → String}
---     → (p : (A i0 ⊗ B i0) (w i0))
---     → (q : (A i1 ⊗ B i1) (w i1))
---     → (s≡ : same-splits {w = w} p q)
---     → Type (ℓ-max ℓA ℓB)
---   same-parses {A = A} {B = B} p q s≡ =
---     PathP (λ i → A i (s≡ i .fst) × B i (s≡ i .snd)) (p .snd) (q .snd)
+  @0 ⊗PathP :
+    {A : I → Grammar ℓA}{B : I → Grammar ℓB}
+    {w : I → String}
+    → {p : (A i0 ⊗ B i0) (w i0)}
+    → {q : (A i1 ⊗ B i1) (w i1)}
+    → (s≡ : PathP (λ i → Splitting (w i)) (the-split p) (the-split q))
+    → same-parses {A = A} {B = B} {w = w} p q s≡
+    → PathP (λ i → (A i ⊗ B i) (w i)) p q
+  ⊗PathP s≡ p≡ = ΣPathP (SplittingPathP (λ i → (s≡ i .fst .fst) , (s≡ i .fst .snd)) , p≡)
 
---   @0 ⊗PathP :
---     {A : I → Grammar ℓA}{B : I → Grammar ℓB}
---     {w : I → String}
---     → {p : (A i0 ⊗ B i0) (w i0)}
---     → {q : (A i1 ⊗ B i1) (w i1)}
---     → (s≡ : same-splits {w = w} p q)
---     → same-parses {A = A} {B = B} {w = w} p q s≡
---     → PathP (λ i → (A i ⊗ B i) (w i)) p q
---   ⊗PathP s≡ p≡ = ΣPathP (SplittingPathP s≡ , p≡)
+  @0 ⊗≡ : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{w}
+    → (p p' : (A ⊗ B) w)
+    → (s≡ : the-split p ≡ the-split p')
+    → same-parses {A = λ _ → A} {B = λ _ → B} {w = λ _ → w} p p' s≡
+    → p ≡ p'
+  ⊗≡ p p' s≡ p≡ = ⊗PathP s≡ p≡
 
---   @0 ⊗≡ : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{w}
---     → (p p' : (A ⊗ B) w)
---     → (s≡ : same-splits {w = λ _ → w} p p')
---     → same-parses {A = λ _ → A} {B = λ _ → B} {w = λ _ → w} p p' s≡
---     → p ≡ p'
---   ⊗≡ p p' s≡ p≡ = ⊗PathP s≡ p≡
+opaque
+  unfolding _⊗_
+  ⊗-intro :
+    A ⊢ B →
+    C ⊢ D →
+    A ⊗ C ⊢ B ⊗ D
+  ⊗-intro e e' _ p =
+    p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
 
--- opaque
---   unfolding _⊗_
---   ⊗-intro :
---     A ⊢ B →
---     C ⊢ D →
---     A ⊗ C ⊢ B ⊗ D
---   ⊗-intro e e' _ p =
---     p .fst , (e _ (p .snd .fst)) , (e' _ (p .snd .snd))
+opaque
+  unfolding _⊗_ the-split ⊗-intro ⊗≡
+  ⊗-intro⊗-intro
+    : ∀ {f : A ⊢ B}{f' : C ⊢ D}
+        {f'' : E ⊢ A}
+        {f''' : F ⊢ C}
+    → ⊗-intro f f' ∘g ⊗-intro f'' f'''
+      ≡ ⊗-intro (f ∘g f'') (f' ∘g f''')
+  ⊗-intro⊗-intro = refl
 
--- opaque
---   unfolding _⊗_ the-split ⊗-intro ⊗≡
---   ⊗-intro⊗-intro
---     : ∀ {f : A ⊢ B}{f' : C ⊢ D}
---         {f'' : E ⊢ A}
---         {f''' : F ⊢ C}
---     → ⊗-intro f f' ∘g ⊗-intro f'' f'''
---       ≡ ⊗-intro (f ∘g f'') (f' ∘g f''')
---   ⊗-intro⊗-intro = refl
+  opaque
+    unfolding ε
+    ⊗-unit-r :
+      A ⊗ ε ⊢ A
+    ⊗-unit-r {A = A} w ((_ , Eq.refl) , a , Eq.refl) =
+      Eq.J (λ u v → A u) a (Eq.sym (++-unit-r-Eq _))
 
---   opaque
---     unfolding ε
---     ⊗-unit-r :
---       A ⊗ ε ⊢ A
---     ⊗-unit-r {A = A} w ((ws , ws≡) , a , eps) =
---       Eq.J (λ u _ → A u) a (Eq.sym (ws≡ Eq.∙ Eq.ap (ws .fst ++_) eps Eq.∙ ++-unit-r-Eq _))
---       -- Eq.J (λ u v → A u) a (Eq.sym (++-unit-r-Eq _))
+    @0 ⊗-unit-rPath :
+      A ⊗Path εPath ⊢ A
+    ⊗-unit-rPath {A = A} _ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) =
+      subst A (sym (++-unit-r _)
+              ∙ cong (w' ++_) (sym []'≡[])
+              ∙ sym w≡w'++[]')
+            p⟨w'⟩
 
 --     ⊗-unit-r⁻ :
 --       A ⊢ A ⊗ ε
@@ -152,9 +148,7 @@ opaque
 --     ⊗-unit-rr⁻ {A = A} =
 --       funExt λ w → funExt λ where
 --         ((ws , Eq.refl) , a , Eq.refl) →
---           ⊗≡ _ _
---             {!!}
---             {!!}
+--           {!!}
 
 -- --     ⊗-unit-r⁻r : ∀ {A : Grammar ℓA}
 -- --       → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id

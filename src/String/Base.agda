@@ -28,6 +28,24 @@ NonEmptyString = Σ[ w ∈ String ] (w Eq.≡ [] → Empty.⊥)
 Splitting : String → Type ℓ-zero
 Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w Eq.≡ w₁ ++ w₂)
 
+@0 SplittingPath : String → Type ℓ-zero
+SplittingPath w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
+
+@0 SplittingIso : ∀ w → Iso (Splitting w) (SplittingPath w)
+SplittingIso w .Iso.fun s = (s .fst) , (Eq.eqToPath (s .snd))
+SplittingIso w .Iso.inv s = s .fst , Eq.pathToEq (s .snd)
+SplittingIso w .Iso.rightInv s i = s .fst , Eq.eqToPath-pathToEq (s .snd) i
+SplittingIso w .Iso.leftInv s i = s .fst , Eq.pathToEq-eqToPath (s .snd) i
+
+@0 Splitting→SplittingPath : ∀ w → Splitting w → SplittingPath w
+Splitting→SplittingPath w = SplittingIso w .Iso.fun
+
+@0 SplittingPath→Splitting : ∀ w → SplittingPath w → Splitting w
+SplittingPath→Splitting w = SplittingIso w .Iso.inv
+
+@0 Splitting≡SplittingPath : ∀ w → Splitting w ≡ SplittingPath w
+Splitting≡SplittingPath w = isoToPath (SplittingIso w)
+
 @0 isSetString : isSet String
 isSetString = isOfHLevelList 0 (str Alphabet)
 

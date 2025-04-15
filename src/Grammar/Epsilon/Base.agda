@@ -24,6 +24,9 @@ opaque
   ε : Grammar ℓ-zero
   ε w = w Eq.≡ []
 
+  @0 εPath : Grammar ℓ-zero
+  εPath w = w ≡ []
+
   ε-intro : ε⊢ ε
   ε-intro = Eq.refl
 
@@ -56,3 +59,11 @@ isLangε* = isLangLift isLangε
 
 @0 isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
 isSetGrammarε* = isLang→isSetGrammar isLangε*
+
+opaque
+  unfolding ε εPath
+  @0 ε→εPath : ε ⊢ εPath
+  ε→εPath w = Eq.eqToPath
+
+  @0 εPath→ε : εPath ⊢ ε
+  εPath→ε w = Eq.pathToEq
