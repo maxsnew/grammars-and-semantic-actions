@@ -1,9 +1,11 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
 module Grammar.Epsilon.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
+import Cubical.Data.Equality as Eq
 import Cubical.Data.Empty as Empty
 
 open import Grammar.Base Alphabet
@@ -20,40 +22,37 @@ private
 
 opaque
   ε : Grammar ℓ-zero
-  ε w = w ≡ []
+  ε w = w Eq.≡ []
 
   ε-intro : ε⊢ ε
-  ε-intro = refl
+  ε-intro = Eq.refl
 
   ε-elim : ∀ {A : Grammar ℓA} → ε⊢ A → ε ⊢ A
-  ε-elim {A = A} A[] w w≡[] = subst A (sym w≡[]) A[]
+  ε-elim {A = A} A[] w Eq.refl = A[]
 
-  ε-elim-natural : ∀ {A : Grammar ℓA} → (x : ε⊢ A) →
+  @0 ε-elim-natural : ∀ {A : Grammar ℓA} → (a : ε⊢ A) →
     (f : A ⊢ B) →
-    f ∘g ε-elim {A = A} x ≡ ε-elim (f ∘ε x)
-  ε-elim-natural {B = B} {A = A} x f = funExt λ w → funExt λ p →
-    J (λ w' w'≡ → (f ∘g ε-elim x) w' (sym w'≡) ≡ ε-elim {A = B}(f ∘ε x) w' (sym w'≡))
-      (cong (f []) (transportRefl x) ∙ sym (substRefl {A = A []} {B = λ _ → B []} {x = x} (f [] x)))
-      (sym p)
+    f ∘g ε-elim {A = A} a ≡ ε-elim (f ∘ε a)
+  ε-elim-natural {B = B} {A = A} _ _ = funExt λ w → funExt λ where Eq.refl → refl
 
-  ε-β : ∀ (Ap : ε⊢ A) → ε-elim {A = A} Ap ∘ε ε-intro ≡ Ap
-  ε-β {A = A} Ap = transportRefl Ap
+  @0 ε-β : ∀ (Ap : ε⊢ A) → ε-elim {A = A} Ap ∘ε ε-intro ≡ Ap
+  ε-β {A = A} Ap = refl
 
-  isLangε : isLang ε
-  isLangε _ _ _ = isSetString _ _ _ _
+  @0 isLangε : isLang ε
+  isLangε w Eq.refl Eq.refl = refl
 
-  isSetGrammarε : isSetGrammar ε
+  @0 isSetGrammarε : isSetGrammar ε
   isSetGrammarε = isLang→isSetGrammar isLangε
 
-  ε-length0 : ∀ w → ε w → length w ≡ 0
+  @0 ε-length0 : ∀ w → ε w → length w ≡ 0
   ε-length0 [] p = refl
-  ε-length0 (x ∷ w) p = Empty.rec (¬cons≡nil p)
+  ε-length0 (x ∷ w) ()
 
 ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε
 
-isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
+@0 isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
 isLangε* = isLangLift isLangε
 
-isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
+@0 isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
 isSetGrammarε* = isLang→isSetGrammar isLangε*

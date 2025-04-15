@@ -9,6 +9,8 @@ open import Cubical.Data.Nat.Order
 open import Cubical.Data.Empty as Empty
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as Sum
+import Cubical.Data.Equality as Eq
+
 
 LiftList : ∀ {L}{L'} → {A : Type L} → List A → List (Lift {L}{L'} A)
 LiftList [] = []
@@ -24,6 +26,14 @@ LiftListDist [] w' = refl
 LiftListDist (x ∷ w) w' = cong (lift x ∷_) (LiftListDist w w')
 
 module _ {ℓ : Level} {A : Type ℓ} where
+  ++-unit-r-Eq : (xs : List A) → xs ++ [] Eq.≡ xs
+  ++-unit-r-Eq [] = Eq.refl
+  ++-unit-r-Eq (x ∷ xs) = Eq.ap (_∷_ x) (++-unit-r-Eq xs)
+
+  ++-assoc-Eq : (xs ys zs : List A) → (xs ++ ys) ++ zs Eq.≡ xs ++ ys ++ zs
+  ++-assoc-Eq [] ys zs = Eq.refl
+  ++-assoc-Eq (x ∷ xs) ys zs = Eq.ap (_∷_ x) (++-assoc-Eq xs ys zs)
+
   revLength : (xs : List A) → length xs ≡ length (rev xs)
   revLength [] = refl
   revLength (x ∷ xs) =
@@ -185,4 +195,3 @@ module _ {ℓ : Level} {A : Type ℓ} where
         )
         (the-split .snd)
       where the-split = split++ xs ys zs ws p
-
