@@ -9,9 +9,11 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module @0 Grammar.Equalizer.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Equalizer.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Nat
+open import Cubical.Data.Sigma.ErasedSnd
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
@@ -33,34 +35,31 @@ private
 module _ {A : Grammar ℓA}{B : Grammar ℓB} (f f' : A ⊢ B) where
   opaque
     equalizer : Grammar (ℓ-max ℓA ℓB)
-    equalizer w = Σ[ x ∈ A w ] f w x ≡ f' w x
+    equalizer w = Σ0[ x ∈ A w ] f w x ≡ f' w x
 
     eq-π : equalizer ⊢ A
-    eq-π = λ w z → z .fst
+    eq-π = λ w z → z .fst0
 
-    eq-π-pf : f ∘g eq-π ≡ f' ∘g eq-π
-    eq-π-pf i w x = x .snd i
+    @0 eq-π-pf : f ∘g eq-π ≡ f' ∘g eq-π
+    eq-π-pf i w x = x .snd0 i
 
-  module _ (f'' : C ⊢ A) (p : f ∘g f'' ≡ f' ∘g f'') where
+  module _ (f'' : C ⊢ A) (@0 p : f ∘g f'' ≡ f' ∘g f'') where
     opaque
       unfolding equalizer
       eq-intro : C ⊢ equalizer
-      eq-intro w x .fst = f'' w x
-      eq-intro w x .snd i = p i w x
+      eq-intro w x .fst0 = f'' w x
+      eq-intro w x .snd0 i = p i w x
 
-      eq-β : eq-π ∘g eq-intro ≡ f''
+      @0 eq-β : eq-π ∘g eq-intro ≡ f''
       eq-β = refl
 
   module _ (f'' : C ⊢ equalizer) where
     opaque
       unfolding equalizer eq-intro
-      eq-η : f'' ≡ eq-intro (eq-π ∘g f'') λ i → eq-π-pf i ∘g f''
+      @0 eq-η : f'' ≡ eq-intro (eq-π ∘g f'') λ i → eq-π-pf i ∘g f''
       eq-η i = f''
 
-  equalizer-section :
-    ∀ (f'' : A ⊢ equalizer) →
-    (eq-π ∘g f'' ≡ id)
-    → f ≡ f'
+  @0 equalizer-section : ∀ (f'' : A ⊢ equalizer) → (eq-π ∘g f'' ≡ id) → f ≡ f'
   equalizer-section f'' p =
     cong (f ∘g_) (sym p)
     ∙ cong (_∘g f'') eq-π-pf
@@ -84,7 +83,7 @@ module _ {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
       (roll ∘g map (F x) (λ x' → eq-π (e x') (e' x')))
       (pf x)
 
-  equalizer-ind : ∀ (x : X) → e x ≡ e' x
+  @0 equalizer-ind : ∀ (x : X) → e x ≡ e' x
   equalizer-ind = λ x →
     equalizer-section (e x) (e' x)
       (rec F equalizer-ind-alg x)
@@ -102,7 +101,7 @@ module _ {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
           roll ∘g map (F x) λ x' → eq-π (e x') (e' x')
       eq-π-is-homo x = refl
 
-equalizer-ind-unit : (F : Functor Unit) {A : Grammar ℓA}
+@0 equalizer-ind-unit : (F : Functor Unit) {A : Grammar ℓA}
   {e e' : μ (λ _ → F) tt ⊢ A}
   → (e ∘g roll ∘g map F (λ _ → eq-π e e'))
     ≡ (e' ∘g roll ∘g map F (λ _ → eq-π e e'))
@@ -110,7 +109,7 @@ equalizer-ind-unit : (F : Functor Unit) {A : Grammar ℓA}
 equalizer-ind-unit F {A = A} pf = equalizer-ind {X = Unit} (λ _ → F) (λ _ → A) _ _ (λ _ → pf) tt
 
 open import Grammar.LinearFunction Alphabet
-eq-π-pf-⊸-intro :
+@0 eq-π-pf-⊸-intro :
   (f f' : A ⊗ B ⊢ C) →
   f ∘g (eq-π (⊸-intro f) (⊸-intro f') ,⊗ id) ≡ f' ∘g eq-π (⊸-intro f) (⊸-intro f') ,⊗ id
 eq-π-pf-⊸-intro f f' =
@@ -124,7 +123,7 @@ eq-π-pf-⊸-intro f f' =
      ⊸-intro (f' ∘g eq-π (⊸-intro f) (⊸-intro f') ,⊗ id)
      ∎)
 
-eq-π-pf-⟜-intro :
+@0 eq-π-pf-⟜-intro :
   (f f' : A ⊗ B ⊢ C) →
   f ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f') ≡ f' ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f')
 eq-π-pf-⟜-intro f f' =
@@ -163,7 +162,7 @@ module _ {X : Type ℓX}
             (λ x' → eq-π (⊸-intro (e x')) (⊸-intro (e' x')))
           ∘g σ t) ,⊗ id)
     where
-    equalizer-ind-⊗l : ∀ (x : X) → e x ≡ e' x
+    @0 equalizer-ind-⊗l : ∀ (x : X) → e x ≡ e' x
     equalizer-ind-⊗l x =
       isoFunInjective ⊸UMP _ _
         (equalizer-ind
@@ -224,7 +223,7 @@ module _ {X : Type ℓX}
             (λ x' → eq-π (⟜-intro (e x')) (⟜-intro (e' x')))
           ∘g σ t))
     where
-    equalizer-ind-⊗r : ∀ (x : X) → e x ≡ e' x
+    @0 equalizer-ind-⊗r : ∀ (x : X) → e x ≡ e' x
     equalizer-ind-⊗r x =
       isoFunInjective ⟜UMP _ _
         (equalizer-ind

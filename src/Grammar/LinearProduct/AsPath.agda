@@ -260,19 +260,9 @@ opaque
 
   ⊗-assoc :
     A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
-  ⊗-assoc _ p =
-    ((fst p .fst .fst ++ fst (p .snd .snd) .fst .fst ,
-      fst (p .snd .snd) .fst .snd) ,
-      p .fst .snd ∙
-      cong (p .fst .fst .fst ++_) (p .snd .snd .fst .snd) ∙
-      sym
-      (++-assoc
-        (p .fst .fst .fst)
-        (p .snd .snd .fst .fst .fst)
-        (p .snd .snd .fst .fst .snd))) ,
-    ((((fst p .fst .fst , fst (p .snd .snd) .fst .fst) ,
-      refl) ,
-    ((p .snd .fst) , (p .snd .snd .snd .fst))) , (p .snd .snd .snd .snd))
+  ⊗-assoc _ (s , a , (s' , b , c)) =
+    (_ , (s .snd ∙ cong (s .fst .fst ++_) (s' .snd) ∙ sym (++-assoc (s .fst .fst) (s' .fst .fst) (s' .fst .snd)))) ,
+    ((_ , refl) , a , b) , c
 
   ⊗-assoc⁻ :
     (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C)
