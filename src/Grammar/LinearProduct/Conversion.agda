@@ -81,7 +81,7 @@ open StrongEquivalence
   ≅∙ ⊗Path≅ id≅ ε≅εPath
 
 opaque
-  unfolding _⊗_ ε ⊗Path-unit-r ⊗-unit-r ⊗-intro ⊗Path-intro ⊗→⊗Path
+  unfolding _⊗_ ε εPath ⊗Path-unit-r ⊗-unit-r ⊗-intro ⊗Path-intro ⊗→⊗Path ε→εPath
   -- If equalities like this one can be proven as compatibilities
   -- between the AsPath and AsEquality variants of LinearProduct,
   -- then maybe we can use them as fixes to port old proofs over
@@ -95,11 +95,20 @@ opaque
                      refl)
 
   ⊗-unit-r≡ : ⊗-unit-r {A = A} ≡ ⊗Path-unit-r ∘g ⊗ε-eqToPath≅ .fun
-  ⊗-unit-r≡ =
+  ⊗-unit-r≡ {A = A} =
     funExt λ w → funExt λ where
-      (((w' , _) , Eq.refl) , a , Eq.refl) → {!!}
+      (((w' , _) , Eq.refl) , a , Eq.refl) →
+          (cong (λ z → Eq.transport A z a)
+            (Eq.eqToPath (Eq.isPropPathToIsProp
+              (isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _))
+                _ (Eq.pathToEq (sym (++-unit-r w'))))))
+          ∙ (Eq.eqToPath (Eq.transportPathToEq→transportPath A (sym (++-unit-r w')) a))
+          ∙ (cong (λ z → subst A z a) (isSetString _ _ _ _))
 
 ⊗-unit-rr⁻ :
   ∀ {A : Grammar ℓA}
   → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
-⊗-unit-rr⁻ {A = A} = {!!}
+⊗-unit-rr⁻ {A = A} =
+  (λ i → ⊗-unit-r⁻≡ i ∘g ⊗-unit-r≡ i) ∙
+  (λ i → ⊗ε-eqToPath≅ .inv ∘g ⊗Path-unit-rr⁻ i ∘g ⊗ε-eqToPath≅ .fun) ∙
+  ⊗ε-eqToPath≅ .ret

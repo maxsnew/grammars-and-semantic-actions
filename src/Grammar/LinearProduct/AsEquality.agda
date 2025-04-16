@@ -128,7 +128,8 @@ opaque
     ⊗-unit-r :
       A ⊗ ε ⊢ A
     ⊗-unit-r {A = A} w ((_ , Eq.refl) , a , Eq.refl) =
-      Eq.J (λ u v → A u) a (Eq.sym (++-unit-r-Eq _))
+      -- Eq.J (λ u v → A u) a (Eq.sym (++-unit-r-Eq _))
+      Eq.transport A (Eq.sym (++-unit-r-Eq _)) a
 
     ⊗-unit-r⁻ :
       A ⊢ A ⊗ ε
@@ -148,15 +149,28 @@ opaque
     @0 ⊗-unit-rr⁻ :
       ∀ {A : Grammar ℓA}
       → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
-    ⊗-unit-rr⁻ {A = A} = {!!}
---       funExt λ w → funExt λ where
---         ((ws , Eq.refl) , a , Eq.refl) →
---           {!!}
+    ⊗-unit-rr⁻ {A = A} =
+      funExt λ w → funExt λ where
+        (((w' , _) , Eq.refl) , a , Eq.refl) →
+          let
+            w≡w' : w Eq.≡ w'
+            w≡w' = ++-unit-r-Eq w'
+          in
+          ΣPathP (Splitting≡ (≡-× (Eq.eqToPath w≡w') refl) ,
+            ΣPathPProp (λ _ → isLangε _)
+              {!!}
+              -- (cong (λ z → Eq.transport A (Eq.sym z) a) (++-unit-r-Eq≡pathToEq-++-unit-r (Alphabet .snd) _)
+              --   -- ◁ Eq.pathOver→PathP A (++-unit-r _) (Eq.transportPathToEq→transportPath A (++-unit-r _) _)
+              --   ◁ isProp→PathP (λ i → {!!}) (Eq.transport A (Eq.sym (Eq.pathToEq (++-unit-r _))) a) a
+              --   -- ▷ symP (subst-filler A refl a)
+              --   ▷ {!!}
+              --   )
+          )
 
     ⊗-unit-r⁻r : ∀ {A : Grammar ℓA}
       → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
     ⊗-unit-r⁻r {A = A} = funExt λ w → funExt λ where
-      a → {!!}
+      a → {!ΣPathP!}
 --       t
 --         w≡w : w ≡ w
 --         w≡w =       (λ i →
