@@ -18,8 +18,7 @@ open import Grammar.Epsilon.AsPath Alphabet
   hiding (ε-intro)
   renaming (ε to εPath)
 open import Grammar.Epsilon.Conversion Alphabet
-open import Grammar.LinearProduct.AsEquality Alphabet
-  hiding (⊗-unit-rr⁻)
+open import Grammar.LinearProduct.AsEquality.Base Alphabet
 open import Grammar.LinearProduct.AsPath Alphabet
   renaming (_⊗_ to _⊗Path_
           ; _,⊗_ to _,⊗Path_
@@ -109,6 +108,14 @@ opaque
   ∀ {A : Grammar ℓA}
   → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
 ⊗-unit-rr⁻ {A = A} =
-  (λ i → ⊗-unit-r⁻≡ i ∘g ⊗-unit-r≡ i) ∙
-  (λ i → ⊗ε-eqToPath≅ .inv ∘g ⊗Path-unit-rr⁻ i ∘g ⊗ε-eqToPath≅ .fun) ∙
-  ⊗ε-eqToPath≅ .ret
+  (λ i → ⊗-unit-r⁻≡ i ∘g ⊗-unit-r≡ i)
+  ∙ (λ i → ⊗ε-eqToPath≅ .inv ∘g ⊗Path-unit-rr⁻ i ∘g ⊗ε-eqToPath≅ .fun)
+  ∙ ⊗ε-eqToPath≅ .ret
+
+⊗-unit-r⁻r :
+  ∀ {A : Grammar ℓA}
+  → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
+⊗-unit-r⁻r {A = A} =
+  (λ i → ⊗-unit-r≡ i ∘g ⊗-unit-r⁻≡ i)
+  ∙ (λ i → ⊗Path-unit-r ∘g ⊗ε-eqToPath≅ .sec i ∘g ⊗Path-unit-r⁻)
+  ∙ ⊗Path-unit-r⁻r
