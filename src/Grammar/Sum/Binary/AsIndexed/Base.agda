@@ -47,7 +47,7 @@ module _ {A : Bool → Grammar ℓA} where
   ⊕-elim {A = ⊕Ind _ _} e₁ e₂ ∘g inr ≡ e₂
 ⊕-βr e₁ e₂ = refl
 
-⊕-η : (e : A ⊕ B ⊢ C) →
+@0 ⊕-η : (e : A ⊕ B ⊢ C) →
   ⊕-elim (e ∘g inl) (e ∘g inr) ≡ e
 ⊕-η e = ⊕ᴰ≡ _ _ λ where
   true → refl
@@ -60,7 +60,7 @@ e ,⊕p f = ⊕-elim (inl ∘g e) (inr ∘g f)
 ⊕-swap : A ⊕ B ⊢ B ⊕ A
 ⊕-swap = ⊕-elim inr inl
 
-⊕-swap-invol : ⊕-swap ∘g ⊕-swap {A = A}{B = B} ≡ id
+@0 ⊕-swap-invol : ⊕-swap ∘g ⊕-swap {A = A}{B = B} ≡ id
 ⊕-swap-invol = ⊕ᴰ≡ _ _ λ where
   true → refl
   false → refl
@@ -77,12 +77,12 @@ module _ {A B C D : Grammar ℓA}
     the-inv : B ⊕ D ⊢ A ⊕ C
     the-inv = A≅B .inv ,⊕p C≅D .inv
 
-    the-sec : the-fun ∘g the-inv ≡ id
+    @0 the-sec : the-fun ∘g the-inv ≡ id
     the-sec = ⊕ᴰ≡ _ _ λ where
       true → (cong (inl ∘g_) (A≅B .sec))
       false → (cong (inr ∘g_) (C≅D .sec))
 
-    the-ret : the-inv ∘g the-fun ≡ id
+    @0 the-ret : the-inv ∘g the-fun ≡ id
     the-ret = ⊕ᴰ≡ _ _ λ where
       true → (cong (inl ∘g_) (A≅B .ret))
       false → (cong (inr ∘g_) (C≅D .ret))
@@ -111,14 +111,14 @@ module _
   ⊕-assoc⁻ = ⊕-elim (inl ∘g inl) (⊕-elim (inl ∘g inr) inr)
 
   private
-    the-sec : ⊕-assoc ∘g ⊕-assoc⁻ ≡ id
+    @0 the-sec : ⊕-assoc ∘g ⊕-assoc⁻ ≡ id
     the-sec = ⊕ᴰ≡ _ _ λ where
       true → refl
       false → ⊕ᴰ≡ _ _ λ where
         true → refl
         false → refl
 
-    the-ret : ⊕-assoc⁻ ∘g ⊕-assoc ≡ id
+    @0 the-ret : ⊕-assoc⁻ ∘g ⊕-assoc ≡ id
     the-ret = ⊕ᴰ≡ _ _ λ where
       false → refl
       true → ⊕ᴰ≡ _ _ λ where

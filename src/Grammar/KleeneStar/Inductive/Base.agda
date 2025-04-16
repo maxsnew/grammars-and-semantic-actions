@@ -104,6 +104,7 @@ module _ (A : Grammar ℓA) where
           (roll ∘g id ,⊗ (liftG ∘g eq-π _ _ ∘g lowerG))
           (λ i → ⊕ᴰ-elim (λ (lift m) → σ (lift (suc m)) ∘g roll ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distR .fun ∘g
                  id ,⊗ eq-π-pf _ _ i ∘g lowerG ,⊗ lowerG )
+
   secAlg : Algebra repeatTy (λ n → equalizer (grade ∘g ungrade' n) (σ n))
   secAlg (lift zero) = eq-intro _ _ roll refl
   secAlg (lift (suc n)) = the-sec-alg-snd n
@@ -280,6 +281,7 @@ module _ (A : Grammar ℓA) where
             ⊕ᴰ-elim (λ (lift m) → σ (lift (suc m))
             ∘g roll ∘g liftG ,⊗ liftG) ∘g ⊕ᴰ-distL .fun ∘g
                  eq-π-pf _ _ i ,⊗ id ∘g lowerG ,⊗ lowerG )
+
   secAlgL :
     Algebra repeatTyL (λ n → equalizer (gradeL ∘g ungrade'L n) (σ n))
   secAlgL (lift zero) = eq-intro _ _ roll refl

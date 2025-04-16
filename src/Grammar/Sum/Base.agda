@@ -24,12 +24,12 @@ module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
   ⊕ᴰ-elim : (∀ x → B x ⊢ A) → ⊕[ x ∈ X ] B x ⊢ A
   ⊕ᴰ-elim f w x = f (x .fst) w (x .snd)
 
-  ⊕ᴰ≡ : (f f' : (⊕[ x ∈ X ] B x) ⊢ A)
+  @0 ⊕ᴰ≡ : (f f' : (⊕[ x ∈ X ] B x) ⊢ A)
     → (∀ x → f ∘g σ x ≡ f' ∘g σ x)
     → f ≡ f'
   ⊕ᴰ≡ f f' fx≡fx' i w z = fx≡fx' (z .fst) i w (z .snd)
 
-⊕ᴰ-elim∘g :
+@0 ⊕ᴰ-elim∘g :
   ∀ {X : Type ℓX}{A : Grammar ℓA}
   {B : X → Grammar ℓB}{C : Grammar ℓC}
   → {f' : ∀ x → B x ⊢ A}

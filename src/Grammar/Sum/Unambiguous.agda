@@ -36,14 +36,14 @@ module _
   where
 
   opaque
-    isMono-σ : (x : X) → isMono (σ {A = A} x)
+    @0 isMono-σ : (x : X) → isMono (σ {A = A} x)
     isMono-σ x e e' σe=σe' =
       funExt λ w → funExt λ p →
         sym (transportRefl (e w p)) ∙
         Σ-contractFst (refl , (isSetX _ _ _)) .fst
           (PathΣ→ΣPathTransport _ _ (funExt⁻ (funExt⁻ σe=σe' w) p))
 
-  unambiguous'⊕ᴰ :
+  @0 unambiguous'⊕ᴰ :
     unambiguous' (⊕[ x ∈ X ] A x) →
       (x : X)  → unambiguous' (A x)
   unambiguous'⊕ᴰ unambig⊕ x f f' !≡ =
@@ -51,7 +51,7 @@ module _
       (unambig⊕ (σ x ∘g f) (σ x ∘g f')
         (unambiguous⊤ _ _ ∙ !≡ ∙ sym (unambiguous⊤ _ _)))
 
-  unambiguous⊕ᴰ : unambiguous (⊕[ x ∈ X ] A x) → (x : X) →
+  @0 unambiguous⊕ᴰ : unambiguous (⊕[ x ∈ X ] A x) → (x : X) →
     unambiguous (A x)
   unambiguous⊕ᴰ unambig⊕ x =
     unambiguous'→unambiguous
@@ -62,17 +62,16 @@ module _
     where
     opaque
       unfolding _&_ ⊥
-      equalizer→⊥ :
+      @0 equalizer→⊥ :
         (x y : X) →
         (x ≡ y → Empty.⊥) →
         equalizer (σ {A = A} x ∘g π₁) (σ y ∘g π₂) ⊢ ⊥
       equalizer→⊥ x y x≠y w p =
         x≠y (cong fst (funExt⁻ (funExt⁻ (eq-π-pf (σ {A = A} x ∘g π₁) (σ y ∘g π₂)) w) p))
 
-    hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
+    @0 hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
     hasDisjointSummands⊕ᴰ x y x≠y =
       equalizer→⊥ x y x≠y
       ∘g eq-intro {A = A x & A y}{B = ⊕[ x ∈ X ] A x}
         (σ x ∘g π₁) (σ y ∘g π₂) id
         (unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂))
-

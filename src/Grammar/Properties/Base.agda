@@ -49,19 +49,19 @@ unambiguous A = ∀ {ℓB} {B : Grammar ℓB} → (e e' : B ⊢ A) → e ≡ e'
 unambiguous' : Grammar ℓA → Typeω
 unambiguous' {ℓA = ℓA} A = isMono {A = A}{B = ⊤} (⊤-intro {A = A})
 
-unambiguous'→unambiguous : unambiguous' A → unambiguous A
+@0 unambiguous'→unambiguous : unambiguous' A → unambiguous A
 unambiguous'→unambiguous unambig e e' =
   unambig e e'
     (sym (is-terminal-⊤ .snd (⊤-intro ∘g e)) ∙
          is-terminal-⊤ .snd (⊤-intro ∘g e') )
 
-unambiguous→unambiguous' : unambiguous A → unambiguous' A
+@0 unambiguous→unambiguous' : unambiguous A → unambiguous' A
 unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
 
 -- A grammar is unambiguous if Δ : A ⊢ A & A is a strong equivalence
 module _ {A : Grammar ℓA} where
   module _ (π≡ : π₁ ≡ π₂) where
-    π≡→unambiguous : unambiguous A
+    @0 π≡→unambiguous : unambiguous A
     π≡→unambiguous e e' =
       sym (&-β₁ e e')
       ∙ cong (_∘g e ,& e') π≡
@@ -69,19 +69,19 @@ module _ {A : Grammar ℓA} where
 
   module _ (Δ≅ : isStrongEquivalence A (A & A) &-Δ) where
     private
-      π≡ : π₁ ≡ π₂
+      @0 π≡ : π₁ ≡ π₂
       π≡ =
         cong (π₁ ∘g_) (sym (Δ≅ .sec))
         ∙ cong (_∘g Δ≅ .inv) (&-β₁ id id)
         ∙ cong (_∘g Δ≅ .inv) (sym (&-β₂ id id))
         ∙ cong (π₂ ∘g_) (Δ≅ .sec)
 
-    Δ≅→unambiguous : unambiguous A
+    @0 Δ≅→unambiguous : unambiguous A
     Δ≅→unambiguous = π≡→unambiguous π≡
 
   module _ (unambig : unambiguous A) where
     private
-      π≡ : π₁ ≡ π₂
+      @0 π≡ : π₁ ≡ π₂
       π≡ = unambig π₁ π₂
     unambiguous→Δ≅ : isStrongEquivalence _ _ &-Δ
     unambiguous→Δ≅ .inv = π₁
@@ -135,11 +135,11 @@ isUnambiguousRetract' f f' ret unambB e e' =
   ∙ cong (_∘g e') ret
 
 open _isRetractOf_
-isUnambiguousRetract : A isRetractOf B → unambiguous B → unambiguous A
+@0 isUnambiguousRetract : A isRetractOf B → unambiguous B → unambiguous A
 isUnambiguousRetract the-ret =
   isUnambiguousRetract' (the-ret .weak .fun) (the-ret .weak .inv) (the-ret .ret)
 
-unambiguous≅ : A ≅ B → unambiguous A → unambiguous B
+@0 unambiguous≅ : A ≅ B → unambiguous A → unambiguous B
 unambiguous≅ A≅B unambA = isUnambiguousRetract' (A≅B .inv) (A≅B .fun) (A≅B .sec) unambA
   where open isStrongEquivalence
 
@@ -160,7 +160,7 @@ unambiguousRetract'→StrongEquivalence
 unambiguousRetract'→StrongEquivalence f f' ret unambB
   = unambiguous→StrongEquivalence (isUnambiguousRetract' f f' ret unambB) unambB f f'
 
-unambiguousRetract→StrongEquivalence :
+@0 unambiguousRetract→StrongEquivalence :
   A isRetractOf B → unambiguous B → A ≅ B
 unambiguousRetract→StrongEquivalence the-ret unambB =
   unambiguous→StrongEquivalence

@@ -125,12 +125,12 @@ module _
     the-inv = A≅B .inv ,&p C≅D .inv
     opaque
       unfolding _&_ &-intro π₁
-      the-sec : the-fun ∘g the-inv ≡ id
+      @0 the-sec : the-fun ∘g the-inv ≡ id
       the-sec =
         &≡ _ _
           (cong (_∘g π₁) (A≅B .sec))
           (cong (_∘g π₂) (C≅D .sec))
-      the-ret : the-inv ∘g the-fun ≡ id
+      @0 the-ret : the-inv ∘g the-fun ≡ id
       the-ret =
         &≡ _ _
           (cong (_∘g π₁) (A≅B .ret))

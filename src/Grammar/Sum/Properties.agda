@@ -1,3 +1,4 @@
+{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -55,12 +56,10 @@ module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
 
     opaque
       unfolding ⊗-intro
-      ⊕ᴰ-distL-β : ∀ {x : X} →
-        ⊕ᴰ-distL .fun ∘g σ x ,⊗ id ≡ σ x
+      @0 ⊕ᴰ-distL-β : ∀ {x : X} → ⊕ᴰ-distL .fun ∘g σ x ,⊗ id ≡ σ x
       ⊕ᴰ-distL-β = refl
 
-      ⊕ᴰ-distR-β : ∀ {x : X} →
-        ⊕ᴰ-distR .fun ∘g id ,⊗ σ x ≡ σ x
+      @0 ⊕ᴰ-distR-β : ∀ {x : X} → ⊕ᴰ-distR .fun ∘g id ,⊗ σ x ≡ σ x
       ⊕ᴰ-distR-β = refl
 
 module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : X → Grammar ℓB}
@@ -77,8 +76,7 @@ module _
   {Y : X → Type ℓY}
   {A : (x : X) → Y x → Grammar ℓA}
   where
-  nested⊕ᴰ≅ :
-    (⊕[ x ∈ X ] ⊕[ y ∈ Y x ] A x y) ≅ ⊕[ (x , y) ∈ Σ X Y ] A x y
+  nested⊕ᴰ≅ : (⊕[ x ∈ X ] ⊕[ y ∈ Y x ] A x y) ≅ ⊕[ (x , y) ∈ Σ X Y ] A x y
   nested⊕ᴰ≅ .fun = ⊕ᴰ-elim (λ x → ⊕ᴰ-elim (λ y → σ (x , y)))
   nested⊕ᴰ≅ .inv = ⊕ᴰ-elim (λ (x , y) → σ x ∘g σ y)
   nested⊕ᴰ≅ .sec = refl
@@ -100,7 +98,11 @@ module _
     nothing → inl ∘g lowerG
     (just x) → inr ∘g σ x ∘g lowerG
   ⊕⊕ᴰ≅ .sec =
-    ⊕ᴰ≡ _ _ λ where
+    -- TODO get an error that ⊕-βl is erased, but we are in
+    -- an erased context. I think this is a bug
+    -- Should report to Agda repo
+    -- Can likely refactor to avoid the bug
+    ⊕ᴰ≡ _ _ λ @0 where
       nothing i →
         ⊕-βl (σ nothing ∘g liftG) (mapFst⊕ᴰ just (λ _ → liftG)) i ∘g lowerG
       (just x) i →
@@ -121,5 +123,5 @@ module _
   {X : Type ℓX} {A : X → Grammar ℓA}
   where
 
-  isSetGrammar⊕ᴰ : isSet X → (∀ x → isSetGrammar (A x)) → isSetGrammar (⊕ᴰ A)
+  @0 isSetGrammar⊕ᴰ : isSet X → (∀ x → isSetGrammar (A x)) → isSetGrammar (⊕ᴰ A)
   isSetGrammar⊕ᴰ isSetX isSetGrammarA w = isSetΣ isSetX (λ x → isSetGrammarA x w)

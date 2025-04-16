@@ -9,7 +9,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.Equalizer.Base (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.Equalizer.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Nat
 

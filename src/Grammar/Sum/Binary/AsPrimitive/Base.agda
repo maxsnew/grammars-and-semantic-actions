@@ -41,7 +41,7 @@ opaque
       (λ pB → eB _ pB)
       p
 
-  ⊕≡ : (f f' : A ⊕ C ⊢ B)
+  @0 ⊕≡ : (f f' : A ⊕ C ⊢ B)
     → (f ∘g inl ≡ f' ∘g inl)
     → (f ∘g inr ≡ f' ∘g inr)
     → f ≡ f'
@@ -49,15 +49,15 @@ opaque
     { (Sum.inl x) → funExt⁻ (funExt⁻ f≡f'inl _) x
     ; (Sum.inr x) → funExt⁻ (funExt⁻ f≡f'inr _) x }
 
-  ⊕-βl : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
+  @0 ⊕-βl : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
     ⊕-elim e₁ e₂ ∘g inl ≡ e₁
   ⊕-βl e₁ e₂ = refl
 
-  ⊕-βr : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
+  @0 ⊕-βr : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
     ⊕-elim e₁ e₂ ∘g inr ≡ e₂
   ⊕-βr e₁ e₂ = refl
 
-  ⊕-η : (e : A ⊕ B ⊢ C) →
+  @0 ⊕-η : (e : A ⊕ B ⊢ C) →
     ⊕-elim (e ∘g inl) (e ∘g inr) ≡ e
   ⊕-η e i _ (Sum.inl x) = e _ (Sum.inl x)
   ⊕-η e i _ (Sum.inr x) = e _ (Sum.inr x)
@@ -73,18 +73,16 @@ open StrongEquivalence
 module _ {A : Grammar ℓA} {B : Grammar ℓB} where
   opaque
     unfolding ⊕-elim
-    ⊕-swap-invol : ⊕-swap ∘g ⊕-swap {A = A}{B = B} ≡ id
+    @0 ⊕-swap-invol : ⊕-swap ∘g ⊕-swap {A = A}{B = B} ≡ id
     ⊕-swap-invol = ⊕≡ _ _ refl refl
 
 opaque
   unfolding _⊗_ _⊕_
-  ⊗⊕-distL :
-    A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C)
+  ⊗⊕-distL : A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C)
   ⊗⊕-distL {A = A} {B = B} {C = C} w (s , p , Sum.inl q) = Sum.inl (s , p , q)
   ⊗⊕-distL {A = A} {B = B} {C = C} w (s , p , Sum.inr q) = Sum.inr (s , p , q)
 
-  ⊗⊕-distR :
-    (A ⊕ B) ⊗ C ⊢ (A ⊗ C) ⊕ (B ⊗ C)
+  ⊗⊕-distR : (A ⊕ B) ⊗ C ⊢ (A ⊗ C) ⊕ (B ⊗ C)
   ⊗⊕-distR {A = A} {B = B} {C = C} w (s , Sum.inl p , q) = Sum.inl (s , p , q)
   ⊗⊕-distR {A = A} {B = B} {C = C} w (s , Sum.inr p , q) = Sum.inr (s , p , q)
 
@@ -103,12 +101,12 @@ module _
     the-inv = A≅B .inv ,⊕p C≅D .inv
     opaque
       unfolding _⊕_ ⊕-elim
-      the-sec : the-fun ∘g the-inv ≡ id
+      @0 the-sec : the-fun ∘g the-inv ≡ id
       the-sec =
         ⊕≡ _ _
           (cong (inl ∘g_) (A≅B .sec))
           (cong (inr ∘g_) (C≅D .sec))
-      the-ret : the-inv ∘g the-fun ≡ id
+      @0 the-ret : the-inv ∘g the-fun ≡ id
       the-ret =
         ⊕≡ _ _
           (cong (inl ∘g_) (A≅B .ret))
@@ -142,9 +140,10 @@ module _
   private
     opaque
       unfolding _⊕_ ⊕-elim
-      the-sec : ⊕-assoc ∘g ⊕-assoc⁻ ≡ id
+      @0 the-sec : ⊕-assoc ∘g ⊕-assoc⁻ ≡ id
       the-sec = ⊕≡ _ _ refl (⊕≡ _ _ refl refl)
-      the-ret : ⊕-assoc⁻ ∘g ⊕-assoc ≡ id
+
+      @0 the-ret : ⊕-assoc⁻ ∘g ⊕-assoc ≡ id
       the-ret = ⊕≡ _ _ (⊕≡ _ _ refl refl) refl
 
   ⊕-assoc≅ : (A ⊕ B) ⊕ C ≅ A ⊕ (B ⊕ C)

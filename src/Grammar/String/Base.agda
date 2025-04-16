@@ -1,3 +1,4 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -10,6 +11,7 @@ open import Cubical.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
 open import Cubical.Data.Empty as Empty
+import Cubical.Data.Equality as Eq
 
 open import Cubical.Foundations.Structure
 
@@ -57,31 +59,23 @@ stringL = *L char
 opaque
   unfolding ⊗-intro ε literal
   mk⌈⌉ : ∀ w → ⌈ w ⌉ w
-  mk⌈⌉ [] = refl
-  mk⌈⌉ (c ∷ w) = (_ , refl) , (refl , (mk⌈⌉ w))
+  mk⌈⌉ [] = Eq.refl
+  mk⌈⌉ (c ∷ w) = (_ , Eq.refl) , (Eq.refl , (mk⌈⌉ w))
 
 mk⌈⌉' : ∀ w → ⌈ w ⌉' w
 mk⌈⌉' w = refl
 
-isLang⌈⌉' : ∀ w → isLang (⌈ w ⌉')
+@0 isLang⌈⌉' : ∀ w → isLang (⌈ w ⌉')
 isLang⌈⌉' = isSetString
 
 opaque
   unfolding ε _⊗_ literal
   uniquely-supported-⌈⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
   uniquely-supported-⌈⌉ [] [] p = refl
-  uniquely-supported-⌈⌉ [] (x ∷ w') p =
-    Empty.rec (¬cons≡nil p)
-  uniquely-supported-⌈⌉ (x ∷ w) [] p =
-    Empty.rec (¬nil≡cons (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst)))
-  uniquely-supported-⌈⌉ (x ∷ w) (y ∷ w') p =
-    cong₂ _∷_
-      (cons-inj₁ w≡)
-      (uniquely-supported-⌈⌉ w (p .fst .fst .snd) (p .snd .snd) ∙
-        cons-inj₂ w≡)
-    where
-    w≡ : x ∷ p .fst .fst .snd ≡ y ∷ w'
-    w≡ = ( (sym (cong (_++ p .fst .fst .snd) (p .snd .fst))) ∙ sym (p .fst .snd))
+  uniquely-supported-⌈⌉ [] (x ∷ w') ()
+  uniquely-supported-⌈⌉ (x ∷ w) [] ((_ , ()) , Eq.refl , the-⌈⌉)
+  uniquely-supported-⌈⌉ (x ∷ w) (y ∷ w') ((_ , Eq.refl) , Eq.refl , the-⌈⌉) =
+    cong (x ∷_) (uniquely-supported-⌈⌉ w w' the-⌈⌉)
 
 ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
 ⌈⌉→≡ = uniquely-supported-⌈⌉
@@ -92,7 +86,7 @@ opaque
 opaque
   unfolding ε _⊗_ uniquely-supported-⌈⌉ mk⌈⌉
   ⌈⌉'→⌈⌉ : ∀ w → ⌈ w ⌉' ⊢ ⌈ w ⌉
-  ⌈⌉'→⌈⌉ [] = λ _ → sym
+  ⌈⌉'→⌈⌉ [] w p = Eq.sym (Eq.pathToEq p)
   ⌈⌉'→⌈⌉ (c ∷ w) w' cw≡w' = J (λ w'' cw≡w'' → (＂ c ＂ ⊗ ⌈ w ⌉) w'') (mk⌈⌉ (c ∷ w)) cw≡w'
 
   open StrongEquivalence
@@ -100,15 +94,13 @@ opaque
   ⌈⌉≅⌈⌉' w .fun = ⌈⌉→⌈⌉' w
   ⌈⌉≅⌈⌉' w .inv = ⌈⌉'→⌈⌉ w
   ⌈⌉≅⌈⌉' w .sec = funExt λ w' → funExt λ p → isSetString w w' _ _
-  ⌈⌉≅⌈⌉' [] .ret = funExt λ w' → funExt λ p → isSetString w' [] _ _
-  ⌈⌉≅⌈⌉' (c ∷ w) .ret = funExt λ w' → funExt λ p →
-    Σ≡Prop
-     (λ s → isProp× (isLangLiteral c (s .fst .fst))
-                    (isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w) (s .fst .snd)))
-     (Splitting≡ (≡-× (transportRefl [ c ] ∙ sym (p .snd .fst))
-                 (transportRefl w ∙ ⌈⌉→⌈⌉' w _ (p .snd .snd))))
+  ⌈⌉≅⌈⌉' [] .ret = funExt λ w' → funExt λ p → isLangε _ _ _
+  ⌈⌉≅⌈⌉' (c ∷ w) .ret = funExt λ w' → funExt λ @0 where
+    ((_ , Eq.refl) , Eq.refl , the-⌈⌉) →
+      Σ≡Prop (λ s → isProp× (isLangLiteral _ _) (isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w) _))
+        (Splitting≡ (≡-× (transportRefl [ c ]) (transportRefl w ∙ ⌈⌉→⌈⌉' w _ the-⌈⌉)))
 
-isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
+@0 isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
 isLang⌈⌉ w = isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w)
 
 pick-parse : ∀ (w : String) → (A : Grammar ℓA) → A w → ⌈ w ⌉ ⊢ A
@@ -120,4 +112,3 @@ pick-parse w A pA w' p⌈⌉ = subst A (uniquely-supported-⌈⌉ w w' p⌈⌉) 
 
 mkstring : (w : String) → string w
 mkstring w = (⌈⌉→string w) w (mk⌈⌉ w)
-

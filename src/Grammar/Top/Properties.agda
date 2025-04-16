@@ -17,24 +17,24 @@ private
 
 opaque
   unfolding ⊤
-  unambiguous'⊤ : unambiguous' ⊤
+  @0 unambiguous'⊤ : unambiguous' ⊤
   unambiguous'⊤ e e' _ = refl
 
-unambiguous⊤ : unambiguous ⊤
+@0 unambiguous⊤ : unambiguous ⊤
 unambiguous⊤ = unambiguous'→unambiguous unambiguous'⊤
 
 opaque
   unfolding ⊤*
-  unambiguous'⊤* : ∀ {ℓA} → unambiguous' (⊤* {ℓA})
+  @0 unambiguous'⊤* : ∀ {ℓA} → unambiguous' (⊤* {ℓA})
   unambiguous'⊤* e e' _ = refl
 
-unambiguous⊤* : ∀ {ℓA} → unambiguous (⊤* {ℓA})
+@0 unambiguous⊤* : ∀ {ℓA} → unambiguous (⊤* {ℓA})
 unambiguous⊤* = unambiguous'→unambiguous unambiguous'⊤*
 
 opaque
   unfolding ⊤
-  isLang⊤ : isLang ⊤
+  @0 isLang⊤ : isLang ⊤
   isLang⊤ w x y = refl
 
-isSetGrammar⊤ : isSetGrammar ⊤
+@0 isSetGrammar⊤ : isSetGrammar ⊤
 isSetGrammar⊤ = isLang→isSetGrammar isLang⊤

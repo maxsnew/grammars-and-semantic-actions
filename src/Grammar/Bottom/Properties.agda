@@ -26,7 +26,7 @@ private
     A : Grammar ℓA
     B : Grammar ℓB
 
-is-initial : Grammar ℓA → Typeω
+@0 is-initial : Grammar ℓA → Typeω
 is-initial A =
   ∀ {ℓB}{B : Grammar ℓB} → (Σ[ e ∈ A ⊢ B ] (∀ e' → e ≡ e'))
 
@@ -48,7 +48,7 @@ opaque
 
 open StrongEquivalence
 
-is-initial-⊥&A : (A : Grammar ℓA) → is-initial (⊥ & A)
+@0 is-initial-⊥&A : (A : Grammar ℓA) → is-initial (⊥ & A)
 is-initial-⊥&A A .fst = ⊥-elim ∘g π₁
 is-initial-⊥&A A .snd e = p ∙ cong (⊕-elim f e ∘g_) inl≡inr-⊥&A ∙ sym q
   where
@@ -62,16 +62,16 @@ is-initial-⊥&A A .snd e = p ∙ cong (⊕-elim f e ∘g_) inl≡inr-⊥&A ∙ 
 
   opaque
     unfolding inl ⇒-app π₁
-    inl≡inr-⊥&A : inl {A = ⊥ & A}{B = ⊥ & A} ≡ inr {A = ⊥ & A}{B = ⊥ & A}
+    @0 inl≡inr-⊥&A : inl {A = ⊥ & A}{B = ⊥ & A} ≡ inr {A = ⊥ & A}{B = ⊥ & A}
     inl≡inr-⊥&A i = &⊕-distR ∘g &-par (inl≡inr-⊥ i) id
 
-    p : f ≡ (⊕-elim f e) ∘g inl
+    @0 p : f ≡ (⊕-elim f e) ∘g inl
     p = sym (⊕-βl f e)
 
-    q : e ≡ (⊕-elim f e) ∘g inr
+    @0 q : e ≡ (⊕-elim f e) ∘g inr
     q = sym (⊕-βr f e)
 
-⊥&A≅⊥ : (A : Grammar ℓA) → (⊥ & A) ≅ ⊥
+@0 ⊥&A≅⊥ : (A : Grammar ℓA) → (⊥ & A) ≅ ⊥
 ⊥&A≅⊥ A .fun = is-initial-⊥&A A .fst
 ⊥&A≅⊥ A .inv = ⊥-elim
 ⊥&A≅⊥ A .sec = is-initial→propHoms is-initial-⊥ _ _
@@ -103,9 +103,7 @@ opaque
     r = &-β₂ f id
 
   -- Any g with a map into ⊥ is iso to ⊥, so it is also initial
-  A⊢⊥→is-initial :
-    uninhabited A →
-    is-initial A
+  @0 A⊢⊥→is-initial : uninhabited A → is-initial A
   A⊢⊥→is-initial e {B = B} .fst = ⊥-elim {A = B} ∘g e
   A⊢⊥→is-initial e {B = B} .snd e' =
     cong (_∘g e) p ∙ cong (e' ∘g_) (is-strict-initial-⊥ e .ret)
@@ -113,7 +111,7 @@ opaque
     p : ⊥-elim ≡ e' ∘g ⊥-elim
     p = is-initial→propHoms is-initial-⊥ _ _
 
-uninhabited→initial : uninhabited A → is-initial A
+@0 uninhabited→initial : uninhabited A → is-initial A
 uninhabited→initial = A⊢⊥→is-initial
 
 opaque
@@ -131,14 +129,14 @@ uninhabited→≅⊥ e =
   x : isStrongEquivalence _ _ e
   x = is-strict-initial-⊥ e
 
-unambiguous'⊥ : unambiguous' ⊥
+@0 unambiguous'⊥ : unambiguous' ⊥
 unambiguous'⊥ {C = C} e e' !∘e≡!∘e' =
   is-initial→propHoms (A⊢⊥→is-initial e) _ _
 
-unambiguous⊥ : unambiguous ⊥
+@0 unambiguous⊥ : unambiguous ⊥
 unambiguous⊥ = unambiguous'→unambiguous unambiguous'⊥
 
-isProp-uninhabited : ∀ {A : Grammar ℓA} → isProp (uninhabited A)
+@0 isProp-uninhabited : ∀ {A : Grammar ℓA} → isProp (uninhabited A)
 isProp-uninhabited = unambiguous⊥
 
 module _ (A : Grammar ℓA) where

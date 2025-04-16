@@ -43,13 +43,14 @@ module _ (A : Bool → Grammar ℓA) where
   private
     opaque
       unfolding _⊕_ ⊕-elim
-      the-sec : ⊕→Ind⊕ ∘g Ind⊕→⊕ ≡ id
+      @0 the-sec : ⊕→Ind⊕ ∘g Ind⊕→⊕ ≡ id
       the-sec = ⊕ᴰ≡ _ _ λ where
         true → refl
         false → refl
 
-      the-ret : Ind⊕→⊕ ∘g ⊕→Ind⊕ ≡ id
+      @0 the-ret : Ind⊕→⊕ ∘g ⊕→Ind⊕ ≡ id
       the-ret = ⊕≡ _ _ refl refl
+
   ⊕≅⊕Ind : A true ⊕ A false ≅ ⊕ᴰ A
   ⊕≅⊕Ind .fun = ⊕→Ind⊕
   ⊕≅⊕Ind .inv = Ind⊕→⊕
@@ -57,7 +58,7 @@ module _ (A : Bool → Grammar ℓA) where
   ⊕≅⊕Ind .ret = the-ret
 
 module _ {A B : Grammar ℓA} (unambig⊕ : unambiguous (A ⊕ B)) where
-  unambig-⊕-is-disjoint : disjoint A B
+  @0 unambig-⊕-is-disjoint : disjoint A B
   unambig-⊕-is-disjoint =
     disjoint≅2
       (hasDisjointSummands⊕ᴰ isSetBool
@@ -65,12 +66,12 @@ module _ {A B : Grammar ℓA} (unambig⊕ : unambiguous (A ⊕ B)) where
         true false true≢false)
       id≅ id≅
 
-  summand-L-is-unambig : unambiguous A
+  @0 summand-L-is-unambig : unambiguous A
   summand-L-is-unambig =
     unambiguous≅ id≅
       (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕) true)
 
-  summand-R-is-unambig : unambiguous B
+  @0 summand-R-is-unambig : unambiguous B
   summand-R-is-unambig =
     unambiguous≅ id≅
       (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕) false)
@@ -101,17 +102,17 @@ module _
     ∘g &-Δ
 
 open isStrongEquivalence
-isMono-⊕-inl : isMono (inl {A = A} {B = B})
+@0 isMono-⊕-inl : isMono (inl {A = A} {B = B})
 isMono-⊕-inl {A = A}{B = B}{C = C} e e' inl∘e≡inl∘e' =
   sym (&-β₂ _ _) ∙ cong (π₂ ∘g_) r ∙ &-β₂ _ _
   where
-  isMono-C&A→C&A⊕C&B : isMono (inl {A = C & A } {B = C & B})
+  @0 isMono-C&A→C&A⊕C&B : isMono (inl {A = C & A } {B = C & B})
   isMono-C&A→C&A⊕C&B =
     hasRetraction→isMono inl (⊕-elim id (id ,& e ∘g π₁))
       (⊕-βl id (id ,& e ∘g π₁))
 
   distiso∘inl = (&⊕-distL⁻ ∘g inl {A = C & A}{B = C & B})
-  isMono-distiso∘inl :
+  @0 isMono-distiso∘inl :
     isMono (&⊕-distL⁻ ∘g inl {A = C & A}{B = C & B})
   isMono-distiso∘inl =
     Mono∘g (inl {A = C & A}{B = C & B}) &⊕-distL⁻
@@ -129,10 +130,10 @@ isMono-⊕-inl {A = A}{B = B}{C = C} e e' inl∘e≡inl∘e' =
     q : distiso∘inl ∘g (id ,& e) ≡ distiso∘inl ∘g (id ,& e')
     q = p
 
-  r : (id {A = C} ,& e) ≡ (id ,& e')
+  @0 r : (id {A = C} ,& e) ≡ (id ,& e')
   r = isMono-distiso∘inl (id ,& e) (id ,& e') q
 
-isMono-⊕-inr : isMono (inr {A = B} {B = A})
+@0 isMono-⊕-inr : isMono (inr {A = B} {B = A})
 isMono-⊕-inr {B = B}{A = A}{C = C} e e' inr∘e≡inr∘e' =
   sym (&-β₂ _ _) ∙ cong (π₂ ∘g_) r ∙ &-β₂ _ _
   where
