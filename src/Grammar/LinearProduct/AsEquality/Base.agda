@@ -192,11 +192,17 @@ opaque
   ⊗-assoc⁻ _ (((wab , wc) , Eq.refl) , (((wa , wb) , Eq.refl) , a , b) , c) =
     ((wa , wb ++ wc) , ++-assoc-Eq wa wb wc) , (a , (((wb , wc) , Eq.refl) , (b , c)))
 
+-- i = i0 ⊢ fst
+--          (⊗-assoc ((wa ++ wb) ++ wc)
+--           (((wa , wb ++ wc) , ++-assoc-Eq wa wb wc) ,
+--            a , ((wb , wc) , Eq.refl) , b , c)
+--           .fst .fst)
+-- i = i1 ⊢ wa ++ wb
   -- @0 ⊗-assoc∘⊗-assoc⁻≡id :
   --  ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
   -- ⊗-assoc∘⊗-assoc⁻≡id = funExt λ w → funExt λ where
   --   (((wab , wc) , Eq.refl) , (((wa , wb) , Eq.refl) , a , b) , c) →
-  --     ⊗≡ _ _ (≡-× {!!} {!!}) {!!}
+  --     ⊗≡ _ _ (≡-× (Eq.J (λ w' w'≡ → {!!} ≡ {!wb ++ wc)!}) refl (++-assoc-Eq wa wb wc)) {!!}) {!!}
   --     ⊗≡ _ _
   --       (≡-× (λ i → {!!}) {!!})
   --       {!!}

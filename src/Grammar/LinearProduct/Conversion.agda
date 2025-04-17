@@ -20,17 +20,6 @@ open import Grammar.Epsilon.AsPath Alphabet
 open import Grammar.Epsilon.Conversion Alphabet
 open import Grammar.LinearProduct.AsEquality.Base Alphabet
 import Grammar.LinearProduct.AsPath Alphabet as ⊗Path
-  -- renaming (_⊗_ to _⊗Path_
-  --         ; _,⊗_ to _,⊗Path_
-  --         ; ⊗≡ to ⊗Path≡
-  --         ; ⊗-assoc to ⊗Path-assoc
-  --         ; the-split to the-splitPath
-  --         ; ⊗-intro to ⊗Path-intro
-  --         ; ⊗-unit-r to ⊗Path-unit-r
-  --         ; ⊗-unit-r⁻ to ⊗Path-unit-r⁻
-  --         ; ⊗-unit-rr⁻ to ⊗Path-unit-rr⁻
-  --         ; ⊗-unit-r⁻r to ⊗Path-unit-r⁻r
-  --         ; ⊗≅ to ⊗Path≅)
 open import Term.Base Alphabet
 
 private
@@ -52,6 +41,7 @@ private
     N : Grammar ℓN
     O : Grammar ℓO
     f f' f'' f''' f'''' f''''' : A ⊢ B
+    g : C ⊢ D
 
 opaque
   unfolding _⊗_ ⊗Path._⊗_
@@ -77,186 +67,201 @@ open StrongEquivalence
 ⊗≅⊗Path .sec = ⊗Path→⊗→⊗Path
 ⊗≅⊗Path .ret = ⊗→⊗Path→⊗
 
-⊗ε-eqToPath≅ : A ⊗ ε ≅ A ⊗Path.⊗ εPath
-⊗ε-eqToPath≅ =
-  ⊗≅⊗Path
-  ≅∙ ⊗Path.⊗≅ id≅ ε≅εPath
+opaque
+  unfolding _⊗_ ⊗-intro ⊗Path._⊗_ ⊗Path.⊗-intro ⊗→⊗Path
+  ⊗→⊗Path-natural : (f : A ⊢ B) → (g : C ⊢ D) → ⊗→⊗Path ∘g f ,⊗ g ≡ f ⊗Path.,⊗ g ∘g ⊗→⊗Path
+  ⊗→⊗Path-natural f g = refl
 
 opaque
-  unfolding _⊗_ ε εPath ⊗Path.⊗-unit-r ⊗-unit-r ⊗-intro ⊗Path.⊗-intro ⊗→⊗Path ε→εPath
-  -- If equalities like this one can be proven as compatibilities
-  -- between the AsPath and AsEquality variants of LinearProduct,
-  -- then maybe we can use them as fixes to port old proofs over
-  -- to the new definitons using Data.Equality
-  ⊗-unit-r⁻≡ : ⊗-unit-r⁻ {A = A} ≡ ⊗ε-eqToPath≅ .inv ∘g ⊗Path.⊗-unit-r⁻
-  ⊗-unit-r⁻≡ =
-    funExt λ w → funExt λ where
-     a →
-      ΣPathP ((SplittingPathP refl) ,
-              Σ≡Prop (λ _ → isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _))
-                     refl)
+  unfolding _⊗_ ⊗-intro ⊗Path._⊗_ ⊗Path.⊗-intro
+  opaque
+    unfolding ε εPath ⊗Path.⊗-unit-r ⊗-unit-r ⊗→⊗Path ε→εPath
+    ⊗-unit-r≡ : ⊗-unit-r {A = A} ≡ ⊗Path.⊗-unit-r ∘g ⊗→⊗Path ∘g id ,⊗ ε→εPath
+    ⊗-unit-r≡ {A = A} =
+      funExt λ w → funExt λ where
+        (((w' , _) , Eq.refl) , a , Eq.refl) →
+            (cong (λ z → Eq.transport A z a)
+              (Eq.eqToPath (Eq.isPropPathToIsProp (isSetEqString _ _) _ (Eq.pathToEq (sym (++-unit-r w'))))))
+            ∙ (Eq.eqToPath (Eq.transportPathToEq→transportPath A (sym (++-unit-r w')) a))
+            ∙ (cong (λ z → subst A z a) (isSetString _ _ _ _))
 
-  ⊗-unit-r≡ : ⊗-unit-r {A = A} ≡ ⊗Path.⊗-unit-r ∘g ⊗ε-eqToPath≅ .fun
-  ⊗-unit-r≡ {A = A} =
-    funExt λ w → funExt λ where
-      (((w' , _) , Eq.refl) , a , Eq.refl) →
-          (cong (λ z → Eq.transport A z a)
-            (Eq.eqToPath (Eq.isPropPathToIsProp
-              (isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _))
-                _ (Eq.pathToEq (sym (++-unit-r w'))))))
-          ∙ (Eq.eqToPath (Eq.transportPathToEq→transportPath A (sym (++-unit-r w')) a))
-          ∙ (cong (λ z → subst A z a) (isSetString _ _ _ _))
+    ⊗-unit-r⁻≡ : ⊗-unit-r⁻ {A = A} ≡ id ,⊗ εPath→ε ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-unit-r⁻
+    ⊗-unit-r⁻≡ = funExt λ w → funExt λ where
+       a → ΣPathP ((SplittingPathP refl) , Σ≡Prop (λ _ → isSetEqString _ _) refl)
 
-⊗-unit-rr⁻ :
-  ∀ {A : Grammar ℓA}
-  → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
-⊗-unit-rr⁻ {A = A} =
-  (λ i → ⊗-unit-r⁻≡ i ∘g ⊗-unit-r≡ i)
-  ∙ (λ i → ⊗ε-eqToPath≅ .inv ∘g ⊗Path.⊗-unit-rr⁻ i ∘g ⊗ε-eqToPath≅ .fun)
-  ∙ ⊗ε-eqToPath≅ .ret
+  ⊗-unit-rr⁻ :
+    ∀ {A : Grammar ℓA}
+    → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
+  ⊗-unit-rr⁻ {A = A} =
+    (λ i → ⊗-unit-r⁻≡ i ∘g ⊗-unit-r≡ i)
+    ∙ (λ i → id ,⊗ εPath→ε ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-unit-rr⁻ i ∘g ⊗→⊗Path ∘g id ,⊗ ε→εPath)
+    ∙ (λ i → id ,⊗ εPath→ε ∘g ⊗≅⊗Path .ret i ∘g id ,⊗ ε→εPath)
+    ∙ λ i → id ,⊗ ε≅εPath .ret i
 
-⊗-unit-r⁻r :
-  ∀ {A : Grammar ℓA}
-  → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
-⊗-unit-r⁻r {A = A} =
-  (λ i → ⊗-unit-r≡ i ∘g ⊗-unit-r⁻≡ i)
-  ∙ (λ i → ⊗Path.⊗-unit-r ∘g ⊗ε-eqToPath≅ .sec i ∘g ⊗Path.⊗-unit-r⁻)
-  ∙ ⊗Path.⊗-unit-r⁻r
+  ⊗-unit-r⁻r :
+    ∀ {A : Grammar ℓA}
+    → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
+  ⊗-unit-r⁻r {A = A} =
+    (λ i → ⊗-unit-r≡ i ∘g ⊗-unit-r⁻≡ i)
+    ∙ (λ i → ⊗Path.⊗-unit-r ∘g ⊗→⊗Path ∘g id ,⊗ ε≅εPath .sec i ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-unit-r⁻)
+    ∙ (λ i → ⊗Path.⊗-unit-r ∘g ⊗≅⊗Path .sec i ∘g ⊗Path.⊗-unit-r⁻)
+    ∙ (λ i → ⊗Path.⊗-unit-r⁻r i)
 
-opaque
-  unfolding _⊗_ the-split ⊗-intro ⊗≡ ⊗-assoc ⊗→⊗Path ⊗Path._⊗_ ⊗Path.the-split ⊗Path.⊗-intro ⊗Path.⊗≡ ⊗Path.⊗-assoc
-  private
-    ϕ : A ⊗ (B ⊗ C) ≅ A ⊗Path.⊗ (B ⊗Path.⊗ C)
-    ϕ = ⊗≅⊗Path ≅∙ ⊗Path.⊗≅ id≅ ⊗≅⊗Path
+  opaque
+    unfolding the-split ⊗≡ ⊗-assoc ⊗→⊗Path ⊗Path.the-split ⊗Path.⊗≡ ⊗Path.⊗-assoc
+    private
+      ϕ : A ⊗ (B ⊗ C) ≅ A ⊗Path.⊗ (B ⊗Path.⊗ C)
+      ϕ = ⊗≅⊗Path ≅∙ ⊗Path.⊗≅ id≅ ⊗≅⊗Path
 
-    ψ : (A ⊗ B) ⊗ C ≅ (A ⊗Path.⊗ B) ⊗Path.⊗ C
-    ψ = ⊗≅⊗Path ≅∙ ⊗Path.⊗≅ ⊗≅⊗Path id≅
+      ψ : (A ⊗ B) ⊗ C ≅ (A ⊗Path.⊗ B) ⊗Path.⊗ C
+      ψ = ⊗≅⊗Path ≅∙ ⊗Path.⊗≅ ⊗≅⊗Path id≅
 
-  ⊗-assoc≡ : ⊗-assoc {A = A} {B = B} {C = C} ≡ ψ .inv ∘g ⊗Path.⊗-assoc ∘g ϕ .fun
-  ⊗-assoc≡ = funExt λ w → funExt λ where
-    (((wa , wbc) , Eq.refl) , a , (((wb , wc) , Eq.refl) , b , c)) →
-      let
-        -- TODO make this a global lemma
-        isPropEqString : ∀ (u v : String) → isProp (u Eq.≡ v)
-        isPropEqString u v = isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _)
-      in
-        (λ i → ((wa ++ wb , wc) ,
-        isPropEqString (wa ++ wb ++ wc) ((wa ++ wb) ++ wc)
-          (Eq.sym (++-assoc-Eq wa wb wc))
-          (Eq.pathToEq (sym (++-assoc wa wb wc)))
-          i) ,
-        ((((wa , wb) ,
-          isPropEqString (wa ++ wb) (wa ++ wb)
-            (Eq.refl {x = wa ++ wb})
-            (Eq.pathToEq {A = String} λ _ → wa ++ wb)
-            i
-        ) , a , b) , c))
-        ∙ (cong (λ z → ψ .inv (wa ++ wb ++ wc) (((wa ++ wb , wc) , z) , (((wa , wb) , refl) , a , b) , c))
-            (isSetString (wa ++ wb ++ wc) ((wa ++ wb) ++ wc)
-              (sym (++-assoc wa wb wc))
-              (refl ∙ cong (wa ++_) refl ∙ sym (++-assoc wa wb wc))))
+    ⊗-assoc≡ : ⊗-assoc {A = A} {B = B} {C = C} ≡
+      ⊗Path→⊗ ,⊗ id ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path
+    ⊗-assoc≡ =
+      funExt λ w → funExt λ where
+      (((wa , wbc) , Eq.refl) , a , (((wb , wc) , Eq.refl) , b , c)) →
+          (λ i → ((wa ++ wb , wc) ,
+            isSetEqString (wa ++ wb ++ wc) ((wa ++ wb) ++ wc)
+              (Eq.sym (++-assoc-Eq wa wb wc))
+              (Eq.pathToEq (sym (++-assoc wa wb wc)))
+              i) ,
+          ((((wa , wb) ,
+            isSetEqString (wa ++ wb) (wa ++ wb)
+              (Eq.refl {x = wa ++ wb})
+              (Eq.pathToEq {A = String} λ _ → wa ++ wb)
+              i
+          ) , a , b) , c))
+          ∙ (cong (λ z → ψ .inv (wa ++ wb ++ wc) (((wa ++ wb , wc) , z) , (((wa , wb) , refl) , a , b) , c))
+              (isSetString (wa ++ wb ++ wc) ((wa ++ wb) ++ wc)
+                (sym (++-assoc wa wb wc))
+                (refl ∙ cong (wa ++_) refl ∙ sym (++-assoc wa wb wc))))
 
-  -- @0 ⊗-assoc∘⊗-assoc⁻≡id :
-  --  ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
-  -- ⊗-assoc∘⊗-assoc⁻≡id = funExt λ w → funExt λ where
-  --   ((_ , Eq.refl) , ((_ , Eq.refl) , a , b) , c) → {!!}
+    ⊗-assoc⁻≡ : ⊗-assoc⁻ {A = A} {B = B} {C = C} ≡
+      id ,⊗ ⊗Path→⊗ ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc⁻ ∘g ⊗→⊗Path ∘g ⊗→⊗Path ,⊗ id
+    ⊗-assoc⁻≡ = funExt λ w → funExt λ where
+      (((wab , wc) , Eq.refl) , (((wa , wb) , Eq.refl) , a , b) , c) →
+        (λ i → ((wa , wb ++ wc) ,
+          isSetEqString ((wa ++ wb) ++ wc) (wa ++ wb ++ wc)
+            (++-assoc-Eq wa wb wc) (Eq.pathToEq (++-assoc wa wb wc)) i) ,
+            (a , ((wb , wc) ,
+              isSetEqString (wb ++ wc) (wb ++ wc) Eq.refl (Eq.pathToEq {A = String} refl) i
+            ) , b , c))
+        ∙ cong (λ z → ϕ .inv ((wa ++ wb) ++ wc)
+          (((wa , wb ++ wc) , z) , (a , (((wb , wc) , refl) , (b , c)))))
+          (isSetString ((wa ++ wb) ++ wc) (wa ++ wb ++ wc) (++-assoc wa wb wc) (refl ∙ cong (_++ wc) refl ∙ ++-assoc wa wb wc))
 
---   @0 ⊗-assoc⁻∘⊗-assoc≡id :
---    ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
---   ⊗-assoc⁻∘⊗-assoc≡id = {!!}
+    @0 ⊗-assoc∘⊗-assoc⁻≡id :
+     ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
+    ⊗-assoc∘⊗-assoc⁻≡id =
+      (λ i → ⊗-assoc≡ i ∘g ⊗-assoc⁻≡ i)
+      ∙ (λ i → ψ .inv ∘g ⊗Path.⊗-assoc ∘g ϕ .sec i ∘g ⊗Path.⊗-assoc⁻ ∘g ψ .fun)
+      ∙ (λ i → ψ .inv ∘g ⊗Path.⊗-assoc∘⊗-assoc⁻≡id i ∘g ψ .fun)
+      ∙ ψ .ret
 
---   @0 ⊗-assoc⁻⊗-intro :
---     ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
---     → ⊗-assoc⁻ ∘g (⊗-intro (⊗-intro f f') f'')
---     ≡ ⊗-intro f (⊗-intro f' f'') ∘g ⊗-assoc⁻
---   ⊗-assoc⁻⊗-intro = {!!}
+    @0 ⊗-assoc⁻∘⊗-assoc≡id :
+     ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
+    ⊗-assoc⁻∘⊗-assoc≡id =
+      (λ i → ⊗-assoc⁻≡ i ∘g ⊗-assoc≡ i)
+      ∙ (λ i → ϕ .inv ∘g ⊗Path.⊗-assoc⁻ ∘g ψ .sec i ∘g ⊗Path.⊗-assoc ∘g ϕ .fun)
+      ∙ (λ i → ϕ .inv ∘g ⊗Path.⊗-assoc⁻∘⊗-assoc≡id i ∘g ϕ .fun)
+      ∙ ϕ .ret
 
---   @0 ⊗-assoc⊗-intro :
---     ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
---     → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'')
---       ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
---   ⊗-assoc⊗-intro = {!!}
+    @0 ⊗-assoc⁻⊗-intro :
+      ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
+      → ⊗-assoc⁻ ∘g ((f ,⊗ f') ,⊗ f'') ≡ f ,⊗ (f' ,⊗ f'') ∘g ⊗-assoc⁻
+    ⊗-assoc⁻⊗-intro {f = f} {f' = f'} {f'' = f''} =
+      (λ i → ⊗-assoc⁻≡ i ∘g (f ,⊗ f') ,⊗ f'')
+      ∙ (λ i → id ,⊗ ⊗Path→⊗ ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc⁻⊗-intro {f = f} {f' = f'} {f'' = f''} i
+                             ∘g ⊗→⊗Path ∘g ⊗→⊗Path ,⊗ id)
+      ∙ (λ i → f ,⊗ (f' ,⊗ f'') ∘g ⊗-assoc⁻≡ (~ i) )
 
---   opaque
---     unfolding ⊗-unit-r⁻
---     @0 ⊗-assoc⁻⊗-unit-r⁻ :
---       ⊗-assoc⁻ {A = A}{B = B} ∘g ⊗-unit-r⁻ ≡ ⊗-intro id ⊗-unit-r⁻
---     ⊗-assoc⁻⊗-unit-r⁻ =
---       {!!}
---     -- funExt λ w → funExt λ p →
---     --   ⊗≡ _ _ (≡-× refl (++-unit-r _))
---     --     (ΣPathP (refl , ⊗PathP refl refl))
+-- --   @0 ⊗-assoc⊗-intro :
+-- --     ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
+-- --     → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'')
+-- --       ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
+-- --   ⊗-assoc⊗-intro = {!!}
 
---   opaque
---     unfolding ⊗-unit-l⁻
---     ⊗-assoc⊗-unit-l⁻ :
---      ⊗-assoc {A = A}{C = C} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
---     ⊗-assoc⊗-unit-l⁻ = funExt λ w → funExt λ p →
---       -- ⊗≡ _ _ (≡-× (++-unit-r _) refl) (ΣPathP (⊗PathP refl refl , refl))
---       {!!}
+-- --   opaque
+-- --     unfolding ⊗-unit-r⁻
+-- --     @0 ⊗-assoc⁻⊗-unit-r⁻ :
+-- --       ⊗-assoc⁻ {A = A}{B = B} ∘g ⊗-unit-r⁻ ≡ ⊗-intro id ⊗-unit-r⁻
+-- --     ⊗-assoc⁻⊗-unit-r⁻ =
+-- --       {!!}
+-- --     -- funExt λ w → funExt λ p →
+-- --     --   ⊗≡ _ _ (≡-× refl (++-unit-r _))
+-- --     --     (ΣPathP (refl , ⊗PathP refl refl))
 
---     ⊗-unit-l⊗-intro :
---       ∀ (f : A ⊢ B)
---       → f ∘g ⊗-unit-l
---         ≡ ⊗-unit-l ∘g (⊗-intro id f)
---     ⊗-unit-l⊗-intro f =
---       {!!}
+-- --   opaque
+-- --     unfolding ⊗-unit-l⁻
+-- --     ⊗-assoc⊗-unit-l⁻ :
+-- --      ⊗-assoc {A = A}{C = C} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
+-- --     ⊗-assoc⊗-unit-l⁻ = funExt λ w → funExt λ p →
+-- --       -- ⊗≡ _ _ (≡-× (++-unit-r _) refl) (ΣPathP (⊗PathP refl refl , refl))
+-- --       {!!}
 
---     ⊗-unit-r⊗-intro :
---       (f : A ⊢ B) →
---       ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
---     ⊗-unit-r⊗-intro f =
---       {!!}
+-- --     ⊗-unit-l⊗-intro :
+-- --       ∀ (f : A ⊢ B)
+-- --       → f ∘g ⊗-unit-l
+-- --         ≡ ⊗-unit-l ∘g (⊗-intro id f)
+-- --     ⊗-unit-l⊗-intro f =
+-- --       {!!}
 
---   @0 ⊗-unit*-l⊗-intro :
---       ∀ (f : A ⊢ B)
---       → f ∘g ⊗-unit*-l {ℓ}
---         ≡ ⊗-unit*-l ∘g (⊗-intro id f)
---   ⊗-unit*-l⊗-intro f =
---     cong₂ _∘g_ (⊗-unit-l⊗-intro f) refl
+-- --     ⊗-unit-r⊗-intro :
+-- --       (f : A ⊢ B) →
+-- --       ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
+-- --     ⊗-unit-r⊗-intro f =
+-- --       {!!}
 
---   @0 ⊗-unit*-r⊗-intro :
---       ∀ (f : A ⊢ B)
---       → ⊗-unit*-r {ℓ = ℓ} ∘g (⊗-intro f id)
---         ≡ f ∘g ⊗-unit*-r
---   ⊗-unit*-r⊗-intro {ℓ = ℓ} f = cong₂ _∘g_ (⊗-unit-r⊗-intro f) refl
+-- --   @0 ⊗-unit*-l⊗-intro :
+-- --       ∀ (f : A ⊢ B)
+-- --       → f ∘g ⊗-unit*-l {ℓ}
+-- --         ≡ ⊗-unit*-l ∘g (⊗-intro id f)
+-- --   ⊗-unit*-l⊗-intro f =
+-- --     cong₂ _∘g_ (⊗-unit-l⊗-intro f) refl
 
---   @0 ⊗-triangle :
---     ⊗-intro ⊗-unit*-r id ∘g ⊗-assoc {A = A}{B = ε* {ℓ}}{C = B}
---     ≡ ⊗-intro id ⊗-unit*-l
---   ⊗-triangle {A = A}{B = B} =
---     {!!}
+-- --   @0 ⊗-unit*-r⊗-intro :
+-- --       ∀ (f : A ⊢ B)
+-- --       → ⊗-unit*-r {ℓ = ℓ} ∘g (⊗-intro f id)
+-- --         ≡ f ∘g ⊗-unit*-r
+-- --   ⊗-unit*-r⊗-intro {ℓ = ℓ} f = cong₂ _∘g_ (⊗-unit-r⊗-intro f) refl
 
---   @0 ⊗-pentagon :
---     ⊗-intro (⊗-assoc {A = A}) id
---     ∘g ⊗-assoc
---     ∘g ⊗-intro id (⊗-assoc {A = B}{B = C}{C = D})
---       ≡
---     ⊗-assoc
---     ∘g ⊗-assoc
---   ⊗-pentagon {A = A}{B = B}{C = C}{D = D} =
---     {!!}
+-- --   @0 ⊗-triangle :
+-- --     ⊗-intro ⊗-unit*-r id ∘g ⊗-assoc {A = A}{B = ε* {ℓ}}{C = B}
+-- --     ≡ ⊗-intro id ⊗-unit*-l
+-- --   ⊗-triangle {A = A}{B = B} =
+-- --     {!!}
 
--- @0 ⊗-assoc⁻3⊗-unit-r⁻ :
---   ⊗-assoc⁻3 {A = A}{B = B}{C = C} ∘g ⊗-unit-r⁻
---   ≡ id ,⊗ id ,⊗ ⊗-unit-r⁻
--- ⊗-assoc⁻3⊗-unit-r⁻ =
---   {!!}
+-- --   @0 ⊗-pentagon :
+-- --     ⊗-intro (⊗-assoc {A = A}) id
+-- --     ∘g ⊗-assoc
+-- --     ∘g ⊗-intro id (⊗-assoc {A = B}{B = C}{C = D})
+-- --       ≡
+-- --     ⊗-assoc
+-- --     ∘g ⊗-assoc
+-- --   ⊗-pentagon {A = A}{B = B}{C = C}{D = D} =
+-- --     {!!}
 
--- @0 ⊗-assoc⁻3⊗-unit-r⁻ :
---   ⊗-assoc⁻3 {A = A}{B = B}{C = C} ∘g ⊗-unit-r⁻
---   ≡ id ,⊗ id ,⊗ ⊗-unit-r⁻
--- ⊗-assoc⁻3⊗-unit-r⁻ =
---   {!!}
+-- -- @0 ⊗-assoc⁻3⊗-unit-r⁻ :
+-- --   ⊗-assoc⁻3 {A = A}{B = B}{C = C} ∘g ⊗-unit-r⁻
+-- --   ≡ id ,⊗ id ,⊗ ⊗-unit-r⁻
+-- -- ⊗-assoc⁻3⊗-unit-r⁻ =
+-- --   {!!}
 
---   @0 ⊗-assoc⁻4⊗-intro :
---     ∀ {f f' f'' f''' f''''} →
---     (⊗-assoc⁻4 {A = A}{B = B}{C = C}{D = D}{E = E} ∘g (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''')
---     ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {A = F}{B = G}{C = H}{D = K}{E = L}))
---   ⊗-assoc⁻4⊗-intro = {!!} -- refl
+-- -- @0 ⊗-assoc⁻3⊗-unit-r⁻ :
+-- --   ⊗-assoc⁻3 {A = A}{B = B}{C = C} ∘g ⊗-unit-r⁻
+-- --   ≡ id ,⊗ id ,⊗ ⊗-unit-r⁻
+-- -- ⊗-assoc⁻3⊗-unit-r⁻ =
+-- --   {!!}
 
---   @0 ⊗-assoc4⊗-intro :
---     ⊗-assoc4 ∘g f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f''''
---     ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''' ∘g ⊗-assoc4
---   ⊗-assoc4⊗-intro {f = f}{f' = f'}{f'' = f''}{f''' = f'''}{f'''' = f''''} =
---     {!!}
+-- --   @0 ⊗-assoc⁻4⊗-intro :
+-- --     ∀ {f f' f'' f''' f''''} →
+-- --     (⊗-assoc⁻4 {A = A}{B = B}{C = C}{D = D}{E = E} ∘g (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''')
+-- --     ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''' ∘g (⊗-assoc⁻4 {A = F}{B = G}{C = H}{D = K}{E = L}))
+-- --   ⊗-assoc⁻4⊗-intro = {!!} -- refl
+
+-- --   @0 ⊗-assoc4⊗-intro :
+-- --     ⊗-assoc4 ∘g f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f''''
+-- --     ≡ (f ,⊗ f' ,⊗ f'' ,⊗ f''') ,⊗ f'''' ∘g ⊗-assoc4
+-- --   ⊗-assoc4⊗-intro {f = f}{f' = f'}{f'' = f''}{f''' = f'''}{f'''' = f''''} =
+-- --     {!!}
