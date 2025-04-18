@@ -24,6 +24,11 @@ litmus :
 test :
 	$(AGDA) Evaluate.agda
 
+.PHONY : gen-and-check-everythings
+gen-and-check-everythings:
+	$(EVERYTHINGS) gen-except
+	$(EVERYTHINGS) check-except
+
 .PHONY : clean
 clean:
 	find . -type f -name '*.agdai' -delete

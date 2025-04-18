@@ -10,6 +10,7 @@ open import Cubical.Data.Bool
 import Cubical.Data.Equality as Eq
 
 open import Grammar Alphabet
+import Grammar.Sum.Binary.AsIndexed Alphabet as Idx⊕
 open import Parser Alphabet
 open import Term Alphabet
 
@@ -101,7 +102,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
    unambiguous≅ (sym-strong-equivalence (Trace≅string q)) unambiguous-string
 
   unambiguous-Trace : ∀ b q → unambiguous (Trace b q)
-  unambiguous-Trace b q = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace q) b
+  unambiguous-Trace b q = Idx⊕.unambig-summands (unambiguous-⊕Trace q) b
 
   isSetGrammarTrace : ∀ b q → isSetGrammar (Trace b q)
   isSetGrammarTrace b = isSetGrammarμ (TraceTy b) λ q →
@@ -117,5 +118,5 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   AccTraceParser : ∀ q → Parser (Trace true q) (Trace false q)
   AccTraceParser q .disj =
-    hasDisjointSummands⊕ᴰ isSetBool (unambiguous-⊕Trace q) true false true≢false
+    hasDisjointSummands⊕ᴰ (unambiguous-⊕Trace q) true false true≢false
   AccTraceParser q .fun = Ind⊕→⊕ (λ b → Trace b q) ∘g π q ∘g parse

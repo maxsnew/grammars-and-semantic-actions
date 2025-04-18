@@ -54,6 +54,7 @@ Alphabet = Tok , isSetTok
 +≢num x ()
 
 open import Grammar Alphabet hiding (_+)
+import Grammar.Sum.Binary.AsIndexed Alphabet as Idx⊕
 open import Parser Alphabet
 open import Term Alphabet
 
@@ -582,10 +583,10 @@ module Automaton where
   unambiguous-⊕Trace nq = unambiguous≅ (sym≅ (Trace≅string nq)) unambiguous-string
 
   unambiguous-Trace : ∀ b nq → unambiguous (Trace b nq)
-  unambiguous-Trace b nq = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace nq) b
+  unambiguous-Trace b nq = Idx⊕.unambig-summands (unambiguous-⊕Trace nq) b
 
   disjointAccRej : ∀ nq → disjoint (Trace true nq) (Trace false nq)
-  disjointAccRej nq = hasDisjointSummands⊕ᴰ isSetBool (unambiguous-⊕Trace nq) true false true≢false
+  disjointAccRej nq = hasDisjointSummands⊕ᴰ (unambiguous-⊕Trace nq) true false true≢false
 
   open Parser
 

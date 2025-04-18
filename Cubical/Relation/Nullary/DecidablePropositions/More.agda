@@ -33,6 +33,12 @@ private
   variable
     ℓ ℓ' : Level
 
+decElim : ∀ {ℓ ℓ'} {P : Type ℓ} {A : Dec P → Type ℓ'} →
+  ((p : P) → A (yes p)) → ((¬p : ¬ P) → A (no ¬p)) →
+  (x : Dec P) → A x
+decElim ifyes ifno (yes p) = ifyes p
+decElim ifyes ifno (no ¬p) = ifno ¬p
+
 negateDecProp : ∀ {ℓ} → DecProp ℓ → DecProp ℓ
 fst (fst (negateDecProp A)) = ¬ A .fst .fst
 snd (fst (negateDecProp A)) = isProp→ isProp⊥

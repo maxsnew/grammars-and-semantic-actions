@@ -32,47 +32,21 @@ private
 
 module _
   {X : Type ℓX} {A : X → Grammar ℓA}
-  (isSetX : isSet X)
+  (unambig⊕ : unambiguous (⊕[ x ∈ X ] A x))
   where
 
   opaque
-    isMono-σ : (x : X) → isMono (σ {A = A} x)
-    isMono-σ x e e' σe=σe' =
-      funExt λ w → funExt λ p →
-        sym (transportRefl (e w p)) ∙
-        Σ-contractFst (refl , (isSetX _ _ _)) .fst
-          (PathΣ→ΣPathTransport _ _ (funExt⁻ (funExt⁻ σe=σe' w) p))
+    unfolding _&_ ⊥
+    equalizer→⊥ :
+      (x y : X) →
+      (x ≡ y → Empty.⊥) →
+      equalizer (σ {A = A} x ∘g π₁) (σ y ∘g π₂) ⊢ ⊥
+    equalizer→⊥ x y x≠y w p =
+      x≠y (cong fst (funExt⁻ (funExt⁻ (eq-π-pf (σ {A = A} x ∘g π₁) (σ y ∘g π₂)) w) p))
 
-  unambiguous'⊕ᴰ :
-    unambiguous' (⊕[ x ∈ X ] A x) →
-      (x : X)  → unambiguous' (A x)
-  unambiguous'⊕ᴰ unambig⊕ x f f' !≡ =
-    isMono-σ x f f'
-      (unambig⊕ (σ x ∘g f) (σ x ∘g f')
-        (unambiguous⊤ _ _ ∙ !≡ ∙ sym (unambiguous⊤ _ _)))
-
-  unambiguous⊕ᴰ : unambiguous (⊕[ x ∈ X ] A x) → (x : X) →
-    unambiguous (A x)
-  unambiguous⊕ᴰ unambig⊕ x =
-    unambiguous'→unambiguous
-      (unambiguous'⊕ᴰ (unambiguous→unambiguous' unambig⊕) x)
-
-  module _
-    (unambig⊕ : unambiguous (⊕[ x ∈ X ] A x))
-    where
-    opaque
-      unfolding _&_ ⊥
-      equalizer→⊥ :
-        (x y : X) →
-        (x ≡ y → Empty.⊥) →
-        equalizer (σ {A = A} x ∘g π₁) (σ y ∘g π₂) ⊢ ⊥
-      equalizer→⊥ x y x≠y w p =
-        x≠y (cong fst (funExt⁻ (funExt⁻ (eq-π-pf (σ {A = A} x ∘g π₁) (σ y ∘g π₂)) w) p))
-
-    hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
-    hasDisjointSummands⊕ᴰ x y x≠y =
-      equalizer→⊥ x y x≠y
-      ∘g eq-intro {A = A x & A y}{B = ⊕[ x ∈ X ] A x}
-        (σ x ∘g π₁) (σ y ∘g π₂) id
-        (unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂))
-
+  hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
+  hasDisjointSummands⊕ᴰ x y x≠y =
+    equalizer→⊥ x y x≠y
+    ∘g eq-intro {A = A x & A y}{B = ⊕[ x ∈ X ] A x}
+      (σ x ∘g π₁) (σ y ∘g π₂) id
+      (unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂))
