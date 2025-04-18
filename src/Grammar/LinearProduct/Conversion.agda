@@ -16,7 +16,8 @@ open import Grammar.HLevels.Base Alphabet
 open import Grammar.Epsilon.AsEquality Alphabet
 open import Grammar.Epsilon.AsPath Alphabet
   hiding (ε-intro)
-  renaming (ε to εPath)
+  renaming (ε to εPath
+          ; ε* to ε*Path)
 open import Grammar.Epsilon.Conversion Alphabet
 open import Grammar.LinearProduct.AsEquality.Base Alphabet
 import Grammar.LinearProduct.AsPath Alphabet as ⊗Path
@@ -89,23 +90,28 @@ opaque
     ⊗-unit-r⁻≡ = funExt λ w → funExt λ where
        a → ΣPathP ((SplittingPathP refl) , Σ≡Prop (λ _ → isSetEqString _ _) refl)
 
-  ⊗-unit-rr⁻ :
-    ∀ {A : Grammar ℓA}
-    → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
+  ⊗-unit-rr⁻ : ∀ {A : Grammar ℓA} → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
   ⊗-unit-rr⁻ {A = A} =
     (λ i → ⊗-unit-r⁻≡ i ∘g ⊗-unit-r≡ i)
     ∙ (λ i → id ,⊗ εPath→ε ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-unit-rr⁻ i ∘g ⊗→⊗Path ∘g id ,⊗ ε→εPath)
     ∙ (λ i → id ,⊗ εPath→ε ∘g ⊗≅⊗Path .ret i ∘g id ,⊗ ε→εPath)
     ∙ λ i → id ,⊗ ε≅εPath .ret i
 
-  ⊗-unit-r⁻r :
-    ∀ {A : Grammar ℓA}
-    → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
+  ⊗-unit-r⁻r : ∀ {A : Grammar ℓA} → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
   ⊗-unit-r⁻r {A = A} =
     (λ i → ⊗-unit-r≡ i ∘g ⊗-unit-r⁻≡ i)
     ∙ (λ i → ⊗Path.⊗-unit-r ∘g ⊗→⊗Path ∘g id ,⊗ ε≅εPath .sec i ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-unit-r⁻)
     ∙ (λ i → ⊗Path.⊗-unit-r ∘g ⊗≅⊗Path .sec i ∘g ⊗Path.⊗-unit-r⁻)
     ∙ (λ i → ⊗Path.⊗-unit-r⁻r i)
+
+  cong-∘g⊗-unit-r⁻ :
+    (e e' : A ⊗ ε ⊢ B) →
+    (e ∘g ⊗-unit-r⁻ ≡ e' ∘g ⊗-unit-r⁻) →
+    e ≡ e'
+  cong-∘g⊗-unit-r⁻ {A = A} f f' ∘g≡ =
+    cong (f ∘g_) (sym ⊗-unit-rr⁻) ∙
+    cong (_∘g ⊗-unit-r) ∘g≡ ∙
+    cong (f' ∘g_) (⊗-unit-rr⁻)
 
   opaque
     unfolding the-split ⊗≡ ⊗-assoc ⊗→⊗Path ⊗Path.the-split ⊗Path.⊗≡ ⊗Path.⊗-assoc
@@ -151,24 +157,21 @@ opaque
           (((wa , wb ++ wc) , z) , (a , (((wb , wc) , refl) , (b , c)))))
           (isSetString ((wa ++ wb) ++ wc) (wa ++ wb ++ wc) (++-assoc wa wb wc) (refl ∙ cong (_++ wc) refl ∙ ++-assoc wa wb wc))
 
-    @0 ⊗-assoc∘⊗-assoc⁻≡id :
-     ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
+    @0 ⊗-assoc∘⊗-assoc⁻≡id : ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
     ⊗-assoc∘⊗-assoc⁻≡id =
       (λ i → ⊗-assoc≡ i ∘g ⊗-assoc⁻≡ i)
       ∙ (λ i → ψ .inv ∘g ⊗Path.⊗-assoc ∘g ϕ .sec i ∘g ⊗Path.⊗-assoc⁻ ∘g ψ .fun)
       ∙ (λ i → ψ .inv ∘g ⊗Path.⊗-assoc∘⊗-assoc⁻≡id i ∘g ψ .fun)
       ∙ ψ .ret
 
-    @0 ⊗-assoc⁻∘⊗-assoc≡id :
-     ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
+    @0 ⊗-assoc⁻∘⊗-assoc≡id : ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
     ⊗-assoc⁻∘⊗-assoc≡id =
       (λ i → ⊗-assoc⁻≡ i ∘g ⊗-assoc≡ i)
       ∙ (λ i → ϕ .inv ∘g ⊗Path.⊗-assoc⁻ ∘g ψ .sec i ∘g ⊗Path.⊗-assoc ∘g ϕ .fun)
       ∙ (λ i → ϕ .inv ∘g ⊗Path.⊗-assoc⁻∘⊗-assoc≡id i ∘g ϕ .fun)
       ∙ ϕ .ret
 
-    @0 ⊗-assoc⁻⊗-intro :
-      ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
+    @0 ⊗-assoc⁻⊗-intro : ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
       → ⊗-assoc⁻ ∘g ((f ,⊗ f') ,⊗ f'') ≡ f ,⊗ (f' ,⊗ f'') ∘g ⊗-assoc⁻
     ⊗-assoc⁻⊗-intro {f = f} {f' = f'} {f'' = f''} =
       (λ i → ⊗-assoc⁻≡ i ∘g (f ,⊗ f') ,⊗ f'')
@@ -176,61 +179,71 @@ opaque
                              ∘g ⊗→⊗Path ∘g ⊗→⊗Path ,⊗ id)
       ∙ (λ i → f ,⊗ (f' ,⊗ f'') ∘g ⊗-assoc⁻≡ (~ i) )
 
--- --   @0 ⊗-assoc⊗-intro :
--- --     ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
--- --     → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'')
--- --       ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
--- --   ⊗-assoc⊗-intro = {!!}
+    @0 ⊗-assoc⊗-intro : ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
+      → ⊗-assoc ∘g f ,⊗ (f' ,⊗ f'') ≡ (f ,⊗ f') ,⊗ f'' ∘g ⊗-assoc
+    ⊗-assoc⊗-intro {f = f} {f' = f'} {f'' = f''} =
+      (λ i → ⊗-assoc≡ i ∘g f ,⊗ (f' ,⊗ f''))
+      ∙ (λ i → ⊗Path→⊗ ,⊗ id ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc⊗-intro {f = f} {f' = f'} {f'' = f''} i
+                             ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path )
+      ∙ λ i → (f ,⊗ f') ,⊗ f'' ∘g ⊗-assoc≡ (~ i)
 
--- --   opaque
--- --     unfolding ⊗-unit-r⁻
--- --     @0 ⊗-assoc⁻⊗-unit-r⁻ :
--- --       ⊗-assoc⁻ {A = A}{B = B} ∘g ⊗-unit-r⁻ ≡ ⊗-intro id ⊗-unit-r⁻
--- --     ⊗-assoc⁻⊗-unit-r⁻ =
--- --       {!!}
--- --     -- funExt λ w → funExt λ p →
--- --     --   ⊗≡ _ _ (≡-× refl (++-unit-r _))
--- --     --     (ΣPathP (refl , ⊗PathP refl refl))
+    opaque
+      unfolding ⊗-unit-r⁻ ⊗Path.⊗-unit-r⁻
+      @0 ⊗-assoc⁻⊗-unit-r⁻ : ⊗-assoc⁻ {A = A}{B = B} ∘g ⊗-unit-r⁻ ≡ id ,⊗ ⊗-unit-r⁻
+      ⊗-assoc⁻⊗-unit-r⁻ {A = A} {B = B} =
+        (λ i → ⊗-assoc⁻≡ i ∘g ⊗-unit-r⁻≡ i)
+        ∙ (λ i → id ,⊗ ⊗Path→⊗ ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc⁻
+                               ∘g ⊗→⊗Path ⊗Path.,⊗ id
+                               ∘g id ⊗Path.,⊗ εPath→ε
+                               ∘g ⊗≅⊗Path .sec i
+                               ∘g ⊗Path.⊗-unit-r⁻)
+        ∙ (λ i → id ,⊗ ⊗Path→⊗ ∘g ⊗Path→⊗
+                               ∘g id ⊗Path.,⊗ id ⊗Path.,⊗ εPath→ε
+                               ∘g ⊗Path.⊗-assoc⁻⊗-unit-r⁻ i
+                               ∘g ⊗→⊗Path)
+        ∙ (λ i → ⊗≅⊗Path .ret i ∘g id ,⊗ ⊗-unit-r⁻≡ (~ i))
 
--- --   opaque
--- --     unfolding ⊗-unit-l⁻
--- --     ⊗-assoc⊗-unit-l⁻ :
--- --      ⊗-assoc {A = A}{C = C} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
--- --     ⊗-assoc⊗-unit-l⁻ = funExt λ w → funExt λ p →
--- --       -- ⊗≡ _ _ (≡-× (++-unit-r _) refl) (ΣPathP (⊗PathP refl refl , refl))
--- --       {!!}
+      opaque
+        unfolding ⊗-unit-l⁻ ⊗Path.⊗-unit-l⁻
+        @0 ⊗-assoc⊗-unit-l⁻ : ⊗-assoc {A = A}{C = C} ∘g id ,⊗ ⊗-unit-l⁻ ≡ ⊗-unit-r⁻ ,⊗ id
+        ⊗-assoc⊗-unit-l⁻ =
+           funExt λ w → funExt λ where
+             ((_ , Eq.refl) , a , c) → ⊗≡ _ _ (≡-× (++-unit-r _) refl)
+               (ΣPathP ((⊗PathP refl refl) , refl))
 
--- --     ⊗-unit-l⊗-intro :
--- --       ∀ (f : A ⊢ B)
--- --       → f ∘g ⊗-unit-l
--- --         ≡ ⊗-unit-l ∘g (⊗-intro id f)
--- --     ⊗-unit-l⊗-intro f =
--- --       {!!}
+        @0 ⊗-unit-l⊗-intro : ∀ (f : A ⊢ B) → f ∘g ⊗-unit-l ≡ ⊗-unit-l ∘g (id ,⊗ f)
+        ⊗-unit-l⊗-intro f = cong-∘g⊗-unit-l⁻ _ _ λ i → ⊗-unit-l⁻l (~ i) ∘g f ∘g ⊗-unit-l⁻l i
 
--- --     ⊗-unit-r⊗-intro :
--- --       (f : A ⊢ B) →
--- --       ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
--- --     ⊗-unit-r⊗-intro f =
--- --       {!!}
+      ⊗-unit-r⊗-intro : (f : A ⊢ B) → ⊗-unit-r ∘g f ,⊗ id ≡ f ∘g ⊗-unit-r
+      ⊗-unit-r⊗-intro f = cong-∘g⊗-unit-r⁻ _ _ (λ i → ⊗-unit-r⁻r i ∘g f ∘g ⊗-unit-r⁻r (~ i))
 
--- --   @0 ⊗-unit*-l⊗-intro :
--- --       ∀ (f : A ⊢ B)
--- --       → f ∘g ⊗-unit*-l {ℓ}
--- --         ≡ ⊗-unit*-l ∘g (⊗-intro id f)
--- --   ⊗-unit*-l⊗-intro f =
--- --     cong₂ _∘g_ (⊗-unit-l⊗-intro f) refl
+  @0 ⊗-unit*-l⊗-intro : ∀ (f : A ⊢ B) → f ∘g ⊗-unit*-l {ℓ} ≡ ⊗-unit*-l ∘g (⊗-intro id f)
+  ⊗-unit*-l⊗-intro f = cong₂ _∘g_ (⊗-unit-l⊗-intro f) refl
 
--- --   @0 ⊗-unit*-r⊗-intro :
--- --       ∀ (f : A ⊢ B)
--- --       → ⊗-unit*-r {ℓ = ℓ} ∘g (⊗-intro f id)
--- --         ≡ f ∘g ⊗-unit*-r
--- --   ⊗-unit*-r⊗-intro {ℓ = ℓ} f = cong₂ _∘g_ (⊗-unit-r⊗-intro f) refl
+  @0 ⊗-unit*-r⊗-intro : ∀ (f : A ⊢ B) → ⊗-unit*-r {ℓ = ℓ} ∘g (⊗-intro f id) ≡ f ∘g ⊗-unit*-r
+  ⊗-unit*-r⊗-intro {ℓ = ℓ} f = cong₂ _∘g_ (⊗-unit-r⊗-intro f) refl
 
--- --   @0 ⊗-triangle :
--- --     ⊗-intro ⊗-unit*-r id ∘g ⊗-assoc {A = A}{B = ε* {ℓ}}{C = B}
--- --     ≡ ⊗-intro id ⊗-unit*-l
--- --   ⊗-triangle {A = A}{B = B} =
--- --     {!!}
+  opaque
+    unfolding ⊗-unit-r ⊗-unit-l ⊗-assoc ⊗Path.⊗-unit-r ⊗Path.⊗-unit-l ⊗Path.⊗-assoc
+    @0 ⊗-triangle : ⊗-unit*-r ,⊗ id ∘g ⊗-assoc {A = A}{B = ε* {ℓ}}{C = B} ≡ id ,⊗ ⊗-unit*-l
+    ⊗-triangle {A = A} {ℓ = ℓ} {B = B} =
+      -- (⊗-unit-r ∘g id ,⊗ lowerG) ,⊗ id ∘g ⊗-assoc
+      --    ≡⟨ (λ i → (⊗-unit-r≡ i ∘g id ,⊗ lowerG) ,⊗ id ∘g ⊗-assoc≡ i) ⟩
+      -- (⊗Path.⊗-unit-r ∘g ⊗→⊗Path ∘g id ,⊗ ε→εPath ∘g id ,⊗ lowerG) ,⊗ id
+      -- ∘g ⊗Path→⊗ ,⊗ id ∘g ⊗Path→⊗
+      -- ∘g ⊗Path.⊗-assoc
+      -- ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path
+      --   ≡⟨ {!!} ⟩
+      -- {!!}
+      --   ≡⟨ {!!} ⟩
+      -- id ,⊗ (⊗-unit-l ∘g lowerG ,⊗ id)
+      -- ∎
+      funExt λ w → funExt λ where
+        (((wa , wb) , Eq.refl) , a , (((_ , wb') , Eq.refl) , (lift Eq.refl) , b)) →
+          ⊗≡ _ _ (≡-× (++-unit-r _) refl) (
+            ΣPathP (
+              {!!} ,
+              refl))
 
 -- --   @0 ⊗-pentagon :
 -- --     ⊗-intro (⊗-assoc {A = A}) id

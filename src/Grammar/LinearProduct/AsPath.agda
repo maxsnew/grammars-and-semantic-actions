@@ -248,7 +248,6 @@ opaque
       cong (_∘g ⊗-unit-r) ∘g≡ ∙
       cong (f' ∘g_) (⊗-unit-rr⁻)
 
-
     ⊗-unit-rl⁻ : ⊗-unit-r ∘g ⊗-unit-l⁻ ≡ id
     ⊗-unit-rl⁻ = funExt λ w → funExt λ p →
       isSetString w [] ((⊗-unit-r ∘g ⊗-unit-l⁻) w p) (id {A = ε} w p)
