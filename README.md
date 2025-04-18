@@ -24,9 +24,13 @@ docker run -it dependent-lambek-calculus
 
 ### Compiling the Repository
 
-Running `make` will compile `Evaluate.agda` which imports the entirety of the project. This may take longer than 30 minutes, as it will also compile the dependencies from `cubical` and `cubical-categorical-logic` if they are not already built. You may also build `Evaluate.agda` interactively by loading the file with [agda-mode](https://agda.readthedocs.io/en/v2.7.0.1/tools/emacs-mode.html).
+Running `make` will compile `Evaluate.agda` which imports the entirety of the project. This should take around 5 minutes to build, but may take longer as it will also compile the dependencies from `cubical` and `cubical-categorical-logic` if they are not already built. You may also build `Evaluate.agda` interactively by loading the file with [agda-mode](https://agda.readthedocs.io/en/v2.7.0.1/tools/emacs-mode.html).
 
 If the compilation of `Evaluate.agda` doesn't immediately crash, and you can see it checking submodules, it is very likely that the there will be no technical difficulties. We have also included the target `make litmus` which builds only the `Grammar` submodule as a shorter litmus test to check for issues of technical compatibility.
+
+#### Memory Requirement
+
+Depending on hardware differences, high memory usage may cause the typechecking process to be killed when checking `Cubical.Categories.Monoidal.Dual` from `cubical-categorical-logic`. This issue was encountered by one artifact reviewer but has not been reproduced by the authors. The issue was then alleviated by switching to VSCode and loading the project interactively.
 
 ## Claims
 
@@ -62,58 +66,66 @@ Defined as `unambiguous` in `Grammar.Properties.Base`. The same file also includ
 
 Given in `Grammar.Properties.Base` as `isUnambiguousRetract`.
 
->If a disjunction `⊕[ x ∈ X ] A x` is unambiguous then each `A x` is unambiguous
+### Lemma 4.4
 
-Given in `Grammar.Sum.Unambiguous` as `unambiguous⊕ᴰ`. 
+>If a binary disjunction `A ⊕ B` is unambiguous then `A` and `B` are each unambiguous
 
-We further require that `σ : A x ⊢ ⊕[ x ∈ X ] A` is a monomorphism, which is axiomatized in the same file as `isMono-σ`. We did not include this requirement in the paper, but we will in the revised version.
+For binary sums implemented via Agda's sum types, given in `Grammar.Sum.Binary.AsPrimitive.Properties` as `summand-L-is-unambig` and `summand-R-is-unambig`.
 
-### Definition 4.4
+For binary sums implemented as indexed sums over `Bool`, given in `Grammar.Sum.Binary.AsIndexed.Properties` as `unambig-summands`.
 
-> A parser for a linear type `A` is a function `↑ (string ⊸ A ⊕ B)` where `B` is a linear type that is __disjoint__ from `A` in that we can implement a function `↑ (A & B ⊸ 0)`
+### Definition 4.5
 
-This definition of disjointness is given in `Grammar.Properties.Base`, and the definition of a parser is given in `Parser.Base`.
+> Linear types `A` and `B` are _disjoint_ if there is a function `↑ (A & B ⊸ 0)`
 
-### Lemma 4.5
+Given in `Grammar.Properties.Base`.
 
-> If `A ⊕ B` is unambiguous, then `A` and `B` are disjoint.
+### Definition 4.6
+
+> A parser for a linear type `A` is the choice of a type `B` disjoint from `A` and a function `↑ (string ⊸ A ⊕ B)`
+
+Given in `Parser.Base`.
+
+### Lemma 4.7
+
+> If `⊕[ x ∈ X ] A x` is unambiguous, then for `x ≢ x'`, `A x` and `A x'` are disjoint. In particular, if the binary product `A ⊕ B` is unambiguous, then `A` and `B` are disjoint.
 
 Given for all indexed sums as `hasDisjointSummands⊕ᴰ` in `Grammar.Sum.Unambiguous`. This lemma is a consequence of the disjoint constructors axioms, which is encoded in the same file as `equalizer→⊥`.
 
 For the binary sums implemented in `Grammar.Sum.Binary.AsPrimitive`, we prove this lemma in `Grammar.Sum.Binary.AsPrimitive.Properties` under the name `unambig-⊕-is-disjoint`.
 
-### Lemma 4.6
+### Lemma 4.8
 
 > If `A` is weakly equivalent to `B`, then any parser for `A` can be extended to a parser for `B`.
 
-Defined as `≈Parser` in `Grammar.Parser.Base`.
+Defined as `≈Parser` in `Parser.Base`.
 
-### Theorem 4.7
+### Theorem 4.9
 
-> A parser for the accepting traces of a DFA.
+> Given a DFA `D`, we construct a function `parse D s` that is a parser for `Trace D s true`
 
 DFAs are defined in `Automata.DFA.Base`. The type `DFA` is implemented using a more general construction `DeterministicAutomaton` from `Automata.Deterministic`.
 
-`DeterministicAutomaton` encodes a deterministic labelled transition system over a type of states `Q : Type ℓ`. A `DFA` is then a `DeterministicAutomaton` where the type of states is a finite set. 
+`DeterministicAutomaton` encodes a deterministic labelled transition system over a type of states `Q : Type ℓ`. A `DFA` is then a `DeterministicAutomaton` where the type of states is a finite set.
 
 A parser for a `DeterministicAutomaton` is given in `Automata.Deterministic` as `AccTraceParser`. Because `DFA` is just a special case of this more general automaton, `AccTraceParser` is also a parser for `DFA`s.
 
-### Theorem 4.8 (Determinization)
+### Construction 4.10 (Determinization)
 
-> For an NFA `N`, there exists a DFA `D` such that `Parse D` is weakly equivalent to `Parse N`.
+> Given an NFA `N`, we construct a DFA `D` such that `Parse N` is weakly equivalent to `Parse D`.
 
-NFAs are defined in `Automata.NFA.Base`. The determinization construction is given in `Determinization.WeakEquivalence` as `NFA≈DFA`. 
+NFAs are defined in `Automata.NFA.Base`. The determinization construction is given in `Determinization.WeakEquivalence` as `NFA≈DFA`.
 
 There are a couple of non-linear analyses we perform over an NFA `N : NFA` to enable this construction:
 
-1. Given several traces through `N`, the determinization construction needs to deterministically choose one. A priori, the states of `N`, the type of labelled transitions in `N`, and the type of `ε`-transitions in `N` are each finite sets. To enable the choice function for traces through `N`, we require each of these types are not just finite sets, but that they are further __finitely ordered__. By making each of these types ordered, we then have a well-defined way to choose the __smallest__ trace when determinizing. 
+1. Given several traces through `N`, the determinization construction needs to deterministically choose one. A priori, the states of `N`, the type of labelled transitions in `N`, and the type of `ε`-transitions in `N` are each finite sets. To enable the choice function for traces through `N`, we require each of these types are not just finite sets, but that they are further __finitely ordered__. By making each of these types ordered, we then have a well-defined way to choose the __smallest__ trace when determinizing.
   - The definitions of `isFinSet` (a finite set) and `isFinOrd` (a finite order) may be found in the Cubical standard library under `Cubical.Data.FinSet`.
 
-2. When building the powerset DFA, we define a `DFA` whose states are `ε`-closed subsets of states in `N`. To begin to reason about these `ε`-closed subsets, we need to decide if there is a path in `N` between any two states solely through `ε`-transitions. To make that decision, in `Cubical.Data.Quiver.Reachability` we prove that in any finite `Quiver` we can decide whether any two nodes are connected. To build the `ε`-closed subsets for the DFA, we then instantiate our `Quiver.Reachability` module with a `Quiver` whose nodes are the states of `N` and whose edges are the `ε`-transitions of `N`. 
+2. When building the powerset DFA, we define a `DFA` whose states are `ε`-closed subsets of states in `N`. To begin to reason about these `ε`-closed subsets, we need to decide if there is a path in `N` between any two states solely through `ε`-transitions. To make that decision, in `Cubical.Data.Quiver.Reachability` we prove that in any finite `Quiver` we can decide whether any two nodes are connected. To build the `ε`-closed subsets for the DFA, we then instantiate our `Quiver.Reachability` module with a `Quiver` whose nodes are the states of `N` and whose edges are the `ε`-transitions of `N`.
 
-### Theorem 4.9 (Thompson's Construction)
+### Construction 4.11 (Thompson's Construction)
 
-> For a regular expression `r`, there exists and NFA `N` such that `r` is strongly equivalent to `Parse N`.
+> For a regular expression `r`, we construct an NFA `N` such that `r` is strongly equivalent to `Parse N`.
 
 In `Grammar.RegularExpression.Base`, we define a non-linear type of regular expressions and its interpretation as grammars (`RegularExpression` and `RegularExpression→Grammar`, respectively).
 
@@ -121,21 +133,27 @@ Then in the module `Thompson.Construction`, we have a submodule for each regular
 
 `Thompson.Equivalence` gathers up all of the equivalences from `Thompson.Construction` and recursively proves that every regular expression is strongly equivalent to the parses of its corresponding `NFA`.
 
-### Theorem 4.10
+### Corollary 4.12
 
-> `Dyck` is strongly equivalent to `Parse M`, and therefore we can build a `Dyck` parser.
+> We may build a parser for every regular expression `r`
 
-`Examples.Dyck` contains `Dyck`, the grammar of balanced parentheses. In this file we instantiate the module `Automata.Deterministic` to build the machine `M` depicted in Figure 12. 
+We combine Thompson's construction and determinization to build a parser for an arbitrary regular rexpression in `Examples.RegexParser`.
+
+### Theorem 4.13
+
+> `Dyck` and `Parse M` are strongly equivalent, so we may build a parser for `Dyck`.
+
+`Examples.Dyck` contains `Dyck`, the grammar of balanced parentheses. In this file we instantiate the module `Automata.Deterministic` to build the machine `M` depicted in Figure 12.
 
 The term `Dyck≅Trace` shows that the accepting traces of this automaton are strongly equivalent to `Dyck`. Finally, `DyckParser` is the `Parser` for `Dyck` that arises from porting the parser for the accepting traces of the automaton over the equivalence between `Dyck` and the type of accepting traces.
 
-### Theorem 4.11
+### Theorem 4.14
 
 > We construct a parser for `Exp` by showing that it is weakly equivalent to the accepting traces from the opening state with its stack set to `0`.
 
-In `Examples.BinOp`, we define a grammar of arithmetic expressions over a binary operation `+`. 
+In `Examples.BinOp`, we define a grammar of arithmetic expressions over a binary operation `+`.
 
-The module `LL⟨1⟩` found in this file defines the grammars `EXP` and `ATOM`. The module `Automaton` in this file defines the lookahead automaton given in Figure 13. 
+The module `LL⟨1⟩` found in this file defines the grammars `EXP` and `ATOM`. The module `Automaton` in this file defines the lookahead automaton given in Figure 13.
 
 `Automaton.TraceParser` defines a parser for the accepting traces beginning at any state in the lookahead automaton.
 
@@ -143,11 +161,11 @@ The module `Soundness` in this file builds a term `buildExp` from the accepting 
 
 We then combine the terms `buildExp` and `mkTrace` in `AccTrace≈EXP` to show that `EXP` and `Trace true (0 , Opening)` are weakly equivalent. `EXPParser` is then the parser for `EXP` that arises from combining `AccTrace≈EXP` and `Automaton.TraceParser`.
 
-### Theorem 4.12
+### Construction 4.15
 
 > For any Turing machine `T`, we construct a grammar that accepts the same language as `T`.
 
-In `Grammar.Reify.Base`, we define the `Reify` grammar 
+In `Grammar.Reify.Base`, we define the `Reify` grammar
 
 ``` agda
 module _ (P : String → Type ℓA) where
@@ -155,7 +173,7 @@ module _ (P : String → Type ℓA) where
   Reify = ⊕[ w ∈ String ] ⊕[ x ∈ P w ] ⌈ w ⌉
 ```
 
-`Reify` allows the user to treat the non-linear type-valued function `P` as if it were a proper linear type. 
+`Reify` allows the user to treat the non-linear type-valued function `P` as if it were a proper linear type.
 
 In `Automata.Turing.OneSided.Base`, we define a non-linear type of Turing machine specifications `TuringMachine`. Then for a fixed Turing machine `TM : TuringMachine`, we define a type of traces through that machine `TuringTrace`.
 
@@ -166,15 +184,25 @@ Turing : Grammar ℓ-zero
 Turing = Reify Accepting
 ```
 
-### Additional Axioms Holds in the Semantics
+### Axiom 3.1
 
 > Additive conjunction distributes over additive disjunction
 
 Given in `Grammar.Distributivity`.
 
+### Corollary 3.2
+
+> The constructors of a binary sum, `inl` and `inr` are injective
+
+Given in `Grammar.Sum.Binary.AsPrimitive.Properties` as `isMono-⊕-inl` and `isMono-⊕-inr`.
+
+### Axiom 3.3
+
 > The constructors of sums are disjoint.
 
 Given as `equalizer→⊥` in `Grammar.Sum.Unambiguous`.
+
+### Axiom 3.4
 
 > We add a function `read : ↑ (⊤ ⊸ string)`.
 
@@ -186,7 +214,7 @@ Given as `string≅⊤` in `Grammar.String.Terminal`.
 
 ## Evaluation
 
-We propose evaluating this codebase by running it through the Agda typechecker. 
+We propose evaluating this codebase by running it through the Agda typechecker.
 
 A successful compilation will complete with no errors. Once `agda` has typechecked a particular module, it will cache the result in the `_build/` directory. So repeated checks will be much faster.
 
@@ -205,13 +233,13 @@ agda Grammar/Everything.agda
 will check the `Grammar` submodule. Or,
 
 ``` console
-agda Thompson/Construction/Literal.agda 
+agda Thompson/Construction/Literal.agda
 ```
 
 will only check only the file `Thompson/Construction/Literal.agda`.
 
 ## Project Layout
-This repository is split into the following directories 
+This repository is split into the following directories
 - `String` - contains the definition as the list type over some fixed alphabet, and some associated utilities. `String := List ⟨ Alphabet ⟩`, where `Alphabet : hSet ℓ-zero`
 - `Grammar` - defining the primitive linear types in Dependent Lambek Calculus. Linear types are encoded as functions from strings to types, written as `Grammar ℓA = String → Type ℓA`.
 - `Term` - defining parse transformers between grammars. A parse transformer between `A` and `B` is written as the type `A ⊢ B` (or `Term A B`).
@@ -223,7 +251,7 @@ This repository is split into the following directories
 - `Cubical` - general purpose utilities that supplement the `Cubical` standard library in ways not specific to grammars.
 
 ## Dependent Lambek Calculus in Agda
-Dependent Lambek Calculus (`Lambekᴰ`) is a domain-specific dependent type theory for verified parsing and formal grammar theory. We use linear types as a syntax for formal grammars, and parsers can be written as linear terms. The linear typing restriction provides a form of intrinsic verification that a parser yields only valid parse trees for the input string. 
+Dependent Lambek Calculus (`Lambekᴰ`) is a domain-specific dependent type theory for verified parsing and formal grammar theory. We use linear types as a syntax for formal grammars, and parsers can be written as linear terms. The linear typing restriction provides a form of intrinsic verification that a parser yields only valid parse trees for the input string.
 
 We build an implementation of Dependent Lambek Calculus by as a *shallow embedding* in Cubical Agda. That is, we define the constructs used in the denotational semantics and program directly using the denotations. The syntax is then interpreted via the following encodings:
 
@@ -288,7 +316,7 @@ In `Grammar.Product.Base` we define indexed conjunction as a `Π`-type.
 
 Given `A : X → Grammar ℓA`, the grammar `&ᴰ A` may sometimes be written as `&[ x ∈ X ] A x`.
 
-We can define binary products as an indexed product over `Bool`, which we give in `Grammar.Product.Binary.AsIndexed`. 
+We can define binary products as an indexed product over `Bool`, which we give in `Grammar.Product.Binary.AsIndexed`.
 
 We may instead define a primitive where the binary product is implemented semantically as a pair, given in `Grammar.Product.Binary.AsPrimitive`.
 
@@ -319,9 +347,9 @@ We often write `A ⊢ B` as a synonym for `Term A B`.
 Because the non-linear types are implemented using Agda's `Type`, the encoding of a `Lambekᴰ` derivation `Γ ; A ⊢ B` does not need to explicitly be reference `Γ`. The non-linear variables are scoped by Agda.
 
 The linear contexts in the implementation are unary, so the `Lambekᴰ` derivations of the form `A , B ⊢ C` are represented in the code as terms `A ⊗ B ⊢ C`. Similarly, `Lambekᴰ` terms in the empty context `∙ ⊢ A` are represented in the code as terms `ε ⊢ A`.
-   
+
 #### `A ⊢ B` vs. `↑ (A ⊸ B)`
-In the paper syntax, we write `↑ (A ⊸ B)` to describe the parse transformers from `A` to `B`. 
+In the paper syntax, we write `↑ (A ⊸ B)` to describe the parse transformers from `A` to `B`.
 
 For a grammar `C`, `↑ C` denotes the parses of `C` in the empty context and we define this encoding in `Term.Nullary`. By leveraging the adjunction between `⊗` and `⊸`, and using the fact that `ε` is the unit for `⊗`, it is true that `↑ (A ⊸ B)` and `A ⊢ B` are equivalent types. This equivalence is proven in `Grammar.LinearFunction.Base` with `Term≅Element`. However, in this implementation we almost exclusively use `A ⊢ B` to encode parser transformers instead of `↑ (A ⊸ B)`.
 
@@ -337,7 +365,7 @@ f : ↑ (＂ a ＂ ⊗ ＂ b ＂ ⊸ (＂ a ＂ ⊗ ＂ b ＂) ⊕ ＂ c ＂)
 f (a , b) = inl (a ⊗ b)
 ```
 
-`f` matches on its input which is a tensor and introduces two parse trees, `a : ＂ a ＂` and `b : ＂ b ＂`. Then `f` recombines these parse trees with a tensor and calls `inl`. 
+`f` matches on its input which is a tensor and introduces two parse trees, `a : ＂ a ＂` and `b : ＂ b ＂`. Then `f` recombines these parse trees with a tensor and calls `inl`.
 
 Our implementation captures the same parse transformer, except we do not have the ability to introduce named variables in this manner. Instead, the same parse transformer is implemented in `Examples.Section2.Figure1` using the `inl` combinator from `Grammar.Sum.Binary.AsPrimitive`.
 
@@ -364,22 +392,22 @@ Note, in this implementation the contexts `A , ·`, `· , A`, and `A` are encode
 
 ## Caveats
 
-### Combinators 
+### Combinators
 The parse transformers built in this implementation must be written in a combinatory style without mention to any named linear variables. This is the biggest departure of this codebase from the syntax presented in the paper.
 
 The two systems have equivalent semantics, so this difference does not affect any of the claims supported by this artifact.
 
 To bridge the gap between the paper syntax and this codebase, in the future we may write an ordered, linear typechecker that elaborates the full syntax into a combinatory core language.
 
-  
+
 ### Opacity
-Many of the definitions in this repository are marked as `opaque`. [Opacity](https://agda.readthedocs.io/en/v2.7.0.1/language/opaque-definitions.html) is a feature in Agda that allow selective unfolding of definitions. 
+Many of the definitions in this repository are marked as `opaque`. [Opacity](https://agda.readthedocs.io/en/v2.7.0.1/language/opaque-definitions.html) is a feature in Agda that allow selective unfolding of definitions.
 
 When normalizing, a term defined in an `opaque` block will not reduce unless it is explicitly marked with an `unfolding`. Opacity is also infective in that any definition that wishes to unfold an `opaque` definition must itself be marked as `opaque`.
 
 We use opacity for several reasons:
 - Reducing typechecking time by limiting unnecessary normalizations.
-- Putting up an explicit barrier between the embedded language and the host language. By marking our language primitives as `opaque` we gain finer grained control of their unfoldings. In particular, we can ensure that certain equalities occur in the embedded equational theory of `Lambekᴰ` rather than by happenstance in Agda. 
+- Putting up an explicit barrier between the embedded language and the host language. By marking our language primitives as `opaque` we gain finer grained control of their unfoldings. In particular, we can ensure that certain equalities occur in the embedded equational theory of `Lambekᴰ` rather than by happenstance in Agda.
 
 The most faithful encoding of `Lambekᴰ` would only break these abstraction boundaries when axiomatizing a language primitive. Usage of any language constructs, and proofs about any language constructs would then occur without any explicit `unfolding`. This strategy would guarantee that any proofs of equality between linear terms follows only from equational reasoning in `Lambekᴰ`. That is, there would be no possibility to "accidentally get an equality correct" by leveraging external reasoning available in Agda that isn't available in `Lambekᴰ`.
 
@@ -402,7 +430,7 @@ We apply this same principle throughout all of our code. Any instance of unfoldi
 Here are the other terms that we unfold to solve for `β`-equalities:
 - `⊕-elim` from `Grammar.Sum.Binary.AsPrimitive` so that we can leverage the definitional equalities that hold over Agda's `Sum` type.
 - `π₁`/`π₂` from `Grammar.Product.Binary.AsPrimitive` so that we can leverage the definitional equalities that hold over Agda's `×` type.
-- `⊕ᴰ-distL`/`⊕ᴰ-distR` from `Grammar.Sum.Properties` and their counterparts from `Grammar.Sum.Binary.AsPrimitive`. Unfolding these allows distributivity of sums over `⊗` to reduce. 
+- `⊕ᴰ-distL`/`⊕ᴰ-distR` from `Grammar.Sum.Properties` and their counterparts from `Grammar.Sum.Binary.AsPrimitive`. Unfolding these allows distributivity of sums over `⊗` to reduce.
 - A combination of `⊗-intro`, `⊗-unit-l`/`⊗-unit-r`, `⊗-unit-l⁻`/`⊗-unit-r⁻` and `⊗-assoc` to use these equalities from `Grammar.LinearProduct.Base`:
   - `⊗-assoc⁻4⊗-intro`
   - `id,⊗id≡id`
@@ -441,16 +469,3 @@ One drawback of embedding the language in Agda is that the typechecker is now ac
 Additionally, we have not interfaced with any of Agda's `IO` modules. Instead, all of our experiments have either mocked the parsing input as its own Agda file that contains a string literal of the data to be parsed or have a function that generates the input.
 
 For the `Dyck` example, we ran some simple benchmarks in `Examples.Benchmark.Dyck`. The verified parser for `Dyck` takes `1m3s` to parse an input string that is `196544` characters long. This runtime also includes the time to generate the input string, which is estimated to be around `20s` on its own.
-
-
-
-
-
-
-
-
-
-
-
-
-
