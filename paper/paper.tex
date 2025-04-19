@@ -51,6 +51,8 @@
 \usepackage{hyperref}
 \usepackage[capitalise]{cleveref}
 
+% \usepackage{showframe}
+
 \usepackage[LGR,T1]{fontenc}
 \DeclareMathAlphabet{\mathgtt}{LGR}{cmtt}{m}{n}
 
@@ -128,8 +130,17 @@ breakatwhitespace=false,
 rulecolor=\color{black},
 texcl=true,
 backgroundcolor=\color{backcolour},
-frame=single
+frame=single,
+xleftmargin = 1.5mm ,
+xrightmargin = 1.5mm
 }
+
+\lstnewenvironment{floatlisting}{
+  \FloatBarrier
+  \lstset{
+    aboveskip=2mm
+  }
+}{}
 
 \usepackage{stmaryrd}
 \usepackage{scalerel}
@@ -608,10 +619,10 @@ the context $\internalize{\stringquote{ab}} = a : \literal a , b :
 typing derivation to define a parse for a finite grammar.
 
 \begin{figure}
-\begin{lstlisting}
+\begin{floatlisting}
 f : (*@$\uparrowcode$@*)('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)' (*@$\lto$@*) ('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\oplus$@*) '(*@\color{alphabetcolor}c@*)')
 f (a , b) = inl (a , b)
-\end{lstlisting}\begin{mathpar}
+\end{floatlisting}\begin{mathpar}
   \footnotesize
   \inferrule
   {
@@ -855,7 +866,7 @@ equivalent} as grammars.
 \begin{figure}
   \begin{minipage}[t]{.6\textwidth}
     \vspace{0pt}
-  \begin{lstlisting}
+  \begin{floatlisting}
 data Trace : (s : Fin 3) (*@$\tocode$@*) L where
   stop : (*@$\uparrowcode$@*)(Trace 2)
   1to1 : (*@$\uparrowcode$@*)('(*@\color{alphabetcolor}a@*)' (*@$\lto$@*) Trace 1 (*@$\lto$@*) Trace 1)
@@ -865,7 +876,7 @@ data Trace : (s : Fin 3) (*@$\tocode$@*) L where
 
 k : (*@$\uparrowcode$@*)(('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\lto$@*)  Trace 0)
 k (a , b) = 0to1 (1to1 a (1to2 b stop))
-\end{lstlisting}
+\end{floatlisting}
   \end{minipage}%
   \begin{minipage}[t]{.4\textwidth}
   \vspace{8pt}
@@ -1609,18 +1620,17 @@ source of the $\epsilon$-transition. As a shorthand, we write $Parse_{N}$
 for the accepting traces out of $N.init$.
 \newcommand{\D}{\texttt{D}}
 \begin{figure}
-\begin{lstlisting}
+\begin{floatlisting}
 data Trace(*@$_{\color{black}\N}$@*) : (s : N .states) (*@$\tocode$@*) L where
   nil : (*@$\uparrowcode$@*)(&[ s : N .states ] N .isAcc s (*@$\tocodelin$@*) Trace(*@$_{\color{black}\N}$@*) s)
   cons : (*@$\uparrowcode$@*)(&[ t : N .transitions ] ('#N .label t#' (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .dst t)
                                                  (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .src t)))
   (*@$\color{linconstructorcolor}\epsilon$@*)cons : (*@$\uparrowcode$@*)(&[ t : N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)transitions ] (Trace(*@$_{\color{black}\N}$@*) (N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)dst t) (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)src t)))
-
 data Trace(*@$_{\color{black}\D}$@*) : (s : (*@\color{black}D@*) .states) (b : Bool) (*@$\tocode$@*) L where
   nil : (*@$\uparrowcode$@*)(&[ s : (*@\color{black}D@*) .states ] Trace(*@$_{\color{black}\D}$@*) s (*@\color{black}D@*) .isAcc s)
   cons : (*@$\uparrowcode$@*)(&[ c : (*@$\color{nonlintycolor}\Sigma$@*) ] &[ s : (*@\color{black}D@*) .states ]
            &[ b : Bool ] ('(*@\color{alphabetcolor}c@*)' (*@$\lto$@*) Trace(*@$_{\color{black}\D}$@*) ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c s) b (*@$\lto$@*) Trace(*@$_{\color{black}\D}$@*) s b))
-\end{lstlisting}
+\end{floatlisting}
 \caption{Traces of an NFA $N$ and a DFA $D$}
 \label{fig:nfatrace}
 \end{figure}
@@ -1671,7 +1681,6 @@ parse(*@$\color{black}_D$@*) : (*@$\uparrowcode$@*)(String (*@$\lto$@*) &[ s : (
 parse(*@$\color{black}_D$@*) String .nil s = (*@$\color{linconstructorcolor}\sigma$@*) ((*@\color{black}D@*) .isAcc s) (Trace(*@$_{\color{black}\D}$@*) .nil s)
 parse(*@$\color{black}_D$@*) (String .cons ((*@$\color{linconstructorcolor}\sigma$@*) c a) w) s = let (*@$\color{linconstructorcolor}\sigma$@*) b t = parse w ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c s) in
                                     (*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .cons c s b a t)
-
 print(*@$\color{black}_D$@*) : (s : (*@\color{black}D@*) .states) (*@$\tocode$@*) (*@$\uparrowcode$@*)(((*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\color{black}\D}$@*) s b) (*@$\lto$@*) String)
 print(*@$\color{black}_D$@*) s ((*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .nil .s)) = String .nil
 print(*@$\color{black}_D$@*) s ((*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .cons c ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c .s) b a trace)) =
@@ -1781,11 +1790,11 @@ parse by wrapping an already balanced parse in an additional set of parentheses
 then following it with another balanced parse. We construct a parser for $\Dyck$ by building a deterministic automaton $M$ such
 that $Parse_{M}$ is strongly equivalent to $\Dyck$.
 \begin{figure}
-\begin{lstlisting}
+\begin{floatlisting}
 data Dyck : L where
   nil : (*@$\uparrowcode$@*) Dyck
   bal : (*@$\uparrowcode$@*)('(' (*@$\lto$@*) Dyck (*@$\lto$@*) ')' (*@$\lto$@*) Dyck (*@$\lto$@*) Dyck)
-\end{lstlisting}
+\end{floatlisting}
 \caption{The Dyck grammar as an inductive linear type}
 \label{fig:dyckinductive}
 \end{figure}
@@ -1882,7 +1891,7 @@ chain of equivalences to be a binary sum rather than a binary product,
 necessitating the distributivity axiom.
 
 \begin{figure}
-\begin{lstlisting}
+\begin{floatlisting}
 data Exp : L where
   done : (*@$\uparrowcode$@*)(Atom (*@$\lto$@*) Exp)
   add : (*@$\uparrowcode$@*)(Atom (*@$\lto$@*) '+' (*@$\lto$@*) Exp (*@$\lto$@*) Exp)
@@ -1906,7 +1915,7 @@ data A : Nat (*@$\tocode$@*) Bool (*@$\tocode$@*) L where
   doneBad : (*@$\uparrowcode$@*)(&[ n : Nat ] A (n + 1) false)
   add : (*@$\uparrowcode$@*)(&[ n : Nat ] &[ b : Bool ] '+' (*@$\lto$@*) O n b (*@$\lto$@*) A n b)
   unexpected : (*@$\uparrowcode$@*)(&[ n : Nat ] ('(' (*@$\oplus$@*) ')' (*@$\oplus$@*) '#NUM#') (*@$\lto$@*) (*@$\color{lintycolor} \top$@*) (*@$\lto$@*) A n false)
-\end{lstlisting}
+\end{floatlisting}
 \caption{Associative arithmetic expressions and a corresponding lookahead automaton}
 \label{fig:binop-inductive}
 \end{figure}
