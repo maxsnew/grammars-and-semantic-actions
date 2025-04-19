@@ -104,6 +104,15 @@ opaque
     ∙ (λ i → ⊗Path.⊗-unit-r ∘g ⊗≅⊗Path .sec i ∘g ⊗Path.⊗-unit-r⁻)
     ∙ (λ i → ⊗Path.⊗-unit-r⁻r i)
 
+  opaque
+    unfolding ε εPath ⊗Path.⊗-unit-l ⊗-unit-l ⊗→⊗Path ε→εPath
+    ⊗-unit-l≡ : ⊗-unit-l {A = A} ≡ ⊗Path.⊗-unit-l ∘g ⊗→⊗Path ∘g ε→εPath ,⊗ id
+    ⊗-unit-l≡ {A = A} =
+      funExt λ w → funExt λ where
+        (((_ , w') , Eq.refl) , Eq.refl , a) →
+            subst-filler A refl a
+            ∙ cong (λ z → subst A z a) (isSetString w w _ _)
+
   cong-∘g⊗-unit-r⁻ :
     (e e' : A ⊗ ε ⊢ B) →
     (e ∘g ⊗-unit-r⁻ ≡ e' ∘g ⊗-unit-r⁻) →
@@ -224,36 +233,84 @@ opaque
   ⊗-unit*-r⊗-intro {ℓ = ℓ} f = cong₂ _∘g_ (⊗-unit-r⊗-intro f) refl
 
   opaque
-    unfolding ⊗-unit-r ⊗-unit-l ⊗-assoc ⊗Path.⊗-unit-r ⊗Path.⊗-unit-l ⊗Path.⊗-assoc
+    unfolding ⊗-unit-r ⊗-unit-l ⊗-assoc ⊗Path.⊗-unit-r ⊗Path.⊗-unit-l ⊗Path.⊗-assoc ⊗→⊗Path
     @0 ⊗-triangle : ⊗-unit*-r ,⊗ id ∘g ⊗-assoc {A = A}{B = ε* {ℓ}}{C = B} ≡ id ,⊗ ⊗-unit*-l
     ⊗-triangle {A = A} {ℓ = ℓ} {B = B} =
-      -- (⊗-unit-r ∘g id ,⊗ lowerG) ,⊗ id ∘g ⊗-assoc
-      --    ≡⟨ (λ i → (⊗-unit-r≡ i ∘g id ,⊗ lowerG) ,⊗ id ∘g ⊗-assoc≡ i) ⟩
-      -- (⊗Path.⊗-unit-r ∘g ⊗→⊗Path ∘g id ,⊗ ε→εPath ∘g id ,⊗ lowerG) ,⊗ id
-      -- ∘g ⊗Path→⊗ ,⊗ id ∘g ⊗Path→⊗
-      -- ∘g ⊗Path.⊗-assoc
-      -- ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path
-      --   ≡⟨ {!!} ⟩
-      -- {!!}
-      --   ≡⟨ {!!} ⟩
-      -- id ,⊗ (⊗-unit-l ∘g lowerG ,⊗ id)
-      -- ∎
-      funExt λ w → funExt λ where
-        (((wa , wb) , Eq.refl) , a , (((_ , wb') , Eq.refl) , (lift Eq.refl) , b)) →
-          ⊗≡ _ _ (≡-× (++-unit-r _) refl) (
-            ΣPathP (
-              {!!} ,
-              refl))
+      (⊗-unit-r ∘g id ,⊗ lowerG) ,⊗ id ∘g ⊗-assoc
+         ≡⟨ (λ i → (⊗-unit-r≡ i ∘g id ,⊗ lowerG) ,⊗ id ∘g ⊗-assoc≡ i) ⟩
+      ⊗Path.⊗-unit-r ,⊗ id
+      ∘g (id ⊗Path.,⊗ ε→εPath) ,⊗ id
+      ∘g (id ⊗Path.,⊗ lowerG) ,⊗ id
+      ∘g (⊗→⊗Path ∘g ⊗Path→⊗) ,⊗ id
+      ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path
+        ≡⟨ (λ i → ⊗Path.⊗-unit-r ,⊗ id
+                  ∘g (id ⊗Path.,⊗ ε→εPath) ,⊗ id
+                  ∘g (id ⊗Path.,⊗ lowerG) ,⊗ id
+                  ∘g (⊗≅⊗Path .sec i) ,⊗ id
+                  ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path )⟩
+      ⊗Path→⊗ ∘g ⊗Path.⊗-unit-r ⊗Path.,⊗ id
+              ∘g (id ⊗Path.,⊗ lowerG {ℓB = ℓ}) ⊗Path.,⊗ id ∘g ⊗Path.⊗-assoc
+              ∘g id ⊗Path.,⊗ (liftG ∘g ε→εPath ∘g lowerG) ⊗Path.,⊗ id
+              ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path
+        ≡⟨ (λ i →
+             ⊗Path→⊗ ∘g ⊗Path.⊗-triangle {ℓ = ℓ} i
+                     ∘g id ⊗Path.,⊗ (liftG ∘g ε→εPath ∘g lowerG) ⊗Path.,⊗ id
+                     ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path
+           ) ⟩
+       id ,⊗ ⊗Path.⊗-unit-l ∘g id ,⊗ (ε→εPath ∘g lowerG) ⊗Path.,⊗ id
+       ∘g ⊗Path→⊗ ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path
+        ≡⟨ (λ i → id ,⊗ ⊗Path.⊗-unit-l ∘g id ,⊗ (ε→εPath ∘g lowerG) ⊗Path.,⊗ id
+                  ∘g ⊗≅⊗Path .ret i ∘g id ,⊗ ⊗→⊗Path) ⟩
+       id ,⊗ ⊗Path.⊗-unit-l ∘g id ,⊗ (ε→εPath ∘g lowerG) ⊗Path.,⊗ id ∘g id ,⊗ ⊗→⊗Path
+        ≡⟨ cong (λ z → id ,⊗ (z ∘g lowerG ,⊗ id)) (sym ⊗-unit-l≡) ⟩
+      id ,⊗ (⊗-unit-l ∘g lowerG ,⊗ id)
+      ∎
 
--- --   @0 ⊗-pentagon :
--- --     ⊗-intro (⊗-assoc {A = A}) id
--- --     ∘g ⊗-assoc
--- --     ∘g ⊗-intro id (⊗-assoc {A = B}{B = C}{C = D})
--- --       ≡
--- --     ⊗-assoc
--- --     ∘g ⊗-assoc
--- --   ⊗-pentagon {A = A}{B = B}{C = C}{D = D} =
--- --     {!!}
+    @0 ⊗-pentagon :
+      (⊗-assoc {A = A}) ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ (⊗-assoc {A = B}{B = C}{C = D})
+        ≡ ⊗-assoc ∘g ⊗-assoc
+    ⊗-pentagon {A = A}{B = B}{C = C}{D = D} =
+      ⊗-assoc ,⊗ id ∘g ⊗-assoc ∘g id ,⊗ ⊗-assoc
+        ≡⟨ (λ i → ⊗-assoc≡ i ,⊗ id ∘g ⊗-assoc≡ i ∘g id ,⊗ ⊗-assoc≡ i) ⟩
+      (⊗Path→⊗ ,⊗ id) ,⊗ id
+      ∘g ⊗Path→⊗ ,⊗ id ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc ⊗Path.,⊗ id
+      ∘g (⊗→⊗Path ∘g ⊗Path→⊗) ⊗Path.,⊗ id
+      ∘g ⊗Path.⊗-assoc
+      ∘g id ⊗Path.,⊗ ((⊗→⊗Path ∘g ⊗Path→⊗) ⊗Path.,⊗ id)
+      ∘g id ⊗Path.,⊗ (⊗→⊗Path ∘g ⊗Path→⊗)
+      ∘g id ⊗Path.,⊗ ⊗Path.⊗-assoc
+      ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path ∘g id ,⊗ id ,⊗ ⊗→⊗Path
+        ≡⟨ (λ i → (⊗Path→⊗ ,⊗ id) ,⊗ id
+                  ∘g ⊗Path→⊗ ,⊗ id ∘g ⊗Path→⊗ ∘g ⊗Path.⊗-assoc ⊗Path.,⊗ id
+                  ∘g (⊗≅⊗Path .sec i) ⊗Path.,⊗ id
+                  ∘g ⊗Path.⊗-assoc
+                  ∘g id ⊗Path.,⊗ ((⊗≅⊗Path .sec i) ⊗Path.,⊗ id)
+                  ∘g id ⊗Path.,⊗ (⊗≅⊗Path .sec i)
+                  ∘g id ⊗Path.,⊗ ⊗Path.⊗-assoc
+                  ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path ∘g id ,⊗ id ,⊗ ⊗→⊗Path
+           ) ⟩
+      (⊗Path→⊗ ,⊗ id) ,⊗ id
+      ∘g ⊗Path→⊗ ,⊗ id ∘g ⊗Path→⊗
+      ∘g ⊗Path.⊗-assoc ⊗Path.,⊗ id
+      ∘g ⊗Path.⊗-assoc
+      ∘g id ⊗Path.,⊗ ⊗Path.⊗-assoc
+      ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path ∘g id ,⊗ id ,⊗ ⊗→⊗Path
+        ≡⟨ (λ i → (⊗Path→⊗ ,⊗ id) ,⊗ id
+                  ∘g ⊗Path→⊗ ,⊗ id ∘g ⊗Path→⊗
+                  ∘g ⊗Path.⊗-pentagon i
+                  ∘g ⊗→⊗Path ∘g id ,⊗ ⊗→⊗Path ∘g id ,⊗ id ,⊗ ⊗→⊗Path)⟩
+      ⊗Path→⊗ ,⊗ id
+      ∘g ⊗Path→⊗
+      ∘g ⊗Path.⊗-assoc
+      ∘g ⊗Path→⊗ ⊗Path.,⊗ id
+      ∘g id
+      ∘g id ⊗Path.,⊗ ⊗→⊗Path
+      ∘g ⊗Path.⊗-assoc
+      ∘g ⊗→⊗Path
+      ∘g id ,⊗ ⊗→⊗Path
+        ≡⟨ {!!} ⟩
+      ⊗-assoc ∘g ⊗-assoc
+      ∎
 
 -- -- @0 ⊗-assoc⁻3⊗-unit-r⁻ :
 -- --   ⊗-assoc⁻3 {A = A}{B = B}{C = C} ∘g ⊗-unit-r⁻

@@ -189,11 +189,8 @@ opaque
 
     ⊗-unit-l :
       ε ⊗ A ⊢ A
-    ⊗-unit-l {A = A} _ p =
-      transport
-        (cong A (cong (_++  p .fst .fst .snd)
-          (sym (p .snd .fst)) ∙ sym (p .fst .snd)))
-        (p .snd .snd)
+    ⊗-unit-l {A = A} _ (s , eps , a) =
+      subst A (cong (_++ s .fst .snd) (sym eps) ∙ sym (s .snd)) a
 
     ⊗-unit-l⁻ :
       A ⊢ ε ⊗ A
@@ -310,8 +307,7 @@ opaque
     ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
     → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'')
       ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
-  ⊗-assoc⊗-intro = funExt λ w → funExt λ p →
-    ⊗≡ _ _ (≡-× refl refl) (ΣPathP (refl , refl))
+  ⊗-assoc⊗-intro = refl
 
   opaque
     unfolding ⊗-unit-r⁻
