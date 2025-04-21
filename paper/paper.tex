@@ -524,7 +524,7 @@ as a shallowly embedded domain-specific language in the Cubical Agda
 proof assistant \cite{VezzosiMortbergAbel2019}. We have implemented many example
 grammars and parsers in our system including regular expressions,
 non-deterministic and deterministic automata, as well as some example
-context-free grammars and parsers based on $\LL{1}$ and $\LR{1}$
+$\LL{1}$ context-free grammars and parsers using stack-based
 automata. Throughout this paper \Agda~ will mark
 results that are mechanized in our Agda development and provide a link to their
 implementation.
@@ -1413,7 +1413,7 @@ of resources, and not $\I$ which controls no resources.
 \begin{axiom}
   \label{ax:string-top}
    $\lambda s. \mathsf{read}(!(s)) \equiv \lambda
-s. s$ where $!$ is the unique function $\ltonl(\StringGram\lto \top)$. That is, $\StringGram$ is strongly equivalent to $\top$.
+s. s$ where $!$ is the unique function $\ltonl(\StringGram\lto \top)$.
 \end{axiom}
 
 If we have a string, but then throw it away and read
@@ -1428,10 +1428,7 @@ provide a basis for verified parsing and formal grammar theory.
 This section explores the applications of \theoryabbv to formal
 grammar theory. We demonstrate that several classical notions and constructions
 integral to the theory of formal languages are faithfully represented
-in \theoryname. By encoding well-established formal grammar concepts, we ensure
-that our framework remains grounded in the
-foundational principles of formal language theory while opening the door to
-compositional formal verification of parsers.
+in \theoryname.
 
 %% \paragraph{Weak and Strong Equivalence}
 In the theory of formal grammars, there are two different notions of
@@ -1456,8 +1453,7 @@ for the \emph{same} string $\w$.  For example, $\a \oplus \a$ is
 ambiguous because there are two parses of $\stringquote{a}$,
 constructed using $\inl$ and $\inr$. On the other hand, a formal
 grammar is unambiguous when there is at most one parse tree for any
-input string. We can capture this notion as a type in \theoryabbv in a
-clever way:
+input string. We can capture this notion as a type in \theoryabbv as follows:
 \begin{definition}
   \label{def:unambig}
   A grammar $\A$ is \emph{unambiguous} if for every linear type $\B$,
@@ -1580,7 +1576,7 @@ establish that $A_{\neg}$ is disjoint from $B$.
 \subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
 
-In this section, we describe how to construct an intrinsically
+Next, we describe how to construct an intrinsically
 verified parser for regular expressions by compiling it to an NFA and
 then a DFA. That is, for each regular expression $A$, we construct an
 NFA $N(A)$ and a corresponding DFA $D(A)$ such that $A$ is strongly
@@ -1637,8 +1633,8 @@ with a trace out of the state $\D.\delta~\c~\s$. The trace built with
 $\cons$ is accepting if and only if the trace out of $D.\delta~c~s$ is
 accepting.
 
-Because DFAs are deterministic, we are able to prove that their type
-of traces are unambiguous and define a parser for them. In particular
+Because DFAs are deterministic, we are able to prove that their types
+of traces are unambiguous and define a parser for them directly. In particular
 we show that for any start state $s$, ${\LinSigTy {b} {\Bool}
   \Trace_{D}~s~b}$ is a retract of $\StringGram$ and apply \cref{lem:retract} to
 derive unambiguity. That is, we first
@@ -1791,10 +1787,7 @@ data Dyck : L where
 \label{fig:dyckinductive}
 \end{figure}
 
-The Dyck language is an example of an $\textrm{LL}(0)$ language, one
-that can be parsed top-down with no
-lookahead \cite{rosenkrantz_properties_1970}. This means we can
-implement it simply as an \emph{infinite} state deterministic
+We implement the parser for the Dyck language using an \emph{infinite} state deterministic
 automaton, in \Cref{fig:DyckAutomaton}. Here the state is a ``stack''
 counting how many open parentheses have been seen so far. Functions
 $parse_{M}$ and $print_{M}$ for this automaton can be defined
@@ -1926,13 +1919,13 @@ Reify~P = \LinSigTy{w} {\StringSem} {\LinSigTy {x} {P~w} {~\lceil w \rceil}}
 where $\lceil \stringquote{} \rceil = I$ and
 $\lceil c :: w \rceil = \literal c \otimes \lceil w \rceil$.
 
-This reification operation on functions $\StringSem \to U$ is incredibly expressive,
+This reification operation on functions $\StringSem \to U$ is very expressive,
 as it sidesteps our linear typing connectives and utilizes the whole of nonlinear
 dependent type theory to define a grammar. For example, given a
 Turing machine $T$ one may
 define a non-linear predicate $accepts : \StringSem \to U$ that encodes that $T$
 halts and accepts an input string. Then, $Reify~accepts$ is a linear type that
-captures precisely the string the same language as $T$. That is,
+captures precisely the string the same language as $T$. In general,
 $Lang(Reify~accepts)$ is recursively enumerable --- the most general class of
 languages in the Chomsky hierarchy.
 \begin{construction}[\Agda]
@@ -2007,11 +2000,10 @@ defines a \emph{category}.
   grammars and morphisms are parse transformers.
 \end{definition}
 This category is equivalent to the slice category $\Set/\Sigma^*$ and
-as such is very well-behaved. It is complete, co-complete, Cartesian
+is very well-behaved. It is complete, co-complete, Cartesian
 closed and carries a monoidal biclosed structure. We will use these
 structures to model the linear types, terms and equalities in
-\theoryabbv. These categorical properties are precisely what is
-required to interpret all of the linear type and term constructors.
+\theoryabbv.
 
 \subsection{Semantics}
 
@@ -2185,14 +2177,14 @@ $\literal{a} \otimes (\literal{a} \otimes \literal{a}^{*})$, then act on the
 left by the identity and on the right by $cons$ to get a parse
 $\literal{a} \otimes \literal{a}^{*}$, and finally we act again by $cons$ to
 finally produce a parse of $\literal{a}^{*}$.
-A benefit of this shallow embedding is that
-the parsers are immediately available to a larger Agda development, as
-they are just normal Agda code. Although, even in the small example from
+Even in the small example from
 \cref{fig:kleeneabstractproof} we must manage additional complexity --- such as
 manually reassociations --- and
-this only grows more complex in larger programs. In future work we will look to
+this only grows more complex in larger programs. On the other hand, a benefit of this shallow embedding is that
+the parsers are immediately available to a larger Agda development, as
+they are just normal Agda code. In future work we will look to
 implement a type checker for a syntax closer to the presentation in
-this paper, while maintaining the goal of integration with an
+this paper, while maintaining the easy integration with an
 existing proof assistant.
 
 \section{Related and Future Work}
