@@ -391,12 +391,12 @@ xrightmargin = 1.5mm
   expressions using deterministic automata, as well as
   examples of verified parsers of context-free grammars.
 
-  We present a denotational semantics of our type theory that
-  interprets the types as a mathematical notion of formal
-  grammars. Based on this denotational semantics, we have made a
-  prototype implementation of \theoryabbv using a shallow embedding in
-  the Agda proof assistant. All of our examples parsers have been
-  implemented in this prototype implementation.
+  We present a denotational semantics of our type theory that interprets the
+  linear types as functions from strings to sets of abstract parse trees and
+  terms as parse transformers. Based on this denotational semantics, we have
+  made a prototype implementation of \theoryabbv using a shallow embedding in
+  the Agda proof assistant. All of our examples parsers have been implemented in
+  this prototype implementation.
 \end{abstract}
 
 %% 2012 ACM Computing Classification System (CSS) concepts
@@ -449,14 +449,13 @@ xrightmargin = 1.5mm
 \section{Introduction}
 \label{sec:intro}
 Parsing structured data from untrusted input is a ubiquitous task in
-computing. Any formally verified software system that interacts with
-the outside world must contain some parsing component. For example, in
-an extensive experiment finding bugs in C compilers
+computing. Any formally verified software system that interacts with the outside
+world must contain some parsing component, and unverified parsers can undermine the overall correctnes theorem for the system.
+For example, in an extensive experiment finding bugs in C compilers
 \cite{yangFindingUnderstandingBugs}, an early version of CompCert, the formally
-verified C compiler, only contained bugs in the then
-unverified parsing component \cite{leroy_formal_2009}. Bugs in parsers
-undermine the overall correctness theorem for a verified system: an
-incorrectly parsed C program will be compiled correctly, but this is
+verified C compiler, was found to have bugs only in the then
+unverified parsing component \cite{leroy_formal_2009}.
+The correctness of the compiler only showed that the abstract syntax tree would be compiled correctly, but this is
 not very useful if it did not correctly correspond to the actual
 source program. Eventually, CompCert
 was updated to use a verified parser that implements
@@ -487,10 +486,10 @@ verification of parsers in that it supports the definition of grammar
 formalisms of unrestricted complexity. That is, \theoryabbv is not a
 system for verifying \emph{one} type of grammar formalism, but instead
 is a domain-specific language in which many grammar formalisms and
-their verified parsers can be implemented. For example, \theoryabbv is
-not a verified parser generator that compiles regular expressions to
+their verified parsers can be implemented. For example, \theoryabbv itself is
+not a verified parser generator compiling regular expressions to
 deterministic finite automata, but is instead a domain specific
-language \emph{for writing} such a verified parser generator.
+language in which we can write such a verified parser generator.
 
 The design of \theoryabbv
 is an extension of Joachim Lambek's \emph{syntactic calculus}
@@ -515,9 +514,7 @@ imperative programming \cite{krishnaswami_integrating_2015}.
 The substructural nature of \theoryabbv is well-aligned with the
 requirements intrinsic to parsing and the theory of formal
 languages, where strings constitute a clear notion of resource
-that cannot be duplicated, reordered, or dropped. Moreover, the constructive
-aspect of \theoryabbv ensures that verification of parsers written in the
-calculus are \emph{correct-by-construction}. That is, our type system is rich
+that cannot be duplicated, reordered, or dropped. Moreover, \theoryabbv ensures that parsers written in the calculus are \emph{correct-by-construction}. That is, our type system is rich
 enough that typing derivations carry intrinsic proofs of parser correctness.
 Parsers written in \theoryabbv take on a linear functional style, which makes
 them familiar to write and amenable to compositional verification techniques.
@@ -534,13 +531,12 @@ implementation.
 
 Our Agda prototype is based on a \emph{denotational semantics} of
 \theoryabbv. The core idea of the denotational semantics stems from an observation of Elliott:
-a formal grammar is a type-level predicate on strings that proves
-language membership \cite{elliottSymbolicAutomaticDifferentiation2021}. That is, a \emph{formal grammar} $A$ is a
+an abstract notion of formal grammar can be given by a ``proof-relevant'' predicate on strings \cite{elliottSymbolicAutomaticDifferentiation2021}. That is, a \emph{formal grammar} $A$ is a
 function $\StringSem \to \Set$ such that for a string $w$, $A~w$ is the
 set of ``proofs'' showing that $w$ belongs to the language recognized
 by $A$. We show that all linear types in \theoryabbv can be so
 interpreted as an abstract formal grammar in this sense, and that
-linear terms are a kind of \emph{parse transformer}, a function that
+linear terms can be interpreted as a kind of \emph{parse transformer}, a function that
 takes a parse tree from one grammar to a parse tree in a different
 grammar but over the same underlying string.
 
@@ -557,8 +553,7 @@ Our contributions are then:
   \item A prototype implementation of \theoryabbv in Agda with all
     examples mechanized.
   \item A denotational semantics for \theoryabbv that shows that the
-    parsers are in fact verified to be correct, and the soundness of the
-    equational theory.
+    parsers are in fact verified to be correct, and the equational theory is sound.
 \end{itemize}
 
 This paper begins in \cref{sec:type-theory-examples} by studying small
