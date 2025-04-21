@@ -646,7 +646,7 @@ f (a , b) = inl (a , b)
 For this interpretation of parse trees as terms to make sense, our
 calculus cannot allow for \emph{any} of the usual structural rules of
 type theory: weakening, contraction and exchange. Weakening allows
-for variables to go unused, would allow for a character in an input string to be ignored, yielding the erroneous parse tree \( {a : \literal a , b : \literal b \not \vdash a : \literal a} \).
+for variables to go unused, which would allow for a character in an input string to be ignored, yielding the erroneous parse tree \( {a : \literal a , b : \literal b \not \vdash a : \literal a} \).
 Contraction allows for the same variable to be used twice, yielding the erroneous parse
 \({a : \literal a , b : \literal b \not \vdash (a, a) : \literal a \otimes \literal a}
 \).
