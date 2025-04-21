@@ -450,7 +450,7 @@ xrightmargin = 1.5mm
 \label{sec:intro}
 Parsing structured data from untrusted input is a ubiquitous task in
 computing. Any formally verified software system that interacts with the outside
-world must contain some parsing component, and unverified parsers can undermine the overall correctnes theorem for the system.
+world must contain some parsing component, and unverified parsers can undermine the overall correctness theorem for the system.
 For example, in an extensive experiment finding bugs in C compilers
 \cite{yangFindingUnderstandingBugs}, an early version of CompCert, the formally
 verified C compiler, was found to have bugs only in the then
@@ -646,7 +646,7 @@ f (a , b) = inl (a , b)
 For this interpretation of parse trees as terms to make sense, our
 calculus cannot allow for \emph{any} of the usual structural rules of
 type theory: weakening, contraction and exchange. Weakening allows
-for variables to go unused, would allow for a character in an input string to be ignored, yielding the erroneous parse tree \( {a : \literal a , b : \literal b \not \vdash a : \literal a} \). 
+for variables to go unused, would allow for a character in an input string to be ignored, yielding the erroneous parse tree \( {a : \literal a , b : \literal b \not \vdash a : \literal a} \).
 Contraction allows for the same variable to be used twice, yielding the erroneous parse
 \({a : \literal a , b : \literal b \not \vdash (a, a) : \literal a \otimes \literal a}
 \).
