@@ -671,7 +671,7 @@ function type $\lto$. The linear function type $\A \lto \B$ defines functions th
 take in parses of $\A$ as input, \emph{consume} the input, and return a parse of
 $\B$ as output. The arrow, $\uparrow$, wrapping these
 constructors means that the constructors are not consumed
-upon usage, and so are \emph{non-linear} values themselves. That is, the
+upon usage, and so are \emph{non-linear} values themselves, which are not small. That is, the
 names $\nil$ and $\cons$ are function symbols that may be reused as many times
 as we wish.
 
@@ -1157,7 +1157,7 @@ $f\,a\equiv g\,a$. Note that it is important here that $f, g$
 themselves are non-linearly used functions, as linear values cannot be
 used in a type.  Equalizer types are not needed for non-linear types
 since they can be constructed using the equality type as $\sum_{x:X}
-f\,x=_Y g\,x$, but this construction can't be used for linear types
+f\,x=_Y g\,x$, but this construction cannot be used for linear types
 because it uses a \emph{dependent} version of the equality type, which
 we cannot define as a linear type. While the equalizer type is not
 used directly in defining any of our parsers or formal grammars, it is
@@ -1311,10 +1311,10 @@ an operation $\el$ that interprets it as such a type constructor, as
 well as an operator $\map$ that defines a functorial action on parse
 transformers. The $\SPF\,X$ type supports constructors for a reference
 $\Var~x$ to one of the linear type variables, a constant expression
-that doesn't mention any type variables $K$, as well as tensor
+that does not mention any type variables $K$, as well as tensor
 products and additive conjunction and disjunction of type expressions.
 Further, we add equations in \ifarxiv{\cref{fig:spf-act} of \cref{sec:syntax}
-  }\else{the extended version of the paper}\fi that say that the
+  }\else{the extended version\fi that say that the
 $\el$/$\map$ operations correspond to these descriptions of the
 constructors.
 
@@ -1504,7 +1504,7 @@ must be total, this means that we can construct an $A$ parse for
 \emph{every} input string, which is impossible for most grammars of
 interest. Instead we might try to write a partial function as a
 $\ltonl{(\StringGram \lto (A \oplus \top))}$ using the ``option''
-monad. This allows for the possibility that the input string doesn't
+monad. This allows for the possibility that the input string does not
 parse, but is far too weak as a specification: we can trivially
 implement a parser for any type by always returning $\inr$. The
 correct notion of a parser should be one that allows for failure, but
