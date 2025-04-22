@@ -66,17 +66,3 @@ opaque
   ⊗-unit*-r⁻r :
     ⊗-unit*-r {A = A} {ℓ = ℓ} ∘g ⊗-unit*-r⁻ ≡ id
   ⊗-unit*-r⁻r = ⊗-unit-r⁻r
-
-open StrongEquivalence
-
-εr≅ : A ≅ A ⊗ ε
-εr≅ .fun = ⊗-unit-r⁻
-εr≅ .inv = ⊗-unit-r
-εr≅ .sec = ⊗-unit-rr⁻
-εr≅ .ret = ⊗-unit-r⁻r
-
-εl≅ : A ≅ ε ⊗ A
-εl≅ .fun = ⊗-unit-l⁻
-εl≅ .inv = ⊗-unit-l
-εl≅ .sec = ⊗-unit-ll⁻
-εl≅ .ret = ⊗-unit-l⁻l

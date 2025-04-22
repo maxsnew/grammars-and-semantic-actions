@@ -47,7 +47,7 @@ whichStringRetract .ret = the-ret
     the-ret : whichStringRetract .weak .inv ∘g whichStringRetract .weak .fun ≡ id
     the-ret =
       equalizer-ind (*Ty char) (λ _ → string) _ _
-      (λ _ → ⊕ᴰ≡ _ _ λ where
+      (λ _ → ⊕ᴰ≡ _ _ λ @0 where
         nil → refl
         cons i → CONS ∘g id ,⊗ eq-π-pf _ _ i ∘g lowerG ,⊗ lowerG
       )
@@ -69,8 +69,8 @@ whichStringRetract .ret = the-ret
         Σ≡Prop (λ w'' → isLang⌈⌉ w'' w') (sym (⌈⌉→≡ w w' p))
 ⊤≅⊕⌈⌉ .ret = unambiguous⊤ _ _
 
-unambiguous⊕⌈⌉ : unambiguous (⊕[ w ∈ String ] ⌈ w ⌉)
+@0 unambiguous⊕⌈⌉ : unambiguous (⊕[ w ∈ String ] ⌈ w ⌉)
 unambiguous⊕⌈⌉ = unambiguous≅ ⊤≅⊕⌈⌉ unambiguous⊤
 
-unambiguous-string : unambiguous string
+@0 unambiguous-string : unambiguous string
 unambiguous-string = isUnambiguousRetract whichStringRetract unambiguous⊕⌈⌉

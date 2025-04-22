@@ -114,7 +114,7 @@ module _ (dis : disjoint A B) (A≅C : A ≅ C) where
   disjoint≅ = disjoint⊢ dis (A≅C .inv)
 
   module _ (B≅D : B ≅ D) where
-    disjoint≅2 : disjoint C D
+    @0 disjoint≅2 : disjoint C D
     disjoint≅2 = disjoint≅ ∘g id ,&p B≅D .inv
 
 disjoint⊕l : disjoint (A ⊕ B) C → disjoint A C

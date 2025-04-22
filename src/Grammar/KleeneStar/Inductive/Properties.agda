@@ -94,7 +94,8 @@ module _
       ind-id' (*Ty B) (compHomo (*Ty B) _ the-B*-alg (initialAlgebra (*Ty B))
         ((λ _ → rec (*Ty A) the-A*-alg _) ,
         (λ _ → ⊕ᴰ≡ _ _
-          λ { nil → refl
+          λ @0
+            { nil → refl
             ; cons → λ i →
               CONS ∘g
               (A≅B .sec i ∘g lowerG) ,⊗
@@ -105,7 +106,8 @@ module _
       ind-id' (*Ty A) (compHomo (*Ty A) _ the-A*-alg (initialAlgebra (*Ty A))
         ((λ _ → rec (*Ty B) the-B*-alg _) ,
         (λ _ → ⊕ᴰ≡ _ _
-          λ { nil → refl
+          λ @0
+            { nil → refl
             ; cons → λ i →
               CONS ∘g
               (A≅B .ret i ∘g lowerG) ,⊗

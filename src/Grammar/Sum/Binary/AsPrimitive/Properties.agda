@@ -58,7 +58,7 @@ module _ (A : Bool → Grammar ℓA) where
   ⊕≅⊕Ind .ret = the-ret
 
 module _ {A B : Grammar ℓA} (unambig⊕ : unambiguous (A ⊕ B)) where
-  @0 unambig-⊕-is-disjoint : disjoint A B
+  unambig-⊕-is-disjoint : disjoint A B
   unambig-⊕-is-disjoint =
     disjoint≅2
       (hasDisjointSummands⊕ᴰ isSetBool

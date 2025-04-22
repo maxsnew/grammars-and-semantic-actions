@@ -246,3 +246,31 @@ opaque
 @0 ⊗-assoc4 :
   A ⊗ B ⊗ C ⊗ D ⊗ E ⊢ (A ⊗ B ⊗ C ⊗ D) ⊗ E
 ⊗-assoc4 = ⊗-assoc ∘g id ,⊗ ⊗-assoc3
+
+open StrongEquivalence
+module _
+  {A : Grammar ℓA} {B : Grammar ℓB}
+  {C : Grammar ℓC} {D : Grammar ℓD}
+  (A≅B : A ≅ B)
+  (C≅D : C ≅ D)
+  where
+
+  private
+    the-fun : A ⊗ C ⊢ B ⊗ D
+    the-fun = A≅B .fun ,⊗ C≅D .fun
+
+    the-inv : B ⊗ D ⊢ A ⊗ C
+    the-inv = A≅B .inv ,⊗ C≅D .inv
+    opaque
+      unfolding ⊗-intro
+      @0 the-sec : the-fun ∘g the-inv ≡ id
+      the-sec i = A≅B .sec i ,⊗ C≅D .sec i
+
+      @0 the-ret : the-inv ∘g the-fun ≡ id
+      the-ret i = A≅B .ret i ,⊗ C≅D .ret i
+
+  ⊗≅ : (A ⊗ C) ≅ (B ⊗ D)
+  ⊗≅ .fun = the-fun
+  ⊗≅ .inv = the-inv
+  ⊗≅ .sec = the-sec
+  ⊗≅ .ret = the-ret

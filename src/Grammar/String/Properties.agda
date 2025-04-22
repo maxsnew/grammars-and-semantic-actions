@@ -72,69 +72,69 @@ unroll-string2Retract .weak .inv =
   ⟜-intro⁻ (fold*r char
     (⟜-intro (inl ∘g ⊗-unit-r))
     (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
-unroll-string2Retract .ret = the-ret
-  where
-  opaque
-    unfolding ⊕-elim ⊗-intro ⊗-assoc⁻
-    the-ret : unroll-string2Retract .weak .inv ∘g unroll-string2Retract .weak .fun ≡ id
-    the-ret =
-      ⊕≡ _ _
-      (cong (_∘g ⊗-unit-r⁻) (⟜-β (inl ∘g ⊗-unit-r))
-      ∙ cong (inl ∘g_) (⊗-unit-r⁻r))
-      (equalizer-ind-⊗r (λ _ → *Tag char) _ _ _ _ _
-        (λ _ → λ where
-          nil →
-            (cong (_∘g (⊗-assoc⁻ ∘g id ,⊗ (⟜-intro (inl ∘g ⊗-unit-r) ∘g lowerG ∘g lowerG)))
-                    (⟜-β (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
-            ∙ (cong (λ z →
-                    inr {B = char} ∘g id ,⊗ string-intro ∘g z
-                    ∘g id ,⊗ (⟜-intro {A = char}(inl {B = (char ⊗ char) ⊗ string} ∘g ⊗-unit-r) ∘g lowerG ∘g lowerG))
-                    ⊗-assoc∘⊗-assoc⁻≡id)
-            ∙ (cong (λ z → inr {B = char} ∘g ⊗-intro {A = (char ⊗ char)} id z) (unambiguous-string _ _))
-          cons →
-            (cong (_∘g (⊗-assoc⁻ ∘g id ,⊗ fold*r char (⟜-intro (inl ∘g ⊗-unit-r))
-                                                      (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
-                        ∘g id ,⊗ CONS
-                        ∘g id ,⊗ id ,⊗ eq-π _ _ ∘g id ,⊗ lowerG ,⊗ lowerG))
-                    (⟜-β (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
-            ∙ (cong (λ z → inr {B = char} ∘g id ,⊗ string-intro ∘g z
-                           ∘g id ,⊗ fold*r char (⟜-intro {A = char}(inl ∘g ⊗-unit-r))
-                                                (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
-                           ∘g id ,⊗ CONS
-                           ∘g id ,⊗ id ,⊗ eq-π {B = char ⊕ (char ⊗ char) ⊗ string ⟜ char ⊗ char}
-                                            (⟜-intro (unroll-string2Retract .weak .inv ∘g unroll-string2Retract .weak .fun ∘g inr))
-                                            (⟜-intro inr)
-                           ∘g id ,⊗ lowerG ,⊗ lowerG)
-                    (⊗-assoc∘⊗-assoc⁻≡id)
-              )
-            ∙ λ i → inr ∘g id ,⊗ unambiguous-string
-                                 (string-intro
-                                 ∘g fold*r char (⟜-intro {A = char}(inl ∘g ⊗-unit-r))
-                                                (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
-                                 ∘g CONS ∘g id ,⊗ eq-π _ _
-                                 ∘g lowerG ,⊗ lowerG
-                                 )
-                                 ((CONS ∘g id ,⊗ eq-π _ _) ∘g lowerG ,⊗ lowerG)
-                                 i
-        )
-        _
-      )
+unroll-string2Retract .ret = {!!} -- the-ret
+  -- where
+  -- opaque
+  --   unfolding ⊕-elim ⊗-intro ⊗-assoc⁻
+  --   @0 the-ret : unroll-string2Retract .weak .inv ∘g unroll-string2Retract .weak .fun ≡ id
+  --   the-ret =
+  --     ⊕≡ _ _
+  --     (cong (_∘g ⊗-unit-r⁻) (⟜-β (inl ∘g ⊗-unit-r))
+  --     ∙ cong (inl ∘g_) (⊗-unit-r⁻r))
+  --     (equalizer-ind-⊗r (λ _ → *Tag char) _ _ _ _ _
+  --       (λ _ → λ @0 where
+  --         nil →
+  --           (cong (_∘g (⊗-assoc⁻ ∘g id ,⊗ (⟜-intro (inl ∘g ⊗-unit-r) ∘g lowerG ∘g lowerG)))
+  --                   (⟜-β (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
+  --           ∙ (cong (λ z →
+  --                   inr {B = char} ∘g id ,⊗ string-intro ∘g z
+  --                   ∘g id ,⊗ (⟜-intro {A = char}(inl {B = (char ⊗ char) ⊗ string} ∘g ⊗-unit-r) ∘g lowerG ∘g lowerG))
+  --                   ⊗-assoc∘⊗-assoc⁻≡id)
+  --           ∙ (cong (λ z → inr {B = char} ∘g ⊗-intro {A = (char ⊗ char)} id z) (unambiguous-string _ _))
+  --         cons →
+  --           (cong (_∘g (⊗-assoc⁻ ∘g id ,⊗ fold*r char (⟜-intro (inl ∘g ⊗-unit-r))
+  --                                                     (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
+  --                       ∘g id ,⊗ CONS
+  --                       ∘g id ,⊗ id ,⊗ eq-π _ _ ∘g id ,⊗ lowerG ,⊗ lowerG))
+  --                   (⟜-β (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
+  --           ∙ (cong (λ z → inr {B = char} ∘g id ,⊗ string-intro ∘g z
+  --                          ∘g id ,⊗ fold*r char (⟜-intro {A = char}(inl ∘g ⊗-unit-r))
+  --                                               (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
+  --                          ∘g id ,⊗ CONS
+  --                          ∘g id ,⊗ id ,⊗ eq-π {B = char ⊕ (char ⊗ char) ⊗ string ⟜ char ⊗ char}
+  --                                           (⟜-intro (unroll-string2Retract .weak .inv ∘g unroll-string2Retract .weak .fun ∘g inr))
+  --                                           (⟜-intro inr)
+  --                          ∘g id ,⊗ lowerG ,⊗ lowerG)
+  --                   (⊗-assoc∘⊗-assoc⁻≡id)
+  --             )
+  --           ∙ λ i → inr ∘g id ,⊗ unambiguous-string
+  --                                (string-intro
+  --                                ∘g fold*r char (⟜-intro {A = char}(inl ∘g ⊗-unit-r))
+  --                                               (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc))
+  --                                ∘g CONS ∘g id ,⊗ eq-π _ _
+  --                                ∘g lowerG ,⊗ lowerG
+  --                                )
+  --                                ((CONS ∘g id ,⊗ eq-π _ _) ∘g lowerG ,⊗ lowerG)
+  --                                i
+  --       )
+  --       _
+  --     )
 
-unambiguous-char⊕char⊗char+' : unambiguous (char ⊕ ((char ⊗ char) ⊗ string))
+@0 unambiguous-char⊕char⊗char+' : unambiguous (char ⊕ ((char ⊗ char) ⊗ string))
 unambiguous-char⊕char⊗char+' =
   isUnambiguousRetract unroll-string2Retract
     (summand-R-is-unambig (unambiguous≅ unroll-string≅ unambiguous-string))
 
-unambiguous-char⊕char⊗char+ : unambiguous (char ⊕ (char ⊗ char +))
+@0 unambiguous-char⊕char⊗char+ : unambiguous (char ⊕ (char ⊗ char +))
 unambiguous-char⊕char⊗char+ = unambiguous≅ (⊕≅ id≅ (sym≅ ⊗-assoc≅)) unambiguous-char⊕char⊗char+'
 
-unambiguous-char : unambiguous char
+@0 unambiguous-char : unambiguous char
 unambiguous-char = summand-L-is-unambig unambiguous-char⊕char⊗char+
 
-disjoint-char-char⊗char+ : disjoint char (char ⊗ char +)
+@0 disjoint-char-char⊗char+ : disjoint char (char ⊗ char +)
 disjoint-char-char⊗char+ = unambig-⊕-is-disjoint unambiguous-char⊕char⊗char+
 
-disjoint-ε-char+ : disjoint ε (char +)
+@0 disjoint-ε-char+ : disjoint ε (char +)
 disjoint-ε-char+ = unambig-⊕-is-disjoint (unambiguous≅ unroll-string≅ unambiguous-string)
 
 unroll-string≅' : string ≅ unrolled-string'
@@ -148,11 +148,11 @@ string≅unrolled-stringL =
 unroll-stringL≅ : stringL ≅ unrolled-stringL
 unroll-stringL≅ = sym≅ string≅stringL ≅∙ string≅unrolled-stringL
 
-unambiguous-unrolled-string : unambiguous unrolled-string
+@0 unambiguous-unrolled-string : unambiguous unrolled-string
 unambiguous-unrolled-string =
     unambiguous≅ unroll-string≅ unambiguous-string
 
-unambiguous-unrolled-string' : unambiguous unrolled-string'
+@0 unambiguous-unrolled-string' : unambiguous unrolled-string'
 unambiguous-unrolled-string' =
     unambiguous≅ unroll-string≅' unambiguous-string
 
@@ -168,10 +168,10 @@ disjoint-ε-char = disjoint-ε-char+' ∘g id ,&p +-singleton char
 disjoint-ε-literal : ∀ c → disjoint ε ＂ c ＂
 disjoint-ε-literal c = disjoint-ε-char ∘g id ,&p (literal→char c)
 
-unambiguous-char+ : unambiguous (char +)
+@0 unambiguous-char+ : unambiguous (char +)
 unambiguous-char+ = summand-R-is-unambig unambiguous-unrolled-string
 
-unambiguous-char+L : unambiguous (char +L)
+@0 unambiguous-char+L : unambiguous (char +L)
 unambiguous-char+L = summand-R-is-unambig unambiguous-unrolled-string'
 
 &string≅ : A ≅ A & string
@@ -207,17 +207,16 @@ char+≈char+L =
     disjoint-ε-char+L
     (≅→≈ (sym≅ unroll-string≅ ≅∙ unroll-string≅'))
 
-char+≅char+L : char + ≅ char +L
-char+≅char+L = ≈→≅ unambiguous-char+ unambiguous-char+L char+≈char+L
+-- char+≅char+L : char + ≅ char +L
+-- char+≅char+L = ≈→≅ unambiguous-char+ unambiguous-char+L char+≈char+L
 
-char+⊗r→char+ : A ⊗ char + ⊢ char +
-char+⊗r→char+ =
-  char+≅char+L .inv
-  ∘g char+L⊗r→char+L
-  ∘g id ,⊗ char+≅char+L .fun
+-- char+⊗r→char+ : A ⊗ char + ⊢ char +
+-- char+⊗r→char+ =
+--   char+≅char+L .inv
+--   ∘g char+L⊗r→char+L
+--   ∘g id ,⊗ char+≅char+L .fun
 
-module _ {c : ⟨ Alphabet ⟩}
-  where
-  startsWith→char+ : startsWith c ⊢ char +
-  startsWith→char+ = literal→char c ,⊗ id
-
+-- module _ {c : ⟨ Alphabet ⟩}
+--   where
+--   startsWith→char+ : startsWith c ⊢ char +
+--   startsWith→char+ = literal→char c ,⊗ id
