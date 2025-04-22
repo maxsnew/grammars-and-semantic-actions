@@ -72,7 +72,8 @@ unroll-string2Retract .weak .inv =
   ⟜-intro⁻ (fold*r char
     (⟜-intro (inl ∘g ⊗-unit-r))
     (⟜-intro (inr ∘g id ,⊗ string-intro ∘g ⊗-assoc)))
-unroll-string2Retract .ret = {!!} -- the-ret
+unroll-string2Retract .ret = {!!}
+  -- the-ret
   -- where
   -- opaque
   --   unfolding ⊕-elim ⊗-intro ⊗-assoc⁻
@@ -131,10 +132,10 @@ unambiguous-char⊕char⊗char+ = unambiguous≅ (⊕≅ id≅ (sym≅ ⊗-assoc
 @0 unambiguous-char : unambiguous char
 unambiguous-char = summand-L-is-unambig unambiguous-char⊕char⊗char+
 
-@0 disjoint-char-char⊗char+ : disjoint char (char ⊗ char +)
+disjoint-char-char⊗char+ : disjoint char (char ⊗ char +)
 disjoint-char-char⊗char+ = unambig-⊕-is-disjoint unambiguous-char⊕char⊗char+
 
-@0 disjoint-ε-char+ : disjoint ε (char +)
+disjoint-ε-char+ : disjoint ε (char +)
 disjoint-ε-char+ = unambig-⊕-is-disjoint (unambiguous≅ unroll-string≅ unambiguous-string)
 
 unroll-string≅' : string ≅ unrolled-string'

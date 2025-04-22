@@ -1,4 +1,3 @@
-{-# OPTIONS --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -6,6 +5,7 @@ module Grammar.Sum.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
 import Cubical.Data.Empty as Empty
+import Cubical.Data.Equality as Eq
 open import Cubical.Data.Maybe hiding (rec)
 
 open import Cubical.Relation.Nullary.Base
@@ -37,7 +37,9 @@ open StrongEquivalence
 module _ {X : Type ℓX} (A : X → Grammar ℓA) where
   disjointSummands⊕ᴰ : Type (ℓ-max ℓX ℓA)
   disjointSummands⊕ᴰ =
-    ∀ x y → (x ≡ y → Empty.⊥) → disjoint (A x) (A y)
+    -- include an erased Eq proof as an argument to
+    -- pattern match against
+    ∀ x y → (@0 x ≡ y → @0 x Eq.≡ y → Empty.⊥) → disjoint (A x) (A y)
 
 module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
   opaque
@@ -98,10 +100,6 @@ module _
     nothing → inl ∘g lowerG
     (just x) → inr ∘g σ x ∘g lowerG
   ⊕⊕ᴰ≅ .sec =
-    -- TODO get an error that ⊕-βl is erased, but we are in
-    -- an erased context. I think this is a bug
-    -- Should report to Agda repo
-    -- Can likely refactor to avoid the bug
     ⊕ᴰ≡ _ _ λ @0 where
       nothing i →
         ⊕-βl (σ nothing ∘g liftG) (mapFst⊕ᴰ just (λ _ → liftG)) i ∘g lowerG

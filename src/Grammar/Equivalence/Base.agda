@@ -161,10 +161,10 @@ record _isRetractOf_ (A : Grammar ℓA) (B : Grammar ℓB) : Type (ℓ-max ℓA 
 
 infixr 10 _isRetractOf_
 
-hasRetraction→isMono :
+@0 hasRetraction→isMono :
   (e : A ⊢ B) →
   (inv : B ⊢ A) →
-  (ret : inv ∘g e ≡ id) →
+  (@0 ret : inv ∘g e ≡ id) →
   isMono e
 hasRetraction→isMono e inv ret f f' e∘f≡e∘f' =
   cong (_∘g f) (sym ret) ∙

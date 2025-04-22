@@ -114,7 +114,7 @@ module _ (dis : disjoint A B) (A≅C : A ≅ C) where
   disjoint≅ = disjoint⊢ dis (A≅C .inv)
 
   module _ (B≅D : B ≅ D) where
-    @0 disjoint≅2 : disjoint C D
+    disjoint≅2 : disjoint C D
     disjoint≅2 = disjoint≅ ∘g id ,&p B≅D .inv
 
 disjoint⊕l : disjoint (A ⊕ B) C → disjoint A C
@@ -125,27 +125,27 @@ disjoint⊕r dis = disjoint⊢ dis inr
 
 open StrongEquivalence
 
-isUnambiguousRetract' :
+@0 isUnambiguousRetract' :
   ∀ (f : A ⊢ B) (f' : B ⊢ A)
-  → (f' ∘g f ≡ id)
-  → unambiguous B → unambiguous A
+  → @0 (f' ∘g f ≡ id)
+  → @0 unambiguous B → unambiguous A
 isUnambiguousRetract' f f' ret unambB e e' =
   cong (_∘g e) (sym ret)
   ∙ cong (f' ∘g_) (unambB _ _)
   ∙ cong (_∘g e') ret
 
 open _isRetractOf_
-@0 isUnambiguousRetract : A isRetractOf B → unambiguous B → unambiguous A
+@0 isUnambiguousRetract : A isRetractOf B → @0 unambiguous B → unambiguous A
 isUnambiguousRetract the-ret =
   isUnambiguousRetract' (the-ret .weak .fun) (the-ret .weak .inv) (the-ret .ret)
 
-@0 unambiguous≅ : A ≅ B → unambiguous A → unambiguous B
+@0 unambiguous≅ : A ≅ B → @0 unambiguous A → unambiguous B
 unambiguous≅ A≅B unambA = isUnambiguousRetract' (A≅B .inv) (A≅B .fun) (A≅B .sec) unambA
   where open isStrongEquivalence
 
 unambiguous→StrongEquivalence
-  : unambiguous A
-  → unambiguous B
+  : @0 unambiguous A
+  → @0 unambiguous B
   → (A ⊢ B)
   → (B ⊢ A)
   → A ≅ B
@@ -154,14 +154,14 @@ unambiguous→StrongEquivalence unambA unambB f f' =
 
 unambiguousRetract'→StrongEquivalence
   : ∀ (f : A ⊢ B) (f' : B ⊢ A)
-  → (f' ∘g f ≡ id)
-  → unambiguous B
+  → @0 (f' ∘g f ≡ id)
+  → @0 unambiguous B
   → A ≅ B
 unambiguousRetract'→StrongEquivalence f f' ret unambB
   = unambiguous→StrongEquivalence (isUnambiguousRetract' f f' ret unambB) unambB f f'
 
-@0 unambiguousRetract→StrongEquivalence :
-  A isRetractOf B → unambiguous B → A ≅ B
+unambiguousRetract→StrongEquivalence :
+  A isRetractOf B → @0 unambiguous B → A ≅ B
 unambiguousRetract→StrongEquivalence the-ret unambB =
   unambiguous→StrongEquivalence
     (isUnambiguousRetract the-ret unambB) unambB

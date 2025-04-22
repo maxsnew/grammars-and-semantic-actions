@@ -57,13 +57,13 @@ module _ (A : Bool → Grammar ℓA) where
   ⊕≅⊕Ind .sec = the-sec
   ⊕≅⊕Ind .ret = the-ret
 
-module _ {A B : Grammar ℓA} (unambig⊕ : unambiguous (A ⊕ B)) where
+module _ {A B : Grammar ℓA} (@0 unambig⊕ : unambiguous (A ⊕ B)) where
   unambig-⊕-is-disjoint : disjoint A B
   unambig-⊕-is-disjoint =
     disjoint≅2
       (hasDisjointSummands⊕ᴰ isSetBool
         (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕)
-        true false true≢false)
+        true false λ _ → λ ())
       id≅ id≅
 
   @0 summand-L-is-unambig : unambiguous A

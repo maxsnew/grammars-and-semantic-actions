@@ -5,6 +5,7 @@ module Grammar.Sum.Unambiguous (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
 import Cubical.Data.Empty as Empty
+import Cubical.Data.Equality as Eq
 open import Cubical.Data.Maybe hiding (rec)
 
 open import Cubical.Relation.Nullary.Base
@@ -58,20 +59,20 @@ module _
       (unambiguous'⊕ᴰ (unambiguous→unambiguous' unambig⊕) x)
 
   module _
-    (unambig⊕ : unambiguous (⊕[ x ∈ X ] A x))
+    (@0 unambig⊕ : unambiguous (⊕[ x ∈ X ] A x))
     where
     opaque
       unfolding _&_ ⊥
-      @0 equalizer→⊥ :
+      equalizer→⊥ :
         (x y : X) →
-        (x ≡ y → Empty.⊥) →
+        (@0 x ≡ y → Empty.⊥) →
         equalizer (σ {A = A} x ∘g π₁) (σ y ∘g π₂) ⊢ ⊥
       equalizer→⊥ x y x≠y w p =
         x≠y (cong fst (funExt⁻ (funExt⁻ (eq-π-pf (σ {A = A} x ∘g π₁) (σ y ∘g π₂)) w) p))
 
-    @0 hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
+    hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
     hasDisjointSummands⊕ᴰ x y x≠y =
-      equalizer→⊥ x y x≠y
+      equalizer→⊥ x y (λ a → x≠y a (Eq.pathToEq a))
       ∘g eq-intro {A = A x & A y}{B = ⊕[ x ∈ X ] A x}
         (σ x ∘g π₁) (σ y ∘g π₂) id
         (unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂))
