@@ -153,7 +153,8 @@ opaque
     ⊗-unit-ll⁻ {A = A} = funExt λ w → funExt λ where
         ((_ , Eq.refl) , Eq.refl , a) → refl
 
-    @0 ⊗-unit-l⁻l : ⊗-unit-l {A = A} ∘g ⊗-unit-l⁻ ≡ id
+    @0 ⊗-unit-l⁻l :
+      ⊗-unit-l {A = A} ∘g ⊗-unit-l⁻ ≡ id
     ⊗-unit-l⁻l {A = A} = refl
 
     @0 cong-∘g⊗-unit-l⁻ :
@@ -175,20 +176,28 @@ opaque
     ⊗-unit-lr⁻ = funExt λ w → funExt λ where
       Eq.refl → refl
 
-  ⊗-assoc : A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
+  ⊗-assoc :
+    A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
   ⊗-assoc _ (((wa , wbc) , Eq.refl) , a , (((wb , wc) , Eq.refl) , b , c)) =
     ((wa ++ wb , wc) , Eq.sym (++-assoc-Eq wa wb wc)) , ((((wa , wb) , Eq.refl) , (a , b)) , c)
 
-  ⊗-assoc⁻ : (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C)
+  ⊗-assoc⁻ :
+    (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C)
   ⊗-assoc⁻ _ (((wab , wc) , Eq.refl) , (((wa , wb) , Eq.refl) , a , b) , c) =
     ((wa , wb ++ wc) , ++-assoc-Eq wa wb wc) , (a , (((wb , wc) , Eq.refl) , (b , c)))
 
   opaque
     unfolding ε ⊗-unit-l⁻
-    ⊗-unit-l⁻⊗-intro : ∀ {f : A ⊢ B} → ⊗-unit-l⁻ ∘g f ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
+    ⊗-unit-l⁻⊗-intro :
+      ∀ {f : A ⊢ B}
+      → ⊗-unit-l⁻ ∘g f
+      ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
     ⊗-unit-l⁻⊗-intro = refl
 
-    ⊗-unit-r⁻⊗-intro : ∀ {f : A ⊢ B} → ⊗-unit-r⁻ ∘g f ≡ (⊗-intro f id) ∘g ⊗-unit-r⁻
+    ⊗-unit-r⁻⊗-intro :
+      ∀ {f : A ⊢ B}
+      → ⊗-unit-r⁻ ∘g f
+      ≡ (⊗-intro f id) ∘g ⊗-unit-r⁻
     ⊗-unit-r⁻⊗-intro = refl
 
     id,⊗id≡id : ⊗-intro id id ≡ id {A = A ⊗ B}

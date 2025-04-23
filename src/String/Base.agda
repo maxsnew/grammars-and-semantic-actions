@@ -22,6 +22,30 @@ open import Cubical.Data.Sigma
 String : Type ℓ-zero
 String = List ⟨ Alphabet ⟩
 
+NonEmptyString : Type ℓ-zero
+NonEmptyString = Σ[ w ∈ String ] (w Eq.≡ [] → Empty.⊥)
+
+Splitting : String → Type ℓ-zero
+Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w Eq.≡ w₁ ++ w₂)
+
+@0 SplittingPath : String → Type ℓ-zero
+SplittingPath w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
+
+@0 SplittingIso : ∀ w → Iso (Splitting w) (SplittingPath w)
+SplittingIso w .Iso.fun s = (s .fst) , (Eq.eqToPath (s .snd))
+SplittingIso w .Iso.inv s = s .fst , Eq.pathToEq (s .snd)
+SplittingIso w .Iso.rightInv s i = s .fst , Eq.eqToPath-pathToEq (s .snd) i
+SplittingIso w .Iso.leftInv s i = s .fst , Eq.pathToEq-eqToPath (s .snd) i
+
+@0 Splitting→SplittingPath : ∀ w → Splitting w → SplittingPath w
+Splitting→SplittingPath w = SplittingIso w .Iso.fun
+
+@0 SplittingPath→Splitting : ∀ w → SplittingPath w → Splitting w
+SplittingPath→Splitting w = SplittingIso w .Iso.inv
+
+@0 Splitting≡SplittingPath : ∀ w → Splitting w ≡ SplittingPath w
+Splitting≡SplittingPath w = isoToPath (SplittingIso w)
+
 @0 isSetString : isSet String
 isSetString = isOfHLevelList 0 (str Alphabet)
 
@@ -31,56 +55,41 @@ isSetEqString _ _ = isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (
 @0 isGroupoidString : isGroupoid String
 isGroupoidString = isSet→isGroupoid isSetString
 
-NonEmptyString : Type ℓ-zero
-NonEmptyString = Σ[ w ∈ String ] (w Eq.≡ [] → Empty.⊥)
+@0 isSetSplitting : (w : String) → isSet (Splitting w)
+isSetSplitting w =
+  isSetΣ
+    (isSet× isSetString isSetString)
+    (λ s → isSetRetract Eq.eqToPath Eq.pathToEq
+       Eq.pathToEq-eqToPath (isGroupoidString w (s .fst ++ s .snd)))
 
-record SplittingStr : Type (ℓ-suc ℓ-zero) where
-  field
-    Splitting : String → Type ℓ-zero
-    strings : ∀ {w} → Splitting w → String × String
-    @0 isSetSplitting : (w : String) → isSet (Splitting w)
-    @0 SplittingPathP :
-      ∀ {w : I → String}{s0 : Splitting (w i0)}{s1 : Splitting (w i1)}
-      → strings s0 ≡ strings s1
-      → PathP (λ i → Splitting (w i)) s0 s1
-  @0 Splitting≡ : ∀ {w} → {s s' : Splitting w}
-    → strings s ≡ strings s' → s ≡ s'
-  Splitting≡ = SplittingPathP
+@0 isSetSplittingPath : (w : String) → isSet (SplittingPath w)
+isSetSplittingPath w =
+  isSetΣ
+    (isSet× isSetString isSetString)
+    (λ s → (isGroupoidString w (s .fst ++ s .snd)))
 
-open SplittingStr {{...}} public
+@0 SplittingPathP :
+  ∀ {w : I → String}{s0 : Splitting (w i0)}{s1 : Splitting (w i1)}
+  → s0 .fst ≡ s1 .fst
+  → PathP (λ i → Splitting (w i)) s0 s1
+SplittingPathP = ΣPathPProp λ _ → isPropRetract Eq.eqToPath
+  Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _)
 
-instance
-  @0 SplittingPath : SplittingStr
-  SplittingPath .Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
-  SplittingPath .strings = fst
-  SplittingPath .isSetSplitting w =
-    isSetΣ (isSet× isSetString isSetString) λ _ → isGroupoidString _ _
-  SplittingPath .SplittingPathP = ΣPathPProp (λ _ → isSetString _ _)
+@0 SplittingPath-PathP :
+  ∀ {w : I → String}{s0 : SplittingPath (w i0)}{s1 : SplittingPath (w i1)}
+  → s0 .fst ≡ s1 .fst
+  → PathP (λ i → SplittingPath (w i)) s0 s1
+SplittingPath-PathP = ΣPathPProp λ _ → (isSetString _ _)
 
-instance
-  SplittingEq : SplittingStr
-  SplittingEq .Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w Eq.≡ w₁ ++ w₂)
-  SplittingEq .strings = fst
-  SplittingEq .isSetSplitting w =
-    isSetΣ (isSet× isSetString isSetString)
-      (λ _ → isSetRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isGroupoidString _ _))
-  SplittingEq .SplittingPathP =
-    ΣPathPProp (λ _ → isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _))
+@0 Splitting≡ : ∀ {w} → {s s' : Splitting w}
+  → s .fst ≡ s' .fst
+  → s ≡ s'
+Splitting≡ = SplittingPathP
 
-@0 SplittingIso : ∀ w → Iso (SplittingEq .Splitting w) (SplittingPath .Splitting w)
-SplittingIso w .Iso.fun s = (s .fst) , (Eq.eqToPath (s .snd))
-SplittingIso w .Iso.inv s = s .fst , Eq.pathToEq (s .snd)
-SplittingIso w .Iso.rightInv s i = s .fst , Eq.eqToPath-pathToEq (s .snd) i
-SplittingIso w .Iso.leftInv s i = s .fst , Eq.pathToEq-eqToPath (s .snd) i
-
-@0 Splitting→SplittingPath : ∀ w → SplittingEq .Splitting w → SplittingPath .Splitting w
-Splitting→SplittingPath w = SplittingIso w .Iso.fun
-
-@0 SplittingPath→Splitting : ∀ w → SplittingPath .Splitting w → SplittingEq .Splitting w
-SplittingPath→Splitting w = SplittingIso w .Iso.inv
-
-@0 Splitting≡SplittingPath : ∀ w → SplittingEq .Splitting w ≡ SplittingPath .Splitting w
-Splitting≡SplittingPath w = isoToPath (SplittingIso w)
+@0 SplittingPath≡ : ∀ {w} → {s s' : SplittingPath w}
+  → s .fst ≡ s' .fst
+  → s ≡ s'
+SplittingPath≡ = SplittingPath-PathP
 
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   DiscreteAlphabet : Discrete ⟨ Alphabet ⟩
@@ -88,6 +97,13 @@ module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
 
   DiscreteString : Discrete String
   DiscreteString = discreteList DiscreteAlphabet
+
+module _ (c : ⟨ Alphabet ⟩) where
+  splitChar : (w : String) → Splitting (c ∷ w)
+  splitChar w = ([ c ] , w) , Eq.refl
+
+splitting++ : ∀ w1 w2 → Splitting (w1 ++ w2)
+splitting++ w1 w2 = ((w1 , w2) , Eq.refl)
 
 -- TODO port these over to Data.Equality
 -- splittingTrichotomyTy :

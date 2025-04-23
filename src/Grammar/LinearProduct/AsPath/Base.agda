@@ -276,7 +276,8 @@ opaque
       (p .snd .fst .snd .snd ,
       p .snd .snd)))
 
-  ⊗-assoc∘⊗-assoc⁻≡id : ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
+  ⊗-assoc∘⊗-assoc⁻≡id :
+   ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
   ⊗-assoc∘⊗-assoc⁻≡id = funExt λ w → funExt λ p →
     ⊗≡ _ _
       (≡-× (λ i → p .snd .fst .fst .snd (~ i)) refl)
@@ -286,7 +287,8 @@ opaque
           (≡-× refl refl)) ,
         refl))
 
-  ⊗-assoc⁻∘⊗-assoc≡id : ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
+  ⊗-assoc⁻∘⊗-assoc≡id :
+   ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
   ⊗-assoc⁻∘⊗-assoc≡id = funExt λ w → funExt λ p →
     ⊗≡ _ _
       (≡-× refl (sym (p .snd .snd .fst .snd)))
@@ -295,34 +297,45 @@ opaque
         (⊗PathP (≡-× refl refl)
           (ΣPathP (refl , refl)))))
 
-  ⊗-assoc⁻⊗-intro : ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
-    → ⊗-assoc⁻ ∘g (⊗-intro (⊗-intro f f') f'') ≡ ⊗-intro f (⊗-intro f' f'') ∘g ⊗-assoc⁻
+  ⊗-assoc⁻⊗-intro :
+    ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
+    → ⊗-assoc⁻ ∘g (⊗-intro (⊗-intro f f') f'')
+    ≡ ⊗-intro f (⊗-intro f' f'') ∘g ⊗-assoc⁻
   ⊗-assoc⁻⊗-intro = refl
 
-  ⊗-assoc⊗-intro : ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
-    → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'') ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
+  ⊗-assoc⊗-intro :
+    ∀ {f : A ⊢ B}{f' : C ⊢ D}{f'' : E ⊢ F}
+    → ⊗-assoc ∘g ⊗-intro f (⊗-intro f' f'')
+      ≡ ⊗-intro (⊗-intro f f') f'' ∘g ⊗-assoc
   ⊗-assoc⊗-intro = refl
 
   opaque
     unfolding ⊗-unit-r⁻
-    ⊗-assoc⁻⊗-unit-r⁻ : ⊗-assoc⁻ {A = A}{B = B} ∘g ⊗-unit-r⁻ ≡ ⊗-intro id ⊗-unit-r⁻
+    ⊗-assoc⁻⊗-unit-r⁻ :
+      ⊗-assoc⁻ {A = A}{B = B} ∘g ⊗-unit-r⁻ ≡ ⊗-intro id ⊗-unit-r⁻
     ⊗-assoc⁻⊗-unit-r⁻ = funExt λ w → funExt λ p →
       ⊗≡ _ _ (≡-× refl (++-unit-r _))
         (ΣPathP (refl , ⊗PathP refl refl))
 
   opaque
     unfolding ⊗-unit-l⁻
-    ⊗-assoc⊗-unit-l⁻ : ⊗-assoc {A = A}{C = C} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
+    ⊗-assoc⊗-unit-l⁻ :
+     ⊗-assoc {A = A}{C = C} ∘g ⊗-intro id ⊗-unit-l⁻ ≡ ⊗-intro ⊗-unit-r⁻ id
     ⊗-assoc⊗-unit-l⁻ = funExt λ w → funExt λ p →
       ⊗≡ _ _ (≡-× (++-unit-r _) refl) (ΣPathP (⊗PathP refl refl , refl))
 
   opaque
     unfolding ε ⊗-unit-l⁻
-    ⊗-unit-l⁻⊗-intro : ∀ {f : A ⊢ B}
-      → ⊗-unit-l⁻ ∘g f ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
+    ⊗-unit-l⁻⊗-intro :
+      ∀ {f : A ⊢ B}
+      → ⊗-unit-l⁻ ∘g f
+      ≡ (⊗-intro id f) ∘g ⊗-unit-l⁻
     ⊗-unit-l⁻⊗-intro = refl
 
-    ⊗-unit-l⊗-intro : ∀ (f : A ⊢ B) → f ∘g ⊗-unit-l ≡ ⊗-unit-l ∘g (⊗-intro id f)
+    ⊗-unit-l⊗-intro :
+      ∀ (f : A ⊢ B)
+      → f ∘g ⊗-unit-l
+        ≡ ⊗-unit-l ∘g (⊗-intro id f)
     ⊗-unit-l⊗-intro f =
       cong-∘g⊗-unit-l⁻ _ _
         λ i → ⊗-unit-l⁻l (~ i) ∘g f ∘g ⊗-unit-l⁻l i
@@ -334,7 +347,9 @@ opaque
     ⊗-unit-r⁻⊗-intro = refl
 
     -- this is the fact that the inverse of a natural transformation is natural
-    ⊗-unit-r⊗-intro : (f : A ⊢ B) → ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
+    ⊗-unit-r⊗-intro :
+      (f : A ⊢ B) →
+      ⊗-unit-r ∘g ⊗-intro f id ≡ f ∘g ⊗-unit-r
     ⊗-unit-r⊗-intro f =
       cong-∘g⊗-unit-r⁻ _ _
         (λ i → ⊗-unit-r⁻r i ∘g f ∘g ⊗-unit-r⁻r (~ i))
@@ -393,7 +408,9 @@ opaque
 {- Triangle -}
 opaque
   unfolding ⊗-intro ⊗-unit-r ⊗-unit-l ⊗-assoc
-  ⊗-triangle : ⊗-intro ⊗-unit*-r id ∘g ⊗-assoc {A = A}{B = ε* {ℓ}}{C = B} ≡ ⊗-intro id ⊗-unit*-l
+  ⊗-triangle :
+    ⊗-intro ⊗-unit*-r id ∘g ⊗-assoc {A = A}{B = ε* {ℓ}}{C = B}
+    ≡ ⊗-intro id ⊗-unit*-l
   ⊗-triangle {A = A}{B = B} = funExt λ w → funExt λ {
     (((w1 , w2) , w≡w1w2) ,
      (gp , (((w3 , w4) , w2≡w3w4) , ((lift w3≡[]) , Bp)))) →
