@@ -19,9 +19,7 @@ open import Grammar.Top.Base Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Bottom.Base Alphabet
 open import Grammar.Literal.Base Alphabet
-open import Grammar.Epsilon.Base Alphabet
 open import Grammar.Negation.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
 open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
