@@ -16,7 +16,6 @@ open import Cubical.Data.Sum as Sum
 open import Cubical.Data.Sum.More
 open import Cubical.Data.Empty as Empty
 import Cubical.Data.Equality as Eq
-import Cubical.Data.Equality.Conversion.More as EqMore
 
 open import Cubical.Data.Sigma
 
@@ -35,14 +34,14 @@ isGroupoidString = isSet→isGroupoid isSetString
 NonEmptyString : Type ℓ-zero
 NonEmptyString = Σ[ w ∈ String ] (w ≡ [] → Empty.⊥)
 
-Splitting : String → Type ℓ-zero
+@0 Splitting : String → Type ℓ-zero
 Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
 
-@0 SplittingEq : String → Type ℓ-zero
+SplittingEq : String → Type ℓ-zero
 SplittingEq w = Σ[ (w₁ , w₂) ∈ String × String ] (w Eq.≡ w₁ ++ w₂)
 
 @0 Splitting≡SplittingEq : ∀ w → Splitting w ≡ SplittingEq w
-Splitting≡SplittingEq w i = Σ[ (w₁ , w₂) ∈ String × String ] EqMore.path≡Eq' {a = w} {a' = w₁ ++ w₂} i
+Splitting≡SplittingEq w i = Σ[ (w₁ , w₂) ∈ String × String ] Eq.PathPathEq {x = w} {y = w₁ ++ w₂} i
 
 @0 isSetSplitting : (w : String) → isSet (Splitting w)
 isSetSplitting w = isSetΣ (isSet× isSetString isSetString) λ _ → isGroupoidString _ _
@@ -56,6 +55,11 @@ SplittingPathP = ΣPathPProp λ _ → isSetString _ _
 
 @0 Splitting≡ : ∀ {w} → {s s' : Splitting w} → s .fst ≡ s' .fst → s ≡ s'
 Splitting≡ = SplittingPathP
+
+-- @0 SplittingEqPathP : ∀ {w : I → String}{s0 : SplittingEq (w i0)}{s1 : SplittingEq (w i1)}
+--   → s0 .fst ≡ s1 .fst → PathP (λ i → SplittingEq (w i)) s0 s1
+-- SplittingEqPathP s≡ = {!!}
+
 
 module _ (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩) where
   DiscreteAlphabet : Discrete ⟨ Alphabet ⟩

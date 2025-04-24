@@ -7,14 +7,6 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
-  hiding (Splitting
-        ; isSetSplitting
-        ; SplittingPathP
-        ; Splitting≡)
-  renaming (SplittingPath to Splitting
-          ; isSetSplittingPath to isSetSplitting
-          ; SplittingPath-PathP to SplittingPathP
-          ; SplittingPath≡ to Splitting≡)
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Lift.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
