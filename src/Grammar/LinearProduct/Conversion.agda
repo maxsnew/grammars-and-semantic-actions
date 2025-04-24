@@ -75,9 +75,15 @@ opaque
                     (λ i₁ → ⊗P .fst .fst .fst ++ ⊗P .snd .snd (~ i₁)) ∙
                     (λ i₁ → ⊗P .fst .snd (~ i₁)))
                    i) (⊗P .snd .fst)
-          ≡⟨ {!!} ⟩
-        subst A (λ i → {!⊗P≡⊗Eq i .fst .fst .fst!}) (⊗P .snd .fst)
           ≡⟨ (λ i → {!!}) ⟩
+        subst A ((λ i → ⊗P≡⊗Eq i .fst .fst .fst) ∙ Eq.eqToPath (Eq.sym (++-unit-r-Eq w'))) (⊗P .snd .fst)
+          ≡⟨ (λ i →
+            subst A
+              (isSetString (⊗P≡⊗Eq i .fst .fst .fst) (w' ++ [])
+                 {!!} {!Eq.eqToPath (Eq.sym (++-unit-r-Eq w'))!} i)
+              (⊗P≡⊗Eq i .snd .fst)) ⟩
+        subst A (Eq.eqToPath (Eq.sym (++-unit-r-Eq w'))) a
+          ≡⟨ Eq.eqToPath (Eq.substPath≡transport' A a (Eq.sym (++-unit-r-Eq _))) ⟩
         Eq.transport A (Eq.sym (++-unit-r-Eq _)) a
         ∎
         )
