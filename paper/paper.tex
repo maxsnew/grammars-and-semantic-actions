@@ -1,31 +1,37 @@
 % -*- fill-column: 80; -*-
-%% For double-blind review submission, w/o CCS and ACM Reference (max submission space)
-\documentclass[acmsmall,review,anonymous]{acmart}\settopmatter{printfolios=true,printccs=false,printacmref=false}
-%% For final camera-ready submission, w/ required CCS and ACM Reference
-%\documentclass[acmsmall]{acmart}\settopmatter{}
+\newif\ifarxiv
+\arxivfalse
 
+\PassOptionsToPackage{prologue,dvipsnames}{xcolor}
 
-%% Journal information
-%% Supplied to authors by publisher for camera-ready submission;
-%% use defaults for review submission.
+\ifarxiv
+\documentclass[acmsmall,nonacm]{acmart}
+\else
+\documentclass[acmsmall]{acmart}
+\fi
+
+\settopmatter{}
+
+\clubpenalty = 10000
+\widowpenalty = 10000
+\displaywidowpenalty = 10000
+
+%%% The following is specific to PLDI '25 and the paper
+%%% 'Intrinsic Verification of Parsers and Formal Grammar Theory in Dependent Lambek Calculus'
+%%% by Steven Schaefer, Nathan Varner, Pedro Henrique Azevedo de Amorim, and Max S. New.
+%%%
+\setcopyright{cc}
+\setcctype{by}
+\acmDOI{10.1145/3729281}
+\acmYear{2025}
 \acmJournal{PACMPL}
-\acmVolume{1}
-\acmNumber{CONF} % CONF = POPL or ICFP or OOPSLA
-\acmArticle{1}
-\acmYear{2018}
-\acmMonth{1}
-\acmDOI{} % \acmDOI{10.1145/nnnnnnn.nnnnnnn}
-\startPage{1}
+\acmVolume{9}
+\acmNumber{PLDI}
+\acmArticle{178}
+\acmMonth{6}
+\received{2024-11-14}
+\received[accepted]{2025-03-06}
 
-%% Copyright information
-%% Supplied to authors (based on authors' rights management selection;
-%% see authors.acm.org) by publisher for camera-ready submission;
-%% use 'none' for review submission.
-\setcopyright{none}
-%\setcopyright{acmcopyright}
-%\setcopyright{acmlicensed}
-%\setcopyright{rightsretained}
-%\copyrightyear{2018}           %% If different from \acmYear
 
 %% Bibliography style
 \bibliographystyle{ACM-Reference-Format}
@@ -45,6 +51,8 @@
 \usepackage{hyperref}
 \usepackage[capitalise]{cleveref}
 
+% \usepackage{showframe}
+
 \usepackage[LGR,T1]{fontenc}
 \DeclareMathAlphabet{\mathgtt}{LGR}{cmtt}{m}{n}
 
@@ -57,31 +65,56 @@
 \usepackage{mathastext}
 \renewcommand{\familydefault}{\rmdefault}
 
-\definecolor{codegreen}{rgb}{0,0.6,0}
-\definecolor{codegray}{rgb}{0.5,0.5,0.5}
-\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\colorlet{keywordcolor}{blue}
+\colorlet{nonlintycolor}{RubineRed}
+\colorlet{lintycolor}{PineGreen}
+\colorlet{nonlinconstructorcolor}{nonlintycolor}
+\colorlet{linconstructorcolor}{lintycolor}
+\colorlet{alphabetcolor}{black}
+\colorlet{funarrowcolor}{lintycolor}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\newcommand{\uparrowcode}{\color{nonlinconstructorcolor} \uparrow}
+\newcommand{\tocode}{\color{nonlinconstructorcolor} \to}
+\newcommand{\tocodelin}{\color{linconstructorcolor} \to}
 
 \usepackage{listings}
 \lstdefinelanguage{Agda}{
+alsoletter={0123\&'},
 keywords={data, where, module, import, open, public,
 record, field, let, in, if, then, else, case, of, with,
 do, postulate, primitive, mutual, abstract, private,
 forall, exists, cong, set, prop, sort, Level, Data, Type,
 Renamer},
-morekeywords=[2]{Set, Type, Prop, moduleFuncs, instance, Named},
+morekeywords=[2]{L, Bool, Nat, Fin},
+morekeywords=[3]{String, Dyck, Trace, Exp, Atom, O, D, C, A, NotStartsWithLP, NotStartsWithRP},
+morekeywords=[4]{bal, .nil, .cons, cons, nil, inl, inr, stop, 1to1, 1to2, 0to2, 0to1,
+  done, add, num, parens, left, unexpected, lookAheadRP, lookAheadNot, closeGood, closeBad,
+  doneGood, doneBad},
+morekeywords=[5]{.states, states, .isAcc, isAcc, transitions, src, dst, .transitions, .dst,
+  .src, .label, label, 0 , 1 , 2, 3, true, false},
+morekeywords=[6]{NUM},
+morekeywords=[7]{\&, '},
 sensitive=true,
 comment=[l]{--},
 morecomment=[s]{\{-}{-\}},
 morestring=[b]",
 mathescape=true,
-escapeinside={(*@}{@*)}
+moredelim={[is][]{\#}{\#}},
+escapeinside={(*@}{@*)},
+escapebegin=\color{funarrowcolor},
+escapeend={}
 }
 \lstset{
 language=Agda,
 basicstyle=\ttfamily\footnotesize,
-keywordstyle=\color{blue},
-keywordstyle=[2]\color{teal},
+keywordstyle=\color{keywordcolor},
+keywordstyle=[2]\color{nonlintycolor},
+keywordstyle=[3]\color{lintycolor},
+keywordstyle=[4]\color{linconstructorcolor},
+keywordstyle=[5]\color{nonlinconstructorcolor},
+keywordstyle=[6]\color{alphabetcolor},
+keywordstyle=[7]\color{funarrowcolor},
 identifierstyle=\color{black},
 commentstyle=\color{gray}\textit,
 stringstyle=\color{orange},
@@ -97,8 +130,19 @@ breakatwhitespace=false,
 rulecolor=\color{black},
 texcl=true,
 backgroundcolor=\color{backcolour},
-frame=single
+frame=single,
+xleftmargin = 1.5mm ,
+xrightmargin = 1.5mm
 }
+
+\usepackage{placeins} % for \FloatBarrier
+
+\lstnewenvironment{floatlisting}{
+  \FloatBarrier
+  \lstset{
+    aboveskip=2mm
+  }
+}{}
 
 \usepackage{stmaryrd}
 \usepackage{scalerel}
@@ -166,7 +210,6 @@ frame=single
 \DeclareMathOperator*{\bigamp}{\scalerel*{\&}{\bigoplus}}
 \DeclareMathOperator*{\bigwith}{\scalerel*{\&}{\bigoplus}}
 
-
 \newcommand{\bang}{~\textbf{!}~}
 % Tentatively using uparrow for linear to non-linear to be in line with
 % Pfennings adjoint functional programming
@@ -174,7 +217,7 @@ frame=single
 \newcommand{\nil}{\texttt{nil}}
 \newcommand{\ident}{\texttt{id}}
 \newcommand{\cons}{\texttt{cons}}
-\newcommand{\epscons}{\varepsilon\texttt{cons}}
+\newcommand{\epscons}{\epsilon\texttt{cons}}
 \newcommand{\data}{\mathsf{data}}
 \newcommand{\where}{\mathsf{where}}
 \newcommand{\Trace}{\texttt{Trace}}
@@ -206,8 +249,6 @@ frame=single
 \newcommand{\LinPiTyLimit}[3]{\bigwith\limits_{#1 : #2} #3}
 \newcommand{\LinSigTy}[3]{\textstyle\bigoplus_{#1 : #2} #3}
 \newcommand{\LinSigTyLimit}[3]{\bigoplus\limits_{#1 : #2} #3}
-%% \newcommand{\DepWith}[2]{{\textstyle\bigamp}\limits_{#1}{#2}
-%% \newcommand{\DepPlus}[2]{{\textstyle\bigoplus}\limits_{#1}{#2}
 \newcommand{\GrTy}{\mathsf{Gr}}
 
 \newcommand{\equalizer}[3]{\{#1\,|\,\applto {#2}{#1} = \applto{#3}{#1} \}}
@@ -238,8 +279,8 @@ frame=single
 \newcommand{\agdalogo}{%
   \usebox{\logoagdabox}}%
 
-\newcommand{\fillerlink}{http://localhost:1313}
-\newcommand{\Agda}[1]{\href{#1}{\agdalogo}}
+\newcommand{\zenodolink}{https://zenodo.org/records/15049780}
+\newcommand{\Agda}{\href{\zenodolink}{\agdalogo}}
 
 \newif\ifdraft
 \draftfalse
@@ -284,46 +325,49 @@ frame=single
 \crefname{corollary}{Corollary}{Corollarys}
 \crefname{construction}{Construction}{Constructions}
 
-% \newtheorem{axiom}{Axiom}[section]
-% \newtheorem{construction}{Construction}
-
-\newif\ifappendix
-\appendixtrue
-
 \begin{document}
-
-%\pagestyle{plain}
 
 \pagebreak
 
+\ifarxiv
+\title{Intrinsic Verification of Parsers and Formal Grammar Theory in Dependent
+  Lambek Calculus (Extended Version)}
+\else
 \title{Intrinsic Verification of Parsers and Formal Grammar Theory in Dependent Lambek Calculus}
+\fi
 
 \author{Steven Schaefer}
-\affiliation{\department{Electrical Engineering and Computer Science}
+\orcid{0009-0007-1258-9501}
+\affiliation{%
   \institution{University of Michigan}
+  \city{Ann Arbor}
   \country{USA}
 }
 \email{stschaef@umich.edu}
 
 \author{Nathan Varner}
-\affiliation{\department{Electrical Engineering and Computer Science}
+\orcid{0009-0000-3031-4930}
+\affiliation{%
   \institution{University of Michigan}
+  \city{Ann Arbor}
   \country{USA}
 }
 \email{nmvarner@umich.edu}
 
-\author{Pedro H. Azevedo de Amorim}
-\affiliation{
-  \department{Department of Computer Science}
+\author{Pedro Henrique Azevedo de Amorim}
+\orcid{0000-0002-8338-8973}
+\affiliation{%
   \institution{University of Oxford}
-  \country{UK}
+  \city{Oxford}
+  \country{United Kingdom}
 }
-\email{pedro.azevedo.de.amorim@cs.ox.ac.uk}
+\email{pedro.azevedodeamorim@cs.ox.ac.uk}
 
 \author{Max S. New}
-\affiliation{
-  \department{Electrical Engineering and Computer Science}
+\orcid{0000-0001-8141-195X}
+\affiliation{%
   \institution{University of Michigan}
+  \city{Ann Arbor}
   \country{USA}
 }
 \email{maxsnew@umich.edu}
@@ -347,35 +391,80 @@ frame=single
   expressions using deterministic automata, as well as
   examples of verified parsers of context-free grammars.
 
-  We present a denotational semantics of our type theory that
-  interprets the types as a mathematical notion of formal
-  grammars. Based on this denotational semantics, we have made a
-  prototype implementation of \theoryabbv using a shallow embedding in
-  the Agda proof assistant. All of our examples parsers have been
-  implemented in this prototype implementation.
+  We present a denotational semantics of our type theory that interprets the
+  linear types as functions from strings to sets of abstract parse trees and
+  terms as parse transformers. Based on this denotational semantics, we have
+  made a prototype implementation of \theoryabbv using a shallow embedding in
+  the Agda proof assistant. All of our examples parsers have been implemented in
+  this prototype implementation.
 \end{abstract}
+
+%% 2012 ACM Computing Classification System (CSS) concepts
+%% Generate at 'http://dl.acm.org/ccs/ccs.cfm'.
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10003752.10010124.10010131.10010133</concept_id>
+       <concept_desc>Theory of computation~Denotational semantics</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011006.10011050.10011017</concept_id>
+       <concept_desc>Software and its engineering~Domain specific languages</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10003752.10003766.10003771</concept_id>
+       <concept_desc>Theory of computation~Grammars and context-free languages</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011006.10011041.10011688</concept_id>
+       <concept_desc>Software and its engineering~Parsers</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10011007.10011074.10011099.10011692</concept_id>
+       <concept_desc>Software and its engineering~Formal software verification</concept_desc>
+       <concept_significance>100</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[300]{Theory of computation~Denotational semantics}
+\ccsdesc[300]{Software and its engineering~Domain specific languages}
+\ccsdesc[500]{Theory of computation~Grammars and context-free languages}
+\ccsdesc[500]{Software and its engineering~Parsers}
+\ccsdesc[100]{Software and its engineering~Formal software verification}
+
+%% Keywords
+%% comma separated list
+\ifarxiv
+\else
+\keywords{Linear types, Dependent types, Lambek calculus, Intrinsic verification}  %% \keywords are mandatory in final camera-ready submission
+\fi
 
 \maketitle
 
 \section{Introduction}
 \label{sec:intro}
 Parsing structured data from untrusted input is a ubiquitous task in
-computing. Any formally verified software system that interacts with
-the outside world must contain some parsing component. For example, in
-an extensive experiment finding bugs in C compilers
-\cite{yangFindingUnderstandingBugs}, an early version of the formally
-verified CompCert C compiler only contained bugs in the then
-unverified parsing component \cite{leroy_formal_2009}. Bugs in parsers
-undermine the overall correctness theorem for a verified system: an
-incorrectly parsed C program will be compiled correctly but this is
+computing. Any formally verified software system that interacts with the outside
+world must contain some parsing component, and unverified parsers can undermine the overall correctness theorem for the system.
+For example, in an extensive experiment finding bugs in C compilers
+\cite{yangFindingUnderstandingBugs}, an early version of CompCert, the formally
+verified C compiler, was found to have bugs only in the then
+unverified parsing component \cite{leroy_formal_2009}.
+The correctness of the compiler only showed that the abstract syntax tree would be compiled correctly, but this is
 not very useful if it did not correctly correspond to the actual
-source program. Eventually, a correct parser was implemented using an
-automaton that is formally verified to implement an $\LR{1}$ grammar
+source program. Eventually, CompCert
+was updated to use a verified parser that implements
+an $\LR{1}$ grammar
 \cite{jourdanValidatingLRParsers2012}.
 
 It is entirely understandable from an engineering perspective
 \emph{why} verified parsing was not part of the initial releases of
-CompCert: parsing algorithms and formal grammars are a complex area,
+CompCert: parsing algorithms are a complex area,
 featuring a variety of domain-specific formalisms such as context-free
 grammars and various automata. These formalisms have little relation
 to the main components of a verified compiler. For this reason, it is
@@ -384,10 +473,10 @@ verified library, just as parser generators and regular expression
 matchers have done for many decades in unverified software.
 
 Prior approaches to verified parsing focus on verification of a
-particular grammar formalism such as non-left-recursive grammars or
+particular grammar formalism, such as non-left-recursive grammars or
 $\LL{1}$ grammars
 \cite{lasserCoStarVerifiedALL2021,EdelmannZippy2020,danielssonTotalParserCombinators2010}.
-Each new grammar formalism is extended with its own independent
+This has led to a series of isolated solutions, as each new grammar formalism is extended with its own independent
 verified implementation.
 
 In this work, we present the design of \theoryname (\theoryabbv), a
@@ -397,10 +486,10 @@ verification of parsers in that it supports the definition of grammar
 formalisms of unrestricted complexity. That is, \theoryabbv is not a
 system for verifying \emph{one} type of grammar formalism, but instead
 is a domain-specific language in which many grammar formalisms and
-their verified parsers can be implemented. For example, \theoryabbv is
-not a verified parser generator that compiles regular expressions to
-deterministic finite automata, but is instead a domain specific
-language \emph{for writing} such a verified parser generator.
+their verified parsers can be implemented. For example, \theoryabbv itself is
+not a verified parser generator compiling regular expressions to
+deterministic finite automata but is instead a domain specific
+language in which we can write such a verified parser generator.
 
 The design of \theoryabbv
 is an extension of Joachim Lambek's \emph{syntactic calculus}
@@ -423,12 +512,10 @@ dependent'' type theory with \emph{commutative} linear logic to model
 imperative programming \cite{krishnaswami_integrating_2015}.
 
 The substructural nature of \theoryabbv is well-aligned with the
-requirements intrinsic to parsing and to the theory of formal
-languages, where strings constitute a very clear notion of resource
-that cannot be duplicated, reordered, or dropped. Moreover, the constructive
-aspect of \theoryabbv ensures that verification of parsers written in the
-calculus are \emph{correct-by-construction}. The type system is powerful enough
-that derivations of a term type checking carry intrinsic proofs of correctness.
+requirements intrinsic to parsing and the theory of formal
+languages, where strings constitute a clear notion of resource
+that cannot be duplicated, reordered, or dropped. Moreover, \theoryabbv ensures that parsers written in the calculus are \emph{correct-by-construction}. That is, our type system is rich
+enough that typing derivations carry intrinsic proofs of parser correctness.
 Parsers written in \theoryabbv take on a linear functional style, which makes
 them familiar to write and amenable to compositional verification techniques.
 
@@ -437,48 +524,36 @@ as a shallowly embedded domain-specific language in the Cubical Agda
 proof assistant \cite{VezzosiMortbergAbel2019}. We have implemented many example
 grammars and parsers in our system including regular expressions,
 non-deterministic and deterministic automata, as well as some example
-context-free grammars and parsers based on $\LL{1}$ and $\LR{1}$
-automata. Throughout this paper, \agdalogo~ will mark
+$\LL{1}$ context-free grammars and parsers using stack-based
+automata. Throughout this paper \Agda~ will mark
 results that are mechanized in our Agda development and provide a link to their
 implementation.
 
 Our Agda prototype is based on a \emph{denotational semantics} of
 \theoryabbv. The core idea of the denotational semantics stems from an observation of Elliott:
-% The core idea of the denotational semantics is
-% \cite{elliottSymbolicAutomaticDifferentiation2021}, Elliott describes
-a formal grammar is a type-level predicate on strings that proves
-language membership \cite{elliottSymbolicAutomaticDifferentiation2021}. That is, a \emph{formal grammar} $A$ is a
+an abstract notion of formal grammar can be given by a ``proof-relevant'' predicate on strings \cite{elliottSymbolicAutomaticDifferentiation2021}. That is, a \emph{formal grammar} $A$ is a
 function $\StringSem \to \Set$ such that for a string $w$, $A~w$ is the
 set of ``proofs'' showing that $w$ belongs to the language recognized
 by $A$. We show that all linear types in \theoryabbv can be so
 interpreted as an abstract formal grammar in this sense, and that
-linear terms are a kind of \emph{parse transformer}, a function that
+linear terms can be interpreted as a kind of \emph{parse transformer}, a function that
 takes a parse tree from one grammar to a parse tree in a different
 grammar but over the same underlying string.
 
-%% Formal verification encompasses a broad suite of techniques one may use to
-%% mathematically guarantee the correctness of software systems. We can only
-%% reap the benefits of
-%% any proof effort if its underlying assumptions hold. For instance, verifying the
-%% functional correctness of an algorithm is no use if it is run on buggy hardware.
-%% Likewise, the promised guarantees of a program may be jeopardized if it is
-%% parsed incorrectly.
-
-Our contributions are then:% \max{This contribution section needs to be punchier}
+Our contributions are then:
 %
 \begin{itemize}
   \item The design of \theoryname (\theoryabbv): A dependent
     linear-non-linear type theory for building verified parsers, which
     extends prior work on dependent linear-non-linear type theory to
     support inductive linear types.
-  \item A demonstration of how to encode many common grammar formalisms
+  \item A demonstration of how to encode many common grammar and parser formalisms
     (regular expressions, (non-)deterministic automata, context-free
-    grammars) and parser formalisms within our type theory.
+    grammars) within our type theory.
   \item A prototype implementation of \theoryabbv in Agda with all
     examples mechanized.
   \item A denotational semantics for \theoryabbv that shows that the
-    parsers are in fact verified to be correct, and the soundness of the
-    equational theory.
+    parsers are in fact verified to be correct, and the equational theory is sound.
 \end{itemize}
 
 This paper begins in \cref{sec:type-theory-examples} by studying small
@@ -489,8 +564,11 @@ applicability of \theoryabbv for relating familiar grammar and
 automata formalisms as well as building concrete parsers.  Then in
 \cref{sec:semantics-and-metatheory}, we give a denotational semantics
 that makes precise the connection between \theoryabbv syntax and
-formal grammars. Finally in \Cref{sec:discussion} we discuss related
+formal grammars. Finally, in \Cref{sec:discussion} we discuss related
 and future work.
+
+\ifarxiv\else {Proofs and syntactic forms elided from this paper are presented
+    in full in the extended version \cite{schaefer2025intrinsicverificationparsersformal}.}\fi
 
 \section{\theoryname by Example}
 \label{sec:type-theory-examples}
@@ -523,25 +601,25 @@ use type-theoretic syntax to represent disjunction $\oplus$ and concatenation
 $\otimes$ of
 grammars. Over an input string $\w$, a parse of the disjunction $\A \oplus \B$ is either
 a parse of $\A$ over the string $\w$ or a
-parse of $\B$ over the string $\w$. Similarly, a parse of $\A \otimes \B$ for
+parse of $\B$ over the string $\w$, along with a tag \texttt{inl} or \texttt{inr} indicating which case was taken. A parse of $\A \otimes \B$ for
 $\w$ is a splitting of $w$ into two strings $\w_{\A}$ and $\w_{\B}$ with
 parses for $\A$
 and $\B$, respectively.
 
-A grammar $A$ derives the word $w$ if there exists a derivation
-$\internalize{w} \vdash a : A$,
+A derivation of a word $w$ in a grammar $A$ is given by a term in our calculus that satisfies the typing
+$\internalize{w} \vdash e : A$,
 where $\internalize \w$ is a context with one variable for each character of
-$\w$. The term $a : A$ represents a \emph{parse tree} of $w$ for the grammar $A$. For
+$\w$. The term $e : A$ represents a \emph{parse tree} of $w$ for the grammar $A$. For
 example, to define a parse tree for \stringquote{ab}, we use
 the context $\internalize{\stringquote{ab}} = a : \literal a , b :
 \literal b$. In \Cref{fig:fingram}, we give a lambda term and its
 typing derivation to define a parse for a finite grammar.
 
 \begin{figure}
-\begin{lstlisting}
-f : (*@$\uparrow$@*)('a' (*@$\otimes$@*) 'b' (*@$\lto$@*) ('a' (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
+\begin{floatlisting}
+f : (*@$\uparrowcode$@*)('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)' (*@$\lto$@*) ('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\oplus$@*) '(*@\color{alphabetcolor}c@*)')
 f (a , b) = inl (a , b)
-\end{lstlisting}\begin{mathpar}
+\end{floatlisting}\begin{mathpar}
   \footnotesize
   \inferrule
   {
@@ -561,39 +639,31 @@ f (a , b) = inl (a , b)
   {a : \literal a , b : \literal b \vdash \texttt{f} := \inl(a , b) :
     (\literal a \otimes \literal b) \oplus \literal c}
 \end{mathpar}
-\caption{(\Agda{fillerlink}) \stringquote{ab} is parsed by $(\literal a \oplus \literal b) \otimes \literal c$
+\caption{(\Agda) \stringquote{ab} is parsed by $(\literal a \otimes \literal b) \oplus \literal c$
 }
 \label{fig:fingram}
 \end{figure}
 For this interpretation of parse trees as terms to make sense, our
 calculus cannot allow for \emph{any} of the usual structural rules of
 type theory: weakening, contraction and exchange. Weakening allows
-for variables to go unused, while contraction allows for the same
-variable to be used twice, but in a parse tree, every character must
-be accounted for exactly once. That is, we want to prevent the following
-erroneous derivations,
-\(
-{a : \literal a , b : \literal b \not \vdash a : \literal a}\) and
+for variables to go unused, which would allow for a character in an input string to be ignored, yielding the erroneous parse tree \( {a : \literal a , b : \literal b \not \vdash a : \literal a} \).
+Contraction allows for the same variable to be used twice, yielding the erroneous parse
 \({a : \literal a , b : \literal b \not \vdash (a, a) : \literal a \otimes \literal a}
 \).
-
 Finally, the ordering of characters in a string cannot be ignored while
 parsing, so we omit the exchange rule because it would allow
-for variables in the context to be reordered. Likewise, we prevent the following derivation,
+for variables in the context to be reordered. This prevents the erroneous derivation,
 \(
   {a : \literal a , b : \literal b \not \vdash (b , a) : \literal b \otimes \literal a}
 \).
-% otherwise we would have that $\inl(x\otimes y)$ is a valid
-% term in context $y:b,x:a$, but there should be no parses of $ba$ in
-% this grammar.
 
 \paragraph{Regular Expressions}
 Regular expressions can be encoded as types generated by base types,
 $\oplus$, and $\otimes$, and the Kleene star $(\cdot)^{\ast}$.  For a
 grammar $\A$, we define the Kleene star $\A^{*}$ as a particular
 \emph{inductive linear type} of linear lists, as shown in
-\cref{fig:kleenestarinductive}. Here $\A^{*} : \L$ means we are defining
-a \emph{linear} type. $\A^{*}$ has two constructors: $\nil$, which
+\cref{fig:kleenestarinductive}. Here $\A^{*} : \L$ means we are defining $\A^*$
+to be a \emph{linear} type. $\A^{*}$ has two constructors: $\nil$, which
 builds a parse of type $\A^{*}$ from nothing; and $\cons$, which
 linearly consumes a parse of $\A$ and a parse of $\A^{*}$ and builds a
 parse of $\A^{*}$. This linear consumption is defined by the linear
@@ -601,15 +671,15 @@ function type $\lto$. The linear function type $\A \lto \B$ defines functions th
 take in parses of $\A$ as input, \emph{consume} the input, and return a parse of
 $\B$ as output. The arrow, $\uparrow$, wrapping these
 constructors means that the constructors are not consumed
-upon usage, and so are \emph{non-linear} values themselves. That is, the
+upon usage, and so are \emph{non-linear} values themselves, which are not small. That is, the
 names $\nil$ and $\cons$ are function symbols that may be reused as many times
 as we wish.
 
 \begin{figure}
 \begin{lstlisting}
 data A(*@$^*$@*) : L where
-  nil : (*@$\uparrow$@*)(A(*@$^*$@*))
-  cons : (*@$\uparrow$@*)(A (*@$\lto$@*) A(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
+  nil : (*@$\uparrowcode$@*)(A(*@$^*$@*))
+  cons : (*@$\uparrowcode$@*)(A (*@$\lto$@*) A(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
 \end{lstlisting}
 \caption{Kleene Star as an inductive type}
 \label{fig:kleenestarinductive}
@@ -673,10 +743,10 @@ a value that may only be used a single time.
 {a : \literal a , b : \literal b \vdash \texttt{g} := \inl (\cons~a~\nil , b) : ({\literal a}^{*} \otimes \literal b) \oplus \literal c}
 \end{mathpar}
 \begin{lstlisting}
-g : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*) ('a'(*@$^*$@*) (*@$\otimes$@*) 'b') (*@$\oplus$@*) 'c')
+g : (*@$\uparrowcode$@*)(('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\lto$@*) ('(*@\color{alphabetcolor}a@*)'(*@$^*$@*) (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\oplus$@*) '(*@\color{alphabetcolor}c@*)')
 g (a , b) = inl (cons a nil , b)
 \end{lstlisting}
-\caption{(\Agda{\fillerlink}) \stringquote{ab} is parsed by
+\caption{(\Agda) \stringquote{ab} is parsed by
   $({\literal a}^{*} \otimes \literal b) \oplus \literal c$}
 \label{fig:kleenestarderivation}
 \end{figure}
@@ -698,7 +768,7 @@ parses of $(\A \otimes \A)^{*}$ to parses of $\A^{*}$.
 We define $h$ by recursion on terms of type $(\A \otimes \A)^{*}$.
 This recursion is expressed in the derivation tree by invoking the
 elimination principle for Kleene star, written
-as $\fold$. The parse transformer $h$ is more compactly presented in the pseudocode
+as $\fold$. The parse transformer $h$ is more intuitively presented in the pseudocode
 of \cref{fig:kleeneabstractproof} by pattern matching on the input and making an
 explicit recursive call in the body of its definition.
 
@@ -728,11 +798,11 @@ explicit recursive call in the body of its definition.
   {aas : (\A \otimes \A)^* \vdash \texttt{h} := \fold(\nil , f)(aas) : \A^* }
 \end{mathpar}
 \begin{lstlisting}
-h : (*@$\uparrow$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
+h : (*@$\uparrowcode$@*)((A (*@$\otimes$@*) A)(*@$^*$@*) (*@$\lto$@*) A(*@$^*$@*))
 h nil = nil
 h (cons (a1 , a2) as) = cons a1 (cons a2 (h as))
 \end{lstlisting}
-\caption{(\Agda{\fillerlink}) A parse transformer for abstract grammars}
+\caption{(\Agda) A parse transformer for abstract grammars}
 \label{fig:kleeneabstractproof}
 \end{figure}
 
@@ -743,15 +813,18 @@ h (cons (a1 , a2) as) = cons a1 (cons a2 (h as))
 \newcommand{\2}{\texttt{2}}
 Regular expressions are a compact formalism for defining a formal grammar,
 but an expression such as
-$({\literal a}^{*} \otimes \literal b) \oplus \literal c$ does not give a very operational perspective of how to parse
-it. For this reason, most parsers are based on compiling a grammar to a corresponding notion of automaton, which is readily implemented. To implement
-these algorithms in \theoryabbv, we need a way to represent automata as types in the same way we can represent regular expressions.
+$({\literal a}^{*} \otimes \literal b) \oplus \literal c$ does not give an
+operationalized method for parsing. For this reason, most parsers are
+implemented by
+compiling a grammar to a corresponding automaton, which is readily
+implemented. To implement
+these algorithms in \theoryabbv, we represent automata as types, just as we did with regular expressions.
 
 Finite automata are precisely the class of machines that recognize regular
 expressions. \cref{fig:exampleNFA} shows a non-deterministic
 finite automaton (NFA) for the regular expression
 $({\literal a}^{*} \otimes \literal b) \oplus \literal c$, along with a type $\Trace$, an \emph{indexed} inductive linear type of traces through this automaton. Defining an indexed inductive type can be thought
-of as defining a family of mutually recursive inductive types, one for each element of the indexing type. Here $\Trace$ 
+of as defining a family of mutually recursive inductive types, one for each element of the indexing type. Here $\Trace$
 uses an index $\s : \texttt{Fin 3}$ which picks out which
 state in the automaton a trace begins at --- where $\texttt{Fin 3}$ is the
 finite type containing inhabitants $\{\0 , \1 , \2\}$. We can think of this as defining three mutually recursive inductive types $\Trace~\0$,
@@ -772,7 +845,7 @@ $\texttt{0to1}$ takes in a trace beginning at state $\1$ and returns a
 trace beginning at state $\0$ corresponding to the same underlying
 string.
 %
-Lastly, we give a lambda term that constructs an accepting trace
+Lastly, we give a $\lambda$ term that constructs an accepting trace
 starting at the initial state for the string \stringquote{ab}.  Later
 in \Cref{sec:applications}, we will show that we can actually
 construct mutually inverse functions between the regular expression
@@ -785,17 +858,17 @@ equivalent} as grammars.
 \begin{figure}
   \begin{minipage}[t]{.6\textwidth}
     \vspace{0pt}
-  \begin{lstlisting}
-data Trace : (s : Fin 3) (*@$\to$@*) L where
-  stop : (*@$\uparrow$@*)(Trace 2)
-  1to1 : (*@$\uparrow$@*)('a' (*@$\lto$@*) Trace 1 (*@$\lto$@*) Trace 1)
-  1to2 : (*@$\uparrow$@*)('b' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 1)
-  0to2 : (*@$\uparrow$@*)('c' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 0)
-  0to1 : (*@$\uparrow$@*)(Trace 1 (*@$\lto$@*) Trace 0)
+  \begin{floatlisting}
+data Trace : (s : Fin 3) (*@$\tocode$@*) L where
+  stop : (*@$\uparrowcode$@*)(Trace 2)
+  1to1 : (*@$\uparrowcode$@*)('(*@\color{alphabetcolor}a@*)' (*@$\lto$@*) Trace 1 (*@$\lto$@*) Trace 1)
+  1to2 : (*@$\uparrowcode$@*)('(*@\color{alphabetcolor}b@*)' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 1)
+  0to2 : (*@$\uparrowcode$@*)('(*@\color{alphabetcolor}c@*)' (*@$\lto$@*) Trace 2 (*@$\lto$@*) Trace 0)
+  0to1 : (*@$\uparrowcode$@*)(Trace 1 (*@$\lto$@*) Trace 0)
 
-k : (*@$\uparrow$@*)(('a' (*@$\otimes$@*) 'b') (*@$\lto$@*)  Trace 0)
+k : (*@$\uparrowcode$@*)(('(*@\color{alphabetcolor}a@*)' (*@$\otimes$@*) '(*@\color{alphabetcolor}b@*)') (*@$\lto$@*)  Trace 0)
 k (a , b) = 0to1 (1to1 a (1to2 b stop))
-\end{lstlisting}
+\end{floatlisting}
   \end{minipage}%
   \begin{minipage}[t]{.4\textwidth}
   \vspace{8pt}
@@ -811,22 +884,12 @@ k (a , b) = 0to1 (1to1 a (1to2 b stop))
               (1) edge[below] node{$\stringquote{b}$} (2);
   \end{tikzpicture}
   \end{minipage}%
-  \caption{(\Agda{\fillerlink}) NFA for $(\a^{*} \otimes \b) \oplus \c$ and its corresponding type}
+  \caption{(\Agda) NFA for $(\a^{*} \otimes \b) \oplus \c$ and its corresponding type}
   \label{fig:exampleNFA}
 \end{figure}
 
-%% 3. Third example: NFA traces to show the indexed inductive types
-
 \section{Syntax and Typing for \theoryname}
 \label{sec:tt}
-
-%% OUTLINE
-%%
-%% 1. Overview of syntax: what are the judgments
-%% 2. Cover the linear types except for inductives
-%% 3. Cover non-linear types, mainly focus on the universes
-%% 4. Cover indexed inductive linear types
-%% 5. Cover the "axioms" we add
 
 The design of \theoryabbv is based on the dependent
 linear-non-linear calculus (\lnld) and Lambek calculus, also known as
@@ -857,8 +920,9 @@ terms. These contexts, types and terms are allowed to depend on an
 ambient non-linear context $\Gamma$, but note that linear types $A$
 cannot depend on any \emph{linear} variables in $\Delta$. We include
 definitional equality judgments for both kinds of type and term
-judgments as well. Additionally, we have a judgment $\Gamma \vdash X
-\isSmall$ which is used in the definition of universe types.
+judgments as well. Additionally, we have judgments $\Gamma \vdash X
+\isSmall$ and $\Gamma \vdash A \isSmallLin$ which are used in the definition of
+universe types.
 
 \begin{figure}
   \begin{mathpar}
@@ -943,20 +1007,26 @@ judgments as well. Additionally, we have a judgment $\Gamma \vdash X
   \label{fig:non-linear-types}
 \end{figure}
 
-We present a selection of the non-linear type constructions in
+We present a selection of the non-linear type constructors in
 \Cref{fig:non-linear-types} and provide the rest in
-\cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of the appendix.  First,
+\ifarxiv{\cref{fig:full-non-linear-types,fig:jdg-eq-nonlinear} of
+    \cref{sec:syntax}}\else{the extended version of the paper}\fi.  First,
 we include universe types $U$ of small non-linear types and $L$ of linear
 types. These are defined as
 universes ``ala Coquand'' in that we define judgments saying when
 non-linear and linear types are \emph{small} and define the universes to internalize
-precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. The definition of smallness is simply that all types are small as long as their sub-formulae are, with the exception of the two universe types themselves. These universe
+precisely this judgment \cite{coquandPresheafModel,lmcs:7713}. The definition of
+smallness is simply that all types are small as long as their sub-formulae are,
+with the exception of the two universe types themselves. A formal
+description of smallness is given in
+\ifarxiv{\cref{fig:small-nonlin-ty,fig:small-lin-ty} of
+    \cref{sec:syntax}}\else{the extended version of the paper}\fi. These universe
 types are needed so that we can define non-linear and linear types by recursion on natural
 numbers.
 Next, we include standard $\Sigma,\Pi$, empty, unit, Boolean, and natural number
 types. More complex inductive types --- such as sum types, list types, and
 $Fin~n$ --- can be defined in terms of these primitives, and we give their
-encoding in the appendix.
+encoding in \ifarxiv{\cref{sec:syntax}}\else{the extended version of the paper}\fi.
 
 We use an \emph{extensional} equality type $M =_{X} N$ with introduction form
 $refl$, but no elimination form. Instead we have the equality reflection rule
@@ -966,9 +1036,9 @@ matches our implementation, which interprets both judgmental and typal equality
 as Cubical Agda's \texttt{Path} type, and so naturally supports the equality
 reflection rule. Extensional equality makes type checking of our syntax as such
 undecidable \citep{Hofmann_1997} because the conversion rule may require an arbitrarily complex
-equality proof with no explicit proof term, but in our Agda implementation we
-must provide all of these equalities manually, and so the extensionality does
-not raise any issues for our implementation. This makes
+equality proof with no explicit proof term. However, in our Agda implementation we
+must provide all of these equalities manually, so the extensionality does
+not raise any issues. This makes
 \theoryabbv into an extensional theory, supporting function extensionality and
 the uniqueness of identity proofs. The development could be ported to an intensional type theory in the future, possibly requiring the use of setoids to handle function extensionality.
 
@@ -1030,11 +1100,13 @@ separation logic \cite{girard_linear_1987,jung_higher-order_2016}.
 We give the rules for linear type
 formation in \cref{fig:linear-formation} and the definition of linear terms in
 \cref{fig:linear-terms}. The equational theory for these
-types is straightforward $\beta\eta$ equivalence and included in the
-appendix. First, the linear variable rule says that a linear variable
-can be used if it is the \emph{only} variable in the context.
+types is straightforward $\beta\eta$ equivalence and is included in
+\ifarxiv{\cref{fig:jdgeq} of \cref{sec:denotational}}\else{the extended version of the paper}\fi.
 
-Next, we cover the ``multiplicative'' connectives of non-commutative
+First, the
+linear variable rule says that a linear variable
+can be used if it is the \emph{only} variable in the context. Next, we cover the
+``multiplicative'' connectives of non-commutative
 linear logic. The linear unit ($\I$) and tensor product ($\otimes$)
 are standard for a non-commutative linear logic: when we construct a
 linear unit we cannot use any variables and when we construct a tensor
@@ -1085,7 +1157,7 @@ $f\,a\equiv g\,a$. Note that it is important here that $f, g$
 themselves are non-linearly used functions, as linear values cannot be
 used in a type.  Equalizer types are not needed for non-linear types
 since they can be constructed using the equality type as $\sum_{x:X}
-f\,x=_Y g\,x$, but this construction can't be used for linear types
+f\,x=_Y g\,x$, but this construction cannot be used for linear types
 because it uses a \emph{dependent} version of the equality type, which
 we cannot define as a linear type. While the equalizer type is not
 used directly in defining any of our parsers or formal grammars, it is
@@ -1096,20 +1168,22 @@ In addition to these type-theoretic principles, we need two additional
 axioms that do not generally hold in systems based on linear
 logic. First, we need that additive conjunction \emph{distributes}
 over additive disjunction --- e.g., in the finitary case that $0 \& A
-\cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. In its most general form,
+\cong 0$ and $(A + B) \& C \cong (A \& C) + (B \& C)$. More generally, we assume
+\cref{ax:dist}.
 
 \begin{axiom}[Distributivity]
 \label{ax:dist}
-For any $A : (x : X) \to Y(x) \to L$, the definable distribuitivity function
-%%%%%%%%%% An attempt to inline
-% \(
-%  {\LinSigTy{f}{\left(\PiTy{x}{X}{Y(x)}\right)}{\LinPiTy{x}{X}{A\,x\,(f\,x)}} \lto
-% \LinPiTy{x}{X}{\LinSigTy{y}{Y(x)}{A\,x\,y}} \right)}
-% \)
-\(
- \lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}} : \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
+For any $A : (x : X) \to Y(x) \to L$, the definable function distributing
+conjunction over disjunction
+% Just type
+\(\LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
 \LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}}
 \)
+% Term and Type
+% \(
+%  \lamblto{b}{\letin{\sigma\,f\,b'}{b}{\withlamb{x}{\sigma\,(f\,x)\,(b'\,.\pi\,x)}}} : \LinSigTyLimit{f}{\PiTy{x}{X}{Y(x)}}{\LinPiTyLimit{x}{X}{A\,x\,(f\,x)}} \lto
+% \LinPiTyLimit{x}{X}{\LinSigTyLimit{y}{Y(x)}{A\,x\,y}}
+% \)
 has an inverse.
 \end{axiom}
 
@@ -1148,11 +1222,6 @@ is empty.
 
 We use $\sigma$-disjointness in \cref{lem:unambig-to-disjoint} to prove that
 unambiguous sums have disjoint summands.
-
-% \pedro{imo, since we are providing an Agda implementation, we can
-%   be looser with the explanation of the meaning of the disjointness axioms.
-%   As it stands, it's a bit hard do follow along. Is there a simpler example
-%   we could point to?}
 
 \begin{figure}
   \footnotesize
@@ -1242,9 +1311,10 @@ an operation $\el$ that interprets it as such a type constructor, as
 well as an operator $\map$ that defines a functorial action on parse
 transformers. The $\SPF\,X$ type supports constructors for a reference
 $\Var~x$ to one of the linear type variables, a constant expression
-that doesn't mention any type variables $K$, as well as tensor
+that does not mention any type variables $K$, as well as tensor
 products and additive conjunction and disjunction of type expressions.
-We additionally add equations in the appendix that say that the
+Further, we add equations in \ifarxiv{\cref{fig:spf-act} of \cref{sec:syntax}
+  }\else{the extended version\fi that say that the
 $\el$/$\map$ operations correspond to these descriptions of the
 constructors.
 
@@ -1276,21 +1346,6 @@ constructors.
     {\fold\,F\,f\equiv e' : \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}}
   \end{mathpar}
   \end{footnotesize}
-  %% \begin{footnotesize}
-  %%   \begin{align*}
-  %%   \mathsf{Var} &: \prod_{X:U} X \to \SPF\,X\\
-  %%   \mathsf{K} &: \prod_{X:U} L \to \SPF\,X\\
-  %%   \mathsf{\bigoplus} &: \prod_{X:U}\prod_{Y:U}(Y \to \SPF\,X) \to \SPF\,X\\
-  %%   \mathsf{\bigamp} &: \prod_{X:U}\prod_{Y:U}(Y \to \SPF\,X) \to \SPF\,X\\
-  %%   \mathsf{\otimes} &: \prod_{X:U}\SPF\,X \to \SPF\,X \to \SPF\,X\\
-  %%   \el &: \prod_{X:U}\SPF\,X \to (X \to A) \to L\\
-  %%   \map &: \prod_{X:U}\prod_{F : \SPF\,X}\prod_{A,B:X\to L}{\left(\prod_{x:X}\uparrow(\unquoteTy{A\,x}\lto \unquoteTy{B\,x})\right)} \to {\uparrow(\unquoteTy{\el(F)(A)} \lto \unquoteTy{\el(F)(B)})}\\\\
-  %%   \roll &: \prod_{X:U}\prod_{F:X \to \SPF\,X}\prod_{x:X}\ltonl{(\el(F\,x)(\mu\,F))}\\
-  %%   \fold &: \prod_{X:U}\prod_{F:X\to\SPF\,X}\prod_{A:X \to L}
-  %%   \left(\prod_{x:X}\ltonl{(\el(F\,x)(A) \lto A\,x)}\right)
-  %%   \to \prod_{x:X}\ltonl{(\mu F\,x \lto A\,x)}
-  %% \end{align*}
-  %% \end{footnotesize}
   \caption{Strictly positive functors and indexed inductive linear types}
   \label{fig:iilt}
 \end{figure}
@@ -1305,7 +1360,7 @@ types $A$ indexed by $X$, we can define a family of functions from
 $\mu F\,x \multimap A\,x$ if you specify how to interpret all of the
 constructors as operations on $A$ values. We add $\beta\eta$ equations
 that specify that this makes the family $\mu F$ into an \emph{initial
-algebra} for the functor $\el(F)$. That is the $\beta$ rule says that
+algebra} for the functor $\el(F)$. That is, the $\beta$ rule says that
 a $\mathsf{fold}$ applied to a $\mathsf{roll}$ is equivalent to
 $\mathsf{map}$ping the $\mathsf{fold}$ over all the sub-expressions,
 which means that $\mathsf{fold}$ interprets all of the constructors
@@ -1340,8 +1395,11 @@ formalization.
 So far, our calculus is a somewhat generic combination of dependent
 types with non-commutative linear types. In order to carry out formal
 grammar theory and define parsers, we need only add a few
-grammar-specific constructions. First for each character in our
-alphabet, we add a corresponding linear type $c$. We can then define a
+grammar-specific constructions.
+
+\theoryabbv is parameterized by a fixed, finite alphabet $\Sigma$ from which we
+build our strings.  For each character $c \in \Sigma$,
+we add a corresponding linear type $\literal{c}$. We can then define a
 non-linear type $\CharGram$ as the disjunction of all of these characters,
 and define a type $\StringGram$ as the Kleene star of $\CharGram$, i.e. as an
 inductive linear type.
@@ -1355,7 +1413,7 @@ of resources, and not $\I$ which controls no resources.
 \begin{axiom}
   \label{ax:string-top}
    $\lambda s. \mathsf{read}(!(s)) \equiv \lambda
-s. s$ where $!$ is the unique function $\ltonl(\StringGram\lto \top)$. That is, $\StringGram$ is strongly equivalent to $\top$.
+s. s$ where $!$ is the unique function $\ltonl(\StringGram\lto \top)$.
 \end{axiom}
 
 If we have a string, but then throw it away and read
@@ -1365,99 +1423,12 @@ type always stand for the actual input string in our reasoning. In the
 next section, we will show how these basic principles are enough to
 provide a basis for verified parsing and formal grammar theory.
 
-% \steven{TODO the intro to this section is to be condensed based on what is
-%   included in the examples section as motivation and intuition building}
-
-% Omission of the structural rules of a deductive system, such as in
-% linear logic \cite{GIRARD19871}, offers precise control over how a value is used
-% in a derivation. Linear logic omits the weakening and contraction rules
-% to ensure that every value in context is used exactly once. This control enables
-% \emph{resource-sensitive} reasoning, where we may treat a resource as
-% \emph{consumed} after usage. This viewpoint is amenable to parsing applications,
-% as we may treat characters of a string as finite resources that are consumed at
-% parse-time. That is, when reading a string, the occurrence of any character is read once. Freely duplicating or dropping characters from a string changes the meaning of that string. \max{what about a backtracking parser?}. One may then envision a linear type system where the types comprise
-% formal grammars generated over some alphabet $\Sigma$, and the type constructors
-% correspond precisely to inductive constructions on grammars --- such as
-% conjunction, disjunction, concatenation, etc.
-
-% Programming in a purely linear term language is limiting due to the variable
-% usage restrictions. Code in such a language can
-% become unnecessarily verbose when ensuring the linearity invariant.
-% To alleviate this
-% concern, in 1995 Benton et al.\ proposed an alternative categorical
-% semantics of linear logic based on adjoint interactions between linear
-% and non-linear logics \cite{bentonMixedLinearNonlinear1995} ---
-% appropriately referred to as a \emph{linear-non-linear} (LNL)
-% system. This work is simply typed, so the boundary between linear and
-% non-linear subtheories is entirely characterized via a monoidal
-% adjunction between linear terms and non-linear terms.
-
-% \steven{Describe this monoidal adjunction with $\ltonl A$ and the derivable
-%   version of $F$}
-
-% Inside of an LNL system, linearity may be thought of as an option that users can
-% choose to deliberately invoke at deliberate points in their developments in an
-% otherwise intuitionistic system. However, if we are wishing to treat parsers as
-% linear terms over input strings, the non-linear fragment of an LNL theory does
-% not really assist in the development of parsers. It is instead the case that
-% parsers may benefit from a \emph{dependence} on non-linear terms.
-% Through the approach described by Krishnaswami et al.\ in
-% \cite{krishnaswami_integrating_2015},
-% we may define a restricted form of dependent types.
-
-% In particular, dependence
-% on linear terms
-% is disallowed; however, through dependence of a linear term on a non-linear
-% index, we can recover the definition of Aho's indexed grammars \cite{AhoIndexed}
-% internal to \theoryabbv. Although, we can define strictly more things, as Aho's
-% indexed grammars provide restricted access to the index whereas we can do
-% whatever with it.
-
-% \steven{elaborate on indexed grammars in a more articulate way in the last sentence}
-% \steven{Put the aho stuff in the subtheory section}
-%
-
-% \paragraph{Regular Expressions}
-% We may realize regular expression as a subtheory
-% of our language by restricting the type constructors to the
-% linear unit, characters, $\otimes$, $\oplus$, and Kleene star. Classically, the
-% languages recognized by these are exactly the regular languages --- the lowest
-% on the Chomsky hierarchy.
-
-% \paragraph{$\mu$-Regular Expressions} Similarly, we may restrict the connectives
-% to be linear unit, characters, $\otimes$, $\oplus$, and arbitrary recursion via
-% left-fixed point rather than only Kleene star.
-% Instead of regular expressions these correspond to Lei{\ss}'s $\mu$-regular
-% expressions, which are known to be equivalent to context-free grammars
-% \cite{leiss,krishnaswami_typed_2019}.
-
-% \paragraph{Beyond Context-Free Grammars} The previous two subtheories induce as semantics
-% regular grammars and context-free grammars, respectively; however, by including
-% the LNL dependent types we may actually express the entirety of the Chomsky
-% hierarchy. Through use of the LNL dependent types, we may encode indexed
-% grammars, which are known to be properly between context-free and
-% context-sensitive grammars within the Chomsky hierarchy \cite{AhoIndexed}. We
-% will further see in \cref{subsubsec:tm} how to use dependence to encode Turing machines internal to our
-% calculus, which of course induces a semantics of unrestricted grammars.
-
-% \paragraph{Indexed Grammars}
-% The LNL dependent types can be used to encode Aho's indexed grammars
-% \cite{AhoIndexed} internal to \theoryabbv. Although, we can define strictly more
-% things with this non-linear index, as we have unrestricted access to the index
-% whereas Aho's grammars can only manipulate it in a particular way.
-
-% \steven{Elaborate on these, and note that they are bw context free and context
-%   sensitive on the Chomsky hierarchy}
-
 \section{Formal Grammar Theory in \theoryname}
 \label{sec:applications}
-This section explores the applications of \theoryabbv to conducting formal
+This section explores the applications of \theoryabbv to formal
 grammar theory. We demonstrate that several classical notions and constructions
 integral to the theory of formal languages are faithfully represented
-in \theoryname. By encoding well-established formal grammar concepts, we ensure
-that our framework remains grounded in the
-foundational principles of formal language theory while opening the door to
-compositional formal verification of parsers.
+in \theoryname.
 
 %% \paragraph{Weak and Strong Equivalence}
 In the theory of formal grammars, there are two different notions of
@@ -1477,39 +1448,12 @@ these notions of equivalence in \theoryabbv.
   the identity, i.e., $\lambda b. f(g(b)) \equiv \lambda b.b$.
 \end{definition}
 
-%% That is, grammars are weakly equivalent if we can construct a parse
-%% tree of $B$ from a parse tree of $A$ and vice-versa, whereas they are
-%% strongly equivalent if these processes are inverse to each other. The
-%% definition of retract is a useful intermediate notion. In retrospect,
-%% our axiom about $\StringGram$ says that $\StringGram$ is a retract of $\top$.
-
-%% \newcommand{\lang}{\texttt{Lang}}
-%% A parse transformer $\f : \ltonl{(\A \lto \B)}$ takes as input parses of $\A$ for string
-%% $\w$ and returns a parse of $\B$ for $\w$. Therefore, $\f$ demonstrates an
-%% inclusion of languages $\lang(\A) \subset \lang(\B)$. Similarly, the existence of
-%% $\g$ shows that $\lang(\B) \subset \lang(\A)$, and thus $\lang(\A) = \lang(\B)$.
-
-%% \steven{Need better notation for language that is cohesive throughout the paper}
-
-%% \begin{definition}
-%%   \label{def:strongequiv}
-%%   Grammars $\A$ and $\B$ are \emph{strongly equivalent} if there exists parse
-%%   transformers $\f : \ltonl{(\A \lto \B)}$ and $\g : \ltonl {(\B \lto \A)}$ such
-%%   that $\f \circ \g \equiv \ident$ and $\g \circ \f \equiv \ident$.
-%% \end{definition}
-
-%% For a string $\w$, \cref{def:strongequiv} induces a bijection between the
-%% $\A$-parses of $\w$ and the $\B$-parses of $\w$, thus demonstrating that $\A$
-%% and $\B$ agree in their strong generative capacity.
-
-%% \paragraph{Ambiguity}
 A formal grammar $\A$ is ambiguous if there are multiple parse trees
 for the \emph{same} string $\w$.  For example, $\a \oplus \a$ is
 ambiguous because there are two parses of $\stringquote{a}$,
 constructed using $\inl$ and $\inr$. On the other hand, a formal
 grammar is unambiguous when there is at most one parse tree for any
-input string. We can capture this notion as a type in \theoryabbv in a
-clever way:
+input string. We can capture this notion as a type in \theoryabbv as follows:
 \begin{definition}
   \label{def:unambig}
   A grammar $\A$ is \emph{unambiguous} if for every linear type $\B$,
@@ -1521,16 +1465,16 @@ is unambiguous if there is at most one way to transform parses of any
 other grammar $\B$ into parses of $\A$. This notion of an unambiguous
 type is the analog for linear types of the definition of a (homotopy)
 \emph{proposition} in the terminology of homotopy type
-theory\cite{hottbook}. The most basic unambiguous types are $\top$ and
+theory \cite{hottbook}. The most basic unambiguous types are $\top$ and
 $0$, and in a system of classical logic all unambiguous types would
 have to be equivalent to one of these, but with our axioms we can show
 also that $\I$ and literals $\literal c$ are unambiguous. To see this, first, we
 establish two useful properties of unambiguity.
-\begin{lemma}[\Agda{\fillerlink}]
+\begin{lemma}[\Agda]
   \label{lem:retract}
   If $\B$ is unambiguous and $\A$ is a retract of $\B$ then $\A$ is unambiguous.
 \end{lemma}
-\begin{lemma}[\Agda{\fillerlink}]
+\begin{lemma}[\Agda]
   \label{lem:unambig-sum}
   As a consequence of \cref{cor:binary-mono}, if a binary disjunction $A \oplus B$ is unambiguous then
   $A$ and $B$ are each unambiguous.
@@ -1544,34 +1488,9 @@ $\StringGram$ is also strongly equivalent to $\top$. Next, since $\StringGram$ i
 defined as a Kleene star, we can easily show that $\StringGram \cong \I
 \oplus \CharGram \oplus (\CharGram \otimes \CharGram \otimes \StringGram)$. Then by
 \cref{lem:unambig-sum}, we have that $\I$ and
-$\CharGram$ --- and thus each literal
-$\literal c$ --- are unambiguous as well.
-
-% \paragraph{A Grammar of Strings}
-% Define the character grammar $\CharGram$ to be the disjunction over characters in the alphabet $\Sigma$,
-% $\CharGram = \LinSigTy {c} {\Sigma} c$. Then define a linear type of strings as a
-% linear list of characters,
-% $\StringGram = \CharGram^{*}$.
-
-% In the grammars model, we can build a
-% strong equivalence between $\top$ and $\StringGram hen building parsers, we may wish to enforce this
-% syntactically by including $\top \cong \StringGram$ as an axiom.
-
-% Through inclusion of this axiom, $! : \StringGram \to \top$ is an isomorphism, and
-% thus also a monomorphism. That is, $\StringGram$ is unambiguous.
-% \max{we should have a section of the previous section which gives the axioms, this one and the distributivity axiom}
-
-% \paragraph{Parseability}
-% We say $A$ is \emph{parseable} if there exists a grammar $B$ and a map
-% $\top \to A \oplus B$. Taking $\top \cong \StringGram$, a grammar $A$ is parseable
-% exactly when we may read an arbitrary string into a parse of $A$ or a $B$-valued
-% refutation.
-
-% \paragraph{Decidability}
-% In the case that $A$ is parseable with respect to $\neg A$ --- i.e.\
-% there's a map $\top \to A \oplus \neg A$ --- then call $A$ \emph{decidable}.
-
-%% \paragraph{Partial and Total Parsers}
+$\CharGram$ are unambiguous as well. Using the finiteness of the alphabet
+$\Sigma$ and the unambiguity of $\CharGram$,
+we have that each literal $\literal c$ is likewise unambiguous.
 
 We now turn to our main task, which is using our linear type system to
 implement verified parsers. Given a grammar defined as a linear type
@@ -1581,7 +1500,7 @@ must be total, this means that we can construct an $A$ parse for
 \emph{every} input string, which is impossible for most grammars of
 interest. Instead we might try to write a partial function as a
 $\ltonl{(\StringGram \lto (A \oplus \top))}$ using the ``option''
-monad. This allows for the possibility that the input string doesn't
+monad. This allows for the possibility that the input string does not
 parse, but is far too weak as a specification: we can trivially
 implement a parser for any type by always returning $\inr$. The
 correct notion of a parser should be one that allows for failure, but
@@ -1612,7 +1531,7 @@ additional effort: the negative grammar is simply the grammar for
 traces that end in a rejecting state. This follows from the following
 principle, a consequence of \cref{ax:disjointness}.
 
-\begin{lemma}[\Agda{\fillerlink}]
+\begin{lemma}[\Agda]
   \label{lem:unambig-to-disjoint}
   If $\LinSigTy{x}{X}{A\,x}$ is unambiguous, then for $x \neq x'$, $A\,x$ and $A\,x'$ are
   disjoint. In particular, if the binary product $A \oplus A_{\neg}$ is unambiguous, then
@@ -1644,112 +1563,65 @@ automaton. Parsers for deterministic automata are simple to implement
 by stepping through the states of the automaton, with the rejecting
 traces serving as the negative grammar. This is sufficient due to the
 following:
-\begin{lemma}[\Agda{\fillerlink}]
+\begin{lemma}[\Agda]
   \label{lem:wk-eqv-parse}
   If $\A$ is weakly equivalent to $\B$ then any parser for $\A$ extends to a
   parser for $\B$.
 \end{lemma}
 Here we need both directions of the weak equivalence. We need $A \lto
 B$ to extend the parser from $\StringGram \lto A \oplus A_{\neg}$ to
-$\StringGram \lto B \oplus A_{\neg}$ but then we also need $B \lto A$ to
+$\StringGram \lto B \oplus A_{\neg}$, but then we also need $B \lto A$ to
 establish that $A_{\neg}$ is disjoint from $B$.
 
 \subsection{Regular Expressions and Finite Automata}
 %% 2. Regex, NFA, DFA
 
-In this section, we describe how to construct an intrinsically
+Next, we describe how to construct an intrinsically
 verified parser for regular expressions by compiling it to an NFA and
 then a DFA. That is, for each regular expression $A$, we construct an
 NFA $N(A)$ and a corresponding DFA $D(A)$ such that $A$ is strongly
 equivalent to the traces of $N(A)$ and weakly equivalent to the
 accepting traces of $D(A)$. Then we can easily construct a parser for
-traces of $D(A)$ and combine this using \Cref{lem:wk-eqv-parse} to get
+traces of $D(A)$ and apply \cref{lem:wk-eqv-parse} to get
 a verified regular expression parser.
 
 A regular expression in \theoryabbv is a linear type constructed
 using only the connectives $\literal c$, $0$, $\oplus$, $I$,
 $\otimes$, and Kleene star.  In \cref{sec:type-theory-examples}, we
 saw one particular NFA and its corresponding type of traces. More
-generally we define the linear type of traces as in
-\Cref{fig:nfatrace}
+generally, in \cref{fig:nfatrace} we define a linear type of traces through an
+arbitrary NFA $\N$.
 
-%% The definition of the linear type of traces
-%% through this
-%% NFA, as
-%% presented in \cref{fig:nfainductive}, inspects the concrete structure of the
-%% NFA.\ When generalizing from this example to an arbitrary NFA, we do not have the
-%% luxury of inspecting a concrete definition. Therefore, we abstract over the
-%% specification of an arbitrary NFA and define traces with respect to that
-%% specification.
-
-%% Let the data of an NFA $\N$ be given by the following nonlinear data,
-%% \begin{itemize}
-%% \item $\N.\states$ --- a finite set of states
-%% \item $\N.\init : \N.\states$ --- the initial state
-%% \item $\N.\isAcc : \N.\states \to \Bool$ --- a mapping marking which states are
-%%         accepting
-%% \item $\N.\transitions$ --- a finite set of labeled transitions
-%% \item $\N.\labelt : \N.\transitions \to \Sigma$ --- a mapping from $N.\transitions$ to the character labeling the transition
-%% \item $\N.\src , \N.\dst : \N.\transitions \to \N.\states$ --- mappings from
-%%         $\N.\transitions$ to the source and target states, respectively, of a labeled transition
-%% \item $\N.\epstransitions$ --- a finite set of $\varepsilon$-transitions
-%% \item $\N.\epssrc, \N.\epsdst : \N.\epstransitions \to \N.\states$ --- mappings
-%%         from $\N.\epstransitions$ to the source and target states of an $\epsilon$-transition
-%% \end{itemize}
-
-In \cref{fig:nfatrace} we define a linear type of traces through an
-NFA $\N$. $\Trace_{\N}$ is an inductive type indexed by the starting
-state of the trace $\s : \N.\states$. Traces in $\N$ may be built
+$\Trace_{\N}$ is an inductive type indexed by the starting
+state of the trace $\s : \N.\states$, and it may be built
 through one of three constructors. We may terminate a trace at an
 accepting state with the constructor $\nil$. Here we use an Agda-style
 Unicode syntax for $\bigamp$, as well as using the function arrow to
 mean a non-dependent version of $\bigamp$. If we had a trace beginning
 at the destination state of a transition, then we may use the $\cons$
-constructor to linearly combine that trace with a parse of the label
+constructor to combine that trace with a parse of the label
 of the transition to build a trace beginning at the source of the
 transition.  Finally, if we had a trace beginning at the destination
 of an $\epsilon$-transition then we may use $\epscons$ to pull it back
 along the $\epsilon$-transition and construct a trace beginning at the
-source of the $\epsilon$-transition. As a shorthand, write $Parse_{N}$
+source of the $\epsilon$-transition. As a shorthand, we write $Parse_{N}$
 for the accepting traces out of $N.init$.
 \newcommand{\D}{\texttt{D}}
 \begin{figure}
-\begin{lstlisting}
-data Trace(*@$_{\N}$@*) : (s : N.states) (*@$\to$@*) L where
-  nil : (*@$\uparrow$@*)(&[ s : N.states ] N.isAcc s (*@$\to$@*) Trace(*@$_{\N}$@*) s)
-  cons : (*@$\uparrow$@*)(&[ t : N.transitions ]
-    ('N.label t' (*@$\lto$@*) Trace(*@$_{\N}$@*) (N.dst t) (*@$\lto$@*) Trace(*@$_{\N}$@*) (N.src t)))
-  (*@$\epsilon$@*)cons : (*@$\uparrow$@*)(&[ t : N.(*@$\epsilon$@*)transitions ]
-    (Trace(*@$_{\N}$@*) (N.(*@$\epsilon$@*)dst t) (*@$\lto$@*) Trace(*@$_{\N}$@*)(N.(*@$\epsilon$@*)src t)))
-
-data Trace(*@$_{\D}$@*) : (s : D.states) (b : Bool) (*@$\to$@*) L where
-  nil : (*@$\uparrow$@*)(&[ s : D.states ] Trace(*@$_{\D}$@*) s D.isAcc s)
-  cons : (*@$\uparrow$@*)(&[ c : Char ] &[ s : D.states ] &[ b : Bool ]
-  ('c' (*@$\lto$@*) Trace(*@$_{\D}$@*) (D.(*@$\delta$@*) c s) b (*@$\lto$@*) Trace(*@$_{\D}$@*) s b))
-\end{lstlisting}
+\begin{floatlisting}
+data Trace(*@$_{\color{black}\N}$@*) : (s : N .states) (*@$\tocode$@*) L where
+  nil : (*@$\uparrowcode$@*)(&[ s : N .states ] N .isAcc s (*@$\tocodelin$@*) Trace(*@$_{\color{black}\N}$@*) s)
+  cons : (*@$\uparrowcode$@*)(&[ t : N .transitions ] ('#N .label t#' (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .dst t)
+                                                 (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .src t)))
+  (*@$\color{linconstructorcolor}\epsilon$@*)cons : (*@$\uparrowcode$@*)(&[ t : N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)transitions ] (Trace(*@$_{\color{black}\N}$@*) (N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)dst t) (*@$\lto$@*) Trace(*@$_{\color{black}\N}$@*) (N .(*@$\color{nonlinconstructorcolor}\epsilon$@*)src t)))
+data Trace(*@$_{\color{black}\D}$@*) : (s : (*@\color{black}D@*) .states) (b : Bool) (*@$\tocode$@*) L where
+  nil : (*@$\uparrowcode$@*)(&[ s : (*@\color{black}D@*) .states ] Trace(*@$_{\color{black}\D}$@*) s (*@\color{black}D@*) .isAcc s)
+  cons : (*@$\uparrowcode$@*)(&[ c : (*@$\color{nonlintycolor}\Sigma$@*) ] &[ s : (*@\color{black}D@*) .states ]
+           &[ b : Bool ] ('(*@\color{alphabetcolor}c@*)' (*@$\lto$@*) Trace(*@$_{\color{black}\D}$@*) ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c s) b (*@$\lto$@*) Trace(*@$_{\color{black}\D}$@*) s b))
+\end{floatlisting}
 \caption{Traces of an NFA $N$ and a DFA $D$}
 \label{fig:nfatrace}
 \end{figure}
-
-%% \paragraph{Deterministic Finite Automata}
-%% Just as the above defines an NFA, we provide a specification for an arbitrary
-%% deterministic finite automaton.\ A DFA $D$ is
-%% given by the following data,
-
-%% \begin{itemize}
-%% \item $\D.\states$ --- a finite set of states
-%% \item $\D.\init : \D.\states$ --- the initial state
-%%   \item $\D.\isAcc : \D.\states \to \Bool$ --- a mapping marking which states
-%%         are accepting
-%% \item $\D.\delta : \Sigma \to \D.\states \to \D.\states$ --- a deterministic transition function. Given a character $\c$ and a state
-%%         $\s$, $\D.\delta~\c~\s$ is the state for which there is a transition $\s \overset{\stringquote{c}}{\to} (\D.\delta~\c~\s)$
-%% \end{itemize}
-
-%% \begin{figure}
-
-%% \caption{Traces through the DFA $D$ as an indexed inductive type}
-%% \label{fig:dfatrace}
-%% \end{figure}
 
 $\Trace_{\D}$, the linear type of traces through $\D$, is given
 next. Unlike traces for an NFA, we parameterize this type additionally
@@ -1761,47 +1633,46 @@ with a trace out of the state $\D.\delta~\c~\s$. The trace built with
 $\cons$ is accepting if and only if the trace out of $D.\delta~c~s$ is
 accepting.
 
-Because DFAs are deterministic, we are able to prove that their type
-of traces are unambiguous and define a parser for them. In particular
+Because DFAs are deterministic, we are able to prove that their types
+of traces are unambiguous and define a parser for them directly. In particular
 we show that for any start state $s$, ${\LinSigTy {b} {\Bool}
   \Trace_{D}~s~b}$ is a retract of $\StringGram$ and apply \cref{lem:retract} to
-derive unambiguity. That is, first we
-construct a function $\pparse_{D}$ that is a parser for
-$\Trace_D~{s}~{true}$, with $\Trace_D~{s}~{false}$ being the disjoint
-type used. The fact that these trace types are disjoint follows from the
+derive unambiguity. That is, we first
+construct a function $\pparse_{D}$ which is a parser for
+$\Trace_D~{s}~{true}$ with $\Trace_D~{s}~{false}$ being the disjoint
+type used, and disjointness follows from the
 unambiguity of $\LinSigTy {b} {\Bool} {\Trace_{D}~s~b}$ by \cref{lem:unambig-sum}.
 
 The parser,
 $\pparse_{D}$,
 is defined by recursion on strings in \cref{fig:printdfa}. If this string is empty, then $\pparse_{D}$
-defines a linear function that terminates a trace at the input state $s$. If the
+terminates a trace at the input state $s$. If the
 string is nonempty, then $\pparse_{D}$ walks forward in $D$ from the input state $s$ by
 the character at the head of the string.
 %
 The inverse, $\print_{D}$ is defined by recursion on traces. If the trace is defined
 via $\nil$, then $\print_{D}$ returns the empty string. Otherwise, if the trace
-is defined by $\cons$ then $\pparse_{D}$ appends the character from the most
+is defined by $\cons$ then $\print_{D}$ appends the character from the most
 recent transition to the output
 string and recurses.
 %
 We prove this is a retraction by induction on traces.
 
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   \label{thm:dfa-parser}
   $\pparse_D s$ is a parser for $\Trace_D~s~\true$.
 \end{theorem}
 
 \begin{figure}
 \begin{lstlisting}
-parse(*@$_D$@*) : (*@$\uparrow$@*)(String (*@$\lto$@*) &[ s : D.states ] (*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\D}$@*) s b)
-parse(*@$_D$@*) String.nil s = (*@$\sigma$@*) (D.isAcc s) (Trace(*@$_{\D}$@*).nil s)
-parse(*@$_D$@*) (String.cons ((*@$\sigma$@*) c a) w) s = let (*@$\sigma$@*) b t = parse w (D.(*@$\delta$@*) c s) in
-                                   (*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c s b a t)
-
-print(*@$_D$@*) : (s : D.states) (*@$\to$@*) (*@$\uparrow$@*)(((*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\D}$@*) s b) (*@$\lto$@*) String)
-print(*@$_D$@*) s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).nil .s)) = String.nil
-print(*@$_D$@*) s ((*@$\sigma$@*) b (Trace(*@$_{\D}$@*).cons c (D.(*@$\delta$@*) c .s) b a trace)) =
-  String.cons ((*@$\sigma$@*) c a) (print(*@$_D$@*) (D.(*@$\delta$@*) c s) ((*@$\sigma$@*) b trace))
+parse(*@$\color{black}_D$@*) : (*@$\uparrowcode$@*)(String (*@$\lto$@*) &[ s : (*@\color{black}D@*) .states ] (*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\color{black}\D}$@*) s b)
+parse(*@$\color{black}_D$@*) String .nil s = (*@$\color{linconstructorcolor}\sigma$@*) ((*@\color{black}D@*) .isAcc s) (Trace(*@$_{\color{black}\D}$@*) .nil s)
+parse(*@$\color{black}_D$@*) (String .cons ((*@$\color{linconstructorcolor}\sigma$@*) c a) w) s = let (*@$\color{linconstructorcolor}\sigma$@*) b t = parse w ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c s) in
+                                    (*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .cons c s b a t)
+print(*@$\color{black}_D$@*) : (s : (*@\color{black}D@*) .states) (*@$\tocode$@*) (*@$\uparrowcode$@*)(((*@$\oplus$@*)[ b : Bool ] Trace(*@$_{\color{black}\D}$@*) s b) (*@$\lto$@*) String)
+print(*@$\color{black}_D$@*) s ((*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .nil .s)) = String .nil
+print(*@$\color{black}_D$@*) s ((*@$\color{linconstructorcolor}\sigma$@*) b (Trace(*@$_{\color{black}\D}$@*) .cons c ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c .s) b a trace)) =
+  String .cons ((*@$\color{linconstructorcolor}\sigma$@*) c a) (print(*@$\color{black}_D$@*) ((*@\color{black}D@*) .(*@$\color{nonlinconstructorcolor}\delta$@*) c s) ((*@$\color{linconstructorcolor}\sigma$@*) b trace))
 \end{lstlisting}
 \caption{Parser/printer for DFA traces}
 \label{fig:printdfa}
@@ -1813,7 +1684,7 @@ Scott's classic powerset construction
 \cite{rabinFiniteAutomataTheir1959}. Here we note that this is
 \emph{only} a weak equivalence and not a strong equivalence, as the
 DFA is unambiguous even if the NFA is not.
-\begin{construction}[Determinization, \Agda{\fillerlink}]
+\begin{construction}[Determinization, \Agda]
   \label{cons:determinization}
   Given an NFA $N$, we construct a DFA $D$ such that
   $Parse_{N}$ is weakly equivalent to $Parse_{D}$.
@@ -1823,13 +1694,13 @@ DFA is unambiguous even if the NFA is not.
 \newcommand{\x}{\texttt{x}}
 \newcommand{\y}{\texttt{y}}
 \begin{proof}
-  Define the states of $\D$ to be the $\mathbb{P}_{\epsilon}(\N.\states)$ --- the type
+  Define the states of $\D$ to be $\mathbb{P}_{\epsilon}(\N.\states)$ --- the type
   of $\epsilon$-closed\footnote{A subset of states $\X$ is $\epsilon$-closed if
     for every $\s \in \X$ and $\epsilon$-transition $\s \overset{\epsilon}{\to} \s'$ we have $\s' \in \X$.} subsets of
   $\N.\states$. A subset is accepting in $\D$ if it contains an accepting state
-  from $\N$. Construct the initial state of $\D$ as the
-  $\epsilon$-closure of $\N.\init$. Lastly define the transition function
-  of $\D$ to send the subset $X$ under the character $\c$ to the
+  from $\N$. The initial state of $\D$ is the
+  $\epsilon$-closure of $\N.\init$. Lastly, the transition function
+  of $\D$ sends the subset $X$ under the character $\c$ to the
   $\epsilon$-closure of all the states reachable from $X$ via a transition
   labeled with the character $\c$.
 
@@ -1847,51 +1718,6 @@ DFA is unambiguous even if the NFA is not.
   that may begin at any subset of states $\X$ that contains $\s$. $\NtoD$ may then be instantiated at
   $\s = \N.\init$ and $\X = D.\mathsf{init}$ to get the desired
   parse transformer.
-
-%% \begin{figure}
-%% \begin{lstlisting}
-%% NtoD : (s : N.states) (*@$\to$@*)
-%%        (*@$\uparrow$@*)(Trace(*@$_{\N}$@*) s true (*@$\lto$@*)
-%%            &[ X : D.states ] &[ sInX : (X (*@$\ni$@*) s) ] Trace(*@$_{\D}$@*) X true)
-%% NtoD .s (nil s) X sInX = nil s
-%% NtoD .(N.src t) (N.cons trans .true a dstTrace) X sInX =
-%%   D.cons (N.label t) X true a
-%%     (((NtoD s dstTrace).(*@$\pi$@*) (D.(*@$\delta$@*) (N.label t) X)).(*@$\pi$@*) (N.dst t))
-%% NtoD .(N.(*@$\epsilon$@*)src t) ((*@$\epsilon$@*)cons (*@$\epsilon$@*)trans .true (*@$\epsilon$@*)DstTrace) X sInX =
-%%   ((NtoD s (*@$\epsilon$@*)DstTrace).(*@$\pi$@*) X).(*@$\pi$@*) (N.(*@$\epsilon$@*)dst t)
-%% \end{lstlisting}
-%% \caption{Parse transformer from NFA traces to Powerset DFA traces}
-%% \label{fig:NtoD}
-%% \end{figure}
-
-%% Because the state $\s$ is now arbitrary, we can define $\NtoD$ via
-%% recursion on the trace through the NFA. Code for this is given in \cref{fig:NtoD}.
-%% If the NFA trace is terminating at the accepting state $\s$ and $\s \in \X$,
-%% then we return a trace in $\D$ that terminates at
-%% $\X$, which is accepting because it contains the accepting state $\s$.
-
-%% If the NFA trace is defined via $\cons$ for a labeled transition
-%% $t : N.transitions$ such that $N.src~t \in \X$, then
-%% we first decompose the trace into a parse of $N.label~t$ and a
-%% trace starting from $N.dst~t$. We then recursively call $\NtoD$
-%% on this trace which returns a family of traces parameterized by $\epsilon$-closed
-%% subsets containing $N.\dst~t$. We instantiate this family at the
-%% set of states
-%% $\D.\delta~(N.label~t)~X$. Because $\N.\dst~t$ is
-%% reachable from $\N.\src~\texttt{trans}$ by a single transition labeled by
-%% $N.label~t$ and $N.src~t \in X$ we have that
-%% $N.dst~t \in \D.\delta~(N.label~t)~X$. Therefore
-%% we can linearly combine the parse of the label and the trace built from the
-%% recursive call to get a trace in $\D$ rooted at $X$.
-
-%% Lastly, if the NFA trace is defined via $\epsilon\cons$ for an $\epsilon$-transition
-%% $t : \N.\epstransitions$ such that
-%% $\N.\epssrc~t \in \X$, then the construction is quite
-%% similar. In this case we again recursively call $\NtoD$, except afterwards we
-%% instantiate the family of grammars at the set $X$ itself. We may do this because
-%% all states in $\D$ are taken to be $\epsilon$-closed, therefore
-%% $\N.\epsdst~t \in \X$ because
-%% $\N.\epssrc~t$ is in $X$. This concludes the construction of $\NtoD$.
 
 To construct a term from DFA traces to NFA traces, we similarly strengthen our
 inductive hypothesis and build a parse transformer that ranges over arbitrary $\epsilon$-closed subsets $X : \mathbb{P}_{\epsilon}{\N.\states}$,
@@ -1911,31 +1737,6 @@ through $\N$ subject to an ordering on the non-linear types $N.\states$,
 $N.\transitions$, and $N.\epstransitions$. In essence, the given orderings
 specify a global disambiguation strategy.
 \end{proof}
-%% For a moment, let us turn our attention to the content behind the traces in $\D$.
-%% Traces from subset $\X$ to subset $\Y$ describes the \emph{existence} of some trace
-%% in the $\N$ from some $\x \in \X$ to some $\y \in \Y$. In general it is not clear how
-%% to extract out a choice of trace in $\N$, which is what $\DtoN$ is asking of us.
-%% However, we may further take the states and transitions of $\N$ to be \emph{ordered}.
-%% This allows us to
-%% induce an order on traces in $\D$ from $\X$ to $\Y$. From these orderings we can then
-%% define the necessary choice functions on each type by taking the smallest with
-%% respect to the ordering.
-
-%% We define $\DtoN$ by recursion on traces through $\D$. First if the trace stops at
-%% some accepting $\epsilon$-closed subset $\X$, then we may choose some state
-%% $\s \in X$ such that $\s$ is accepting and terminate the trace in $\N$ at $\s$.
-
-%% Next if the trace in $\D$ is defined via transition
-%% $\X \overset{\stringquote{c}}{\to} (\D.\delta~\c~\X)$ then we may choose some state in
-%% $\s \in \D.\delta~\c~\X$. Recursively, $\DtoN$ sends the trace rooted at
-%% $\D.\delta~\c~\X$ to one rooted at $\s$. By definition of $\D.\delta~\c~\X$,
-%% there exists some $\s' \in \X$ such that $\s'$ transitions to $\s$ by some number of
-%% $\epsilon$-transitions followed by a transition labeled by $\c$.
-%% We order all
-%% such traces of this form and choose the smallest one, which is then linearly
-%% combined with the parse of $\c$ to build an $\N$ trace. This concludes the
-%% definition of $\DtoN$, thus showing that $Parse_{N}$ and $Parse_{D}$ are
-%% weakly equivalent.
 
 Finally, given any regular expression we can construct a
 \emph{strongly} equivalent NFA. While only weak equivalence is
@@ -1943,175 +1744,13 @@ required to construct a parser, proving the strong equivalence shows
 that other aspects of formal grammar theory are also verifiable in
 \theoryabbv.
 \newcommand{\R}{\texttt{R}}
-\begin{construction}[Thompson's Construction, \Agda{\fillerlink}]
+\begin{construction}[Thompson's Construction \cite{thompsonProgrammingTechniquesRegular1968}, \Agda]
   \label{cons:thompson}
   Given a regular expression $\R$, we build an NFA $\N$ such that $\R$ is
   strongly equivalent to $\Trace_{N}(\N.\init)$.
 \end{construction}
-\begin{proof}
-We use a variant of Thompson's construction
-\cite{thompsonProgrammingTechniquesRegular1968}, showing that NFAs are, up to strong equivalence, closed under each type operation for regular expressions.
-\end{proof}
-%% In this paper we will walk through
-%% some of the cases of this proof. The remaining cases
-%% follow
-%% similar reasoning and the details may be found in the formalized artifact.
 
-%% \begin{figure}
-%%   \begin{tikzpicture}[node distance = 17mm ]
-%%     \node[state, initial] (0) {$\0$};
-%%     \node[state, right of=0, accepting] (1) {$\1$};
-
-%%     \path[->] (0) edge[above] node{$\stringquote{c}$} (1);
-%%   \end{tikzpicture}
-%%   \caption{NFA $\N_{\c}$ for a single character $\c$}
-%%   \label{fig:litnfa}
-%% \end{figure}
-
-%% First handle the case where $R$ is a literal character $\literal c$. The NFA $N_{c}$ pictured in
-%% \cref{fig:litnfa} is strongly equivalent to the grammar $c$. To demonstrate this
-%% strong equivalence, we build functions between $\literal c$ and $Parse_{N_{c}}$
-%% and show they are mutually inverse.
-
-%% \begin{figure}
-%% \begin{lstlisting}
-%% A : (s : Fin 2) (*@$\to$@*) L
-%% A 0 = 'c'
-%% A 1 = I
-
-%% toN(*@$_c$@*) : (s : Fin 2) (*@$\to$@*) (*@$\uparrow$@*)(A s (*@$\lto$@*) Trace(*@$_{N_c}$@*) s true)
-%% toN(*@$_c$@*) 0 c = cons t true c (nil 1)
-%% toN(*@$_c$@*) 1 () = nil 1
-
-%% fromN(*@$_c$@*) : (s : Fin 2) (*@$\to$@*) (*@$\uparrow$@*)(Trace(*@$_{N_c}$@*) s true (*@$\lto$@*) A s)
-%% fromN(*@$_c$@*) 0 (cons t .true c tr) = let a (*@$\otimes$@*) () = c (*@$\otimes$@*) fromN(*@$_c$@*) 1 tr in a
-%% fromN(*@$_c$@*) 1 (nil .1) = ()
-%% \end{lstlisting}
-%% \caption{Parse transformer out of $Trace_{N_{c}}~s~true$}
-%% \label{fig:litNFAterms}
-%% \end{figure}
-
-%% In \cref{fig:litNFAterms} we define a family of grammars $A$ that serve as
-%% interpretations for each state in $N_{c}$. We then prove that each $A~s$ is
-%% equivalent to the accepting traces through $N_{c}$ out of state $s$.
-
-%% When
-%% defining $fromN_{c}$ we pattern match on the accepting traces beginning in each
-%% state. Out of state $0$ the only accepting traces are built via $cons$ over the
-%% single transition $t$, and out
-%% of state $1$ the only accepting trace is built via $nil$.
-
-%% Each $A~s$ is unambiguous, so $(fromN_{c}~s) \circ (toN_{c}~s)$ is equal to the
-%% identity on each $A~s$. To complete the proof of strong equivalence it remains
-%% to show that $(toN_{c}~s) \circ (fromN_{c}~s)$ is equal to the identity on
-%% $Trace~s~true$, which we show by using the equalizer type.
-
-%% \begin{figure}
-%% \begin{lstlisting}
-%% eqHom(*@$_{N_c}$@*) : (s : N(*@$_c$@*).state) (*@$\to$@*)
-%%       (*@$\uparrow$@*)(Trace(*@$_{N_c}$@*) s true (*@$\lto$@*) {tr | (toN(*@$_c$@*) s (*@$\circ$@*) fromN(*@$_{c}$@*) s) tr = id tr})
-%% \end{lstlisting}
-%% \caption{Signature for the equalizer term}
-%% \label{fig:litequalizer}
-%% \end{figure}
-
-%% The type signature for the family of functions, $eqHom_{N_{c}}$, into the equalizer type is given in
-%% \cref{fig:litequalizer}. By defining an $Trace_{N_{c}}$-algebra homomorphism
-%% into the equalizer, we enable a
-%% proof strategy for equality by induction on traces through $N_{c}$. First consider the traces
-%% out of state $1$. The only case to handle here is $nil 1$, and by definition
-%% $toN_{c}~1$ and $fromN_{c}~1$ invert each other.
-%% When defining $eqHom_{N_{c}}$ for traces out of state $0$, we must leverage an
-%% inductive hypothesis,
-
-%% \begin{align*}
-%%   (toN_{c}~0 \circ fromN_{c}~0) (cons~t~true~c~tr)
-%%   & \equiv (toN_{c}~0) (let~a~\otimes~()~=~c~\otimes~fromN_{c}~1~tr~in~a) \\
-%%   & \equiv cons~t~true~(let~a~\otimes~()~=~c~\otimes~fromN_{c}~1~tr~in~a)~(nil~1) \\
-%%   & \equiv cons~t~true~c~(nil~1) \\
-%%   & \equiv cons~t~true~c~tr \\
-%% \end{align*}
-
-%% The first two equalities are by definition. The third equality holds because
-%% $\literal c$ is unambiguous and
-%% $let~a~\otimes~()~=~c~\otimes~fromN_{c}~1~tr~in~a$ and $c$ have type
-%% $\literal c$. The final equality holds because our inductive hypothesis states
-%% that $nil~1 \equiv tr$. Thus, each $A s$ and $Trace_{N_{c}}~s~true$ are strongly
-%% equivalent --- in particular, $\literal c$ and $Parse_{N_{c}}$.
-
-%% \steven{Rewrite the disjunction case with equalizers}
-%% Now consider the case where $R$ is the disjunction of two regular expressions
-%% $R_{1}$ and $R_{2}$. Inductively, we may build NFAs $N_{1}$ and $N_{2}$ that are
-%% strongly equivalent to $R_{1}$ and $R_{2}$, respectively. We define $N_{\oplus}$
-%% as a new NFA built as the disjunction of $N_{1}$ and $N_{2}$.
-%% $N_{\oplus}.\states$ comprises the states from $N_{1}$, the states from
-%% $N_{2}$, and a new marked initial state. The accepting states are precisely
-%% those that were accepting in the subautomata. The initial state has an
-%% $\varepsilon$-transition to each of the initial states of the subautomata. Once in
-%% $N_{1}.\init$, the downstream transitions are a copy of those in $N_{1}$,
-%% likewise for $N_{2}.\init$.  That is, $N_{\oplus}$ contains a copy of each
-%% $N_{1}$ and $N_{2}$, and we choose which copy to inhabit by deciding which
-%% $\varepsilon$-transition out of the initial state to take. A schematic
-%% representation of this automaton is given in \cref{fig:disjunctionnfa}.
-
-%% \begin{figure}
-%%   \begin{tikzpicture}[node distance = 17mm ]
-%%     \node[state, initial] (init) {$\init$};
-%%     \node[state, above right of=init] (init1) {$N_{1}.\init$};
-%%     \node[state, below right of=init] (init2) {$N_{2}.\init$};
-%%     \node[right of=init1] (dots1) {$\dots$};
-%%     \node[right of=init2] (dots2) {$\dots$};
-%%     \node[state, accepting, right of=dots1] (acc1) {$s_{1}$};
-%%     \node[state, accepting, right of=dots2] (acc2) {$s_{2}$};
-
-%%     \path[->] (init) edge[below] node{$\varepsilon$} (init1)
-%%               (init) edge[above] node{$\varepsilon$} (init2)
-%%               (init1) edge[above] node{} (dots1)
-%%               (init2) edge[above] node{} (dots2)
-%%               (dots1) edge[above] node{} (acc1)
-%%               (dots2) edge[above] node{} (acc2);
-%%   \end{tikzpicture}
-%%   \caption{NFA $N_{\oplus}$ as a disjunction of $N_{1}$ and $N_{2}$}
-%%   \label{fig:disjunctionnfa}
-%% \end{figure}
-
-%% Because $N_{1}$ and $N_{2}$ are each strongly equivalent to $R_{1}$ and $R_{2}$,
-%% it suffices to show that
-%% $Parse_{N_{1}} \oplus Parse_{N_{2}}$ is strongly
-%% equivalent to $Parse_{N_{\oplus}}$.
-
-%% Just like the case of a single character, when building the maps in either
-%% direction, we strengthen the induction hypothesis by mapping out of traces
-%% beginning with an arbitrary state then proceed by induction on traces.
-
-%% First, define the
-%% mapping out of $\Trace_{N_{\oplus}}(s)$. If $s$ is a state from $N_{1}$ then
-%% send the trace to a trace in $N_{1}$ beginning at $s$. Likewise, if $s$ is from
-%% $N_{2}$, then we map to a trace in $N_{2}$ beginning at $s$. If $s$ is
-%% $N_{\oplus}.\init$, then we map the trace to a disjunction of traces
-%% $\Trace_{N_{1}}(N_{1}.\init) \oplus \Trace_{N_{2}}(N_{2}.\init)$.
-
-%% In the other direction, we need to map a disjunction of traces through $N_{1}$
-%% or $N_{2}$ to a trace in $N_{\oplus}$. Without loss of generality, assume that
-%% the trace came from $N_{1}$. That is, assume we currently have a term of type
-%% $\Trace_{{N_{1}}}(N_{1}.\init)$ and we aim to construct a term of type
-%% $\Trace_{N_{\oplus}}(N_{\oplus}.\init)$. We induct on the trace $N$ trace an map
-%% it over to a trace beginning at the copy of $N_{1}.\init$ in $N_{\oplus}$, and
-%% then we conclude by using the $\epscons$ constructor to turn this trace into one
-%% beginning at $N_{\oplus}.\init$.
-
-%% We show that these maps mutually invert each other by the same sort of argument
-%% we used with the single character NFA.\ That is, we prove that the each map is a
-%% homomorphism of algebras and then appeal to the initiality of each of
-%% $\Trace_{N_{1}}$, $\Trace_{N_{2}}$, and $\Trace_{N_{\oplus}}$ to prove that the
-%% relevant maps compose to the identity.
-
-%% In this sketch, we elide the proof that these maps do indeed form homomorphisms.
-%% Further, we are eliding the needed NFAs for the cases where the regular
-%% expression is $I$, $0$, a Kleene star, or a concatenation. All of these
-%% elided details may be found in the Agda formalization.
-
-\begin{corollary}[\Agda{\fillerlink}]
+\begin{corollary}[\Agda]
   We may build a parser for every regular expression $\R$.
 \end{corollary}
 \begin{proof}
@@ -2125,8 +1764,8 @@ with respect to this weak equivalence.
 \subsection{Context-free grammars}
 
 Next, we give two examples for parsing context-free
-grammars. Context-free grammars (CFG) can be encoded in our type
-theory in a similar way to regular expressions, as CFGs are equivalent
+grammars (CFGs). CFGs can be encoded in our type
+theory similarly to regular expressions, as CFGs are equivalent
 to the formalism of \emph{$\mu$}-regular expressions, where the Kleene
 star is replaced by an arbitrary fixed point
 operation \cite{leis_towards_1992}.
@@ -2139,38 +1778,27 @@ parse by wrapping an already balanced parse in an additional set of parentheses
 then following it with another balanced parse. We construct a parser for $\Dyck$ by building a deterministic automaton $M$ such
 that $Parse_{M}$ is strongly equivalent to $\Dyck$.
 \begin{figure}
-\begin{lstlisting}
+\begin{floatlisting}
 data Dyck : L where
-  nil : (*@$\uparrow$@*) Dyck
-  bal : (*@$\uparrow$@*)('(' (*@$\lto$@*) Dyck (*@$\lto$@*) ')' (*@$\lto$@*) Dyck (*@$\lto$@*) Dyck)
-\end{lstlisting}
+  nil : (*@$\uparrowcode$@*) Dyck
+  bal : (*@$\uparrowcode$@*)('(' (*@$\lto$@*) Dyck (*@$\lto$@*) ')' (*@$\lto$@*) Dyck (*@$\lto$@*) Dyck)
+\end{floatlisting}
 \caption{The Dyck grammar as an inductive linear type}
 \label{fig:dyckinductive}
 \end{figure}
 
-The Dyck language is an example of an $\textrm{LL}(0)$ language, one
-that can be parsed top-down with no
-lookahead\cite{rosenkrantz_properties_1970}. This means we can
-implement it simply as an \emph{infinite} state deterministic
+We implement the parser for the Dyck language using an \emph{infinite} state deterministic
 automaton, in \Cref{fig:DyckAutomaton}. Here the state is a ``stack''
 counting how many open parentheses have been seen so far. Functions
 $parse_{M}$ and $print_{M}$ for this automaton can be defined
-analogously to the parser and printer for DFAs, and so $\LinSigTy {s}
-{M.states} {\LinSigTy {b}{Bool} {Trace_{M}~s~b}}$ is likewise
+analogously to those for DFAs, and so $\LinSigTy {s}
+{M .states} {\LinSigTy {b}{Bool} {Trace_{M}~s~b}}$ is likewise
 unambiguous.
 
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   \label{thm:dyck}
-  $Dyck$ and $Parse_{M}$ are strongly equivalent. And therefore we can construct a parser for $\Dyck$.
+  $Dyck$ and $Parse_{M}$ are strongly equivalent, so we may build a parser for $\Dyck$.
 \end{theorem}
-
-%% We can build a $Dyck$ parser by utilizing
-%% this artifact, and the
-%% runtime of the $Dyck$ parser is about 30 seconds for input that is 25,000
-%% characters long.
-%% \pedro{It might be a good idea to mention explicitly in the introduction
-%%   that we are not claiming that our verified parsers are competitive with
-%%   the state of the art.}
 
 \begin{figure}
   \footnotesize
@@ -2206,14 +1834,14 @@ traces of an automaton with one token of lookahead. The automaton\footnote{In
   the automaton definition,
   $\texttt{NotStartsWithLP}$ is defined as
   \(I \oplus
-  (\literal{)} \oplus \literal{+} \oplus \mathtt{NUM}) \otimes \top
+  (\literal{)} \oplus \literal{+} \oplus \literal{NUM}) \otimes \top
   \). Similarly,
   $\texttt{NotStartsWithRP}$ is defined as
   \(I \oplus
-  (\literal{(} \oplus \literal{+} \oplus \mathtt{NUM}) \otimes \top
+  (\literal{(} \oplus \literal{+} \oplus \literal{NUM}) \otimes \top
   \).
-} has
-four different ``states'', each with access to a natural number
+}
+has four different ``states'', each with access to a natural number
 ``stack''. The ``opening'' state $O$ expects either a left paren, in
 which case it increments the stack and stays in the opening state, or
 sees a number and proceeds to the $D$ state. The ``done opening''
@@ -2226,7 +1854,7 @@ ends and the count is $0$; otherwise, if we see a plus we continue to the $O$
 state. Additionally, since the automaton need parse all of the
 incorrect strings, we add all of the failing cases.
 
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   \label{thm:exp-parser}
   We construct a parser for $\mathsf{Exp}$ by showing it is weakly
   equivalent to $\mathsf{O}~0~\true$.
@@ -2248,38 +1876,34 @@ chain of equivalences to be a binary sum rather than a binary product,
 necessitating the distributivity axiom.
 
 \begin{figure}
-\begin{lstlisting}
+\begin{floatlisting}
 data Exp : L where
-  done : (*@$\uparrow$@*)(Atom (*@$\lto$@*) Exp)
-  add : (*@$\uparrow$@*)(Atom (*@$\lto$@*) '+' (*@$\lto$@*) Exp (*@$\lto$@*) Exp)
+  done : (*@$\uparrowcode$@*)(Atom (*@$\lto$@*) Exp)
+  add : (*@$\uparrowcode$@*)(Atom (*@$\lto$@*) '+' (*@$\lto$@*) Exp (*@$\lto$@*) Exp)
 data Atom : L where
-  num : (*@$\uparrow$@*)(NUM (*@$\lto$@*) Atom)
-  parens : (*@$\uparrow$@*)('(' (*@$\lto$@*) Exp (*@$\lto$@*) ')' (*@$\lto$@*) Atom)
+  num : (*@$\uparrowcode$@*)('#NUM#' (*@$\lto$@*) Atom)
+  parens : (*@$\uparrowcode$@*)('(' (*@$\lto$@*) Exp (*@$\lto$@*) ')' (*@$\lto$@*) Atom)
 
-data O : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
-  left : (*@$\uparrow$@*)(&[ n ] &[ b ] '(' (*@$\lto$@*) O (n + 1) b (*@$\lto$@*) O n b)
-  num : (*@$\uparrow$@*)(&[ n ] &[ b ] NUM (*@$\lto$@*) D n b (*@$\lto$@*) O n b)
-  unexpected : (*@$\uparrow$@*)(&[ n ] (NotStartsWithLP (*@$\lto$@*) O n false)
-data D : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
-  lookAheadRP : (*@$\uparrow$@*)(&[ n ] &[ b ] ((')' (*@$\otimes$@*) (*@$\top$@*)) (*@$\&$@*) C n b) (*@$\lto$@*) D n b)
-  lookAheadNot : (*@$\uparrow$@*)(&[ n ] &[ b ] (NotStartsWithRP (*@$\&$@*) A n b) (*@$\lto$@*) D n b)
-data C : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
-  closeGood : (*@$\uparrow$@*)(&[ n ] &[ b ] ')' (*@$\lto$@*) D n b (*@$\lto$@*) C (n + 1) b)
-  closeBad : (*@$\uparrow$@*)(')' (*@$\lto$@*) C 0 false)
-  unexpected : (*@$\uparrow$@*)(&[ n ] NotStartsWithRP (*@$\lto$@*) C n false)
-data A : Nat (*@$\to$@*) Bool (*@$\to$@*) L where
-  doneGood : (*@$\uparrow$@*)(A 0 true)
-  doneBad : (*@$\uparrow$@*)(&[ n ] A (n + 1) false)
-  add : (*@$\uparrow$@*)(&[ n ] &[ b ] '+' (*@$\lto$@*) O n b (*@$\lto$@*) A n b)
-  unexpected : (*@$\uparrow$@*)(&[ n ] ('(' (*@$\oplus$@*) ')'(*@$\oplus$@*) NUM) (*@$\lto$@*) (*@$\top$@*) (*@$\lto$@*) A n false)
-\end{lstlisting}
+data O : Nat (*@$\tocode$@*) Bool (*@$\tocode$@*) L where
+  left : (*@$\uparrowcode$@*)(&[ n : Nat ] &[ b : Bool ] '(' (*@$\lto$@*) O (n + 1) b (*@$\lto$@*) O n b)
+  num : (*@$\uparrowcode$@*)(&[ n : Nat ] &[ b : Bool ] '#NUM#' (*@$\lto$@*) D n b (*@$\lto$@*) O n b)
+  unexpected : (*@$\uparrowcode$@*)(&[ n : Nat ] (NotStartsWithLP (*@$\lto$@*) O n false)
+data D : Nat (*@$\tocode$@*) Bool (*@$\tocode$@*) L where
+  lookAheadRP : (*@$\uparrowcode$@*)(&[ n : Nat ] &[ b : Bool ] ((')' (*@$\otimes$@*) (*@$\color{lintycolor}\top$@*)) (*@$\&$@*) C n b) (*@$\lto$@*) D n b)
+  lookAheadNot : (*@$\uparrowcode$@*)(&[ n : Nat ] &[ b : Bool ] (NotStartsWithRP (*@$\&$@*) A n b) (*@$\lto$@*) D n b)
+data C : Nat (*@$\tocode$@*) Bool (*@$\tocode$@*) L where
+  closeGood : (*@$\uparrowcode$@*)(&[ n : Nat ] &[ b : Bool ] ')' (*@$\lto$@*) D n b (*@$\lto$@*) C (n + 1) b)
+  closeBad : (*@$\uparrowcode$@*)(')' (*@$\lto$@*) C 0 false)
+  unexpected : (*@$\uparrowcode$@*)(&[ n : Nat ] NotStartsWithRP (*@$\lto$@*) C n false)
+data A : Nat (*@$\tocode$@*) Bool (*@$\tocode$@*) L where
+  doneGood : (*@$\uparrowcode$@*)(A 0 true)
+  doneBad : (*@$\uparrowcode$@*)(&[ n : Nat ] A (n + 1) false)
+  add : (*@$\uparrowcode$@*)(&[ n : Nat ] &[ b : Bool ] '+' (*@$\lto$@*) O n b (*@$\lto$@*) A n b)
+  unexpected : (*@$\uparrowcode$@*)(&[ n : Nat ] ('(' (*@$\oplus$@*) ')' (*@$\oplus$@*) '#NUM#') (*@$\lto$@*) (*@$\color{lintycolor} \top$@*) (*@$\lto$@*) A n false)
+\end{floatlisting}
 \caption{Associative arithmetic expressions and a corresponding lookahead automaton}
 \label{fig:binop-inductive}
 \end{figure}
-% \subsection{LL(1)}
-% %% 4. LL(1) parser
-
-% \steven{TODO impute LL(1) example, mention that its weak equivalence is mechanized}
 
 \subsection{Unrestricted Grammars}
 
@@ -2289,31 +1913,22 @@ demonstrate this, we show that for any \emph{non-linear} function $P :
 \StringSem \to U$, where here $\StringSem$ is the \emph{non-linear} type
 of strings over the alphabet, we can construct a grammar whose parses
 correspond to $P$.
-%% Define $\StringSem$ to be the non-linear list type over the alphabet $\Sigma$ and
-%% let  be a mapping from the set of strings to the universe of
-%% nonlinear types. The function $P$ describes a family of nonlinear types
-%% dependent on $\StringSem$.
-%% We view the image of $P$ as a set of parse trees for each input string, and thus
-%% $P$ carries the structure of a formal grammar. However, even though $P$ describes this grammatical data, it is not
-%% a first-class linear type in \theoryabbv. 
 \(
 Reify~P = \LinSigTy{w} {\StringSem} {\LinSigTy {x} {P~w} {~\lceil w \rceil}}
 \)
-%% \steven{Probably put this ceiling business around the discussion of the linear
-%%   type of strings. Is this in section 3?}
 where $\lceil \stringquote{} \rceil = I$ and
 $\lceil c :: w \rceil = \literal c \otimes \lceil w \rceil$.
 
-This reification operation on functions $\StringSem \to U$ is incredibly expressive,
-as it allows to sidestep our linear typing connectives and utilize the whole of nonlinear
+This reification operation on functions $\StringSem \to U$ is very expressive,
+as it sidesteps our linear typing connectives and utilizes the whole of nonlinear
 dependent type theory to define a grammar. For example, given a
 Turing machine $T$ one may
 define a non-linear predicate $accepts : \StringSem \to U$ that encodes that $T$
 halts and accepts an input string. Then, $Reify~accepts$ is a linear type that
-captures precisely the string the same language as $T$. That is,
+captures precisely the string the same language as $T$. In general,
 $Lang(Reify~accepts)$ is recursively enumerable --- the most general class of
 languages in the Chomsky hierarchy.
-\begin{construction}[\Agda{\fillerlink}]
+\begin{construction}[\Agda]
   \label{cons:turing}
   For any Turing machine $T$, we can construct a grammar in \theoryabbv
   that accepts the same language as $T$.
@@ -2385,58 +2000,11 @@ defines a \emph{category}.
   grammars and morphisms are parse transformers.
 \end{definition}
 This category is equivalent to the slice category $\Set/\Sigma^*$ and
-as such is very well-behaved. It is complete, co-complete, Cartesian
+is very well-behaved. It is complete, co-complete, Cartesian
 closed and carries a monoidal biclosed structure. We will use these
 structures to model the linear types, terms and equalities in
-\theoryabbv. These categorical properties are precisely what is
-required to interpret all of the linear type and term constructors.
-%% \begin{theorem}
-%%   The category $\Grammar$ is complete, co-complete and cartesian
-%%   closed. Furthermore, it is monoidal biclosed with the monoidal
-%%   product given by
-%%   \[ (A \otimes B) w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in A w_1 \wedge b \in B w_2\} \]
-%%   and unit by
-%%   \[ I w = \{ () \pipe w = \varepsilon \} \]
-%% \end{theorem}
+\theoryabbv.
 
-%% \max{todo: need to decide if we need this section here or if it's in the intro already}.
-% The linear typing judgment in our syntax takes on the following schematic form
-% $\Gamma ; \Delta \vdash a : A$. First, $A$ represents a \emph{linear type} in
-% our syntax. The intended semantics of these linear types are formal grammars.
-% That is, the linear typing system is designed to syntactically reflect the
-% behavior of formal grammars. For this reason, we may often interchangeably use
-% the terms ``linear type'' and ``grammar''.
-
-% The term $a$ is an inhabitant of type $A$, which is thought of as a parse tree of
-% the grammar $A$. The core idea of this entire paper follows precisely from this
-% single correspondence: grammars are types, and the inhabitants of these types
-% are parse trees for the grammars.
-
-% $\Gamma$ represents a non-linear context, while $\Delta$ represents a
-% \emph{linear context} dependent on $\Gamma$. These linear contexts behave
-% substructurally. As stated earlier, they are linear --- they do not obey
-% weakening or contraction --- because a character is exhausted once read by a
-% parsing procedure. Moreover, the characters in strings appear in the order in
-% which we read them. We do not have the freedom to freely permute characters,
-% therefore any type theory that is used to reason about formal grammars ought to
-% omit the structural rule of exchange as well. This means that every variable
-% within $\Delta$ must be used \emph{exactly once} and \emph{in order of
-%   occurrence}. Thus, we can think of the linear contexts as an ordered list of
-% limited resources. Once a resource is consumed, we cannot make reference to it
-% again. Variables in a linear context then act like building
-% blocks for constructing patterns over strings.
-
-% We give the base types and type constructors for linear terms. As the
-% interpretation of types as grammars in $\Grammar$ serves as our intended
-% semantics, we simultaneously give the interpretation $\sem \cdot$ of the
-% semantics as grammars.
-
-% \pedro{The paragraphs above are a bit circular, what about the following alternative?}
-% \steven{I am in favor of cutting what's above, but we haven't introduced the
-%   syntax in the main body of the paper yet, even if the figures appeared
-%   earlier. So what you write needs to take that into account}
-% \pedro{In which case we should introduce it in the previous section. I suggest
-%   adding this right after ``and the intuitionistic typing rules in fig 3''}
 \subsection{Semantics}
 
 We now define our denotational semantics.
@@ -2450,9 +2018,9 @@ We now define our denotational semantics.
   \item For each linear type $\Gamma \vdash A \isLinTy$ and element $\gamma
     \in \sem\Gamma$, we define a formal grammar $\sem{A}\gamma$. We
     similarly define a formal grammar $\sem\Delta\gamma$ for each
-    linear context $\Gamma \Delta\isLinCtx$.
+    linear context $\linctxwff \Gamma \Delta$.
   \item For each non-linear term $\Gamma \vdash M : X$ and $\gamma \in \sem{\Gamma}$, we define an element $\sem{M}\gamma \in \sem{X}\gamma$.
-  \item For each linear term $\Gamma; \Delta \vdash e : A$ and $\gamma \in \sem{\Gamma}$ we define a parse transformer from $\sem{\Delta}\gamma$ to $\sem{A}\gamma$.
+  \item For each linear term $\Gamma; \Delta \vdash e : A$ and $\gamma \in \sem{\Gamma}$, we define a parse transformer from $\sem{\Delta}\gamma$ to $\sem{A}\gamma$.
   \end{enumerate}
   And we verify the following conditions:
   \begin{enumerate}
@@ -2483,7 +2051,7 @@ except the $B$ parse is for the reversed concatenation $w'w$.
 The set $\uparrow A$ is the set of parse for the empty string for
 $A$. This definition means that $\sem{\uparrow (A \lto B)}$ (or $\sem{\uparrow (B \tol A)}$) is
 equivalent to the set of parse transformers:
-\( \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\varepsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\).
+\( \sem{\uparrow (A \lto B)}\gamma = \sem{A \lto B}\gamma\,\epsilon = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'\).
 
 Next, a parse in the equalizer $\equalizer{a}{f}{g}$ is defined as
 a parse in $\sem{A}$ that is mapped to the same parse by the parse transformers $\sem{f}$ and
@@ -2492,29 +2060,30 @@ $\sem{g}$.
 The universe $L$ of linear types is interpreted as the set of all
 small grammars.
 \begin{figure}
-  \begin{minipage}[t]{.5\textwidth}
+  \begin{minipage}[t]{.3\textwidth}
   \begin{footnotesize}
     \begin{flalign*}
     &\sem{c}\gamma\,w = \{ c | w = c\}\\
-    &\sem{I}\gamma\,w = \{ () \pipe w = \varepsilon \}\\
-    &\sem{A \otimes B}\gamma\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
+    &\sem{I}\gamma\,w = \{ () \pipe w = \epsilon \}\\
+    &\sem{\uparrow A}\gamma = \sem{A}\gamma\,\epsilon\\
     &\sem{A \lto B}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,ww'\\
     &\sem{B \tol A}\gamma\,w = \prod_{w'} \sem{A}\gamma\,w' \to \sem{B}\gamma\,w'w\\
-    &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \}
-  \end{flalign*}
-  \end{footnotesize}
-  \end{minipage}%
-  \begin{minipage}[t]{.5\textwidth}
-  \begin{footnotesize}
-    \begin{flalign*}
-    &\sem{\bigwith_{x:X} A}\gamma\,w = \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w \\
-    &\sem{\uparrow A}\gamma = \sem{A}\gamma\,\varepsilon\\
-    &\sem{\equalizer{a}{f}{g}}\gamma\,w = \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
-    &\sem{L}\gamma = \Grammar_0\\
-    &\sem{SPF\,X}\gamma = \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)\\
     &\sem{\el(F)}\gamma\,G = \sem{F}\gamma\,G\\
     &\sem{\map(F)}\gamma\,f = \sem{F}\gamma\,f\\
     &\sem{\mu A}\gamma = \mu (\sem{A}\gamma)
+  \end{flalign*}
+  \end{footnotesize}
+  \end{minipage}%
+  \begin{minipage}[t]{.7\textwidth}
+  \begin{footnotesize}
+    \begin{flalign*}
+    &\sem{A \otimes B}\gamma\,w = \{ (w_1,w_2,a,b) \pipe w_1w_2 = w \wedge a \in \sem{A}\gamma\,w_1 \wedge b \in \sem{B}\gamma\,w_2 \}\\
+    % &\sem{\bigoplus_{x:X} A}\gamma\,w = \{ (x, a) \pipe x \in \sem{X}\gamma \wedge a \in \sem{A}(\gamma,x)w \} \\
+    &\sem{\bigoplus_{x:X} A}\gamma\,w = \coprod_{x \in \sem{X}\gamma} \sem{A}(\gamma, x)\,w \\
+    &\sem{\bigwith_{x:X} A}\gamma\,w = \prod_{x\in \sem{X}\gamma} \sem{A}(\gamma, x)\,w \\
+    &\sem{\equalizer{a}{f}{g}}\gamma\,w = \{ a \in \sem{A}\gamma\,w \pipe \sem{f}\gamma\,w\,a = \sem{g}\gamma\,w\,a \} \\
+    &\sem{L}\gamma = \Grammar_0\\
+    &\sem{SPF\,X}\gamma = \textrm{DepPolyFunctor}(\sem{X}\gamma\times \Sigma^*,\Sigma^*)
   \end{flalign*}
   \end{footnotesize}
   \end{minipage}
@@ -2570,16 +2139,17 @@ algebra structure is used to interpret $\roll, \fold$ and the
 corresponding axioms.
 
 The remaining details of the interpretation of linear terms as parse
-transformers and verification of the equational axioms --- as well as
-\cref{ax:dist,ax:disjointness,ax:string-top} --- is a relatively
-straightforward extension of existing semantics of linear logic in
-monoidal categories, and is included in the appendix\cite{seely89}.
+transformers is a relatively straightforward extension of existing semantics for
+linear logic in monoidal categories \cite{seely89}. In
+\ifarxiv{\cref{sec:denotational}}\else{the extended version of the paper}\fi, we include the denotations
+of linear terms and prove that our semantics respects the equational theory of
+\theoryabbv --- as well as \cref{ax:dist,ax:disjointness,ax:string-top}.
 
-\subsection{Agda Implementation \Agda{\fillerlink}}
+\subsection{Agda Implementation \Agda}
 \label{subsec:impl}
 This denotational semantics in grammars and parse transformers serves
 as the basis for our prototype implementation of \theoryabbv in
-Cubical Agda. The implementation is a shallow embedding, meaning that
+Cubical Agda \cite{schaefer_2025_15243560}. The implementation is a shallow embedding, meaning that
 rather than formalizing a syntax of \theoryabbv types and terms, we interpret
 the non-linear universe $U$ as Cubical Agda's universe of (homotopy) sets (at
 some universe level $\ell$), $\hSet~\ell$, and the linear universe $L$ as the
@@ -2591,7 +2161,7 @@ term equalities. Cubical Agda is convenient for this purpose as it has
 built-in support for function extensionality which is convenient for the verification of equality rules. Axioms such as distributivity of $\oplus/\&$ and
 disjointness of constructors are then provable directly in Agda, and
 we are careful to only construct grammars, terms and proofs using
-constructs that are possible in \theoryabbv.
+constructs from \theoryabbv.
 
 The main difference
 between our shallow embedding and \theoryabbv is that our linear terms
@@ -2607,762 +2177,15 @@ $\literal{a} \otimes (\literal{a} \otimes \literal{a}^{*})$, then act on the
 left by the identity and on the right by $cons$ to get a parse
 $\literal{a} \otimes \literal{a}^{*}$, and finally we act again by $cons$ to
 finally produce a parse of $\literal{a}^{*}$.
-A benefit of this shallow embedding is that
-the parsers are immediately available to a larger Agda development, as
-they are just normal Agda code. Although, even in the small example from
+Even in the small example from
 \cref{fig:kleeneabstractproof} we must manage additional complexity --- such as
 manually reassociations --- and
-this only grows more complex in larger programs. In future work we will look to
+this only grows more complex in larger programs. On the other hand, a benefit of this shallow embedding is that
+the parsers are immediately available to a larger Agda development, as
+they are just normal Agda code. In future work we will look to
 implement a type checker for a syntax closer to the presentation in
-this paper, while maintaining the goal of integration with an
+this paper, while maintaining the easy integration with an
 existing proof assistant.
-
-%% That is, strings match $A \lto B$ if when prepended with a parse of $A$ they
-%% complete to parses of $B$. In this manner, the linear function types generalize
-%% Brzozowksi's notion of derivative
-%% \cite{brzozowskiDerivativesRegularExpressions1964}.
-%% Brzozowski initially only gave an accounting of this operation for
-%% generalized regular expressions, but later work from Might et al.\ demonstrates that the same
-%% construction can be generalized to context free grammars
-%% \cite{mightParsingDerivativesFunctional2011}. Here, via the linear function
-%% types, the same notion of derivative extends to the grammars of \theoryabbv.
-
-%% Note, to ensure that the linear function types do indeed generalize Brzozowski
-%% derivatives, we must include the equalities in \cref{fig:brzozowskideriv} as axioms\max{we must? why must we}.
-%% \pedro{We should further explain why these equations are required, or at the very
-%% least give some intuition}
-
-%% Of course, all the above statements for the left function type also have
-%% corresponding analogues for the
-%% right-handed counterpart.
-
-%% \begin{figure}
-%% \begin{align*}
-%%   c\lto c &\equiv I\\
-%%   c\lto d &\equiv 0\\
-%%   c\lto I &\equiv 0\\
-%%   c\lto 0 &\equiv 0\\
-%%   c\lto (A \otimes B) & \equiv (c\lto A) \otimes B + (A \amp I) \otimes (c\lto B)\\
-%%   c\lto A^* &\equiv (A \amp I)^{*} \otimes (c \lto A) \otimes A^* \\
-%%   c\lto (A + B) &\equiv (c\lto A) + (c\lto B)
-%% \end{align*}
-%% \caption{Equality for Brzozowski Derivatives}
-%% \label{fig:brzozowskideriv}
-%% \end{figure}
-
-%% \paragraph{LNL Dependent Types}
-%% \steven{talk about how binary sum and binary with are definable over $\Bool$}
-%% Given a non-linear type $X$, we may form both the dependent product type
-%% $\LinPiTy x X A$ and the dependent pair type $\LinSigTy x X A$ as linear types
-%% where $x$ is free in $A$.
-
-%% $\sem{\LinPiTy x X A} \gamma w = \Pi(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
-
-%% $\sem{\LinSigTy x X A} \gamma w = \Sigma(x:\sem{X}\gamma) \sem{A}(\gamma,x) w$
-
-%% The grammar semantics of the linear product type is
-%% indeed a dependent function out of the
-%% semantics of $X$. Likewise, the grammar semantics of the linear dependent pair type is a dependent
-%% pair in $\Set$.\pedro{The connection to grammar semantics needs to be better explained. For instance,
-%% we should explain that disjunction corresponds to ``or'' of grammars}
-
-%% Note that even though we do not take the binary additive conjunction and
-%% disjunction as primitive, we may define them via these LNL dependent types. In
-%% particular, via a dependence on $\Bool$.
-%% %
-%% \[
-%%   A \amp B := \LinPiTy b \Bool {C(b)}
-%% \]
-%% \[
-%%   A \oplus B := \LinSigTy b \Bool {C(b)},
-%% \]
-%% where $C(\true) = A, C(\false) = B$.
-
-%% \paragraph{Universal Type}\max{this is absolutely not the right terminology. Universal type means multiple other completely different things}
-%% \steven{Definable as nullary product}
-%% The universal type $\top$ may be formed in any context.
-%% %
-%% \[ \sem{\top} \gamma w = \{ \ast \}\]
-%% %
-%% Its grammar semantics in set outputs the unit type in $\Set$ for all input strings in all contexts.
-
-%% \paragraph{Empty Type}
-%% \steven{Definable as nullary sum}
-%% The empty type $0$ has no inhabitants. The elimination for the empty type
-%% witnesses the principle of explosion --- i.e.\ from a term of type $0$ we may
-%% introduce a term $\mathsf{absurd}_{A} : A$ for any type $A$.
-%% %
-%% \[ \sem {0} \gamma w = \emptyset \]
-%% %
-%% \paragraph{The $G$ Modality}
-%% \steven{Rename this}
-%% \steven{Compare to persistence modalities from separation logic}
-%% The $G$ modality provides the embedding of linear types in the empty context
-%% into non-linear types. The introduction and elimination forms for $G A$ obey the
-%% same rules as given in \cite{bentonMixedLinearNonlinear1995} and \cite{krishnaswami_integrating_2015}.
-
-%% The left adjoint $F$ from non-linear types back to linear types may be defined
-%% as,
-%% %
-%% \[
-%%   F X := \LinSigTy a A I
-%% \]
-%% %
-%% \steven{Elaborate on $G$ more and rename $G A$to $\ltonl A$ in this section}
-
-%% \pedro{Agreed :) maybe mention connections to persistent propositions from the
-%% separation logic literature}
-
-%% The semantics of $G A$ are exactly the semantics of $A$ at the empty word $\varepsilon$.
-%% %
-%% \[ \sem{G A} \gamma = \sem{A} \gamma \varepsilon \]
-%% %
-%% %
-%% \paragraph{Recursive Types}
-%% \steven{reflavor this section as ``indexed inductive'' instead of ``recursive'',
-%% and entirely rework with the new inductive definition}
-%% \steven{The non-indexed inductive are definable as being trivially indexed over unit}
-%% Recursive linear types may be defined via the least-fixed point operator $\mu$.
-% The grammar semantics of which are the fixed-point of sets induced by the
-% grammar semantics of $A$.
-% %
-% \[ \sem{\mu x. A} \gamma = \mu (x:\Gr_i). \sem{A}(\gamma,x) \]
-% %
-% \pedro{We should justify, even if briefly, the existence of this
-%   fixed-point}
-
-% Observe that we need not take the Kleene star as a primitive
-% grammar constructor, as it is definable as a fixed point.
-% The Kleene star of a grammar $g$ is given as,
-
-% \[
-%   g^{*} := \mu X . I \oplus (g \otimes X)
-% \]
-
-% \begin{figure}[h!]
-% \begin{mathpar}
-%   \inferrule
-%   {\Gamma ; \Delta \vdash p : I}
-%   {\Gamma ; \Delta \vdash \mathsf{nil} : g^{*}}
-
-%   \and
-
-%   \inferrule
-%   {\Gamma ; \Delta \vdash p : g \\ \Gamma ; \Delta' \vdash q
-%   : g^{*}}
-%   {\Gamma ; \Delta \vdash \mathsf{cons}(p , q) : g^{*}}
-
-%   \\
-
-%   \inferrule
-%   {
-%     \Gamma ; \Delta \vdash p : g^{*} \\
-%     \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
-%     \Gamma ; x : g , y : h \vdash p_{\ast} : h
-%   }
-%   {\Gamma ; \Delta \vdash \mathsf{foldr}(p_{\varepsilon} , p_{\ast}) : g^{*}}
-% \end{mathpar}
-% \caption{Kleene Star Rules}
-% \label{fig:star}
-% \end{figure}
-
-% Likewise, $g^{*}$ has admissible introduction and
-% elimination rules, shown in \cref{fig:star}. Note that this
-% definition of $g^{*}$ and these
-% rules arbitrarily assigns a handedness to the Kleene star.
-% We could have just as well took it to be a fixed point of
-% $I \oplus (X \otimes g)$. In fact, the definitions are
-% equivalent, as the existence of the $\mathsf{foldl}$ term below
-% shows that $g^{*}$ is also a fixed point of
-% $I \oplus (X \otimes g)$.
-% This is a marked point of difference from Kleene
-% algebra with recursion, where the fixed points for the left and right variants
-% of Kleene star need not agree \cite{leiss}.
-
-% \begin{equation}
-%   \label{eq:foldl}
-%   \inferrule
-%   {
-%     \Gamma ; \Delta \vdash p : g^{*} \\
-%     \Gamma ; \cdot \vdash p_{\varepsilon} : h \\
-%% %     \Gamma ; y : h , x : h \vdash p_{\ast} : h
-%% %   }
-%% %   {\Gamma ; \Delta \vdash \mathsf{foldl}(p_{\varepsilon} , p_{\ast}) : g^{*}}
-%% % \end{equation}
-
-%% % In fact, the $\mathsf{foldl}$ term is defined using
-%% % $\mathsf{foldr}$ --- much in the same way one
-%% % may define a left fold over lists in terms of a right fold
-%% % in a functional programming language.
-%% % The underlying trick is to fold over a list of linear functions
-%% % instead of the original string. We curry each character $c$
-%% % of the string into a function that concatenates $c$, and
-%% % right fold over this list of linear functions. Because function
-%% % application is left-associative, this results in a left
-%% % fold over the original string.
-
-%% % We only take fixed points of a single variable as a
-%% % primitive operation in the type theory, but we may apply
-%% % Beki\`c's theorem \cite{Bekić1984} to define an admissible
-%% % notion of multivariate fixed point. This is particularly
-%% % useful for defining grammars that encode the states of an
-%% % automaton, as we will see in \cref{sec:automata}. In \cref{fig:multifix} we provide the
-%% % introduction and elimination principles for such a fixed
-%% % point, where $\sigma$ is the substitution that unrolls the
-%% % mutually recursive definitions one level. That is,
-
-%% % \begin{align*}
-%% %   \sigma = \{ & \mu(X_{1} = A_{1} \dots, X_{n} = A_{n}).X_{1} / X_{1} , \dots, \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{n} / X_{n} \}
-%% % \end{align*}
-
-%% % \begin{figure}
-%% % \begin{mathpar}
-%% %   \inferrule
-%% %   {\Gamma ; \Delta \vdash e : \simulsubst {A_{k}} {\sigma}}
-%% %   {\Gamma ; \Delta \vdash \mathsf{cons}~e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k}}
-
-%% %   \and
-
-%% %   \inferrule
-%% %   {\Gamma ; \Delta \vdash e : \mu(X_{1} = A_{1}, \dots, X_{n} = A_{n}).X_{k} \\
-%% %              \Gamma ; x_{j} : \simulsubst {A_{j}}{\sigma} \vdash e_{j} : B_{j}\quad \forall j
-%% %   }
-%% %   {\Gamma; \Delta \vdash \mathsf{mfold}(x_{1}.e_{1}, \dots, x_{n}.e_{n})(e) : B_{k}}
-%% % \end{mathpar}
-%% % \caption{Multi-fixed Points}
-%% % \label{fig:multifix}
-%% % \end{figure}
-
-%% %% \section{Categorical Semantics of \theoryabbv}
-%% %% \label{sec:categorify}
-
-%% As described in previous sections, \theoryabbv has a ``standard''
-%% interpretation where non-linear types denote sets, linear types denote
-%% formal grammars, non-linear terms denote functions and linear terms
-%% denote parse transformers.
-%% %
-%% Further, as is typical for type theory, every type constructor in the
-%% calculus is interpreted by using a \emph{universal construction} in
-%% either the category of sets or the category of grammars\footnote{the
-%% only exception is that the axioms for Brzozowski derivatives we
-%% considered do not follow solely from universal properties. In this
-%% section we focus on models that do not necessarily satisfy these
-%% axioms.}.
-%% %
-%% This leads to an immediate opportunity for generalization: the type
-%% theory has in addition to the standard grammar-theoretic
-%% interpretation, an interpretation in any categorical structure that
-%% exhibits the same universal constructions.
-%% %
-%% On the one hand this gives us a structured way to formalize the
-%% standard semantics precisely, but additionally it enables us to
-%% consider \emph{non-standard} models in the next section that point to
-%% further applications as well as meta-theoretic results.
-
-%% In developing this categorical semantics, we will start with the
-%% closest analogue from formal language theory: Kleene algebra.  Kleene
-%% algebras are an important tool in the theory of regular languages
-%% serving as a bridge between algebraic reasoning and equivalence of
-%% regular expressions. More broadly, through various extensions, they
-%% serve as a theoretical substrate to studying different kinds of formal
-%% languages.
-%% %
-%% We can then see that the ``regular fragment'' of our type theory
-%% (i.e., just characters, $\otimes$, $\oplus$, $0,1$ and a Kleene star)
-%% has models in what we call a \emph{Kleene category} a categorification
-%% of Kleene algebra from posets to categories.
-%% %
-%% We then further develop this into our final notion of model, which we
-%% call a \emph{Chomsky category} as it can model not just regular
-%% languages, but the full Chomsky hierarchy.
-
-%% \subsection{Comparison to Kleene Algebra}
-%% \subsection{Kleene Algebra and Kleene Categories}
-%% A Kleene algebra is a tuple $(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is
-%% a set, $+$ and $\cdot$ are binary operations over $A$, $(-)^*$ is a
-%% function over $A$, and $1$ and $0$ are constants. These structures
-%% satisfy the axioms depicted in Figure~\ref{fig:axioms}.
-
-%% \begin{figure}
-%%   \begin{align*}
-%%     x + (y + z) &= (x + y) + z & x + y &= y + x\\
-%%     x + 0 &= x & x + x &= x\\
-%%     x(yz) &= (xy)z & x1 &= 1x = x\\
-%%     x(y + z) &= xy + xz & (x + y)z &= xz + yz\\
-%%     x0 &= 0x = x & & \\
-%%     1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
-%%      b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
-%%   \end{align*}
-%%   \caption{Kleene algebra axioms}
-%%   \label{fig:axioms}
-%% \end{figure}
-
-%% The addition operation can be used to define the partial order
-%% structure $a \leq b$ if, and only if, $a + b = b$. In the theory of
-%% formal languages, this order structure can be used to model language
-%% containment. In this section, we categorify the concept of Kleene
-%% algebra and build on top of it in order to define an abstract theory
-%% of parsing. We start by defining \emph{Kleene categories}.
-
-%% \begin{definition}
-%%   A Kleene category is a distributive monoidal category $\cat{K}$
-%%   such that for every objects $A$ and $B$, the endofunctors $F_{A, B}
-%%   = B + A \otimes X$ and $G_{A, B} = B + X \otimes A$ have initial
-%%   algebras (denoted $\mu X.\, F_{A, B}(X)$) such that $B \otimes (\mu
-%%   X.\, F_{A, 1}) \cong \mu X.\, F_{A, B}(X)$ and the analogous isomorphism
-%%   for $G_{A,B}$ also holds.
-%% \end{definition}
-
-%% As a sanity check, note that Kleene algebras are indeed examples of
-%% Kleene categories.
-
-%% \begin{example}
-%%   Every Kleene algebra, seen a posetal category, is a Kleene category.
-%%   The product $\cdot$ is a monoidal product and the addition is a
-%%   least-upper bound, which corresponds to a coproduct. Lastly, the
-%%   axioms of the Kleene star have a direct correspondence to the
-%%   coherence conditions postulated by the initial algebras of Kleene
-%%   categories.
-%% \end{example}
-
-%% This example provides a neat categorical justification to how
-%% restrictive Kleene algebras are in terms of reasoning about
-%% languages. By only having at most one morphism between objects, there
-%% is not a lot of information they can convey. In this case, the only
-%% information you get is language containment. As demonstrated by
-%% $\mathbf{Gr}$, the extra degrees of freedom granted by having more
-%% morphisms gives you more algebraic structure for reasoning about
-%% languages.
-
-%% For the next example, we see an unexpected connection with the theory
-%% of substructural logics.
-
-%% \begin{example}
-%%   The opposite category of every Kleene category is a model of a variant of
-%%   conjunctive ordered logic, where the Kleene star plays the role of the ``of
-%%   course'' modality from substructural logics which allows hypotheses to
-%%   be discarded or duplicated.
-%% \end{example}
-
-%% As we have seen, the proposed axioms are a direct translation of the
-%% Kleene algebra axioms to a categorical setting. Its most unusual aspect is the
-%% axiomatization of the Kleene star as a family of initial algebras
-%% satisfying certain isomorphisms. If the Kleene category $\cat{K}$ has
-%% more structure, then these isomorphisms hold ``for free''.
-
-%% \begin{theorem}
-%%   \label{th:kleeneclosed}
-%%   Let $\cat{K}$ be a Kleene category such that it is also monoidal
-%%   closed.  Then, the initial algebras isomorphisms hold automatically.
-%% \end{theorem}
-%% \begin{proof}
-%%   We prove this by the unicity (up-to isomorphism) of initial
-%%   algebras. Let $[hd, tl]: I + (\mu X.\, F_{A, I}(X)) \otimes A \to
-%%   (\mu X.\, F_{A, I}(X))$ be the initial algebra structure of $(\mu
-%%   X.\, F_{A, I}(X))$ and consider the map $[hd, tl] : B + B \otimes
-%%   (\mu X.\, F_{A, I}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
-%%     I}(X))$.
-
-%%   Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
-%%   we want to show that there is a unique algebra morphism $h : \mu X.\, F_{A,I} \to B \lto Y$. We can show existence and
-%%   uniqueness by showing that the diagram on top commutes if, and
-%%   only if, the diagram on the bottom commutes:
-
-%% % https://q.uiver.app/#q=WzAsOCxbMCwwLCJCICsgQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFsyLDAsIkIgKyBZIFxcb3RpbWVzIEEiXSxbMiwyLCJZIl0sWzAsMiwiQiBcXG90aW1lcyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDMsIjEgKyAoXFxtdSBYLlxcLCAxICsgWCBcXG90aW1lcyBBKSJdLFswLDUsIlxcbXUgWC5cXCwgMSArIFggXFxvdGltZXMgQSJdLFsyLDMsIjEgKyAoIEIgXFxsdG8gWSkgXFxvdGltZXMgQSJdLFsyLDUsIkIgXFxsdG8gWSJdLFswLDEsImlkICsgKGlkIFxcb3RpbWVzIGg7IGV2KSBcXG90aW1lcyBpZF9BIl0sWzEsMiwiW2YsZ10iXSxbMywyLCJpZCBcXG90aW1lcyBoOyBldiIsMl0sWzAsMywiW2lkIFxcb3RpbWVzIGgsIGlkIFxcb3RpbWVzIHRsXSIsMl0sWzQsNiwiaWQgKyAoaCBcXG90aW1lcyBYKVxcb3RpbWVzIGlkIl0sWzUsNywiaCIsMl0sWzYsNywiW2YnLCBnJ10iXSxbNCw1LCJbaGQsIHRsXSIsMl1d
-%% \[\begin{tikzcd}
-%% 	{B + B \otimes (\mu X.\, I + X \otimes A)} && {B + Y \otimes A} \\
-%% 	\\
-%% 	{B \otimes (\mu X.\, I + X \otimes A)} && Y \\
-%% 	{I + (\mu X.\, I + X \otimes A)} && {I + ( B \lto Y) \otimes A} \\
-%% 	\\
-%% 	{\mu X.\, I + X \otimes A} && {B \lto Y}
-%% 	\arrow["{id + (id \otimes h; ev) \otimes id_A}", from=1-1, to=1-3]
-%% 	\arrow["{[f,g]}", from=1-3, to=3-3]
-%% 	\arrow["{id \otimes h; ev}"', from=3-1, to=3-3]
-%% 	\arrow["{[id \otimes h, id \otimes tl]}"', from=1-1, to=3-1]
-%% 	\arrow["{id + (h \otimes X)\otimes id}", from=4-1, to=4-3]
-%% 	\arrow["h"', from=6-1, to=6-3]
-%% 	\arrow["{[f', g']}", from=4-3, to=6-3]
-%% 	\arrow["{[hd, tl]}"', from=4-1, to=6-1]
-%% \end{tikzcd}\]
-%%   This equivalence follows by using the adjunction structure given
-%%   by the monoidal closed structure of $\cat{K}$. A completely analogous
-%%   argument for $G_{A,B}$ also holds. Furthermore, by generalizing the
-%%   construction of \Cref{sec:formaltype}, we can also show that from
-%%   the monoidal closed assumption it follows that $\mu X.\, F_{A, I}(X) \cong \mu X.\, G_{A, I}(X)$
-%% \end{proof}
-
-%% Something surprising about this lemma is that it provides an alternative
-%% perspective on the observation that if a Kleene algebra has an
-%% residuation operation, also called action algebra \cite{kozen1994action},
-%% then the Kleene star admits a simpler axiomatization.
-
-%% Since we want Kleene categories to generalize our notion of formal
-%% grammars as presheaves $\String \to \Set$, we prove that they do
-%% indeed form a Kleene category. We start by presenting a well-known
-%% construction from presheaf categories.
-
-%% \begin{definition}
-%%   Let $\cat{C}$ be a locally small monoidal category and $F$, $G$ be
-%%   two functors $\cat{C} \to \Set$. Their Day convolution tensor
-%%   product is defined as the following coend formula:
-%%   \[
-%%   (F \otimes_{Day} G)(x) = \int^{(y,z) \in \cat{C}\times\cat{C}}\cat{C}(y\otimes z, x) \times F(y) \times G(z)
-%%   \]
-%%   Dually, its internal hom is given by the following end formula:
-%%   \[
-%%   (F \lto_{Day} G)(x) = \int_{y} \Set(F(y), G(x \otimes y))
-%%   \]
-%% \end{definition}
-
-%% \begin{lemma}[Day \cite{day1970construction}]
-%%   Under the assumptions above, the presheaf category $\Set^{\cat{C}}$ is
-%%   monoidal closed.
-%% \end{lemma}
-
-%% %% \begin{theorem}
-%% %%   Let $\cat{K}$ be a Kleene category and $A$ a discrete category.
-%% %%   The functor category $[A, \cat{K}]$.
-%% %%   (HOW GENERAL SHOULD THIS THEOREM BE? BY ASSUMING ENOUGH STRUCTURE,
-%% %%   E.G. K = Set, THIS THEOREM BECOMES SIMPLE TO PROVE)
-%% %% \end{theorem}
-%% \begin{theorem}
-%%   If $\cat{C}$ is a locally small monoidal category, then
-%%   $\Set^{\cat{C}}$ is a Kleene category.
-%% \end{theorem}
-%% \begin{proof}
-
-%%   By the lemma above, $\Set^{\cat{C}}$ is monoidal closed, and since it
-%%   is a presheaf category, it has coproducts. Furthermore, the tensor
-%%   is a left adjoint, i.e. it preserves colimits and, therefore, it is
-%%   a distributive category.
-
-%%   As for the Kleene star, since presheaf categories admit small colimits,
-%%   the initial algebra of the functors $F_{A,B}$ and $G_{A,B}$ can be
-%%   defined as the filtered colimit of the diagrams:
-
-%%   From Theorem~\ref{th:kleeneclosed} it follows that these initial
-%%   algebras satisfy the required isomorphisms and this concludes the
-%%   proof.
-%% \end{proof}
-
-%% \begin{corollary}
-%%   For every alphabet $\Sigma$, the presheaf category $\Set^{\cat{\Sigma^*}}$
-%%   is a Kleene category.
-%% \end{corollary}
-%% \begin{proof}
-%%   Note that string concatenation and the empty string make the
-%%   discrete category $\Sigma^*$ a strict monoidal category.
-%% \end{proof}
-
-%% Much like in the posetal case, the abstract structure of a Kleene
-%% category is expressive enough to synthetically reason about regular
-%% languages. A significant difference between them is that while Kleene
-%% algebras can reason about language containment, Kleene categories can
-%% reason about \emph{ambiguity}, \emph{strong equivalence} of grammars.
-
-%% \subsection{Lambek Hyperdoctrines and Chomsky Hyperdoctrines}
-
-%% Though Kleene categories are expressive enough to reason about
-%% concepts that are outside of reach of Kleene algebras, their
-%% simply-typed nature makes them not so expressive from a type theoretic
-%% point of view. This is limiting because type theories are successful
-%% syntactic frameworks for manipulating complicated categorical
-%% structures while avoiding some issues common in category theory, such
-%% as coherence issues.
-
-%% With this in mind, we want to design a categorical semantics that
-%% builds on top of Kleene categories with the goal of extending them
-%% with dependent types and making them capable reasoning about languages
-%% and their parsers. This leads us to the abstract notion of model we
-%% are interested in capturing with \theoryabbv: a \emph{Chomsky
-%% category}.
-
-%% We do this in two stages: first we define a \emph{Lambek hyperdoctrine} to be a
-%% notion of model for the judgmental structure of \theoryabbv: that is we have
-%% notions of linear and non-linear type, contexts, substitution and terms, but do
-%% not assume any particular type constructions exist. Then we will define when a
-%% Lambek hyperdoctrine is a Chomsky hyperdoctrine, meaning it can interpret all
-%% the type formers of \theoryabbv and therefore arbitrary strength grammars.
-
-%% \begin{definition}[Lambek Hyperdoctrine]
-%%   A \emph{Lambek hyperdoctrine} consists of
-%%   \begin{enumerate}
-%%   \item A category $\mathcal C$ with a terminal object.
-%%   \item A category with families structure over $\mathcal C$.
-%%   \item A contravariant functor $L : \mathcal C^{o} \to \textrm{MultiCat}$ from
-%%     $\mathcal C$ to the category of Multicategories.
-%%   \end{enumerate}
-%% \end{definition}
-%% Here the objects of $\mathcal C$ model the non-linear contexts, and morphisms
-%% model non-linear substitutions. The category with families structure over
-%% $\mathcal C$ models the dependent non-linear types. Finally the
-%% ``hyperdoctrine'' of multicategories $L$ models the linear types and terms. The
-%% fact that this is functorial in $\mathcal C$ corresponds to the fact that linear
-%% types are all relative to a non-linear context and that linear variables and
-%% composition commute with non-linear substitution.
-
-%% We will have three main Lambek hyperdoctrines of interest in this paper: the
-%% ``standard model'' of sets and grammars, the ``syntactic model'' given by our
-%% type theory itself and lastly a gluing model introduced in
-%% Section~\ref{sec:canonicity} to prove the canonicity theorem.
-%% \begin{example}
-%%   \begin{enumerate}
-%%   \item Let $\mathcal C$ be the category of sets, equipped with its usual
-%%     category with families structures of families. Define $L : \mathcal C^{o}
-%%     \to \textrm{MultiCat}$ to map $L(X)$ to the representable multicategory
-%%     $(\Set^{\Sigma^*})^X$ of $X$-indexed families of grammars where the monoidal
-%%     structure is given pointwise by the Day convolution monoidal structure.
-%%   \item We can build a ``syntactic'' Lambek hyperdoctrine $\Syn(\Sigma)$ from the syntax
-%%     itself: the category $\mathcal C$ is given by non-linear contexts and
-%%     substitutions, the category with families by the non-linear types and terms
-%%     and the hyperdoctrine of multicategories by the linear types and terms.
-%%   \end{enumerate}
-%% \end{example}
-
-%% Next each type linear and non-linear type constructor corresponds to extra data
-%% on a Lambek hyperdoctrine.
-%% \begin{definition}
-%%   \label{def:chomsky-data}
-%%   \begin{enumerate}
-%%   \item Dependent type structure: standard (say extensional type theory, give a reference)
-%%   \item Universes
-%%   \item Inductive grammars?
-%%   \item Non-inductive Grammar constructors: standard monoidal category stuff
-%%   \end{enumerate}
-%% \end{definition}
-%% \begin{definition}[Chomsky Hyperdoctrine]
-%%   A Chomsky Hyperdoctrine is a Lambek hyperdoctrine equipped with all of the data in Definition~\ref{def:chomsky-data}.
-%% \end{definition}
-%% \pedro{We should probably define some of the words in this definition}
-%% \begin{definition}
-%%   A Chomsky category is a locally Cartesian category with two hierarchies of
-%%   universes $\{L_i\}_{i\in \nat}$ and $\{U_i\}_{i\in \nat}$ such that
-%%   every $L_i$ and $U_i$ are $U_{i+1}$-small. Furthermore, we require
-%%   $U_i$ to be closed under dependent products and sum,
-%%   $L_i$ to be closed under the Kleene category connectives,
-%%   dependent products, left and right closed structures, with
-%%   a type constructor $G : L_i \to U_i$ and a linear dependent sum
-%%   going the other direction.
-%% \end{definition}
-
-%% \steven{Max suggests augmenting the definition of a Chomsky category to
-%%   something like two categories $L$ and $U$, and $U$ is Cartesian closed I don't
-%%   fully recall the rest.
-
-
-%%   My best guess is that you take $L$ a Kleene category with a hierarchy of universes
-%%   two, and you further require that $L$ is $Psh(U)$-enriched, except he
-%%   suggested a further adjective on these presheaves. Perhaps representability?
-%% }
-
-%% \begin{theorem}
-%%   The presheaf category $\Grammar = \Set^{\cat{\Sigma^*}}$ is a Chomsky category.
-%% \end{theorem}
-
-
-%% Further, the syntactic category of \theoryname is manifestly a Chomsky category.
-
-%% \pedro{This is likely true, but if we explicitly say so, this warrants a proof. I think that
-%% if we don't say anything about the syntactic category, reviewers won't mind.}
-
-%% \steven{I agree that we don't want to say anything that opens unnecessary
-%%   questions for proofs we haven't written. However, it seems hard to make the
-%%   case that we have the right categorical model of the syntax if this statement
-%%   isn't true. By restating our definition of Chomsky category, this should be
-%%   obvious or a quick proof}
-
-%% \pedro{I agree, then we should add the quick proof :) }
-
-%% \subsection{Concrete Models of \theoryabbv}
-%% \label{sec:othermodels}
-
-%% \steven{Because we can define a version of semantic actions internally, we
-%%   shouldn't put it as a separate model}
-
-%% One of the powers of type theories is that it can be profitable to interpret them
-%% in various models. In this section, by using our just-defined Chomsky categories,
-%% we show how other useful concepts from formal language theory can also be organized
-%% as models of \theoryabbv. We illustrate this point by providing two examples that
-%% are closely related to the theory of formal languages: language equivalence and
-%% semantic actions. Furthermore, in order to justify how $\mathbf{Gr}$ relates to
-%% more traditional notions of parsing, we define a glued model that proves a
-%% canonicity property of grammar terms.
-
-
-%% \subsection{Language Semantics}
-%% Every grammar induces a language semantics. Also languages can be taken as a
-%% propositionally truncated view of the syntax. Logical equivalence should induce
-%% weak equivalence, and thus even give a syntactic way to reason about language equivalence.
-%% \steven{TODO language semantics}
-
-%% % \subsection{Semantic Actions}
-%% % \steven{Tentatively planning to cut this subsection for an internal representation
-%% %   of semantic actions}
-%% % Returning to the problem of parsing, the output of a parse usually is not the
-%% % literal parse tree. Rather, the output is the result of some \emph{semantic
-%% %   actions} ran on the parse tree, which usually serve to remove some syntactic
-%% % details that are unnecessary for later processing.
-
-%% % Given a grammar $G : \String \to \Set$, we define a semantic action to be a set
-%% % $X$ with a function $f$ that produces a semantic element from any parse of $G$.
-
-%% % \[
-%% %   f : \PiTy w \String {G w \to X}
-%% % \]
-
-%% % Further, semantic actions can be arranged into a structured category.
-%% % Define $\SemAct$ as the comma
-%% % category $\Grammar / \Delta$, where $\Delta : \Set \to \Grammar$ defines a
-%% % discrete presheaf. That is, for a set $X$, $\Delta (X)(w) = X$ for all
-%% % $w \in \String$. As $\SemAct$ is defined as a comma category, it has a forgetful
-%% % functor into $\Grammar$. That is, $\SemAct$ serves as a notion of formal
-%% % grammar. Moreover, $\SemAct$ is a model of \theoryabbv.
-
-%% % \steven{It being a notion of formal grammar is distinct from being a model. This
-%% % probably warrants a proof}
-
-%% % \steven{TODO semantic actions}
-
-%% % \pedro{This is a very nice opportunity of showing off the supremacy of denotational
-%% %   reasoning ;) We should probably prove the gluing lemma in the previous section
-%% %   and apply it here and in the canonicity section. The actual proof might have to be
-%% %   moved to the appendix, though}
-
-%% \subsection{Parse Canonicity}
-%% Canonicity is an important metatheoretic theorem in the type theory
-%% literature.  It provides insight on the normal forms of terms and,
-%% therefore, on its computational aspects. Frequently, proving
-%% canonicity for boolean types, i.e. every closed term of type bool
-%% reduces to either true or false, is enough to justify that the type
-%% theory being studied is well-behaved. In our case, however, since we
-%% want to connect \theoryabbv to parsers, we must provide a more
-%% detailed account of canonicity. In particular, we give a nonstandard semantics
-%% of \theoryabbv that carries a proof of canonicity along with it.
-
-%% If $\cdot \vdash A$ is a closed linear type then there are
-%% two obvious notions of what constitutes a ``parse'' of a string w
-%% according to the grammar $A$:
-%% \begin{enumerate}
-%% \item On the one hand we have the set-theoretic semantics just
-%%   defined, $\llbracket A \rrbracket \cdot w$
-%% \item On the other hand, we can view the string $w = c_1c_2\cdots$ as
-%%   a linear context $\lceil w \rceil = x_1:c_1,x_2:c_2,\ldots$ and
-%%   define a parse to be a $\beta\eta$-equivalence class of linear terms $\cdot;
-%%   \lceil w \rceil \vdash e : G$.
-%% \end{enumerate}
-%% It is not difficult to see that at least for the ``purely positive''
-%% formulae (those featuring only the positive connectives
-%% $0,+,I,\otimes,\mu, \overline\Sigma,c$) that
-%% every element $t \in \llbracket A \rrbracket w$ is a kind of tree and
-%% that the nodes of the tree correspond precisely to the introduction
-%% forms of the type. However it is far less obvious that \emph{every}
-%% linear term $\lceil w \rceil \vdash p : \phi$ is equal to some
-%% sequence of introduction forms since proofs can include elimination
-%% forms as well. To show that this is indeed the case we give a
-%% \emph{canonicity} result for the calculus: that the parses for .
-
-%% \begin{definition}
-%%   A non-linear type $X$ is purely positive if it is built up using
-%%   only finite sums, finite products and least fixed points.
-
-%%   A linear type is purely positive if it is built up using only finite
-%%   sums, tensor products, generators $c$, least fixed points and linear
-%%   sigma types over purely positive non-linear types.
-%% \end{definition}
-
-%% \begin{definition}
-%%   %% Let $X$ be a closed non-linear type. The closed elements $\textrm{Cl}(X)$ of $X$ are the definitional equivalence classes of terms $\cdot \vdash e : X$.
-
-%%   Let $A$ be a closed linear type. The nerve $N(A)$ is a presheaf on
-%%   strings that takes a string $w$ to the definitional equivalence
-%%   classes of terms $\cdot; \lceil w\rceil \vdash e: N(A)$.
-%% \end{definition}
-
-%% \begin{theorem}[Canonicity]
-%%   Let $A$ be a closed, purely positive linear type. Then there is an
-%%   isomorphism between $\llbracket A\rrbracket$ and $N(A)$.
-%% \end{theorem}
-%% \begin{proof}
-%%   We outline the proof here, more details are in the appendix. The
-%%   proof proceeds first by a standard logical families construction
-%%   that combines canonicity arguments for dependent type theory
-%%   TODO cite coquand
-%%   % \cite{coquand,etc}
-%%   with logical relations constructions for linear
-%%   types
-%%   TODO cite hylandschalk
-%%   % \cite{hylandschalk}
-%%   . It is easy to see by induction that the
-%%   logical family for $A$, $\hat A$ is isomorphic to $\llbracket A
-%%   \rrbracket$ and the fundamental lemma proves that the projection
-%%   morphism $p : \hat A \to N(A)$ has a section, the canonicalization
-%%   procedure. Then we establish again by induction that
-%%   canonicalization is also a retraction by observing that introduction
-%%   forms are taken to constructors.
-%% \end{proof}
-
-
-%% \begin{enumerate}
-%% \item Every term $\lceil w \rceil \vdash p : G + H$ is equal to $\sigma_1q$ or $\sigma_2 r$ (but not both)
-%% \item There are no terms $\lceil w \rceil \vdash p : 0$
-%% \item If there is a term $\lceil w \rceil \vdash p : c$ then $w = c$ and $p = x$.
-%% \item Every term $\lceil w \rceil \vdash p : G \otimes H$ is equal to $(q,r)$ for some $q,r$
-%% \item Every term $\lceil w \rceil \vdash p : \varepsilon$ is equal to $()$
-%% \item Every term $\lceil w \rceil \vdash p : c$ is equal to $x:c$
-%% \item Every term $\lceil w \rceil \vdash p : \mu X. G$ is equal to $\textrm{roll}(q)$ where $q : G(\mu X.G/X)$
-%% \item Every term $\lceil w \rceil \vdash p : (x:A) \times G$ is equal
-%%   to $(M,q)$ where $\cdot \vdash M : A$
-%% \end{enumerate}
-
-%% To prove this result we will use a logical families model. We give a
-%% brief overview of this model concretely:
-%% \begin{enumerate}
-%% \item A context $\Gamma$ denotes a family of sets indexed by closing substitutions $\hat\Gamma : (\cdot \vdash \Gamma) \Rightarrow \Set_i$
-%% \item A type $\Gamma \vdash X : U_i$ denotes a family of sets $\hat X : \Pi(\gamma:\cdot \vdash \Gamma) \hat\Gamma \Rightarrow (\cdot \vdash \simulsubst X \gamma) \Rightarrow \Set_i$
-%% \item A term $\Gamma \vdash e : X$ denotes a section $\hat e : \Pi(\gamma)\Pi(\hat\gamma)\hat X \gamma \hat\gamma (\simulsubst e \gamma)$
-%% \item A linear type $\Gamma \vdash A : L_i$ denotes a family of grammars $\hat A : \Pi(\gamma:\cdot\vdash\Gamma)\,\hat\Gamma \Rightarrow \Pi(w:\Sigma^*) (\cdot;\lceil w\rceil \vdash A[\gamma])\Rightarrow \Set_i$, and the denotation of a linear context $\Delta$ is similar.
-%% \item A linear term $\Gamma;\Delta \vdash e : A$ denotes a function \[\hat e : \Pi(\gamma)\Pi(\hat\gamma)\Pi(w)\Pi(\delta : \lceil w \rceil \vdash \simulsubst \Delta \gamma) \hat\Delta \gamma \hat\gamma \delta \Rightarrow \hat A \gamma \hat\gamma w {(\simulsubst {\simulsubst e \gamma} \delta)}\]
-%% \end{enumerate}
-%% And some of the constructions:
-%% \begin{enumerate}
-%% \item $\widehat {(G A)} \gamma \hat\gamma e = \hat A \gamma \hat\gamma \varepsilon (G^{-1}e)$
-%% \item $\widehat {(A \otimes B)} \gamma \hat\gamma w e = \Sigma(w_Aw_B = w)\Sigma(e_A)\Sigma(e_B) (e_A,e_B) = e \wedge \hat A \gamma \hat \gamma w_A e_A \times \hat B \gamma \hat \gamma w_B e_B$
-%% \item $\widehat {(A \lto B)} \gamma \hat\gamma w e = \Pi(w_A)\Pi(e_A) \hat A \gamma\hat\gamma w_A e_A \Rightarrow \hat B \gamma\hat\gamma (ww_A) (\applto {e_A} e)$
-%% \end{enumerate}
-
-%% First, the category with families will be
-%% the category of logical families over set contexts/types
-%% $\Delta$/$A$. Then the propositional portion will be defined by
-%% mapping a logical family $\hat \Gamma \to \Gamma$
-
-%% First, let $L$ be the category of BI formulae and proofs (quotiented
-%% by $\beta\eta$ equality). Define a functor $N : L \to \Set^{\Sigma^*}$ by
-%% \[ N(\phi)(w) = L(w,\phi) \]
-
-%% Then define the gluing category $\mathcal G$ as the comma category
-%% $\Set^{\Sigma^*}/N$. That is, an object of this category is a pair of
-%% a formula $\phi \in L$ and an object $S \in \mathcal
-%% P(\Sigma^*)/N(\phi)$. We can then use the equivalence $\mathcal
-%% P(\Sigma^*)/N(\phi) \cong \mathcal P(\int N(\phi))$ to get a simple
-%% description of such an $S$: it is simply a family of sets indexed by
-%% proofs $L(w,\phi)$:
-%% \[ \prod_{w\in\Sigma^*} L(w,\phi) \to \Set \]
-%% This category clearly comes with a projection functor $\pi : \mathcal
-%% G \to \mathcal L$ and then our goal is to define a section by using
-%% the universal property of $\mathcal L$.
-
-%% To this end we define
-%% \begin{enumerate}
-%% \item $(\phi, S) \otimes (\psi, T) = (\phi \otimes \psi, S\otimes T)$ where
-%%   \[ (S \otimes T)(w, p) = (w_1w_2 = w) \times (q_1,q_2 = p) \times S\,w_1\,q_1 \times T\,w_2\,q_2\]
-%% \item $(\phi, S) \multimap (\psi, T) = (\phi \multimap \psi, S \multimap T)$ where
-%%   \[ (S \multimap T)(w,p) = w' \to q \to S\,w'\,q \to T (ww') (p\,q) \]
-%% \item $\mu X. ??$ ??
-%% \end{enumerate}
-
-%% \pedro{We should conclude this section by explaining the relevance of the canonicity
-%% theorem. Could also be done before stating the theorem.}
 
 \section{Related and Future Work}
 \label{sec:discussion}
@@ -3398,42 +2221,10 @@ and parsers, and it is unclear if these could be implemented in their calculus.
 Frisch and Cardelli introduced the use of a simple type system to reason about
 regular expressions up to weak equivalence \cite{frischCardelli}.
 Henglein and Nielsen build on this type-theoretic view of grammars, pointing out that the values of the types correspond precisely to the parse trees \cite{henglein_regular_2011}.
-Our design of \theoryabbv extends this view of grammars as types to a much broader class of grammars, as well as providing a syntax and equational theory for \emph{parse transformers}, showing that the terms can be viewed not just as parse trees, but as intrinsically verified parsers.
+\theoryabbv extends this view of grammars as types to a much broader class of grammars, as well as providing a syntax and equational theory for \emph{parse transformers}, showing that the terms can be viewed not just as parse trees, but as intrinsically verified parsers.
 
 \citet{elliottSymbolicAutomaticDifferentiation2021} uses essentially the same denotational semantics as ours, interpreting regular expressions as type-valued functions on strings. Our denotational semantics of \theoryabbv extends this to a much broader class of grammars.
-%% Krishnaswami and Yallop \cite{krishnaswami_typed_2019} provide a type system for
-%% demonstrating that carries proves of the LL(1) condition for context-free
-%% grammars. Despite being a type system over formal grammars, their interpretation
-%% of types is very different from the semantics of \theoryabbv.
 
-
-%% 1. More practical: integrating it into a larger verified development
-%%    - verified imperative implementation: Lambek logic ala separation
-%%      logic?
-%% 2. Semantic actions
-%% 3. Type systems as tree grammars
-
-%% \subsubsection{Kleene Algebra}
-%% Since the early works in the theory of formal languages, Kleene
-%% algebras have played an important role in its development. They
-%% generalize the operations known from regular languages by introducing
-%% operations generalizing language composition, language union and the
-%% Kleene star.  More generally, they are defined as inequational theory
-%% where the inequality is meant to capture language containment.  This
-%% theory is extremely successful, having found applications in concurrency theory
-%% \cite{hoare2009concurrent}, software-defined networks \cite{anderson2014netkat},
-%% theory of programming languages \cite{angus2001kleene}, compiler optimizations
-%% \cite{kozen2000certification} and more.
-
-%% A frequently fruitful research direction is exploring varying
-%% extensions of Kleene algebras, Kleene algebra with tests (KAT) being
-%% one of the most notable ones \cite{kozen1997kleene}. Our approach is
-%% radically different from most extensions, which usually aim at
-%% modifying or adding new operations to Kleene algebras, but still
-%% keeping it as an inequational theory. By adopting a category-theoretic
-%% treatment and allowing the ``order structure'' to encode more
-%% information than merely inequalities, we were able to extend Kleene
-%% algebra to reason about parsing as well.
 \paragraph{Dependent Linear Types}
 Our syntax for non-commutative dependent linear type theory is based on the
 dependent commutative linear type theory of
@@ -3446,13 +2237,11 @@ develops a dependent linear type theory where instead the non-linear types are
 accessed using the $!$ modality, similar to Girard's original approach
 \cite{vakar2015,girard_linear_1987}. Additionally, V\'ak\'ar develops a general
 categorical semantics for their system, whereas we have only developed a single
-denotational model. It appears straightforward to adapt V\'ak\'ar's general
+denotational model. It should be straightforward to adapt V\'ak\'ar's general
 semantics approach to a non-commutative variant that would apply to
 \theoryabbv. This may have applications in finding alternative models, or
 developing logical relations proofs categorically.
 
-%%    - verified imperative implementation: Lambek logic ala separation
-%%      logic?
 \paragraph{Relation to Separation Logic}
 
 \theoryabbv is similar in spirit to separation logic
@@ -3466,22 +2255,6 @@ category-theoretic notion of Day convolution monoidal structure
 \cite{day1970construction}. From a separation-logic perspective, our
 notion of memory is very primitive: a memory shape is just a string of
 characters and the state of the memory is never allowed to evolve.
-
-%% Syntactically, our type theory can be viewed as a kind of ``separation
-%% type theory'' in that we care not just about provability of formulae
-%% but the constructive content of our linear terms, as these act as
-%% parsers. The design of \theoryabbv is based on the $\textrm{LNL}_D$
-%% calculus which explicitly was designed to be a dependent
-%% type-theoretic version of separation logic. Many concepts of
-%% separation logic then have direct analogues in our system. The
-%% characters $c$ are analogous to the ``points-to'' formulae $l \mapsto
-%% x$ in separation logic. Our $\otimes,\lto,\tol$ are analogous to the
-%% separating conjunction and magic-wand. The analogue of the persistence
-%% modality $\square$ of separation logic is $\bigoplus_{\_:\uparrow A} I$,
-%% which ``zeros out'' all but the parses from the empty string. If we
-%% think of the portions of the string we are parsing as our notion of
-%% resource, then these make sense as the ``resource-free'' elements of
-%% the type $A$.
 
 This semantic connection to separation logic suggests an avenue of
 future work: to develop a program logic based on non-commutative
@@ -3497,17 +2270,17 @@ verified parsing components of larger verified software systems.
 
 \paragraph{Verified Parser Generators}
 We aim to extend our work on parsing to verify other algorithms. For instance,
-our regular expression parser makes somewhat arbitrary choices in what parse to
-produce when the grammar is ambiguous. In the future we aim to verify Frisch and
+our regular expression parser makes somewhat arbitrary choices
+when the grammar is ambiguous. In the future we aim to verify Frisch and
 Cardelli's \emph{greedy} algorithm for regular expression
 disambiguation. Defining this algorithm in \theoryabbv would provide soundness
 by construction, but it is not obvious if the greediness property could be
 verified easily as well.
 
-We also aim to adapt the approach used for our context-free grammar parsers for
-$\LLL$ and $\LRR$/$\LALRR$ parsers, with the aim of developing a shared library of intrinsically
-verified parsing utilities that can be usefully shared across different
-parsers. We would also like to investigate how high-performance verified parsers
+We also aim to adapt the approach used for our context-free grammar parsers to
+$\LLL$ and $\LRR$/$\LALRR$ parsers, with the aim of developing a shared library
+of intrinsically verified parsing utilities.
+We would also like to investigate how high-performance verified parsers
 can be implemented in \theoryabbv. This might be done by developing an efficient
 compiler for \theoryabbv directly or by developing a verified compiler to an
 imperative system within \theoryabbv itself.
@@ -3552,68 +2325,42 @@ encode type type systems as linear types in a modified version of
 \emph{type systems} over trees. This could analogously serve as a
 framework for verified type checking and static analysis.
 
-%% While parsing typically refers to the generation of semantic
-%% objects from string input, many tasks in programming can be
-%% viewed as parsing of objects with more structure, such as
-%% trees with binding structure or graphs. Fundamental to the
-%% frontend of many
-%% programming language implementations are type systems. In
-%% particular, \emph{type checking}
-%% --- analogous to language recognition --- and \emph{typed
-%%   elaboration} --- analogous to parsing --- arise when
-%% producing a semantic object subject to some analysis. Just
-%% as our string grammars were given as functors from $\String$
-%% to $\Set$, we envision adapting the same philosophy
-%% to functors from a \emph{category of trees} to $\Set$ to craft a syntax
-%% that natively captures typed elaboration. This suggests an
-%% unusual sort of bunched type theory, where context extension
-%% no longer resembles concatenation of strings but instead
-%% takes on the form of tree constructors.
-
-% type system              ~~ Formal Grammar
-% typing derivation        ~~ parse tree
-% algorithmic type system  ~~ LL(1), LR(1) grammar
-% Uniqueness of derivations ~~ unambiguous grammar
-% type elaborator           ~~ semantic actions
-
 \newpage
 
-% \begin{acks}
-%   This material is based upon work supported by the
-%   \grantsponsor{GS100000001}{National Science
-%     Foundation}{http://dx.doi.org/10.13039/100000001} under Grant
-%   No.~\grantnum{GS100000001}{nnnnnnn} and Grant
-%   No.~\grantnum{GS100000001}{mmmmmmm}.  Any opinions, findings, and
-%   conclusions or recommendations expressed in this material are those
-%   of the author and do not necessarily reflect the views of the
-%   National Science Foundation.
-% \end{acks}
+\begin{acks}
+  This material is based upon work supported by the Air Force Office of
+  Scientific Research under Grant No.~\grantnum{}{FA9550-23-1-0760}, the ERC
+  Consolidator Grant BLAST and the ARIA programme on Safeguarded AI. Any
+  opinions, findings, and conclusions or recommendations expressed in this
+  material are those of the authors and do not necessarily reflect the views of
+  the U.S. Department of Defense, the European Research Council or the Advanced
+  Research and Invention Agency.
+\end{acks}
+
+\section*{Data-Availability Statement}
+The Agda implementation of \theoryabbv and the formalization of our proofs are archived on Zenodo \cite{schaefer_2025_15243560} and the source code is available \href{https://github.com/maxsnew/grammars-and-semantic-actions/tree/PLDI25Artifact}{on GitHub}.
 
 \bibliography{refs.bib}
 
 \newpage
-\ifappendix
+\ifarxiv
 \appendix
 \section{Syntax}
+\label{sec:syntax}
+
 \begin{figure}
-\begin{minipage}[t]{.35\textwidth}
   \begin{align*}
     \el\left(\Var\,M\right) B &= B\,M\\
     \el\left(\mathsf{K}\,A\right) B &= A\\
     \el\left(\bigoplus A\right) B &= \bigoplus_{y:Y}\el(A y)B\\
     \el\left(\bigamp A\right) B &= \bigamp_{y:Y}\el(A y)B\\
-    \el\left(A \otimes A'\right) B &= \el(A)B \otimes \el(A')B
-  \end{align*}
-\end{minipage}%
-\begin{minipage}[t]{.65\textwidth}
-\begin{align*}
+    \el\left(A \otimes A'\right) B &= \el(A)B \otimes \el(A')B \\
     \map\left(\Var\,M\right)\,f &= f\,M\\
     \map\left(\K\,A\right)\,f &= \lambda a. a\\
     \map\left(\bigoplus A\right)\,f &= \lambda a. \letin{\oplusinj y {a_y}}{a}{\oplusinj y {\map(A\,y)\,f\,a_y}}\\
     \map\left(\bigwith\,A\right)\,f &= \lambda a. \withlamb{y}{\map(A\,y)\,f\,(\withprj y a)}\\
     \map\left(A \otimes A'\right)\,f &= \lambda b. \letin{(a,a')}{b}{(\map(A)\,f\,a,\map(A')\,f\,a')}
   \end{align*}
-\end{minipage}%
   \caption{Strictly positive functors functorial actions}
   \label{fig:spf-act}
 \end{figure}
@@ -3622,15 +2369,22 @@ In this section we include the elided syntactic forms, as well as
 definitions and basic properties of linear and non-linear
 substitution.
 
-In \cref{fig:spf-act}, we provide the functorial actions for the strictly
-positive functors defined in \cref{fig:iilt}. We also include the full set of
-rules for non-linear types in \cref{fig:full-non-linear-types}, and we provide
-their judgmental equalities in \cref{fig:jdg-eq-nonlinear}. Finally,
-\cref{fig:jdgeq} contains the judgmental equalities between linear terms in
-\theoryabbv.
+\begin{itemize}
+\item In \cref{fig:spf-act}, we provide the functorial actions of the $\el$
+  and $\map$ operations used to define the indexed inductive types in
+  \cref{fig:iilt}.
+\item In \cref{fig:small-nonlin-ty,fig:small-lin-ty} we give the inference rules
+  for the smallness judgments on nonlinear types and linear types, respectively.
+\item In \cref{fig:full-non-linear-types}, we include the full set of rules for
+  non-linear types, and in \cref{fig:jdg-eq-nonlinear} we provide their
+  judgmental equalities.
+\item In \cref{fig:jdgeq}, we give the judgmental equalities between
+  linear terms in \theoryabbv.
+\end{itemize}
 
 \subsection{Non-linear Types}
-We define sum types, list types, and $Fin~n$ from primitve non-linear types.
+\label{subsec:nonlinty}
+We define sum types, list types, and $Fin~n$ from primitive non-linear types.
 
 For $X , Y : U$, define the sum type $X + Y$ as,
 
@@ -3674,6 +2428,7 @@ For $X : U$, define $List~X$ as,
       \nonlinterm \Gamma N X}{\Gamma \vdash {M =_{X} N} \isSmall}
   \end{mathpar}
   \caption{Small Non-linear Types}
+  \label{fig:small-nonlin-ty}
 \end{figure}
 
 \begin{figure}
@@ -3705,6 +2460,7 @@ For $X : U$, define $List~X$ as,
     \inferrule{\Gamma \vdash M : L}{\Gamma \vdash \unquoteTy M \isSmallLin}
   \end{mathpar}
   \caption{Small Linear Types}
+  \label{fig:small-lin-ty}
 \end{figure}
 
 \begin{figure}
@@ -3951,20 +2707,10 @@ For $X : U$, define $List~X$ as,
   simultaneously with an action of substitution on types, terms,
   etc. in the standard way.
 
-  %% \max{do we need identity and composition of substitutions and their functoriality?}
-  %% By induction we can define an identity substitution
-  %% $\textrm{Subst}(\Gamma,\Gamma)$ which maps each variable to
-  %% itself. We write this substitution simply as $\Gamma$.
-  %% \begin{align*}
-  %%   \cdot \circ \gamma' &= \cdot\\
-  %%   (\gamma,M/x) \circ \gamma' &= (\gamma\circ \gamma') , M[\gamma']/x
-  %% \end{align*}
-
   It is straightforward, but laborious to establish that all forms in
   the type theory that are parameterized by a non-linear context
   $\Gamma$ support the admissible actions of a substitution $\gamma
   \in \Subst(\Gamma',\Gamma)$ given in \cref{fig:non-linear-substitution,fig:substact}.
-  %% Further, these all satisfy identity and composition equations M[\Gamma] = M and M[\gamma][\gamma'] = M[(\gamma \circ \gamma')]
 \end{definition}
 
 \begin{figure}
@@ -4009,7 +2755,7 @@ For $X : U$, define $List~X$ as,
     \inferrule
     {\Gamma;\Delta \vdash e \equiv f : A}
     {\Gamma'; \Delta[\gamma] \vdash e[\gamma] \equiv f[\gamma] : A[\gamma]}
-  \end{mathpar}  
+  \end{mathpar}
   \caption{Non-linear substitution}
   \label{fig:non-linear-substitution}
 \end{figure}
@@ -4031,8 +2777,6 @@ For $X : U$, define $List~X$ as,
   can deconstruct $\delta = \delta_1,\delta_2$ with $\delta_1 \in
   \Subst(\Delta_1', \Delta_1)$ and $\delta_2 \in \Subst(\Delta_2',
   \Delta_2)$.
-  %% Again for any $\Gamma \vdash \Delta$, we can define an identity
-  %% substitution mapping each variable to itself. Additionally we can define composition of 
 \end{definition}
 
 \begin{figure}
@@ -4076,11 +2820,10 @@ For $X : U$, define $List~X$ as,
     {\Gamma; \Delta \vdash e \equiv f : A}
     {\Gamma; \Delta' \vdash e[\delta] \equiv f[\delta'] : A}
   \end{mathpar}
-
-  %% \max{identity and composition?}
 \end{definition}
 
 \section{Denotational Semantics}
+\label{sec:denotational}
 Here we extend the denotational semantics from
 \cref{sec:semantics-and-metatheory} to cover all of \theoryname
 syntax. Here we will freely use that the category of grammars is a
@@ -4254,7 +2997,7 @@ $\semg{(e_{1}, e_{2})} : \semg{\Delta,\Delta'} \to \semg{A \otimes B}$ is given
 by the diagram
 
 \begin{center}
-\begin{tikzcd}
+\begin{tikzcd}[column sep = 1in]
   \semg{\Delta,\Delta'} \arrow[r, "m_{\Delta,\Delta'}"] &
   \semg{\Delta} \otimes \semg{\Delta'} \arrow[r, "\semg{e_1} \otimes \semg{e_2}"] &
   \semg{A} \otimes \semg{G}
@@ -4337,7 +3080,7 @@ $\semg{\applto {e'} {e}} : \semg{\Delta,\Delta'} \to \semg{B}$ is defined by the
 diagram,
 
 \begin{center}
-\begin{tikzcd}
+\begin{tikzcd}[column sep=.75in]
   \semg{\Delta,\Delta'} \arrow[r , "m_{\Delta,\Delta'}"] &
   \semg{\Delta} \otimes \semg{\Delta'} \arrow[r , "id \otimes \semg{e}"] &
   \semg{\Delta} \otimes \semg{A} \arrow[r , "\phi^{-1}\left( \semg{e'} \right)"]
@@ -4395,7 +3138,7 @@ induced by this adjunction. In particular, $\semg{\lambtol a e}$ is given by $\p
 acting on the following diagram
 
 \begin{center}
-\begin{tikzcd}
+\begin{tikzcd}[column sep=.75in]
   \semg{A} \otimes \semg{\Delta} \arrow[r , "\lambda^{-1} \otimes id"] &
   \semg{a : A} \otimes \semg{\Delta} \arrow[r , "m^{-1}_{a : A , \Delta}"] &
   \semg{a : A , \Delta} \arrow[r , "\semg{e}"] &
@@ -4408,7 +3151,7 @@ The application of a $\tol$-function,
 $\semg{\apptol {e} {e'}} : \semg{\Delta',\Delta} \to \semg{B}$ defined by the diagram
 
 \begin{center}
-\begin{tikzcd}
+\begin{tikzcd}[column sep=.75in]
   \semg{\Delta',\Delta} \arrow[r , "m_{\Delta',\Delta}"] &
   \semg{\Delta'} \otimes \semg{\Delta} \arrow[r , "\semg{e'} \otimes id"] &
   \semg{A} \otimes \semg{\Delta} \arrow[r , "\psi^{-1}\left( \semg{e} \right)"] &
@@ -4457,10 +3200,10 @@ The $\eta$ rule for $\tol$ is given by,
 \subsubsection{$\bigamp$-Products}
 % Products
 \paragraph{$\bigamp$-Introduction}
-$\semg{\dlamb x e} : \semg{\Delta} \to \prod_{x : X} {\sem{A}(\gamma , x)}$ is
+$\semg{\dlamb x e} : \semg{\Delta} \to \prod_{x : \semg{X}} {\sem{A}(\gamma , x)}$ is
 defined by the universal property of the product
 \[
-\semg{\dlamb x e} = \left( \sem{e}(\gamma , x) \right)_{(x : X)}
+\semg{\dlamb x e} = \left( \sem{e}(\gamma , x) \right)_{(x : \semg{X})}
 \]
 
 \paragraph{$\bigamp$-Elimination}
@@ -4470,7 +3213,7 @@ projection out of the product,
 \begin{center}
 \begin{tikzcd}
   \semg{\Delta} \arrow[r , "\semg{e}"] &
-  \prod_{x : X} {\sem{A}(\gamma , x)} \arrow[r , "\pi_M"] &
+  \prod_{x : \semg{X}} {\sem{A}(\gamma , x)} \arrow[r , "\pi_M"] &
   \sem{A}(\gamma , M)
 \end{tikzcd}
 \end{center}
@@ -4484,7 +3227,7 @@ The $\beta$ law for $\bigamp$ is given by,
 \begin{align*}
   \semg{(\dlamb x e).\pi~M}
   & = \pi_{M} \circ \semg{\dlamb x e} \\
-  & = \pi_{M} \circ (\sem{e}(\gamma , x))_{(x : X)} \\
+  & = \pi_{M} \circ (\sem{e}(\gamma , x))_{(x : \semg{X})} \\
   & = \sem{e}(\gamma , M)
 \end{align*}
 by the universal property of the product.
@@ -4505,8 +3248,8 @@ The $\eta$ law for $\bigamp$ is given by,
 \begin{proof}
 \begin{align*}
   \semg{(\dlamb x {e.\pi~x})}
-  & = (\semg{e.\pi~x})_{x : X} \\
-  & = (\pi_x \circ \semg{e})_{x : X} \\
+  & = (\semg{e.\pi~x})_{x : \semg{X}} \\
+  & = (\pi_x \circ \semg{e})_{x : \semg{X}} \\
   & = \semg{e}
 \end{align*}
 \end{proof}
@@ -4515,13 +3258,13 @@ by the universal property of the product.
 \subsubsection{$\bigoplus$-Sums}
 % Sums
 \paragraph{$\bigoplus$-Introduction}
-$\semg{\sigma~M~e} : \semg{\Delta} \to \coprod_{x : X} \sem{A}(\gamma, x)$
+$\semg{\sigma~M~e} : \semg{\Delta} \to \coprod_{x : \semg{X}} \sem{A}(\gamma, x)$
 
 \begin{center}
 \begin{tikzcd}
   \semg{\Delta} \arrow[r , "\semg{e}"] &
   \sem{A}(\gamma, M) \arrow[r , "i_M"] &
-  \coprod_{x : X} {\sem{A}(\gamma , x)}
+  \coprod_{x : \semg{X}} {\sem{A}(\gamma , x)}
 \end{tikzcd}
 \end{center}
 
@@ -4533,9 +3276,9 @@ is defined in the diagram
 % https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBpiBdUkANwEMAbAVxiRAB124YBbAc2CcAIjAY46AcgD6ARlLDR4+exFjJUgEwBfEFtLpMufIRRzK1es1aIOXXgIVrpcx+K0ACThDw94nu-yCKorq2rr6IBjYeAREcjJUtIwsbJwMMABmOAAU-tyBruoyHl4+fpz5DsFqJewATlh8ABY4AJT+3li+cHn2Qari0mF6BtHGcaQaiZYpNpwAMlhgAMqNACoAnos8uO7AAB4ewAAaRxW8-SHOpHTuiO4AgsoDoVrZnHx0PDy3pO77rR0I0ihhiJhIk2myWstkWK3WWy6uwOR1OezSmRyvR4lycsjeHy+P3cfwBHTKcHYYHcNNp5xxDwJ7E+31+-3anAazTa5K65QCuMGmiZLOJpMB4VGRliKDICQs0NS7HSWVy9KqL2ctU63X8cNWfE222Rhz2aKC+WAjPezKJbIBtS5LQ57B1-MqgtekpBYxlyDkAGYoVYlZaAMIiu3i71RaXgshBhUhuYBAQR3SJGBQPjwIigDJ1CA8JBkEA4CBIORJZMgHhSYA2zWyZ4hVotvFhagMOgAI1EAAVQeMbCqcN6C0XK9Ry0gNEnZrX64VroUtKU+T0sFAQF3ewOhzKQKPx4Xi4g52WK4gAKzzmHZLe83Xq4AwLQut2b7e7vsMQe+kwj0xE9J0QANpyvAA2O82GQbFXwkSNWRJdl3Aoetsn2O53GOCUf33AC2GPYEJzPAAWCCkHA6sFx4AA9YAAFpigw5dmzoRAHjbNjOyPPc-wPQDiIiUikFvS8kAomiYR3Pjf3-OMiOAkjTyQaCJMQAB2LQKC0IA
 \begin{tikzcd}[column sep =large]
 {\semg{\Delta'_1,\Delta,\Delta'_2}} \arrow[r, "{m_{(\Delta'_1,\Delta),\Delta'_2}}"]                                                                                                           & {\semg{\Delta'_1,\Delta} \otimes \semg{\Delta'_2}} \arrow[d, "{m_{\Delta'_1,\Delta}\otimes id}"]                             \\
-{\left( \semg{\Delta'_1} \otimes \coprod_{x:X} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, "d"]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
-{\coprod_{x : X} {\left( \sem{\Delta'_1}(\gamma , x) \otimes
-      \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, "\coprod_{x:X}({m^{-1}_{(\Delta'_1,a:A),\Delta'_2}})"] & {\coprod_{x : X} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : X)}}"]     \\
+{\left( \semg{\Delta'_1} \otimes \coprod_{x:\semg{X}} {\sem{A}(\gamma , x)} \right) \otimes \semg{\Delta'_2}} \arrow[d, "d"]                                                                 & \left( \semg{\Delta'_1} \otimes \semg{\Delta} \right) \otimes \semg{\Delta'_2} \arrow[l, "(id \otimes \semg{e}) \otimes id"] \\
+{\coprod_{x : \semg{X}} {\left( \sem{\Delta'_1}(\gamma , x) \otimes
+      \sem{A}(\gamma , x) \right) \otimes \sem{\Delta'_2}(\gamma , x)}} \arrow[r, outer sep=.15cm, "\coprod_{x:\semg{X}}({m^{-1}_{(\Delta'_1,a:A),\Delta'_2}})"] & {\coprod_{x : \semg{X}} {\sem{\Delta'_1,a : A,\Delta'_2}(\gamma , x)}} \arrow[d, "{[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}}"]     \\
 \semg{C}                                                                                                                                                                                      & {\sem{C}(\gamma, x)} \arrow[l]
 \end{tikzcd}
 \end{center}
@@ -4550,13 +3293,14 @@ The $\beta$ rule for $\bigoplus$ is given by,
 \]
 \begin{proof}
   \begin{align*}
-  \semg{\letin {\sigma~x~a} {\sigma~M~a'} {e'}}
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id
+  \llbracket \mathsf{let}\, {\sigma~x~a} = & {\sigma~M~a'} \, \mathsf{in}\, {e'} \rrbracket \gamma \\
+  % \semg{\letin {\sigma~x~a} {\sigma~M~a'} {e'}}
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}} \circ \coprod_{x:\semg{X}}(m^{-1}) \circ d \circ (id
   \otimes \semg{\sigma~M~a'}) \otimes id \circ m \otimes id \circ m \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X}m^{-1} \circ d \circ (id
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}} \circ \coprod_{x:\semg{X}}m^{-1} \circ d \circ (id
   \otimes (i_M \circ \semg{a'})) \otimes id \circ m \otimes id \circ m \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X} m^{-1} \circ d \circ (id \otimes i_M) \otimes id \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
-  & = {[ \sem{e'}(\gamma , x) ]_{(x : X)}} \circ \coprod_{x:X} m^{-1} \circ i_M \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}} \circ \coprod_{x:\semg{X}} m^{-1} \circ d \circ (id \otimes i_M) \otimes id \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
+  & = {[ \sem{e'}(\gamma , x) ]_{(x : \semg{X})}} \circ \coprod_{x:\semg{X}} m^{-1} \circ i_M \circ (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
   & = \sem{e'}(\gamma , M) \circ m^{-1} (id \otimes  \lambda) \otimes id \circ m \otimes id \circ m \\
   & = \sem{e'}(\gamma , M) \tag{coherence}
   \end{align*}
@@ -4571,24 +3315,24 @@ The $\beta$ rule for $\bigoplus$ is given by,
 \paragraph{$\bigoplus\eta$}
 It suffices to show
 \[
-  \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}} = \semg{f[c'/c]} = \semg{f}
+  \semg{\letin {\sigma~x~a} {c'} {f[(\sigma~x~a)/c]}} = \semg{f[c'/c]} = \semg{f}
   \]
 First, expanding the left hand side, we have.
 \begin{proof}
   \begin{align*}
-    \semg{\letin {\sigma~x~a} {c'} {f[\sigma~x~a/c]}}
-    &= [ \semg{f[\sigma~x~a/c]} ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
-    &= [ \semg{f} \circ (id \otimes i_x) \otimes id ]_{(x : X)} \circ \coprod_{x:X}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
-    &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    \llbracket \mathsf{let}\, {\sigma~x~a} = {c'} & \, \mathsf{in}\, {f[(\sigma~x~a)/c]} \rrbracket \gamma \\
+    &= [ \semg{f[(\sigma~x~a)/c]} ]_{(x : \semg{X})} \circ \coprod_{x:\semg{X}}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    &= [ \semg{f} \circ (id \otimes i_x) \otimes id ]_{(x : \semg{X})} \circ \coprod_{x:\semg{X}}(m^{-1}) \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
+    &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : \semg{X})} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m\\
   \end{align*}
 Since the domain has the universal property of a coproduct (due to distributivity), to prove
 this is equal to $\semg{f}$, it is sufficient to prove they are equal
 when composed with the injections:
 
 \begin{align*}
-  \semg{f} &\circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id\\
-  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ d  \circ (id \otimes i_y) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
-  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : X)} \circ i_y \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
+  \semg{f} &\circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : \semg{X})} \circ d \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id\\
+  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : \semg{X})} \circ d  \circ (id \otimes i_y) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
+  &= \semg{f} \circ [ (id \otimes i_x) \otimes id \circ (m^{-1})]_{(x : \semg{X})} \circ i_y \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \tag{naturality}\\
   &= \semg{f} \circ (id \otimes i_y) \otimes id \circ (m^{-1}) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \\
   &= \semg{f} \circ (m^{-1}) \otimes id \circ (id \otimes \lambda) \otimes id \circ m \otimes id \circ m \circ (id \otimes i_y) \otimes id \\
   &= \semg{f} \circ (id \otimes i_y) \otimes id \tag{coherence}\\
@@ -4664,7 +3408,7 @@ We verify that the denotational semantics validates each of the axioms we have
 assumed.
 
 \paragraph{\cref{ax:dist}} Distributivity
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{\lamblto{e}{\letin{\sigma\,f\,e'}{e}{\withlamb{x}{e'\,.\pi\,x}}}}$ has
   an inverse.
 \end{theorem}
@@ -4677,7 +3421,7 @@ assumed.
 \end{proof}
 
 \paragraph{\cref{ax:disjointness}} $\sigma$-Disjointness
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{\sigma x}$ and $\semg{\sigma x'}$ are disjoint for
   $x \neq x'$.
 \end{theorem}
@@ -4690,7 +3434,7 @@ assumed.
 \end{proof}
 
 \paragraph{\cref{ax:string-top}} String is strongly equivalent to $\top$.
-\begin{theorem}[\Agda{\fillerlink}]
+\begin{theorem}[\Agda]
   In $\Grammar$, $\semg{!}$ has an inverse.
 \end{theorem}
 \begin{proof}
@@ -4713,3 +3457,8 @@ assumed.
 
 \fi
 \end{document}
+
+%%% Local Variables:
+%%% mode: LaTeX
+%%% TeX-master: t
+%%% End:
