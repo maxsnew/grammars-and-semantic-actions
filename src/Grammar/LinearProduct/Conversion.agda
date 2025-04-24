@@ -2,24 +2,23 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.LinearProduct.Conversion (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.LinearProduct.Conversion (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
 open import Cubical.Data.List.More
 import Cubical.Data.Equality as Eq
+open import Cubical.Functions.FunExtEquiv
 
 open import Grammar.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Lift.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
-open import Grammar.Epsilon.AsEquality Alphabet
-open import Grammar.Epsilon.AsPath Alphabet
-  hiding (ε-intro)
-  renaming (ε to εPath
-          ; ε* to ε*Path)
+import Grammar.Epsilon.AsEquality Alphabet as εEq
+import Grammar.Epsilon.AsPath Alphabet as εPath
+import Grammar.Epsilon.Conversion Alphabet as εConv
 open import Grammar.Epsilon.Conversion Alphabet
-open import Grammar.LinearProduct.AsEquality.Base Alphabet
+import Grammar.LinearProduct.AsEquality.Base Alphabet as ⊗Eq
 import Grammar.LinearProduct.AsPath Alphabet as ⊗Path
 open import Term.Base Alphabet
 
@@ -44,8 +43,45 @@ private
     f f' f'' f''' f'''' f''''' : A ⊢ B
     g : C ⊢ D
 
--- opaque
---   unfolding _⊗_ ⊗Path._⊗_
+opaque
+  unfolding ⊗Eq._⊗_ ⊗Path._⊗_
+
+  ⊗≡ : A ⊗Path.⊗ B ≡ A ⊗Eq.⊗ B
+  ⊗≡ {A = A} {B = B} =
+    funExt λ w i → Σ[ s ∈ Splitting≡SplittingEq w i ] A (s .fst .fst) × B (s .fst .snd)
+
+  isSetGrammar⊗Eq : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗Eq.⊗ B)
+  isSetGrammar⊗Eq isSetA isSetB = subst isSetGrammar ⊗≡ (⊗Path.isSetGrammar⊗ isSetA isSetB)
+
+  opaque
+    unfolding ⊗Eq.⊗-intro ⊗Path.⊗-intro
+    ⊗-intro≡ :
+        PathP (λ i → ⊗≡ {A = A} {B = B} i ⊢ ⊗≡ {A = C} {B = D} i) (f ⊗Path.,⊗ g) (f ⊗Eq.,⊗ g)
+    ⊗-intro≡ {f = f} {g = g} = funExt λ w → funExtDep (λ where
+        {⊗P} {⊗Eq} ⊗P≡⊗Eq →
+            ΣPathP (
+            (λ i → ⊗P≡⊗Eq i .fst) ,
+            ΣPathP (
+                (λ i → f (⊗P≡⊗Eq i .fst .fst .fst) (⊗P≡⊗Eq i .snd .fst)) ,
+                (λ i → g (⊗P≡⊗Eq i .fst .fst .snd) (⊗P≡⊗Eq i .snd .snd)))))
+  opaque
+    unfolding ⊗Eq.⊗-unit-r ⊗Path.⊗-unit-r
+    ⊗-unit-r≡ :
+        PathP (λ i → ⊗≡ {A = A} {B = εConv.ε≡ i} i ⊢ A) ⊗Path.⊗-unit-r ⊗Eq.⊗-unit-r
+    ⊗-unit-r≡ {A = A} = funExt λ w → funExtDep (λ where
+      {⊗P} {(((w' , _) , Eq.refl) , a , Eq.refl)} ⊗P≡⊗Eq →
+        subst A (λ i →
+                   ((λ i₁ → ++-unit-r (⊗P .fst .fst .fst) (~ i₁)) ∙
+                    (λ i₁ → ⊗P .fst .fst .fst ++ ⊗P .snd .snd (~ i₁)) ∙
+                    (λ i₁ → ⊗P .fst .snd (~ i₁)))
+                   i) (⊗P .snd .fst)
+          ≡⟨ {!!} ⟩
+        subst A (λ i → {!⊗P≡⊗Eq i .fst .fst .fst!}) (⊗P .snd .fst)
+          ≡⟨ (λ i → {!!}) ⟩
+        Eq.transport A (Eq.sym (++-unit-r-Eq _)) a
+        ∎
+        )
+
 --   @0 ⊗→⊗Path : A ⊗ B ⊢ A ⊗Path.⊗ B
 --   ⊗→⊗Path _ (s , a , b) = Splitting→SplittingPath _ s , a , b
 
