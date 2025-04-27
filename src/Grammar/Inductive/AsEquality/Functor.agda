@@ -52,7 +52,7 @@ module _ where
     opaque
       unfolding _⊗_ ⊗-intro &-intro π₁
 
-      map-id : ∀ (F : Functor X) {A : X → Grammar ℓA} →
+      @0 map-id : ∀ (F : Functor X) {A : X → Grammar ℓA} →
         map F (λ x → id {A = A x}) ≡ id
       map-id (k A) i = id
       map-id (Var x) i = id
@@ -61,7 +61,7 @@ module _ where
       map-id (F ⊗e F') i = map-id F i ,⊗ map-id F' i
       map-id (F &e2 F') i = map-id F i ,&p map-id F' i
 
-      map-∘ :  ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
+      @0 map-∘ :  ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
         (F : Functor X)
         (f : ∀ x → B x  ⊢ C x)(f' : ∀ x → A x ⊢ B x)
         → map F (λ x → f x ∘g f' x) ≡ map F f ∘g map F f'
@@ -77,20 +77,25 @@ module _ where
     Algebra A = ∀ x → ⟦ F x ⟧ A ⊢ A x
 
     module _ {A : X → Grammar ℓA}{B : X → Grammar ℓB} (α : Algebra A) (β : Algebra B) where
-      isHomo : (∀ x → A x ⊢ B x) → Type _
+      @0 isHomo : (∀ x → A x ⊢ B x) → Type _
       isHomo ϕ = (∀ x → ϕ x ∘g α x ≡ β x ∘g map (F x) ϕ)
 
-      Homomorphism : Type _
-      Homomorphism = Σ _ isHomo
+      record Homomorphism : Type (ℓ-max ℓX (ℓ-max ℓA ℓB)) where
+        field
+          fun : ∀ x → A x ⊢ B x
+          @0 is-homo : isHomo fun
+
+    open Homomorphism
 
     idHomo : ∀ {A : X → Grammar ℓA} → (α : Algebra A) → Homomorphism α α
-    idHomo α = (λ x → id) , λ x → cong (α x ∘g_) (sym (map-id (F x)))
+    idHomo α .fun x = id
+    idHomo α .is-homo x = cong (α x ∘g_) (sym (map-id (F x)))
 
     compHomo : ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
       (α : Algebra A)(β : Algebra B)(η : Algebra C)
       → Homomorphism β η → Homomorphism α β → Homomorphism α η
-    compHomo α β η ϕ ψ .fst x = ϕ .fst x ∘g ψ .fst x
-    compHomo α β η ϕ ψ .snd x =
-      cong (ϕ .fst x ∘g_) (ψ .snd x)
-      ∙ cong (_∘g map (F x) (ψ .fst)) (ϕ .snd x)
-      ∙ cong (η x ∘g_) (sym (map-∘ (F x) (ϕ .fst) (ψ .fst)))
+    compHomo α β η ϕ ψ .fun x = ϕ .fun x ∘g ψ .fun x
+    compHomo α β η ϕ ψ .is-homo x =
+      cong (ϕ .fun x ∘g_) (ψ .is-homo x)
+      ∙ cong (_∘g map (F x) (ψ .fun)) (ϕ .is-homo x)
+      ∙ cong (η x ∘g_) (sym (map-∘ (F x) (ϕ .fun) (ψ .fun)))

@@ -19,7 +19,7 @@ open import Grammar.Epsilon.AsPath.Base Alphabet
 open import Grammar.Inductive.AsPath.Indexed Alphabet hiding (k)
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Product.Base Alphabet
-open import Grammar.LinearFunction.AsPath.Base Alphabet
+open import Grammar.LinearFunction.AsPath Alphabet
 
 open import Term.Base Alphabet
 

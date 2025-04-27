@@ -38,6 +38,8 @@ opaque
   infixr 2 _⊸_
   infixl 2 _⟜_
 
+opaque
+  unfolding _⊗_ _⟜_
   ⟜-intro : A ⊗ B ⊢ C → B ⊢ C ⟜ A
   ⟜-intro e _ p w' q = e _ ((_ , Eq.refl) , (q , p))
 

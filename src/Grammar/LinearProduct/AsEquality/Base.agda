@@ -49,12 +49,10 @@ opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (left s) × B (right s)
 
-infixr 25 _⊗_
-
-opaque
-  unfolding _⊗_
   ⊗-intro : A ⊢ B → C ⊢ D → A ⊗ C ⊢ B ⊗ D
   ⊗-intro e e' _ (s , a , c) = s , e _ a , e' _ c
+
+infixr 25 _⊗_
 
 _,⊗_ = ⊗-intro
 infixr 20 _,⊗_

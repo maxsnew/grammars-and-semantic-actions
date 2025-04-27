@@ -16,6 +16,7 @@ open import Cubical.Data.Sigma.ErasedSnd
 import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
+open import Grammar.LinearFunction.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Epsilon.Base Alphabet
 open import Grammar.Inductive.Indexed Alphabet hiding (k)
@@ -108,7 +109,6 @@ module _ {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
   → e ≡ e'
 equalizer-ind-unit F {A = A} pf = equalizer-ind {X = Unit} (λ _ → F) (λ _ → A) _ _ (λ _ → pf) tt
 
-open import Grammar.LinearFunction Alphabet
 @0 eq-π-pf-⊸-intro :
   (f f' : A ⊗ B ⊢ C) →
   f ∘g (eq-π (⊸-intro f) (⊸-intro f') ,⊗ id) ≡ f' ∘g eq-π (⊸-intro f) (⊸-intro f') ,⊗ id
