@@ -1,12 +1,13 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module @0 Grammar.LinearProduct.AsPath.Base (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.LinearProduct.AsPath.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
 
 open import Grammar.Base Alphabet
+open import Grammar.LinearProduct.AsPath.Base Alphabet
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Lift.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
@@ -34,191 +35,74 @@ private
     f f' f'' f''' f'''' f''''' : A ⊢ B
 
 opaque
-  _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
-  (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (left s) × B (right s)
-
-  ⊗-intro : A ⊢ B → C ⊢ D → A ⊗ C ⊢ B ⊗ D
-  ⊗-intro e f _ (s , a , c) = s , e _ a , f _ c
-
-opaque
-  unfolding ε _⊗_
-  ⊗-unit-l : ε ⊗ A ⊢ A
-  ⊗-unit-l {A = A} _ (s , eps , a) =
-    subst A (sym (w≡l++r s ∙ cong (_++ right s) eps)) a
-
-  ⊗-unit-l⁻ : A ⊢ ε ⊗ A
-  ⊗-unit-l⁻ _ a = splitting++ [] _ , ε-intro , a
-
-opaque
-  unfolding ε _⊗_
-  ⊗-unit-r : A ⊗ ε ⊢ A
-  ⊗-unit-r {A = A} w (s , a , eps) =
-    subst A (sym (w≡l++r s ∙ cong (left s ++_) eps ∙ ++-unit-r _)) a
-
-  ⊗-unit-r⁻ : A ⊢ A ⊗ ε
-  ⊗-unit-r⁻ _ a = (_ , (sym (++-unit-r _))) , a , ε-intro
+  unfolding _⊗_
+  isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
+  isSetGrammar⊗ isSetG isSetB w = isSetΣ (isSetSplitting w)
+    λ _ → isSet× (isSetG _) (isSetB _)
 
 opaque
   unfolding _⊗_
-  ⊗-assoc : A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
-  ⊗-assoc _ (s , a , (s' , b , c)) =
-    (_ , w≡l++r s ∙ cong (left s ++_) (w≡l++r s') ∙ sym (++-assoc (left s) (left s') (right s'))) ,
-      (splitting++ _ _ , a , b) , c
+  -- because ⊗ is opaque,
+  -- same-splits and same-parses are needed so that the interface of
+  -- ⊗ doesn't leak in the type signature of ⊗PathP
+  has-split :
+    ∀ (w : String) → (p : (A ⊗ B) w) → (s : Splitting w) → Type ℓ-zero
+  has-split w p s = s ≡ p .fst
 
-  ⊗-assoc⁻ : (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C)
-  ⊗-assoc⁻ _ (s , (s' , a , b) , c) =
-    (_ , w≡l++r s ∙ cong (_++ right s) (w≡l++r s') ∙ ++-assoc (left s') (right s') (right s)) ,
-      a , (splitting++ (right s') (right s) , b , c)
+  isProp-has-split : ∀ (w : String) (p : (A ⊗ B) w) → (s : Splitting w) → isProp (has-split w p s)
+  isProp-has-split w p s = isSetSplitting w _ _
 
-infixr 25 _⊗_
+  the-split :
+    ∀ (w : String) → (p : (A ⊗ B) w) → Σ[ s ∈ Splitting w ] has-split w p s
+  the-split w p = (p .fst) , refl
 
-_,⊗_ = ⊗-intro
-infixr 20 _,⊗_
+same-splits :
+  {A : Grammar ℓA}
+  {B : Grammar ℓB}
+  {C : Grammar ℓC}
+  {D : Grammar ℓD}
+  {w : I → String}
+  → (p : (A ⊗ B) (w i0))
+  → (q : (C ⊗ D) (w i1))
+  → Type ℓ-zero
+same-splits {w = w} p q =
+    (the-split (w i0) p .fst .fst) ≡ (the-split (w i1) q .fst .fst)
 
-{- ε* versions of the unitors -}
-⊗-unit*-l : ε* {ℓ} ⊗ A ⊢ A
-⊗-unit*-l = ⊗-unit-l ∘g ⊗-intro lowerG id
+opaque
+  unfolding _⊗_ the-split
 
-⊗-unit*-l⁻ : A ⊢ ε* {ℓ} ⊗ A
-⊗-unit*-l⁻ = ⊗-intro liftG id ∘g ⊗-unit-l⁻
+  same-parses :
+    {A : I → Grammar ℓA}{B : I → Grammar ℓB}
+    {w : I → String}
+    → (p : (A i0 ⊗ B i0) (w i0))
+    → (q : (A i1 ⊗ B i1) (w i1))
+    → (s≡ : same-splits {w = w} p q)
+    → Type (ℓ-max ℓA ℓB)
+  same-parses {A = A} {B = B} p q s≡ =
+    PathP (λ i → A i (s≡ i .fst) × B i (s≡ i .snd)) (p .snd) (q .snd)
 
-⊗-unit*-r : A ⊗ ε* {ℓ} ⊢ A
-⊗-unit*-r = ⊗-unit-r ∘g ⊗-intro id lowerG
+  ⊗PathP :
+    {A : I → Grammar ℓA}{B : I → Grammar ℓB}
+    {w : I → String}
+    → {p : (A i0 ⊗ B i0) (w i0)}
+    → {q : (A i1 ⊗ B i1) (w i1)}
+    → (s≡ : same-splits {w = w} p q)
+    → same-parses {A = A} {B = B} {w = w} p q s≡
+    → PathP (λ i → (A i ⊗ B i) (w i)) p q
+  ⊗PathP s≡ p≡ = ΣPathP (SplittingPathP s≡ , p≡)
 
-⊗-unit*-r⁻ : A ⊢ A ⊗ ε* {ℓ}
-⊗-unit*-r⁻ = ⊗-intro id liftG ∘g ⊗-unit-r⁻
+  ⊗≡ : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{w}
+    → (p p' : (A ⊗ B) w)
+    → (s≡ : same-splits {w = λ _ → w} p p')
+    → same-parses {A = λ _ → A} {B = λ _ → B} {w = λ _ → w} p p' s≡
+    → p ≡ p'
+  ⊗≡ p p' s≡ p≡ = ⊗PathP s≡ p≡
 
-{- Big associators -}
-⊗-assoc⁻3 : (A ⊗ B ⊗ C) ⊗ D ⊢ A ⊗ B ⊗ C ⊗ D
-⊗-assoc⁻3 = id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
-
-⊗-assoc3 : A ⊗ B ⊗ C ⊗ D ⊢ (A ⊗ B ⊗ C) ⊗ D
-⊗-assoc3 = ⊗-assoc ∘g id ,⊗ ⊗-assoc
-
-⊗-assoc⁻4 : (A ⊗ B ⊗ C ⊗ D) ⊗ E ⊢ A ⊗ B ⊗ C ⊗ D ⊗ E
-⊗-assoc⁻4 = id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻
-
-⊗-assoc4 : A ⊗ B ⊗ C ⊗ D ⊗ E ⊢ (A ⊗ B ⊗ C ⊗ D) ⊗ E
-⊗-assoc4 = ⊗-assoc ∘g id ,⊗ ⊗-assoc3
-
-open StrongEquivalence
-module _
-  {A : Grammar ℓA} {B : Grammar ℓB}
-  {C : Grammar ℓC} {D : Grammar ℓD}
-  (A≅B : A ≅ B) (C≅D : C ≅ D)
-  where
-
-  private
-    the-fun : A ⊗ C ⊢ B ⊗ D
-    the-fun = A≅B .fun ,⊗ C≅D .fun
-
-    the-inv : B ⊗ D ⊢ A ⊗ C
-    the-inv = A≅B .inv ,⊗ C≅D .inv
-    opaque
-      unfolding ⊗-intro
-      the-sec : the-fun ∘g the-inv ≡ id
-      the-sec i = A≅B .sec i ,⊗ C≅D .sec i
-
-      the-ret : the-inv ∘g the-fun ≡ id
-      the-ret i = A≅B .ret i ,⊗ C≅D .ret i
-
-  ⊗≅ : (A ⊗ C) ≅ (B ⊗ D)
-  ⊗≅ .fun = the-fun
-  ⊗≅ .inv = the-inv
-  ⊗≅ .sec = the-sec
-  ⊗≅ .ret = the-ret
-
--- module _
---   {A : Grammar ℓA}
---   {B : Grammar ℓB}
---   {C : Grammar ℓC}
---   where
---   ⊗-assoc≅ : A ⊗ (B ⊗ C) ≅ (A ⊗ B) ⊗ C
---   ⊗-assoc≅ .fun = ⊗-assoc
---   ⊗-assoc≅ .inv = ⊗-assoc⁻
---   ⊗-assoc≅ .sec = ⊗-assoc∘⊗-assoc⁻≡id
---   ⊗-assoc≅ .ret = ⊗-assoc⁻∘⊗-assoc≡id
-
--- εr≅ : A ≅ A ⊗ ε
--- εr≅ .fun = ⊗-unit-r⁻
--- εr≅ .inv = ⊗-unit-r
--- εr≅ .sec = ⊗-unit-rr⁻
--- εr≅ .ret = ⊗-unit-r⁻r
-
--- εl≅ : A ≅ ε ⊗ A
--- εl≅ .fun = ⊗-unit-l⁻
--- εl≅ .inv = ⊗-unit-l
--- εl≅ .sec = ⊗-unit-ll⁻
--- εl≅ .ret = ⊗-unit-l⁻l
-
--- opaque
---   unfolding _⊗_
---   -- because ⊗ is opaque,
---   -- same-splits and same-parses are needed so that the interface of
---   -- ⊗ doesn't leak in the type signature of ⊗PathP
---   has-split :
---     ∀ (w : String) → (p : (A ⊗ B) w) → (s : Splitting w) → Type ℓ-zero
---   has-split w p s = s ≡ p .fst
-
---   isProp-has-split : ∀ (w : String) (p : (A ⊗ B) w) → (s : Splitting w) → isProp (has-split w p s)
---   isProp-has-split w p s = isSetSplitting w _ _
-
---   the-split :
---     ∀ (w : String) → (p : (A ⊗ B) w) → Σ[ s ∈ Splitting w ] has-split w p s
---   the-split w p = (p .fst) , refl
-
--- same-splits :
---   {A : Grammar ℓA}
---   {B : Grammar ℓB}
---   {C : Grammar ℓC}
---   {D : Grammar ℓD}
---   {w : I → String}
---   → (p : (A ⊗ B) (w i0))
---   → (q : (C ⊗ D) (w i1))
---   → Type ℓ-zero
--- same-splits {w = w} p q =
---     (the-split (w i0) p .fst .fst) ≡ (the-split (w i1) q .fst .fst)
-
--- opaque
---   unfolding _⊗_ the-split
-
---   same-parses :
---     {A : I → Grammar ℓA}{B : I → Grammar ℓB}
---     {w : I → String}
---     → (p : (A i0 ⊗ B i0) (w i0))
---     → (q : (A i1 ⊗ B i1) (w i1))
---     → (s≡ : same-splits {w = w} p q)
---     → Type (ℓ-max ℓA ℓB)
---   same-parses {A = A} {B = B} p q s≡ =
---     PathP (λ i → A i (s≡ i .fst) × B i (s≡ i .snd)) (p .snd) (q .snd)
-
---   ⊗PathP :
---     {A : I → Grammar ℓA}{B : I → Grammar ℓB}
---     {w : I → String}
---     → {p : (A i0 ⊗ B i0) (w i0)}
---     → {q : (A i1 ⊗ B i1) (w i1)}
---     → (s≡ : same-splits {w = w} p q)
---     → same-parses {A = A} {B = B} {w = w} p q s≡
---     → PathP (λ i → (A i ⊗ B i) (w i)) p q
---   ⊗PathP s≡ p≡ = ΣPathP (SplittingPathP s≡ , p≡)
-
---   ⊗≡ : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{w}
---     → (p p' : (A ⊗ B) w)
---     → (s≡ : same-splits {w = λ _ → w} p p')
---     → same-parses {A = λ _ → A} {B = λ _ → B} {w = λ _ → w} p p' s≡
---     → p ≡ p'
---   ⊗≡ p p' s≡ p≡ = ⊗PathP s≡ p≡
-
--- opaque
---   unfolding _⊗_ the-split ⊗-intro ⊗≡
---   ⊗-intro⊗-intro
---     : ∀ {f : A ⊢ B}{f' : C ⊢ D}
---         {f'' : E ⊢ A}
---         {f''' : F ⊢ C}
---     → ⊗-intro f f' ∘g ⊗-intro f'' f'''
---       ≡ ⊗-intro (f ∘g f'') (f' ∘g f''')
---   ⊗-intro⊗-intro = refl
-
+opaque
+  unfolding _⊗_
+  ⊗-intro⊗-intro : ∀ {f : A ⊢ B}{f' : C ⊢ D} {f'' : E ⊢ A} {f''' : F ⊢ C}
+    → f ,⊗ f' ∘g f'' ,⊗ f''' ≡ (f ∘g f'') ,⊗ (f' ∘g f''')
+  ⊗-intro⊗-intro = refl
 
 --     rectify :
 --       ∀ {w w'}{A : Grammar ℓA}
@@ -229,41 +113,49 @@ module _
 --     rectify {w = w}{w'}{A = A}{p = p}{q = q} =
 --       subst {A = w ≡ w'} (λ w≡ → PathP (λ i → A (w≡ i)) p q)
 --         (isSetString _ _ _ _)
+  opaque
+    unfolding ⊗-unit-r the-split ⊗≡ ε
+    ⊗-unit-rr⁻ :
+      ∀ {A : Grammar ℓA}
+      → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
+    ⊗-unit-rr⁻ {A = A} =
+      funExt λ w → funExt λ (s , a , eps) →
+      let w≡w' = w≡l++r s ∙ cong (left s ++_) eps ∙ ++-unit-r _
+      in
+      ⊗≡ _ _
+        (≡-× w≡w' (sym eps))
+        (ΣPathP (
+          symP (subst-filler A (sym w≡w') a) ,
+          (isProp→PathP (λ _ → isLangε _) _ _)))
 
---     ⊗-unit-rr⁻ :
---       ∀ {A : Grammar ℓA}
---       → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
---     ⊗-unit-rr⁻ {A = A} =
---       funExt λ w → funExt λ (((w' , []') , w≡w'++[]') , p⟨w'⟩ , []'≡[]) →
---       let w≡w' = (sym (sym (++-unit-r _)
---               ∙ cong (w' ++_) (sym []'≡[])
---               ∙ sym w≡w'++[]'))
---       in
---       ⊗≡ _ _
---         (≡-× w≡w'
---           (sym []'≡[]))
---         (ΣPathP
---           ( symP (subst-filler A (sym w≡w') p⟨w'⟩)
---           , isProp→PathP (λ _ → isLangε _) refl []'≡[]))
+    ⊗-unit-r⁻r : ∀ {A : Grammar ℓA}
+      → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
+    ⊗-unit-r⁻r {A = A} = funExt λ w → funExt λ a →
+      subst (λ w≡w' → subst A w≡w' a ≡ a) {!!} (substRefl {B = A} a)
+      -- let
+      --   w≡w : w ≡ w
+      --   w≡w =       (λ i →
+      --        (hcomp
+      --         (doubleComp-faces (λ _ → w)
+      --          (λ i₁ →
+      --             hcomp (doubleComp-faces (λ _ → w ++ [])
+      --               (λ i₂ → ++-unit-r w i₂) i₁)
+      --             (w ++ []))
+      --          i)
+      --         (++-unit-r w (~ i))))
+      -- in
+      -- subst (λ w≡w → subst A w≡w p ≡ p) (isSetString _ _ refl w≡w)
+      --   (substRefl {B = A} p)
 
---     ⊗-unit-r⁻r : ∀ {A : Grammar ℓA}
---       → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
---     ⊗-unit-r⁻r {A = A} = funExt λ w → funExt λ p →
---       let
---         w≡w : w ≡ w
---         w≡w =       (λ i →
---              (hcomp
---               (doubleComp-faces (λ _ → w)
---                (λ i₁ →
---                   hcomp (doubleComp-faces (λ _ → w ++ [])
---                     (λ i₂ → ++-unit-r w i₂) i₁)
---                   (w ++ []))
---                i)
---               (++-unit-r w (~ i))))
---       in
---       subst (λ w≡w → subst A w≡w p ≡ p) (isSetString _ _ refl w≡w)
---         (substRefl {B = A} p)
+--     ⊗-unit-l :
+--       ε ⊗ A ⊢ A
+--     ⊗-unit-l {A = A} _ (s , eps , a) =
+--       subst A (cong (_++ s .fst .snd) (sym eps) ∙ sym (s .snd)) a
 
+--     ⊗-unit-l⁻ :
+--       A ⊢ ε ⊗ A
+--     ⊗-unit-l⁻ _ p =
+--       (([] , _) , refl) , (refl , p)
 
 --     ⊗-unit-ll⁻ :
 --       ⊗-unit-l⁻ {A = A} ∘g ⊗-unit-l ≡ id
@@ -321,6 +213,28 @@ module _
 --     ⊗-unit-lr⁻ : ⊗-unit-l ∘g ⊗-unit-r⁻ ≡ id
 --     ⊗-unit-lr⁻ = funExt λ w → funExt λ p →
 --       isSetString w [] ((⊗-unit-l ∘g ⊗-unit-r⁻ ) w p) ((id {A = ε} w p))
+
+--   ⊗-assoc :
+--     A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
+--   ⊗-assoc _ (s , a , (s' , b , c)) =
+--     (_ , (s .snd ∙ cong (s .fst .fst ++_) (s' .snd) ∙ sym (++-assoc (s .fst .fst) (s' .fst .fst) (s' .fst .snd)))) ,
+--     ((_ , refl) , a , b) , c
+
+--   ⊗-assoc⁻ :
+--     (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C)
+--   ⊗-assoc⁻ _ p =
+--     (((fst (p .snd .fst) .fst .fst) ,
+--       (fst (p .snd .fst) .fst .snd ++ fst p .fst .snd)) ,
+--       (p .fst .snd ∙
+--       cong (_++ p .fst .fst .snd) (p .snd .fst .fst .snd) ∙
+--       ++-assoc
+--         (p .snd .fst .fst .fst .fst)
+--         (p .snd .fst .fst .fst .snd)
+--         (p .fst .fst .snd))) ,
+--       (p .snd .fst .snd .fst ,
+--       ((_ , refl) ,
+--       (p .snd .fst .snd .snd ,
+--       p .snd .snd)))
 
 --   ⊗-assoc∘⊗-assoc⁻≡id :
 --    ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
@@ -403,6 +317,15 @@ module _
 --     id,⊗id≡id : ⊗-intro id id ≡ id {A = A ⊗ B}
 --     id,⊗id≡id = refl
 
+-- _,⊗_ = ⊗-intro
+-- infixr 20 _,⊗_
+
+-- {- ε* versions of the unitors  -}
+-- ⊗-unit*-l : ε* {ℓ} ⊗ A ⊢ A
+-- ⊗-unit*-l = ⊗-unit-l ∘g ⊗-intro lowerG id
+
+-- ⊗-unit*-l⁻ : A ⊢ ε* {ℓ} ⊗ A
+-- ⊗-unit*-l⁻ = ⊗-intro liftG id ∘g ⊗-unit-l⁻
 
 -- opaque
 --   unfolding ⊗-intro
@@ -420,6 +343,11 @@ module _
 --     ⊗-unit*-l {ℓ = ℓ} {A = A} ∘g ⊗-unit*-l⁻ ≡ id
 --   ⊗-unit*-l⁻l = ⊗-unit-l⁻l
 
+-- ⊗-unit*-r : A ⊗ ε* {ℓ} ⊢ A
+-- ⊗-unit*-r = ⊗-unit-r ∘g ⊗-intro id lowerG
+
+-- ⊗-unit*-r⁻ : A ⊢ A ⊗ ε* {ℓ}
+-- ⊗-unit*-r⁻ = ⊗-intro id liftG ∘g ⊗-unit-r⁻
 
 -- opaque
 --   unfolding ⊗-intro
@@ -486,6 +414,13 @@ module _
 
 -- {- Big associators and big diagrams -}
 
+-- ⊗-assoc⁻3 :
+--   (A ⊗ B ⊗ C) ⊗ D ⊢ A ⊗ B ⊗ C ⊗ D
+-- ⊗-assoc⁻3 = id ,⊗ ⊗-assoc⁻ ∘g ⊗-assoc⁻
+
+-- ⊗-assoc3 :
+--   A ⊗ B ⊗ C ⊗ D ⊢ (A ⊗ B ⊗ C) ⊗ D
+-- ⊗-assoc3 = ⊗-assoc ∘g id ,⊗ ⊗-assoc
 
 -- ⊗-assoc⁻3⊗-unit-r⁻ :
 --   ⊗-assoc⁻3 {A = A}{B = B}{C = C} ∘g ⊗-unit-r⁻
@@ -495,6 +430,13 @@ module _
 --   ∙ ⊗-intro⊗-intro
 --   ∙ cong (id ,⊗_) ⊗-assoc⁻⊗-unit-r⁻
 
+-- ⊗-assoc⁻4 :
+--   (A ⊗ B ⊗ C ⊗ D) ⊗ E ⊢ A ⊗ B ⊗ C ⊗ D ⊗ E
+-- ⊗-assoc⁻4 = id ,⊗ ⊗-assoc⁻3 ∘g ⊗-assoc⁻
+
+-- ⊗-assoc4 :
+--   A ⊗ B ⊗ C ⊗ D ⊗ E ⊢ (A ⊗ B ⊗ C ⊗ D) ⊗ E
+-- ⊗-assoc4 = ⊗-assoc ∘g id ,⊗ ⊗-assoc3
 
 -- ⊗-assoc⁻4⊗-unit-r⁻ :
 --   ⊗-assoc⁻4 {A = A}{B = B}{C = C}{D = D} ∘g ⊗-unit-r⁻
@@ -549,3 +491,54 @@ module _
 --   ⊗-assoc4⊗-intro {f = f}{f' = f'}{f'' = f''}{f''' = f'''}{f'''' = f''''} =
 --     sym (invMoveR {f = ⊗-assoc⁻4} {f⁻ = ⊗-assoc4} ⊗-assoc4⊗-assoc⁻4
 --       (cong ((f ,⊗ f' ,⊗ f'' ,⊗ f''' ,⊗ f'''') ∘g_) ⊗-assoc⁻4⊗-assoc4))
+
+-- open StrongEquivalence
+-- module _
+--   {A : Grammar ℓA} {B : Grammar ℓB}
+--   {C : Grammar ℓC} {D : Grammar ℓD}
+--   (A≅B : A ≅ B)
+--   (C≅D : C ≅ D)
+--   where
+
+--   private
+--     the-fun : A ⊗ C ⊢ B ⊗ D
+--     the-fun = A≅B .fun ,⊗ C≅D .fun
+
+--     the-inv : B ⊗ D ⊢ A ⊗ C
+--     the-inv = A≅B .inv ,⊗ C≅D .inv
+--     opaque
+--       unfolding ⊗-intro
+--       the-sec : the-fun ∘g the-inv ≡ id
+--       the-sec i = A≅B .sec i ,⊗ C≅D .sec i
+
+--       the-ret : the-inv ∘g the-fun ≡ id
+--       the-ret i = A≅B .ret i ,⊗ C≅D .ret i
+
+--   ⊗≅ : (A ⊗ C) ≅ (B ⊗ D)
+--   ⊗≅ .fun = the-fun
+--   ⊗≅ .inv = the-inv
+--   ⊗≅ .sec = the-sec
+--   ⊗≅ .ret = the-ret
+
+-- module _
+--   {A : Grammar ℓA}
+--   {B : Grammar ℓB}
+--   {C : Grammar ℓC}
+--   where
+--   ⊗-assoc≅ : A ⊗ (B ⊗ C) ≅ (A ⊗ B) ⊗ C
+--   ⊗-assoc≅ .fun = ⊗-assoc
+--   ⊗-assoc≅ .inv = ⊗-assoc⁻
+--   ⊗-assoc≅ .sec = ⊗-assoc∘⊗-assoc⁻≡id
+--   ⊗-assoc≅ .ret = ⊗-assoc⁻∘⊗-assoc≡id
+
+-- εr≅ : A ≅ A ⊗ ε
+-- εr≅ .fun = ⊗-unit-r⁻
+-- εr≅ .inv = ⊗-unit-r
+-- εr≅ .sec = ⊗-unit-rr⁻
+-- εr≅ .ret = ⊗-unit-r⁻r
+
+-- εl≅ : A ≅ ε ⊗ A
+-- εl≅ .fun = ⊗-unit-l⁻
+-- εl≅ .inv = ⊗-unit-l
+-- εl≅ .sec = ⊗-unit-ll⁻
+-- εl≅ .ret = ⊗-unit-l⁻l

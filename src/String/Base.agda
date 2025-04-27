@@ -37,8 +37,19 @@ NonEmptyString = Σ[ w ∈ String ] (w ≡ [] → Empty.⊥)
 @0 Splitting : String → Type ℓ-zero
 Splitting w = Σ[ (w₁ , w₂) ∈ String × String ] (w ≡ w₁ ++ w₂)
 
+@0 left right : ∀ {w} → Splitting w → String
+left s = s .fst .fst
+right s = s .fst .snd
+
+@0 w≡l++r : ∀ {w} → (s : Splitting w) → w ≡ left s ++ right s
+w≡l++r s = s .snd
+
 SplittingEq : String → Type ℓ-zero
 SplittingEq w = Σ[ (w₁ , w₂) ∈ String × String ] (w Eq.≡ w₁ ++ w₂)
+
+leftEq rightEq : ∀ {w} → SplittingEq w → String
+leftEq s = s .fst .fst
+rightEq s = s .fst .snd
 
 @0 Splitting≡SplittingEq : ∀ w → Splitting w ≡ SplittingEq w
 Splitting≡SplittingEq w i = Σ[ (w₁ , w₂) ∈ String × String ] Eq.PathPathEq {x = w} {y = w₁ ++ w₂} i
