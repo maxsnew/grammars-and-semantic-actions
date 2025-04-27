@@ -12,9 +12,13 @@ open import Grammar.Base Alphabet
   hiding (Splitting
         ; isSetSplitting
         ; SplittingPathP
-        ; Splitting≡)
+        ; Splitting≡
+        ; left
+        ; right)
   renaming (SplittingEq to Splitting
-          ; isSetSplittingEq to isSetSplitting)
+          ; isSetSplittingEq to isSetSplitting
+          ; leftEq to left
+          ; rightEq to right)
 open import Grammar.Equivalence.Base Alphabet
 open import Grammar.Lift.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
@@ -43,11 +47,7 @@ private
 
 opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
-  (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (s .fst .fst) × B (s .fst .snd)
-
-  -- @0 isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
-  -- isSetGrammar⊗ isSetG isSetB w = isSetΣ (isSetSplitting w)
-  --   λ _ → isSet× (isSetG _) (isSetB _)
+  (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (left s) × B (right s)
 
 infixr 25 _⊗_
 

@@ -25,8 +25,8 @@ String = List ⟨ Alphabet ⟩
 @0 isSetString : isSet String
 isSetString = isOfHLevelList 0 (str Alphabet)
 
--- @0 isSetEqString : ∀ (w w' : String) → isProp (w Eq.≡ w')
--- isSetEqString _ _ = isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _)
+@0 isSetEqString : ∀ (w w' : String) → isProp (w Eq.≡ w')
+isSetEqString _ _ = isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _)
 
 @0 isGroupoidString : isGroupoid String
 isGroupoidString = isSet→isGroupoid isSetString

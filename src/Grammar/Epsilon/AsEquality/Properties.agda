@@ -17,7 +17,7 @@ open import Grammar.Epsilon.AsPath Alphabet
           ; ε* to ε*Path
           ; ε-intro to εPath-intro
           ; ε-elim to εPath-elim)
-open import Grammar.Epsilon.AsEquality Alphabet
+open import Grammar.Epsilon.AsEquality.Base Alphabet
   renaming (ε to εEq
           ; ε* to ε*Eq
           ; ε-intro to εEq-intro
