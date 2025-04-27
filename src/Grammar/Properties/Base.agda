@@ -1,8 +1,9 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 
-module Grammar.Properties.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Properties.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Foundations.Cubes.Base
 
@@ -14,18 +15,18 @@ open import Cubical.Data.List
 open import Cubical.Data.Empty as Empty hiding (⊥;⊥*)
 open import Cubical.Data.Sigma
 
-open import Grammar.Base Alphabet
-open import Grammar.Top.Base Alphabet
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Bottom.Base Alphabet
-open import Grammar.Literal.Base Alphabet
-open import Grammar.Epsilon.Base Alphabet
-open import Grammar.Negation.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Top.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Bottom.Base Alphabet isSetAlphabet
+open import Grammar.Literal.Base Alphabet isSetAlphabet
+open import Grammar.Epsilon.Base Alphabet isSetAlphabet
+open import Grammar.Negation.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -59,7 +60,7 @@ unambiguous'→unambiguous unambig e e' =
 unambiguous→unambiguous' unambig e e' ≡! = unambig e e'
 
 -- A grammar is unambiguous if Δ : A ⊢ A & A is a strong equivalence
-module _ {A : Grammar ℓA} where
+module @0 _ {A : Grammar ℓA} where
   module _ (π≡ : π₁ ≡ π₂) where
     @0 π≡→unambiguous : unambiguous A
     π≡→unambiguous e e' =

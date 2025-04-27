@@ -2,30 +2,30 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Inductive.AsEquality.Indexed (Alphabet : hSet ℓ-zero)where
+module Grammar.Inductive.AsEquality.Indexed (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Foundations.Structure
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 
-open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Product.Base Alphabet
-open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Lift Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Product.Base Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Grammar.Lift Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
-open import Grammar.Inductive.Functor Alphabet public
+open import Grammar.Inductive.Functor Alphabet isSetAlphabet public
 
 private
   variable ℓA ℓB ℓC ℓX : Level
 
 module _ where
-  module _ {X : Type ℓX}{ℓA} where
-    ⟦_⟧ : Functor X → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
-    ⟦ k B ⟧ A = LiftG ℓA B
+  module _ {X : Type ℓX} where
+    ⟦_⟧ : Functor X → {ℓA : Level} → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
+    ⟦ k B ⟧ {ℓA = ℓA} A = LiftG ℓA B
     ⟦ Var x ⟧ A = LiftG ℓX (A x)
     ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
@@ -93,6 +93,7 @@ module _ where
       cong (ϕ .fun x ∘g_) (ψ .is-homo x)
       ∙ cong (_∘g map (F x) (ψ .fun)) (ϕ .is-homo x)
       ∙ cong (η x ∘g_) (sym (map-∘ (F x) (ϕ .fun) (ψ .fun)))
+
   module _ {X : Type ℓX} where
     -- NOTE: this is only needed because ⊗ is opaque. If it's not
     -- opaque this passes the positivity check.

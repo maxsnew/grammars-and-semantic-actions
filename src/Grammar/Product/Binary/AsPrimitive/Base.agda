@@ -1,16 +1,17 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.Product.Binary.AsPrimitive.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Product.Binary.AsPrimitive.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Cubical.Data.Sigma
-open import Cubical.Data.Sum
+open import Erased.Data.Sigma.Base
+open import Erased.Data.Sum.Base
 
-open import Grammar.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -48,24 +49,24 @@ opaque
   π₂ : A & B ⊢ B
   π₂ _ p = p .snd
 
-  &-β₁ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) →
+  @0 &-β₁ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) →
     π₁ ∘g (e₁ ,& e₂) ≡ e₁
   &-β₁ e₁ e₂ = refl
 
-  &-β₂ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) →
+  @0 &-β₂ : (e₁ : A ⊢ B) → (e₂ : A ⊢ C) →
     π₂ ∘g (e₁ ,& e₂) ≡ e₂
   &-β₂ e₁ e₂ = refl
 
-  &-η : (e : A ⊢ B & C) → (π₁ ∘g e) ,& (π₂ ∘g e) ≡ e
+  @0 &-η : (e : A ⊢ B & C) → (π₁ ∘g e) ,& (π₂ ∘g e) ≡ e
   &-η e = refl
 
-  &-η' : (e e' : A ⊢ B & C) →
+  @0 &-η' : (e e' : A ⊢ B & C) →
    π₁ ∘g e ≡ π₁ ∘g e' → π₂ ∘g e ≡ π₂ ∘g e' →
    e ≡ e'
   &-η' e e' p₁ p₂ =
     sym (&-η e) ∙ cong₂ &-intro p₁ p₂ ∙ &-η e'
 
-  &≡ : (f f' : A  ⊢ B & C) →
+  @0 &≡ : (f f' : A  ⊢ B & C) →
     π₁ ∘g f ≡ π₁ ∘g f' → π₂ ∘g f ≡ π₂ ∘g f' →
     f ≡ f'
   &≡ f f' π₁≡ π₂≡ = funExt (λ w → funExt (λ p →
@@ -92,7 +93,7 @@ module _
   where
   opaque
     unfolding &-intro π₁
-    &-swap-invol : &-swap ∘g &-swap {A = A}{B = B} ≡ id
+    @0 &-swap-invol : &-swap ∘g &-swap {A = A}{B = B} ≡ id
     &-swap-invol = refl
 
 &-assoc : A & (B & C) ⊢ (A & B) & C

@@ -1,12 +1,13 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Top.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Top.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.Unit
 
-open import Grammar.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -14,7 +15,7 @@ private
     A : Grammar ℓA
     B : Grammar ℓB
 
-is-terminal : Grammar ℓA → Typeω
+@0 is-terminal : Grammar ℓA → Typeω
 is-terminal A =
   ∀ {ℓB}{B : Grammar ℓB} → (Σ[ e ∈ B ⊢ A ] (∀ e' → e ≡ e'))
 
@@ -22,19 +23,18 @@ opaque
   ⊤ : Grammar ℓ-zero
   ⊤ _ = Unit
 
-  ⊤* : Grammar ℓA
+  @0 ⊤* : Grammar ℓA
   ⊤* _ = Unit*
 
   ⊤-intro :
     A ⊢ ⊤
   ⊤-intro _ _ = tt
 
-  ⊤*-intro : ∀ {ℓB} → A ⊢ ⊤* {ℓB}
+  @0 ⊤*-intro : ∀ {ℓB} → A ⊢ ⊤* {ℓB}
   ⊤*-intro _ _ = tt*
 
-  is-terminal-⊤ : is-terminal ⊤
+  @0 is-terminal-⊤ : is-terminal ⊤
   is-terminal-⊤ = ⊤-intro , (λ e → refl)
 
-  is-terminal-⊤* : ∀ {ℓA} → is-terminal (⊤* {ℓA})
+  @0 is-terminal-⊤* : ∀ {ℓA} → is-terminal (⊤* {ℓA})
   is-terminal-⊤* = ⊤*-intro , λ _ → refl
-

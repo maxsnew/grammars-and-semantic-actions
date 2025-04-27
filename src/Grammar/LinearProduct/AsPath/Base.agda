@@ -1,17 +1,18 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module @0 Grammar.LinearProduct.AsPath.Base (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.LinearProduct.AsPath.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.Sigma
-open import Cubical.Data.List
+open import Erased.Data.List
 
-open import Grammar.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Lift.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Epsilon.AsPath Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.Lift.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.Epsilon.AsPath Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable

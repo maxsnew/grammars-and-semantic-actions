@@ -3,19 +3,19 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Transport
 
-module @0 Grammar.LinearFunction.AsPath.Properties (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.LinearFunction.AsPath.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
 
-open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.LinearProduct.AsPath Alphabet
-open import Grammar.LinearFunction.AsPath.Base Alphabet
-open import Grammar.Epsilon.AsPath.Base Alphabet
-open import Term.Base Alphabet
-open import Term.Nullary Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.AsPath Alphabet isSetAlphabet
+open import Grammar.LinearFunction.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.Epsilon.AsPath.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
+open import Term.Nullary Alphabet isSetAlphabet
 
 private
   variable

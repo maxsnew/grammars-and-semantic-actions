@@ -1,14 +1,14 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Function.AsPrimitive.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Function.AsPrimitive.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Grammar.Base Alphabet
-open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.LinearFunction Alphabet
-open import Grammar.Top.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Grammar.LinearFunction Alphabet isSetAlphabet
+open import Grammar.Top.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable

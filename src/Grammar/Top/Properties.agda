@@ -1,14 +1,15 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 
-module Grammar.Top.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.Top.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Properties Alphabet
-open import Grammar.Top.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.Properties Alphabet isSetAlphabet
+open import Grammar.Top.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable

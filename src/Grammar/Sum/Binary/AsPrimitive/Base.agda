@@ -1,16 +1,17 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Sum.Binary.AsPrimitive.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Binary.AsPrimitive.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-import Cubical.Data.Sum as Sum
+import Erased.Data.Sum.Base as Sum
 
-open import Grammar.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Function.AsPrimitive.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Function.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable

@@ -1,14 +1,15 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Bottom.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Bottom.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
+open import Erased.Data.Empty.Base as Empty hiding (⊥ ; ⊥*)
 
-open import Grammar.Base Alphabet
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -20,18 +21,18 @@ opaque
   ⊥ : Grammar ℓ-zero
   ⊥ _ = Empty.⊥
 
-  ⊥* : Grammar ℓA
+  @0 ⊥* : Grammar ℓA
   ⊥* _ = Empty.⊥*
 
   ⊥-elim :
     ⊥ ⊢ A
   ⊥-elim _ = Empty.elim
 
-  ⊥*-elim :
+  @0 ⊥*-elim :
     ⊥* {ℓB} ⊢ A
   ⊥*-elim _ x = Empty.elim (lower x)
 
-  ⊥-η : ∀ (f f' : ⊥ ⊢ A)
+  @0 ⊥-η : ∀ (f f' : ⊥ ⊢ A)
     → f ≡ f'
   ⊥-η _ _ = funExt λ _ → funExt Empty.elim
 

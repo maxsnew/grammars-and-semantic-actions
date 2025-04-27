@@ -1,17 +1,18 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Sum.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Grammar.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
     ℓA ℓB ℓC ℓX : Level
 
 ⊕ᴰ : {X : Type ℓX} → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
-⊕ᴰ {X = X} f w = Σ[ x ∈ X ] f x w
+⊕ᴰ {X = X} f w = Σ X λ x → f x w
 
 syntax ⊕ᴰ {X = X}(λ x → A) = ⊕[ x ∈ X ] A
 infix 8 ⊕ᴰ

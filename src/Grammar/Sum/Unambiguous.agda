@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Sum.Unambiguous (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.Sum.Unambiguous (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
 import Cubical.Data.Empty as Empty
@@ -18,7 +18,7 @@ open import Grammar.Properties Alphabet
 open import Grammar.Sum.Base Alphabet
 open import Grammar.Sum.Properties Alphabet
 open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Equalizer Alphabet
+open import Grammar.Equalizer.AsPath.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
 open import Grammar.Top Alphabet
 open import Term.Base Alphabet
@@ -65,14 +65,14 @@ module _
       unfolding _&_ ⊥
       equalizer→⊥ :
         (x y : X) →
-        (@0 x ≡ y → Empty.⊥) →
+        (x ≡ y → Empty.⊥) →
         equalizer (σ {A = A} x ∘g π₁) (σ y ∘g π₂) ⊢ ⊥
       equalizer→⊥ x y x≠y w p =
         x≠y (cong fst (funExt⁻ (funExt⁻ (eq-π-pf (σ {A = A} x ∘g π₁) (σ y ∘g π₂)) w) p))
 
     hasDisjointSummands⊕ᴰ : disjointSummands⊕ᴰ A
     hasDisjointSummands⊕ᴰ x y x≠y =
-      equalizer→⊥ x y (λ a → x≠y a (Eq.pathToEq a))
+      equalizer→⊥ x y x≠y
       ∘g eq-intro {A = A x & A y}{B = ⊕[ x ∈ X ] A x}
         (σ x ∘g π₁) (σ y ∘g π₂) id
         (unambig⊕ (σ x ∘g π₁) (σ y ∘g π₂))

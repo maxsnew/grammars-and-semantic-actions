@@ -1,18 +1,18 @@
-{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Epsilon.AsEquality.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Epsilon.AsEquality.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.List
 import Cubical.Data.Equality as Eq
 import Cubical.Data.Empty as Empty
 
-open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Lift.Base Alphabet
-open import Term.Base Alphabet
-open import Term.Nullary Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.Lift.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
+open import Term.Nullary Alphabet isSetAlphabet
 
 private
   variable
@@ -30,5 +30,5 @@ opaque
   ε-elim : ∀ {A : Grammar ℓA} → ε⊢ A → ε ⊢ A
   ε-elim {A = A} A[] w Eq.refl = A[]
 
-ε* : ∀ {ℓ : Level} → Grammar ℓ
+@0 ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε

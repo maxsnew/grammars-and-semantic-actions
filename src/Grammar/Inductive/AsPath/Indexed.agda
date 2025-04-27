@@ -23,9 +23,9 @@ private
   variable ℓA ℓB ℓC ℓX : Level
 
 module _ where
-  module _ {X : Type ℓX}{ℓA} where
-    ⟦_⟧ : Functor X → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
-    ⟦ k B ⟧ A = LiftG ℓA B
+  module _ {X : Type ℓX} where
+    ⟦_⟧ : Functor X → {ℓA : Level} → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
+    ⟦ k B ⟧ {ℓA = ℓA} A = LiftG ℓA B
     ⟦ Var x ⟧ A = LiftG ℓX (A x)
     ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
     ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A

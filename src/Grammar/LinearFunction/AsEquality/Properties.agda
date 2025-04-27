@@ -3,20 +3,20 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Transport
 
-module Grammar.LinearFunction.AsEquality.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.LinearFunction.AsEquality.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
 import Cubical.Data.Equality as Eq
 
-open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.LinearProduct.AsEquality Alphabet
-open import Grammar.LinearFunction.AsEquality.Base Alphabet
-open import Grammar.Epsilon.Base Alphabet
-open import Term.Base Alphabet
-open import Term.Nullary Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.AsEquality Alphabet isSetAlphabet
+open import Grammar.LinearFunction.AsEquality.Base Alphabet isSetAlphabet
+open import Grammar.Epsilon.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
+open import Term.Nullary Alphabet isSetAlphabet
 
 private
   variable

@@ -15,7 +15,7 @@ open import Grammar.Sum Alphabet
 open import Grammar.Product Alphabet
 open import Grammar.Product.Binary.AsPrimitive Alphabet
 open import Grammar.Epsilon.AsPath.Base Alphabet
-open import Grammar.LinearProduct.AsPath.Base Alphabet
+open import Grammar.LinearProduct.AsPath Alphabet
 open import Grammar.Lift.Base Alphabet
 open import Grammar.Inductive.AsPath.Indexed Alphabet as Inductive
 open import Term.Base Alphabet

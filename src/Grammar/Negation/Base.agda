@@ -1,12 +1,12 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Negation.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Negation.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Grammar.Base Alphabet
-open import Grammar.Bottom.Base Alphabet
-open import Grammar.Function.AsPrimitive.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Bottom.Base Alphabet isSetAlphabet
+open import Grammar.Function.AsPrimitive.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable

@@ -1,14 +1,15 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Equivalence.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Equivalence.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Foundations.Isomorphism
 
-open import Cubical.Data.Sigma
+open import Erased.Data.Sigma.Base
 
-open import Grammar.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -41,7 +42,7 @@ module _ {ℓA} {ℓB}
 
   open Iso
 
-  isStronglyEquivalent : Type (ℓ-max ℓA ℓB)
+  @0 isStronglyEquivalent : Type (ℓ-max ℓA ℓB)
   isStronglyEquivalent = ∀ w → Iso (A w) (B w)
 
   record StrongEquivalence : Type (ℓ-max ℓA ℓB) where

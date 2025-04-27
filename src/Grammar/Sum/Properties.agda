@@ -1,28 +1,29 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Sum.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.Sigma
-import Cubical.Data.Empty as Empty
-import Cubical.Data.Equality as Eq
+import Erased.Data.Empty.Base as Empty
+import Erased.Data.Equality.Base as Eq
 open import Cubical.Data.Maybe hiding (rec)
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
 open import Cubical.Relation.Nullary.DecidablePropositions
 
-open import Grammar.Base Alphabet
-open import Grammar.Lift Alphabet
-open import Grammar.Properties Alphabet
-open import Grammar.LinearProduct.AsPath.Base Alphabet
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Top Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Lift Alphabet isSetAlphabet
+open import Grammar.Properties Alphabet isSetAlphabet
+open import Grammar.LinearProduct.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.Top Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -36,10 +37,7 @@ open StrongEquivalence
 
 module _ {X : Type ℓX} (A : X → Grammar ℓA) where
   disjointSummands⊕ᴰ : Type (ℓ-max ℓX ℓA)
-  disjointSummands⊕ᴰ =
-    -- include an erased Eq proof as an argument to
-    -- pattern match against
-    ∀ x y → (@0 x ≡ y → @0 x Eq.≡ y → Empty.⊥) → disjoint (A x) (A y)
+  disjointSummands⊕ᴰ = ∀ x y → (x ≡ y → Empty.⊥) → disjoint (A x) (A y)
 
 module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
   opaque
@@ -84,7 +82,7 @@ module _
   nested⊕ᴰ≅ .sec = refl
   nested⊕ᴰ≅ .ret = refl
 
-module _
+module @0 _
   {X : Type ℓX}
   (A : Grammar ℓA)
   (B : X → Grammar ℓB)

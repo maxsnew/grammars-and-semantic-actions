@@ -1,3 +1,4 @@
+{-# OPTIONS --erased-cubical #-}
 module Examples.Section2.Alphabet where
 
 open import Cubical.Foundations.Prelude
@@ -8,11 +9,11 @@ open import Cubical.Foundations.Structure
 open import Cubical.Data.SumFin
 open import Cubical.Data.FinSet
 
-data Alphabet' : Type where
-  a b c : Alphabet'
+data Alphabet : Type where
+  a b c : Alphabet
 
-Alphabet'Rep : Iso Alphabet' (Fin 3)
-Alphabet'Rep = iso
+@0 AlphabetRep : Iso Alphabet (Fin 3)
+AlphabetRep = iso
   (λ where
     a → fromℕ 0
     b → fromℕ 1
@@ -32,13 +33,13 @@ Alphabet'Rep = iso
 
 open Iso
 
-isSetAlphabet' : isSet Alphabet'
-isSetAlphabet' =
-  isSetRetract (Alphabet'Rep .fun) (Alphabet'Rep .inv)
-               (Alphabet'Rep .leftInv) isSetFin
+@0 isSetAlphabet : isSet Alphabet
+isSetAlphabet =
+  isSetRetract (AlphabetRep .fun) (AlphabetRep .inv)
+               (AlphabetRep .leftInv) isSetFin
 
-Alphabet : hSet ℓ-zero
-Alphabet = Alphabet' , isSetAlphabet'
+-- Alphabet : hSet ℓ-zero
+-- Alphabet = Alphabet' , isSetAlphabet'
 
-isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩
-isFinSetAlphabet = EquivPresIsFinSet (isoToEquiv (invIso Alphabet'Rep)) isFinSetFin
+@0 isFinSetAlphabet : isFinSet Alphabet
+isFinSetAlphabet = EquivPresIsFinSet (isoToEquiv (invIso AlphabetRep)) isFinSetFin

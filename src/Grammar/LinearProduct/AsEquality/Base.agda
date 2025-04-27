@@ -1,14 +1,15 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.LinearProduct.AsEquality.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.LinearProduct.AsEquality.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Cubical.Data.Sigma
-open import Cubical.Data.List
-open import Cubical.Data.List.More
-import Cubical.Data.Equality as Eq
+open import Erased.Data.Sigma.Base
 
-open import Grammar.Base Alphabet
+open import Erased.Data.List
+import Erased.Data.Equality.Base as Eq
+
+open import Grammar.Base Alphabet isSetAlphabet
   hiding (Splitting
         ; isSetSplitting
         ; SplittingPathP
@@ -19,11 +20,11 @@ open import Grammar.Base Alphabet
           ; isSetSplittingEq to isSetSplitting
           ; leftEq to left
           ; rightEq to right)
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Lift.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Epsilon.AsEquality Alphabet
-open import Term.Base Alphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.Lift.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.Epsilon.AsEquality Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -47,7 +48,7 @@ private
 
 opaque
   _⊗_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
-  (A ⊗ B) w = Σ[ s ∈ Splitting w ] A (left s) × B (right s)
+  (A ⊗ B) w = Σ (Splitting w) λ s → A (left s) × B (right s)
 
   ⊗-intro : A ⊢ B → C ⊢ D → A ⊗ C ⊢ B ⊗ D
   ⊗-intro e e' _ (s , a , c) = s , e _ a , e' _ c
@@ -85,16 +86,16 @@ opaque
     ((wa , wb ++ wc) , ++-assoc-Eq wa wb wc) , (a , (((wb , wc) , Eq.refl) , (b , c)))
 
 {- ε* versions of the unitors  -}
-⊗-unit*-l : ε* {ℓ} ⊗ A ⊢ A
+@0 ⊗-unit*-l : ε* {ℓ} ⊗ A ⊢ A
 ⊗-unit*-l = ⊗-unit-l ∘g ⊗-intro lowerG id
 
-⊗-unit*-l⁻ : A ⊢ ε* {ℓ} ⊗ A
+@0 ⊗-unit*-l⁻ : A ⊢ ε* {ℓ} ⊗ A
 ⊗-unit*-l⁻ = ⊗-intro liftG id ∘g ⊗-unit-l⁻
 
-⊗-unit*-r : A ⊗ ε* {ℓ} ⊢ A
+@0 ⊗-unit*-r : A ⊗ ε* {ℓ} ⊢ A
 ⊗-unit*-r = ⊗-unit-r ∘g ⊗-intro id lowerG
 
-⊗-unit*-r⁻ : A ⊢ A ⊗ ε* {ℓ}
+@0 ⊗-unit*-r⁻ : A ⊢ A ⊗ ε* {ℓ}
 ⊗-unit*-r⁻ = ⊗-intro id liftG ∘g ⊗-unit-r⁻
 
 -- {- Big associators and big diagrams -}

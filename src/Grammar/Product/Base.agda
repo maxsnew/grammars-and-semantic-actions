@@ -2,11 +2,11 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.Product.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Product.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Grammar.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -54,4 +54,3 @@ module _ {X : Type ℓX}
   &ᴰ≅ .inv = map&ᴰ λ x → A≅B x .inv
   &ᴰ≅ .sec = &ᴰ≡ _ _ λ x → cong (_∘g π x) (A≅B x .sec)
   &ᴰ≅ .ret = &ᴰ≡ _ _ λ x → cong (_∘g π x) (A≅B x .ret)
-

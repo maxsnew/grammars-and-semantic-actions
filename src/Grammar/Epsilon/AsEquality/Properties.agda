@@ -1,29 +1,22 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module @0 Grammar.Epsilon.AsEquality.Properties (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.Epsilon.AsEquality.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.List
 import Cubical.Data.Equality as Eq
 import Cubical.Data.Empty as Empty
 open import Cubical.Functions.FunExtEquiv
 
-open import Grammar.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Lift.Base Alphabet
-open import Grammar.Epsilon.AsPath Alphabet
-  renaming (ε to εPath
-          ; ε* to ε*Path
-          ; ε-intro to εPath-intro
-          ; ε-elim to εPath-elim)
-open import Grammar.Epsilon.AsEquality.Base Alphabet
-  renaming (ε to εEq
-          ; ε* to ε*Eq
-          ; ε-intro to εEq-intro
-          ; ε-elim to εEq-elim)
-open import Term.Base Alphabet
-open import Term.Nullary Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.Lift.Base Alphabet isSetAlphabet
+import Grammar.Epsilon.AsPath Alphabet isSetAlphabet as εPath
+open import Grammar.Epsilon.AsEquality.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
+open import Term.Nullary Alphabet isSetAlphabet
 
 private
   variable
@@ -32,27 +25,27 @@ private
     B : Grammar ℓB
 
 opaque
-  unfolding εPath εEq
+  unfolding εPath.ε ε
 
-  ε≡ : εPath ≡ εEq
+  ε≡ : εPath.ε ≡ ε
   ε≡ = funExt λ _ → Eq.PathPathEq
 
-  ε*≡ : ε*Path {ℓ = ℓ} ≡ ε*Eq
+  ε*≡ : εPath.ε* {ℓ = ℓ} ≡ ε*
   ε*≡ = funExt λ x → cong Lift (funExt⁻ ε≡ x)
 
-  isLangεEq : isLang εEq
-  isLangεEq = subst isLang ε≡ isLangε
+  isLangε : isLang ε
+  isLangε = subst isLang ε≡ εPath.isLangε
 
-  isLangε*Eq : isLang (ε*Eq {ℓ = ℓ})
-  isLangε*Eq = subst isLang ε*≡ isLangε*
+  isLangε* : isLang (ε* {ℓ = ℓ})
+  isLangε* = subst isLang ε*≡ εPath.isLangε*
 
   isLangε≡ : ∀ i → isLang (ε≡ i)
-  isLangε≡ i = subst-filler isLang ε≡ isLangε i
+  isLangε≡ i = subst-filler isLang ε≡ εPath.isLangε i
 
-  ε-intro≡ : PathP (λ i → ε≡ i []) εPath-intro εEq-intro
+  ε-intro≡ : PathP (λ i → ε≡ i []) εPath.ε-intro ε-intro
   ε-intro≡ = isProp→PathP (λ i → isLangε≡ i []) _ _
 
-  ε-elim≡ : PathP (λ i → ε⊢ A → ε≡ i ⊢ A) εPath-elim εEq-elim
+  ε-elim≡ : PathP (λ i → ε⊢ A → ε≡ i ⊢ A) εPath.ε-elim ε-elim
   ε-elim≡ {A = A} = funExt λ a → funExt λ w →
     funExtDep (λ where
       {εP} {Eq.refl} eps →
@@ -64,18 +57,18 @@ opaque
           ∎)
 
   εEq-elim-natural : ∀ {A : Grammar ℓA} → (a : ε⊢ A) →
-    (f : A ⊢ B) → f ∘g εEq-elim {A = A} a ≡ εEq-elim (f ∘ε a)
+    (f : A ⊢ B) → f ∘g ε-elim {A = A} a ≡ ε-elim (f ∘ε a)
   εEq-elim-natural a f =
-    transport (λ i → f ∘g ε-elim≡ i a ≡ ε-elim≡ i (f ∘ε a)) (ε-elim-natural a f)
+    transport (λ i → f ∘g ε-elim≡ i a ≡ ε-elim≡ i (f ∘ε a)) (εPath.ε-elim-natural a f)
 
-  εEq-β : ∀ (a : ε⊢ A) → εEq-elim {A = A} a ∘ε εEq-intro ≡ a
-  εEq-β {A = A} a = transport (λ i → ε-elim≡ {A = A} i a ∘ε ε-intro≡ i ≡ a) (ε-β {A = A} a)
+  εEq-β : ∀ (a : ε⊢ A) → ε-elim {A = A} a ∘ε ε-intro ≡ a
+  εEq-β {A = A} a = transport (λ i → ε-elim≡ {A = A} i a ∘ε ε-intro≡ i ≡ a) (εPath.ε-β {A = A} a)
 
-  isSetGrammarεEq : isSetGrammar εEq
-  isSetGrammarεEq = subst isSetGrammar ε≡ isSetGrammarε
+  isSetGrammarε : isSetGrammar ε
+  isSetGrammarε = subst isSetGrammar ε≡ εPath.isSetGrammarε
 
-  isSetGrammarε*Eq : isSetGrammar (ε*Eq {ℓ = ℓ})
-  isSetGrammarε*Eq = subst isSetGrammar ε*≡ isSetGrammarε*
+  isSetGrammarε* : isSetGrammar (ε* {ℓ = ℓ})
+  isSetGrammarε* = subst isSetGrammar ε*≡ εPath.isSetGrammarε*
 
-  εEq-length0 : ∀ w → εEq w → length w ≡ 0
-  εEq-length0 = transport (λ i → ∀ w → ε≡ i w → length w ≡ 0) ε-length0
+  εEq-length0 : ∀ w → ε w → length w ≡ 0
+  εEq-length0 = transport (λ i → ∀ w → ε≡ i w → length w ≡ 0) εPath.ε-length0

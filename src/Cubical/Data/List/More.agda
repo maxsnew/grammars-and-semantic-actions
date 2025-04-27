@@ -26,22 +26,6 @@ LiftListDist [] w' = refl
 LiftListDist (x ∷ w) w' = cong (lift x ∷_) (LiftListDist w w')
 
 module _ {ℓ : Level} {A : Type ℓ} where
-  ++-unit-r-Eq : (xs : List A) → xs ++ [] Eq.≡ xs
-  ++-unit-r-Eq [] = Eq.refl
-  ++-unit-r-Eq (x ∷ xs) = Eq.ap (_∷_ x) (++-unit-r-Eq xs)
-
-  module _ (isSetA : isSet A) where
-    ++-unit-r-Eq≡pathToEq-++-unit-r : (xs : List A) →
-      ++-unit-r-Eq xs ≡ Eq.pathToEq (++-unit-r xs)
-    ++-unit-r-Eq≡pathToEq-++-unit-r xs = isPropEq _ _
-      where
-      isPropEq : isProp (xs ++ [] Eq.≡ xs)
-      isPropEq = isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isOfHLevelList 0 isSetA _ _)
-
-  ++-assoc-Eq : (xs ys zs : List A) → (xs ++ ys) ++ zs Eq.≡ xs ++ ys ++ zs
-  ++-assoc-Eq [] ys zs = Eq.refl
-  ++-assoc-Eq (x ∷ xs) ys zs = Eq.ap (_∷_ x) (++-assoc-Eq xs ys zs)
-
   revLength : (xs : List A) → length xs ≡ length (rev xs)
   revLength [] = refl
   revLength (x ∷ xs) =

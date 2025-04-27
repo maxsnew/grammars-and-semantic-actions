@@ -1,8 +1,9 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Transport
 
-module @0 Grammar.LinearProduct.AsEquality.Properties (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.LinearProduct.AsEquality.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
@@ -10,15 +11,15 @@ open import Cubical.Data.List.More
 import Cubical.Data.Equality as Eq
 open import Cubical.Functions.FunExtEquiv
 
-open import Grammar.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Lift.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-import Grammar.Epsilon.AsEquality Alphabet as εEq
-import Grammar.Epsilon.AsPath Alphabet as εPath
-import Grammar.LinearProduct.AsEquality.Base Alphabet as ⊗Eq
-import Grammar.LinearProduct.AsPath Alphabet as ⊗Path
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.Lift.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+import Grammar.Epsilon.AsEquality Alphabet isSetAlphabet as εEq
+import Grammar.Epsilon.AsPath Alphabet isSetAlphabet as εPath
+open import Grammar.LinearProduct.AsEquality.Base Alphabet isSetAlphabet
+import Grammar.LinearProduct.AsPath Alphabet isSetAlphabet as ⊗Path
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -42,15 +43,15 @@ private
     g : C ⊢ D
 
 opaque
-  unfolding ⊗Eq._⊗_ ⊗Path._⊗_
+  unfolding _⊗_ ⊗Path._⊗_
 
-  ⊗Path≡⊗Eq : A ⊗Path.⊗ B ≡ A ⊗Eq.⊗ B
+  ⊗Path≡⊗Eq : A ⊗Path.⊗ B ≡ A ⊗ B
   ⊗Path≡⊗Eq {A = A} {B = B} =
     funExt λ w i →
       Σ[ s ∈ Splitting≡SplittingEq w i ] A (s .fst .fst) × B (s .fst .snd)
 
-  isSetGrammar⊗Eq : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗Eq.⊗ B)
-  isSetGrammar⊗Eq isSetA isSetB = subst isSetGrammar ⊗Path≡⊗Eq (⊗Path.isSetGrammar⊗ isSetA isSetB)
+  isSetGrammar⊗ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊗ B)
+  isSetGrammar⊗ isSetA isSetB = subst isSetGrammar ⊗Path≡⊗Eq (⊗Path.isSetGrammar⊗ isSetA isSetB)
 
   -- -- because ⊗ is opaque,
   -- -- same-splits and same-parses are needed so that the interface of
