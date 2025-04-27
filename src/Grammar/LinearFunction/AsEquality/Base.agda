@@ -12,7 +12,7 @@ import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
+open import Grammar.LinearProduct Alphabet
 open import Grammar.Epsilon.Base Alphabet
 open import Term.Base Alphabet
 open import Term.Nullary Alphabet
