@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module @0 Grammar.Epsilon.Conversion (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.Epsilon.AsEquality.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
 import Cubical.Data.Equality as Eq
