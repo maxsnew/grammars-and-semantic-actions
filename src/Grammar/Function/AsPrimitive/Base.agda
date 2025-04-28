@@ -1,3 +1,4 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -40,14 +41,10 @@ opaque
 
 opaque
   unfolding _⇒_ _&_ &-intro ⇒-intro π₁
-  ⇒-β :
-    (e : A & B ⊢ C) →
-    ⇒-intro⁻ (⇒-intro e) ≡ e
+  @0 ⇒-β : (e : A & B ⊢ C) → ⇒-intro⁻ (⇒-intro e) ≡ e
   ⇒-β e = refl
 
-  ⇒-η :
-    (e : A ⊢ B ⇒ C) →
-    ⇒-intro (⇒-intro⁻ e) ≡ e
+  @0 ⇒-η : (e : A ⊢ B ⇒ C) → ⇒-intro (⇒-intro⁻ e) ≡ e
   ⇒-η e = refl
 
 ⇒-mapDom : A ⊢ B → B ⇒ C ⊢ A ⇒ C

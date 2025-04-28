@@ -17,6 +17,7 @@ open import Grammar.KleeneStar.Inductive.AsEquality.Base Alphabet isSetAlphabet
 open import Grammar.Inductive.AsEquality.Indexed Alphabet isSetAlphabet
 open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet isSetAlphabet
 open import Grammar.String.Base Alphabet isSetAlphabet
+import Grammar.Top.Base Alphabet isSetAlphabet as ⊤G
 open import Term.Base Alphabet isSetAlphabet
 
 
@@ -97,8 +98,10 @@ opaque
 g : A ⊢ B
 g = inl ∘g (CONS ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻) ,⊗ id
 
-h : string ⊢ B
-h = ?
+h : string ⊢ A ⊕ string
+h = fold*r char
+  (inr ∘g {!string-intro!})
+  {!!}
 
 main : IO ⊤
 main = putStrLn (print⊢ printA printB g testString mkA)

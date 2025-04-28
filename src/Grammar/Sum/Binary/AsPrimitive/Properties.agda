@@ -1,27 +1,28 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 
-module Grammar.Sum.Binary.AsPrimitive.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Binary.AsPrimitive.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool using (Bool ; false ; true ; _≟_ ; isSetBool ; true≢false)
 open import Cubical.Data.FinSet
 import Cubical.Data.Empty as Empty
 
-open import Grammar.Base Alphabet
-open import Grammar.Function Alphabet
-open import Grammar.Product Alphabet
-open import Grammar.Bottom Alphabet
-open import Grammar.Lift Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Properties Alphabet
-open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Sum Alphabet
-open import Grammar.Distributivity Alphabet
-import Grammar.Sum.Binary.AsIndexed.Base Alphabet as Ind⊕
-open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Function Alphabet isSetAlphabet
+open import Grammar.Product Alphabet isSetAlphabet
+open import Grammar.Bottom Alphabet isSetAlphabet
+open import Grammar.Lift Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.Properties Alphabet isSetAlphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Sum Alphabet isSetAlphabet
+open import Grammar.Distributivity Alphabet isSetAlphabet
+import Grammar.Sum.Binary.AsIndexed.Base Alphabet isSetAlphabet as Ind⊕
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -61,7 +62,7 @@ module _ {A B : Grammar ℓA} (@0 unambig⊕ : unambiguous (A ⊕ B)) where
   unambig-⊕-is-disjoint : disjoint A B
   unambig-⊕-is-disjoint =
     disjoint≅2
-      (hasDisjointSummands⊕ᴰ isSetBool
+      (hasDisjointSummands⊕ᴰ
         (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕)
         true false λ _ → λ ())
       id≅ id≅

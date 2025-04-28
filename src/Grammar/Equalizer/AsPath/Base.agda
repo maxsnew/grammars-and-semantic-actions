@@ -1,3 +1,4 @@
+{-# OPTIONS --erased-cubical #-}
 {- Equalizers are "solutions" to equations between two terms. -}
 
 {-
@@ -9,19 +10,19 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module @0 Grammar.Equalizer.AsPath.Base (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.Equalizer.AsPath.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.Nat
 
-open import Grammar.Base Alphabet
-open import Grammar.LinearProduct.AsPath.Base Alphabet
-open import Grammar.Epsilon.AsPath.Base Alphabet
-open import Grammar.Inductive.AsPath.Indexed Alphabet hiding (k)
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Product.Base Alphabet
-open import Grammar.LinearFunction.AsPath Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.Epsilon.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.Inductive.AsPath.Indexed Alphabet isSetAlphabet hiding (k)
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Product.Base Alphabet isSetAlphabet
+open import Grammar.LinearFunction.AsPath Alphabet isSetAlphabet
 
-open import Term.Base Alphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable

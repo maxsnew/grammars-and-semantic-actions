@@ -1,24 +1,25 @@
+{-# OPTIONS --erased-cubical #-}
 -- Distributivity of products over sums
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Function
 
-module Grammar.Distributivity (Alphabet : hSet ℓ-zero) where
+module Grammar.Distributivity (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-import Cubical.Data.Sum as Sum
+import Erased.Data.Sum.Base as Sum
 
-open import Grammar.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Sum.Properties Alphabet
-open import Grammar.Product.Base Alphabet
-open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Product.Binary.AsPrimitive Alphabet
-import Grammar.Sum.Binary.AsIndexed.Base Alphabet as Ind⊕
-import Grammar.Product.Binary.AsIndexed Alphabet as Ind&
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Function.AsPrimitive.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Properties Alphabet isSetAlphabet
+open import Grammar.Product.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive Alphabet isSetAlphabet
+import Grammar.Sum.Binary.AsIndexed.Base Alphabet isSetAlphabet as Ind⊕
+import Grammar.Product.Binary.AsIndexed Alphabet isSetAlphabet as Ind&
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.Function.AsPrimitive.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -39,7 +40,7 @@ module _
   &ᴰ⊕ᴰ-dist :
     &[ x ∈ X ] ⊕[ y ∈ Y x ] A (x , y)
       ⊢ ⊕[ f ∈ (∀ (x : X) → Y x) ] (&[ x ∈ X ] A (x , f x))
-  &ᴰ⊕ᴰ-dist _ z = fst ∘ z , snd ∘ z
+  &ᴰ⊕ᴰ-dist _ z = (λ x → fst (z x)) , (λ x → snd (z x))
 
   -- Derived inverse to the axiom
   &ᴰ⊕ᴰ-dist⁻ :
@@ -68,10 +69,10 @@ module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : Grammar ℓB}
 
     opaque
       unfolding ⇒-intro &-intro π₁
-      the-sec : the-fun ∘g the-inv ≡ id
+      @0 the-sec : the-fun ∘g the-inv ≡ id
       the-sec = refl
 
-      the-ret : the-inv ∘g the-fun ≡ id
+      @0 the-ret : the-inv ∘g the-fun ≡ id
       the-ret = refl
 
   &⊕ᴰ-distL≅ : (⊕[ x ∈ X ] A x) & B ≅ ⊕[ x ∈ X ] (A x & B)
@@ -93,11 +94,12 @@ module _ where
 
   opaque
     unfolding _⊕_ ⇒-intro ⊕-elim π₁
-    &⊕-distR-sec : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
+    @0 &⊕-distR-sec : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
       &⊕-distR {A = A}{B = C}{C = B} ∘g &⊕-distR⁻ ≡ id
     &⊕-distR-sec =
       funExt λ w → funExt λ { (Sum.inl x) → refl ; (Sum.inr x) → refl}
-    &⊕-distR-ret : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
+
+    @0 &⊕-distR-ret : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
       &⊕-distR⁻ ∘g &⊕-distR {A = A}{B = C}{C = B} ≡ id
     &⊕-distR-ret =
       funExt λ w → funExt λ { (Sum.inl x , pB) → refl ; (Sum.inr x , pB) → refl}
@@ -121,11 +123,12 @@ module _ where
 
   opaque
     unfolding _⊕_ ⇒-intro ⊕-elim π₁
-    &⊕-distL-sec : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
+    @0 &⊕-distL-sec : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
       &⊕-distL {A = A}{B = C}{C = B} ∘g &⊕-distL⁻ ≡ id
     &⊕-distL-sec =
       funExt λ w → funExt λ { (Sum.inl x) → refl ; (Sum.inr x) → refl}
-    &⊕-distL-ret : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
+
+    @0 &⊕-distL-ret : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} →
       &⊕-distL⁻ ∘g &⊕-distL {A = A}{B = C}{C = B} ≡ id
     &⊕-distL-ret =
       funExt λ w → funExt λ { (pA , Sum.inl x) → refl ; (pA , Sum.inr x) → refl}

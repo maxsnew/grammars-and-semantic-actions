@@ -3,23 +3,23 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 
-module Grammar.Bottom.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.Bottom.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
-import Cubical.Data.Sum as Sum
+open import Erased.Data.Empty.Base as Empty hiding (⊥ ; ⊥*)
+import Erased.Data.Sum.Base as Sum
 
-open import Grammar.Base Alphabet
-open import Grammar.Properties Alphabet
-open import Grammar.Bottom.Base Alphabet
-open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.LinearFunction Alphabet
-open import Grammar.Function Alphabet
-open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Distributivity Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Properties Alphabet isSetAlphabet
+open import Grammar.Bottom.Base Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Grammar.LinearFunction Alphabet isSetAlphabet
+open import Grammar.Function Alphabet isSetAlphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.Distributivity Alphabet isSetAlphabet
 
-open import Term.Base Alphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -31,7 +31,7 @@ private
 is-initial A =
   ∀ {ℓB}{B : Grammar ℓB} → (Σ[ e ∈ A ⊢ B ] (∀ e' → e ≡ e'))
 
-is-initial→propHoms :
+@0 is-initial→propHoms :
   is-initial A →
   ∀ {ℓB}{B : Grammar ℓB} (e e' : A ⊢ B) → e ≡ e'
 is-initial→propHoms initA e e' =
@@ -44,7 +44,7 @@ is-strict-initial A =
 
 opaque
   unfolding ⊥
-  is-initial-⊥ : is-initial ⊥
+  @0 is-initial-⊥ : is-initial ⊥
   is-initial-⊥ = ⊥-elim , (λ e → funExt λ x → funExt λ p → Empty.rec p)
 
 open StrongEquivalence
@@ -117,7 +117,7 @@ uninhabited→initial = A⊢⊥→is-initial
 
 opaque
   unfolding ⊥*
-  is-initial-⊥* : is-initial (⊥* {ℓA})
+  @0 is-initial-⊥* : is-initial (⊥* {ℓA})
   is-initial-⊥* =
     ⊥*-elim , (λ e → funExt λ x → funExt λ p → Empty.rec (lower p))
 
@@ -150,7 +150,7 @@ module _ (A : Grammar ℓA) where
     where
     opaque
       unfolding ⊕-elim ⊥
-      the-ret : ⊥⊕≅ .inv ∘g ⊥⊕≅ .fun ≡ id
+      @0 the-ret : ⊥⊕≅ .inv ∘g ⊥⊕≅ .fun ≡ id
       the-ret = funExt λ w → funExt λ {
         (Sum.inr x) → refl
         }

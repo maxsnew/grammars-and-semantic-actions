@@ -1,15 +1,16 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Grammar.Sum.Binary.AsIndexed.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Sum.Binary.AsIndexed.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.Bool using (Bool ; true ; false)
 
-open import Grammar.Base Alphabet
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -39,12 +40,10 @@ module _ {A : Bool → Grammar ℓA} where
     ⊕-elim' false = f
     ⊕-elim' true = e
 
-⊕-βl : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
-  ⊕-elim {A = ⊕Ind _ _} e₁ e₂ ∘g inl ≡ e₁
+@0 ⊕-βl : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) → ⊕-elim {A = ⊕Ind _ _} e₁ e₂ ∘g inl ≡ e₁
 ⊕-βl e₁ e₂ = refl
 
-⊕-βr : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
-  ⊕-elim {A = ⊕Ind _ _} e₁ e₂ ∘g inr ≡ e₂
+@0 ⊕-βr : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) → ⊕-elim {A = ⊕Ind _ _} e₁ e₂ ∘g inr ≡ e₂
 ⊕-βr e₁ e₂ = refl
 
 @0 ⊕-η : (e : A ⊕ B ⊢ C) →

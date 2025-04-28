@@ -5,7 +5,7 @@ open import Cubical.Foundations.Transport
 
 module @0 Grammar.LinearFunction.AsPath.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Cubical.Data.List
+open import Erased.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
 

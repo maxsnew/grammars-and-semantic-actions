@@ -2,7 +2,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Product.Properties (Alphabet : Type ℓ-zero) (isSetAlphabet : isSet Alphabet) where
+module Grammar.Product.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
