@@ -1,17 +1,22 @@
-open import Cubical.Foundations.Prelude
+{-# OPTIONS --erased-cubical #-}
+open import Cubical.Foundations.Prelude hiding (Lift ; lift ; lower)
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 
-module Automata.Deterministic (Alphabet : hSet ℓ-zero) where
+module Automata.Deterministic (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Bool
-import Cubical.Data.Equality as Eq
+import Erased.Data.Equality as Eq
+import Erased.Data.Empty as Empty
+import Cubical.Data.Empty as CubicalEmpty
+open import Erased.Lift.Base
 
-open import Grammar Alphabet
-open import Parser Alphabet
-open import Term Alphabet
+open import Grammar Alphabet isSetAlphabet
+open import Parser Alphabet isSetAlphabet
+open import Grammar.Sum.Binary.AsIndexed Alphabet isSetAlphabet as Idx⊕
+open import Term Alphabet isSetAlphabet
 
 private
   variable
@@ -21,27 +26,27 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   field
     init : Q
     isAcc : Q → Bool
-    δ : Q → ⟨ Alphabet ⟩ → Q
+    δ : Q → Alphabet → Q
 
   data Tag : Type ℓ where
     stop step : Tag
 
   open Iso
 
-  TagRep : Iso Tag Bool
+  @0 TagRep : Iso Tag Bool
   TagRep = iso
     (λ { stop → false ; step → true})
     (λ { false → stop ; true → step})
     (λ { false → refl ; true → refl})
     (λ { stop → refl ; step → refl})
 
-  isSetTag : isSet Tag
+  @0 isSetTag : isSet Tag
   isSetTag = isSetRetract (TagRep .fun) (TagRep .inv) (TagRep .leftInv) isSetBool
 
   TraceTy : Bool → (q : Q) → Functor Q
   TraceTy b q = ⊕e Tag λ {
       stop → ⊕e (Lift (b Eq.≡ isAcc q)) λ { (lift acc) → k ε* }
-      ; step → ⊕e (Lift ⟨ Alphabet ⟩) (λ { (lift c) → (k (literal* c)) ⊗e (Var (δ q c)) }) }
+      ; step → ⊕e (Lift Alphabet) (λ { (lift c) → (k (literal* c)) ⊗e (Var (δ q c)) }) }
 
   Trace : Bool → (q : Q) → Grammar ℓ
   Trace b = μ (TraceTy b)
@@ -55,7 +60,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   parse =
     fold*r char
       (&ᴰ-intro (λ q → σ (isAcc q) ∘g roll ∘g σ stop ∘g σ (lift Eq.refl) ∘g liftG ∘g liftG))
-      (&ᴰ-intro (λ q → ⊕ᴰ-elim (λ c → map⊕ᴰ (λ b → STEP c b q) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ π (δ q c)) ∘g ⊕ᴰ-distL .fun))
+      (&ᴰ-intro (λ q → ⊕ᴰ-elim (λ c → map⊕ᴰ (λ b → STEP c b q) ∘g ⊕ᴰ-distREq .fun ∘g id ,⊗ π (δ q c)) ∘g ⊕ᴰ-distLEq .fun))
 
   parseInit : string ⊢ ⊕[ b ∈ Bool ] Trace b init
   parseInit = π init ∘g parse
@@ -75,8 +80,8 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   Trace≅string q .ret = the-ret
     where
     opaque
-      unfolding ⊕ᴰ-distR ⊕ᴰ-distL ⊗-intro
-      the-ret : π q ∘g parse ∘g ⊕ᴰ-elim (λ b → print b q) ≡ id
+      unfolding ⊕ᴰ-distREq ⊕ᴰ-distLEq ⊗-intro
+      @0 the-ret : π q ∘g parse ∘g ⊕ᴰ-elim (λ b → print b q) ≡ id
       the-ret =
         ⊕ᴰ≡ _ _ λ b →
         equalizer-ind (TraceTy b)
@@ -90,32 +95,33 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
               step → ⊕ᴰ≡ _ _ λ where
                 (lift c) i →
                   map⊕ᴰ (λ b' → STEP c b' q)
-                  ∘g ⊕ᴰ-distR .fun
+                  ∘g ⊕ᴰ-distREq .fun
                   ∘g id ,⊗ eq-π-pf _ _ i
                   ∘g (lowerG ∘g lowerG) ,⊗ lowerG
           )
           q
 
-  unambiguous-⊕Trace : ∀ q → unambiguous (⊕[ b ∈ Bool ] Trace b q)
+  @0 unambiguous-⊕Trace : ∀ q → unambiguous (⊕[ b ∈ Bool ] Trace b q)
   unambiguous-⊕Trace q =
    unambiguous≅ (sym-strong-equivalence (Trace≅string q)) unambiguous-string
 
-  unambiguous-Trace : ∀ b q → unambiguous (Trace b q)
-  unambiguous-Trace b q = unambiguous⊕ᴰ isSetBool (unambiguous-⊕Trace q) b
+  @0 unambiguous-Trace : ∀ b q → unambiguous (Trace b q)
+  unambiguous-Trace b q = Idx⊕.unambig-summands (unambiguous-⊕Trace q) b
 
-  isSetGrammarTrace : ∀ b q → isSetGrammar (Trace b q)
-  isSetGrammarTrace b = isSetGrammarμ (TraceTy b) λ q →
-    isSetTag , λ where
-      stop → (isOfHLevelLift 2
-               (isSetRetract Eq.eqToPath Eq.pathToEq
-                Eq.pathToEq-eqToPath (isProp→isSet (isSetBool _ _)))) ,
-             λ _ → isSetGrammarε*
-      step → isOfHLevelLift 2 (Alphabet .snd) ,
-             λ (lift y) → (isSetGrammarLift (isSetGrammarLiteral _)) , _
+  -- @0 isSetGrammarTrace : ∀ b q → isSetGrammar (Trace b q)
+  -- isSetGrammarTrace b = {!!}
+    -- isSetGrammarμ (TraceTy b) λ q →
+    -- isSetTag , λ where
+    --   stop → (isOfHLevelLift 2
+    --            (isSetRetract Eq.eqToPath Eq.pathToEq
+    --             Eq.pathToEq-eqToPath (isProp→isSet (isSetBool _ _)))) ,
+    --          λ _ → isSetGrammarε*
+    --   step → isOfHLevelLift 2 (Alphabet .snd) ,
+    --          λ (lift y) → (isSetGrammarLift (isSetGrammarLiteral _)) , _
 
   open Parser
 
   AccTraceParser : ∀ q → Parser (Trace true q) (Trace false q)
   AccTraceParser q .disj =
-    hasDisjointSummands⊕ᴰ isSetBool (unambiguous-⊕Trace q) true false true≢false
+    hasDisjointSummands⊕ᴰ (unambiguous-⊕Trace q) true false λ t≡f → CubicalEmpty.rec (true≢false t≡f)
   AccTraceParser q .fun = Ind⊕→⊕ (λ b → Trace b q) ∘g π q ∘g parse

@@ -52,8 +52,8 @@ opaque
 ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε
 
-@0 isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
-isLangε* = isLangLift isLangε
+-- @0 isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
+-- isLangε* = isLangLift isLangε
 
-@0 isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
-isSetGrammarε* = isLang→isSetGrammar isLangε*
+-- @0 isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
+-- isSetGrammarε* = isLang→isSetGrammar isLangε*

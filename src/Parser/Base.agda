@@ -1,14 +1,15 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 
-module Parser.Base (Alphabet : hSet ℓ-zero) where
+module Parser.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-import Cubical.Data.Sum as Sum
+import Erased.Data.Sum.Base as Sum
 open import Cubical.Data.Bool using (Bool ; true ; false)
 
-open import Grammar Alphabet
-open import Term Alphabet
+open import Grammar Alphabet isSetAlphabet
+open import Term Alphabet isSetAlphabet
 
 private
   variable
@@ -20,7 +21,7 @@ private
 
 record Parser (A : Grammar ℓA) (B : Grammar ℓB) : Type (ℓ-max ℓA ℓB) where
   field
-    disj : disjoint A B
+    @0 disj : disjoint A B
     fun : string ⊢ A ⊕ B
 
   -- Utilities to benchmark a Parser

@@ -40,10 +40,10 @@ string-intro = read ∘g ⊤-intro
 -- stringL-intro : ∀ {ℓA} {A : Grammar ℓA} → A ⊢ stringL
 -- stringL-intro = string≅stringL .fun ∘g string-intro
 
--- -- This is assumed as an axiom on paper, and
--- -- it holds semantically
--- string≅⊤ : string ≅ ⊤
--- string≅⊤ .fun = ⊤-intro
--- string≅⊤ .inv = read
--- string≅⊤ .sec = unambiguous⊤ _ _
--- string≅⊤ .ret = unambiguous-string _ _
+-- This is assumed as an axiom on paper, and
+-- it holds semantically
+string≅⊤ : string ≅ ⊤
+string≅⊤ .fun = ⊤-intro
+string≅⊤ .inv = read
+string≅⊤ .sec = unambiguous⊤ _ _
+string≅⊤ .ret = unambiguous-string _ _

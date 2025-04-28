@@ -73,10 +73,13 @@ SplittingPathP = ΣPathPProp λ _ → isSetString _ _
 @0 Splitting≡ : ∀ {w} → {s s' : Splitting w} → s .fst ≡ s' .fst → s ≡ s'
 Splitting≡ = SplittingPathP
 
--- @0 SplittingEqPathP : ∀ {w : I → String}{s0 : SplittingEq (w i0)}{s1 : SplittingEq (w i1)}
---   → s0 .fst ≡ s1 .fst → PathP (λ i → SplittingEq (w i)) s0 s1
--- SplittingEqPathP s≡ = {!!}
+@0 SplittingEqPathP : ∀ {w : I → String}{s0 : SplittingEq (w i0)}{s1 : SplittingEq (w i1)}
+  → s0 .fst ≡ s1 .fst → PathP (λ i → SplittingEq (w i)) s0 s1
+SplittingEqPathP {w = w} = ΣPathPProp λ _ → isSetEqString _ _
 
+@0 SplittingEq≡ : ∀ {w : String}{s s' : SplittingEq w}
+  → s .fst ≡ s' .fst → s ≡ s'
+SplittingEq≡ {w = w} = SplittingEqPathP
 
 -- module _ (isFinSetAlphabet : isFinSet Alphabet) where
 --   DiscreteAlphabet : Discrete Alphabet

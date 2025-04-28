@@ -1,23 +1,24 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.RegularExpression.Base (Alphabet : hSet ℓ-zero)where
+module Grammar.RegularExpression.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Foundations.Structure
 
-open import Grammar.Base Alphabet
-open import Grammar.Epsilon Alphabet
-open import Grammar.Bottom Alphabet
-open import Grammar.Literal Alphabet
-open import Grammar.LinearProduct Alphabet
-open import Grammar.Sum.Binary.AsPrimitive Alphabet
-open import Grammar.KleeneStar.Inductive Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Epsilon Alphabet isSetAlphabet
+open import Grammar.Bottom Alphabet isSetAlphabet
+open import Grammar.Literal Alphabet isSetAlphabet
+open import Grammar.LinearProduct Alphabet isSetAlphabet
+open import Grammar.Sum.Binary.AsPrimitive Alphabet isSetAlphabet
+open import Grammar.KleeneStar.Inductive Alphabet isSetAlphabet
 
 data RegularExpression  : Type ℓ-zero where
   εr : RegularExpression
   ⊥r : RegularExpression
   _⊗r_ : RegularExpression → RegularExpression → RegularExpression
-  ＂_＂r : ⟨ Alphabet ⟩ → RegularExpression
+  ＂_＂r : Alphabet → RegularExpression
   _⊕r_ : RegularExpression → RegularExpression → RegularExpression
   _*r : RegularExpression → RegularExpression
 

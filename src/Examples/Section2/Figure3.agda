@@ -25,14 +25,8 @@ import Grammar.Top.Base Alphabet isSetAlphabet as ⊤G
 open import Term.Base Alphabet isSetAlphabet
 
 
--- open import Agda.Builtin.IO
 open import IO
--- open import Agda.Builtin.Unit using (⊤)
 import Agda.Builtin.String as BuiltinString
-
--- postulate putStrLn : BuiltinString.String → IO ⊤
--- {-# FOREIGN GHC import qualified Data.Text as T #-}
--- {-# COMPILE GHC putStrLn = putStrLn . T.unpack #-}
 
 _++B_ = BuiltinString.primStringAppend
 infixl 25 _++B_

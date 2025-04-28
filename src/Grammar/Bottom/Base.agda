@@ -8,6 +8,8 @@ open import Erased.Data.Empty.Base as Empty hiding (⊥ ; ⊥*)
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Grammar.LinearFunction.Base Alphabet isSetAlphabet
 open import Grammar.Equivalence.Base Alphabet isSetAlphabet
 open import Term.Base Alphabet isSetAlphabet
 
@@ -38,3 +40,9 @@ opaque
 
   get⊥ : ∀ {w} → ⊥ w → Empty.⊥
   get⊥ p = p
+
+⊗⊥ : A ⊗ ⊥ ⊢ ⊥
+⊗⊥ = ⟜-app ∘g id ,⊗ ⊥-elim
+
+⊥⊗ : ⊥ ⊗ A ⊢ ⊥
+⊥⊗ = ⊸-app ∘g ⊥-elim ,⊗ id

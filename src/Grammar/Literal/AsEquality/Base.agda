@@ -39,5 +39,5 @@ isSetGrammarLiteral c = isLang→isSetGrammar (isLangLiteral c)
 
 -- This * here is a Cubical naming convention for
 -- a lifted type, not a Kleene star
-@0 literal* : ∀ {ℓ : Level} → Alphabet → Grammar ℓ
+literal* : ∀ {ℓ : Level} → Alphabet → Grammar ℓ
 literal* {ℓ = ℓ} c = LiftG ℓ (literal c)

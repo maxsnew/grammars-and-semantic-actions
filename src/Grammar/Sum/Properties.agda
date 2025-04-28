@@ -7,7 +7,7 @@ module Grammar.Sum.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isS
 open import Cubical.Data.Sigma
 import Erased.Data.Empty.Base as Empty
 import Erased.Data.Equality.Base as Eq
-open import Cubical.Data.Maybe hiding (rec)
+open import Erased.Data.Maybe.Base hiding (rec)
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Nullary.Properties
@@ -95,7 +95,7 @@ module _
   nested⊕ᴰ≅ .sec = refl
   nested⊕ᴰ≅ .ret = refl
 
-module @0 _
+module _
   {X : Type ℓX}
   (A : Grammar ℓA)
   (B : X → Grammar ℓB)

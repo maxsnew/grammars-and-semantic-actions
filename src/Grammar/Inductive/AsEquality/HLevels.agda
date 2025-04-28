@@ -1,24 +1,26 @@
-open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Prelude hiding (Lift ; lift ; lower)
 open import Cubical.Foundations.HLevels
 
-module Grammar.Inductive.AsEquality.HLevels (Alphabet : hSet ℓ-zero)where
+module Grammar.Inductive.AsEquality.HLevels (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
+
+open import Erased.Lift.Base
+open import Erased.Data.Unit
 
 open import Cubical.Data.Empty
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
-open import Cubical.Data.Unit
 open import Cubical.Data.W.Indexed
 
-open import Grammar.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Grammar.Sum Alphabet
-open import Grammar.Product Alphabet
-open import Grammar.Product.Binary.AsPrimitive Alphabet
-open import Grammar.Epsilon.Base Alphabet
-open import Grammar.LinearProduct.AsEquality Alphabet
-open import Grammar.Lift.Base Alphabet
-open import Grammar.Inductive.Indexed Alphabet as Inductive
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Grammar.Sum Alphabet isSetAlphabet
+open import Grammar.Product Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive Alphabet isSetAlphabet
+open import Grammar.Epsilon.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.AsEquality Alphabet isSetAlphabet
+open import Grammar.Lift.Base Alphabet isSetAlphabet
+open import Grammar.Inductive.Indexed Alphabet isSetAlphabet as Inductive
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable ℓA ℓB ℓX ℓY : Level

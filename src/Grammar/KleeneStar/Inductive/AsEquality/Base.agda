@@ -179,10 +179,10 @@ module _ (A : Grammar ℓA) where
   *L : Grammar ℓA
   *L = μ *LTy _
 
---   unrolled*L = ⟦ *LTy _ ⟧ (μ *LTy)
+  unrolled*L = ⟦ *LTy _ ⟧ (μ *LTy)
 
---   *L≅unrolled*L : *L ≅ unrolled*L
---   *L≅unrolled*L = unroll≅ *LTy _
+  *L≅unrolled*L : *L ≅ unrolled*L
+  *L≅unrolled*L = unroll≅ {ℓA = ℓA} *LTy _
 
 --   repeatTyL : Lift {j = ℓA} ℕ → Functor (Lift ℕ)
 --   repeatTyL (lift zero) = k ε*

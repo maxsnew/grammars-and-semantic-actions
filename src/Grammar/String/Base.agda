@@ -8,7 +8,7 @@ open import Cubical.Relation.Nullary.Base hiding (¬_)
 open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Erased.Data.List
-import Erased.Data.Equality.Base as Eq
+import Erased.Data.Equality as Eq
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
@@ -84,28 +84,28 @@ opaque
 @0 ⌈⌉→⌈⌉' : ∀ w → ⌈ w ⌉ ⊢ ⌈ w ⌉'
 ⌈⌉→⌈⌉' = ⌈⌉→≡
 
--- opaque
---   unfolding ε _⊗_ uniquely-supported-⌈⌉ mk⌈⌉
---   ⌈⌉'→⌈⌉ : ∀ w → ⌈ w ⌉' ⊢ ⌈ w ⌉
---   ⌈⌉'→⌈⌉ [] w p = Eq.sym (Eq.pathToEq p)
---   ⌈⌉'→⌈⌉ (c ∷ w) w' cw≡w' = J (λ w'' cw≡w'' → (＂ c ＂ ⊗ ⌈ w ⌉) w'') (mk⌈⌉ (c ∷ w)) cw≡w'
+opaque
+  unfolding ε _⊗_ uniquely-supported-⌈⌉ mk⌈⌉
+  @0 ⌈⌉'→⌈⌉ : ∀ w → ⌈ w ⌉' ⊢ ⌈ w ⌉
+  ⌈⌉'→⌈⌉ [] w p = Eq.sym (Eq.pathToEq p)
+  ⌈⌉'→⌈⌉ (c ∷ w) w' cw≡w' = J (λ w'' cw≡w'' → (＂ c ＂ ⊗ ⌈ w ⌉) w'') (mk⌈⌉ (c ∷ w)) cw≡w'
 
---   open StrongEquivalence
---   ⌈⌉≅⌈⌉' : ∀ w → ⌈ w ⌉ ≅ ⌈ w ⌉'
---   ⌈⌉≅⌈⌉' w .fun = ⌈⌉→⌈⌉' w
---   ⌈⌉≅⌈⌉' w .inv = ⌈⌉'→⌈⌉ w
---   ⌈⌉≅⌈⌉' w .sec = funExt λ w' → funExt λ p → isSetString w w' _ _
---   ⌈⌉≅⌈⌉' [] .ret = funExt λ w' → funExt λ p → isLangε _ _ _
---   ⌈⌉≅⌈⌉' (c ∷ w) .ret = funExt λ w' → funExt λ @0 where
---     ((_ , Eq.refl) , Eq.refl , the-⌈⌉) →
---       Σ≡Prop (λ s → isProp× (isLangLiteral _ _) (isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w) _))
---         (Splitting≡ (≡-× (transportRefl [ c ]) (transportRefl w ∙ ⌈⌉→⌈⌉' w _ the-⌈⌉)))
+  open StrongEquivalence
+  @0 ⌈⌉≅⌈⌉' : ∀ w → ⌈ w ⌉ ≅ ⌈ w ⌉'
+  ⌈⌉≅⌈⌉' w .fun = ⌈⌉→⌈⌉' w
+  ⌈⌉≅⌈⌉' w .inv = ⌈⌉'→⌈⌉ w
+  ⌈⌉≅⌈⌉' w .sec = funExt λ w' → funExt λ p → isSetString w w' _ _
+  ⌈⌉≅⌈⌉' [] .ret = funExt λ w' → funExt λ p → isLangε _ _ _
+  ⌈⌉≅⌈⌉' (c ∷ w) .ret = funExt λ w' → funExt λ @0 where
+    ((_ , Eq.refl) , Eq.refl , the-⌈⌉) →
+      Σ≡Prop (λ s → isProp× (isLangLiteral _ _) (isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w) _))
+        (SplittingEq≡ (≡-× (transportRefl [ c ]) (transportRefl w ∙ ⌈⌉→⌈⌉' w _ the-⌈⌉)))
 
--- @0 isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
--- isLang⌈⌉ w = isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w)
+@0 isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
+isLang⌈⌉ w = isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w)
 
--- pick-parse : ∀ (w : String) → (A : Grammar ℓA) → A w → ⌈ w ⌉ ⊢ A
--- pick-parse w A pA w' p⌈⌉ = subst A (uniquely-supported-⌈⌉ w w' p⌈⌉) pA
+@0 pick-parse : ∀ (w : String) → (A : Grammar ℓA) → A w → ⌈ w ⌉ ⊢ A
+pick-parse w A pA w' p⌈⌉ = subst A (uniquely-supported-⌈⌉ w w' p⌈⌉) pA
 
 ⌈⌉→string : ∀ w → ⌈ w ⌉ ⊢ string
 ⌈⌉→string [] = NIL

@@ -3,7 +3,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 
-module Grammar.Bottom.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
+module @0 Grammar.Bottom.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Erased.Data.Empty.Base as Empty hiding (⊥ ; ⊥*)
 import Erased.Data.Sum.Base as Sum
@@ -154,9 +154,3 @@ module _ (A : Grammar ℓA) where
       the-ret = funExt λ w → funExt λ {
         (Sum.inr x) → refl
         }
-
-⊗⊥ : A ⊗ ⊥ ⊢ ⊥
-⊗⊥ = ⟜-app ∘g id ,⊗ ⊥-elim
-
-⊥⊗ : ⊥ ⊗ A ⊢ ⊥
-⊥⊗ = ⊸-app ∘g ⊥-elim ,⊗ id

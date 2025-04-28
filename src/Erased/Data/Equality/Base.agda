@@ -84,44 +84,44 @@ apd : {C : A → Type ℓ} (f : (x : A) → C x) {x y : A} (p : x ≡ y) → tra
 apd f refl = refl
 
 
--- -- Equivalences expressed using ≡ everywhere
--- fiber : ∀ {A : Type ℓ} {B : Type ℓ'} (f : A → B) (y : B) → Type (ℓ-max ℓ ℓ')
--- fiber {A = A} f y = Σ[ x ∈ A ] f x ≡ y
+-- Equivalences expressed using ≡ everywhere
+fiber : ∀ {A : Type ℓ} {B : Type ℓ'} (f : A → B) (y : B) → Type (ℓ-max ℓ ℓ')
+fiber {A = A} f y = Σ A λ x → f x ≡ y
 
--- isContr : Type ℓ → Type ℓ
--- isContr A = Σ[ x ∈ A ] (∀ y → x ≡ y)
+isContr : Type ℓ → Type ℓ
+isContr A = Σ A λ x → (∀ y → x ≡ y)
 
--- isProp : Type ℓ → Type ℓ
--- isProp A = (x y : A) → x ≡ y
+isProp : Type ℓ → Type ℓ
+isProp A = (x y : A) → x ≡ y
 
--- record isEquiv {A : Type ℓ} {B : Type ℓ'} (f : A → B) : Type (ℓ-max ℓ ℓ') where
---   field equiv-proof : (y : B) → isContr (fiber f y)
--- open isEquiv public
+record isEquiv {A : Type ℓ} {B : Type ℓ'} (f : A → B) : Type (ℓ-max ℓ ℓ') where
+  field equiv-proof : (y : B) → isContr (fiber f y)
+open isEquiv public
 
--- infix 4 _≃_
--- _≃_ : ∀ (A : Type ℓ) (B : Type ℓ') → Type (ℓ-max ℓ ℓ')
--- A ≃ B = Σ[ f ∈ (A → B) ] (isEquiv f)
+infix 4 _≃_
+_≃_ : ∀ (A : Type ℓ) (B : Type ℓ') → Type (ℓ-max ℓ ℓ')
+A ≃ B = Σ (A → B) λ f → (isEquiv f)
 
--- equivFun : A ≃ B → A → B
--- equivFun e = e .pr₁
+equivFun : A ≃ B → A → B
+equivFun e = e .pr₁
 
--- equivIsEquiv : (e : A ≃ B) → isEquiv (equivFun e)
--- equivIsEquiv e = e .pr₂
+equivIsEquiv : (e : A ≃ B) → isEquiv (equivFun e)
+equivIsEquiv e = e .pr₂
 
--- equivCtr : (e : A ≃ B) (y : B) → fiber (equivFun e) y
--- equivCtr e y = e .pr₂ .equiv-proof y .pr₁
+equivCtr : (e : A ≃ B) (y : B) → fiber (equivFun e) y
+equivCtr e y = e .pr₂ .equiv-proof y .pr₁
 
--- id : A → A
--- id x = x
+id : A → A
+id x = x
 
--- isEquivId : isEquiv (id {A = A})
--- equiv-proof isEquivId y = (y , refl) , λ where (_ , refl) → refl
+isEquivId : isEquiv (id {A = A})
+equiv-proof isEquivId y = (y , refl) , λ where (_ , refl) → refl
 
--- HEq : {A0 A1 : Type ℓ}(Aeq : A0 ≡ A1) (a0 : A0)(a1 : A1) → Type _
--- HEq Aeq a0 a1 = transport (λ A → A) Aeq a0 ≡ a1
+HEq : {A0 A1 : Type ℓ}(Aeq : A0 ≡ A1) (a0 : A0)(a1 : A1) → Type _
+HEq Aeq a0 a1 = transport (λ A → A) Aeq a0 ≡ a1
 
--- singlP : {A0 A1 : Type ℓ}(Aeq : A0 ≡ A1) (a : A0) → Type _
--- singlP {A1 = A1} Aeq a = Σ[ x ∈ A1 ] HEq Aeq a x
+singlP : {A0 A1 : Type ℓ}(Aeq : A0 ≡ A1) (a : A0) → Type _
+singlP {A1 = A1} Aeq a = Σ A1 λ x → HEq Aeq a x
 
--- singl : {A : Type ℓ}(a : A) → Type _
--- singl {A = A} a = singlP refl a
+singl : {A : Type ℓ}(a : A) → Type _
+singl {A = A} a = singlP refl a

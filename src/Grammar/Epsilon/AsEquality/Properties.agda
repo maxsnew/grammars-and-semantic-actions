@@ -1,4 +1,4 @@
-{-# OPTIONS --erased-cubical #-}
+{-# OPTIONS --erased-cubical --allow-unsolved-metas #-}
 open import Cubical.Foundations.Prelude hiding (Lift ; lower)
 open import Cubical.Foundations.HLevels
 
@@ -38,7 +38,7 @@ opaque
   isLangε = subst isLang ε≡ εPath.isLangε
 
   isLangε* : isLang (ε* {ℓ = ℓ})
-  isLangε* = subst isLang ε*≡ εPath.isLangε*
+  isLangε* = {!!} -- subst isLang ε*≡ εPath.isLangε*
 
   isLangε≡ : ∀ i → isLang (ε≡ i)
   isLangε≡ i = subst-filler isLang ε≡ εPath.isLangε i
@@ -69,7 +69,7 @@ opaque
   isSetGrammarε = subst isSetGrammar ε≡ εPath.isSetGrammarε
 
   isSetGrammarε* : isSetGrammar (ε* {ℓ = ℓ})
-  isSetGrammarε* = subst isSetGrammar ε*≡ εPath.isSetGrammarε*
+  isSetGrammarε* = {!!} --subst isSetGrammar ε*≡ εPath.isSetGrammarε*
 
   εEq-length0 : ∀ w → ε w → length w ≡ 0
   εEq-length0 = transport (λ i → ∀ w → ε≡ i w → length w ≡ 0) εPath.ε-length0

@@ -1,4 +1,4 @@
-{-# OPTIONS --erased-cubical --allow-unsolved-metas #-}
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
