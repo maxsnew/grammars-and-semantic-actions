@@ -1,14 +1,17 @@
-open import Cubical.Foundations.Prelude
+{-# OPTIONS --erased-cubical #-}
+open import Cubical.Foundations.Prelude hiding (lift ; Lift ; lower)
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Isomorphism
 
 module Grammar.KleeneStar.Inductive.AsEquality.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
+open import Erased.Lift.Base
+open import Erased.Data.Unit.Base
+
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum hiding (rec)
-open import Cubical.Data.Unit
-open import Cubical.Data.Nat
+-- open import Cubical.Data.Nat
 open import Cubical.Data.FinSet
 
 open import Grammar.Base Alphabet isSetAlphabet
@@ -38,7 +41,7 @@ module _ (A : Grammar ℓA) where
   *Ty : Unit* {ℓA} → Functor Unit*
   *Ty _ = ⊕e *Tag (λ { nil → k ε* ; cons → (k A) ⊗e (Var _)})
 
-  isFinSet*Tag : isFinSet *Tag
+  @0 isFinSet*Tag : isFinSet *Tag
   isFinSet*Tag =
     EquivPresIsFinSet
       (isoToEquiv (iso

@@ -24,6 +24,9 @@ opaque
   literal : Alphabet → Grammar ℓ-zero
   literal c w = w Eq.≡ [ c ]
 
+  lit-intro : literal c [ c ]
+  lit-intro = Eq.refl
+
   @0 isLangLiteral : ∀ c → isLang (literal c)
   isLangLiteral c w = isPropRetract Eq.eqToPath Eq.pathToEq
                         Eq.pathToEq-eqToPath (isSetString w [ c ])

@@ -1,7 +1,10 @@
-open import Cubical.Foundations.Prelude
+{-# OPTIONS --erased-cubical --allow-unsolved-metas #-}
+open import Cubical.Foundations.Prelude hiding (Lift ; lower)
 open import Cubical.Foundations.HLevels
 
-module @0 Grammar.Lift.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
+module Grammar.Lift.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
+
+open import Erased.Lift.Base
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.HLevels.Base Alphabet isSetAlphabet
@@ -21,11 +24,6 @@ LiftG ℓB A w = Lift {j = ℓB} (A w)
 
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Equiv
--- I thought this would be helpful at some point when
--- fiddling with transports,
--- but it's almost surely a bad idea to use univalence directly
-LiftG≡ : ∀ ℓA → (A : Grammar ℓA) → A ≡ LiftG ℓA A
-LiftG≡ ℓA A i w = ua {A = A w} (LiftEquiv {ℓ' = ℓA}) i
 
 liftG : A ⊢ LiftG ℓB A
 liftG = λ w z → lift z
@@ -47,8 +45,8 @@ module _ ℓB ℓC (A : Grammar ℓA) where
       LiftG≅ ℓB A
       ≅∙ LiftG≅ ℓC (LiftG ℓB A)
 
-isLangLift : isLang A → isLang (LiftG ℓB A)
-isLangLift isLangA w = isOfHLevelLift 1 (isLangA w)
+@0 isLangLift : isLang A → isLang (LiftG ℓB A)
+isLangLift isLangA w = {!!} -- isOfHLevelLift 1 (isLangA w)
 
 isSetGrammarLift : isSetGrammar A → isSetGrammar (LiftG ℓB A)
-isSetGrammarLift isSetGrammarA w = isOfHLevelLift 2 (isSetGrammarA w)
+isSetGrammarLift isSetGrammarA w = {!!} -- isOfHLevelLift 2 (isSetGrammarA w)

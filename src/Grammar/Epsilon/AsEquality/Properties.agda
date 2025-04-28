@@ -1,9 +1,10 @@
 {-# OPTIONS --erased-cubical #-}
-open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Prelude hiding (Lift ; lower)
 open import Cubical.Foundations.HLevels
 
 module @0 Grammar.Epsilon.AsEquality.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
+open import Erased.Lift.Base
 open import Cubical.Data.List
 import Cubical.Data.Equality as Eq
 import Cubical.Data.Empty as Empty

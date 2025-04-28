@@ -30,5 +30,5 @@ opaque
   ε-elim : ∀ {A : Grammar ℓA} → ε⊢ A → ε ⊢ A
   ε-elim {A = A} A[] w Eq.refl = A[]
 
-@0 ε* : ∀ {ℓ : Level} → Grammar ℓ
+ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε

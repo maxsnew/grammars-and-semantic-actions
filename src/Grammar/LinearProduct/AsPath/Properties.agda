@@ -1,11 +1,12 @@
 {-# OPTIONS --erased-cubical #-}
-open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Prelude hiding (Lift ; lower)
 open import Cubical.Foundations.HLevels
 
 module @0 Grammar.LinearProduct.AsPath.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.Sigma
 open import Erased.Data.List
+open import Erased.Lift.Base
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.LinearProduct.AsPath.Base Alphabet isSetAlphabet

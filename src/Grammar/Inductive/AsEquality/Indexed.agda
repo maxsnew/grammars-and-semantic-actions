@@ -1,3 +1,4 @@
+{-# OPTIONS --erased-cubical #-}
 {- An indexed inductive type is basically just a mutually inductive type -}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels

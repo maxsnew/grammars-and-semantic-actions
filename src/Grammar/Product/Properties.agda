@@ -1,14 +1,15 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Product.Properties (Alphabet : hSet ℓ-zero) where
+module Grammar.Product.Properties (Alphabet : Type ℓ-zero) (isSetAlphabet : isSet Alphabet) where
 
-open import Grammar.Base Alphabet
-open import Grammar.LinearProduct.Base Alphabet
-open import Grammar.Product.Base Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.HLevels.Base Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+open import Grammar.Product.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable
@@ -23,6 +24,5 @@ open StrongEquivalence
 module _
   {X : Type ℓX} {A : X → Grammar ℓA}
   where
-  isSetGrammar&ᴰ : (∀ x → isSetGrammar (A x)) → isSetGrammar (&ᴰ A)
+  @0 isSetGrammar&ᴰ : (∀ x → isSetGrammar (A x)) → isSetGrammar (&ᴰ A)
   isSetGrammar&ᴰ isSetGrammarA w = isSetΠ λ x → isSetGrammarA x w
-
