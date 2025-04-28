@@ -1,4 +1,4 @@
 name: grammar
 include: .
-depend: cubical cubical-categorical-logic
+depend: cubical cubical-categorical-logic standard-library
 flags: --cubical --erasure -WnoUnsupportedIndexedMatch

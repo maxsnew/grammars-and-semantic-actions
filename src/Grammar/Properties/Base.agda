@@ -96,32 +96,32 @@ module @0 _ {A : Grammar ℓA} where
 disjoint : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
 disjoint A B = A & B ⊢ ⊥
 
-module _ (dis : disjoint A B) (e : C ⊢ A) where
-  disjoint⊢ : disjoint C B
+module _ (@0 dis : disjoint A B) (e : C ⊢ A) where
+  @0 disjoint⊢ : disjoint C B
   disjoint⊢ = dis ∘g e ,&p id
 
   module _ (f : D ⊢ B) where
-    disjoint⊢2 : disjoint C D
+    @0 disjoint⊢2 : disjoint C D
     disjoint⊢2 = disjoint⊢ ∘g id ,&p f
 
 open WeakEquivalence
-module _ (dis : disjoint A B) (A≈C : A ≈ C) where
-  disjoint≈ : disjoint C B
+module _ (@0 dis : disjoint A B) (A≈C : A ≈ C) where
+  @0 disjoint≈ : disjoint C B
   disjoint≈ = disjoint⊢ dis (A≈C .inv)
 
 open StrongEquivalence
-module _ (dis : disjoint A B) (A≅C : A ≅ C) where
-  disjoint≅ : disjoint C B
+module _ (@0 dis : disjoint A B) (A≅C : A ≅ C) where
+  @0 disjoint≅ : disjoint C B
   disjoint≅ = disjoint⊢ dis (A≅C .inv)
 
   module _ (B≅D : B ≅ D) where
-    disjoint≅2 : disjoint C D
+    @0 disjoint≅2 : disjoint C D
     disjoint≅2 = disjoint≅ ∘g id ,&p B≅D .inv
 
-disjoint⊕l : disjoint (A ⊕ B) C → disjoint A C
+@0 disjoint⊕l : disjoint (A ⊕ B) C → disjoint A C
 disjoint⊕l dis = disjoint⊢ dis inl
 
-disjoint⊕r : disjoint (A ⊕ B) C → disjoint B C
+@0 disjoint⊕r : disjoint (A ⊕ B) C → disjoint B C
 disjoint⊕r dis = disjoint⊢ dis inr
 
 open StrongEquivalence

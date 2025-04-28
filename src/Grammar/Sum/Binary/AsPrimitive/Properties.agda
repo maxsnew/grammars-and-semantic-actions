@@ -8,13 +8,15 @@ module Grammar.Sum.Binary.AsPrimitive.Properties (Alphabet : Type ℓ-zero) (@0 
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool using (Bool ; false ; true ; _≟_ ; isSetBool ; true≢false)
 open import Cubical.Data.FinSet
-import Cubical.Data.Empty as Empty
+import Erased.Data.Empty.Base as Empty
+import Cubical.Data.Empty.Base as CubicalEmpty
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.Function Alphabet isSetAlphabet
 open import Grammar.Product Alphabet isSetAlphabet
 open import Grammar.Bottom Alphabet isSetAlphabet
 open import Grammar.Lift Alphabet isSetAlphabet
+open import Grammar.Top Alphabet isSetAlphabet
 open import Grammar.Equivalence.Base Alphabet isSetAlphabet
 open import Grammar.Properties Alphabet isSetAlphabet
 open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet isSetAlphabet
@@ -58,50 +60,6 @@ module _ (A : Bool → Grammar ℓA) where
   ⊕≅⊕Ind .sec = the-sec
   ⊕≅⊕Ind .ret = the-ret
 
-module _ {A B : Grammar ℓA} (@0 unambig⊕ : unambiguous (A ⊕ B)) where
-  unambig-⊕-is-disjoint : disjoint A B
-  unambig-⊕-is-disjoint =
-    disjoint≅2
-      (hasDisjointSummands⊕ᴰ
-        (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕)
-        true false λ _ → λ ())
-      id≅ id≅
-
-  @0 summand-L-is-unambig : unambiguous A
-  summand-L-is-unambig =
-    unambiguous≅ id≅
-      (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕) true)
-
-  @0 summand-R-is-unambig : unambiguous B
-  summand-R-is-unambig =
-    unambiguous≅ id≅
-      (unambiguous⊕ᴰ isSetBool (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕) false)
-
-open StrongEquivalence
-open WeakEquivalence
-module _
-  {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC} {D : Grammar ℓD}
-  (A≈B : A ≈ B)
-  (dis-AC : disjoint A C)
-  (dis-BD : disjoint B D)
-  (A⊕C≅B⊕D : (A ⊕ C) ≈ (B ⊕ D))
-  where
-  disjoint⊕≈ : C ≈ D
-  disjoint⊕≈ .fun =
-    ⊕-elim
-      (⊥-elim ∘g dis-AC ∘g A≈B .inv ,&p id)
-      π₁
-    ∘g &⊕-distR
-    ∘g (A⊕C≅B⊕D .fun ∘g inr) ,&p id
-    ∘g &-Δ
-  disjoint⊕≈ .inv =
-    ⊕-elim
-      (⊥-elim ∘g dis-BD ∘g A≈B .fun ,&p id)
-      π₁
-    ∘g &⊕-distR
-    ∘g (A⊕C≅B⊕D .inv ∘g inr) ,&p id
-    ∘g &-Δ
-
 open isStrongEquivalence
 @0 isMono-⊕-inl : isMono (inl {A = A} {B = B})
 isMono-⊕-inl {A = A}{B = B}{C = C} e e' inl∘e≡inl∘e' =
@@ -113,22 +71,22 @@ isMono-⊕-inl {A = A}{B = B}{C = C} e e' inl∘e≡inl∘e' =
       (⊕-βl id (id ,& e ∘g π₁))
 
   distiso∘inl = (&⊕-distL⁻ ∘g inl {A = C & A}{B = C & B})
-  @0 isMono-distiso∘inl :
-    isMono (&⊕-distL⁻ ∘g inl {A = C & A}{B = C & B})
+
+  @0 isMono-distiso∘inl : isMono (&⊕-distL⁻ ∘g inl {A = C & A}{B = C & B})
   isMono-distiso∘inl =
     Mono∘g (inl {A = C & A}{B = C & B}) &⊕-distL⁻
       (isStrongEquivalence→isMono &⊕-distL⁻
         (isStrEq &⊕-distL (&⊕-distL≅ .ret) (&⊕-distL≅ .sec)))
       isMono-C&A→C&A⊕C&B
 
-  p : id ,& (inl {A = A}{B = B} ∘g e) ≡ id ,& (inl {A = A}{B = B} ∘g e')
+  @0 p : id ,& (inl {A = A}{B = B} ∘g e) ≡ id ,& (inl {A = A}{B = B} ∘g e')
   p = &-η' _ _
     (&-β₁ id _ ∙ sym (&-β₁ id _))
     (&-β₂ _ _ ∙ inl∘e≡inl∘e' ∙ sym (&-β₂ _ _))
 
   opaque
     unfolding &-intro ⊕-elim π₁
-    q : distiso∘inl ∘g (id ,& e) ≡ distiso∘inl ∘g (id ,& e')
+    @0 q : distiso∘inl ∘g (id ,& e) ≡ distiso∘inl ∘g (id ,& e')
     q = p
 
   @0 r : (id {A = C} ,& e) ≡ (id ,& e')
@@ -165,3 +123,49 @@ isMono-⊕-inr {B = B}{A = A}{C = C} e e' inr∘e≡inr∘e' =
 
   r : (id {A = C} ,& e) ≡ (id ,& e')
   r = isMono-distiso∘inr (id ,& e) (id ,& e') q
+
+module _ {A B : Grammar ℓA} (@0 unambig⊕ : unambiguous (A ⊕ B)) where
+  @0 unambig-⊕-is-disjoint : disjoint A B
+  unambig-⊕-is-disjoint =
+    disjoint≅2
+      (hasDisjointSummands⊕ᴰ
+        (unambiguous≅ (⊕≅⊕Ind (Ind⊕.⊕Ind A B)) unambig⊕)
+        true false λ t≡f → CubicalEmpty.rec (true≢false t≡f))
+      id≅ id≅
+
+  @0 summand-L-is-unambig : unambiguous A
+  summand-L-is-unambig =
+    unambiguous'→unambiguous λ e f _ → Mono∘g inl (⊤-intro {A = A ⊕ B})
+      (unambiguous→unambiguous' unambig⊕)
+      isMono-⊕-inl e f (unambiguous⊤ _ _)
+
+  @0 summand-R-is-unambig : unambiguous B
+  summand-R-is-unambig =
+    unambiguous'→unambiguous λ e f _ → Mono∘g inr (⊤-intro {A = A ⊕ B})
+      (unambiguous→unambiguous' unambig⊕)
+      isMono-⊕-inr e f (unambiguous⊤ _ _)
+
+open StrongEquivalence
+open WeakEquivalence
+module _
+  {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC} {D : Grammar ℓD}
+  (A≈B : A ≈ B)
+  (dis-AC : disjoint A C)
+  (dis-BD : disjoint B D)
+  (A⊕C≅B⊕D : (A ⊕ C) ≈ (B ⊕ D))
+  where
+  disjoint⊕≈ : C ≈ D
+  disjoint⊕≈ .fun =
+    ⊕-elim
+      (⊥-elim ∘g dis-AC ∘g A≈B .inv ,&p id)
+      π₁
+    ∘g &⊕-distR
+    ∘g (A⊕C≅B⊕D .fun ∘g inr) ,&p id
+    ∘g &-Δ
+  disjoint⊕≈ .inv =
+    ⊕-elim
+      (⊥-elim ∘g dis-BD ∘g A≈B .fun ,&p id)
+      π₁
+    ∘g &⊕-distR
+    ∘g (A⊕C≅B⊕D .inv ∘g inr) ,&p id
+    ∘g &-Δ

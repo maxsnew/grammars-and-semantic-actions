@@ -66,41 +66,41 @@ module _ {A : Grammar ℓA}{B : Grammar ℓB} (f f' : A ⊢ B) where
     ∙ cong (_∘g f'') eq-π-pf
     ∙ cong (f' ∘g_) p
 
--- module _ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} (f f' : A ⊢ B)(f'' : B ⊢ C) where
---   equalizer-cong : equalizer f f' ⊢ equalizer (f'' ∘g f) (f'' ∘g f')
---   equalizer-cong =
---     eq-intro (f'' ∘g f) (f'' ∘g f')
---       (eq-π f f') (cong (f'' ∘g_) (eq-π-pf f f'))
+module _ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC} (f f' : A ⊢ B)(f'' : B ⊢ C) where
+  equalizer-cong : equalizer f f' ⊢ equalizer (f'' ∘g f) (f'' ∘g f')
+  equalizer-cong =
+    eq-intro (f'' ∘g f) (f'' ∘g f')
+      (eq-π f f') (cong (f'' ∘g_) (eq-π-pf f f'))
 
--- module _ {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
---   (e e' : ∀ (x : X) → μ F x ⊢ A x)
---   (pf : ∀ (x : X) →
---     e  x ∘g roll ∘g map (F x) (λ x' → eq-π (e x') (e' x')) ≡
---     e' x ∘g roll ∘g map (F x) (λ x' → eq-π (e x') (e' x'))) where
+module _ {X : Type ℓX} (F : X → Functor X) (A : X → Grammar ℓA)
+  (e e' : ∀ (x : X) → μ F x ⊢ A x)
+  (pf : ∀ (x : X) →
+    e  x ∘g roll ∘g map (F x) (λ x' → eq-π (e x') (e' x')) ≡
+    e' x ∘g roll ∘g map (F x) (λ x' → eq-π (e x') (e' x'))) where
 
---   equalizer-ind-alg : Algebra F λ x → equalizer (e x) (e' x)
---   equalizer-ind-alg x =
---     eq-intro (e x) (e' x)
---       (roll ∘g map (F x) (λ x' → eq-π (e x') (e' x')))
---       (pf x)
+  equalizer-ind-alg : Algebra F λ x → equalizer (e x) (e' x)
+  equalizer-ind-alg x =
+    eq-intro (e x) (e' x)
+      (roll ∘g map (F x) (λ x' → eq-π (e x') (e' x')))
+      (pf x)
 
---   @0 equalizer-ind : ∀ (x : X) → e x ≡ e' x
---   equalizer-ind = λ x →
---     equalizer-section (e x) (e' x)
---       (rec F equalizer-ind-alg x)
---       (ind-id' F (compHomo F (initialAlgebra F) equalizer-ind-alg (initialAlgebra F)
---         ((λ x' → eq-π (e x') (e' x')) ,
---          λ x' → eq-π-is-homo x')
---         (recHomo F equalizer-ind-alg)) x)
---     where
+  @0 equalizer-ind : ∀ (x : X) → e x ≡ e' x
+  equalizer-ind = λ x →
+    equalizer-section (e x) (e' x)
+      (rec F equalizer-ind-alg x)
+      (ind-id' F (compHomo F (initialAlgebra F) equalizer-ind-alg (initialAlgebra F)
+        (record { fun = λ x' → eq-π (e x') (e' x')
+                ; is-homo = λ x' → eq-π-is-homo x' })
+        (recHomo F equalizer-ind-alg)) x)
+    where
 
---     opaque
---       unfolding eq-π eq-intro
---       eq-π-is-homo :
---         ∀ x →
---         eq-π (e x) (e' x) ∘g equalizer-ind-alg x ≡
---           roll ∘g map (F x) λ x' → eq-π (e x') (e' x')
---       eq-π-is-homo x = refl
+    opaque
+      unfolding eq-π eq-intro
+      eq-π-is-homo :
+        ∀ x →
+        eq-π (e x) (e' x) ∘g equalizer-ind-alg x ≡
+          roll ∘g map (F x) λ x' → eq-π (e x') (e' x')
+      eq-π-is-homo x = refl
 
 -- @0 equalizer-ind-unit : (F : Functor Unit) {A : Grammar ℓA}
 --   {e e' : μ (λ _ → F) tt ⊢ A}

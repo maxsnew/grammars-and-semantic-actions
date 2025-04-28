@@ -25,7 +25,7 @@ open import Grammar.Equivalence.Base Alphabet isSetAlphabet
 -- open import Grammar.Equalizer.Base Alphabet isSetAlphabet
 open import Grammar.Lift.Base Alphabet isSetAlphabet
 open import Grammar.Inductive.AsEquality.Indexed Alphabet isSetAlphabet
--- open import Grammar.Inductive.Properties Alphabet isSetAlphabet
+open import Grammar.Inductive.Properties Alphabet isSetAlphabet
 open import Term.Base Alphabet isSetAlphabet
 
 private
@@ -147,10 +147,10 @@ module _ (A : Grammar ℓA) where
 --                 ; cons → refl }))
 --             (recHomo *Ty gradeAlg)) _
 
---   unrolled* = ⟦ *Ty _ ⟧ (μ *Ty)
+  unrolled* = ⟦ *Ty _ ⟧ (μ *Ty)
 
---   *≅unrolled* : KL* ≅ unrolled*
---   *≅unrolled* = unroll≅ *Ty _
+  *≅unrolled* : KL* ≅ unrolled*
+  *≅unrolled* = unroll≅ {ℓA = ℓA} *Ty _
 
   data *TagL : Type ℓA where
     nil snoc : *TagL

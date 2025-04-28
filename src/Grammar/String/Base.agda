@@ -7,11 +7,12 @@ module Grammar.String.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet 
 open import Cubical.Relation.Nullary.Base hiding (¬_)
 open import Cubical.Relation.Nullary.DecidablePropositions
 
-open import Cubical.Data.List
+open import Erased.Data.List
+import Erased.Data.Equality.Base as Eq
+
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
 open import Cubical.Data.Empty as Empty
-import Cubical.Data.Equality as Eq
 
 open import Cubical.Foundations.Structure
 
@@ -53,35 +54,35 @@ stringL = *L char
 ⌈ [] ⌉ = ε
 ⌈ c ∷ w ⌉ = literal c ⊗ ⌈ w ⌉
 
--- ⌈_⌉' : String → Grammar ℓ-zero
--- ⌈ w ⌉' w' = w ≡ w'
+@0 ⌈_⌉' : String → Grammar ℓ-zero
+⌈ w ⌉' w' = w ≡ w'
 
--- opaque
---   unfolding ⊗-intro ε literal
---   mk⌈⌉ : ∀ w → ⌈ w ⌉ w
---   mk⌈⌉ [] = Eq.refl
---   mk⌈⌉ (c ∷ w) = (_ , Eq.refl) , (Eq.refl , (mk⌈⌉ w))
+opaque
+  unfolding ⊗-intro ε literal
+  mk⌈⌉ : ∀ w → ⌈ w ⌉ w
+  mk⌈⌉ [] = Eq.refl
+  mk⌈⌉ (c ∷ w) = (_ , Eq.refl) , (Eq.refl , (mk⌈⌉ w))
 
--- mk⌈⌉' : ∀ w → ⌈ w ⌉' w
--- mk⌈⌉' w = refl
+@0 mk⌈⌉' : ∀ w → ⌈ w ⌉' w
+mk⌈⌉' w = refl
 
--- @0 isLang⌈⌉' : ∀ w → isLang (⌈ w ⌉')
--- isLang⌈⌉' = isSetString
+@0 isLang⌈⌉' : ∀ w → isLang (⌈ w ⌉')
+isLang⌈⌉' = isSetString
 
--- opaque
---   unfolding ε _⊗_ literal
---   uniquely-supported-⌈⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
---   uniquely-supported-⌈⌉ [] [] p = refl
---   uniquely-supported-⌈⌉ [] (x ∷ w') ()
---   uniquely-supported-⌈⌉ (x ∷ w) [] ((_ , ()) , Eq.refl , the-⌈⌉)
---   uniquely-supported-⌈⌉ (x ∷ w) (y ∷ w') ((_ , Eq.refl) , Eq.refl , the-⌈⌉) =
---     cong (x ∷_) (uniquely-supported-⌈⌉ w w' the-⌈⌉)
+opaque
+  unfolding ε _⊗_ literal
+  @0 uniquely-supported-⌈⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
+  uniquely-supported-⌈⌉ [] [] p = refl
+  uniquely-supported-⌈⌉ [] (x ∷ w') ()
+  uniquely-supported-⌈⌉ (x ∷ w) [] ((_ , ()) , Eq.refl , the-⌈⌉)
+  uniquely-supported-⌈⌉ (x ∷ w) (y ∷ w') ((_ , Eq.refl) , Eq.refl , the-⌈⌉) =
+    cong (x ∷_) (uniquely-supported-⌈⌉ w w' the-⌈⌉)
 
--- ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
--- ⌈⌉→≡ = uniquely-supported-⌈⌉
+@0 ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
+⌈⌉→≡ = uniquely-supported-⌈⌉
 
--- ⌈⌉→⌈⌉' : ∀ w → ⌈ w ⌉ ⊢ ⌈ w ⌉'
--- ⌈⌉→⌈⌉' = ⌈⌉→≡
+@0 ⌈⌉→⌈⌉' : ∀ w → ⌈ w ⌉ ⊢ ⌈ w ⌉'
+⌈⌉→⌈⌉' = ⌈⌉→≡
 
 -- opaque
 --   unfolding ε _⊗_ uniquely-supported-⌈⌉ mk⌈⌉
@@ -106,9 +107,9 @@ stringL = *L char
 -- pick-parse : ∀ (w : String) → (A : Grammar ℓA) → A w → ⌈ w ⌉ ⊢ A
 -- pick-parse w A pA w' p⌈⌉ = subst A (uniquely-supported-⌈⌉ w w' p⌈⌉) pA
 
--- ⌈⌉→string : ∀ w → ⌈ w ⌉ ⊢ string
--- ⌈⌉→string [] = NIL
--- ⌈⌉→string (c ∷ w) = CONS ∘g σ c ,⊗ ⌈⌉→string w
+⌈⌉→string : ∀ w → ⌈ w ⌉ ⊢ string
+⌈⌉→string [] = NIL
+⌈⌉→string (c ∷ w) = CONS ∘g σ c ,⊗ ⌈⌉→string w
 
--- mkstring : (w : String) → string w
--- mkstring w = (⌈⌉→string w) w (mk⌈⌉ w)
+mkstring : (w : String) → string w
+mkstring w = (⌈⌉→string w) w (mk⌈⌉ w)

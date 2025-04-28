@@ -17,6 +17,7 @@ open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.Lift Alphabet isSetAlphabet
 open import Grammar.Properties Alphabet isSetAlphabet
 open import Grammar.LinearProduct.AsPath.Base Alphabet isSetAlphabet
+import Grammar.LinearProduct.AsEquality.Base Alphabet isSetAlphabet as ⊗Eq
 open import Grammar.Sum.Base Alphabet isSetAlphabet
 open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet isSetAlphabet
 open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
@@ -41,18 +42,30 @@ module _ {X : Type ℓX} (A : X → Grammar ℓA) where
 
 module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
   opaque
-    unfolding _⊗_
+    unfolding _⊗_ ⊗Eq._⊗_
     ⊕ᴰ-distL : (⊕[ x ∈ X ] B x) ⊗ A ≅ ⊕[ x ∈ X ] (B x ⊗ A)
     ⊕ᴰ-distL .fun w (s , (x , p) , q) = x , ((s , (p , q)))
     ⊕ᴰ-distL .inv w (x , (s , (p , q))) = s , ((x , p) , q)
     ⊕ᴰ-distL .sec = refl
     ⊕ᴰ-distL .ret = refl
 
+    ⊕ᴰ-distLEq : (⊕[ x ∈ X ] B x) ⊗Eq.⊗ A ≅ ⊕[ x ∈ X ] (B x ⊗Eq.⊗ A)
+    ⊕ᴰ-distLEq .fun w (s , (x , p) , q) = x , ((s , (p , q)))
+    ⊕ᴰ-distLEq .inv w (x , (s , (p , q))) = s , ((x , p) , q)
+    ⊕ᴰ-distLEq .sec = refl
+    ⊕ᴰ-distLEq .ret = refl
+
     ⊕ᴰ-distR : A ⊗ (⊕[ x ∈ X ] B x) ≅ ⊕[ x ∈ X ] (A ⊗ B x)
     ⊕ᴰ-distR .fun w (s , p , (x , q)) = x , ((s , (p , q)))
     ⊕ᴰ-distR .inv w (x , (s , (p , q))) = s , (p , (x , q))
     ⊕ᴰ-distR .sec = refl
     ⊕ᴰ-distR .ret = refl
+
+    ⊕ᴰ-distREq : A ⊗Eq.⊗ (⊕[ x ∈ X ] B x) ≅ ⊕[ x ∈ X ] (A ⊗Eq.⊗ B x)
+    ⊕ᴰ-distREq .fun w (s , p , (x , q)) = x , ((s , (p , q)))
+    ⊕ᴰ-distREq .inv w (x , (s , (p , q))) = s , (p , (x , q))
+    ⊕ᴰ-distREq .sec = refl
+    ⊕ᴰ-distREq .ret = refl
 
     opaque
       unfolding ⊗-intro
