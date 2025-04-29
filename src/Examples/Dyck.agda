@@ -692,47 +692,12 @@ private
     D : Grammar ℓD
     w : String
 
-_++B_ = BuiltinString.primStringAppend
-infixl 25 _++B_
-
 printBracket : Bracket → BuiltinString.String
 printBracket [ = "["
 printBracket ] = "]"
 
-printStringHelp : String → BuiltinString.String
-printStringHelp [] = ""
-printStringHelp (character ∷ []) = printBracket character
-printStringHelp (character ∷ w) = printBracket character ++B printStringHelp w
-
-printString : String → BuiltinString.String
-printString w = "＂" ++B printStringHelp w ++B "＂"
-
-printer : Grammar ℓC → Type ℓC
-printer C = ∀ (w : String) → C w → BuiltinString.String
-
-printLiteral : ∀ character → printer ＂ character ＂
-printLiteral character lit w = "＂" ++B printBracket character ++B "＂"
-
-opaque
-  unfolding _⊗_ _⊕_
-  print⊗ : printer C → printer D → printer (C ⊗ D)
-  print⊗ printC printD w (s , the-c , the-d) =
-    "[" ++B printC _ the-c ++B " ⊗ " ++B printD _ the-d ++B "]"
-    -- "[ " ++B printString (leftEq s) ++B " - " ++B printC _ the-c ++B " ] ⊗ [ "
-    --     ++B printString (rightEq s) ++B " - " ++B printD _ the-d ++B " ]"
-
-  print⊕ : printer C → printer D → printer (C ⊕ D)
-  print⊕ printC printD w (Sum.inl the-c) = "INL " ++B printC w the-c
-  print⊕ printC printD w (Sum.inr the-d) = "INR " ++B printD w the-d
-
-print-string : printer string
-print-string w _ = printString w
-
-printLift : {ℓ : Level} → printer C → printer (LiftG ℓ C)
-printLift printC w (lift the-c) = printC w the-c
-
-print⊢ : printer C → printer D → C ⊢ D → (w : String) → C w → BuiltinString.String
-print⊢ printC printD e w the-c = "IN: " ++B printC w the-c ++B "\nOUT: " ++B printD w (e w the-c)
+open import Printer.Base Bracket isSetBracket
+open PrintingUtils printBracket
 
 open Parser hiding (run)
 parseDyck : string ⊢ Dyck ⊕ Trace false (just 0)
@@ -745,31 +710,34 @@ mkIndent : ℕ → BuiltinString.String
 mkIndent zero = ""
 mkIndent (suc n) = " " ++B mkIndent n
 
-{-# TERMINATING #-}
-printDyck : ℕ → printer Dyck
-printDyck n w (roll .w (nil' , lift eps)) = "NIL"
-printDyck n w (roll .w (balanced' , the-⊗)) =
-  "\n" ++B mkIndent n ++B "BALANCED(" ++B
-    print⊗ (printLift (printLiteral [))
-      (print⊗ (printLift (printDyck (suc n)))
-        (print⊗ (printLift (printLiteral ])) (printLift (printDyck n))))
-        w the-⊗ ++B ")"
+opaque
+  unfolding _⊗_
+  {-# TERMINATING #-}
+  printDyck : Printer Dyck
+  printDyck .printTy = "Dyck"
+  printDyck .printParse {w = w} (roll .w (nil' , lift eps)) = mkPrint 0 "nil" []V
+  printDyck .printParse {w = w} (roll .w (balanced' , (_ , lparen , (_ , d , (_ , rparen , d'))))) =
+    mkPrint 4 "bal" (printLift (printLiteral [) .printParse lparen ∷V
+                     printLift printDyck .printParse d ∷V
+                     printLift (printLiteral ]) .printParse rparen ∷V
+                     printLift printDyck .printParse d' ∷V []V)
 
-printRejectingTrace : printer (Trace false (just 0))
-printRejectingTrace w _ = "REJECT"
+printRejectingTrace : Printer (Trace false (just 0))
+printRejectingTrace .printTy = "Trace false (just 0)"
+printRejectingTrace .printParse _ = "reject"
 
-printDyck' : printer (Dyck ⊕ Trace false (just 0))
-printDyck' = print⊕ (printDyck 0) printRejectingTrace
+printDyck⊕Fail : Printer (Dyck ⊕ Trace false (just 0))
+printDyck⊕Fail = print⊕ printDyck printRejectingTrace
 
 mkTest : String → BuiltinString.String
-mkTest w = "\n\n" ++B print⊢ print-string printDyck' parseDyck w (mkstring w)
+mkTest w = "\n\n" ++B print⊢ print-string printDyck⊕Fail parseDyck w (mkstring w)
 
-opaque
-  unfolding _⊕_
-  mkAccept? : String → BuiltinString.String
-  mkAccept? w with parseDyck' w
-  mkAccept? w | Sum.inl x = "ACCEPT"
-  mkAccept? w | Sum.inr x = "REJECT"
+-- opaque
+--   unfolding _⊕_
+--   mkAccept? : String → BuiltinString.String
+--   mkAccept? w with parseDyck' w
+--   mkAccept? w | Sum.inl x = "ACCEPT"
+--   mkAccept? w | Sum.inr x = "REJECT"
 
 {-# TERMINATING #-}
 -- make a big balanced string
@@ -788,21 +756,18 @@ mkInput' (suc (suc n)) =
   ([ ∷ []) ++ mkInput (suc n) ++ mkInput n
            ++ ([ ∷ [ ∷ [ ∷ []) ++ mkInput n ++ (] ∷ []) ++ mkInput (suc n) ++ ] ∷ ] ∷ []
 
--- @0 _ : length (mkInput' 14) ≡ {!2466215!}
--- @0 _ : length (mkInput' 13) ≡ 902695
--- @0 _ : length (mkInput 13) ≡ 902696
--- @0 _ : length (mkInput' 12) ≡ 330407
--- _ = refl
+-- -- @0 _ : length (mkInput' 14) ≡ {!2466215!}
+-- -- @0 _ : length (mkInput' 13) ≡ 902695
+-- -- @0 _ : length (mkInput 13) ≡ 902696
+-- -- @0 _ : length (mkInput' 12) ≡ 330407
+-- -- _ = refl
 
 main : Main
 main = run (do
-  putStrLn (mkAccept? (mkInput 14))
-  putStrLn (mkAccept? (mkInput' 14))
-  -- putStrLn (mkTest (mkInput' 0))
-  -- putStrLn (mkTest (mkInput 2))
-  -- putStrLn (mkTest (mkInput' 2))
-  -- putStrLn (mkTest (mkInput 4))
-  -- putStrLn (mkTest (mkInput' 4))
-  -- putStrLn (mkTest (mkInput 6))
-  -- putStrLn (mkTest (mkInput' 6))
+  putStrLn (mkTest (mkInput 3))
+  putStrLn (mkTest (mkInput' 3))
+  putStrLn (mkTest (mkInput 4))
+  putStrLn (mkTest (mkInput' 4))
+  putStrLn (mkTest (mkInput 5))
+  putStrLn (mkTest (mkInput' 5))
   )

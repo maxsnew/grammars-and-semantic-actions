@@ -45,9 +45,9 @@ module _ {ℓ} {A : Type ℓ} where
 --   filterMap f [] = []
 --   filterMap f (x ∷ xs) = Maybe.rec (filterMap f xs) (_∷ filterMap f xs) (f x)
 
---   foldr : ∀ {ℓ'} {B : Type ℓ'} → (A → B → B) → B → List A → B
---   foldr f b [] = b
---   foldr f b (x ∷ xs) = f x (foldr f b xs)
+  foldr : ∀ {ℓ'} {B : Type ℓ'} → (A → B → B) → B → List A → B
+  foldr f b [] = b
+  foldr f b (x ∷ xs) = f x (foldr f b xs)
 
 --   foldl : ∀ {ℓ'} {B : Type ℓ'} → (B → A → B) → B → List A → B
 --   foldl f b [] = b
