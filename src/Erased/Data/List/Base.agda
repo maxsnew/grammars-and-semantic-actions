@@ -6,7 +6,7 @@ open import Agda.Builtin.List public
 open import Cubical.Foundations.Prelude
 
 open import Cubical.Data.Maybe.Base as Maybe hiding (rec ; elim)
-open import Cubical.Data.Nat.Base hiding (elim)
+open import Erased.Data.Nat.Base hiding (elim)
 
 module _ {ℓ} {A : Type ℓ} where
 
@@ -27,9 +27,9 @@ module _ {ℓ} {A : Type ℓ} where
 --   _∷ʳ_ : List A → A → List A
 --   xs ∷ʳ x = xs ++ x ∷ []
 
---   length : List A → ℕ
---   length [] = 0
---   length (x ∷ l) = 1 + length l
+  length : List A → ℕ
+  length [] = 0
+  length (x ∷ l) = 1 + length l
 
 --   map : ∀ {ℓ'} {B : Type ℓ'} → (A → B) → List A → List B
 --   map f [] = []

@@ -736,7 +736,10 @@ print⊢ printC printD e w the-c = "IN: " ++B printC w the-c ++B "\nOUT: " ++B p
 
 open Parser hiding (run)
 parseDyck : string ⊢ Dyck ⊕ Trace false (just 0)
-parseDyck = (mkTree ,⊕p id) ∘g AccTraceParser (just 0) .fun -- DyckParser .fun
+parseDyck = (mkTree ,⊕p id) ∘g AccTraceParser (just 0) .fun
+
+parseDyck' : (w : String) → (Dyck ⊕ Trace false (just 0)) w
+parseDyck' w = parseDyck w (mkstring w)
 
 mkIndent : ℕ → BuiltinString.String
 mkIndent zero = ""
@@ -761,6 +764,13 @@ printDyck' = print⊕ (printDyck 0) printRejectingTrace
 mkTest : String → BuiltinString.String
 mkTest w = "\n\n" ++B print⊢ print-string printDyck' parseDyck w (mkstring w)
 
+opaque
+  unfolding _⊕_
+  mkAccept? : String → BuiltinString.String
+  mkAccept? w with parseDyck' w
+  mkAccept? w | Sum.inl x = "ACCEPT"
+  mkAccept? w | Sum.inr x = "REJECT"
+
 {-# TERMINATING #-}
 -- make a big balanced string
 mkInput : ℕ → String
@@ -778,14 +788,21 @@ mkInput' (suc (suc n)) =
   ([ ∷ []) ++ mkInput (suc n) ++ mkInput n
            ++ ([ ∷ [ ∷ [ ∷ []) ++ mkInput n ++ (] ∷ []) ++ mkInput (suc n) ++ ] ∷ ] ∷ []
 
+-- @0 _ : length (mkInput' 14) ≡ {!2466215!}
+-- @0 _ : length (mkInput' 13) ≡ 902695
+-- @0 _ : length (mkInput 13) ≡ 902696
+-- @0 _ : length (mkInput' 12) ≡ 330407
+-- _ = refl
+
 main : Main
 main = run (do
-  putStrLn (mkTest (mkInput 0))
-  putStrLn (mkTest (mkInput' 0))
-  putStrLn (mkTest (mkInput 2))
-  putStrLn (mkTest (mkInput' 2))
-  putStrLn (mkTest (mkInput 4))
-  putStrLn (mkTest (mkInput' 4))
-  putStrLn (mkTest (mkInput 6))
-  putStrLn (mkTest (mkInput' 6))
+  putStrLn (mkAccept? (mkInput 14))
+  putStrLn (mkAccept? (mkInput' 14))
+  -- putStrLn (mkTest (mkInput' 0))
+  -- putStrLn (mkTest (mkInput 2))
+  -- putStrLn (mkTest (mkInput' 2))
+  -- putStrLn (mkTest (mkInput 4))
+  -- putStrLn (mkTest (mkInput' 4))
+  -- putStrLn (mkTest (mkInput 6))
+  -- putStrLn (mkTest (mkInput' 6))
   )
