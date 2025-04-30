@@ -5,7 +5,7 @@ open import Agda.Builtin.List public
 
 open import Cubical.Foundations.Prelude
 
-open import Cubical.Data.Maybe.Base as Maybe hiding (rec ; elim)
+open import Erased.Data.Maybe.Base as Maybe hiding (rec ; elim)
 open import Erased.Data.Nat.Base hiding (elim)
 
 module _ {ℓ} {A : Type ℓ} where
@@ -31,9 +31,9 @@ module _ {ℓ} {A : Type ℓ} where
   length [] = 0
   length (x ∷ l) = 1 + length l
 
---   map : ∀ {ℓ'} {B : Type ℓ'} → (A → B) → List A → List B
---   map f [] = []
---   map f (x ∷ xs) = f x ∷ map f xs
+  map : ∀ {ℓ'} {B : Type ℓ'} → (A → B) → List A → List B
+  map f [] = []
+  map f (x ∷ xs) = f x ∷ map f xs
 
 --   map2 : ∀ {ℓ' ℓ''} {B : Type ℓ'} {C : Type ℓ''}
 --     → (A → B → C) → List A → List B → List C
@@ -41,9 +41,9 @@ module _ {ℓ} {A : Type ℓ} where
 --   map2 f _ [] = []
 --   map2 f (x ∷ xs) (y ∷ ys) = f x y ∷ map2 f xs ys
 
---   filterMap : ∀ {ℓ'} {B : Type ℓ'} → (A → Maybe B) → List A → List B
---   filterMap f [] = []
---   filterMap f (x ∷ xs) = Maybe.rec (filterMap f xs) (_∷ filterMap f xs) (f x)
+  filterMap : ∀ {ℓ'} {B : Type ℓ'} → (A → Maybe B) → List A → List B
+  filterMap f [] = []
+  filterMap f (x ∷ xs) = Maybe.rec (filterMap f xs) (_∷ filterMap f xs) (f x)
 
   foldr : ∀ {ℓ'} {B : Type ℓ'} → (A → B → B) → B → List A → B
   foldr f b [] = b

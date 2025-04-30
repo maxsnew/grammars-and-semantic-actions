@@ -43,9 +43,18 @@ NonEmpty A = ¬ ¬ A
 Stable : Type ℓ → Type ℓ
 Stable A = NonEmpty A → A
 
--- reexport propositional truncation for uniformity
-open Cubical.HITs.PropositionalTruncation.Base
-  using (∥_∥₁) public
+@0 SplitSupport : Type ℓ → Type ℓ
+SplitSupport A = ∥ A ∥₁ → A
+
+@0 Collapsible : Type ℓ → Type ℓ
+Collapsible A = Σ[ f ∈ (A → A) ] 2-Constant f
+
+@0 Populated ⟪_⟫ : Type ℓ → Type ℓ
+Populated A = (f : Collapsible A) → Fixpoint (f .fst)
+⟪_⟫ = Populated
+
+@0 PStable : Type ℓ → Type ℓ
+PStable A = ⟪ A ⟫ → A
 
 onAllPaths : (Type ℓ → Type ℓ) → Type ℓ → Type ℓ
 onAllPaths S A = (x y : A) → S (x ≡ y)
@@ -53,12 +62,20 @@ onAllPaths S A = (x y : A) → S (x ≡ y)
 onAllEqs : (Type ℓ → Type ℓ) → Type ℓ → Type ℓ
 onAllEqs S A = (x y : A) → S (x Eq.≡ y)
 
-Discrete : Type ℓ → Type ℓ
+Separated : Type ℓ → Type ℓ
+Separated = onAllPaths Stable
+
+@0 HSeparated : Type ℓ → Type ℓ
+HSeparated = onAllPaths SplitSupport
+
+@0 Collapsible≡ : Type ℓ → Type ℓ
+Collapsible≡ = onAllPaths Collapsible
+
+@0 PStable≡ : Type ℓ → Type ℓ
+PStable≡ = onAllPaths PStable
+
+@0 Discrete : Type ℓ → Type ℓ
 Discrete = onAllPaths Dec
 
 DecEq : Type ℓ → Type ℓ
 DecEq = onAllEqs Dec
-
--- module _ {A : Type ℓ} (isFinSetA : isFinSet A) where
---   isFinSet→DecEq : DecEq A
---   isFinSet→DecEq = {!!}

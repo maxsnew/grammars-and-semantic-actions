@@ -9,6 +9,7 @@ import Erased.Data.Sum.Base as Sum
 open import Cubical.Data.Bool using (Bool ; true ; false)
 
 open import Grammar Alphabet isSetAlphabet
+open import Grammar.Maybe Alphabet isSetAlphabet
 open import Term Alphabet isSetAlphabet
 
 private
@@ -18,6 +19,12 @@ private
     B : Grammar ℓB
     C : Grammar ℓC
     D : Grammar ℓD
+
+WeakParser : Grammar ℓA → Type ℓA
+WeakParser A = string ⊢ Maybe A
+
+runWeakParser : WeakParser A → (w : String) → (Maybe A) w
+runWeakParser f w = f w (mkstring w)
 
 record Parser (A : Grammar ℓA) (B : Grammar ℓB) : Type (ℓ-max ℓA ℓB) where
   field

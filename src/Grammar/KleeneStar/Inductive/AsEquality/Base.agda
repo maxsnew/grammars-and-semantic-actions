@@ -369,3 +369,12 @@ CONS = roll ∘g σ cons ∘g liftG ,⊗ liftG
 
 *-singleton : (A : Grammar ℓA) → A ⊢ A *
 *-singleton A = CONS ∘g id ,⊗ NIL ∘g ⊗-unit-r⁻
+
+flatten*' : A * ⊢ A * ⊸ A *
+flatten*' {A = A} =
+  fold*r A
+    (⊸-intro-ε id)
+    (⊸-intro (CONS ∘g id ,⊗ ⊸-app ∘g ⊗-assoc⁻))
+
+flatten* : A * ⊗ A * ⊢ A *
+flatten* = ⊸-app ∘g flatten*' ,⊗ id

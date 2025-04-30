@@ -1,10 +1,11 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Maybe.Base (Alphabet : hSet ℓ-zero) where
+module Grammar.Maybe.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Grammar Alphabet hiding (k ; μ)
-open import Term Alphabet
+open import Grammar Alphabet isSetAlphabet hiding (k ; μ)
+open import Term Alphabet isSetAlphabet
 
 private
   variable
@@ -25,8 +26,8 @@ nothing = inr ∘g ⊤-intro
 return : A ⊢ Maybe A
 return = just
 
-μ : Maybe (Maybe A) ⊢ Maybe A
-μ = ⊕-elim id nothing
+μMaybe : Maybe (Maybe A) ⊢ Maybe A
+μMaybe = ⊕-elim id nothing
 
 fmap :
   A ⊢ B →

@@ -1,10 +1,11 @@
 {-# OPTIONS --erased-cubical #-}
-open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Prelude hiding (Lift ; lower ; lift)
 open import Cubical.Foundations.HLevels
 
 module Grammar.Bottom.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Erased.Data.Empty.Base as Empty hiding (⊥ ; ⊥*)
+open import Erased.Lift.Base
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.Sum.Base Alphabet isSetAlphabet
@@ -23,14 +24,14 @@ opaque
   ⊥ : Grammar ℓ-zero
   ⊥ _ = Empty.⊥
 
-  @0 ⊥* : Grammar ℓA
+  ⊥* : Grammar ℓA
   ⊥* _ = Empty.⊥*
 
   ⊥-elim :
     ⊥ ⊢ A
   ⊥-elim _ = Empty.elim
 
-  @0 ⊥*-elim :
+  ⊥*-elim :
     ⊥* {ℓB} ⊢ A
   ⊥*-elim _ x = Empty.elim (lower x)
 

@@ -1,3 +1,4 @@
+{-# OPTIONS --erased-cubical #-}
 -- Subset of ASCII characters for writing test cases
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
@@ -9,19 +10,24 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Structure
 
-open import Cubical.Relation.Nullary.Base
+open import Erased.Relation.Nullary.Base
 
-open import Cubical.Data.SumFin
-open import Cubical.Data.FinSet
-open import Cubical.Data.Nat
-open import Cubical.Data.Nat.Order
-open import Cubical.Data.Maybe
-open import Cubical.Data.Sigma
-import Cubical.Data.Empty as Empty
-open import Cubical.Data.List as List
-open import Cubical.Data.List.FinData
+open import Erased.Data.SumFin.Base
+open import Erased.Data.SumFin.Properties
+open import Erased.Data.FinSet.Base
+open import Erased.Data.FinSet.Properties
+open import Erased.Data.Nat.Base
+-- open import Cubical.Data.Nat.Order
+open import Erased.Data.Maybe.Base
+open import Erased.Data.Sigma.Base
+-- import Cubical.Data.Empty as Empty
+open import Erased.Data.List as List
+-- open import Cubical.Data.List.FinData
+import Cubical.Data.Equality as Eq
 
 open import String.Unicode
+
+open import Agda.Builtin.String using (primShowChar)
 
 private
   variable
@@ -41,7 +47,8 @@ opaque
     C^ D^ E^ F^ G^ H^ I^ J^ K^ L^ M^
     N^ O^ P^ Q^ R^ S^ T^ U^ V^ W^ X^ Y^
     Z^ a^ b^ c^ d^ e^ f^ g^ h^ i^ j^ k^ l^ m^ n^ o^ p^ q^ r^
-    s^ t^ u^ v^ w^ x^ y^ z^ zero^ one^ two^ three^ four^ five^
+    s^ t^ u^ v^ w^ x^ y^ z^
+    zero^ one^ two^ three^ four^ five^
     six^ seven^ eight^ nine^ : ASCIIChar
 
   SPACE =       fromℕ {k = 96} 0
@@ -182,11 +189,11 @@ translation =
   ('7' , seven^) ∷ ('8' , eight^) ∷ ('9' , nine^) ∷
   []
 
-_ : 97 ≡ length translation
+@0 _ : 97 ≡ length translation
 _ = refl
 
 module _ {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'}
-  (discA : Discrete A) where
+  (discA : DecEq A) where
   find : List (A × B) → (a : A) → Maybe B
   find [] the-a = nothing
   find ((a' , b') ∷ abs) the-a =
@@ -203,20 +210,43 @@ module _ {ℓ ℓ' : Level} {A : Type ℓ} {B : Type ℓ'}
       (λ _ → findIdx abs the-a (suc n))
       (discA a' the-a)
 
-Unicode→ASCII : UnicodeChar → Maybe ASCIIChar
-Unicode→ASCII = find DiscreteUnicodeChar translation
+-- Unicode→ASCII : UnicodeChar → Maybe ASCIIChar
+-- Unicode→ASCII = find {!!} translation
 
 opaque
   unfolding ASCIIChar
-  isSetASCII : isSet ASCIIChar
-  isSetASCII = isSetFin {k = 97}
+  ASCII→Unicode' : ASCIIChar → Maybe UnicodeChar
+  ASCII→Unicode' = find (decEqFin 97) (map (λ (u , a) → (a , u)) translation)
 
-  isFinSetASCII : isFinSet ASCIIChar
-  isFinSetASCII = isFinSetFin {n = 97}
+ASCII→UnicodeChar : ASCIIChar → UnicodeChar
+ASCII→UnicodeChar c = rec '🅱' (λ x → x) (ASCII→Unicode' c)
 
-DiscreteASCII : Discrete ASCIIChar
-DiscreteASCII = isFinSet→Discrete isFinSetASCII
+ASCII→UnicodeString : ASCIIChar → UnicodeString
+ASCII→UnicodeString c = primShowChar (ASCII→UnicodeChar c)
 
-ASCII : hSet ℓ-zero
-ASCII = ASCIIChar , isSetASCII
+opaque
+  unfolding ASCIIChar
+  @0 isSetASCIIChar : isSet ASCIIChar
+  isSetASCIIChar = isSetFin {k = 97}
 
+open IsoEq
+opaque
+  unfolding ASCIIChar
+  isFinOrd'ASCII : isFinOrd' ASCIIChar
+  isFinOrd'ASCII .fst = length translation
+  isFinOrd'ASCII .snd .fun x = x
+  isFinOrd'ASCII .snd .inv x = x
+  isFinOrd'ASCII .snd .rightInv _ = Eq.refl
+  isFinOrd'ASCII .snd .leftInv _ = Eq.refl
+
+decEqASCII : DecEq ASCIIChar
+decEqASCII = isFinOrd'→DecEq isFinOrd'ASCII
+
+--   @0 isFinSetASCII : isFinSet ASCIIChar
+--   isFinSetASCII = isFinSetFin {n = 97}
+
+-- DiscreteASCII : Discrete ASCIIChar
+-- DiscreteASCII = isFinSet→Discrete isFinSetASCII
+
+-- ASCII : hSet ℓ-zero
+-- ASCII = ASCIIChar , isSetASCII

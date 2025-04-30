@@ -1,7 +1,8 @@
 {-# OPTIONS --erased-cubical #-}
 module Erased.Data.Empty.Base where
 
-open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Prelude hiding (Lift)
+open import Erased.Lift.Base
 
 private
   variable
@@ -9,7 +10,7 @@ private
 
 data ⊥ : Type₀ where
 
-@0 ⊥* : Type ℓ
+⊥* : Type ℓ
 ⊥* = Lift ⊥
 
 rec : {A : Type ℓ} → ⊥ → A
