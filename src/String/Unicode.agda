@@ -25,12 +25,19 @@ import Erased.Data.Equality as Eq
 open import Erased.Relation.Nullary.Base
 open import Erased.Relation.Nullary.Properties
 
+import Data.String.Properties as AgdaStdlibString
+import Data.Char.Properties as AgdaStdlibChar
+import Relation.Nullary.Decidable.Core as AgdaStdlibDec
+import Relation.Nullary.Reflects as AgdaStdlibReflects
+import Data.Empty as AgdaStdlibEmpty
 
 UnicodeChar = Char
 UnicodeString = String
 
-postulate
-  charDecEq : DecEq UnicodeChar
+charDecEq : DecEq UnicodeChar
+charDecEq c c' with c AgdaStdlibChar.≟ c'
+... | true AgdaStdlibDec.because AgdaStdlibReflects.ofʸ a = yes a
+... | false AgdaStdlibDec.because AgdaStdlibReflects.ofⁿ ¬a = no (λ x → AgdaStdlibEmpty.⊥-elim (¬a x))
 
 postulate
   mkUnicodeCharPath-yes : (c c' : UnicodeChar) → primCharEquality c c' ≡ true → c ≡ c'

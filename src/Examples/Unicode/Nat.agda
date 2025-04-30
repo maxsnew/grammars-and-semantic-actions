@@ -12,13 +12,13 @@ open import Erased.Data.Bool.Base hiding (_⊕_)
 open import Erased.Data.Bool.SwitchStatement
 open import Erased.Relation.Nullary.Base
 
-open import String.ASCII.Base
+open import String.Unicode
 
-open import Grammar ASCIIChar isSetASCIIChar
-open import Grammar.Maybe ASCIIChar isSetASCIIChar
-open import Term ASCIIChar isSetASCIIChar
-open import Parser ASCIIChar isSetASCIIChar
-open import Printer.Base ASCIIChar isSetASCIIChar
+open import Grammar UnicodeChar isSetUnicodeChar
+open import Grammar.Maybe UnicodeChar isSetUnicodeChar
+open import Term UnicodeChar isSetUnicodeChar
+open import Parser UnicodeChar isSetUnicodeChar
+open import Printer.Base UnicodeChar isSetUnicodeChar
 
 open import IO
 open import Agda.Builtin.String renaming (String to BString)
@@ -30,59 +30,50 @@ data Digit' : Type ℓ-zero where
 Digit'List : List Digit'
 Digit'List = zero' ∷ one' ∷ two' ∷ three' ∷ four' ∷ five' ∷ six' ∷ seven' ∷ eight' ∷ nine' ∷ []
 
-Digit'→ASCIIChar : Digit' → ASCIIChar
-Digit'→ASCIIChar zero' = zero^
-Digit'→ASCIIChar one' = one^
-Digit'→ASCIIChar two' = two^
-Digit'→ASCIIChar three' = three^
-Digit'→ASCIIChar four' = four^
-Digit'→ASCIIChar five' = five^
-Digit'→ASCIIChar six' = six^
-Digit'→ASCIIChar seven' = seven^
-Digit'→ASCIIChar eight' = eight^
-Digit'→ASCIIChar nine' = nine^
+Digit'→BChar : Digit' → BChar
+Digit'→BChar zero' = '0'
+Digit'→BChar one' = '1'
+Digit'→BChar two' = '2'
+Digit'→BChar three' = '3'
+Digit'→BChar four' = '4'
+Digit'→BChar five' = '5'
+Digit'→BChar six' = '6'
+Digit'→BChar seven' = '7'
+Digit'→BChar eight' = '8'
+Digit'→BChar nine' = '9'
 
 ⟦_⟧Digit : Digit' → Grammar ℓ-zero
-⟦ d ⟧Digit = ＂ Digit'→ASCIIChar d ＂
+⟦ d ⟧Digit = ＂ Digit'→BChar d ＂
 
 Digit : Grammar ℓ-zero
 Digit = ⊕[ d ∈ Digit' ] ⟦ d ⟧Digit
 
 Num = Digit *
 
-
 open Printer
-open PrintingUtils ASCII→UnicodeString
+open PrintingUtils primShowChar
 
 printDigit : Printer Digit
 printDigit =
   print⊕ᴰ "Digit'"
-    (λ d → ASCII→UnicodeString (Digit'→ASCIIChar d))
+    (λ d → primShowChar (Digit'→BChar d))
     (λ dString → join ("⟦ " ∷ dString ∷ " ⟧Digit" ∷ []))
-    (λ d → printLiteral (Digit'→ASCIIChar d))
+    (λ d → printLiteral (Digit'→BChar d))
 
 printNum : Printer Num
 printNum = print* printDigit
 
 unicodeChar→Num? : char ⊢ Maybe Num
 unicodeChar→Num? = ⊕ᴰ-elim λ c →
-  decRec
-    (λ where Eq.refl → just ∘g *-singleton Digit ∘g σ one')
-    (λ _ → nothing)
-    (decEqASCII c one^)
-      -- decRec
-      --   (λ where Eq.refl → just ∘g *-singleton Digit ∘g σ one')
-      --   (λ _ → nothing)
-      --   (charDecEq c (Digit'→ASCIIChar one'))
-  -- foldr
-  --   (λ d acc →
-  --     decRec
-  --       (λ where Eq.refl → just ∘g *-singleton Digit ∘g σ d)
-  --       (λ _ → acc)
-  --       (charDecEq c (Digit'→ASCIIChar d))
-  --   )
-  --   nothing
-  --   Digit'List
+  foldr
+    (λ d acc →
+      decRec
+        (λ where Eq.refl → just ∘g *-singleton Digit ∘g σ d)
+        (λ _ → acc)
+        (charDecEq c (Digit'→BChar d))
+    )
+    nothing
+    Digit'List
 
 concatNum : Num ⊗ Num ⊢ Num
 concatNum = flatten*
@@ -91,7 +82,7 @@ open StrongEquivalence
 
 ℕParser : WeakParser Num
 ℕParser = fold*r char
-  (inr ∘g ⊤-intro)
+  (inl ∘g NIL)
   (fmap concatNum
   ∘g Maybe⊗
   ∘g unicodeChar→Num? ,⊗ id)
@@ -102,7 +93,7 @@ main = run (do
   putStrLn "Please enter a number"
   n ← getLine
   putStr "Got input: "
-  putStr (primShowString n)
+  putStr (printString (primStringToList n))
   putStrLn "\n"
-  putStrLn (printParser (printMaybe printNum) ℕParser {!!})
+  putStrLn (printParser (printMaybe printNum) ℕParser (primStringToList n))
   )
