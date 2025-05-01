@@ -8,17 +8,28 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 
-open import Cubical.Data.Bool as Bool hiding (_⊕_ ;_or_)
+open import Erased.Data.Bool.Base as Bool hiding (_⊕_ ;_or_)
+open import Erased.Data.Bool.SwitchStatement
+open import Erased.Data.Bool.Properties
 -- open import Cubical.Data.Sum as Sum using (_⊎_ ; isSet⊎)
 open import Cubical.Data.FinSet
 
 open import Erased.Data.Nat.Base as Nat
-open import Erased.Data.Maybe.Base hiding (rec)
+open import Erased.Data.Maybe.Base as Maybe hiding (rec)
 import Erased.Data.Equality.Base as Eq
 open import Erased.Data.Unit
 import Erased.Data.Sum.Base as Sum
 open import Erased.Data.List.Base
 open import Erased.Lift.Base
+open import Erased.Relation.Nullary.Base
+
+open import String.Unicode
+
+open import IO
+open import Agda.Builtin.String renaming (String to BString)
+open import Agda.Builtin.Char renaming (Char to BChar)
+open import Data.String.Properties using (_==_)
+open import Data.Nat.Show using (show)
 
 private
   variable
@@ -679,12 +690,6 @@ rhs = ((&ᴰ-intro λ n → ⊸-intro (⊸-app ∘g id ,⊗ genMkTree n) ∘g π
 -- DyckParser : Parser Dyck (Trace false (just 0))
 -- DyckParser = ≈Parser (AccTraceParser (just 0)) (≅→≈ (sym≅ Dyck≅Trace))
 
-
-
-
-open import IO
-import Agda.Builtin.String as BuiltinString
-
 private
   variable
     ℓC ℓD : Level
@@ -692,35 +697,44 @@ private
     D : Grammar ℓD
     w : String
 
-printBracket : Bracket → BuiltinString.String
+printBracket : Bracket → BString
 printBracket [ = "["
 printBracket ] = "]"
+
+open DecodeUnicode Bracket
+inputToString : BString → String
+inputToString =
+  mkString λ c →
+    foldr
+      (λ (c' , c'') acc →
+        decRec
+          (λ where Eq.refl → just c'')
+          (λ _ → acc)
+          (charDecEq c c')
+      )
+      nothing
+      (('[' , [) ∷ (']' , ]) ∷ [])
 
 open import Printer.Base Bracket isSetBracket
 open PrintingUtils printBracket
 
+open import Examples.Unicode.Nat hiding (repl ; main)
+
 open Parser hiding (run)
 parseDyck : string ⊢ Dyck ⊕ Trace false (just 0)
 parseDyck = (mkTree ,⊕p id) ∘g AccTraceParser (just 0) .fun
-
-parseDyck' : (w : String) → (Dyck ⊕ Trace false (just 0)) w
-parseDyck' w = parseDyck w (mkstring w)
-
-mkIndent : ℕ → BuiltinString.String
-mkIndent zero = ""
-mkIndent (suc n) = " " ++B mkIndent n
 
 opaque
   unfolding _⊗_
   {-# TERMINATING #-}
   printDyck : Printer Dyck
   printDyck .printTy = "Dyck"
-  printDyck .printParse {w = w} (roll .w (nil' , lift eps)) = mkPrint 0 "nil" []V
+  printDyck .printParse {w = w} (roll .w (nil' , lift eps)) = mkPrint "nil" [] -- mkPrint 0 "nil" []V
   printDyck .printParse {w = w} (roll .w (balanced' , (_ , lparen , (_ , d , (_ , rparen , d'))))) =
-    mkPrint 4 "bal" (printLift (printLiteral [) .printParse lparen ∷V
-                     printLift printDyck .printParse d ∷V
-                     printLift (printLiteral ]) .printParse rparen ∷V
-                     printLift printDyck .printParse d' ∷V []V)
+    mkPrint "bal" (printLift (printLiteral [) .printParse lparen ∷
+                   printLift printDyck .printParse d ∷
+                   printLift (printLiteral ]) .printParse rparen ∷
+                   printLift printDyck .printParse d' ∷ [])
 
 printRejectingTrace : Printer (Trace false (just 0))
 printRejectingTrace .printTy = "Trace false (just 0)"
@@ -729,45 +743,133 @@ printRejectingTrace .printParse _ = "reject"
 printDyck⊕Fail : Printer (Dyck ⊕ Trace false (just 0))
 printDyck⊕Fail = print⊕ printDyck printRejectingTrace
 
-mkTest : String → BuiltinString.String
-mkTest w = "\n\n" ++B print⊢ print-string printDyck⊕Fail parseDyck w (mkstring w)
-
--- opaque
---   unfolding _⊕_
---   mkAccept? : String → BuiltinString.String
---   mkAccept? w with parseDyck' w
---   mkAccept? w | Sum.inl x = "ACCEPT"
---   mkAccept? w | Sum.inr x = "REJECT"
-
 {-# TERMINATING #-}
 -- make a big balanced string
-mkInput : ℕ → String
-mkInput zero = []
-mkInput (suc zero) = [ ∷ ] ∷ []
-mkInput (suc (suc n)) =
-  ([ ∷ []) ++ mkInput (suc n) ++ mkInput n ++ (] ∷ [])
-           ++ ([ ∷ [ ∷ [ ∷ []) ++ mkInput n ++ (] ∷ []) ++ mkInput (suc n) ++ ] ∷ ] ∷ []
+mkInputAcc : ℕ → String
+mkInputAcc zero = []
+mkInputAcc (suc zero) = [ ∷ ] ∷ []
+mkInputAcc (suc (suc n)) =
+  ([ ∷ []) ++ mkInputAcc (suc n) ++ mkInputAcc n ++ (] ∷ [])
+           ++ ([ ∷ [ ∷ [ ∷ []) ++ mkInputAcc n ++ (] ∷ []) ++ mkInputAcc (suc n) ++ ] ∷ ] ∷ []
+
+surroundIter : ℕ → String → String
+surroundIter zero s = s
+surroundIter (suc n) s = ([ ∷ []) ++ surroundIter n s ++ ] ∷ []
+
+iterBracket : ℕ → Bracket → String
+iterBracket zero b = []
+iterBracket (suc n) b = b ∷ (iterBracket n b)
+
+mkInputAccLinear : ℕ → String
+mkInputAccLinear n = iterBracket (n + n) [ ++ surroundIter 2 (mkInputAcc 3) ++ iterBracket n ] ++ surroundIter 3 (mkInputAcc 2) ++ iterBracket n ]
 
 -- make a big unbalanced string
-mkInput' : ℕ → String
-mkInput' zero = ] ∷ []
-mkInput' (suc zero) = ] ∷ []
-mkInput' (suc (suc n)) =
-  ([ ∷ []) ++ mkInput (suc n) ++ mkInput n
-           ++ ([ ∷ [ ∷ [ ∷ []) ++ mkInput n ++ (] ∷ []) ++ mkInput (suc n) ++ ] ∷ ] ∷ []
+mkInputFail : ℕ → String
+mkInputFail zero = ] ∷ []
+mkInputFail (suc zero) = ] ∷ []
+mkInputFail (suc (suc n)) =
+  ([ ∷ []) ++ mkInputFail (suc n) ++ mkInputFail n
+           ++ ([ ∷ [ ∷ [ ∷ []) ++ mkInputFail n ++ (] ∷ []) ++ mkInputFail (suc n) ++ ] ∷ ] ∷ []
 
--- -- @0 _ : length (mkInput' 14) ≡ {!2466215!}
--- -- @0 _ : length (mkInput' 13) ≡ 902695
--- -- @0 _ : length (mkInput 13) ≡ 902696
--- -- @0 _ : length (mkInput' 12) ≡ 330407
--- -- _ = refl
+mkInputFailLinear : ℕ → String
+mkInputFailLinear n = iterBracket (n + n) [ ++ surroundIter 2 (mkInputAcc 3) ++ iterBracket (suc n) ] ++ surroundIter 3 (mkInputAcc 2) ++ iterBracket n ]
+
+mkTestAcc : ℕ → BString
+mkTestAcc n = printParser printDyck⊕Fail parseDyck (mkInputAcc n)
+
+mkTestFail : ℕ → BString
+mkTestFail n = printParser printDyck⊕Fail parseDyck (mkInputFail n)
+
+mkTestAccLinear : ℕ → BString
+mkTestAccLinear n = printParser printDyck⊕Fail parseDyck (mkInputAccLinear n)
+
+mkTestFailLinear : ℕ → BString
+mkTestFailLinear n = printParser printDyck⊕Fail parseDyck (mkInputFailLinear n)
+
+opaque
+  unfolding _⊕_
+  accepts? : String → BString
+  accepts? w with parseDyck w (mkstring w)
+  ... | Sum.inl _ = "accept"
+  ... | Sum.inr _ = "reject"
+
+shortOutput : (w : String) → BString
+shortOutput w = joinDelimited "\n" (("length: " ++B show (length w)) ∷ accepts? w ∷ [])
+
+mkTestAccShort : ℕ → BString
+mkTestAccShort n = shortOutput (mkInputAcc n)
+
+mkTestAccShortLinear : ℕ → BString
+mkTestAccShortLinear n = shortOutput (mkInputAccLinear n)
+
+mkTestFailShort : ℕ → BString
+mkTestFailShort n = shortOutput (mkInputFail n)
+
+mkTestFailShortLinear : ℕ → BString
+mkTestFailShortLinear n = shortOutput (mkInputFailLinear n)
+
+
+{-# TERMINATING #-}
+repl replWritten : IO _
+replGen : BString → (ℕ → BString) → IO _
+
+replGen msg f = do
+  putStrLn msg
+  input ← getLine
+  switch (λ x → x == input) cases
+    case "quit" ⇒ putStrLn "Goodbye!" break
+    case "main" ⇒ repl break
+    default⇒ do
+      Maybe.rec
+        (do
+          putStrLn "Please enter a valid number"
+          replGen msg f
+        )
+        (λ n → do
+           putStrLn (f n)
+           replGen msg f
+        )
+        (readℕ input)
+
+replWritten = do
+  putStrLn "Enter a string of brackets"
+  input ← getLine
+  switch (λ x → x == input) cases
+    case "quit" ⇒ putStrLn "Goodbye!" break
+    case "main" ⇒ repl break
+    default⇒ do
+      putStrLn (printParser printDyck⊕Fail parseDyck (inputToString input))
+      replWritten
+
+repl = do
+  putStrLn (joinDelimited "\n" ("Choose a mode:" ∷
+                                "(1) Exponentially generate balanced strings" ∷
+                                "(2) Exponentially generate balanced strings (verbose)" ∷
+                                "(3) Linearly generate balanced strings" ∷
+                                "(4) Linearly generate balanced strings (verbose)" ∷
+                                "(5) Exponentially generate unbalanced strings" ∷
+                                "(6) Exponentially generate unbalanced strings (verbose)" ∷
+                                "(7) Linearly generate unbalanced strings" ∷
+                                "(8) Linearly generate unbalanced strings (verbose)" ∷
+                                "(9) Manually write strings" ∷
+                                "(quit) to exit" ∷
+                                "(main) to return to this menu" ∷ []))
+  input ← getLine
+  switch (λ x → x == input) cases
+    case "quit" ⇒ putStrLn "Goodbye!" break
+    case "main" ⇒ repl break
+    case "1" ⇒ replGen "Enter a number to generate a balanced string" mkTestAccShort break
+    case "2" ⇒ replGen "Enter a number to generate a balanced string" mkTestAcc break
+    case "3" ⇒ replGen "Enter a number to generate a balanced string" mkTestAccShortLinear break
+    case "4" ⇒ replGen "Enter a number to generate a balanced string" mkTestAccLinear break
+    case "5" ⇒ replGen "Enter a number to generate an unbalanced string" mkTestFailShort break
+    case "6" ⇒ replGen "Enter a number to generate an unbalanced string" mkTestFail break
+    case "7" ⇒ replGen "Enter a number to generate an unbalanced string" mkTestFailShortLinear break
+    case "8" ⇒ replGen "Enter a number to generate an unbalanced string" mkTestFailLinear break
+    case "9" ⇒ replWritten break
+    default⇒ (do
+      putStrLn "Please enter a valid option"
+      repl)
 
 main : Main
-main = run (do
-  putStrLn (mkTest (mkInput 3))
-  putStrLn (mkTest (mkInput' 3))
-  putStrLn (mkTest (mkInput 4))
-  putStrLn (mkTest (mkInput' 4))
-  putStrLn (mkTest (mkInput 5))
-  putStrLn (mkTest (mkInput' 5))
-  )
+main = run repl

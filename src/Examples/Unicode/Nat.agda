@@ -10,6 +10,7 @@ import Erased.Data.Equality.Base as Eq
 import Erased.Data.Sum.Base as Sum
 open import Erased.Data.Bool.Base hiding (_⊕_)
 open import Erased.Data.Bool.SwitchStatement
+import Erased.Data.Maybe.Base as Maybe
 open import Erased.Relation.Nullary.Base
 
 open import String.Unicode
@@ -23,6 +24,7 @@ open import Printer.Base UnicodeChar isSetUnicodeChar
 open import IO
 open import Agda.Builtin.String renaming (String to BString)
 open import Agda.Builtin.Char renaming (Char to BChar)
+open import Data.String.Properties using (_==_)
 
 data Digit' : Type ℓ-zero where
   zero' one' two' three' four' five' six' seven' eight' nine' : Digit'
@@ -51,7 +53,7 @@ Digit = ⊕[ d ∈ Digit' ] ⟦ d ⟧Digit
 Num = Digit *
 
 open Printer
-open PrintingUtils primShowChar
+open PrintingUtils (λ c → primStringFromList (c ∷ []))
 
 printDigit : Printer Digit
 printDigit =
@@ -87,13 +89,52 @@ open StrongEquivalence
   ∘g Maybe⊗
   ∘g unicodeChar→Num? ,⊗ id)
 
+Digit'→ℕ : Digit' → ℕ
+Digit'→ℕ zero' = 0
+Digit'→ℕ one' = 1
+Digit'→ℕ two' = 2
+Digit'→ℕ three' = 3
+Digit'→ℕ four' = 4
+Digit'→ℕ five' = 5
+Digit'→ℕ six' = 6
+Digit'→ℕ seven' = 7
+Digit'→ℕ eight' = 8
+Digit'→ℕ nine' = 9
+
+Num→ℕ' : Num ⊢ ⊕[ n ∈ ℕ ] ⊕[ depth ∈ ℕ ] ⊤
+Num→ℕ' =
+  fold*r Digit
+    (σ 0 ∘g σ 0 ∘g ⊤-intro)
+    (⊕ᴰ-elim (λ dig →
+      ⊕ᴰ-elim (λ n →
+        ⊕ᴰ-elim (λ depth →
+          σ ((10 ^ depth) · Digit'→ℕ dig + n)
+          ∘g σ (suc depth)
+          ∘g ⊤-intro
+        )
+        ∘g ⊕ᴰ-distREq .fun
+      )
+      ∘g ⊕ᴰ-distREq .fun
+    )
+    ∘g ⊕ᴰ-distLEq .fun)
+
+Num→ℕ : ∀ {w} → Num w → ℕ
+Num→ℕ n = Num→ℕ' _ n .fst
+
+readℕ : BString → Maybe.Maybe ℕ
+readℕ s = Maybe.map-Maybe Num→ℕ (extractMaybe (runWeakParser ℕParser (primStringToList s)))
+
+{-# TERMINATING #-}
+repl : IO _
+repl = do
+  input ← getLine
+  if input == "quit"
+    then putStrLn "Goodbye!"
+    else do
+      putStrLn (printParser (printMaybe printNum) ℕParser (primStringToList input))
+      repl
 
 main : Main
-main = run (do
+main = run do
   putStrLn "Please enter a number"
-  n ← getLine
-  putStr "Got input: "
-  putStr (printString (primStringToList n))
-  putStrLn "\n"
-  putStrLn (printParser (printMaybe printNum) ℕParser (primStringToList n))
-  )
+  repl

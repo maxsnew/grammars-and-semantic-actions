@@ -4,6 +4,9 @@ open import Cubical.Foundations.HLevels
 
 module Grammar.Maybe.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
+import Erased.Data.Maybe.Base as Maybe
+import Erased.Data.Sum.Base as Sum
+
 open import Grammar Alphabet isSetAlphabet hiding (k ; μ)
 open import Term Alphabet isSetAlphabet
 
@@ -59,3 +62,9 @@ Maybe⊗ {A = A}{B = B} =
             (⊸-intro just)
             (⊸-intro (nothing {B = A ⊗ B})))))
       (⟜-intro (nothing {B = A ⊗ B})))
+
+opaque
+  unfolding _⊕_
+  extractMaybe : ∀ {w} → (Maybe A) w → Maybe.Maybe (A w)
+  extractMaybe (Sum.inl a) = Maybe.just a
+  extractMaybe (Sum.inr _) = Maybe.nothing

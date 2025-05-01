@@ -21,6 +21,7 @@ open import Grammar.Maybe Alphabet isSetAlphabet
 open import Term Alphabet isSetAlphabet
 
 open import Agda.Builtin.String renaming (String to BString)
+import Data.String.Base as StdlibString
 
 _++B_ = primStringAppend
 infixl 25 _++B_
@@ -29,9 +30,7 @@ join : List BString → BString
 join = foldr _++B_ ""
 
 joinDelimited : BString → List BString → BString
-joinDelimited delimiter [] = ""
-joinDelimited delimiter (s ∷ []) = s
-joinDelimited delimiter (s ∷ s' ∷ strings) = foldr (λ s s' → s ++B delimiter ++B s') "" (s ∷ s' ∷ strings)
+joinDelimited = StdlibString.intersperse
 
 private
   variable

@@ -59,7 +59,6 @@ isSetUnicodeChar = Discrete→isSet DiscreteUnicodeChar
 
 module DecodeUnicode
   (Alphabet : Type ℓ-zero)
-  (@0 isSetAlphabet : isSet Alphabet)
   (readUnicode : UnicodeChar → Maybe Alphabet)
   where
 
