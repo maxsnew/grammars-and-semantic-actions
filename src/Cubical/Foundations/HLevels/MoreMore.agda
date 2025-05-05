@@ -1,3 +1,4 @@
+{-# OPTIONS --cubical #-}
 module Cubical.Foundations.HLevels.MoreMore where
 
 open import Cubical.Foundations.Prelude

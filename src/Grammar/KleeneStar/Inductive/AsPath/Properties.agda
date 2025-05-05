@@ -1,9 +1,10 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Isomorphism
 
-module @0 Grammar.KleeneStar.Inductive.AsPath.Properties (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.KleeneStar.Inductive.AsPath.Properties (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum hiding (rec)
@@ -11,18 +12,18 @@ open import Cubical.Data.Unit
 open import Cubical.Data.Nat
 open import Cubical.Data.FinSet
 
-open import Grammar.Base Alphabet
-open import Grammar.KleeneStar.Inductive.AsPath.Base Alphabet
-open import Grammar.Sum.Base Alphabet
-open import Grammar.Sum.Properties Alphabet
-open import Grammar.Epsilon.AsPath.Base Alphabet
-open import Grammar.LinearProduct.AsPath Alphabet
-open import Grammar.Equivalence.Base Alphabet
-open import Grammar.Equalizer.AsPath.Base Alphabet
-open import Grammar.Lift.Base Alphabet
-open import Grammar.Inductive.AsPath.Indexed Alphabet
-open import Grammar.Inductive.AsPath.Properties Alphabet
-open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.KleeneStar.Inductive.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Sum.Properties Alphabet isSetAlphabet
+open import Grammar.Epsilon.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.AsPath Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.Equalizer.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.Lift.Base Alphabet isSetAlphabet
+open import Grammar.Inductive.AsPath.Indexed Alphabet isSetAlphabet
+open import Grammar.Inductive.AsPath.Properties Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
 private
   variable

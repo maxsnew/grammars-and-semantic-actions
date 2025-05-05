@@ -17,7 +17,7 @@ open import Cubical.Data.FinSet
 open import Cubical.Data.Sum as Sum
 open import Cubical.Data.Sum.More
 open import Cubical.Data.Empty as Empty
-import Cubical.Data.Equality as Eq
+import Erased.Data.Equality as Eq
 
 open import Cubical.Data.Sigma
 
@@ -29,6 +29,9 @@ isSetString = isOfHLevelList 0 isSetAlphabet
 
 @0 isSetEqString : ∀ (w w' : String) → isProp (w Eq.≡ w')
 isSetEqString _ _ = isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _)
+
+@0 isPropEq≡Path-String : ∀ w w' i → isProp (Eq.PathPathEq {x = w} {y = w'} i)
+isPropEq≡Path-String w w' i = subst-filler isProp Eq.PathPathEq (isSetString _ _) i
 
 @0 isGroupoidString : isGroupoid String
 isGroupoidString = isSet→isGroupoid isSetString

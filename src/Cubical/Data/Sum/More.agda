@@ -1,3 +1,4 @@
+{-# OPTIONS --cubical #-}
 module Cubical.Data.Sum.More where
 
 open import Cubical.Foundations.Prelude

@@ -1,7 +1,8 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.HLevels.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
+module @0 Grammar.HLevels.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.Equivalence.Base Alphabet isSetAlphabet

@@ -1,4 +1,5 @@
-module Cubical.Data.List.More where
+{-# OPTIONS --erased-cubical #-}
+module @0 Cubical.Data.List.More where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels

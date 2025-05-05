@@ -1,10 +1,12 @@
-open import Cubical.Foundations.Prelude
+{-# OPTIONS --erased-cubical #-}
+open import Cubical.Foundations.Prelude hiding (lift ; Lift ; lower)
 open import Cubical.Foundations.HLevels
 
 module @0 Grammar.Epsilon.AsPath.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Data.List
 import Cubical.Data.Empty as Empty
+open import Erased.Lift.Base
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.HLevels.Base Alphabet isSetAlphabet
@@ -14,7 +16,7 @@ open import Term.Nullary Alphabet isSetAlphabet
 
 private
   variable
-    ℓA ℓB : Level
+    ℓA ℓB ℓ : Level
     A : Grammar ℓA
     B : Grammar ℓB
 
@@ -52,8 +54,16 @@ opaque
 ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε
 
--- @0 isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
--- isLangε* = isLangLift isLangε
+opaque
+  unfolding ε
+  ε*-intro : ε⊢ (ε* {ℓ = ℓ})
+  ε*-intro = lift ε-intro
 
--- @0 isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
--- isSetGrammarε* = isLang→isSetGrammar isLangε*
+  ε*-elim : ∀ {A : Grammar ℓA} → ε⊢ A → (ε* {ℓ = ℓ}) ⊢ A
+  ε*-elim {A = A} A[] w (lift w≡[]) = ε-elim {A = A} A[] w w≡[]
+
+@0 isLangε* : ∀ {ℓ} → isLang (ε* {ℓ})
+isLangε* = isLangLift isLangε
+
+@0 isSetGrammarε* : ∀ {ℓ} → isSetGrammar (ε* {ℓ})
+isSetGrammarε* = isLang→isSetGrammar isLangε*

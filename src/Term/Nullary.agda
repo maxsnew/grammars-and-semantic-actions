@@ -1,3 +1,4 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -18,10 +19,10 @@ private
 {-- A direct interpretation of terms in an empty (ε) context
  -- ε ⊢ M : k
  --}
-Element : Grammar ℓA → Type _
+Element : Grammar ℓA → Type ℓA
 Element A = A []
 
-ε⊢ : Grammar ℓA → Type _
+ε⊢ : Grammar ℓA → Type ℓA
 ε⊢ = Element
 
 ↑ : Grammar ℓA → Type _

@@ -1,7 +1,8 @@
+{-# OPTIONS --erased-cubical #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module @0 Grammar.String.AsPath.Base (Alphabet : hSet ℓ-zero) where
+module @0 Grammar.String.AsPath.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Cubical.Relation.Nullary.Base hiding (¬_)
 open import Cubical.Relation.Nullary.DecidablePropositions
@@ -13,46 +14,46 @@ open import Cubical.Data.Empty as Empty
 
 open import Cubical.Foundations.Structure
 
-open import Grammar.Base Alphabet
--- open import Grammar.Equivalence.Base Alphabet
--- open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
--- open import Grammar.Sum.Base Alphabet
-open import Grammar.Literal.AsPath.Base Alphabet
-open import Grammar.Epsilon.AsPath.Base Alphabet
--- open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
--- open import Grammar.LinearProduct.AsPath.Base Alphabet
-open import Grammar.KleeneStar.Inductive.Base Alphabet
--- open import Term.Base Alphabet
+open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.Equivalence.Base Alphabet isSetAlphabet
+open import Grammar.HLevels.Base Alphabet hiding (⟨_⟩)
+open import Grammar.Sum.Base Alphabet isSetAlphabet
+open import Grammar.Literal.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.Epsilon.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.Product.Binary.AsPrimitive.Base Alphabet isSetAlphabet
+open import Grammar.LinearProduct.AsPath.Base Alphabet isSetAlphabet
+open import Grammar.KleeneStar.Inductive.Base Alphabet isSetAlphabet
+open import Term.Base Alphabet isSetAlphabet
 
--- private
---   variable
---     w : String
---     ℓA ℓB : Level
---     A : Grammar ℓA
+private
+  variable
+    w : String
+    ℓA ℓB : Level
+    A : Grammar ℓA
 
--- char : Grammar ℓ-zero
--- char = ⊕[ c ∈ ⟨ Alphabet ⟩ ] literal c
+char : Grammar ℓ-zero
+char = ⊕[ c ∈ Alphabet ] literal c
 
--- module _ (c : ⟨ Alphabet ⟩) where
---   literal→char : ＂ c ＂ ⊢ char
---   literal→char = σ c
+module _ (c : Alphabet) where
+  literal→char : ＂ c ＂ ⊢ char
+  literal→char = σ c
 
--- string : Grammar ℓ-zero
--- string = char *
+string : Grammar ℓ-zero
+string = char *
 
--- module _ (c : ⟨ Alphabet ⟩) where
---   startsWith : Grammar ℓ-zero
---   startsWith = ＂ c ＂ ⊗ string
+module _ (c : Alphabet) where
+  startsWith : Grammar ℓ-zero
+  startsWith = ＂ c ＂ ⊗ string
 
--- stringL : Grammar ℓ-zero
--- stringL = *L char
+stringL : Grammar ℓ-zero
+stringL = *L char
 
--- ⌈_⌉ : String → Grammar ℓ-zero
--- ⌈ [] ⌉ = ε
--- ⌈ c ∷ w ⌉ = literal c ⊗ ⌈ w ⌉
+⌈_⌉ : String → Grammar ℓ-zero
+⌈ [] ⌉ = ε
+⌈ c ∷ w ⌉ = literal c ⊗ ⌈ w ⌉
 
--- ⌈_⌉' : String → Grammar ℓ-zero
--- ⌈ w ⌉' w' = w ≡ w'
+⌈_⌉' : String → Grammar ℓ-zero
+⌈ w ⌉' w' = w ≡ w'
 
 -- opaque
 --   unfolding ⊗-intro ε literal

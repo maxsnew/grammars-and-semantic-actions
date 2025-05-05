@@ -1,12 +1,13 @@
 {-# OPTIONS --erased-cubical #-}
-open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Prelude hiding (Lift ; lift ; lower)
 open import Cubical.Foundations.HLevels
 
 module Grammar.Epsilon.AsEquality.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
-open import Cubical.Data.List
-import Cubical.Data.Equality as Eq
-import Cubical.Data.Empty as Empty
+open import Erased.Data.List
+open import Erased.Lift.Base
+import Erased.Data.Equality as Eq
+import Erased.Data.Empty as Empty
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.HLevels.Base Alphabet isSetAlphabet
@@ -16,7 +17,7 @@ open import Term.Nullary Alphabet isSetAlphabet
 
 private
   variable
-    ℓA ℓB : Level
+    ℓA ℓB ℓ : Level
     A : Grammar ℓA
     B : Grammar ℓB
 
@@ -32,3 +33,11 @@ opaque
 
 ε* : ∀ {ℓ : Level} → Grammar ℓ
 ε* {ℓ = ℓ} = LiftG ℓ ε
+
+opaque
+  unfolding ε
+  ε*-intro : ε⊢ (ε* {ℓ = ℓ})
+  ε*-intro = lift ε-intro
+
+  ε*-elim : ∀ {A : Grammar ℓA} → ε⊢ A → (ε* {ℓ = ℓ}) ⊢ A
+  ε*-elim A[] w (lift Eq.refl)= A[]

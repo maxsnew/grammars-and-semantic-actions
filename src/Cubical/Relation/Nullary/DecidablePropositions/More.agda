@@ -1,3 +1,4 @@
+{-# OPTIONS --cubical #-}
 module Cubical.Relation.Nullary.DecidablePropositions.More where
 
 open import Cubical.Foundations.Prelude
