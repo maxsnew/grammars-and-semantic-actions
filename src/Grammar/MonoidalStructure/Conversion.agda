@@ -35,9 +35,9 @@ MonoidalStr≡ i .literal c = LiteralEq.literal*≡ c i
 MonoidalStr≡ i .lit-intro = LiteralEq.lit*-intro≡ i
 MonoidalStr≡ i ._⊗_ A B = ⊗Eq.⊗Path≡⊗Eq A B i
 MonoidalStr≡ i .⊗-intro f g = ⊗Eq.⊗-intro≡ {f = f} {g = g} i
-MonoidalStr≡ i .⊗-unit-r = {!⊗Eq.⊗-unit-r≡ i!}
-MonoidalStr≡ i .⊗-unit-r⁻ = {!!}
-MonoidalStr≡ i .⊗-unit-l = {!!}
-MonoidalStr≡ i .⊗-unit-l⁻ = {!!}
-MonoidalStr≡ i .⊗-assoc = {!!}
-MonoidalStr≡ i .⊗-assoc⁻ = {!!}
+MonoidalStr≡ i .⊗-unit-r = ⊗Eq.⊗-unit*-r≡ i
+MonoidalStr≡ i .⊗-unit-r⁻ = ⊗Eq.⊗-unit*-r⁻≡ i
+MonoidalStr≡ i .⊗-unit-l = ⊗Eq.⊗-unit*-l≡ i
+MonoidalStr≡ i .⊗-unit-l⁻ = ⊗Eq.⊗-unit*-l⁻≡ i
+MonoidalStr≡ i .⊗-assoc = ⊗Eq.⊗-assoc≡ i
+MonoidalStr≡ i .⊗-assoc⁻ = ⊗Eq.⊗-assoc⁻≡ i

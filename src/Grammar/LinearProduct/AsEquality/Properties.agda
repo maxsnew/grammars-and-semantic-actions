@@ -1,5 +1,5 @@
 {-# OPTIONS --erased-cubical #-}
-open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Prelude hiding (lift ; Lift ; lower)
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Transport
 
@@ -7,6 +7,7 @@ module @0 Grammar.LinearProduct.AsEquality.Properties (Alphabet : Type ℓ-zero)
 
 open import Cubical.Data.Sigma
 open import Erased.Data.List
+open import Erased.Lift.Base
 open import Cubical.Data.List.More
 import Erased.Data.Equality as Eq
 open import Cubical.Functions.FunExtEquiv
@@ -78,14 +79,32 @@ opaque
 
 
     ⊗-unit*-r≡ : PathP (λ i → ⊗Path≡⊗Eq A (εEq.ε*≡ {ℓ = ℓ} i) i ⊢ A) ⊗Path.⊗-unit*-r ⊗-unit*-r
-    ⊗-unit*-r≡ =
-      {!!} ◁ {!!} ▷ {!!}
+    ⊗-unit*-r≡ {A = A} = funExt λ w → funExtDep λ where
+      {s , a , lift eps} {(_ , Eq.refl) , a' , lift Eq.refl} p →
+        subst A (λ i → (w≡l++r s ∙ (λ i₁ → left s ++ eps i₁) ∙ ++-unit-r (s .fst .fst)) (~ i)) a
+          ≡⟨ cong (subst A _) (sym (fromPathP (λ i → p (~ i) .snd .fst)) ∙ cong (λ z → subst A z a') (isSetString _ _ _ _)) ⟩
+        subst A (λ i → (w≡l++r s ∙ (λ i₁ → left s ++ eps i₁) ∙ ++-unit-r (s .fst .fst)) (~ i))
+          (subst A (λ i → p (~ i) .fst .fst .fst) a')
+          ≡⟨ sym (substComposite A _ _ a') ⟩
+        subst A _ a'
+          ≡⟨ cong (λ z → subst A z a') (isSetString _ _ _ _ ) ⟩
+        subst A _ a'
+          ≡⟨ sym (Eq.eqToPath (Eq.transportPathToEq→transportPath A (sym (++-unit-r _)) a')) ⟩
+        Eq.transport A (Eq.pathToEq (sym (++-unit-r _))) a'
+          ≡⟨ cong {x = Eq.pathToEq (sym (++-unit-r _))}
+              (λ z → Eq.transport A z a') (isSetEqString _ _ _ _) ⟩
+        Eq.transport A (Eq.sym (++-unit-r-Eq _)) a'
+        ∎
 
   opaque
-    unfolding εPath.ε εEq.ε ⊗Path.⊗-unit-r⁻ ⊗-unit-r⁻
+    unfolding εPath.ε εEq.ε εPath.ε*-intro εEq.ε*-intro ⊗Path.⊗-unit-r⁻ ⊗-unit-r⁻
     ⊗-unit-r⁻≡ : PathP (λ i → A ⊢ ⊗Path≡⊗Eq A (εEq.ε≡ i) i) ⊗Path.⊗-unit-r⁻ ⊗-unit-r⁻
     ⊗-unit-r⁻≡ {A = A} = funExt λ w → funExt λ a →
       ΣPathP (ΣPathP (refl , isProp→PathP (isPropEq≡Path-String _ _) _ _) , ΣPathP (refl , εEq.ε-intro≡))
+
+    ⊗-unit*-r⁻≡ : PathP (λ i → A ⊢ ⊗Path≡⊗Eq A (εEq.ε*≡ {ℓ = ℓ} i) i) ⊗Path.⊗-unit*-r⁻ ⊗-unit*-r⁻
+    ⊗-unit*-r⁻≡ {A = A} = funExt λ w → funExt λ a →
+      ΣPathP (ΣPathP (refl , (isProp→PathP (isPropEq≡Path-String _ _) _ _)) , ΣPathP (refl , εEq.ε*-intro≡))
 
   opaque
     unfolding εPath.ε εEq.ε ⊗Path.⊗-unit-l ⊗-unit-l
@@ -99,11 +118,25 @@ opaque
         a'
         ∎
 
+    ⊗-unit*-l≡ : PathP (λ i → ⊗Path≡⊗Eq (εEq.ε*≡ {ℓ = ℓ} i) A i ⊢ A) ⊗Path.⊗-unit*-l ⊗-unit*-l
+    ⊗-unit*-l≡ {A = A} = funExt λ w → funExtDep λ where
+      {s , lift eps , a} {(_ , Eq.refl) , lift Eq.refl , a'} p →
+        subst A _ a
+          ≡⟨ cong (λ z → subst A z a) (isSetString _ _ _ _) ⟩
+        subst A (λ i → p i .fst .fst .snd) a
+          ≡⟨ fromPathP (λ i → p i .snd .snd) ⟩
+        a'
+        ∎
+
   opaque
-    unfolding εPath.ε εEq.ε ⊗Path.⊗-unit-l⁻ ⊗-unit-l⁻
+    unfolding εPath.ε εEq.ε εPath.ε*-intro εEq.ε*-intro ⊗Path.⊗-unit-l⁻ ⊗-unit-l⁻
     ⊗-unit-l⁻≡ : PathP (λ i → A ⊢ ⊗Path≡⊗Eq (εEq.ε≡ i) A i) ⊗Path.⊗-unit-l⁻ ⊗-unit-l⁻
     ⊗-unit-l⁻≡ {A = A} = funExt λ w → funExt λ a →
       ΣPathP ((ΣPathP (refl , isProp→PathP (isPropEq≡Path-String _ _) _ _)) , (ΣPathP (εEq.ε-intro≡ , refl)))
+
+    ⊗-unit*-l⁻≡ : PathP (λ i → A ⊢ ⊗Path≡⊗Eq (εEq.ε*≡ {ℓ = ℓ} i) A i) ⊗Path.⊗-unit*-l⁻ ⊗-unit*-l⁻
+    ⊗-unit*-l⁻≡ {A = A} = funExt λ w → funExt λ a →
+      ΣPathP ((ΣPathP (refl , isProp→PathP (isPropEq≡Path-String _ _) _ _)) , (ΣPathP (εEq.ε*-intro≡ , refl)))
 
   opaque
     unfolding ⊗Path.⊗-assoc ⊗-assoc
@@ -141,100 +174,3 @@ opaque
             ΣPathP (
             (λ i → p i .snd .fst .snd .snd) ,
             λ i → p i .snd  .snd))))))
-
-  -- -- because ⊗ is opaque,
-  -- -- same-splits and same-parses are needed so that the interface of
-  -- -- ⊗ doesn't leak in the type signature of ⊗PathP
-  -- has-splitEq :
-  --   ∀ (w : String) → (p : (A ⊗Eq.⊗ B) w) → (s : SplittingEq w) → Type ℓ-zero
-  -- has-splitEq w p s = s ≡ p .fst
-
-  -- isProp-has-splitEq : ∀ (w : String) (p : (A ⊗Eq.⊗ B) w) → (s : SplittingEq w) → isProp (has-splitEq w p s)
-  -- isProp-has-splitEq w p s = isSetSplittingEq w _ _
-
-  -- the-splitEq :
-  --   ∀ (w : String) → (p : (A ⊗Eq.⊗ B) w) → Σ[ s ∈ SplittingEq w ] has-splitEq w p s
-  -- the-splitEq w p = (p .fst) , refl
-
-  -- same-splitsEq :
-  --   {A : Grammar ℓA}
-  --   {B : Grammar ℓB}
-  --   {C : Grammar ℓC}
-  --   {D : Grammar ℓD}
-  --   {w : I → String}
-  --   → (p : (A ⊗Eq.⊗ B) (w i0))
-  --   → (q : (C ⊗Eq.⊗ D) (w i1))
-  --   → Type ℓ-zero
-  -- same-splitsEq {w = w} p q =
-  --     (the-splitEq (w i0) p .fst .fst) ≡ (the-splitEq (w i1) q .fst .fst)
-
-  -- opaque
-  --   unfolding the-splitEq
-
-  --   same-parsesEq :
-  --     {A : I → Grammar ℓA}{B : I → Grammar ℓB}
-  --     {w : I → String}
-  --     → (p : (A i0 ⊗Eq.⊗ B i0) (w i0))
-  --     → (q : (A i1 ⊗Eq.⊗ B i1) (w i1))
-  --     → (s≡ : same-splitsEq {w = w} p q)
-  --     → Type (ℓ-max ℓA ℓB)
-  --   same-parsesEq {A = A} {B = B} p q s≡ =
-  --     PathP (λ i → A i (s≡ i .fst) × B i (s≡ i .snd)) (p .snd) (q .snd)
-
-  --   ⊗EqPathP :
-  --     {A : I → Grammar ℓA}{B : I → Grammar ℓB}
-  --     {w : I → String}
-  --     → {p : (A i0 ⊗Eq.⊗ B i0) (w i0)}
-  --     → {q : (A i1 ⊗Eq.⊗ B i1) (w i1)}
-  --     → (s≡ : same-splitsEq {w = w} p q)
-  --     → same-parsesEq {A = A} {B = B} {w = w} p q s≡
-  --     → PathP (λ i → (A i ⊗Eq.⊗ B i) (w i)) p q
-  --   ⊗EqPathP s≡ p≡ = ΣPathP ({!SpittingPathP!} , p≡)
-
-  --   ⊗Eq≡ : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{w}
-  --     → (p p' : (A ⊗Eq.⊗ B) w)
-  --     → (s≡ : same-splitsEq {w = λ _ → w} p p')
-  --     → same-parsesEq {A = λ _ → A} {B = λ _ → B} {w = λ _ → w} p p' s≡
-  --     → p ≡ p'
-  --   ⊗Eq≡ p p' s≡ p≡ = ⊗EqPathP s≡ p≡
-
-  -- opaque
-  --   unfolding ⊗Eq.⊗-intro ⊗Path.⊗-intro
-  --   ⊗-intro≡ :
-  --       PathP (λ i → ⊗Path≡⊗Eq {A = A} {B = B} i ⊢ ⊗Path≡⊗Eq {A = C} {B = D} i) (f ⊗Path.,⊗ g) (f ⊗Eq.,⊗ g)
-  --   ⊗-intro≡ {f = f} {g = g} = funExt λ w → funExtDep (λ where
-  --       {⊗P} {⊗Eq} ⊗P≡⊗Eq →
-  --           ΣPathP (
-  --           (λ i → ⊗P≡⊗Eq i .fst) ,
-  --           ΣPathP (
-  --               (λ i → f (⊗P≡⊗Eq i .fst .fst .fst) (⊗P≡⊗Eq i .snd .fst)) ,
-  --               (λ i → g (⊗P≡⊗Eq i .fst .fst .snd) (⊗P≡⊗Eq i .snd .snd)))))
-  -- opaque
-  --   unfolding ⊗Eq.⊗-unit-r ⊗Path.⊗-unit-r εEq.ε εPath.ε
-  --   ⊗-unit-r≡ :
-  --       PathP (λ i → ⊗Path≡⊗Eq {A = A} {B = εEq.ε≡ i} i ⊢ A) ⊗Path.⊗-unit-r ⊗Eq.⊗-unit-r
-  --   ⊗-unit-r≡ {A = A} = funExt λ w → funExtDep (λ where
-  --     {(s , aPath , eps)} {(((w' , _) , Eq.refl) , aEq , Eq.refl)} ⊗P≡⊗Eq →
-  --       subst A (sym (w≡l++r s ∙ cong (left s ++_) eps ∙ ++-unit-r (left s))) aPath
-  --         ≡⟨ (λ i →
-  --              subst A
-  --               (sym (w≡l++r s ∙ cong (left s ++_) eps ∙ ++-unit-r (left s)))
-  --               (fromPathP (λ j → ⊗P≡⊗Eq (~ j) .snd .fst) (~ i) )) ⟩
-  --       subst A _ (subst A (λ j → ⊗P≡⊗Eq (~ j) .fst .fst .fst) aEq)
-  --         ≡⟨ sym (substComposite A _ _ aEq) ⟩
-  --       subst A _ aEq
-  --         ≡⟨ (λ i → subst A (isSetString _ _
-  --           ((λ j →
-  --             ⊗P≡⊗Eq (~ j) .fst .fst .fst) ∙
-  --             sym (w≡l++r s ∙ cong (left s ++_) eps ∙ ++-unit-r (left s)))
-  --           (sym (++-unit-r _)) i) aEq) ⟩
-  --       subst A (sym (++-unit-r _)) aEq
-  --         ≡⟨ sym (Eq.eqToPath
-  --           (Eq.transportPathToEq→transportPath A (sym (++-unit-r _)) aEq)) ⟩
-  --       Eq.transport A (Eq.pathToEq (sym (++-unit-r _))) aEq
-  --         ≡⟨ ((λ i → Eq.transport A
-  --           (isSetEqString _ _
-  --             (Eq.pathToEq (sym (++-unit-r _)))
-  --             (Eq.sym (++-unit-r-Eq _)) i) aEq)) ⟩
-  --       Eq.transport A (Eq.sym (++-unit-r-Eq _)) aEq
-  --       ∎)
