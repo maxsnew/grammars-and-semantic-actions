@@ -22,17 +22,17 @@ private
 
 open MonoidalStr
 
-asEqualityMonoidalStr : MonoidalStr ℓA
-asEqualityMonoidalStr .ε = εEq.ε*
-asEqualityMonoidalStr .ε-intro = εEq.ε*-intro
-asEqualityMonoidalStr .ε-elim = εEq.ε*-elim
-asEqualityMonoidalStr .literal = LiteralEq.literal*
-asEqualityMonoidalStr .lit-intro = LiteralEq.lit*-intro
+asEqualityMonoidalStr : MonoidalStr
+asEqualityMonoidalStr .ε = εEq.ε
+asEqualityMonoidalStr .ε-intro = εEq.ε-intro
+asEqualityMonoidalStr .ε-elim = εEq.ε-elim
+asEqualityMonoidalStr .literal = LiteralEq.literal
+asEqualityMonoidalStr .lit-intro = LiteralEq.lit-intro
 asEqualityMonoidalStr ._⊗_ = ⊗Eq._⊗_
 asEqualityMonoidalStr .⊗-intro = ⊗Eq.⊗-intro
-asEqualityMonoidalStr .⊗-unit-r = ⊗Eq.⊗-unit*-r
-asEqualityMonoidalStr .⊗-unit-r⁻ = ⊗Eq.⊗-unit*-r⁻
-asEqualityMonoidalStr .⊗-unit-l = ⊗Eq.⊗-unit*-l
-asEqualityMonoidalStr .⊗-unit-l⁻ = ⊗Eq.⊗-unit*-l⁻
+asEqualityMonoidalStr .⊗-unit-r = ⊗Eq.⊗-unit-r
+asEqualityMonoidalStr .⊗-unit-r⁻ = ⊗Eq.⊗-unit-r⁻
+asEqualityMonoidalStr .⊗-unit-l = ⊗Eq.⊗-unit-l
+asEqualityMonoidalStr .⊗-unit-l⁻ = ⊗Eq.⊗-unit-l⁻
 asEqualityMonoidalStr .⊗-assoc = ⊗Eq.⊗-assoc
 asEqualityMonoidalStr .⊗-assoc⁻ = ⊗Eq.⊗-assoc⁻

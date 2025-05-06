@@ -1,3 +1,4 @@
+{-# OPTIONS --erased-cubical #-}
 {- Equalizers are "solutions" to equations between two terms. -}
 
 {-

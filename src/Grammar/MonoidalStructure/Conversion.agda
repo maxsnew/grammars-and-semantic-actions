@@ -27,7 +27,7 @@ private
 
 open MonoidalStr
 
-MonoidalStr≡ : asPathMonoidalStr {ℓA} ≡ asEqualityMonoidalStr
+MonoidalStr≡ : asPathMonoidalStr ≡ asEqualityMonoidalStr
 MonoidalStr≡ i .ε = εEq.ε*≡ i
 MonoidalStr≡ i .ε-intro = εEq.ε*-intro≡ i
 MonoidalStr≡ i .ε-elim = εEq.ε*-elim≡ i

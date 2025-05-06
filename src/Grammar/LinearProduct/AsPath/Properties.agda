@@ -139,8 +139,7 @@ opaque
 
   opaque
     unfolding ⊗-unit-l the-split ⊗≡ ε
-    ⊗-unit-ll⁻ :
-      ⊗-unit-l⁻ {A = A} ∘g ⊗-unit-l ≡ id
+    ⊗-unit-ll⁻ : ⊗-unit-l⁻ {A = A} ∘g ⊗-unit-l ≡ id
     ⊗-unit-ll⁻ {A = A} =
       funExt λ w → funExt λ (s , eps , a) →
       let w'≡w = sym (w≡l++r s ∙ cong (_++ right s) eps)
@@ -149,8 +148,7 @@ opaque
        (ΣPathP ((isProp→PathP (λ _ → isLangε _) _ _) ,
          symP (subst-filler A w'≡w a)))
 
-    ⊗-unit-l⁻l :
-      ⊗-unit-l {A = A} ∘g ⊗-unit-l⁻ ≡ id
+    ⊗-unit-l⁻l : ⊗-unit-l {A = A} ∘g ⊗-unit-l⁻ ≡ id
     ⊗-unit-l⁻l {A = A} = funExt λ w → funExt λ a →
       subst (λ w'≡w → subst A w'≡w a ≡ a)
         (isSetString _ _ _ _) (substRefl {B = A} a)
@@ -186,8 +184,7 @@ opaque
 
 opaque
   unfolding _⊗_ ⊗-assoc ⊗≡
-  ⊗-assoc∘⊗-assoc⁻≡id :
-   ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
+  ⊗-assoc∘⊗-assoc⁻≡id : ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
   ⊗-assoc∘⊗-assoc⁻≡id = funExt λ w → funExt λ p →
     ⊗≡ _ _
       (≡-× (λ i → p .snd .fst .fst .snd (~ i)) refl)
@@ -197,8 +194,7 @@ opaque
           (≡-× refl refl)) ,
         refl))
 
-  ⊗-assoc⁻∘⊗-assoc≡id :
-   ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
+  ⊗-assoc⁻∘⊗-assoc≡id : ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
   ⊗-assoc⁻∘⊗-assoc≡id = funExt λ w → funExt λ p →
     ⊗≡ _ _
       (≡-× refl (sym (p .snd .snd .fst .snd)))

@@ -22,17 +22,17 @@ private
 
 open MonoidalStr
 
-asPathMonoidalStr : MonoidalStr ℓA
-asPathMonoidalStr .ε = εPath.ε*
-asPathMonoidalStr .ε-intro = εPath.ε*-intro
-asPathMonoidalStr .ε-elim = εPath.ε*-elim
-asPathMonoidalStr .literal = LiteralPath.literal*
-asPathMonoidalStr .lit-intro = LiteralPath.lit*-intro
+asPathMonoidalStr : MonoidalStr
+asPathMonoidalStr .ε = εPath.ε
+asPathMonoidalStr .ε-intro = εPath.ε-intro
+asPathMonoidalStr .ε-elim = εPath.ε-elim
+asPathMonoidalStr .literal = LiteralPath.literal
+asPathMonoidalStr .lit-intro = LiteralPath.lit-intro
 asPathMonoidalStr ._⊗_ = ⊗Path._⊗_
 asPathMonoidalStr .⊗-intro = ⊗Path.⊗-intro
-asPathMonoidalStr .⊗-unit-r = ⊗Path.⊗-unit*-r
-asPathMonoidalStr .⊗-unit-r⁻ = ⊗Path.⊗-unit*-r⁻
-asPathMonoidalStr .⊗-unit-l = ⊗Path.⊗-unit*-l
-asPathMonoidalStr .⊗-unit-l⁻ = ⊗Path.⊗-unit*-l⁻
+asPathMonoidalStr .⊗-unit-r = ⊗Path.⊗-unit-r
+asPathMonoidalStr .⊗-unit-r⁻ = ⊗Path.⊗-unit-r⁻
+asPathMonoidalStr .⊗-unit-l = ⊗Path.⊗-unit-l
+asPathMonoidalStr .⊗-unit-l⁻ = ⊗Path.⊗-unit-l⁻
 asPathMonoidalStr .⊗-assoc = ⊗Path.⊗-assoc
 asPathMonoidalStr .⊗-assoc⁻ = ⊗Path.⊗-assoc⁻

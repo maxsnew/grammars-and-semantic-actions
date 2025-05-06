@@ -22,7 +22,6 @@ open import Grammar.Epsilon.Base Alphabet isSetAlphabet
 open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
 open import Grammar.LinearFunction Alphabet isSetAlphabet
 open import Grammar.Equivalence.Base Alphabet isSetAlphabet
--- open import Grammar.Equalizer.Base Alphabet isSetAlphabet
 open import Grammar.Lift.Base Alphabet isSetAlphabet
 open import Grammar.Inductive.AsEquality.Indexed Alphabet isSetAlphabet
 open import Grammar.Inductive.Properties Alphabet isSetAlphabet
@@ -150,7 +149,7 @@ module _ (A : Grammar ℓA) where
   unrolled* = ⟦ *Ty _ ⟧ (μ *Ty)
 
   *≅unrolled* : KL* ≅ unrolled*
-  *≅unrolled* = unroll≅ {ℓA = ℓA} *Ty _
+  *≅unrolled* = unroll≅ *Ty _
 
   data *TagL : Type ℓA where
     nil snoc : *TagL

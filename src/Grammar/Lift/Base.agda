@@ -31,6 +31,9 @@ liftG = λ w z → lift z
 lowerG : LiftG ℓB A ⊢ A
 lowerG = λ w z → z .lower
 
+mapLiftG : A ⊢ B → LiftG ℓC A ⊢ LiftG ℓD B
+mapLiftG e = liftG ∘g e ∘g lowerG
+
 open StrongEquivalence
 module _ ℓB (A : Grammar ℓA) where
   LiftG≅ : A ≅ (LiftG ℓB A)

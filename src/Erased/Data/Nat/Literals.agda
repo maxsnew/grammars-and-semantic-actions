@@ -11,7 +11,7 @@ open import Agda.Builtin.FromNat public
   renaming (Number to HasFromNat)
 open import Agda.Builtin.FromNeg public
   renaming (Negative to HasFromNeg)
-open import Cubical.Data.Unit.Base public
+open import Erased.Data.Unit.Base public
 
 -- Natural number literals for ℕ
 

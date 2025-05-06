@@ -9,8 +9,9 @@ open import Erased.Data.Sigma.Base
 open import Erased.Data.Sum.Base
 
 open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.MonoidalStructure.Base Alphabet isSetAlphabet
 open import Grammar.Equivalence.Base Alphabet isSetAlphabet
-open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
+-- open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
 open import Term.Base Alphabet isSetAlphabet
 
 private
@@ -105,11 +106,14 @@ module _
 &-par : A ⊢ B → C ⊢ D → A & C ⊢ B & D
 &-par e e' = (e ∘g π₁) ,& (e' ∘g π₂)
 
-⊗&-distL : A ⊗ (B & C) ⊢ (A ⊗ B) & (A ⊗ C)
-⊗&-distL = (id ,⊗ π₁) ,& (id ,⊗ π₂)
 
-⊗&-distR : (A & B) ⊗ C ⊢ (A ⊗ C) & (B ⊗ C)
-⊗&-distR = (π₁ ,⊗ id) ,& (π₂ ,⊗ id)
+module _ (monStr : MonoidalStr) where
+  open MonoidalStr monStr
+  ⊗&-distL : A ⊗ (B & C) ⊢ (A ⊗ B) & (A ⊗ C)
+  ⊗&-distL = (id ,⊗ π₁) ,& (id ,⊗ π₂)
+
+  ⊗&-distR : (A & B) ⊗ C ⊢ (A ⊗ C) & (B ⊗ C)
+  ⊗&-distR = (π₁ ,⊗ id) ,& (π₂ ,⊗ id)
 
 module _
   {A : Grammar ℓA} {B : Grammar ℓB}

@@ -9,13 +9,14 @@ open import Cubical.Data.List as List hiding (rec)
 open import Cubical.Data.Sigma
 
 open import Grammar.Base Alphabet isSetAlphabet
+open import Grammar.MonoidalStructure.Base Alphabet isSetAlphabet
 open import Grammar.Top Alphabet isSetAlphabet
 open import Grammar.Sum Alphabet isSetAlphabet
 open import Grammar.Properties Alphabet isSetAlphabet
 open import Grammar.Lift Alphabet isSetAlphabet
 open import Grammar.Equalizer.Base Alphabet isSetAlphabet
-open import Grammar.LinearProduct.Base Alphabet isSetAlphabet
-open import Grammar.KleeneStar.Inductive Alphabet isSetAlphabet
+open import Grammar.KleeneStar.Inductive.Base Alphabet isSetAlphabet
+open import Grammar.Inductive.Indexed Alphabet isSetAlphabet as Ind
 open import Grammar.String.Base Alphabet isSetAlphabet
 open import Grammar.Equivalence.Base Alphabet isSetAlphabet
 
@@ -34,44 +35,42 @@ open StrongEquivalence
 
 open _isRetractOf_
 open WeakEquivalence
-@0 whichStringRetract : string isRetractOf (⊕[ w ∈ String ] ⌈ w ⌉)
-whichStringRetract .weak .fun =
-  fold*r char
-    (σ [])
-    (⊕ᴰ-elim (λ w → (⊕ᴰ-elim λ c → σ (c ∷ w)) ∘g ⊕ᴰ-distLEq .fun)
-     ∘g ⊕ᴰ-distREq .fun)
-whichStringRetract .weak .inv = ⊕ᴰ-elim ⌈⌉→string
-whichStringRetract .ret = the-ret
-  where
-  opaque
-    unfolding ⊗-intro ⊕ᴰ-distL ⊕ᴰ-distR
+
+module _ {{monStr : MonoidalStr}} where
+  open MonoidalStr monStr
+  whichStringRetract : string isRetractOf (⊕[ w ∈ String ] ⌈ w ⌉)
+  whichStringRetract .weak .fun = string→⌈⌉
+  whichStringRetract .weak .inv = ⊕ᴰ-elim ⌈⌉→string
+  whichStringRetract .ret = the-ret
+    where
     the-ret : whichStringRetract .weak .inv ∘g whichStringRetract .weak .fun ≡ id
     the-ret =
       equalizer-ind (*Ty char) (λ _ → string) _ _
       (λ _ → ⊕ᴰ≡ _ _ λ @0 where
         nil → refl
-        cons i → CONS ∘g id ,⊗ eq-π-pf _ _ i ∘g lowerG ,⊗ lowerG
+        cons → {!!}
+        -- CONS ∘g id ,⊗ eq-π-pf _ _ i ∘g lowerG ,⊗ lowerG
       )
       _
 
-@0 ⊤→⊕⌈⌉ : ⊤ ⊢ ⊕[ w ∈ String ] ⌈ w ⌉
-⊤→⊕⌈⌉ w _ = w , (mk⌈⌉ w)
+  -- ⊤→⊕⌈⌉ : ⊤ ⊢ ⊕[ w ∈ String ] ⌈ w ⌉
+  -- ⊤→⊕⌈⌉ w _ = w , (mk⌈⌉ w)
 
-@0 ⊤≅⊕⌈⌉ : ⊤ ≅ ⊕[ w ∈ String ] ⌈ w ⌉
-⊤≅⊕⌈⌉ .fun = ⊤→⊕⌈⌉
-⊤≅⊕⌈⌉ .inv = ⊤-intro
-⊤≅⊕⌈⌉ .sec = the-sec
-  where
-  opaque
-    unfolding ⊗-intro ⊕ᴰ-distL ⊕ᴰ-distR mk⌈⌉
-    the-sec : ⊤→⊕⌈⌉ ∘g ⊤-intro ≡ id
-    the-sec = ⊕ᴰ≡ _ _ λ w →
-      funExt λ w' → funExt λ p →
-        Σ≡Prop (λ w'' → isLang⌈⌉ w'' w') (sym (⌈⌉→≡ w w' p))
-⊤≅⊕⌈⌉ .ret = unambiguous⊤ _ _
+  -- -- @0 ⊤≅⊕⌈⌉ : ⊤ ≅ ⊕[ w ∈ String ] ⌈ w ⌉
+  -- -- ⊤≅⊕⌈⌉ .fun = ⊤→⊕⌈⌉
+  -- -- ⊤≅⊕⌈⌉ .inv = ⊤-intro
+  -- -- ⊤≅⊕⌈⌉ .sec = the-sec
+  -- --   where
+  -- --   opaque
+  -- --     unfolding ⊗-intro ⊕ᴰ-distL ⊕ᴰ-distR mk⌈⌉
+  -- --     the-sec : ⊤→⊕⌈⌉ ∘g ⊤-intro ≡ id
+  -- --     the-sec = ⊕ᴰ≡ _ _ λ w →
+  -- --       funExt λ w' → funExt λ p →
+  -- --         Σ≡Prop (λ w'' → isLang⌈⌉ w'' w') (sym (⌈⌉→≡ w w' p))
+  -- -- ⊤≅⊕⌈⌉ .ret = unambiguous⊤ _ _
 
-@0 unambiguous⊕⌈⌉ : unambiguous (⊕[ w ∈ String ] ⌈ w ⌉)
-unambiguous⊕⌈⌉ = unambiguous≅ ⊤≅⊕⌈⌉ unambiguous⊤
+  -- -- @0 unambiguous⊕⌈⌉ : unambiguous (⊕[ w ∈ String ] ⌈ w ⌉)
+  -- -- unambiguous⊕⌈⌉ = unambiguous≅ ⊤≅⊕⌈⌉ unambiguous⊤
 
-@0 unambiguous-string : unambiguous string
-unambiguous-string = isUnambiguousRetract whichStringRetract unambiguous⊕⌈⌉
+  -- -- @0 unambiguous-string : unambiguous string
+  -- -- unambiguous-string = isUnambiguousRetract whichStringRetract unambiguous⊕⌈⌉

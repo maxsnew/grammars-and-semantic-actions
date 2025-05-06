@@ -7,6 +7,7 @@ module @0 Grammar.Epsilon.AsPath.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphab
 open import Cubical.Data.List
 import Cubical.Data.Empty as Empty
 open import Erased.Lift.Base
+open import Cubical.Functions.FunExtEquiv
 
 open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.HLevels.Base Alphabet isSetAlphabet

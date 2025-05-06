@@ -1,3 +1,4 @@
+{-# OPTIONS --erased-cubical #-}
 module Cubical.Data.Sigma.ErasedSnd where
 
 open import Cubical.Foundations.Prelude
