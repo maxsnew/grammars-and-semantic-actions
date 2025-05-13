@@ -36,7 +36,7 @@ module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
   → {f' : ∀ x → B x ⊢ A}
   → {f : A ⊢ C}
   → f ∘g ⊕ᴰ-elim f' ≡ ⊕ᴰ-elim (λ x → f ∘g f' x)
-⊕ᴰ-elim∘g = ⊕ᴰ≡ _ _ (λ x → refl)
+⊕ᴰ-elim∘g = refl
 
 module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : X → Grammar ℓB}
   (e : (x : X) → A x ⊢ B x)

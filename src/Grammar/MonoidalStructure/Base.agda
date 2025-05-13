@@ -27,20 +27,22 @@ private
     f f' f'' : A ⊢ B
 
 open StrongEquivalence
-record MonoidalStr : Typeω where
+record MonoidalStr ℓA : Type (ℓ-suc ℓA) where
   field
-    ε : Grammar ℓ-zero
+    ε : Grammar ℓA
     ε-intro : ε []
     ε-elim : ∀ {A : Grammar ℓA} → A [] → ε ⊢ A
 
     literal : Alphabet → Grammar ℓ-zero
     lit-intro : {c : Alphabet} → literal c [ c ]
 
-    _⊗_ : Grammar ℓA → Grammar ℓB →  Grammar (ℓ-max ℓA ℓB)
+    _⊗_ : Grammar ℓA → Grammar ℓA →  Grammar ℓA
     ⊗-intro : A ⊢ B → C ⊢ D → A ⊗ C ⊢ B ⊗ D
     @0 ⊗-intro∘g⊗-intro : ∀ {f : A ⊢ B} {f' : C ⊢ D} {f'' : B ⊢ E} {f''' : D ⊢ F} →
       ⊗-intro f'' f''' ∘g ⊗-intro f f' ≡ ⊗-intro (f'' ∘g f) (f''' ∘g f')
     @0 id⊗id≡id : ⊗-intro {A = A} {C = B} id id ≡ id
+
+    mk⊗ : ∀ {w w' : String} → A w → B w' → (A ⊗ B) (w ++ w')
 
     ⊗-unit-r : A ⊗ ε ⊢ A
     ⊗-unit-r⁻ : A ⊢ A ⊗ ε
@@ -57,30 +59,41 @@ record MonoidalStr : Typeω where
     @0 ⊗-assoc∘⊗-assoc⁻≡id : ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
     @0 ⊗-assoc⁻∘⊗-assoc≡id : ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
 
-    _⟜_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
+    _⟜_ : Grammar ℓA → Grammar ℓA → Grammar ℓA
     ⟜-intro : A ⊗ B ⊢ C → B ⊢ C ⟜ A
     ⟜-app : A ⊗ (B ⟜ A) ⊢ B
 
     @0 ⟜-β : (e : (A ⊗ B) ⊢ C) → ⟜-app ∘g ⊗-intro id (⟜-intro e) ≡ e
     @0 ⟜-η : (f : A ⊢ B ⟜ C) → f ≡ ⟜-intro (⟜-app ∘g ⊗-intro id f)
 
-    _⊸_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
+    _⊸_ : Grammar ℓA → Grammar ℓA → Grammar ℓA
     ⊸-intro : A ⊗ B ⊢  C → A ⊢ B ⊸ C
     ⊸-app : (A ⊸ B) ⊗ A ⊢ B
 
     @0 ⊸-β : (e : A ⊗ B ⊢ C) → ⊸-app ∘g ⊗-intro (⊸-intro e) id ≡ e
     @0 ⊸-η : (e : A ⊢ B ⊸ C) → ⊸-intro (⊸-app ∘g ⊗-intro e id) ≡ e
 
-    ⊕ᴰ-distL : ∀ {X : Type ℓX} {A : Grammar ℓA} {B : X → Grammar ℓB} →
+    ⊕ᴰ-distL : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA} →
       (⊕[ x ∈ X ] B x) ⊗ A ≅ ⊕[ x ∈ X ] (B x ⊗ A)
 
-    @0 ⊕ᴰ-distL-β : ∀ {X : Type ℓX} {A : Grammar ℓA} {B : X → Grammar ℓB} {x : X} →
+    @0 ⊕ᴰ-distL-β : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA} {x : X} →
       ⊕ᴰ-distL {A = A} {B = B} .fun ∘g ⊗-intro (σ x) id ≡ σ x
 
-    ⊕ᴰ-distR : ∀ {X : Type ℓX} {A : Grammar ℓA} {B : X → Grammar ℓB} →
+    @0 ⊕ᴰ-distL-β' : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA}
+      {C : Grammar ℓA} {D : Grammar ℓA} →
+      (f : (x : X) → B x ⊢ C) → (g : A ⊢ D) →
+      ⊕ᴰ-elim (λ x → ⊗-intro (f x) g) ∘g ⊕ᴰ-distL {A = A} {B = B} .fun ≡ ⊗-intro (⊕ᴰ-elim f) g
+
+    ⊕ᴰ-distR : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA} →
       A ⊗ (⊕[ x ∈ X ] B x) ≅ ⊕[ x ∈ X ] (A ⊗ B x)
-    @0 ⊕ᴰ-distR-β : ∀ {X : Type ℓX} {A : Grammar ℓA} {B : X → Grammar ℓB} {x : X} →
+
+    @0 ⊕ᴰ-distR-β : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA} {x : X} →
       ⊕ᴰ-distR {A = A} {B = B} .fun ∘g ⊗-intro id (σ x) ≡ σ x
+
+    @0 ⊕ᴰ-distR-β' : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA}
+      {C : Grammar ℓA} {D : Grammar ℓA} →
+      (f : (x : X) → B x ⊢ C) → (g : A ⊢ D) →
+      ⊕ᴰ-elim (λ x → ⊗-intro g (f x)) ∘g ⊕ᴰ-distR {A = A} {B = B} .fun ≡ ⊗-intro g (⊕ᴰ-elim f)
 
   _,⊗_ = ⊗-intro
 
@@ -91,8 +104,8 @@ record MonoidalStr : Typeω where
   infixr 2 _⊸_
   infixl 2 _⟜_
 
-  ε* : Grammar ℓ
-  ε* {ℓ = ℓ} = LiftG ℓ ε
+  -- ε : Grammar ℓ
+  -- ε {ℓ = ℓ} = LiftG ℓ ε
 
   ⟜-intro-ε : A ⊢ C → ε ⊢ C ⟜ A
   ⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-r)
@@ -166,8 +179,7 @@ record MonoidalStr : Typeω where
 
   open StrongEquivalence
   module _
-    {A : Grammar ℓA} {B : Grammar ℓB}
-    {C : Grammar ℓC} {D : Grammar ℓD}
+    {A B C D : Grammar ℓA}
     (A≅B : A ≅ B) (C≅D : C ≅ D)
     where
 
@@ -198,9 +210,7 @@ record MonoidalStr : Typeω where
 
 
   module _
-    {A : Grammar ℓA}
-    {B : Grammar ℓB}
-    {C : Grammar ℓC}
+    {A B C : Grammar ℓA}
     where
     ⊗-assoc≅ : A ⊗ (B ⊗ C) ≅ (A ⊗ B) ⊗ C
     ⊗-assoc≅ .fun = ⊗-assoc

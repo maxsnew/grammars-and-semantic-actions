@@ -93,115 +93,115 @@ module @0 _ {A : Grammar ℓA} where
         ∙ π≡)
     unambiguous→Δ≅ .ret = &-β₁ id id
 
-disjoint : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
-disjoint A B = A & B ⊢ ⊥
+disjoint : Grammar ℓA → Grammar ℓA → Type ℓA
+disjoint {ℓA = ℓA} A B = A & B ⊢ ⊥ {ℓA}
 
-module _ (@0 dis : disjoint A B) (e : C ⊢ A) where
-  @0 disjoint⊢ : disjoint C B
-  disjoint⊢ = dis ∘g e ,&p id
+-- module _ (@0 dis : disjoint A B) (e : C ⊢ A) where
+--   @0 disjoint⊢ : disjoint C B
+--   disjoint⊢ = dis ∘g e ,&p id
 
-  module _ (f : D ⊢ B) where
-    @0 disjoint⊢2 : disjoint C D
-    disjoint⊢2 = disjoint⊢ ∘g id ,&p f
+--   module _ (f : D ⊢ B) where
+--     @0 disjoint⊢2 : disjoint C D
+--     disjoint⊢2 = disjoint⊢ ∘g id ,&p f
 
-open WeakEquivalence
-module _ (@0 dis : disjoint A B) (A≈C : A ≈ C) where
-  @0 disjoint≈ : disjoint C B
-  disjoint≈ = disjoint⊢ dis (A≈C .inv)
+-- open WeakEquivalence
+-- module _ (@0 dis : disjoint A B) (A≈C : A ≈ C) where
+--   @0 disjoint≈ : disjoint C B
+--   disjoint≈ = disjoint⊢ dis (A≈C .inv)
 
-open StrongEquivalence
-module _ (@0 dis : disjoint A B) (A≅C : A ≅ C) where
-  @0 disjoint≅ : disjoint C B
-  disjoint≅ = disjoint⊢ dis (A≅C .inv)
+-- open StrongEquivalence
+-- module _ (@0 dis : disjoint A B) (A≅C : A ≅ C) where
+--   @0 disjoint≅ : disjoint C B
+--   disjoint≅ = disjoint⊢ dis (A≅C .inv)
 
-  module _ (B≅D : B ≅ D) where
-    @0 disjoint≅2 : disjoint C D
-    disjoint≅2 = disjoint≅ ∘g id ,&p B≅D .inv
+--   module _ (B≅D : B ≅ D) where
+--     @0 disjoint≅2 : disjoint C D
+--     disjoint≅2 = disjoint≅ ∘g id ,&p B≅D .inv
 
-@0 disjoint⊕l : disjoint (A ⊕ B) C → disjoint A C
-disjoint⊕l dis = disjoint⊢ dis inl
+-- @0 disjoint⊕l : disjoint (A ⊕ B) C → disjoint A C
+-- disjoint⊕l dis = disjoint⊢ dis inl
 
-@0 disjoint⊕r : disjoint (A ⊕ B) C → disjoint B C
-disjoint⊕r dis = disjoint⊢ dis inr
+-- @0 disjoint⊕r : disjoint (A ⊕ B) C → disjoint B C
+-- disjoint⊕r dis = disjoint⊢ dis inr
 
-open StrongEquivalence
+-- open StrongEquivalence
 
-@0 isUnambiguousRetract' :
-  ∀ (f : A ⊢ B) (f' : B ⊢ A)
-  → @0 (f' ∘g f ≡ id)
-  → @0 unambiguous B → unambiguous A
-isUnambiguousRetract' f f' ret unambB e e' =
-  cong (_∘g e) (sym ret)
-  ∙ cong (f' ∘g_) (unambB _ _)
-  ∙ cong (_∘g e') ret
+-- @0 isUnambiguousRetract' :
+--   ∀ (f : A ⊢ B) (f' : B ⊢ A)
+--   → @0 (f' ∘g f ≡ id)
+--   → @0 unambiguous B → unambiguous A
+-- isUnambiguousRetract' f f' ret unambB e e' =
+--   cong (_∘g e) (sym ret)
+--   ∙ cong (f' ∘g_) (unambB _ _)
+--   ∙ cong (_∘g e') ret
 
-open _isRetractOf_
-@0 isUnambiguousRetract : A isRetractOf B → @0 unambiguous B → unambiguous A
-isUnambiguousRetract the-ret =
-  isUnambiguousRetract' (the-ret .weak .fun) (the-ret .weak .inv) (the-ret .ret)
+-- open _isRetractOf_
+-- @0 isUnambiguousRetract : A isRetractOf B → @0 unambiguous B → unambiguous A
+-- isUnambiguousRetract the-ret =
+--   isUnambiguousRetract' (the-ret .weak .fun) (the-ret .weak .inv) (the-ret .ret)
 
-@0 unambiguous≅ : A ≅ B → @0 unambiguous A → unambiguous B
-unambiguous≅ A≅B unambA = isUnambiguousRetract' (A≅B .inv) (A≅B .fun) (A≅B .sec) unambA
-  where open isStrongEquivalence
+-- @0 unambiguous≅ : A ≅ B → @0 unambiguous A → unambiguous B
+-- unambiguous≅ A≅B unambA = isUnambiguousRetract' (A≅B .inv) (A≅B .fun) (A≅B .sec) unambA
+--   where open isStrongEquivalence
 
-unambiguous→StrongEquivalence
-  : @0 unambiguous A
-  → @0 unambiguous B
-  → (A ⊢ B)
-  → (B ⊢ A)
-  → A ≅ B
-unambiguous→StrongEquivalence unambA unambB f f' =
-  mkStrEq f f' (unambB (f ∘g f') id) (unambA (f' ∘g f) id)
+-- unambiguous→StrongEquivalence
+--   : @0 unambiguous A
+--   → @0 unambiguous B
+--   → (A ⊢ B)
+--   → (B ⊢ A)
+--   → A ≅ B
+-- unambiguous→StrongEquivalence unambA unambB f f' =
+--   mkStrEq f f' (unambB (f ∘g f') id) (unambA (f' ∘g f) id)
 
-unambiguousRetract'→StrongEquivalence
-  : ∀ (f : A ⊢ B) (f' : B ⊢ A)
-  → @0 (f' ∘g f ≡ id)
-  → @0 unambiguous B
-  → A ≅ B
-unambiguousRetract'→StrongEquivalence f f' ret unambB
-  = unambiguous→StrongEquivalence (isUnambiguousRetract' f f' ret unambB) unambB f f'
+-- unambiguousRetract'→StrongEquivalence
+--   : ∀ (f : A ⊢ B) (f' : B ⊢ A)
+--   → @0 (f' ∘g f ≡ id)
+--   → @0 unambiguous B
+--   → A ≅ B
+-- unambiguousRetract'→StrongEquivalence f f' ret unambB
+--   = unambiguous→StrongEquivalence (isUnambiguousRetract' f f' ret unambB) unambB f f'
 
-unambiguousRetract→StrongEquivalence :
-  A isRetractOf B → @0 unambiguous B → A ≅ B
-unambiguousRetract→StrongEquivalence the-ret unambB =
-  unambiguous→StrongEquivalence
-    (isUnambiguousRetract the-ret unambB) unambB
-    (the-ret .weak .fun) (the-ret .weak .inv)
+-- unambiguousRetract→StrongEquivalence :
+--   A isRetractOf B → @0 unambiguous B → A ≅ B
+-- unambiguousRetract→StrongEquivalence the-ret unambB =
+--   unambiguous→StrongEquivalence
+--     (isUnambiguousRetract the-ret unambB) unambB
+--     (the-ret .weak .fun) (the-ret .weak .inv)
 
-module _ {A : Grammar ℓA} where
-  &⊤≅ : A ≅ A & ⊤
-  &⊤≅ .fun = id ,& ⊤-intro
-  &⊤≅ .inv = π₁
-  &⊤≅ .sec = the-sec
-    where
-    opaque
-      unfolding &-intro ⊤-intro π₁
-      the-sec : &⊤≅ .fun ∘g &⊤≅ .inv ≡ id
-      the-sec = refl
-  &⊤≅ .ret = the-ret
-    where
-    opaque
-      unfolding &-intro ⊤-intro π₁
-      the-ret : &⊤≅ .inv ∘g &⊤≅ .fun ≡ id
-      the-ret = refl
+-- module _ {A : Grammar ℓA} where
+--   &⊤≅ : A ≅ A & ⊤
+--   &⊤≅ .fun = id ,& ⊤-intro
+--   &⊤≅ .inv = π₁
+--   &⊤≅ .sec = the-sec
+--     where
+--     opaque
+--       unfolding &-intro ⊤-intro π₁
+--       the-sec : &⊤≅ .fun ∘g &⊤≅ .inv ≡ id
+--       the-sec = refl
+--   &⊤≅ .ret = the-ret
+--     where
+--     opaque
+--       unfolding &-intro ⊤-intro π₁
+--       the-ret : &⊤≅ .inv ∘g &⊤≅ .fun ≡ id
+--       the-ret = refl
 
-module _ {A : Grammar ℓA} {B : Grammar ℓB}
-  (unambig-A : unambiguous A) (unambig-B : unambiguous B)
-  (A≈B : A ≈ B)
-  where
+-- module _ {A : Grammar ℓA} {B : Grammar ℓB}
+--   (unambig-A : unambiguous A) (unambig-B : unambiguous B)
+--   (A≈B : A ≈ B)
+--   where
 
-  ≈→≅ : A ≅ B
-  ≈→≅ .fun = A≈B .fun
-  ≈→≅ .inv = A≈B .inv
-  ≈→≅ .sec = unambig-B _ _
-  ≈→≅ .ret = unambig-A _ _
+--   ≈→≅ : A ≅ B
+--   ≈→≅ .fun = A≈B .fun
+--   ≈→≅ .inv = A≈B .inv
+--   ≈→≅ .sec = unambig-B _ _
+--   ≈→≅ .ret = unambig-A _ _
 
-module _
-  {A : Grammar ℓA}
-  {B : Grammar ℓB}
-  (A≅B : A ≅ B)
-  where
+-- module _
+--   {A : Grammar ℓA}
+--   {B : Grammar ℓB}
+--   (A≅B : A ≅ B)
+--   where
 
-  ≅→≈ : A ≈ B
-  ≅→≈ .fun = A≅B .fun
-  ≅→≈ .inv = A≅B .inv
+--   ≅→≈ : A ≈ B
+--   ≅→≈ .fun = A≅B .fun
+--   ≅→≈ .inv = A≅B .inv

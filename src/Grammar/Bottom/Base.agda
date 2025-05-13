@@ -20,28 +20,19 @@ private
     B : Grammar ℓB
 
 opaque
-  ⊥ : Grammar ℓ-zero
-  ⊥ _ = Empty.⊥
+  ⊥ : Grammar ℓA
+  ⊥ _ = Empty.⊥*
 
-  ⊥* : Grammar ℓA
-  ⊥* _ = Empty.⊥*
+  ⊥-elim : ⊥ {ℓB} ⊢ A
+  ⊥-elim _ x = Empty.elim (lower x)
 
-  ⊥-elim :
-    ⊥ ⊢ A
-  ⊥-elim _ = Empty.elim
+  @0 ⊥-η : ∀ (f f' : ⊥ {ℓB} ⊢ A) → f ≡ f'
+  ⊥-η _ _ = funExt λ _ → funExt λ where ()
 
-  ⊥*-elim :
-    ⊥* {ℓB} ⊢ A
-  ⊥*-elim _ x = Empty.elim (lower x)
+  get⊥ : ∀ {w} → ⊥ {ℓB} w → Empty.⊥
+  get⊥ ()
 
-  @0 ⊥-η : ∀ (f f' : ⊥ ⊢ A)
-    → f ≡ f'
-  ⊥-η _ _ = funExt λ _ → funExt Empty.elim
-
-  get⊥ : ∀ {w} → ⊥ w → Empty.⊥
-  get⊥ p = p
-
-module _ {{monStr : MonoidalStr}} where
+module _ {{monStr : MonoidalStr ℓA}} where
   open MonoidalStr monStr
   ⊗⊥ : A ⊗ ⊥ ⊢ ⊥
   ⊗⊥ = ⟜-app ∘g id ,⊗ ⊥-elim

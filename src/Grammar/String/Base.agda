@@ -20,7 +20,7 @@ open import Grammar.Base Alphabet isSetAlphabet
 open import Grammar.MonoidalStructure.Base Alphabet isSetAlphabet
 
 open import Grammar.Equivalence.Base Alphabet isSetAlphabet
--- open import Grammar.HLevels.Base Alphabet isSetAlphabet hiding (⟨_⟩)
+open import Grammar.HLevels.Base Alphabet isSetAlphabet hiding (⟨_⟩)
 open import Grammar.Sum.Base Alphabet isSetAlphabet
 -- open import Grammar.Literal.Base Alphabet isSetAlphabet
 -- open import Grammar.Epsilon Alphabet isSetAlphabet
@@ -72,20 +72,35 @@ module _ {{monStr : MonoidalStr}} where
       ∘g ⊕ᴰ-distR .fun)
       ∘g ⊕ᴰ-distL .fun)
 
+  mk⌈⌉ : ∀ w → ⌈ w ⌉ w
+  mk⌈⌉ [] = ε-intro
+  mk⌈⌉ (c ∷ w) = mk⊗ lit-intro (mk⌈⌉ w)
+
+  record ⌈⌉Proofs : Type ℓ-zero where
+    field
+      @0 isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
+      @0 ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
+
   -- @0 ⌈_⌉' : String → Grammar ℓ-zero
   -- ⌈ w ⌉' w' = w ≡ w'
 
-  -- opaque
-  --   unfolding ⊗-intro ε literal
-  --   mk⌈⌉ : ∀ w → ⌈ w ⌉ w
-  --   mk⌈⌉ [] = Eq.refl
-  --   mk⌈⌉ (c ∷ w) = (_ , Eq.refl) , (Eq.refl , (mk⌈⌉ w))
+  -- -- opaque
+  -- --   unfolding ⊗-intro ε literal
+  -- --   mk⌈⌉ : ∀ w → ⌈ w ⌉ w
+  -- --   mk⌈⌉ [] = Eq.refl
+  -- --   mk⌈⌉ (c ∷ w) = (_ , Eq.refl) , (Eq.refl , (mk⌈⌉ w))
 
   -- @0 mk⌈⌉' : ∀ w → ⌈ w ⌉' w
   -- mk⌈⌉' w = refl
 
   -- @0 isLang⌈⌉' : ∀ w → isLang (⌈ w ⌉')
   -- isLang⌈⌉' = isSetString
+
+  -- @0 uniquely-supported-⌈⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
+  -- uniquely-supported-⌈⌉ [] [] p = refl
+  -- uniquely-supported-⌈⌉ [] (c ∷ w) p = {!!}
+  -- uniquely-supported-⌈⌉ (c ∷ w) [] p = {!!}
+  -- uniquely-supported-⌈⌉ (c ∷ w) (c' ∷ w') p = {!!}
 
   -- opaque
   --   unfolding ε _⊗_ literal
