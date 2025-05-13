@@ -372,10 +372,6 @@ xrightmargin = 1.5mm
 }
 \email{maxsnew@umich.edu}
 
-\makeatletter
-\let\@authorsaddresses\@empty
-\makeatother
-
 \begin{abstract}
   We present \theoryname~(\theoryabbv), a domain-specific dependent
   type theory for verified parsing and formal grammar theory. In
@@ -1390,7 +1386,7 @@ formalization.
 \pedro{I don't like the inductive proof explanation above, but I
   don't know how I would phrase it}
 
-\subsection{Grammar-specific Additions}
+\subsection{Grammar-Specific Additions}
 
 So far, our calculus is a somewhat generic combination of dependent
 types with non-commutative linear types. In order to carry out formal
@@ -1761,7 +1757,7 @@ equivalent to the traces of its determinized automaton. Then, we use
 with respect to this weak equivalence.
 \end{proof}
 
-\subsection{Context-free grammars}
+\subsection{Context-Free Grammars}
 
 Next, we give two examples for parsing context-free
 grammars (CFGs). CFGs can be encoded in our type
@@ -2325,8 +2321,6 @@ encode type type systems as linear types in a modified version of
 \emph{type systems} over trees. This could analogously serve as a
 framework for verified type checking and static analysis.
 
-\newpage
-
 \begin{acks}
   This material is based upon work supported by the Air Force Office of
   Scientific Research under Grant No.~\grantnum{}{FA9550-23-1-0760}, the ERC
@@ -2342,7 +2336,6 @@ The Agda implementation of \theoryabbv and the formalization of our proofs are a
 
 \bibliography{refs.bib}
 
-\newpage
 \ifarxiv
 \appendix
 \section{Syntax}
