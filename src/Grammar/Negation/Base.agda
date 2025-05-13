@@ -15,5 +15,5 @@ private
     A : Grammar ℓA
 
 ¬G_ : Grammar ℓA → Grammar ℓA
-¬G_ {ℓA = ℓA} A = A ⇒ (⊥ {ℓA})
+¬G  A = A ⇒ ⊥
 infix 30 ¬G_

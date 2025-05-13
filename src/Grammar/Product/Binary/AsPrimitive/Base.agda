@@ -107,7 +107,7 @@ module _
 &-par e e' = (e ∘g π₁) ,& (e' ∘g π₂)
 
 
-module _ (monStr : MonoidalStr ℓA) where
+module _ (monStr : MonoidalStr) where
   open MonoidalStr monStr
   ⊗&-distL : A ⊗ (B & C) ⊢ (A ⊗ B) & (A ⊗ C)
   ⊗&-distL = (id ,⊗ π₁) ,& (id ,⊗ π₂)
