@@ -55,7 +55,6 @@ opaque
 @0 Alphabet : hSet _
 Alphabet = (Bracket , isSetBracket)
 
-
 -- open import Grammar.Base Bracket isSetBracket
 -- open import Grammar.Bottom Bracket isSetBracket
 -- open import Grammar.Top Bracket isSetBracket

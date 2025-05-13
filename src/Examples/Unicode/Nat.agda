@@ -50,7 +50,7 @@ Digit'→BChar nine' = '9'
 Digit : Grammar ℓ-zero
 Digit = ⊕[ d ∈ Digit' ] ⟦ d ⟧Digit
 
-Num = Digit *
+Num = Digit +
 
 open Printer
 open PrintingUtils (λ c → primStringFromList (c ∷ []))
@@ -63,14 +63,14 @@ printDigit =
     (λ d → printLiteral (Digit'→BChar d))
 
 printNum : Printer Num
-printNum = print* printDigit
+printNum = print⊗ printDigit (print* printDigit)
 
 unicodeChar→Num? : char ⊢ Maybe Num
 unicodeChar→Num? = ⊕ᴰ-elim λ c →
   foldr
     (λ d acc →
       decRec
-        (λ where Eq.refl → just ∘g *-singleton Digit ∘g σ d)
+        (λ where Eq.refl → just ∘g +-singleton Digit ∘g σ d)
         (λ _ → acc)
         (charDecEq c (Digit'→BChar d))
     )
@@ -78,16 +78,26 @@ unicodeChar→Num? = ⊕ᴰ-elim λ c →
     Digit'List
 
 concatNum : Num ⊗ Num ⊢ Num
-concatNum = flatten*
+concatNum = id ,⊗ (flatten* ∘g id ,⊗ CONS) ∘g ⊗-assoc⁻
 
 open StrongEquivalence
 
-ℕParser : WeakParser Num
-ℕParser = fold*r char
-  (inl ∘g NIL)
-  (fmap concatNum
+Digit*Parser : WeakParser (Digit *)
+Digit*Parser =
+  fold*r char
+  (just ∘g NIL)
+  (fmap (flatten* ∘g CONS ,⊗ id)
   ∘g Maybe⊗
   ∘g unicodeChar→Num? ,⊗ id)
+
+ℕParser : WeakParser Num
+ℕParser =
+  ⊕-elim
+    nothing
+    (fmap (id ,⊗ flatten* ∘g ⊗-assoc⁻)
+    ∘g Maybe⊗
+    ∘g unicodeChar→Num? ,⊗ Digit*Parser)
+  ∘g unroll-string≅ .fun
 
 Digit'→ℕ : Digit' → ℕ
 Digit'→ℕ zero' = 0
@@ -101,8 +111,8 @@ Digit'→ℕ seven' = 7
 Digit'→ℕ eight' = 8
 Digit'→ℕ nine' = 9
 
-Num→ℕ' : Num ⊢ ⊕[ n ∈ ℕ ] ⊕[ depth ∈ ℕ ] ⊤
-Num→ℕ' =
+Digit*→ℕ' : Digit * ⊢ ⊕[ n ∈ ℕ ] ⊕[ depth ∈ ℕ ] ⊤
+Digit*→ℕ' =
   fold*r Digit
     (σ 0 ∘g σ 0 ∘g ⊤-intro)
     (⊕ᴰ-elim (λ dig →
@@ -117,6 +127,9 @@ Num→ℕ' =
       ∘g ⊕ᴰ-distREq .fun
     )
     ∘g ⊕ᴰ-distLEq .fun)
+
+Num→ℕ' : Num ⊢ ⊕[ n ∈ ℕ ] ⊕[ depth ∈ ℕ ] ⊤
+Num→ℕ' = Digit*→ℕ' ∘g +→* Digit
 
 Num→ℕ : ∀ {w} → Num w → ℕ
 Num→ℕ n = Num→ℕ' _ n .fst
