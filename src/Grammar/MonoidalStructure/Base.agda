@@ -6,6 +6,8 @@ open import Cubical.Foundations.Isomorphism
 module Grammar.MonoidalStructure.Base (Alphabet : Type ℓ-zero) (@0 isSetAlphabet : isSet Alphabet) where
 
 open import Erased.Data.List.Base
+open import Erased.Data.Nat.Base
+open import Erased.Data.Nat.Properties
 open import Erased.Lift.Base
 
 open import Grammar.Base Alphabet isSetAlphabet
@@ -26,213 +28,245 @@ private
     F A6 : Grammar ℓF
     f f' f'' : A ⊢ B
 
-open StrongEquivalence
-record MonoidalStr : Typeω where
+record _⊑_ (ℓ ℓ' : Level) : Type where
   field
-    ε : Grammar ℓ-zero
-    ε-intro : ε []
-    ε-elim : ∀ {A : Grammar ℓA} → A [] → ε ⊢ A
+    @0 bound : ℓ-max ℓ ℓ' ≡ ℓ'
 
-    literal : Alphabet → Grammar ℓ-zero
-    lit-intro : {c : Alphabet} → literal c [ c ]
+open _⊑_
 
-    _⊗_ : Grammar ℓA → Grammar ℓB →  Grammar (ℓ-max ℓA ℓB)
-    ⊗-intro : A ⊢ B → C ⊢ D → A ⊗ C ⊢ B ⊗ D
-    @0 ⊗-intro∘g⊗-intro : ∀ {f : A ⊢ B} {f' : C ⊢ D} {f'' : B ⊢ E} {f''' : D ⊢ F} →
-      ⊗-intro f'' f''' ∘g ⊗-intro f f' ≡ ⊗-intro (f'' ∘g f) (f''' ∘g f')
-    @0 id⊗id≡id : ⊗-intro {A = A} {C = B} id id ≡ id
+instance
+  ⊑-bottom : ∀ {ℓ} → ℓ-zero ⊑ ℓ
+  ⊑-bottom .bound = refl
 
-    mk⊗ : ∀ {w w' : String} → A w → B w' → (A ⊗ B) (w ++ w')
+  ⊑-LUB : ∀ {ℓ} → {{ a : ℓA ⊑ ℓ }} → {{ b : ℓB ⊑ ℓ }} → ℓ-max ℓA ℓB ⊑ ℓ
+  ⊑-LUB = {!!}
 
-    ⊗-unit-r : A ⊗ ε ⊢ A
-    ⊗-unit-r⁻ : A ⊢ A ⊗ ε
-    @0 ⊗-unit-rr⁻ : ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
-    @0 ⊗-unit-r⁻r : ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
+open StrongEquivalence
 
-    ⊗-unit-l : ε ⊗ A ⊢ A
-    ⊗-unit-l⁻ : A ⊢ ε ⊗ A
-    @0 ⊗-unit-ll⁻ : ⊗-unit-l⁻ {A = A} ∘g ⊗-unit-l ≡ id
-    @0 ⊗-unit-l⁻l : ⊗-unit-l {A = A} ∘g ⊗-unit-l⁻ ≡ id
+module _ ℓBound where
+  {-# NO_UNIVERSE_CHECK #-}
+  record MonoidalStr : Type (ℓ-suc ℓBound) where
+    field
+      ε : Grammar ℓ-zero
+      ε-intro : ε []
+      ε-elim : {{ ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → A [] → ε ⊢ A
 
-    ⊗-assoc : A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
-    ⊗-assoc⁻ : (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C)
-    @0 ⊗-assoc∘⊗-assoc⁻≡id : ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
-    @0 ⊗-assoc⁻∘⊗-assoc≡id : ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
+      literal : Alphabet → Grammar ℓ-zero
+      lit-intro : {c : Alphabet} → literal c [ c ]
 
-    _⟜_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
-    ⟜-intro : A ⊗ B ⊢ C → B ⊢ C ⟜ A
-    ⟜-app : A ⊗ (B ⟜ A) ⊢ B
+      _⊗_ : {{ ℓA ⊑ ℓBound }} → {{ ℓB ⊑ ℓBound }} → Grammar ℓA → Grammar ℓB →  Grammar (ℓ-max ℓA ℓB)
+      ⊗-intro :
+        {{ a : ℓA ⊑ ℓBound }} → {{ b : ℓB ⊑ ℓBound }} → {{ c : ℓC ⊑ ℓBound }} → {{ d : ℓD ⊑ ℓBound }} →
+        {A : Grammar ℓA} → {B : Grammar ℓB} → {C : Grammar ℓC} → {D : Grammar ℓD} →
+        A ⊢ B → C ⊢ D → A ⊗ C ⊢ B ⊗ D
+      @0 ⊗-intro∘g⊗-intro :
+        {{ a : ℓA ⊑ ℓBound }} → {{ b : ℓB ⊑ ℓBound }} → {{ c : ℓC ⊑ ℓBound }} →
+        {{ d : ℓD ⊑ ℓBound }} → {{ e : ℓE ⊑ ℓBound }} → {{ f : ℓF ⊑ ℓBound }} →
+        {A : Grammar ℓA} → {B : Grammar ℓB} → {C : Grammar ℓC} → {D : Grammar ℓD} → {E : Grammar ℓE} → {F : Grammar ℓF} →
+        {f : A ⊢ B} {f' : C ⊢ D} {f'' : B ⊢ E} {f''' : D ⊢ F} →
+        ⊗-intro f'' f''' ∘g ⊗-intro f f' ≡ ⊗-intro (f'' ∘g f) (f''' ∘g f')
+      @0 id⊗id≡id :
+        {{ a : ℓA ⊑ ℓBound }} → {{ b : ℓB ⊑ ℓBound }} →
+        {A : Grammar ℓA} → {B : Grammar ℓB} →
+        ⊗-intro {A = A} {C = B} id id ≡ id
 
-    @0 ⟜-β : (e : (A ⊗ B) ⊢ C) → ⟜-app ∘g ⊗-intro id (⟜-intro e) ≡ e
-    @0 ⟜-η : (f : A ⊢ B ⟜ C) → f ≡ ⟜-intro (⟜-app ∘g ⊗-intro id f)
+      mk⊗ : ∀ {w w' : String} →
+        {{ a : ℓA ⊑ ℓBound }} → {{ b : ℓB ⊑ ℓBound }} →
+        {A : Grammar ℓA} → {B : Grammar ℓB} →
+        A w → B w' → (A ⊗ B) (w ++ w')
 
-    _⊸_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
-    ⊸-intro : A ⊗ B ⊢  C → A ⊢ B ⊸ C
-    ⊸-app : (A ⊸ B) ⊗ A ⊢ B
+      ⊗-unit-r : {{ a : ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → A ⊗ ε ⊢ A
+      ⊗-unit-r⁻ : {{ a : ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → A ⊢ A ⊗ ε
+      @0 ⊗-unit-rr⁻ : {{ a : ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
+      @0 ⊗-unit-r⁻r : {{ a : ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
 
-    @0 ⊸-β : (e : A ⊗ B ⊢ C) → ⊸-app ∘g ⊗-intro (⊸-intro e) id ≡ e
-    @0 ⊸-η : (e : A ⊢ B ⊸ C) → ⊸-intro (⊸-app ∘g ⊗-intro e id) ≡ e
+      ⊗-unit-l : {{ a : ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → ε ⊗ A ⊢ A
+      ⊗-unit-l⁻ : {{ a : ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → A ⊢ ε ⊗ A
+      @0 ⊗-unit-ll⁻ : {{ a : ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → ⊗-unit-l⁻ {A = A} ∘g ⊗-unit-l ≡ id
+      @0 ⊗-unit-l⁻l : {{ a : ℓA ⊑ ℓBound }} → {A : Grammar ℓA} → ⊗-unit-l {A = A} ∘g ⊗-unit-l⁻ ≡ id
 
-    ⊕ᴰ-distL : ∀ {X : Type ℓX} {A : Grammar ℓA} {B : X → Grammar ℓB} →
-      (⊕[ x ∈ X ] B x) ⊗ A ≅ ⊕[ x ∈ X ] (B x ⊗ A)
+      ⊗-assoc :
+        {{ a : ℓA ⊑ ℓBound }} → {{ b : ℓB ⊑ ℓBound }} → {{ c : ℓC ⊑ ℓBound }} →
+        {A : Grammar ℓA} → {B : Grammar ℓB} → {C : Grammar ℓC} →
+        A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
+    --   ⊗-assoc⁻ : (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C)
+    --   @0 ⊗-assoc∘⊗-assoc⁻≡id : ⊗-assoc {A = A}{B = B}{C = C} ∘g ⊗-assoc⁻ ≡ id
+    --   @0 ⊗-assoc⁻∘⊗-assoc≡id : ⊗-assoc⁻ {A = A}{B = B}{C = C} ∘g ⊗-assoc ≡ id
 
-    @0 ⊕ᴰ-distL-β : ∀ {X : Type ℓX} {A : Grammar ℓA} {B : X → Grammar ℓB} {x : X} →
-      ⊕ᴰ-distL {A = A} {B = B} .fun ∘g ⊗-intro (σ x) id ≡ σ x
+    --   _⟜_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
+    --   ⟜-intro : A ⊗ B ⊢ C → B ⊢ C ⟜ A
+    --   ⟜-app : A ⊗ (B ⟜ A) ⊢ B
 
-    @0 ⊕ᴰ-distL-β' : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA}
-      {C : Grammar ℓA} {D : Grammar ℓA} →
-      (f : (x : X) → B x ⊢ C) → (g : A ⊢ D) →
-      ⊕ᴰ-elim (λ x → ⊗-intro (f x) g) ∘g ⊕ᴰ-distL {A = A} {B = B} .fun ≡ ⊗-intro (⊕ᴰ-elim f) g
+    --   @0 ⟜-β : (e : (A ⊗ B) ⊢ C) → ⟜-app ∘g ⊗-intro id (⟜-intro e) ≡ e
+    --   @0 ⟜-η : (f : A ⊢ B ⟜ C) → f ≡ ⟜-intro (⟜-app ∘g ⊗-intro id f)
 
-    ⊕ᴰ-distR : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA} →
-      A ⊗ (⊕[ x ∈ X ] B x) ≅ ⊕[ x ∈ X ] (A ⊗ B x)
+    --   _⊸_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
+    --   ⊸-intro : A ⊗ B ⊢  C → A ⊢ B ⊸ C
+    --   ⊸-app : (A ⊸ B) ⊗ A ⊢ B
 
-    @0 ⊕ᴰ-distR-β : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA} {x : X} →
-      ⊕ᴰ-distR {A = A} {B = B} .fun ∘g ⊗-intro id (σ x) ≡ σ x
+    --   @0 ⊸-β : (e : A ⊗ B ⊢ C) → ⊸-app ∘g ⊗-intro (⊸-intro e) id ≡ e
+    --   @0 ⊸-η : (e : A ⊢ B ⊸ C) → ⊸-intro (⊸-app ∘g ⊗-intro e id) ≡ e
 
-    @0 ⊕ᴰ-distR-β' : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA}
-      {C : Grammar ℓA} {D : Grammar ℓA} →
-      (f : (x : X) → B x ⊢ C) → (g : A ⊢ D) →
-      ⊕ᴰ-elim (λ x → ⊗-intro g (f x)) ∘g ⊕ᴰ-distR {A = A} {B = B} .fun ≡ ⊗-intro g (⊕ᴰ-elim f)
+    --   ⊕ᴰ-distL : ∀ {X : Type ℓX} {A : Grammar ℓA} {B : X → Grammar ℓB} →
+    --     (⊕[ x ∈ X ] B x) ⊗ A ≅ ⊕[ x ∈ X ] (B x ⊗ A)
 
-  _,⊗_ = ⊗-intro
+    --   @0 ⊕ᴰ-distL-β : ∀ {X : Type ℓX} {A : Grammar ℓA} {B : X → Grammar ℓB} {x : X} →
+    --     ⊕ᴰ-distL {A = A} {B = B} .fun ∘g ⊗-intro (σ x) id ≡ σ x
 
-  ＂_＂ : Alphabet → Grammar ℓ-zero
-  ＂ c ＂ = literal c
+    --   @0 ⊕ᴰ-distL-β' : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA}
+    --     {C : Grammar ℓA} {D : Grammar ℓA} →
+    --     (f : (x : X) → B x ⊢ C) → (g : A ⊢ D) →
+    --     ⊕ᴰ-elim (λ x → ⊗-intro (f x) g) ∘g ⊕ᴰ-distL {A = A} {B = B} .fun ≡ ⊗-intro (⊕ᴰ-elim f) g
 
-  infixr 25 _⊗_
-  infixr 2 _⊸_
-  infixl 2 _⟜_
+    --   ⊕ᴰ-distR : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA} →
+    --     A ⊗ (⊕[ x ∈ X ] B x) ≅ ⊕[ x ∈ X ] (A ⊗ B x)
 
-  ε* : Grammar ℓ
-  ε* {ℓ = ℓ} = LiftG ℓ ε
+    --   @0 ⊕ᴰ-distR-β : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA} {x : X} →
+    --     ⊕ᴰ-distR {A = A} {B = B} .fun ∘g ⊗-intro id (σ x) ≡ σ x
 
-  ⟜-intro-ε : A ⊢ C → ε ⊢ C ⟜ A
-  ⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-r)
+    --   @0 ⊕ᴰ-distR-β' : ∀ {X : Type ℓA} {A : Grammar ℓA} {B : X → Grammar ℓA}
+    --     {C : Grammar ℓA} {D : Grammar ℓA} →
+    --     (f : (x : X) → B x ⊢ C) → (g : A ⊢ D) →
+    --     ⊕ᴰ-elim (λ x → ⊗-intro g (f x)) ∘g ⊕ᴰ-distR {A = A} {B = B} .fun ≡ ⊗-intro g (⊕ᴰ-elim f)
 
-  ⊸-intro-ε : A ⊢ C → ε ⊢ A ⊸ C
-  ⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-l)
+    -- _,⊗_ = ⊗-intro
 
-  ⟜-intro⁻ : A ⊢ B ⟜ C → C ⊗ A ⊢ B
-  ⟜-intro⁻ f = ⟜-app ∘g id ,⊗ f
+    -- ＂_＂ : Alphabet → Grammar ℓ-zero
+    -- ＂ c ＂ = literal c
 
-  ⊸-intro⁻ : A ⊢ B ⊸ C → A ⊗ B ⊢ C
-  ⊸-intro⁻ {B = B}{C = C} f = ⊸-app ∘g ⊗-intro f (id {A = B})
+    -- infixr 25 _⊗_
+    -- infixr 2 _⊸_
+    -- infixl 2 _⟜_
 
-  ⊸-mapCod : C ⊢ D → A ⊸ C ⊢ A ⊸ D
-  ⊸-mapCod f = ⊸-intro (f ∘g ⊸-app)
+    -- ε* : Grammar ℓ
+    -- ε* {ℓ = ℓ} = LiftG ℓ ε
 
-  ⟜-mapCod : C ⊢ D → C ⟜ A ⊢ D ⟜ A
-  ⟜-mapCod f = ⟜-intro (f ∘g ⟜-app)
+    -- ⟜-intro-ε : A ⊢ C → ε ⊢ C ⟜ A
+    -- ⟜-intro-ε f = ⟜-intro (f ∘g ⊗-unit-r)
 
-  ⊸-mapDom : A ⊢ B → B ⊸ C ⊢ A ⊸ C
-  ⊸-mapDom f = ⊸-intro (⊸-app ∘g id ,⊗ f)
+    -- ⊸-intro-ε : A ⊢ C → ε ⊢ A ⊸ C
+    -- ⊸-intro-ε f = ⊸-intro (f ∘g ⊗-unit-l)
 
-  ⟜-mapDom : A ⊢ B → C ⟜ B ⊢ C ⟜ A
-  ⟜-mapDom f = ⟜-intro (⟜-app ∘g f ,⊗ id)
+    -- ⟜-intro⁻ : A ⊢ B ⟜ C → C ⊗ A ⊢ B
+    -- ⟜-intro⁻ f = ⟜-app ∘g id ,⊗ f
 
-  ⟜-curry : A ⟜ (B ⊗ C) ⊢ (A ⟜ B) ⟜ C
-  ⟜-curry {A = A} = ⟜-intro (⟜-intro {C = A}(⟜-app ∘g ⊗-assoc))
+    -- ⊸-intro⁻ : A ⊢ B ⊸ C → A ⊗ B ⊢ C
+    -- ⊸-intro⁻ {B = B}{C = C} f = ⊸-app ∘g ⊗-intro f (id {A = B})
 
-  ⊸-curry : (A ⊗ B) ⊸ C ⊢ A ⊸ (B ⊸ C)
-  ⊸-curry {C = C} = ⊸-intro (⊸-intro (⊸-app ∘g ⊗-assoc⁻))
+    -- ⊸-mapCod : C ⊢ D → A ⊸ C ⊢ A ⊸ D
+    -- ⊸-mapCod f = ⊸-intro (f ∘g ⊸-app)
 
-  ⊸2-intro-ε : A1 ⊗ A2 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ C
-  ⊸2-intro-ε {C = C} f = ⊸-curry ∘g ⊸-intro-ε f
+    -- ⟜-mapCod : C ⊢ D → C ⟜ A ⊢ D ⟜ A
+    -- ⟜-mapCod f = ⟜-intro (f ∘g ⟜-app)
 
-  ⊸3-intro-ε : A1 ⊗ A2 ⊗ A3 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ C
-  ⊸3-intro-ε {C = C} f = ⊸-mapCod (⊸-curry {C = C}) ∘g ⊸2-intro-ε f
+    -- ⊸-mapDom : A ⊢ B → B ⊸ C ⊢ A ⊸ C
+    -- ⊸-mapDom f = ⊸-intro (⊸-app ∘g id ,⊗ f)
 
-  ⊸4-intro-ε : A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ C
-  ⊸4-intro-ε {C = C} f = ⊸-mapCod (⊸-mapCod (⊸-curry {C = C})) ∘g ⊸3-intro-ε f
+    -- ⟜-mapDom : A ⊢ B → C ⟜ B ⊢ C ⟜ A
+    -- ⟜-mapDom f = ⟜-intro (⟜-app ∘g f ,⊗ id)
 
-  ⊸5-intro-ε : A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ A5 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ A5 ⊸ C
-  ⊸5-intro-ε {C = C} f = ⊸-mapCod (⊸-mapCod (⊸-mapCod ⊸-curry)) ∘g ⊸4-intro-ε f
+    -- ⟜-curry : A ⟜ (B ⊗ C) ⊢ (A ⟜ B) ⟜ C
+    -- ⟜-curry {A = A} = ⟜-intro (⟜-intro {C = A}(⟜-app ∘g ⊗-assoc))
 
-  -- applying a multi-argument function to the front of a substitution
-  ⊸-app-l : (A ⊸ B) ⊗ A ⊗ D ⊢ B ⊗ D
-  ⊸-app-l = (⊗-intro ⊸-app id ∘g ⊗-assoc)
+    -- ⊸-curry : (A ⊗ B) ⊸ C ⊢ A ⊸ (B ⊸ C)
+    -- ⊸-curry {C = C} = ⊸-intro (⊸-intro (⊸-app ∘g ⊗-assoc⁻))
 
-  ⊸0⊗ : ε ⊢ C → D ⊢ C ⊗ D
-  ⊸0⊗ f = f ,⊗ id ∘g ⊗-unit-l⁻
+    -- ⊸2-intro-ε : A1 ⊗ A2 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ C
+    -- ⊸2-intro-ε {C = C} f = ⊸-curry ∘g ⊸-intro-ε f
 
-  ⊸1⊗ : ε ⊢ A1 ⊸ C → A1 ⊗ B ⊢ C ⊗ B
-  ⊸1⊗ f = ⊸-app-l ∘g ⊸0⊗ f
+    -- ⊸3-intro-ε : A1 ⊗ A2 ⊗ A3 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ C
+    -- ⊸3-intro-ε {C = C} f = ⊸-mapCod (⊸-curry {C = C}) ∘g ⊸2-intro-ε f
 
-  ⊸2⊗ : ε ⊢ A1 ⊸ A2 ⊸ C → A1 ⊗ A2 ⊗ D ⊢ C ⊗ D
-  ⊸2⊗ f = ⊸-app-l ∘g ⊸1⊗ f
+    -- ⊸4-intro-ε : A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ C
+    -- ⊸4-intro-ε {C = C} f = ⊸-mapCod (⊸-mapCod (⊸-curry {C = C})) ∘g ⊸3-intro-ε f
 
-  ⊸2⊗' : A1 ⊗ A2 ⊢ C → A1 ⊗ A2 ⊗ D ⊢ C ⊗ D
-  ⊸2⊗' f = f ,⊗ id ∘g ⊗-assoc
+    -- ⊸5-intro-ε : A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ A5 ⊢ C → ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ A5 ⊸ C
+    -- ⊸5-intro-ε {C = C} f = ⊸-mapCod (⊸-mapCod (⊸-mapCod ⊸-curry)) ∘g ⊸4-intro-ε f
 
-  ⊸3⊗ : ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ C → A1 ⊗ A2 ⊗ A3 ⊗ D ⊢ C ⊗ D
-  ⊸3⊗ f = ⊸-app-l ∘g ⊸2⊗ f
+    -- -- applying a multi-argument function to the front of a substitution
+    -- ⊸-app-l : (A ⊸ B) ⊗ A ⊗ D ⊢ B ⊗ D
+    -- ⊸-app-l = (⊗-intro ⊸-app id ∘g ⊗-assoc)
 
-  ⊸4⊗ : ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ C → A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ D ⊢ C ⊗ D
-  ⊸4⊗ f = ⊸-app-l ∘g ⊸3⊗ f
+    -- ⊸0⊗ : ε ⊢ C → D ⊢ C ⊗ D
+    -- ⊸0⊗ f = f ,⊗ id ∘g ⊗-unit-l⁻
 
-  ⊸5⊗ : ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ A5 ⊸ C → A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ A5 ⊗ D ⊢ C ⊗ D
-  ⊸5⊗ f = ⊸-app-l ∘g ⊸4⊗ f
+    -- ⊸1⊗ : ε ⊢ A1 ⊸ C → A1 ⊗ B ⊢ C ⊗ B
+    -- ⊸1⊗ f = ⊸-app-l ∘g ⊸0⊗ f
 
-  ⟜0⊗ : ε ⊢ C → D ⊢ D ⊗ C
-  ⟜0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
+    -- ⊸2⊗ : ε ⊢ A1 ⊸ A2 ⊸ C → A1 ⊗ A2 ⊗ D ⊢ C ⊗ D
+    -- ⊸2⊗ f = ⊸-app-l ∘g ⊸1⊗ f
 
-  open StrongEquivalence
-  module _
-    {A : Grammar ℓA} {B : Grammar ℓB}
-    {C : Grammar ℓC} {D : Grammar ℓD}
-    (A≅B : A ≅ B) (C≅D : C ≅ D)
-    where
+    -- ⊸2⊗' : A1 ⊗ A2 ⊢ C → A1 ⊗ A2 ⊗ D ⊢ C ⊗ D
+    -- ⊸2⊗' f = f ,⊗ id ∘g ⊗-assoc
 
-    private
-      the-fun : A ⊗ C ⊢ B ⊗ D
-      the-fun = A≅B .fun ,⊗ C≅D .fun
+    -- ⊸3⊗ : ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ C → A1 ⊗ A2 ⊗ A3 ⊗ D ⊢ C ⊗ D
+    -- ⊸3⊗ f = ⊸-app-l ∘g ⊸2⊗ f
 
-      the-inv : B ⊗ D ⊢ A ⊗ C
-      the-inv = A≅B .inv ,⊗ C≅D .inv
+    -- ⊸4⊗ : ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ C → A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ D ⊢ C ⊗ D
+    -- ⊸4⊗ f = ⊸-app-l ∘g ⊸3⊗ f
 
-      @0 the-sec : the-fun ∘g the-inv ≡ id
-      the-sec =
-        ⊗-intro∘g⊗-intro
-        ∙ (λ i → A≅B .sec i ,⊗ C≅D .sec i)
-        ∙ id⊗id≡id
+    -- ⊸5⊗ : ε ⊢ A1 ⊸ A2 ⊸ A3 ⊸ A4 ⊸ A5 ⊸ C → A1 ⊗ A2 ⊗ A3 ⊗ A4 ⊗ A5 ⊗ D ⊢ C ⊗ D
+    -- ⊸5⊗ f = ⊸-app-l ∘g ⊸4⊗ f
 
-      @0 the-ret : the-inv ∘g the-fun ≡ id
-      the-ret =
-        ⊗-intro∘g⊗-intro
-        ∙ (λ i → A≅B .ret i ,⊗ C≅D .ret i)
-        ∙ id⊗id≡id
+    -- ⟜0⊗ : ε ⊢ C → D ⊢ D ⊗ C
+    -- ⟜0⊗ f = id ,⊗ f ∘g ⊗-unit-r⁻
 
-    ⊗≅ : (A ⊗ C) ≅ (B ⊗ D)
-    ⊗≅ .fun = the-fun
-    ⊗≅ .inv = the-inv
-    ⊗≅ .sec = the-sec
-    ⊗≅ .ret = the-ret
+    -- open StrongEquivalence
+    -- module _
+    --   {A : Grammar ℓA} {B : Grammar ℓB}
+    --   {C : Grammar ℓC} {D : Grammar ℓD}
+    --   (A≅B : A ≅ B) (C≅D : C ≅ D)
+    --   where
+
+    --   private
+    --     the-fun : A ⊗ C ⊢ B ⊗ D
+    --     the-fun = A≅B .fun ,⊗ C≅D .fun
+
+    --     the-inv : B ⊗ D ⊢ A ⊗ C
+    --     the-inv = A≅B .inv ,⊗ C≅D .inv
+
+    --     @0 the-sec : the-fun ∘g the-inv ≡ id
+    --     the-sec =
+    --       ⊗-intro∘g⊗-intro
+    --       ∙ (λ i → A≅B .sec i ,⊗ C≅D .sec i)
+    --       ∙ id⊗id≡id
+
+    --     @0 the-ret : the-inv ∘g the-fun ≡ id
+    --     the-ret =
+    --       ⊗-intro∘g⊗-intro
+    --       ∙ (λ i → A≅B .ret i ,⊗ C≅D .ret i)
+    --       ∙ id⊗id≡id
+
+    --   ⊗≅ : (A ⊗ C) ≅ (B ⊗ D)
+    --   ⊗≅ .fun = the-fun
+    --   ⊗≅ .inv = the-inv
+    --   ⊗≅ .sec = the-sec
+    --   ⊗≅ .ret = the-ret
 
 
-  module _
-    {A : Grammar ℓA}
-    {B : Grammar ℓB}
-    {C : Grammar ℓC}
-    where
-    ⊗-assoc≅ : A ⊗ (B ⊗ C) ≅ (A ⊗ B) ⊗ C
-    ⊗-assoc≅ .fun = ⊗-assoc
-    ⊗-assoc≅ .inv = ⊗-assoc⁻
-    ⊗-assoc≅ .sec = ⊗-assoc∘⊗-assoc⁻≡id
-    ⊗-assoc≅ .ret = ⊗-assoc⁻∘⊗-assoc≡id
+    -- module _
+    --   {A : Grammar ℓA}
+    --   {B : Grammar ℓB}
+    --   {C : Grammar ℓC}
+    --   where
+    --   ⊗-assoc≅ : A ⊗ (B ⊗ C) ≅ (A ⊗ B) ⊗ C
+    --   ⊗-assoc≅ .fun = ⊗-assoc
+    --   ⊗-assoc≅ .inv = ⊗-assoc⁻
+    --   ⊗-assoc≅ .sec = ⊗-assoc∘⊗-assoc⁻≡id
+    --   ⊗-assoc≅ .ret = ⊗-assoc⁻∘⊗-assoc≡id
 
-  εr≅ : A ≅ A ⊗ ε
-  εr≅ .fun = ⊗-unit-r⁻
-  εr≅ .inv = ⊗-unit-r
-  εr≅ .sec = ⊗-unit-rr⁻
-  εr≅ .ret = ⊗-unit-r⁻r
+    -- εr≅ : A ≅ A ⊗ ε
+    -- εr≅ .fun = ⊗-unit-r⁻
+    -- εr≅ .inv = ⊗-unit-r
+    -- εr≅ .sec = ⊗-unit-rr⁻
+    -- εr≅ .ret = ⊗-unit-r⁻r
 
-  εl≅ : A ≅ ε ⊗ A
-  εl≅ .fun = ⊗-unit-l⁻
-  εl≅ .inv = ⊗-unit-l
-  εl≅ .sec = ⊗-unit-ll⁻
-  εl≅ .ret = ⊗-unit-l⁻l
+    -- εl≅ : A ≅ ε ⊗ A
+    -- εl≅ .fun = ⊗-unit-l⁻
+    -- εl≅ .inv = ⊗-unit-l
+    -- εl≅ .sec = ⊗-unit-ll⁻
+    -- εl≅ .ret = ⊗-unit-l⁻l
 
-  -- ⟜UMP : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC}
-  --   → Iso (A ⊗ B ⊢ C) (B ⊢ C ⟜ A)
-  -- ⟜UMP {C = C} = {!!} -- iso ⟜-intro ⟜-intro⁻ (λ b → sym (⟜-η b)) ⟜-β
+    -- -- ⟜UMP : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC}
+    -- --   → Iso (A ⊗ B ⊢ C) (B ⊢ C ⟜ A)
+    -- -- ⟜UMP {C = C} = {!!} -- iso ⟜-intro ⟜-intro⁻ (λ b → sym (⟜-η b)) ⟜-β
