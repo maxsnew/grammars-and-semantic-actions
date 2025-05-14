@@ -33,7 +33,7 @@ The contributions of this codebase are:
 3. A verification of the powerset construction for NFA determinization, given in `Determinization.WeakEquivalence`.
 4. Example parsers written in `Lambekᴰ`,
   - A regular expression parser that is implemented by determinizing Thompson's construction, given in `Examples.RegexParser`.
-  - A parser for an `LL(0)` grammar of balanced parentheses, given in `Examples.Dyck`.
+  - A parser for an `LL(1)` grammar of balanced parentheses, given in `Examples.Dyck`.
   - A parser for an `LL(1)` grammar of arithmetic expressions, given in `Examples.BinOp`.
 
 Below, we include the code locations of the specific claims made in the paper.
