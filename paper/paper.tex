@@ -1249,7 +1249,7 @@ unambiguous sums have disjoint summands.
     %
     \and
     %
-    \inferrule{\Gamma ; \Delta_2 \vdash e : A \otimes B \\ \Gamma ; \Delta_1, a : A, b : B, \Delta_2 \vdash e' : C}{\Gamma ;  \Delta_1, \Delta_2, \Delta_3 \vdash \letin {(a , b)} e {e'} : C}
+    \inferrule{\Gamma ; \Delta_2 \vdash e : A \otimes B \\ \Gamma ; \Delta_1, a : A, b : B, \Delta_3 \vdash e' : C}{\Gamma ;  \Delta_1, \Delta_2, \Delta_3 \vdash \letin {(a , b)} e {e'} : C}
     \\
     %
     \inferrule{\Gamma ; \Delta , a : A \vdash e : B}{\Gamma ; \Delta \vdash \lamblto a e : A\lto B}
