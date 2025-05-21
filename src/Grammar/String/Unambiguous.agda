@@ -31,27 +31,60 @@ private
 
 open StrongEquivalence
 
-open _isRetractOf_
-open WeakEquivalence
-whichStringRetract : string isRetractOf (⊕[ w ∈ String ] ⌈ w ⌉)
-whichStringRetract .weak .fun =
+whichString≅ : string ≅ (⊕[ w ∈ String ] ⌈ w ⌉)
+whichString≅ .fun =
   fold*r char
     (σ [])
     (⊕ᴰ-elim (λ w → (⊕ᴰ-elim λ c → σ (c ∷ w)) ∘g ⊕ᴰ-distL .fun)
      ∘g ⊕ᴰ-distR .fun)
-whichStringRetract .weak .inv = ⊕ᴰ-elim ⌈⌉→string
-whichStringRetract .ret = the-ret
+whichString≅ .inv = ⊕ᴰ-elim ⌈⌉→string
+whichString≅ .sec = the-sec
   where
   opaque
-    unfolding ⊗-intro ⊕ᴰ-distL ⊕ᴰ-distR
-    the-ret : whichStringRetract .weak .inv ∘g whichStringRetract .weak .fun ≡ id
-    the-ret =
-      equalizer-ind (*Ty char) (λ _ → string) _ _
-      (λ _ → ⊕ᴰ≡ _ _ λ where
-        nil → refl
-        cons i → CONS ∘g id ,⊗ eq-π-pf _ _ i ∘g lowerG ,⊗ lowerG
-      )
-      _
+    unfolding ⊗-intro ⊕ᴰ-distR ⊕ᴰ-distL
+
+    help : (w : String) → whichString≅ .fun ∘g ⌈⌉→string w ≡ σ w
+    help [] = refl
+    help (c ∷ w) =
+        (⊕ᴰ-elim (λ w → (⊕ᴰ-elim λ c → σ (c ∷ w)) ∘g ⊕ᴰ-distL .fun)
+        ∘g ⊕ᴰ-distR .fun)
+        ∘g id ,⊗ whichString≅ .fun
+        ∘g σ c ,⊗ ⌈⌉→string w
+            ≡⟨ refl ⟩
+        ⊕ᴰ-elim (λ w → (⊕ᴰ-elim λ c → σ (c ∷ w)) ∘g ⊕ᴰ-distL .fun)
+        ∘g ⊕ᴰ-distR .fun
+        ∘g σ c ,⊗ id
+        ∘g id ,⊗ whichString≅ .fun
+        ∘g id ,⊗ ⌈⌉→string w
+            ≡⟨ (λ i →
+                ⊕ᴰ-elim (λ w → (⊕ᴰ-elim λ c → σ (c ∷ w)) ∘g ⊕ᴰ-distL .fun)
+                ∘g ⊕ᴰ-distR .fun
+                ∘g σ c ,⊗ id
+                ∘g id ,⊗ help w i
+            ) ⟩
+        ⊕ᴰ-elim (λ w → (⊕ᴰ-elim λ c → σ (c ∷ w)) ∘g ⊕ᴰ-distL .fun)
+        ∘g ⊕ᴰ-distR .fun
+        ∘g σ c ,⊗ id
+        ∘g id ,⊗ σ w
+            ≡⟨ refl ⟩
+        σ (c ∷ w)
+        ∎
+
+    the-sec : whichString≅ .fun ∘g ⊕ᴰ-elim ⌈⌉→string ≡ id
+    the-sec = ⊕ᴰ≡ _ _ help
+
+whichString≅ .ret = the-ret
+  where
+  opaque
+      unfolding ⊗-intro ⊕ᴰ-distL ⊕ᴰ-distR
+      the-ret : whichString≅ .inv ∘g whichString≅ .fun ≡ id
+      the-ret =
+          equalizer-ind (*Ty char) (λ _ → string) _ _
+          (λ _ → ⊕ᴰ≡ _ _ λ where
+              nil → refl
+              cons i → CONS ∘g id ,⊗ eq-π-pf _ _ i ∘g lowerG ,⊗ lowerG
+          )
+          _
 
 ⊤→⊕⌈⌉ : ⊤ ⊢ ⊕[ w ∈ String ] ⌈ w ⌉
 ⊤→⊕⌈⌉ w _ = w , (mk⌈⌉ w)
@@ -73,4 +106,4 @@ unambiguous⊕⌈⌉ : unambiguous (⊕[ w ∈ String ] ⌈ w ⌉)
 unambiguous⊕⌈⌉ = unambiguous≅ ⊤≅⊕⌈⌉ unambiguous⊤
 
 unambiguous-string : unambiguous string
-unambiguous-string = isUnambiguousRetract whichStringRetract unambiguous⊕⌈⌉
+unambiguous-string = unambiguous≅ (sym≅ whichString≅) unambiguous⊕⌈⌉
