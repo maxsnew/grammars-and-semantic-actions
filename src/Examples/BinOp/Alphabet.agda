@@ -65,3 +65,6 @@ open StrongEquivalence
 
 anyNum : Grammar _
 anyNum = ⊕[ n ∈ ℕ ] ＂ num n ＂
+
+mkAnyNum : ∀ {n} → literal (num n) ⊢ anyNum
+mkAnyNum = σ _

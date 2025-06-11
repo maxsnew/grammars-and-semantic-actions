@@ -72,9 +72,6 @@ module RightAssoc where
     num → k anyNum
     parens → k (literal LP) ⊗e Var Exp ⊗e k (literal RP)
 
-  BinOp : NT → Grammar ℓ-zero
-  BinOp = μ BinOpF
-
   -- TODO: RightAssoc is weakly equivalent to the ambiguous version (in fact a retract)
   module _ {X : Grammar ℓ} (ϕ : Algebra (λ _ → Ambiguous.ExpF) (λ _ → X)) where
     X' : NT → Grammar ℓ
@@ -105,8 +102,6 @@ module LeftFactorized where
   BinOpF Atom = ⊕e (Tag Atom) λ where
     num → k anyNum
     parens → k (literal LP) ⊗e Var Exp ⊗e k (literal RP)
-
-  BinOp = μ BinOpF
 
   -- TODO: RightAssoc.BinOp Exp is strongly equivalent to BinOp Exp
   -- and analogous for RightAssoc.BinOp Atom
@@ -168,38 +163,69 @@ module LookaheadAutomaton where
 
   module _ (X : LeftFactorized.NT → Grammar ℓ) (ϕ : Algebra LeftFactorized.BinOpF X) where
     -- Can we refunctionalize this?
+    -- I.e., can we get rid of the Kleene *?
     [Closing] : ℕ → Grammar ℓ
     [Closing] zero = ε*
-    [Closing] (suc n) = literal RP ⊗ (literal PLUS ⊗ X LeftFactorized.Atom) * ⊗ [Closing] n
+    [Closing] (suc n) = literal RP ⊗ X LeftFactorized.dE/dA ⊗ [Closing] n
 
     X' : State → Grammar ℓ
     X' (Opening opens) = X LeftFactorized.Exp ⊗ [Closing] opens
     X' (Closing opens) = [Closing] opens
-    X' (Adding opens)  = ((literal PLUS) ⊗ X LeftFactorized.Atom) ⊗ [Closing] opens
+    X' (Adding opens)  = X LeftFactorized.dE/dA ⊗ [Closing] opens
     X' fail = ⊥* -- TODO: make this better?
 
     [Opening] [Adding] : ℕ → Grammar _
     [Opening] n = X' (Opening n)
     [Adding] n = X' (Adding n)
 
+    {- It would be nice if we didn't have to deal with the guards when writing the algebra, they aren't ever used -}
     mkParseTreeAlg : Algebra (DeterministicAutomaton.TraceF aut true) X'
     mkParseTreeAlg (Opening x) = ⊕ᴰ-elim (λ where
-      DeterministicAutomaton.Tag.stop → ⊕ᴰ-elim (λ ())
       DeterministicAutomaton.Tag.step → ⊕ᴰ-elim (λ where
-        (lift ([ , g)) → {!!}
-        (lift (] , g)) → {!!}
-        (lift (+ , g)) → {!!}
-        (lift (num n , nothing)) → {!!}
-        (lift (num n , just [)) → {!!}
-        (lift (num n , just ])) → {!!}
-        (lift (num n , just +)) → {!!}
-        (lift (num n , just (num m))) → {!!}))
-    mkParseTreeAlg (Closing x) = {!!}
-    mkParseTreeAlg (Adding x) = {!!}
+        (lift ([ , g)) → (ϕ LeftFactorized.Exp ∘g (liftG ∘g ϕ LeftFactorized.Atom ∘g σ LeftFactorized.parens) ,⊗ id) ,⊗ id ∘g (((((liftG ∘g lowerG) ∘g lowerG) ,⊗ liftG ,⊗ liftG) ,⊗ liftG ∘g ⊗-assoc3) ,⊗ id ∘g ⊗-assoc4) ∘g id ,⊗ (lowerG ∘g π₁)
+        (lift (] , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (+ , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (num n , just [)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (num n , just ])) → (ϕ LeftFactorized.Exp ∘g (liftG ∘g (ϕ LeftFactorized.Atom ∘g σ LeftFactorized.num ∘g mapLift (mkAnyNum ∘g lowerG))) ,⊗ (liftG ∘g (ϕ LeftFactorized.dE/dA ∘g σ LeftFactorized.done ∘g liftG )) ∘g ⊗-unit-r⁻) ,⊗ (lowerG ∘g π₁)
+        (lift (num n , nothing)) → ((ϕ LeftFactorized.Exp ∘g (liftG ∘g ϕ LeftFactorized.Atom ∘g σ LeftFactorized.num ∘g mapLift mkAnyNum) ,⊗ liftG) ,⊗ id ∘g ⊗-assoc) ∘g lowerG ,⊗ (lowerG ∘g π₁)
+        (lift (num n , just +))  → ((ϕ LeftFactorized.Exp ∘g (liftG ∘g ϕ LeftFactorized.Atom ∘g σ LeftFactorized.num ∘g mapLift mkAnyNum) ,⊗ liftG) ,⊗ id ∘g ⊗-assoc) ∘g lowerG ,⊗ (lowerG ∘g π₁)
+        (lift (num n , just (num m))) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁))) -- impossible
+    mkParseTreeAlg (Closing zero) = ⊕ᴰ-elim λ where
+      DeterministicAutomaton.Tag.step → ⊕ᴰ-elim λ where
+        (lift ([ , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (] , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (+ , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (num x , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+    mkParseTreeAlg (Closing (suc x)) = ⊕ᴰ-elim λ where
+      DeterministicAutomaton.Tag.step → ⊕ᴰ-elim λ where
+        (lift (] , just ])) → (lowerG ∘g lowerG) ,⊗ ((ϕ LeftFactorized.dE/dA ∘g σ LeftFactorized.done ∘g liftG) ,⊗ (lowerG ∘g π₁) ∘g ⊗-unit-l⁻)
+        (lift (] , nothing)) → (lowerG ∘g lowerG) ,⊗ (lowerG ∘g π₁) -- this and the next are the same
+        (lift (] , just +)) → (lowerG ∘g lowerG) ,⊗ (lowerG ∘g π₁)
+        (lift (] , just [)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (] , just (num x))) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift ([ , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (+ , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (num x , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+
+    -- Annoying: the step cases are the same here
+    mkParseTreeAlg (Adding zero) = ⊕ᴰ-elim λ where
+      DeterministicAutomaton.Tag.stop → ⊕ᴰ-elim λ { (lift Eq.refl) →
+        (ϕ LeftFactorized.dE/dA ∘g σ LeftFactorized.done ∘g liftG ∘g lowerG ∘g lowerG) ,⊗ liftG ∘g ⊗-unit-r⁻ }
+      DeterministicAutomaton.Tag.step → ⊕ᴰ-elim λ where
+        (lift (+ , g)) → ((ϕ LeftFactorized.dE/dA ∘g σ LeftFactorized.add ∘g mapLift lowerG ,⊗ liftG) ,⊗ id ∘g ⊗-assoc) ∘g id ,⊗ (lowerG ∘g π₁) -- ez
+        (lift ([ , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (] , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (num x , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+    mkParseTreeAlg (Adding (suc x)) = ⊕ᴰ-elim λ where
+      DeterministicAutomaton.Tag.step → ⊕ᴰ-elim λ where
+        (lift (+ , g)) → ((ϕ LeftFactorized.dE/dA ∘g σ LeftFactorized.add ∘g mapLift lowerG ,⊗ liftG) ,⊗ id ∘g ⊗-assoc) ∘g id ,⊗ (lowerG ∘g π₁) -- same as last ez
+        (lift ([ , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (] , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+        (lift (num x , g)) → ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) -- impossible
+      
     mkParseTreeAlg fail = ⊕ᴰ-elim (λ where
-      DeterministicAutomaton.Tag.stop → ⊕ᴰ-elim (λ ())
       DeterministicAutomaton.Tag.step → ⊕ᴰ-elim λ _ →
-        {!? ∘g !})
+        ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) )
 
     X'' : Bool → State → Grammar ℓ
     X'' false = λ _ → ⊤*
@@ -209,13 +235,24 @@ module LookaheadAutomaton where
     parseTreeAlg false = λ _ → ⊤*-intro
     parseTreeAlg true = mkParseTreeAlg
 
--- A completely deforested parse function
+-- A completely deforested parsing pipeline
+parse' : string ⊢ &ᴰ
+                   (λ q →
+                      ⊕ᴰ
+                      (λ b →
+                         LookaheadAutomaton.X''
+                         (LeftFactorized.X' (RightAssoc.un-assoc-alg Ambiguous.semAct))
+                         (LeftFactorized.un-factorize-alg
+                          (RightAssoc.un-assoc-alg Ambiguous.semAct))
+                         b q))
+parse' = DeterministicAutomaton.parse-alg
+       LookaheadAutomaton.aut
+       (LookaheadAutomaton.parseTreeAlg _
+         (LeftFactorized.un-factorize-alg (RightAssoc.un-assoc-alg Ambiguous.semAct)))
+
 parse : string ⊢ Pure AST.Exp ⊕ ⊤
 parse = ((⊕ᴰ-elim λ where
   false → inr ∘g ⊤-intro
   true → inl ∘g ⊗-unit-r ∘g id ,⊗ lowerG)
   ∘g π (LookaheadAutomaton.Opening 0))
-  ∘g DeterministicAutomaton.parse-alg
-       LookaheadAutomaton.aut
-       (LookaheadAutomaton.parseTreeAlg _
-         (LeftFactorized.un-factorize-alg (RightAssoc.un-assoc-alg Ambiguous.semAct)))
+  ∘g parse'
