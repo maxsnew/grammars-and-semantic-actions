@@ -11,7 +11,6 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Data.Bool hiding (_⊕_)
 open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Nat as Nat hiding (_+_)
-open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
 open import Cubical.Data.Sum as Sum using (_⊎_)

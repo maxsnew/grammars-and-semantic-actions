@@ -44,7 +44,6 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
     stop → ⊕e (Lift (b Eq.≡ isAcc q)) λ { (lift acc) → k ε* }
     step → ⊕e (Lift (⟨ Alphabet ⟩ × Maybe ⟨ Alphabet ⟩)) λ { (lift (c , g)) →
       k (literal* c) ⊗e (Var (δ q c g) &e2 k (LiftG _ (PeekChar g))) }
-
   
   Trace : Bool → (q : Q) → Grammar ℓ
   Trace b = μ (TraceF b)
@@ -62,7 +61,6 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
         ∘g ⊕ᴰ-distR .StrongEquivalence.fun) ∘g id ,⊗ peek .StrongEquivalence.fun)
         ∘g ⊕ᴰ-distL .StrongEquivalence.fun))
 
-
   module _ {X : Bool → Q → Grammar ℓ'}(ϕ : ∀ b → Algebra (TraceF b) (X b)) where
     parse-alg : string ⊢ &[ q ∈ Q ] ⊕[ b ∈ Bool ] X b q
     parse-alg = fold*r char
@@ -75,3 +73,15 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
             ∘g id ,⊗ (&⊕ᴰ-distL≅ .StrongEquivalence.fun ∘g π (δ q c g) ,&p id))
           ∘g ⊕ᴰ-distR .StrongEquivalence.fun ∘g id ,⊗ peek .StrongEquivalence.fun)
         ∘g ⊕ᴰ-distL .StrongEquivalence.fun)
+
+    parse-alg' : string ⊢ X true init ⊕ X false init
+    parse-alg' = ⊕ᴰ-elim (λ { true → inl ; false → inr }) ∘g π init ∘g parse-alg
+
+  {-
+  this uses linear stack space :/
+  parseAlg []     q = σ (isAcc q) (ϕ (isAcc q) q .nil)
+  parseAlg (c::l) q =
+    let q' = δ c (peek l) q in
+    let (b, x) = parseAlg l q'
+    ϕ b q' .cons c x
+  -}

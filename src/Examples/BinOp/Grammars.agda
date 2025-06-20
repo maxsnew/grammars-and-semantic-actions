@@ -3,6 +3,7 @@
 module Examples.BinOp.Grammars where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
@@ -30,7 +31,7 @@ open StrongEquivalence
 
 private
   variable
-    ℓ ℓ' : Level
+    ℓ ℓ' ℓA ℓB : Level
 
 module AST where
   data Exp : Type ℓ-zero where
@@ -72,6 +73,37 @@ module RightAssoc where
     num → k anyNum
     parens → k (literal LP) ⊗e Var Exp ⊗e k (literal RP)
 
+  -- Now lets define a composable translation from RightAssoc BinOp expressions to Ambiguous Expressions
+  -- To define this composably we start with a translation of carriers:
+  Transform : NT → Functor Unit
+  Transform Exp = Var _
+  Transform Atom = Var _
+
+  -- Next we lift this transform to a functor of algebras
+  module _ {X : Unit → Grammar ℓ}(α : Algebra (λ _ → Ambiguous.ExpF) X) where
+    un-assoc-alg' : Algebra BinOpF λ nt → ⟦ Transform nt ⟧ X
+    un-assoc-alg' Exp = ⊕ᴰ-elim λ where
+      done → lowerG
+      add → liftG ∘g α _ ∘g σ Ambiguous.add ∘g lowerG ,⊗ id ,⊗ lowerG
+    un-assoc-alg' Atom = ⊕ᴰ-elim λ where
+      num → liftG ∘g α _ ∘g σ Ambiguous.num
+      parens → liftG ∘g α _ ∘g σ Ambiguous.parens ∘g id ,⊗ lowerG ,⊗ id
+
+  module _ {A : Unit → Grammar ℓA}(α : Algebra (λ _ → Ambiguous.ExpF) A)
+           {B : Unit → Grammar ℓB}(β : Algebra (λ _ → Ambiguous.ExpF) B)
+           (ϕ : Homomorphism (λ _ → Ambiguous.ExpF) α β)
+           where
+    opaque
+      unfolding ⊗-intro
+      un-assoc-alg'-functorial : isHomo BinOpF (un-assoc-alg' α) (un-assoc-alg' β)
+        λ x → map (Transform x) (ϕ .fst)
+      un-assoc-alg'-functorial Exp = ⊕ᴰ≡ _ _ (λ where
+        done → refl
+        add → (λ i → liftG ∘g ϕ .snd _ i ∘g σ Ambiguous.add ∘g lowerG ,⊗ id ,⊗ lowerG))
+      un-assoc-alg'-functorial Atom = ⊕ᴰ≡ _ _ λ where
+        num → λ i → liftG ∘g ϕ .snd _ i ∘g σ Ambiguous.num
+        parens → λ i → liftG ∘g ϕ .snd _ i ∘g σ Ambiguous.parens ∘g id ,⊗ lowerG ,⊗ id
+         
   -- TODO: RightAssoc is weakly equivalent to the ambiguous version (in fact a retract)
   module _ {X : Grammar ℓ} (ϕ : Algebra (λ _ → Ambiguous.ExpF) (λ _ → X)) where
     X' : NT → Grammar ℓ
@@ -103,6 +135,57 @@ module LeftFactorized where
     num → k anyNum
     parens → k (literal LP) ⊗e Var Exp ⊗e k (literal RP)
 
+  Transform : NT → Functor (RightAssoc.NT)
+  Transform Exp = Var RightAssoc.Exp
+  Transform dE/dA = ⊕e Bool λ where
+    false → k ε*
+    true →  k (literal* PLUS) ⊗e Var RightAssoc.Exp
+  Transform Atom = Var RightAssoc.Atom
+
+  module _ {A : RightAssoc.NT → Grammar ℓ} (α : Algebra RightAssoc.BinOpF A) where
+    un-factorize-alg' : Algebra BinOpF λ nt → ⟦ Transform nt ⟧ A
+    un-factorize-alg' Exp =
+      ⊕ᴰ-elim (λ where
+        false → liftG ∘g α RightAssoc.Exp ∘g σ RightAssoc.done
+                ∘g ⊗-unit-r ∘g id ,⊗ (lowerG ∘g lowerG)
+        true → liftG ∘g α RightAssoc.Exp ∘g σ RightAssoc.add
+               ∘g id ,⊗ mapLift lowerG ,⊗ id)
+      ∘g ⊕ᴰ-distR .StrongEquivalence.fun
+      ∘g lowerG ,⊗ lowerG
+    un-factorize-alg' dE/dA = ⊕ᴰ-elim λ where
+      done → σ false ∘g mapLift liftG
+      add → σ true ∘g mapLift liftG ,⊗ lowerG
+    un-factorize-alg' Atom = ⊕ᴰ-elim λ where
+      num → mapLift (α RightAssoc.Atom ∘g σ RightAssoc.num ∘g liftG)
+      parens → liftG ∘g α RightAssoc.Atom ∘g σ RightAssoc.parens
+               ∘g id ,⊗ lowerG ,⊗ id
+
+  module _ {A : RightAssoc.NT → Grammar ℓA}(α : Algebra RightAssoc.BinOpF A)
+           {B : RightAssoc.NT → Grammar ℓB}(β : Algebra RightAssoc.BinOpF B)
+           (ϕ : Homomorphism RightAssoc.BinOpF α β)
+           where
+    opaque
+      unfolding ⊗-intro ⊕ᴰ-distR
+      un-factorize-alg'-homo : isHomo BinOpF (un-factorize-alg' α) (un-factorize-alg' β)
+        λ x → map (Transform x) (ϕ .fst)
+      un-factorize-alg'-homo Exp   = {!⊕ᴰ≡-distR _ _ ?!} -- TODO: need a version of ⊕ᴰ≡ combined with distributivity
+        -- -- Correct, but yellow
+        -- λ i → 
+        -- ((⊕ᴰ≡ _ _ λ where
+        -- false → λ i → liftG ∘g ϕ .snd RightAssoc.Exp i ∘g σ RightAssoc.done
+        --         ∘g ⊗-unit-r ∘g id ,⊗ (lowerG ∘g lowerG)
+        -- true → λ i → liftG ∘g ϕ .snd RightAssoc.Exp i ∘g σ RightAssoc.add
+        --        ∘g id ,⊗ mapLift lowerG ,⊗ id) i)
+        -- ∘g ⊕ᴰ-distR .StrongEquivalence.fun ∘g lowerG ,⊗ lowerG
+      un-factorize-alg'-homo dE/dA = ⊕ᴰ≡ _ _ λ where
+        done → refl
+        add → refl
+      un-factorize-alg'-homo Atom  = ⊕ᴰ≡ _ _ λ where
+        num → λ i → mapLift (ϕ .snd RightAssoc.Atom i ∘g σ RightAssoc.num ∘g liftG)
+        parens → λ i → liftG ∘g ϕ .snd RightAssoc.Atom i ∘g σ RightAssoc.parens
+                       ∘g id ,⊗ lowerG ,⊗ id
+  
+
   -- TODO: RightAssoc.BinOp Exp is strongly equivalent to BinOp Exp
   -- and analogous for RightAssoc.BinOp Atom
   module _ {X : RightAssoc.NT → Grammar ℓ} (ϕ : Algebra RightAssoc.BinOpF X) where
@@ -126,7 +209,6 @@ module LeftFactorized where
     -- un-factorize : ∀ nt → BinOp nt ⊢ X' nt
     -- un-factorize nt = {!!}
 module LookaheadAutomaton where
-
   data State : Type ℓ-zero where
     Opening Closing Adding : ℕ → State
     fail : State
@@ -160,6 +242,28 @@ module LookaheadAutomaton where
   aut .DeterministicAutomaton.δ (Adding opens) ] g = fail
   aut .DeterministicAutomaton.δ (Adding opens) + g = Opening opens
   aut .DeterministicAutomaton.δ (Adding opens) (num x) g = fail
+
+  TransformClosing : ℕ → Functor LeftFactorized.NT
+  TransformClosing zero = k ε
+  TransformClosing (suc n) =
+    k (literal RP)
+    ⊗e Var LeftFactorized.dE/dA
+    ⊗e TransformClosing n
+
+  Transform : State → Functor LeftFactorized.NT
+  Transform (Opening x) = Var LeftFactorized.Exp ⊗e TransformClosing x
+  Transform (Closing x) = TransformClosing x
+  Transform (Adding x) = Var LeftFactorized.dE/dA ⊗e TransformClosing x
+  Transform fail = k ⊥
+
+  -- module _ {A : LeftFactorized.NT → Grammar ℓ}
+  --          (α : Algebra LeftFactorized.BinOpF A)
+  --          where
+  --   mkParseTreeAlg' : Algebra (DeterministicAutomaton.TraceF aut true) λ q → ⟦ Transform q ⟧ A
+  --   mkParseTreeAlg' (Opening x) = {!!}
+  --   mkParseTreeAlg' (Closing x) = {!!}
+  --   mkParseTreeAlg' (Adding x) = {!!}
+  --   mkParseTreeAlg' fail = {!!}
 
   module _ (X : LeftFactorized.NT → Grammar ℓ) (ϕ : Algebra LeftFactorized.BinOpF X) where
     -- Can we refunctionalize this?
@@ -227,6 +331,9 @@ module LookaheadAutomaton where
       DeterministicAutomaton.Tag.step → ⊕ᴰ-elim λ _ →
         ⊗⊥* ∘g id ,⊗ (lowerG ∘g π₁) )
 
+    mkParseTree : ∀ q → DeterministicAutomaton.Trace aut true q ⊢ X' q
+    mkParseTree q = rec (DeterministicAutomaton.TraceF aut true) mkParseTreeAlg q
+
     X'' : Bool → State → Grammar ℓ
     X'' false = λ _ → ⊤*
     X'' true = X'
@@ -235,24 +342,153 @@ module LookaheadAutomaton where
     parseTreeAlg false = λ _ → ⊤*-intro
     parseTreeAlg true = mkParseTreeAlg
 
--- A completely deforested parsing pipeline
-parse' : string ⊢ &ᴰ
-                   (λ q →
-                      ⊕ᴰ
-                      (λ b →
-                         LookaheadAutomaton.X''
-                         (LeftFactorized.X' (RightAssoc.un-assoc-alg Ambiguous.semAct))
-                         (LeftFactorized.un-factorize-alg
-                          (RightAssoc.un-assoc-alg Ambiguous.semAct))
-                         b q))
-parse' = DeterministicAutomaton.parse-alg
-       LookaheadAutomaton.aut
-       (LookaheadAutomaton.parseTreeAlg _
-         (LeftFactorized.un-factorize-alg (RightAssoc.un-assoc-alg Ambiguous.semAct)))
+    X''' : Bool → State → Grammar ℓ
+    X''' false q = LiftG _ $ DeterministicAutomaton.Trace aut false q
+    X''' true = X'
+    parseTreeAlg' : ∀ b → Algebra (DeterministicAutomaton.TraceF aut b) (X''' b)
+    -- TODO : this could be automatic/unsafeCoerce
+    parseTreeAlg' false q = ⊕ᴰ-elim λ where
+      DeterministicAutomaton.Tag.stop → ⊕ᴰ-elim (λ foo →
+        mapLift (roll ∘g σ DeterministicAutomaton.Tag.stop ∘g σ foo ∘g liftG))
+      DeterministicAutomaton.Tag.step → ⊕ᴰ-elim λ foo →
+        liftG ∘g roll ∘g σ DeterministicAutomaton.Tag.step ∘g σ foo ∘g mapLift id ,⊗ mapLift lowerG ,&p mapLift id
+    parseTreeAlg' true = mkParseTreeAlg
 
-parse : string ⊢ Pure AST.Exp ⊕ ⊤
-parse = ((⊕ᴰ-elim λ where
-  false → inr ∘g ⊤-intro
-  true → inl ∘g ⊗-unit-r ∘g id ,⊗ lowerG)
-  ∘g π (LookaheadAutomaton.Opening 0))
-  ∘g parse'
+{- Let's start with one step of fusion, fusing the pipeline
+
+  String
+  ⊢ &[ q ] ⊕[ b ] Trace q b
+  ⊢ ⊕[ b ] Trace Init b
+  ⊢ ⊕{ true → Factorized ⊗ ε* ; false → Trace q false }
+  ⊢ ⊕{ true → Factorized ; false → Trace q false }
+  
+  since the translation from Trace Init true ⊢ Factorized ⊗ ε* is just the instantiation of a more general transformation Trace Init q true ⊢ ⟦ q ⟧, this is equivalent to:
+
+  String
+  ⊢ &[ q ] ⊕[ b ] Trace q b
+  ⊢ &[ q ] ⊕{ true → ⟦ q ⟧ ; false → Trace q false }
+  ⊢ ⊕{ true → Factorized ⊗ ε* ; false → Trace q false }  
+  ⊢ ⊕{ true → Factorized ; false → Trace q false }
+
+  String
+  ⊢ &[ q ] ⊕{ true → ⟦ q ⟧ ; false → Trace q false }
+  ⊢ ⊕{ true → Factorized ⊗ ε* ; false → Trace q false }  
+  ⊢ ⊕{ true → Factorized ; false → Trace q false }
+-}
+
+LFExp : Grammar ℓ-zero
+LFExp = μ LeftFactorized.BinOpF LeftFactorized.Exp
+
+open LookaheadAutomaton using (aut; mkParseTreeAlg; mkParseTree; parseTreeAlg')
+open DeterministicAutomaton hiding (parse)
+
+the-type : Bool → Grammar _
+the-type true = LFExp
+the-type false = DeterministicAutomaton.Trace aut false (aut .init)
+parseLF-unfused parseLF-fused : string ⊢ ⊕ᴰ the-type
+
+parseLF-unfused =
+  map⊕ᴰ (λ where
+    false → id
+    true →
+      (⊗-unit-r ∘g id ,⊗ lowerG) ∘g
+      mkParseTree (μ LeftFactorized.BinOpF) (initialAlgebra LeftFactorized.BinOpF) (init aut))
+  ∘g π (aut .init)
+  ∘g DeterministicAutomaton.parse aut
+
+-- parseLF-unfused' =   map⊕ᴰ (λ where
+--     false → lowerG
+--     true → (⊗-unit-r ∘g id ,⊗ lowerG)) ∘g
+--   π (aut .init) ∘g
+--   map&ᴰ (λ q → map⊕ᴰ (λ where
+--     false → id
+--     true → mkParseTree (μ LeftFactorized.BinOpF) (initialAlgebra LeftFactorized.BinOpF) q)) ∘g
+--   DeterministicAutomaton.parse aut
+
+parseLF-fused =
+  map⊕ᴰ (λ where
+    false → lowerG
+    true → (⊗-unit-r ∘g id ,⊗ lowerG)) ∘g
+  π (aut .init) ∘g
+  DeterministicAutomaton.parse-alg aut (parseTreeAlg' (μ LeftFactorized.BinOpF) (initialAlgebra LeftFactorized.BinOpF))
+
+fusion-correctness : parseLF-unfused ≡ parseLF-fused
+fusion-correctness = {!!}
+
+-- the-type' : LookaheadAutomaton.State → Bool → Grammar ℓ-zero
+-- the-type' q false = DeterministicAutomaton.Trace aut false (aut .init)
+-- the-type' q true = LookaheadAutomaton.X''' {!!} {!!} q
+parseLF-unfused' parseLF-fused' : string ⊢ &[ q ∈ LookaheadAutomaton.State ] ⊕[ b ∈ Bool ]
+  (LookaheadAutomaton.X''' _ (initialAlgebra LeftFactorized.BinOpF) b q)
+parseLF-fused' =
+  DeterministicAutomaton.parse-alg aut (parseTreeAlg' (μ LeftFactorized.BinOpF) (initialAlgebra LeftFactorized.BinOpF))
+
+parseLF-unfused' =
+  map&ᴰ (λ q → map⊕ᴰ (λ where
+    false → liftG
+    true → mkParseTree _ (initialAlgebra LeftFactorized.BinOpF) q))
+  ∘g DeterministicAutomaton.parse aut
+
+fusion-correctness' : parseLF-unfused' ≡ parseLF-fused'
+fusion-correctness' = {!!}
+
+-- to-traceAlg :
+--   ∀ {X : Grammar ℓ}
+--   → Algebra (λ _ → Ambiguous.ExpF) (λ _ → X)
+--   → ∀ b → Algebra (DeterministicAutomaton.TraceF LookaheadAutomaton.aut b) {!!}
+-- to-traceAlg {X = X} ϕ =
+--   LookaheadAutomaton.parseTreeAlg _ $
+--   LeftFactorized.un-factorize-alg   $
+--   RightAssoc.un-assoc-alg {X = X} $ ϕ
+  
+
+-- -- A parsing pipeline without the semantic action
+-- amb-alg : ∀ b → Algebra (DeterministicAutomaton.TraceF LookaheadAutomaton.aut b) _
+-- amb-alg =
+--   LookaheadAutomaton.parseTreeAlg _ $
+--   LeftFactorized.un-factorize-alg   $
+--   RightAssoc.un-assoc-alg $
+--   initialAlgebra (λ _ → Ambiguous.ExpF)
+
+-- -- A completely deforested parsing pipeline
+-- full-alg : ∀ b → Algebra (DeterministicAutomaton.TraceF LookaheadAutomaton.aut b) _
+-- full-alg =
+--   LookaheadAutomaton.parseTreeAlg _ $
+--   LeftFactorized.un-factorize-alg   $
+--   RightAssoc.un-assoc-alg $
+--   Ambiguous.semAct
+
+-- -- forested-parse' parse' : string ⊢ &ᴰ
+-- --                    (λ q →
+-- --                       ⊕ᴰ
+-- --                       (λ b →
+-- --                          LookaheadAutomaton.X''
+-- --                          (LeftFactorized.X' (RightAssoc.un-assoc-alg Ambiguous.semAct))
+-- --                          (LeftFactorized.un-factorize-alg
+-- --                           (RightAssoc.un-assoc-alg Ambiguous.semAct))
+-- --                          b q))
+-- -- parse' = DeterministicAutomaton.parse-alg
+-- --        LookaheadAutomaton.aut
+-- --        (LookaheadAutomaton.parseTreeAlg _
+-- --          (LeftFactorized.un-factorize-alg (RightAssoc.un-assoc-alg Ambiguous.semAct)))
+
+-- -- forested-parse' = {!!}
+
+-- parse : string ⊢ Pure AST.Exp ⊕ ⊤
+-- parse = (⊗-unit-r ∘g id ,⊗ lowerG) ,⊕p ⊤-intro
+--   ∘g DeterministicAutomaton.parse-alg' LookaheadAutomaton.aut full-alg
+
+-- parse' : string ⊢ μ (λ _ → Ambiguous.ExpF) _ ⊕ ⊤
+-- parse' = (⊗-unit-r ∘g id ,⊗ lowerG) ,⊕p ⊤-intro
+--   ∘g DeterministicAutomaton.parse-alg' LookaheadAutomaton.aut amb-alg
+
+-- parse-sound : parse ≡ (rec _ Ambiguous.semAct _ ,⊕p id) ∘g parse'
+-- parse-sound = {!!}
+
+-- {- Specification-}
+-- -- 1. A semantic type X (in this case AST.Exp)
+-- -- 2. A grammar functor F : Functor Unit, with an alg : Algebra F (Pure X)
+-- {- A sound and complete parser with semantic values in X would then be -}
+-- -- 1. The parsing function p : string ⊢ X ⊕ ⊤
+-- -- 2. p is sound if it factorizes via some p' : μ F ⊕ ⊤ as
+-- --    p ≡ fold alg ⊕ id ∘g p'

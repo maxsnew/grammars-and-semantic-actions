@@ -38,6 +38,9 @@ module _ where
     ⟦ F ⊗e F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
     ⟦ F &e2 F' ⟧ A = ⟦ F ⟧ A & ⟦ F' ⟧ A
 
+  ⟦_⟧s : {X : Type ℓX} → Functor X → (X → Grammar ℓX) → Grammar ℓX
+  ⟦_⟧s = ⟦_⟧
+
   map : ∀ {X : Type ℓX}(F : Functor X) {A : X → Grammar ℓA}{B : X → Grammar ℓB}
         → (∀ x → A x ⊢ B x)
         → ⟦ F ⟧ A ⊢ ⟦ F ⟧ B
@@ -94,3 +97,32 @@ module _ where
       cong (ϕ .fst x ∘g_) (ψ .snd x)
       ∙ cong (_∘g map (F x) (ψ .fst)) (ϕ .snd x)
       ∙ cong (η x ∘g_) (sym (map-∘ (F x) (ϕ .fst) (ψ .fst)))
+
+  -- Functor here is an expression monad whose intended semantics is a
+  -- continuation monad.
+  -- i.e., Functor X is thought of as (X →
+  -- Grammar) → Grammar
+  module _ {X : Type ℓX} where
+    retF : X → Functor X
+    retF x = Var x
+
+  _>>=F_ : {X Y : Type ℓX} → Functor X → (X → Functor Y) → Functor Y
+  k A >>=F K = k A
+  Var x >>=F K = K x
+  &e Y' F >>=F K = &e Y' (λ y' → F y' >>=F K)
+  ⊕e Y' F >>=F K = ⊕e Y' (λ y' → F y' >>=F K)
+  (F ⊗e F') >>=F K = (F >>=F K) ⊗e (F' >>=F K)
+  (F &e2 F') >>=F K = (F >>=F K) &e2 (F' >>=F K)
+
+  -- -- This is true if not for there being extra lifts on the RHS
+  -- ⟦⟧>>= : ∀ {X Y : Type ℓX} (F : Functor X) (K : X → Functor Y)
+  --   → ⟦ F >>=F K ⟧s ≡ λ A_y → ⟦ F ⟧ (λ x → ⟦ K x ⟧ A_y)
+  -- ⟦⟧>>= (k A) K = refl
+  -- ⟦⟧>>= (Var x) K = {!!} -- doesn't hold bc of lifts lol
+  -- ⟦⟧>>= (&e Y F) K = funExt λ A_y → cong &ᴰ (funExt λ y → λ i → ⟦⟧>>= (F y) K i A_y)
+  -- ⟦⟧>>= (⊕e Y F) K = funExt λ A_y → cong ⊕ᴰ (funExt λ y → λ i → ⟦⟧>>= (F y) K i A_y)
+  -- ⟦⟧>>= (F ⊗e F') K = funExt λ A_y → cong₂ _⊗_ (λ i → ⟦⟧>>= F K i A_y) (λ i → ⟦⟧>>= F' K i A_y)
+  -- ⟦⟧>>= (F &e2 F') K = funExt λ A_y → cong₂ _&_ (λ i → ⟦⟧>>= F K i A_y) (λ i → ⟦⟧>>= F' K i A_y)
+
+  _>=>F_ : {X Y Z : Type ℓX} → (X → Functor Y) → (Y → Functor Z) → X → Functor Z
+  (F >=>F G) x = F x >>=F G

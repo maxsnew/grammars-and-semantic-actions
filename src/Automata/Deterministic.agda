@@ -5,9 +5,11 @@ open import Cubical.Foundations.Isomorphism
 module Automata.Deterministic (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Function
 
 open import Cubical.Data.Bool
 import Cubical.Data.Equality as Eq
+open import Cubical.Data.Sigma
 
 open import Grammar Alphabet
 open import Parser Alphabet
@@ -140,3 +142,18 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   -- It should also be easy to prove that de-forested parse of the
   -- initial algebra is equivalent to ordinary parse.
+  LabeledTraceF : Q → Functor Q
+  LabeledTraceF q = ⊕e (Lift Bool) λ where
+    (lift b) → TraceTy b q
+
+  UnlabeledTraceF : Q → Functor Q
+  UnlabeledTraceF q = ⊕e Tag λ where
+    stop → k ε*
+    step → ⊕e (Lift ⟨ Alphabet ⟩) λ (lift c) → k (literal* c) ⊗e Var (δ q c)
+
+  module _ {X : Q → Grammar ℓ'} (ϕ : Algebra LabeledTraceF X) where
+    label : Algebra UnlabeledTraceF X
+    label q = ⊕ᴰ-elim (λ where
+      stop → ϕ q ∘g σ (lift $ isAcc q) ∘g σ stop ∘g σ (lift Eq.refl)
+      step → ⊕ᴰ-elim λ (lift c) →
+        ϕ q ∘g σ {!!} ∘g {!!})
