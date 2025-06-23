@@ -9,7 +9,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Inductive.Structure (Alphabet : hSet ℓ-zero)where
+module Grammar.Inductive.Liftless.Structure (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Foundations.Structure
 open import Cubical.Data.Sigma
@@ -24,7 +24,7 @@ open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Lift Alphabet
 open import Term.Base Alphabet
 
-open import Grammar.Inductive.Indexed Alphabet
+open import Grammar.Inductive.Liftless.Indexed Alphabet
 
 private
   variable ℓA ℓB ℓC ℓX ℓY : Level

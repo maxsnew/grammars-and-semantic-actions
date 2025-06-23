@@ -12,22 +12,30 @@ import Cubical.Data.Equality as Eq
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
 
-open import Grammar Alphabet
 open import Parser Alphabet
 open import Term Alphabet
-open import Grammar.Inductive.Structure Alphabet
+open import Grammar.Base Alphabet
+open import Grammar.Equivalence.Base Alphabet
+open import Grammar.Epsilon Alphabet
+open import Grammar.Literal Alphabet
+open import Grammar.String.Liftless Alphabet
+open import Grammar.Sum Alphabet
+open import Grammar.Product.Base Alphabet
+open import Grammar.LinearProduct.Base Alphabet
+open import Grammar.Inductive.Liftless.Indexed Alphabet
+open import Grammar.Inductive.Liftless.Structure Alphabet
 
 private
   variable
     ℓ ℓ' : Level
 
-record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
+record DeterministicAutomaton (Q : Type ℓ-zero) : Type (ℓ-suc ℓ-zero) where
   field
     init : Q
     isAcc : Q → Bool
     δ : Q → ⟨ Alphabet ⟩ → Q
 
-  data Tag (b : Bool) (q : Q) : Type ℓ where
+  data Tag (b : Bool) (q : Q) : Type ℓ-zero where
     stop : (isAcc q Eq.≡ b) → Tag b q
     step : ⟨ Alphabet ⟩ → Tag b q
 
@@ -43,46 +51,43 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   TraceF : (Bool × Q) → Functor (Bool × Q)
   TraceF (b , q) = ⊕e (Tag b q) λ where
-    (stop _) → k ε*
-    (step c) → k (literal* c) ⊗e Var (b , (δ q c))
+    (stop _) → k ε
+    (step c) → k (literal c) ⊗e Var (b , (δ q c))
 
-  Trace : Bool → (q : Q) → Grammar ℓ
+  Trace : Bool → (q : Q) → Grammar ℓ-zero
   Trace b q = μ TraceF (b , q)
 
   module _ where
-    StrF : Unit* {ℓ} → Functor (Unit* {ℓ})
-    StrF _ = *Ty (LiftG _ char) _
-  
-    Ix-f : Unit* {ℓ} → Functor (Bool × Q)
-    Ix-f _ = &e Q (λ q → ⊕e (Lift Bool) (λ (lift b) → Var (b , q)))
+    Ix-f : Unit → Functor (Bool × Q)
+    Ix-f _ = &e Q (λ q → ⊕e (Bool) (λ b → Var (b , q)))
 
-    Str-f : ∀ (A : _ → Grammar ℓ) → Algebra TraceF A → Algebra (λ _ → *Ty (LiftG _ char) _) λ t → ⟦ Ix-f t ⟧ A -- λ sᵢ → ⟦ Ix-f sᵢ ⟧ A
-    Str-f A α _ = 
-      ⊕ᴰ-elim (λ where
-      *Tag.nil  → &ᴰ-intro λ q → σ _ ∘g liftG ∘g α (_ , q) ∘g σ (stop Eq.refl)
-      *Tag.cons → &ᴰ-intro λ q →
-        (⊕ᴰ-elim λ c → (⊕ᴰ-elim λ b → σ _ ∘g liftG ∘g α (lower b , q) ∘g σ (step c) ∘g (liftG ∘g liftG) ,⊗ id )
-          ∘g ⊕ᴰ-distR .StrongEquivalence.fun ∘g id ,⊗ π (δ q c))
-        ∘g ⊕ᴰ-distL .StrongEquivalence.fun
-        ∘g (lowerG ∘g lowerG) ,⊗ lowerG)
-
+    Str-f : ∀ (A : _ → Grammar ℓ-zero)
+      → Algebra TraceF A
+      → Algebra StrF λ t → ⟦ Ix-f t ⟧ A
+    Str-f A α _ = ⊕ᴰ-elim λ where
+      StrTag.nil → &ᴰ-intro λ q → σ (isAcc q) ∘g α (_ , q) ∘g σ (stop Eq.refl)
+      (StrTag.cons c) → &ᴰ-intro λ q →
+        ⊕ᴰ-elim (λ b → σ b ∘g α (b , q) ∘g σ (step c))
+        ∘g ⊕ᴰ-distR .StrongEquivalence.fun
+        ∘g id ,⊗ π (δ q c)
     opaque
       unfolding ⊗-intro ⊕ᴰ-distR ⊕ᴰ-distL 
       Str-f-homo : ∀ {A B}
         → (α : Algebra TraceF A) (β : Algebra TraceF B)
         → (ϕ : Homomorphism TraceF α β)
         → isHomo StrF (Str-f _ α) (Str-f _ β) λ sᵢ → map (Ix-f sᵢ) (ϕ .fst)
-      Str-f-homo α β ϕ _ = ⊕ᴰ≡ _ _ (λ where
-        *Tag.nil  → λ i → &ᴰ-intro λ q → σ _ ∘g liftG ∘g ϕ .snd (_ , q) i ∘g σ (stop Eq.refl)
-        *Tag.cons → λ i → &ᴰ-intro λ q →
-          (⊕ᴰ-elim λ c → (⊕ᴰ-elim λ b → σ _ ∘g liftG ∘g ϕ .snd (lower b , q) i ∘g σ (step c) ∘g (liftG ∘g liftG) ,⊗ id )
-            ∘g ⊕ᴰ-distR .StrongEquivalence.fun ∘g id ,⊗ π (δ q c))
-          ∘g ⊕ᴰ-distL .StrongEquivalence.fun
-          ∘g (lowerG ∘g lowerG) ,⊗ lowerG)
+      Str-f-homo α β ϕ _ = ⊕ᴰ≡ _ _ λ where
+        StrTag.nil → λ i → &ᴰ-intro λ q → σ (isAcc q) ∘g ϕ .snd (_ , q) i ∘g σ (stop Eq.refl)
+        (StrTag.cons c) → λ i → &ᴰ-intro λ q →
+          ⊕ᴰ-elim (λ b → σ b ∘g ϕ .snd (b , q) i ∘g σ (step c))
+          ∘g ⊕ᴰ-distR .StrongEquivalence.fun
+          ∘g id ,⊗ π (δ q c)
+
+  TraceStructure = mkStructure TraceF
 
   parseTrace : StructureTransform
-    (mkStructure (λ _ → *Ty (LiftG _ char) _))
-    (mkStructure TraceF)
+    (mkStructure StrF)
+    TraceStructure
   parseTrace .StructureTransform.Ix-f = Ix-f
   parseTrace .StructureTransform.Str-f = Str-f
   parseTrace .StructureTransform.Str-f-homo = Str-f-homo

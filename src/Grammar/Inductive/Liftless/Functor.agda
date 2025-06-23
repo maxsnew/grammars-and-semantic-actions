@@ -1,7 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
-module Grammar.Inductive.Functor (Alphabet : hSet ℓ-zero)where
+module Grammar.Inductive.Liftless.Functor (Alphabet : hSet ℓ-zero)where
 
 open import Cubical.Foundations.Structure
 open import Cubical.Data.Sigma
@@ -29,48 +29,29 @@ module _ where
 
   infixr 25 _⊗e_
 
-  module _ {X : Type ℓX}{ℓA} where
-    ⟦_⟧ : Functor X → (X → Grammar ℓA) → Grammar (ℓ-max ℓX ℓA)
-    ⟦ k B ⟧ A = LiftG ℓA B
-    ⟦ Var x ⟧ A = LiftG ℓX (A x)
-    ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
-    ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
-    ⟦ F ⊗e F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
-    ⟦ F &e2 F' ⟧ A = ⟦ F ⟧ A & ⟦ F' ⟧ A
+  ⟦_⟧ : {X : Type ℓX} → Functor X → (X → Grammar ℓX) → Grammar ℓX
+  ⟦ k B ⟧ A = B
+  ⟦ Var x ⟧ A = A x
+  ⟦ &e Y F ⟧ A = &[ y ∈ Y ] ⟦ F y ⟧ A
+  ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
+  ⟦ F ⊗e F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
+  ⟦ F &e2 F' ⟧ A = ⟦ F ⟧ A & ⟦ F' ⟧ A
 
-  ⟦_⟧s : {X : Type ℓX} → Functor X → (X → Grammar ℓX) → Grammar ℓX
-  ⟦ k B ⟧s A = B
-  ⟦ Var x ⟧s A = A x
-  ⟦ &e Y F ⟧s A = &[ y ∈ Y ] ⟦ F y ⟧s A
-  ⟦ ⊕e Y F ⟧s A = ⊕[ y ∈ Y ] ⟦ F y ⟧s A
-  ⟦ F ⊗e F' ⟧s A = ⟦ F ⟧s A ⊗ ⟦ F' ⟧s A
-  ⟦ F &e2 F' ⟧s A = ⟦ F ⟧s A & ⟦ F' ⟧s A
-
-  map : ∀ {X : Type ℓX}(F : Functor X) {A : X → Grammar ℓA}{B : X → Grammar ℓB}
+  map : ∀ {X : Type ℓX}(F : Functor X) {A}{B}
         → (∀ x → A x ⊢ B x)
         → ⟦ F ⟧ A ⊢ ⟦ F ⟧ B
-  map (k A) f = liftG ∘g lowerG
-  map (Var x) f = liftG ∘g f x ∘g lowerG
+  map (k A) f = id
+  map (Var x) f = f x
   map (&e Y F) f = &ᴰ-intro λ y → map (F y) f ∘g π y
   map (⊕e Y F) f = ⊕ᴰ-elim λ y → σ y ∘g map (F y) f
   map (F ⊗e F') f = map F f ,⊗ map F' f
   map (F &e2 F') f = map F f ,&p map F' f
 
-  maps : ∀ {X : Type ℓX}(F : Functor X) {A}{B}
-        → (∀ x → A x ⊢ B x)
-        → ⟦ F ⟧s A ⊢ ⟦ F ⟧s B
-  maps (k A) f = id
-  maps (Var x) f = f x
-  maps (&e Y F) f = &ᴰ-intro λ y → maps (F y) f ∘g π y
-  maps (⊕e Y F) f = ⊕ᴰ-elim λ y → σ y ∘g maps (F y) f
-  maps (F ⊗e F') f = maps F f ,⊗ maps F' f
-  maps (F &e2 F') f = maps F f ,&p maps F' f
-
   module _ {X : Type ℓX} where
     opaque
       unfolding _⊗_ ⊗-intro &-intro π₁
 
-      map-id : ∀ (F : Functor X) {A : X → Grammar ℓA} →
+      map-id : ∀ (F : Functor X) {A : X → Grammar _} →
         map F (λ x → id {A = A x}) ≡ id
       map-id (k A) i = id
       map-id (Var x) i = id
@@ -79,32 +60,32 @@ module _ where
       map-id (F ⊗e F') i = map-id F i ,⊗ map-id F' i
       map-id (F &e2 F') i = map-id F i ,&p map-id F' i
 
-      map-∘ :  ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
+      map-∘ :  ∀ {A B C : X → Grammar _}
         (F : Functor X)
         (f : ∀ x → B x  ⊢ C x)(f' : ∀ x → A x ⊢ B x)
         → map F (λ x → f x ∘g f' x) ≡ map F f ∘g map F f'
-      map-∘ (k A) f f' i = liftG ∘g lowerG
-      map-∘ (Var x) f f' i = liftG ∘g f x ∘g f' x ∘g lowerG
+      map-∘ (k A) f f' i = id
+      map-∘ (Var x) f f' i = f x ∘g f' x
       map-∘ (&e Y F) f f' i = &ᴰ-intro (λ y → map-∘ (F y) f f' i ∘g π y)
       map-∘ (⊕e Y F) f f' i = ⊕ᴰ-elim (λ y → σ y ∘g map-∘ (F y) f f' i)
       map-∘ (F ⊗e F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
       map-∘ (F &e2 F') f f' i = map-∘ F f f' i ,&p map-∘ F' f f' i
 
   module _ {X : Type ℓX} (F : X → Functor X) where
-    Algebra : (X → Grammar ℓA) → Type (ℓ-max ℓX ℓA)
+    Algebra : (X → Grammar ℓX) → Type ℓX
     Algebra A = ∀ x → ⟦ F x ⟧ A ⊢ A x
 
-    module _ {A : X → Grammar ℓA}{B : X → Grammar ℓB} (α : Algebra A) (β : Algebra B) where
+    module _ {A B} (α : Algebra A) (β : Algebra B) where
       isHomo : (∀ x → A x ⊢ B x) → Type _
       isHomo ϕ = (∀ x → ϕ x ∘g α x ≡ β x ∘g map (F x) ϕ)
 
       Homomorphism : Type _
       Homomorphism = Σ _ isHomo
 
-    idHomo : ∀ {A : X → Grammar ℓA} → (α : Algebra A) → Homomorphism α α
+    idHomo : ∀ {A} → (α : Algebra A) → Homomorphism α α
     idHomo α = (λ x → id) , λ x → cong (α x ∘g_) (sym (map-id (F x)))
 
-    compHomo : ∀ {A : X → Grammar ℓA}{B : X → Grammar ℓB}{C : X → Grammar ℓC}
+    compHomo : ∀ {A B C}
       (α : Algebra A)(β : Algebra B)(η : Algebra C)
       → Homomorphism β η → Homomorphism α β → Homomorphism α η
     compHomo α β η ϕ ψ .fst x = ϕ .fst x ∘g ψ .fst x
@@ -117,9 +98,8 @@ module _ where
   -- continuation monad.
   -- i.e., Functor X is thought of as (X →
   -- Grammar) → Grammar
-  module _ {X : Type ℓX} where
-    retF : X → Functor X
-    retF x = Var x
+  retF : ∀ {X : Type ℓX} → X → Functor X
+  retF x = Var x
 
   _>>=F_ : {X Y : Type ℓX} → Functor X → (X → Functor Y) → Functor Y
   k A >>=F K = k A
@@ -129,9 +109,8 @@ module _ where
   (F ⊗e F') >>=F K = (F >>=F K) ⊗e (F' >>=F K)
   (F &e2 F') >>=F K = (F >>=F K) &e2 (F' >>=F K)
 
-  -- This is true if not for there being extra lifts on the RHS
   ⟦⟧>>= : ∀ {X Y : Type ℓX} (F : Functor X) (K : X → Functor Y)
-    → ⟦ F >>=F K ⟧s ≡ λ A_y → ⟦ F ⟧s (λ x → ⟦ K x ⟧s A_y)
+    → ⟦ F >>=F K ⟧ ≡ λ A_y → ⟦ F ⟧ (λ x → ⟦ K x ⟧ A_y)
   ⟦⟧>>= (k A) K = refl
   ⟦⟧>>= (Var x) K = refl
   ⟦⟧>>= (&e Y F) K = funExt λ A → cong &ᴰ (funExt λ y → funExt⁻ (⟦⟧>>= (F y) K) A)
