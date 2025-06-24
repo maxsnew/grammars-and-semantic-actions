@@ -118,5 +118,18 @@ module _ where
   ⟦⟧>>= (F ⊗e F') K = funExt λ A → cong₂ _⊗_ (funExt⁻ (⟦⟧>>= F K) A) (funExt⁻ (⟦⟧>>= F' K) A)
   ⟦⟧>>= (F &e2 F') K = funExt λ A → cong₂ _&_ (funExt⁻ (⟦⟧>>= F K) A) (funExt⁻ (⟦⟧>>= F' K) A)
 
+  map>>= : ∀ {X Y : Type ℓX} (F : Functor X) (K : X → Functor Y)
+    → PathP (λ i → ∀ {A B : Y → Grammar ℓX}
+        → ((x : Y) → Term (A x) (B x))
+        → Term (⟦⟧>>= F K i A) (⟦⟧>>= F K i B))
+       (map (F >>=F K))
+       λ f → map F (λ x → map (K x) f)
+  map>>= (k A) K = refl
+  map>>= (Var x) K = refl
+  map>>= (&e Y F) K i A = map&ᴰ (λ y → map>>= (F y) K i A)
+  map>>= (⊕e Y F) K i A = map⊕ᴰ (λ y → map>>= (F y) K i A)
+  map>>= (F ⊗e F') K i A = map>>= F K i A ,⊗ map>>= F' K i A
+  map>>= (F &e2 F') K i A = map>>= F K i A ,&p map>>= F' K i A
+
   _>=>F_ : {X Y Z : Type ℓX} → (X → Functor Y) → (Y → Functor Z) → X → Functor Z
   (F >=>F G) x = F x >>=F G

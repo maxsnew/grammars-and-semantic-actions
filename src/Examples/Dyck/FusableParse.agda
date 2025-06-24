@@ -59,58 +59,55 @@ module _ where
   Closers zero = k ε
   Closers (suc n) = k (literal RP) ⊗e Var _ ⊗e Closers n
 
-  Ix-f : (Bool × Maybe ℕ) → Functor Unit
-  Ix-f (false , n?) = k (CountParens.Trace false n?)
-  Ix-f (true , nothing) = ⊕e Empty.⊥ λ ()
-  Ix-f (true , just n)    = Var _ ⊗e Closers n
+  Ix-f : Maybe ℕ → Functor Unit
+  Ix-f nothing  = ⊕e Empty.⊥ λ ()
+  Ix-f (just n) = Var _ ⊗e Closers n
 
   module _ (A : Unit → Grammar ℓ-zero) (α : Algebra DyckF A) where
     step-[ : ∀ n →
-      (literal [) ⊗ (⟦ Ix-f (true , just (suc n)) ⟧ A)
+      (literal [) ⊗ (⟦ Ix-f (just (suc n)) ⟧ A)
       ⊢ ⟦ Var tt ⊗e Closers n ⟧ A
     step-[ _ = (α _ ∘g σ balanced') ,⊗ id ∘g ⊗-assoc4
 
-    Str-f : Algebra CountParens.TraceF (λ bn? → ⟦ Ix-f bn? ⟧ A )
-    -- TODO: this could be done entirely generically for DeterministicAutomaton
-    Str-f (false , q) = ⊕ᴰ-elim (λ where
-      (CountParens.stop x) → roll ∘g σ (CountParens.stop x)
-      (CountParens.step x) → roll ∘g σ (CountParens.step x))
+    Str-f : Algebra (CountParens.AccTraceF true) (λ bn? → ⟦ Ix-f bn? ⟧ A )
     -- TODO: this could be done generically if we made δ : State → Alphabet → Maybe State
-    Str-f (true , nothing) = ⊕ᴰ-elim (λ where
+    Str-f nothing = ⊕ᴰ-elim (λ where
       (CountParens.step c) → ⊕ᴰ-elim (λ ()) ∘g ⊕ᴰ-distR .StrongEquivalence.fun)
     -- This is specific to LL grammars
-    Str-f (true , just zero) = ⊕ᴰ-elim (λ where
+    Str-f (just zero) = ⊕ᴰ-elim (λ where
       -- interesting: the nil case is the same as the close case for the other state...
       (CountParens.stop _) → (α _ ∘g σ nil') ,⊗ id ∘g ⊗-unit-l⁻
       (CountParens.step [) → step-[ zero
       (CountParens.step ]) → (⊕ᴰ-elim λ ()) ∘g ⊕ᴰ-distR .StrongEquivalence.fun)
-    Str-f (true , just (suc n)) = ⊕ᴰ-elim (λ where
+    Str-f (just (suc n)) = ⊕ᴰ-elim (λ where
       (CountParens.step [) → step-[ $ suc n
       (CountParens.step ]) → (α _ ∘g σ nil') ,⊗ id ∘g ⊗-unit-l⁻)
 
   opaque
     unfolding ⊗-intro ⊕ᴰ-distR ⊗-unit-l⁻
-    lem : ∀ {A} n α → Str-f A α (true , just (suc n)) ∘g σ (CountParens.Tag.step ]) ≡ (α _ ∘g σ nil') ,⊗ id ∘g ⊗-unit-l⁻
-    lem n α = refl
-
     Str-f-homo : ∀ {A B α β}
       (ϕ : Homomorphism DyckF α β)
-      → isHomo CountParens.TraceF (Str-f A α) (Str-f B β) λ bn? → map (Ix-f bn?) (ϕ .fst)
-    Str-f-homo ϕ (false , q) = ⊕ᴰ≡ _ _ λ where
-      (CountParens.stop x) → refl
-      (CountParens.step x) → refl
-    Str-f-homo ϕ (true , nothing) = ⊕ᴰ≡ _ _ λ where
+      → isHomo (CountParens.AccTraceF true) (Str-f A α) (Str-f B β) λ bn? → map (Ix-f bn?) (ϕ .fst)
+    Str-f-homo ϕ nothing = ⊕ᴰ≡ _ _ λ where
       (CountParens.step c) → uninhabited→PropHoms ((⊕ᴰ-elim λ ()) ∘g ⊕ᴰ-distR .StrongEquivalence.fun)
-    Str-f-homo ϕ (true , just zero) = ⊕ᴰ≡ _ _ λ where
+    Str-f-homo ϕ (just zero) = ⊕ᴰ≡ _ _ λ where
       (CountParens.stop _) → λ i → (ϕ .snd _ i ∘g σ nil') ,⊗ id ∘g ⊗-unit-l⁻
       (CountParens.step [) → λ i → (ϕ .snd _ i ∘g σ balanced') ,⊗ id ∘g ⊗-assoc4
       (CountParens.step ]) → uninhabited→PropHoms ((⊕ᴰ-elim λ ()) ∘g ⊕ᴰ-distR .StrongEquivalence.fun)
-    Str-f-homo {α = α}{β} ϕ (true , just (suc n)) = ⊕ᴰ≡ _ _ λ where
+    Str-f-homo {α = α}{β} ϕ (just (suc n)) = ⊕ᴰ≡ _ _ λ where
       (CountParens.step [) → λ i → (ϕ .snd _ i ∘g σ balanced') ,⊗ map (Closers (suc n)) (ϕ .fst) ∘g ⊗-assoc4
       (CountParens.step ]) →
         (λ i → (ϕ .snd _ i ∘g σ nil') ,⊗ map (Closers (suc n)) (ϕ .fst) ∘g ⊗-unit-l⁻)
       
 Trace→Dyck : StructureTransform
-  CountParens.TraceStructure
+  (mkStructure (CountParens.AccTraceF true))
   DyckStr
-Trace→Dyck = record { Ix-f = Ix-f ; Str-f = Str-f ; Str-f-homo = λ α β → Str-f-homo }
+Trace→Dyck = mkStructureTransform Ix-f Str-f λ α β → Str-f-homo
+
+String→Dyck : StructureTransform
+  (mkStructure StrF)
+  DyckStr
+String→Dyck =
+  Trace→Dyck
+  ∘str (CountParens.markAccept
+  ∘str CountParens.parseTrace)
