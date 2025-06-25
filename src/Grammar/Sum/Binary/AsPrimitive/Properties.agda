@@ -5,7 +5,7 @@ open import Cubical.Foundations.Structure
 module Grammar.Sum.Binary.AsPrimitive.Properties (Alphabet : hSet ℓ-zero) where
 
 import Cubical.Data.Sum as Sum
-open import Cubical.Data.Bool using (Bool ; false ; true ; _≟_ ; isSetBool ; true≢false)
+open import Cubical.Data.Bool as Bool using (Bool ; false ; true ; _≟_ ; isSetBool ; true≢false)
 open import Cubical.Data.FinSet
 import Cubical.Data.Empty as Empty
 
@@ -36,6 +36,12 @@ open StrongEquivalence
 module _ (A : Bool → Grammar ℓA) where
   Ind⊕→⊕ : ⊕ᴰ A ⊢ A true ⊕ A false
   Ind⊕→⊕ = Ind⊕.⊕-elim inl inr
+
+  opaque
+    unfolding ⊕-elim
+    ⊕map∘gInd⊕→⊕ : (f : A true ⊢ B)(g : A false ⊢ C)
+      → (f ,⊕p g) ∘g Ind⊕→⊕ ≡ ⊕ᴰ-elim (Bool.elim (inl ∘g f) (inr ∘g g)) -- (λ { true → inl ∘g f ; false → inr ∘g g })
+    ⊕map∘gInd⊕→⊕ f g = ⊕ᴰ≡ _ _ (Bool.elim refl refl)
 
   ⊕→Ind⊕ : A true ⊕ A false ⊢ ⊕ᴰ A
   ⊕→Ind⊕ = ⊕-elim Ind⊕.inl Ind⊕.inr

@@ -20,6 +20,8 @@ private
     C : Grammar ℓC
     D : Grammar ℓD
 
+    f f' g g' : A ⊢ B
+
 opaque
   _⊕_ : Grammar ℓA → Grammar ℓB → Grammar (ℓ-max ℓA ℓB)
   (A ⊕ B) w = A w Sum.⊎ B w
@@ -64,6 +66,11 @@ opaque
 
 _,⊕p_ : A ⊢ B → C ⊢ D → A ⊕ C ⊢ B ⊕ D
 e ,⊕p f = ⊕-elim (inl ∘g e) (inr ∘g f)
+
+opaque
+  unfolding ⊕-elim
+  ⊕p-∘ : (f ∘g f') ,⊕p (g ∘g g') ≡ (f ,⊕p g) ∘g (f' ,⊕p g')
+  ⊕p-∘ = ⊕≡ _ _ refl refl
 
 ⊕-swap : A ⊕ B ⊢ B ⊕ A
 ⊕-swap = ⊕-elim inr inl

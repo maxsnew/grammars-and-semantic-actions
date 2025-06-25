@@ -73,6 +73,15 @@ _≅_ : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
 A ≅ B = StrongEquivalence A B
 infix 6 _≅_
 
+∘gIso≡ : ∀ (eq : A ≅ B)
+  → {f f' : B ⊢ C}
+  → (f ∘g eq .StrongEquivalence.fun ≡ f' ∘g eq .StrongEquivalence.fun)
+  → f ≡ f'
+∘gIso≡ eq {f} {f'} feq≡f'eq =
+  (λ i → f ∘g eq .StrongEquivalence.sec (~ i))
+  ∙ (λ i → feq≡f'eq i ∘g eq .StrongEquivalence.inv)
+  ∙ λ i → f' ∘g eq .StrongEquivalence.sec i
+
 _≈_ : Grammar ℓA → Grammar ℓB → Type (ℓ-max ℓA ℓB)
 A ≈ B = WeakEquivalence A B
 infix 1 _≈_

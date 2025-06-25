@@ -5,9 +5,11 @@ open import Cubical.Foundations.Isomorphism
 module Automata.Deterministic (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Function
 
 open import Cubical.Data.Bool
 import Cubical.Data.Equality as Eq
+open import Cubical.Data.Sigma
 
 open import Grammar Alphabet
 open import Parser Alphabet
@@ -15,7 +17,7 @@ open import Term Alphabet
 
 private
   variable
-    ℓ : Level
+    ℓ ℓ' : Level
 
 record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   field
@@ -119,3 +121,39 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   AccTraceParser q .disj =
     hasDisjointSummands⊕ᴰ isSetBool (unambiguous-⊕Trace q) true false true≢false
   AccTraceParser q .fun = Ind⊕→⊕ (λ b → Trace b q) ∘g π q ∘g parse
+
+  -- Rather than targeting the *initial* algebra of traces, this parse
+  -- targets *any* algebra of the Trace structure functor.
+  de-forested-parse : ∀ (M : Bool → Q → Grammar ℓ')
+    → (∀ b → Algebra (TraceTy b) (M b))
+    → string ⊢ &[ q ∈ Q ] ⊕[ b ∈ Bool ] M b q
+  de-forested-parse M ϕ = rec _
+    (λ _ → ⊕ᴰ-elim (λ
+    { nil → &ᴰ-intro λ q →
+      σ (isAcc q) ∘g ϕ (isAcc q) q ∘g σ stop ∘g σ (lift Eq.refl) ∘g liftG ∘g liftG ∘g lowerG ∘g lowerG
+    ; cons → &ᴰ-intro λ q →
+      ⊕ᴰ-elim (λ c → map⊕ᴰ (λ b → ϕ b q ∘g σ step ∘g σ (lift c) ∘g (liftG ∘g liftG) ,⊗ liftG) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ π (δ q c)) ∘g ⊕ᴰ-distL .fun ∘g lowerG ,⊗ lowerG
+      -- ⊕ᴰ-elim (λ c → {!!}) ∘g ⊕ᴰ-distR .fun ∘g id ,⊗ {!!} ∘g lowerG ,⊗ lowerG
+    }))
+    _
+
+  -- It should be easy induction to prove that ordinary parse followed
+  -- by a fold is equivalent to the direct de-forested parse.
+
+  -- It should also be easy to prove that de-forested parse of the
+  -- initial algebra is equivalent to ordinary parse.
+  LabeledTraceF : Q → Functor Q
+  LabeledTraceF q = ⊕e (Lift Bool) λ where
+    (lift b) → TraceTy b q
+
+  UnlabeledTraceF : Q → Functor Q
+  UnlabeledTraceF q = ⊕e Tag λ where
+    stop → k ε*
+    step → ⊕e (Lift ⟨ Alphabet ⟩) λ (lift c) → k (literal* c) ⊗e Var (δ q c)
+
+  module _ {X : Q → Grammar ℓ'} (ϕ : Algebra LabeledTraceF X) where
+    label : Algebra UnlabeledTraceF X
+    label q = ⊕ᴰ-elim (λ where
+      stop → ϕ q ∘g σ (lift $ isAcc q) ∘g σ stop ∘g σ (lift Eq.refl)
+      step → ⊕ᴰ-elim λ (lift c) →
+        ϕ q ∘g σ {!!} ∘g {!!})
