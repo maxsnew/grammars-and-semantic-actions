@@ -10,6 +10,7 @@ open import Cubical.Data.Unit
 open import Grammar.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
 open import Grammar.Sum.Base Alphabet
+open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
 open import Grammar.Product.Base Alphabet
 open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
@@ -26,6 +27,7 @@ module _ where
     &e ⊕e : ∀ (Y : Type ℓX) → (F : Y → Functor X) → Functor X
     _⊗e_ : (F : Functor X) → (F' : Functor X) → Functor X
     _&e2_ : (F : Functor X) → (F' : Functor X) → Functor X
+    _⊕e2_ : (F : Functor X) → (F' : Functor X) → Functor X
 
   infixr 25 _⊗e_
 
@@ -36,6 +38,7 @@ module _ where
   ⟦ ⊕e Y F ⟧ A = ⊕[ y ∈ Y ] ⟦ F y ⟧ A
   ⟦ F ⊗e F' ⟧ A = ⟦ F ⟧ A ⊗ ⟦ F' ⟧ A
   ⟦ F &e2 F' ⟧ A = ⟦ F ⟧ A & ⟦ F' ⟧ A
+  ⟦ F ⊕e2 F' ⟧ A = ⟦ F ⟧ A ⊕ ⟦ F' ⟧ A
 
   map : ∀ {X : Type ℓX}(F : Functor X) {A}{B}
         → (∀ x → A x ⊢ B x)
@@ -46,10 +49,11 @@ module _ where
   map (⊕e Y F) f = ⊕ᴰ-elim λ y → σ y ∘g map (F y) f
   map (F ⊗e F') f = map F f ,⊗ map F' f
   map (F &e2 F') f = map F f ,&p map F' f
+  map (F ⊕e2 F') f = map F f ,⊕p map F' f
 
   module _ {X : Type ℓX} where
     opaque
-      unfolding _⊗_ ⊗-intro &-intro π₁
+      unfolding _⊗_ ⊗-intro &-intro π₁ ⊕-elim
 
       map-id : ∀ (F : Functor X) {A : X → Grammar _} →
         map F (λ x → id {A = A x}) ≡ id
@@ -59,6 +63,9 @@ module _ where
       map-id (⊕e Y F) i = ⊕ᴰ-elim (λ y → σ y ∘g map-id (F y) i)
       map-id (F ⊗e F') i = map-id F i ,⊗ map-id F' i
       map-id (F &e2 F') i = map-id F i ,&p map-id F' i
+      map-id (F ⊕e2 F') = ⊕≡ _ _
+        (cong (inl ∘g_) (map-id F))
+        (cong (inr ∘g_) (map-id F'))
 
       map-∘ :  ∀ {A B C : X → Grammar _}
         (F : Functor X)
@@ -70,6 +77,9 @@ module _ where
       map-∘ (⊕e Y F) f f' i = ⊕ᴰ-elim (λ y → σ y ∘g map-∘ (F y) f f' i)
       map-∘ (F ⊗e F') f f' i = map-∘ F f f' i ,⊗ map-∘ F' f f' i
       map-∘ (F &e2 F') f f' i = map-∘ F f f' i ,&p map-∘ F' f f' i
+      map-∘ (F ⊕e2 F') f f' = ⊕≡ _ _
+        (cong (inl ∘g_) (map-∘ F f f'))
+        (cong (inr ∘g_) (map-∘ F' f f'))
 
   module _ {X : Type ℓX} (F : X → Functor X) where
     Algebra : (X → Grammar ℓX) → Type ℓX
@@ -108,6 +118,7 @@ module _ where
   ⊕e Y' F >>=F K = ⊕e Y' (λ y' → F y' >>=F K)
   (F ⊗e F') >>=F K = (F >>=F K) ⊗e (F' >>=F K)
   (F &e2 F') >>=F K = (F >>=F K) &e2 (F' >>=F K)
+  (F ⊕e2 F') >>=F K = (F >>=F K) ⊕e2 (F' >>=F K)
 
   ⟦⟧>>= : ∀ {X Y : Type ℓX} (F : Functor X) (K : X → Functor Y)
     → ⟦ F >>=F K ⟧ ≡ λ A_y → ⟦ F ⟧ (λ x → ⟦ K x ⟧ A_y)
@@ -117,6 +128,7 @@ module _ where
   ⟦⟧>>= (⊕e Y F) K = funExt λ A → cong ⊕ᴰ (funExt λ y → funExt⁻ (⟦⟧>>= (F y) K) A)
   ⟦⟧>>= (F ⊗e F') K = funExt λ A → cong₂ _⊗_ (funExt⁻ (⟦⟧>>= F K) A) (funExt⁻ (⟦⟧>>= F' K) A)
   ⟦⟧>>= (F &e2 F') K = funExt λ A → cong₂ _&_ (funExt⁻ (⟦⟧>>= F K) A) (funExt⁻ (⟦⟧>>= F' K) A)
+  ⟦⟧>>= (F ⊕e2 F') K = funExt λ A → cong₂ _⊕_ (funExt⁻ (⟦⟧>>= F K) A) (funExt⁻ (⟦⟧>>= F' K) A)
 
   map>>= : ∀ {X Y : Type ℓX} (F : Functor X) (K : X → Functor Y)
     → PathP (λ i → ∀ {A B : Y → Grammar ℓX}
@@ -130,6 +142,7 @@ module _ where
   map>>= (⊕e Y F) K i A = map⊕ᴰ (λ y → map>>= (F y) K i A)
   map>>= (F ⊗e F') K i A = map>>= F K i A ,⊗ map>>= F' K i A
   map>>= (F &e2 F') K i A = map>>= F K i A ,&p map>>= F' K i A
+  map>>= (F ⊕e2 F') K i A = map>>= F K i A ,⊕p map>>= F' K i A
 
   _>=>F_ : {X Y Z : Type ℓX} → (X → Functor Y) → (Y → Functor Z) → X → Functor Z
   (F >=>F G) x = F x >>=F G
