@@ -114,11 +114,10 @@ String→Dyck =
   ∘str (CountParens.markAccept
   ∘str CountParens.parseTrace)
 
--- module String→Dyck = StructureTransform String→Dyck
-
 -- -- doesn't actually matter that X is pure here but it corresponds to a
 -- -- semantic action
 -- module _ {X} (semAct : Algebra DyckF (λ _ → Pure X)) where
+--   module String→Dyck = StructureTransform String→Dyck
 --   parseDyck :
 --       μ StrF _
 --       ⊢ Pure X ⊕ μ (CountParens.AccTraceF false) (just 0)
@@ -133,14 +132,14 @@ String→Dyck =
 --     private
 --       lem : (Ind⊕→⊕ _
 --         ∘g π (just 0)
---         ∘g String→Dyck.Ix-f₁ .fst _ (rec DyckF semAct))
+--         ∘g String→Dyck.Ix-f₁ (rec DyckF semAct) _)
 --         ≡ (((rec DyckF semAct _ ,⊗ id) ,⊕p id)
 --         ∘g Ind⊕→⊕ _
 --         ∘g (π (just 0)))
 --       lem =
 --         (⊕ᴰ-elim (Bool.elim inl inr)
 --         ∘g π (just 0)
---         ∘g String→Dyck.Ix-f₁ .fst _ (rec DyckF semAct))
+--         ∘g String→Dyck.Ix-f₁ (rec DyckF semAct) _)
 --           ≡⟨ {!!} ⟩
 --         (⊕ᴰ-elim (Bool.elim (inl ∘g (rec DyckF semAct _ ,⊗ id)) inr)
 --         ∘g π (just 0))
@@ -162,7 +161,7 @@ String→Dyck =
 --       (⊗-unit-r ,⊕p id)
 --         ∘g Ind⊕→⊕ _
 --         ∘g π (just 0)
---         ∘g String→Dyck.Ix-f₁ .fst _ (rec DyckF semAct)
+--         ∘g String→Dyck.Ix-f₁ (rec DyckF semAct) _
 --         ∘g String→Dyck.toFoldToTrees _
 --         ≡⟨ cong ((⊗-unit-r ,⊕p id) ∘g_) (cong (_∘g String→Dyck.toFoldToTrees _) lem) ⟩
 --       (⊗-unit-r ,⊕p id)
@@ -170,12 +169,7 @@ String→Dyck =
 --         ∘g Ind⊕→⊕ _
 --         ∘g (π (just 0))
 --         ∘g String→Dyck.toFoldToTrees _
-
 --         ≡⟨ cong (_∘g Ind⊕→⊕ _ ∘g π (just 0) ∘g String→Dyck.toFoldToTrees _) (sym ⊕p-∘) ⟩
--- -- cong (_∘g π (just 0) ∘g String→Dyck.toFoldToTrees _)
--- --           (⊕ᴰ≡ _ _ (λ where
--- --             false → refl
--- --             true → refl))        
 --       ((⊗-unit-r ∘g rec DyckF semAct _ ,⊗ id) ,⊕p id)
 --         ∘g Ind⊕→⊕ _
 --         ∘g (π (just 0))

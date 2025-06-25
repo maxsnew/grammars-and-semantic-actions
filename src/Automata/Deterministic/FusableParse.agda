@@ -39,16 +39,6 @@ record DeterministicAutomaton (Q : Type ℓ-zero) : Type (ℓ-suc ℓ-zero) wher
     stop : (isAcc q Eq.≡ b) → Tag b q
     step : ⟨ Alphabet ⟩ → Tag b q
 
-  -- TagRep : Iso Tag Bool
-  -- TagRep = iso
-  --   (λ { stop → false ; step → true})
-  --   (λ { false → stop ; true → step})
-  --   (λ { false → refl ; true → refl})
-  --   (λ { stop → refl ; step → refl})
-
-  -- isSetTag : isSet Tag
-  -- isSetTag = isSetRetract (TagRep .fun) (TagRep .inv) (TagRep .leftInv) isSetBool
-
   TraceF : (Bool × Q) → Functor (Bool × Q)
   TraceF (b , q) = ⊕e (Tag b q) λ where
     (stop _) → k ε
