@@ -33,13 +33,18 @@ private
 record Structure (ℓX : Level) : Type (ℓ-suc ℓX) where
   field
     Ix : Type ℓX
-    -- A syntactic representaiton of an endofunctor on Gr^Ix
+    -- A syntactic representation of an endofunctor on Gr^Ix
     Str : Ix → Functor Ix
 
 mkStructure : ∀ {Ix : Type ℓX} (Str : Ix → Functor Ix) → Structure ℓX
 mkStructure Str = record { Ix = _ ; Str = Str }
 
 -- A StructureTransform is a "fusable" fold over S trees producing T trees.
+-- Note: I think I made this overly complicated.
+
+-- Probably should just remove the Ix-f Functor field altogether and
+-- only have the semantic functor stuff. So far I don't even think I
+-- use the fact that the functorial action preserves id/comp.
 record StructureTransform (S : Structure ℓX) (T : Structure ℓX) : Type (ℓ-suc ℓX) where
   private
     module S = Structure S

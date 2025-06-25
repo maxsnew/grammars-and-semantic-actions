@@ -8,7 +8,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 
-open import Cubical.Data.Bool hiding (_⊕_)
+open import Cubical.Data.Bool as Bool hiding (_⊕_)
 open import Cubical.Data.Maybe as Maybe hiding (rec)
 open import Cubical.Data.Nat as Nat hiding (_+_)
 open import Cubical.Data.FinSet
@@ -27,6 +27,7 @@ open import Grammar.Epsilon Alphabet
 open import Grammar.Literal Alphabet
 open import Grammar.String.Liftless Alphabet
 open import Grammar.Sum Alphabet
+open import Grammar.Sum.Binary.AsPrimitive Alphabet
 open import Grammar.Product.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
 open import Grammar.Inductive.Liftless.Indexed Alphabet
@@ -113,37 +114,75 @@ String→Dyck =
   ∘str (CountParens.markAccept
   ∘str CountParens.parseTrace)
 
-module String→Dyck = StructureTransform String→Dyck
+-- module String→Dyck = StructureTransform String→Dyck
 
--- doesn't actually matter that X is pure here but it corresponds to a
--- semantic action
-module _ {X} (semAct : Algebra DyckF (λ _ → Pure X)) where
-  parseDyck :
-      μ StrF _
-      ⊢ (⊕ᴰ {X = Bool} λ where
-          false → μ (CountParens.AccTraceF false) (just 0)
-          true → Pure X)
-  parseDyck =
-    (map⊕ᴰ λ where
-      false → id
-      true → ⊗-unit-r)
-    ∘g π (just 0)
-    ∘g String→Dyck.toFold semAct _
+-- -- doesn't actually matter that X is pure here but it corresponds to a
+-- -- semantic action
+-- module _ {X} (semAct : Algebra DyckF (λ _ → Pure X)) where
+--   parseDyck :
+--       μ StrF _
+--       ⊢ Pure X ⊕ μ (CountParens.AccTraceF false) (just 0)
+--   parseDyck =
+--     (⊗-unit-r ,⊕p id)
+--     ∘g Ind⊕→⊕ _
+--     ∘g π (just 0)
+--     ∘g String→Dyck.toFold semAct _
 
-  -- Should be able to prove this but getting stuck with Agda's
-  -- nominal λ nonsense
+--   opaque
+--     unfolding ⊗-intro ⊕ᴰ-elim
+--     private
+--       lem : (Ind⊕→⊕ _
+--         ∘g π (just 0)
+--         ∘g String→Dyck.Ix-f₁ .fst _ (rec DyckF semAct))
+--         ≡ (((rec DyckF semAct _ ,⊗ id) ,⊕p id)
+--         ∘g Ind⊕→⊕ _
+--         ∘g (π (just 0)))
+--       lem =
+--         (⊕ᴰ-elim (Bool.elim inl inr)
+--         ∘g π (just 0)
+--         ∘g String→Dyck.Ix-f₁ .fst _ (rec DyckF semAct))
+--           ≡⟨ {!!} ⟩
+--         (⊕ᴰ-elim (Bool.elim (inl ∘g (rec DyckF semAct _ ,⊗ id)) inr)
+--         ∘g π (just 0))
+--           ≡⟨ cong (_∘g π (just 0)) (sym $ ⊕map∘gInd⊕→⊕ _ _ _) ⟩
+--         (((rec DyckF semAct _ ,⊗ id) ,⊕p id)
+--         ∘g Ind⊕→⊕ _
+--         ∘g (π (just 0)))
+--           ∎
 
-  -- parseDyck-fusion :
-  --   parseDyck
-  --   ≡ ((map⊕ᴰ λ where
-  --        false → id
-  --        true → rec DyckF semAct _ ∘g ⊗-unit-r))
-  --     ∘g π (just 0)
-  --     ∘g String→Dyck.toFoldToTrees _
-  -- parseDyck-fusion =
-  --   (λ i → (map⊕ᴰ λ where
-  --     false → id
-  --     true → ⊗-unit-r)
-  --   ∘g π (just 0)
-  --   ∘g {!(String→Dyck.toFold-fusion semAct) (~ i) _!})
-  --   ∙ {!!}
+--     parseDyck-fusion :
+--       parseDyck
+--       ≡ ((rec DyckF semAct _ ∘g ⊗-unit-r) ,⊕p id)
+--         ∘g Ind⊕→⊕ _
+--         ∘g (π (just 0))
+--         ∘g String→Dyck.toFoldToTrees _
+--     parseDyck-fusion =
+--       parseDyck
+--         ≡⟨ cong (((⊗-unit-r ,⊕p id) ∘g Ind⊕→⊕ _ ∘g π (just 0)) ∘g_) (sym $ funExt⁻ (String→Dyck.toFold-fusion semAct) _) ⟩
+--       (⊗-unit-r ,⊕p id)
+--         ∘g Ind⊕→⊕ _
+--         ∘g π (just 0)
+--         ∘g String→Dyck.Ix-f₁ .fst _ (rec DyckF semAct)
+--         ∘g String→Dyck.toFoldToTrees _
+--         ≡⟨ cong ((⊗-unit-r ,⊕p id) ∘g_) (cong (_∘g String→Dyck.toFoldToTrees _) lem) ⟩
+--       (⊗-unit-r ,⊕p id)
+--         ∘g ((rec DyckF semAct _ ,⊗ id) ,⊕p id)
+--         ∘g Ind⊕→⊕ _
+--         ∘g (π (just 0))
+--         ∘g String→Dyck.toFoldToTrees _
+
+--         ≡⟨ cong (_∘g Ind⊕→⊕ _ ∘g π (just 0) ∘g String→Dyck.toFoldToTrees _) (sym ⊕p-∘) ⟩
+-- -- cong (_∘g π (just 0) ∘g String→Dyck.toFoldToTrees _)
+-- --           (⊕ᴰ≡ _ _ (λ where
+-- --             false → refl
+-- --             true → refl))        
+--       ((⊗-unit-r ∘g rec DyckF semAct _ ,⊗ id) ,⊕p id)
+--         ∘g Ind⊕→⊕ _
+--         ∘g (π (just 0))
+--         ∘g String→Dyck.toFoldToTrees _
+--         ≡⟨ cong (_∘g Ind⊕→⊕ _ ∘g π (just 0) ∘g String→Dyck.toFoldToTrees _) (cong (_,⊕p id) (⊗-unit-r⊗-intro (rec DyckF semAct _))) ⟩
+--       ((rec DyckF semAct _ ∘g ⊗-unit-r) ,⊕p id)
+--         ∘g Ind⊕→⊕ _
+--         ∘g (π (just 0))
+--         ∘g String→Dyck.toFoldToTrees _
+--         ∎
