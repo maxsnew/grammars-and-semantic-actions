@@ -64,28 +64,35 @@ record StructureTransform (S : Structure ℓX) (T : Structure ℓX) : Type (ℓ-
       → (ϕ : Homomorphism T.Str α β)
       → isHomo S.Str (Str-f _ α) (Str-f _ β) λ sᵢ → Ix-f₁ .fst sᵢ (ϕ .fst)
 
--- StructureTransforms satisfy the following fusion principle which
--- fuses two folds into one.
-module _ {S T : Structure ℓX}{A} (F : StructureTransform S T) where
-  private
-    module S = Structure S
-    module T = Structure T
-    module F = StructureTransform F
-  StructureTransform-fusion : ∀ (α : Algebra T.Str A)
+  -- A structure transform gives a way of expressing a fold from S.Str
+  -- given a T.Str algebra
+  toFold :
+    ∀ {A} (α : Algebra T.Str A)
+    → ∀ s → μ S.Str s ⊢ Ix-f₀ .fst s A
+  toFold α s = rec S.Str (Str-f _ α) s
+
+  toFoldToTrees : ∀ s → μ S.Str s ⊢ Ix-f₀ .fst s (μ T.Str)
+  toFoldToTrees = toFold (initialAlgebra T.Str)
+
+  -- The functoriality conditions ensure that the following fusion principle holds
+  toFold-fusion :
+    ∀ {A}(α : Algebra T.Str A)
     → (λ sᵢ →
-        F.Ix-f₁ .fst sᵢ (rec T.Str α)
-        ∘g rec S.Str (F.Str-f _ (initialAlgebra T.Str)) sᵢ)
-      ≡ rec S.Str (F.Str-f _ α)
-  StructureTransform-fusion α = μ-η S.Str (F.Str-f A α)
+        Ix-f₁ .fst sᵢ (rec T.Str α)
+        ∘g toFoldToTrees sᵢ)
+      ≡ toFold α
+  toFold-fusion α = μ-η S.Str (Str-f _ α)
     (compHomo S.Str
       (initialAlgebra S.Str)
-      (F.Str-f (μ T.Str) (initialAlgebra T.Str))
-      (F.Str-f A α)
-      (_ , F.Str-f-homo (initialAlgebra T.Str) α (recHomo T.Str α))
-      (recHomo S.Str (F.Str-f _ (initialAlgebra T.Str))))
+      (Str-f (μ T.Str) (initialAlgebra T.Str))
+      (Str-f _ α)
+      (_ , Str-f-homo (initialAlgebra T.Str) α (recHomo T.Str α))
+      (recHomo S.Str (Str-f _ (initialAlgebra T.Str))))
+
 
 open Structure
 open StructureTransform
+
 mkStructureTransform : ∀ {S T : Structure ℓX}
   (Ix-f : S .Ix → Functor (T .Ix))
   → (Str-f : ∀ (A : _ → Grammar ℓX) → Algebra (T .Str) A → Algebra (S .Str) λ sᵢ → ⟦ Ix-f sᵢ ⟧ A)

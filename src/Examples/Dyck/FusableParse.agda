@@ -33,6 +33,7 @@ open import Grammar.Inductive.Liftless.Indexed Alphabet
 open import Grammar.Inductive.Liftless.Structure Alphabet
 open import Term Alphabet
 
+open import SemanticAction.Base Alphabet
 open import Examples.Dyck.Grammar
 open import Automata.Deterministic.FusableParse Alphabet
 
@@ -98,7 +99,7 @@ module _ where
       (CountParens.step [) → λ i → (ϕ .snd _ i ∘g σ balanced') ,⊗ map (Closers (suc n)) (ϕ .fst) ∘g ⊗-assoc4
       (CountParens.step ]) →
         (λ i → (ϕ .snd _ i ∘g σ nil') ,⊗ map (Closers (suc n)) (ϕ .fst) ∘g ⊗-unit-l⁻)
-      
+
 Trace→Dyck : StructureTransform
   (mkStructure (CountParens.AccTraceF true))
   DyckStr
@@ -111,3 +112,38 @@ String→Dyck =
   Trace→Dyck
   ∘str (CountParens.markAccept
   ∘str CountParens.parseTrace)
+
+module String→Dyck = StructureTransform String→Dyck
+
+-- doesn't actually matter that X is pure here but it corresponds to a
+-- semantic action
+module _ {X} (semAct : Algebra DyckF (λ _ → Pure X)) where
+  parseDyck :
+      μ StrF _
+      ⊢ (⊕ᴰ {X = Bool} λ where
+          false → μ (CountParens.AccTraceF false) (just 0)
+          true → Pure X)
+  parseDyck =
+    (map⊕ᴰ λ where
+      false → id
+      true → ⊗-unit-r)
+    ∘g π (just 0)
+    ∘g String→Dyck.toFold semAct _
+
+  -- Should be able to prove this but getting stuck with Agda's
+  -- nominal λ nonsense
+
+  -- parseDyck-fusion :
+  --   parseDyck
+  --   ≡ ((map⊕ᴰ λ where
+  --        false → id
+  --        true → rec DyckF semAct _ ∘g ⊗-unit-r))
+  --     ∘g π (just 0)
+  --     ∘g String→Dyck.toFoldToTrees _
+  -- parseDyck-fusion =
+  --   (λ i → (map⊕ᴰ λ where
+  --     false → id
+  --     true → ⊗-unit-r)
+  --   ∘g π (just 0)
+  --   ∘g {!(String→Dyck.toFold-fusion semAct) (~ i) _!})
+  --   ∙ {!!}
