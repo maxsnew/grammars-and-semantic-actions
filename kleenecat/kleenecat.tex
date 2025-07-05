@@ -1,0 +1,509 @@
+\documentclass[acmsmall,anonymous,review,screen]{acmart}
+\usepackage{mathpartir}
+\usepackage{quiver}
+\usepackage{enumitem}
+\usepackage{wrapfig}
+\usepackage{fancyvrb}
+\usepackage{amsmath}
+
+\DeclareFontFamily{U}{dmjhira}{}
+\DeclareFontShape{U}{dmjhira}{m}{n}{ <-> dmjhira }{}
+
+\DeclareRobustCommand{\yo}{\text{\usefont{U}{dmjhira}{m}{n}\symbol{"48}}}
+
+\usepackage{xstring} % Need it for strlen
+\newcommand{\cat}[1]{
+  \relax
+  \StrLen{#1}[\arglength]
+  \ifnum\arglength=1
+  \mathcal{#1}
+  \else
+  \mathbf{#1}
+  \fi
+}
+
+\newcommand{\Set}{\cat{Set}}
+\newcommand{\lto}{\multimap}
+\newcommand{\grammar}{\Set^{\cat{\Sigma^*}}}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmcopyright}
+\copyrightyear{2018}
+\acmYear{2018}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%% These commands are for a PROCEEDINGS abstract or paper.
+\acmConference[Woodstock '18]{Woodstock '18: ACM Symposium on Neural
+  Gaze Detection}{June 03--05, 2018}{Woodstock, NY}
+\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+  June 03--05, 2018, Woodstock, NY}
+\acmPrice{15.00}
+\acmISBN{978-1-4503-XXXX-X/18/06}
+
+
+\begin{document}
+\title{Kleene Categories}
+\author{Steven Schaefer}
+\affiliation{
+  \department{Electrical Engineering and Computer Science}
+  \institution{University of Michigan}
+  \country{USA}
+}
+\email{stschaef@umich.edu}
+
+\author{Max S. New}
+\affiliation{
+  \department{Electrical Engineering and Computer Science}
+  \institution{University of Michigan}
+  \country{USA}
+}
+\email{maxsnew@umich.edu}
+
+\author{Pedro H. Azevedo de Amorim}
+\affiliation{
+  \department{Department of Computer Science}
+  \institution{University of Oxford}
+  \country{UK}
+}
+\email{pedro.azevedo.de.amorim@cs.ox.ac.uk}
+
+\begin{abstract}
+  We propose a categorification of Kleene algebras and study some of its basic properties.
+\end{abstract}
+
+\maketitle
+
+
+\section{Kleene Category}
+
+Kleene algebras are an important tool in the theory of regular
+languages. More broadly, they serve as a theoretical substrate to
+studying various kinds of formal languages. Formally, they are a tuple
+$(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is a set, $+$ and $\cdot$
+are binary operations over $A$, $(-)^*$ is a function over $A$, and
+$1$ and $0$ are constants. These structures satisfy the axoims depicted
+in Figure~\ref{fig:axioms}.
+
+\begin{figure}
+  \begin{align*}
+    x + (y + z) &= (x + y) + z & x + y &= y + x\\
+    x + 0 &= x & x + x &= x\\
+    x(yz) &= (xy)z & x1 &= 1x = x\\
+    x(y + z) &= xy + xz & (x + y)z &= xz + yz\\
+    x0 &= 0x = x & & \\
+    1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
+     b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
+  \end{align*}
+  \label{fig:axioms}
+  \caption{Kleene algebra axioms}
+\end{figure}
+
+The addition operation can be used to define the partial order
+structure $a \leq b$ if $a + b = b$. In the theory of formal languages
+this order structure can be used to model language containment. In this
+section, we want to categorify the concept of Kleene algebra and
+build on top of it in order to define an abstract theory of parsing.
+We start by defining \emph{Kleene categories}.
+
+\begin{definition}
+  A Kleene category is a distributive monoidal category $\cat{K}$
+  such that for every objects $A$ and $B$, the endofunctors $F_{A, B}
+  = B + A \otimes X$ and $G_{A, B} = B + X \otimes A$ have initial
+  algebras (denoted $\mu X.\, F_{A, B}(X)$) such that the canonical
+  morphisms $\mu X.\, F_{A, B}(X) \to B \otimes (\mu   X.\, F_{A, 1})$
+  $\mu X.\, G_{A, B}(X) \to (\mu   X.\, G_{A, 1})\otimes B $ are iso.
+\end{definition}
+
+As a sanity check, note that Kleene algebras are indeed examples of
+Kleene categories.
+
+\begin{example}
+  Every Kleene algebra, seen a posetal category, is a Kleene category.
+\end{example}
+
+An unexpected example comes from the theory of substructural logics.
+
+\begin{example}
+  The opposite category of every Kleene category is a model of a variant of
+  conjunctive ordered logic, where the Kleene star plays the role of the ``of
+  course'' modality from substructural logics.
+\end{example}
+
+This proposed definition is sensible. After all, the proposed axioms
+are a direct translation of the Kleene algebra axioms to a categorical
+setting. Its most convoluted aspect is the axiomatization of the Kleene
+star as a family os initial algebras satisfying certain
+isomorphisms. If the Kleene category $\cat{K}$ has more structure,
+then these isomorphisms hold ``for free''.
+
+\begin{theorem}
+  \label{th:kleeneclosed}
+  Let $\cat{K}$ be a Kleene category such that it is also monoidal
+  closed.  Then, the initial algebras isomorphisms hold automatically.
+\end{theorem}
+\begin{proof}
+  We prove this by the unicity (up-to isomorphism) of initial
+  algebras. Let $[hd, tl]: 1 + (\mu X.\, F_{A, 1}(X)) \otimes A \to
+  (\mu X.\, F_{A, 1}(X))$ be the initial algebra structure of $(\mu
+  X.\, F_{A, 1}(X))$ and consider the map $[hd, tl] : B + B \otimes
+  (\mu X.\, F_{A, 1}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
+    1}(X))$.
+
+  Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
+  we want to show that there is a unique algebra morphism $h : B
+  \otimes \mu X.\, F_{A,1} \to Y$. We can show existence and uniqueness
+  by showing that the diagram on the left commute if, and only if,
+  the diagram on the right commutes:
+
+  This equivalence follows by using the adjunction structure given
+  by the monoidal closed structure of $\cat{K}$. A completely analogous
+  argument for $G_{A,B}$ also holds.
+\end{proof}
+
+This result feels similar in spirit to the definition of action
+algebras, which are algebras where the product also has adjoint
+operations which results in the Kleene star being more easily
+axiomatized \cite{kozen1994}. We are now ready to prove that our
+concept of formal grammars fit nicely within our categorical
+framework. We start by presenting a well-known construction
+from presheaf categories.
+
+\begin{definition}
+  Let $\cat{C}$ be a locally small monoidal category and $F$, $G$ be
+  two functors $\cat{C} \to \Set$. Their Day convolution tensor
+  product is defined as the following coend formula:
+  \[
+  (F \otimes_{Day} G)(x) = \int^{(y,z) \in \cat{C}\times\cat{C}}\cat{C}(y\otimes z, x) \times F(y) \times G(z) 
+  \]
+  Dually, its internal hom is given by the following end formula:
+  \[
+  (F \lto_{Day} G)(x) = \int_{y} \Set(F(y), G(x \otimes y))
+  \]
+\end{definition}
+
+\begin{lemma}[\cite{day1970}]
+  Under the assumptions above, the presheaf category $\Set^{\cat{C}}$ is
+  monoidal closed.
+\end{lemma}
+
+%% \begin{theorem}
+%%   Let $\cat{K}$ be a Kleene category and $A$ a discrete category.
+%%   The functor category $[A, \cat{K}]$.
+%%   (HOW GENERAL SHOULD THIS THEOREM BE? BY ASSUMING ENOUGH STRUCTURE,
+%%   E.G. K = Set, THIS THEOREM BECOMES SIMPLE TO PROVE)
+%% \end{theorem}
+\begin{theorem}
+  If $\cat{C}$ is a locally small monoidal category, then
+  $\Set^{\cat{C}}$ is a Kleene category.
+\end{theorem}
+\begin{proof}
+
+  By the lemma above, $\Set^{\cat{C}}$ is monoidal closed, and since it
+  is a presheaf category, it has coproducts, and since the tensor
+  is a left adjoint, it preserves colimits and, therefore, it is
+  a distributive category.
+
+  As for the Kleene star, since presheaf categories admit small colimits,
+  the initial algebra of the functors $F_{A,B}$ and $G_{A,B}$ can be
+  defined as the filtered colimit of the diagrams:
+
+  From Theorem~\ref{th:kleeneclosed} it follows that these initial
+  algebras satisfy the required isomorphisms and this concludes the
+  proof.
+\end{proof}
+
+\begin{corollary}
+  For every alphabet $\Sigma$, the presheaf category $\grammar$
+  is a Kleene category.
+\end{corollary}
+\begin{proof}
+  Note that string concatenation and the empty string make the
+  discrete category $\Sigma^*$ a strict monoidal category.
+\end{proof}
+
+\begin{definition}
+  Let $K$ be a Kleene category over alphabet $\Sigma$. This
+  induces a strong monoidal functor $\Sigma^* \to K$. The
+  nerve functor $w \mapsto K(w, -)$ is the grammar interpretation
+  functor of $K$.
+\end{definition}
+
+\section{Proof-Relevant Deterministic Automata}
+
+Now, we will consider a categorification of deterministic automata.
+
+\begin{definition}
+  A proof-relevant DFA is an $F$-coalgebra, for the functor
+  $F(\cat{C}) = \Set \times (\Sigma \Rightarrow \cat{C})$.
+\end{definition}
+
+Assuming that the underlying category $\cat{C}$ is not discrete,
+arrows $f : X \to Y$ in $\cat{C}$ should be thought of as a proof that
+the state $X$ is related to the $Y$. This can be seen as a
+generalization of simulation relations. After all, functoriality of $F
+: \cat{C} \times \Sigma \to \cat{C}$ implies that $F(f, id_c): F(X, c)
+\to F(Y, c)$, i.e. after one transition, the end states will also be
+related.
+
+\begin{definition}
+  We can equip $\grammar$ with the $F$-coalgebra structure $\langle \alpha_1, \alpha_2\rangle$,
+  where $\alpha_1(F) = F(\varepsilon)$ and $\alpha_2(F, c) = \yo(c) \lto F$.
+\end{definition}
+
+\begin{theorem}
+  The morphism $\alpha : \grammar \to F(\grammar)$ is the final
+  $F$-coalgebra.
+\end{theorem}
+\begin{proof}
+  Given an $F$-coalgebra $\langle \alpha, \delta\rangle : \cat{C} \to \Set \times \cat{C}^\Sigma$, we can define the functor $\cat{C} \times \Sigma^* \to \Set$ much like in the DFA case:
+  by induction on $\Sigma^*$.
+  
+\end{proof}
+
+
+\begin{comment}
+\subsection{DFAs with simulation relation}
+
+Let $\langle \tau, \delta\rangle : X \to 2 \times X^\Sigma$ be a DFA
+over an alphabet $\Sigma$.
+
+\begin{definition}
+  A binary relation $\mathcal{R} \subseteq X \times X$ is a simulation if
+  \begin{itemize}
+  \item It is a preorder.
+  \item If $x_1 \mathcal{R} x_2$ and $x_1$ is an accept state, so is $x_2$.
+  \item If $x_1 \mathcal{R} x_2$ then for every $a : \Sigma$,
+    $\delta(x_1, a) \mathcal{R} \delta(x_2, a)$.
+  \end{itemize}
+\end{definition}
+
+We refine the notion of DFA morphism so that it also preserves the
+simulation relation.
+
+\begin{definition}
+A morphism between DFAs with simulation $f : (X, \tau, \delta,
+\mathcal{R}) \to (Y, \tau', \delta', \mathcal{S})$ is a function $f :
+X \to Y$ such that it is a DFA morphism and if $x_1 \mathcal{R} x_2$,
+then $f(x_1) \mathcal{S} f(x_2)$.
+\end{definition}
+
+These can be naturally organized as a category, which we denote
+$\cat{SimDFA}$.
+
+\begin{theorem}
+  The forgetful functor $U : \cat{SimDFA} \to \cat{DFA}$ is a fibration.
+\end{theorem}
+\begin{proof}
+  Since this functor is faithful, proving the universal property of
+  fibrations is simpler. Consider the following lifting problem:
+
+  We define the DFA with relation $(X, \mathcal{S}^*)$, where
+  $\mathcal{S} = \{ (x_1, x_2) \mid f(x_1) \mathcal{S} f(x_2)\}$.
+  We now prove that $\mathcal{S}^*$ is a simulation relation.
+  \begin{description}
+  \item[Preorder:] It follows directly from the fact that $\mathcal{S}$
+    is a preorder.
+  \item[Preserves acceptance:] Assume that $f(x_1) \mathcal{S} f(x_2)$
+    and that $x_1$ is an accepting state. Since $f$ is a DFA morphism,
+    it follows that $f(x)$ is an accepting state if, and only if, $x$
+    is accepting. Since by assumption $\mathcal{S}$ is a simulation
+    relation, we can conclude that $f(x_2)$ is an accepting state and
+    so is $x_2$.
+  \item[Stable under transition:] Assume that $f(x_1) \mathcal{S} f(x_2)$,
+    $\delta_a(x_1) = x'_1$ and $\delta_a(x_2) = x'_2$. We want to
+    show that $f(x'_1) \mathcal{S} f(x'_2)$. By assumption that $f$ is
+    a DFA morphism, we have $f \circ \delta_a = \delta'_a \circ f$,
+    for every character $a : \Sigma$. Therefore, we have to prove that
+    $\delta'_a(f(x_1)) \mathcal{S} \delta'_a(f(x_2))$. This follows
+    by the assumption that $\mathcal{S}$ is a simulation relation.
+  \end{description}
+
+  Therefore $(X, \mathcal{S}^*)$ is indeed a lifting of $X$.
+  Showing that it is the Cartesian lifting follows by unfolding
+  the definitions and using the fact that $U$ is faithful.
+\end{proof}
+\end{comment}
+
+
+\section{Proposed construction for free Kleene categories}
+
+For now, we ignore the subtleties behind pseudomonads, 2-monads,
+lax algebras, etc. We begin by defining pre Kleene categories.
+
+\begin{definition}
+  A pre Kleene category is a distributive monoidal category such that
+  the functors $F_{A, B}$ and $G_{A, B}$ have initial algebras, but
+  they do not necessarily satisfy the isomorphism condition.
+\end{definition}
+
+These objects can pretty naturally be organized as a 2-category
+$\cat{PKC}$: 1-cells are functors that strictly preserves all of the
+structure while 2-cells are just natural transformations.
+
+Let $\cat{C}$ be a category. It is more or less straightforward to
+define free pre Kleene category $PKC(\cat{C})$. We can do that by
+using the internal language of pre Kleene categories. Concretely, it
+will be a type theory with (non-commutative) tensors, sum types and
+inductive types corresponding to the initial algebras for $F_{A, B}$
+and $G_{A, B}$, for every $A$, $B$. By type theoretic reasons, this
+structure forces the coproduct to distribute over the tensor, where we
+can write the morphism $A \otimes (B + C) \to (A \otimes B) + (A
+\otimes C) $ as the term
+\begin{align*}
+  &z \vdash \mathsf{let}\, x \otimes y = z\, \mathsf{in}\\
+  &\mathsf{case}\, y \, \mathsf{with}\\
+  &| \mathsf{in}_1\, y_1 \Rightarrow \mathsf{in}_1\, (x \otimes y_1)\\
+  &| \mathsf{in}_2\,y_2\Rightarrow \mathsf{in}_2 \,(x \otimes y_2)\\
+  &\mathsf{end}
+\end{align*}
+%
+We can prove directly by the equational theory of this type theory
+that this is an inverse to the canonical map going in the other
+direction. The inductive nature of type theories should make the
+following theorem pretty straightforward to prove:
+%
+\begin{theorem}
+  The forgetful functor $\cat{PKC} \to \cat{Cat}$ has a left adjoint
+  in $\cat{2Cat}$.
+\end{theorem}
+
+Unfortunately, we can see that such a free construction will not be a
+Kleene category, since there is no way of constructing the Kleene star
+isomorphisms. That being said, there is a comparison map
+$\mu F_{A,B} \to A \mu F_{1, B}$ for $F$ and $G$. This leads me to conjecture
+the following:
+%
+\begin{conjecture}
+  The forgetful functor $\cat{KC} \to \cat{PKC}$ is a reflective
+  subcategory
+\end{conjecture}
+
+If the theorem above is true, we get a Kleene category
+monad on $\cat{Cat}$ by composing the adjunctions above.
+While I'm not sure how to define the reflection, Theorem~\ref{th:kleeneclosed}
+might be important in our construction. I remember asking Daniel Gratzer
+about this and he told me something about mapping a pre Kleene
+category $\cat{C}$ to $\widehat{\cat{C}}$ and ``carving it out'' in order
+to obtain an appropriate subcategory. Note that $\widehat{C}$ is monoidal
+closed, so it will be Kleene as well.
+
+
+\section{Revisiting Brzozowski's Distributive Law}
+
+It has been observed that Brzozowski's derivative can be more conceptually
+explained as a distributive law between the Kleene algebra monad and the
+DFA functor $2 \times (\Sigma \Rightarrow -)$.
+
+\begin{definition}
+  We can equip the two element set $2 = \{0, 1 \}$ with the following KA structure
+  \begin{itemize}
+    \item $b_1 + b_2 = b_1 \lor b_2$
+    \item $0 = 0$
+    \item $b_1 b_2 = b_1 \land b_2$
+    \item $1 = 1$
+    \item $b^* = 1$
+  \end{itemize}
+\end{definition}
+
+Since the axiomatization of Kleene algebras over an alphabet $\Sigma$
+is a Horn theory, the category of Kleene algebras and Kleene algebra
+morphisms is monadic over $\Set$. Let $E_\Sigma : \Set \to \Set$. be the 
+Kleene algebra monad. It is possible to show the following theorem.
+
+\begin{theorem}
+  There is a distributive law $E_\Sigma(2 \times (\Sigma \Rightarrow X)) \to 2 \times (\Sigma \Rightarrow E_\Sigma(X))$.
+\end{theorem}
+\begin{proof}
+  The component $E_\Sigma(2 \times (\Sigma \Rightarrow X)) \to 2$ is
+  defined using the universal property of free algebraic structures,
+  i.e. it suffices to define a morphism $2 \times (\Sigma \Rightarrow
+  X)) \to 2$, which we choose it to be the first projection
+  $\pi_1$. The component $E_\Sigma(2 \times (\Sigma \Rightarrow X))
+  \to (\Sigma \Rightarrow E_\Sigma(X))$ requires us to be more
+  clever. There is a ``non-standard'' Kleene algebra structure on
+  $(\Sigma \Rightarrow E_\Sigma(X)) \times E_\Sigma(X)$ that makes
+  this possible.
+\end{proof}
+
+\section{Generalization}
+
+We now want to prove that the distributive law above generalizes to
+the Kleene category case. We begin by showing that the ``non-standard''
+structure defined in the previous section can be extended to the
+proof-relevant setting.
+
+\begin{lemma}
+  Let $\cat{K}$ and $\cat{L}$ be two Kleene categories, $F : \cat{L}
+  \to \cat{K}$ and $G : \cat{L} \to \cat{K}$ two Kleene category
+  morphisms. We can equip $\cat{K} \times \cat{L}$ with the following
+  Kleene category structure:
+  \begin{itemize}
+  \item $(A, X) + (B, Y) = (A + B, X + Y)$
+  \item $0 = (0, 0)$
+  \item $(A, X) \otimes (B, Y) = (A \otimes F(Y) + G(X) \otimes B, X \otimes Y)$
+  \item $(A, X)^* = (A \otimes F(X^*), X^*)$
+  \end{itemize}
+\end{lemma}
+%% \begin{proof}
+%%   Since the morphism structure is defined componentwise, it is
+%%   immediate to show that the proposed cocartesian structure is
+%%   valid. For the monoidal structure, the bifunctoriality of $\otimes$
+%%   follows from the bifunctoriality of the monoidal structures
+%%   $\otimes$ and $+$ in $\cat{K}$. Next, we define the coherence
+%%   isomorphisms. As suggested by the action on the $\cat{L}$ component,
+%%   such isomorphisms are the same as in $\cat{L}$. The $\cat{K}$
+%%   components of these morphisms are more interesting:
+%% \end{proof}
+
+With this lemma and the 2-monadicity of Kleene categories over $\cat{Cat}$,
+we can define the distributive law between the proof-relevant
+DFA functor and the Kleene category 2-monad.
+
+\paragraph{Possible motivations}
+
+People have considered derivative-based parsing before, this would provide
+a semantic counterpart to those implementations.
+
+
+\section{Gluing Kleene categories}
+
+The following theorems should be true
+\begin{theorem}
+  Given Kleene categories $\cat{L}$, $\cat{K}$, $\cat{K}'$
+  and functors $F : \cat{L} \to \cat{K}$, $p : \cat{K}' \to \cat{K}$
+  such that $F$ is lax monoidal such that it laxly preserves the initial
+  algebras and $p$ is a monoidal fibration strictly preserving the
+  Kleene category structure, then in the pullback diagram
+  % https://q.uiver.app/#q=WzAsNCxbMCwxLCJcXGNhdHtMfSJdLFsxLDEsIlxcY2F0e0t9Il0sWzEsMCwiXFxjYXR7S30nIl0sWzAsMCwiXFxjYXR7TH0nIl0sWzAsMSwiRiIsMl0sWzIsMSwicCJdLFszLDJdLFszLDBdLFszLDEsIiIsMSx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dXQ==
+\[\begin{tikzcd}
+	{\cat{L}'} & {\cat{K}'} \\
+	{\cat{L}} & {\cat{K}}
+	\arrow[from=1-1, to=1-2]
+	\arrow[from=1-1, to=2-1]
+	\arrow["\lrcorner"{anchor=center, pos=0.125}, draw=none, from=1-1, to=2-2]
+	\arrow["p", from=1-2, to=2-2]
+	\arrow["F"', from=2-1, to=2-2]
+\end{tikzcd}\]
+$\cat{L}'$ is a Kleene category and the functor $\cat{L}'\to \cat{L}$ is a
+monoidal fibration strictly preserving the Kleene category structure.
+\end{theorem}
+\begin{proof}
+  It is known from linear logic reasons that the pullback is distributive monoidal.
+  The Kleene star should be defined much like the exponential in glued models of
+  linear logic. And the projection functor is a monoidal fibration because those
+  are stable under pullback.
+\end{proof}
+
+Recently I have been enjoying comma categories a bit more, which leads me to the follwing
+conjecture:
+
+\begin{conjecture}
+  The 2-category of Kleene categories has comma objects.
+\end{conjecture}
+
+
+\end{document}
