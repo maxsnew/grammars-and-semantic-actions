@@ -25,6 +25,7 @@
 \newcommand{\Set}{\cat{Set}}
 \newcommand{\lto}{\multimap}
 \newcommand{\grammar}{\Set^{\cat{\Sigma^*}}}
+\newtheorem*{construction}{Construction}
 
 %% Rights management information.  This information is sent to you
 %% when you complete the rights form.  These commands have SAMPLE
@@ -78,11 +79,11 @@
 \maketitle
 
 
-\section{Kleene Category}
+\section{Kleene Algebra and Kleene Categories}
 
 Kleene algebras are an important tool in the theory of regular
 languages. More broadly, they serve as a theoretical substrate to
-studying various kinds of formal languages. Formally, they are a tuple
+studying various kinds of formal languages. Formally, a Kleene algebra is a tuple
 $(A, +, \cdot, (-)^*, 1, 0)$, where $A$ is a set, $+$ and $\cdot$
 are binary operations over $A$, $(-)^*$ is a function over $A$, and
 $1$ and $0$ are constants. These structures satisfy the axoims depicted
@@ -102,29 +103,99 @@ in Figure~\ref{fig:axioms}.
   \caption{Kleene algebra axioms}
 \end{figure}
 
-The addition operation can be used to define the partial order
-structure $a \leq b$ if $a + b = b$. In the theory of formal languages
-this order structure can be used to model language containment. In this
-section, we want to categorify the concept of Kleene algebra and
-build on top of it in order to define an abstract theory of parsing.
-We start by defining \emph{Kleene categories}.
+The addition operation induces a partial order structure where $a \leq
+b$ if $a + b = b$. In the theory of formal languages this order
+structure models language containment.
+
+\begin{example}
+  The free Kleene algebra over a set $\Sigma$ is given by regular
+  expressions with alphabet $\Sigma$, quotiented by the Kleene algebra
+  axioms.
+\end{example}
+
+Kleene algebra provides an algebraic foundation for the implementation
+of langauge \emph{recognizers}, i.e., programs that determine whether
+or not a string is a member of a formal language. On the other hand,
+the fact that $+$ is idempotent means that a Kleene algebra cannot
+distinguish between multiple parses of the same string, and so Kleene
+algebra is insufficient for the discussion of \emph{parsers} which may
+select one of several different possible parses in the case of
+ambiguous grammars.
+
+Our goal is to provide a generalization of Kleene algebra that is
+``proof-relevant'', and so can provide a foundation for parsing
+regular expressions in the same way that Kleene algebra does for
+recognition. To do this we need to move beyond the view of a Kleene
+algebra as algebraic structure over sets, and instead as a kind of
+structured \emph{poset}. We then generalize this to a Kleene
+\emph{category}, where the morphisms of the category correspond to not
+just language inclusion but \emph{formal reductions} of grammars, and
+isomorphism is not language equivalence but instead \emph{strong
+equivalence} of grammars.
+
+The most complex part of this generalization is the appropriate
+generalization of the Kleene star. For that we make the following
+definitions
+\begin{definition}
+  Let $\cat C$ be a monoidal category. Given an object $A \in \cat C$,
+  a \textbf{parameterized cons-list object} consists of
+  \begin{enumerate}
+  \item an object $L \in \cat C$
+  \item with morphisms $\textrm{nil} : I \to L$ and $\textrm{cons} : A \otimes L \to L$
+  \item such that for every $P,B \in \cat C$, and morphisms $n : P \to
+    B$ and $c : A \otimes B \to B$ there is a unique morphism $\textrm{foldr}(n,c) : L
+    \otimes P \to B$ satisfying
+
+    % https://q.uiver.app/#q=WzAsNixbMSwwLCJMIFxcb3RpbWVzIFAiXSxbMCwwLCJJIFxcb3RpbWVzIFAiXSxbMCwxLCJQIl0sWzIsMCwiQSBcXG90aW1lcyBMIFxcb3RpbWVzIFAiXSxbMiwxLCJBIFxcb3RpbWVzIEIiXSxbMSwxLCJCIl0sWzEsMiwiIiwwLHsibGV2ZWwiOjIsInN0eWxlIjp7ImhlYWQiOnsibmFtZSI6Im5vbmUifX19XSxbMiw1LCJuIl0sWzQsNSwiYyIsMl0sWzMsNCwiQSBcXG90aW1lcyBcXHRleHRybXtmb2xkcn0obixjKSJdLFszLDAsIlxcdGV4dHJte2NvbnN9IFxcb3RpbWVzIFAiLDJdLFsxLDAsIlxcdGV4dHJte25pbH0gXFxvdGltZXMgUCJdLFswLDUsIlxcdGV4dHJte2ZvbGRyfShuLGMpIl1d
+\[\begin{tikzcd}[ampersand replacement=\&]
+	{I \otimes P} \& {L \otimes P} \& {A \otimes L \otimes P} \\
+	P \& B \& {A \otimes B}
+	\arrow["{\textrm{nil} \otimes P}", from=1-1, to=1-2]
+	\arrow[equals, from=1-1, to=2-1]
+	\arrow["{\textrm{foldr}(n,c)}", from=1-2, to=2-2]
+	\arrow["{\textrm{cons} \otimes P}"', from=1-3, to=1-2]
+	\arrow["{A \otimes \textrm{foldr}(n,c)}", from=1-3, to=2-3]
+	\arrow["n", from=2-1, to=2-2]
+	\arrow["c"', from=2-3, to=2-2]
+\end{tikzcd}\]
+  \end{enumerate}
+
+  A \textbf{cons-list object} is like a parameterized cons-list object but where $P$ can only be $I$.
+
+  A \textbf{parameterized snoc-list object} is a cons-list object in
+  the dual monoidal structure $\cat C^{co}$. In this case we call the
+  $\textrm{cons}$ instead $\textrm{snoc}$ and the $\textrm{foldr}$
+  morphism $\textrm{foldl}$. A non-parameterized snoc-list object is
+  defined similarly.
+\end{definition}
+
+\begin{construction}
+  Given a cons-list object for $A$, we can define a morphism $\textrm{snoc} : L \otimes A \to L$ as $\textrm{foldr}(\eta, \textrm{cons})$
+  where $\eta : A \to L$ is the composition
+  % https://q.uiver.app/#q=WzAsNCxbMCwwLCJBIl0sWzEsMCwiQSBcXG90aW1lcyBJIl0sWzIsMCwiQSBcXG90aW1lcyBMIl0sWzMsMCwiTCJdLFswLDEsIiIsMCx7ImxldmVsIjoyLCJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzEsMiwiQSBcXG90aW1lcyBcXHRleHRybXtuaWx9Il0sWzIsMywiXFx0ZXh0cm17Y29uc30iXV0=
+\[\begin{tikzcd}[ampersand replacement=\&]
+	A \& {A \otimes I} \& {A \otimes L} \& L
+	\arrow[equals, from=1-1, to=1-2]
+	\arrow["{A \otimes \textrm{nil}}", from=1-2, to=1-3]
+	\arrow["{\textrm{cons}}", from=1-3, to=1-4]
+\end{tikzcd}\]
+\end{construction}
 
 \begin{definition}
-  A Kleene category is a distributive monoidal category $\cat{K}$
-  such that for every objects $A$ and $B$, the endofunctors $F_{A, B}
-  = B + A \otimes X$ and $G_{A, B} = B + X \otimes A$ have initial
-  algebras (denoted $\mu X.\, F_{A, B}(X)$) such that the canonical
-  morphisms $\mu X.\, F_{A, B}(X) \to B \otimes (\mu   X.\, F_{A, 1})$
-  $\mu X.\, G_{A, B}(X) \to (\mu   X.\, G_{A, 1})\otimes B $ are iso.
+  A Kleene category is a distributive monoidal category $\cat{K}$ such
+  that for every object $A$, there is a cons-list object
+  $(A^*,\textrm{nil},\textrm{cons})$ such that $(A^*, \textrm{nil},
+  \textrm{snoc})$ is a snoc-list object.
 \end{definition}
 
 As a sanity check, note that Kleene algebras are indeed examples of
 Kleene categories.
 
-\begin{example}
-  Every Kleene algebra, seen a posetal category, is a Kleene category.
-\end{example}
+\begin{lemma}
+  A Kleene algebra is equivalent to a posetal Kleene category.
+\end{lemma}
 
+% This isn't an example of a Kleene category, it's an example of a model of conjunctive ordered logic
 An unexpected example comes from the theory of substructural logics.
 
 \begin{example}
@@ -135,34 +206,45 @@ An unexpected example comes from the theory of substructural logics.
 
 This proposed definition is sensible. After all, the proposed axioms
 are a direct translation of the Kleene algebra axioms to a categorical
-setting. Its most convoluted aspect is the axiomatization of the Kleene
-star as a family os initial algebras satisfying certain
-isomorphisms. If the Kleene category $\cat{K}$ has more structure,
-then these isomorphisms hold ``for free''.
+setting. Its most convoluted aspect is the axiomatization of the
+Kleene star as a parameterized list and snoc object. If the Kleene
+category $\cat{K}$ has more structure, then these isomorphisms hold
+``for free''.
+
+\begin{definition}
+  A pre-Kleene category is a distributive monoidal category with a (non-parameterized) cons-list object.
+\end{definition}
 
 \begin{theorem}
-  \label{th:kleeneclosed}
-  Let $\cat{K}$ be a Kleene category such that it is also monoidal
-  closed.  Then, the initial algebras isomorphisms hold automatically.
+  If $\cat K$ is a pre-Kleene category that is also biclosed, then it is a Kleene category.
 \end{theorem}
 \begin{proof}
-  We prove this by the unicity (up-to isomorphism) of initial
-  algebras. Let $[hd, tl]: 1 + (\mu X.\, F_{A, 1}(X)) \otimes A \to
-  (\mu X.\, F_{A, 1}(X))$ be the initial algebra structure of $(\mu
-  X.\, F_{A, 1}(X))$ and consider the map $[hd, tl] : B + B \otimes
-  (\mu X.\, F_{A, 1}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
-    1}(X))$.
-
-  Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
-  we want to show that there is a unique algebra morphism $h : B
-  \otimes \mu X.\, F_{A,1} \to Y$. We can show existence and uniqueness
-  by showing that the diagram on the left commute if, and only if,
-  the diagram on the right commutes:
-
-  This equivalence follows by using the adjunction structure given
-  by the monoidal closed structure of $\cat{K}$. A completely analogous
-  argument for $G_{A,B}$ also holds.
+  TODO: closed implies parameterized for free and that cons-list and snoc-list objects are equivalent.
 \end{proof}
+
+%% \begin{theorem}
+%%   \label{th:kleeneclosed}
+%%   Let $\cat{K}$ be a Kleene category such that it is also monoidal
+%%   closed.  Then, the initial algebras isomorphisms hold automatically.
+%% \end{theorem}
+%% \begin{proof}
+%%   We prove this by the unicity (up-to isomorphism) of initial
+%%   algebras. Let $[hd, tl]: 1 + (\mu X.\, F_{A, 1}(X)) \otimes A \to
+%%   (\mu X.\, F_{A, 1}(X))$ be the initial algebra structure of $(\mu
+%%   X.\, F_{A, 1}(X))$ and consider the map $[hd, tl] : B + B \otimes
+%%   (\mu X.\, F_{A, 1}(X)) \otimes A \to B\otimes (\mu X.\, F_{A,
+%%     1}(X))$.
+
+%%   Now, let $[f,g] : B + A \otimes Y \to Y$ be an $F_{A,B}$-algebra and
+%%   we want to show that there is a unique algebra morphism $h : B
+%%   \otimes \mu X.\, F_{A,1} \to Y$. We can show existence and uniqueness
+%%   by showing that the diagram on the left commute if, and only if,
+%%   the diagram on the right commutes:
+
+%%   This equivalence follows by using the adjunction structure given
+%%   by the monoidal closed structure of $\cat{K}$. A completely analogous
+%%   argument for $G_{A,B}$ also holds.
+%% \end{proof}
 
 This result feels similar in spirit to the definition of action
 algebras, which are algebras where the product also has adjoint
@@ -184,6 +266,9 @@ from presheaf categories.
   (F \lto_{Day} G)(x) = \int_{y} \Set(F(y), G(x \otimes y))
   \]
 \end{definition}
+Note that in the case the category $\cat C$ is the discrete category
+of a monoid, the Day convolution admits a simpler description where
+the coend degenerates to a coproduct and the end ot a product.
 
 \begin{lemma}[\cite{day1970}]
   Under the assumptions above, the presheaf category $\Set^{\cat{C}}$ is
@@ -201,7 +286,6 @@ from presheaf categories.
   $\Set^{\cat{C}}$ is a Kleene category.
 \end{theorem}
 \begin{proof}
-
   By the lemma above, $\Set^{\cat{C}}$ is monoidal closed, and since it
   is a presheaf category, it has coproducts, and since the tensor
   is a left adjoint, it preserves colimits and, therefore, it is
@@ -261,7 +345,6 @@ related.
 \begin{proof}
   Given an $F$-coalgebra $\langle \alpha, \delta\rangle : \cat{C} \to \Set \times \cat{C}^\Sigma$, we can define the functor $\cat{C} \times \Sigma^* \to \Set$ much like in the DFA case:
   by induction on $\Sigma^*$.
-  
 \end{proof}
 
 
@@ -328,28 +411,16 @@ $\cat{SimDFA}$.
 \end{proof}
 \end{comment}
 
-
 \section{Proposed construction for free Kleene categories}
 
 For now, we ignore the subtleties behind pseudomonads, 2-monads,
-lax algebras, etc. We begin by defining pre Kleene categories.
-
-\begin{definition}
-  A pre Kleene category is a distributive monoidal category such that
-  the functors $F_{A, B}$ and $G_{A, B}$ have initial algebras, but
-  they do not necessarily satisfy the isomorphism condition.
-\end{definition}
-
-These objects can pretty naturally be organized as a 2-category
-$\cat{PKC}$: 1-cells are functors that strictly preserves all of the
-structure while 2-cells are just natural transformations.
+lax algebras, etc.
 
 Let $\cat{C}$ be a category. It is more or less straightforward to
-define free pre Kleene category $PKC(\cat{C})$. We can do that by
-using the internal language of pre Kleene categories. Concretely, it
+define the free Kleene category $PKC(\cat{C})$. We can do that by
+using the internal language of Kleene categories. Concretely, it
 will be a type theory with (non-commutative) tensors, sum types and
-inductive types corresponding to the initial algebras for $F_{A, B}$
-and $G_{A, B}$, for every $A$, $B$. By type theoretic reasons, this
+a primitive type of lists $L(A)$ for every $A$. By type theoretic reasons, this
 structure forces the coproduct to distribute over the tensor, where we
 can write the morphism $A \otimes (B + C) \to (A \otimes B) + (A
 \otimes C) $ as the term
@@ -361,36 +432,27 @@ can write the morphism $A \otimes (B + C) \to (A \otimes B) + (A
   &\mathsf{end}
 \end{align*}
 %
+The list type includes primitive terms for $\textrm{cons}$,
+$\textrm{nil}$, $\textrm{foldr}$ and $\textrm{foldl}$ where
+$\textrm{foldr}$ and $\textrm{foldl}$ allow for a context to be used
+in the construction of the nil case, but no free variables can be used
+in the cons case:
+\begin{mathpar}
+  \inferrule
+  {\Gamma \vdash L : A^* \and \Delta \vdash N : B \and a:A,b:B \vdash M : B
+  }
+  {\Gamma,\Delta \vdash \textrm{foldr}(L,N,a.b.M) : B}
+\end{mathpar}
+
 We can prove directly by the equational theory of this type theory
 that this is an inverse to the canonical map going in the other
 direction. The inductive nature of type theories should make the
 following theorem pretty straightforward to prove:
 %
 \begin{theorem}
-  The forgetful functor $\cat{PKC} \to \cat{Cat}$ has a left adjoint
+  The forgetful functor $\cat{KC} \to \cat{Cat}$ has a left adjoint
   in $\cat{2Cat}$.
 \end{theorem}
-
-Unfortunately, we can see that such a free construction will not be a
-Kleene category, since there is no way of constructing the Kleene star
-isomorphisms. That being said, there is a comparison map
-$\mu F_{A,B} \to A \mu F_{1, B}$ for $F$ and $G$. This leads me to conjecture
-the following:
-%
-\begin{conjecture}
-  The forgetful functor $\cat{KC} \to \cat{PKC}$ is a reflective
-  subcategory
-\end{conjecture}
-
-If the theorem above is true, we get a Kleene category
-monad on $\cat{Cat}$ by composing the adjunctions above.
-While I'm not sure how to define the reflection, Theorem~\ref{th:kleeneclosed}
-might be important in our construction. I remember asking Daniel Gratzer
-about this and he told me something about mapping a pre Kleene
-category $\cat{C}$ to $\widehat{\cat{C}}$ and ``carving it out'' in order
-to obtain an appropriate subcategory. Note that $\widehat{C}$ is monoidal
-closed, so it will be Kleene as well.
-
 
 \section{Revisiting Brzozowski's Distributive Law}
 
