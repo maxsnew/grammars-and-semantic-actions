@@ -295,3 +295,6 @@ paper-difforigin/*
 /paper/diff.txt
 /paper/paper-oldtmp-26829.tex
 /paper/paper-oldtmp-*.tex
+
+.lake
+*/.lake/*
