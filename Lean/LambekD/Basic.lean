@@ -2,11 +2,17 @@ import Lean
 
 open Lean Elab Meta
 
+section
+variable {Alphabet : Type}
+variable [Inhabited Alphabet]
+variable [DecidableEq Alphabet]
+include Alphabet
+
 inductive Const
     | eps : Const
     | top : Const
     | bot : Const
-    | lit : String → Const
+    | lit : Alphabet → Const
 
 inductive Binop
     | disj : Binop
@@ -34,7 +40,7 @@ syntax "⊕" : binop
 syntax "⊗" : binop
 
 def elabConst : Syntax → MetaM Expr
-  | `(const| $c:str) => mkAppM ``Const.lit #[mkStrLit c.getString]
+  | `(const| $c:str) => mkAppM ``Const.lit #[]
   | `(const| I) => mkAppM ``Const.eps #[]
   | `(const| ⊤) => mkAppM ``Const.top #[]
   | `(const| ⊥) => mkAppM ``Const.bot #[]
@@ -72,5 +78,8 @@ partial def elabTy : Syntax → MetaM Expr
   | _ => throwError "Unsupported type syntax"
 
 elab "test_elabTy" t:ty : term => elabTy t
-#reduce test_elabTy "hello"
-#reduce test_elabTy ("hello" ⊗ I)
+end
+
+-- #reduce test_elabTy lit("hello")
+-- #reduce test_elabTy (I ⊗ I)
+-- #reduce test_elabTy ("hello" ⊗ I)
