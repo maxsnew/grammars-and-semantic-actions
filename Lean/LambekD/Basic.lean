@@ -40,7 +40,7 @@ syntax "⊕" : binop
 syntax "⊗" : binop
 
 def elabConst : Syntax → MetaM Expr
-  | `(const| $c:str) => mkAppM ``Const.lit #[]
+  | `(const| $c:str) => mkAppM ``Const.lit #[mkStrLit c.getString]
   | `(const| I) => mkAppM ``Const.eps #[]
   | `(const| ⊤) => mkAppM ``Const.top #[]
   | `(const| ⊥) => mkAppM ``Const.bot #[]
