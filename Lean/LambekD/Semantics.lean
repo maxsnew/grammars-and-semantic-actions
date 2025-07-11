@@ -2,7 +2,10 @@ import Mathlib.CategoryTheory.Discrete.Basic
 import Mathlib.CategoryTheory.Pi.Basic
 import Mathlib.CategoryTheory.Types
 import Mathlib.CategoryTheory.Limits.HasLimits
+import Mathlib.CategoryTheory.Limits.FunctorCategory.Basic
+import Mathlib.CategoryTheory.Limits.Types.Colimits
 import Mathlib.CategoryTheory.Monoidal.Category
+import Mathlib.CategoryTheory.Adjunction.Limits
 import Mathlib.Data.List.Basic
 
 universe u
@@ -20,6 +23,20 @@ def StringCat := CategoryTheory.Discrete (SemString Alphabet)
 
 def SemGrammar := SemString Alphabet → Type (u + 1)
 
+def SemGrammarFunctor := (Discrete (SemString Alphabet) ⥤ (Type (u + 1)))
+
+instance SemGrammarFunctorEquivalence :
+  (SemString Alphabet → Type (u + 1)) ≌ (Discrete (SemString Alphabet) ⥤ (Type (u + 1))) :=
+    piEquivalenceFunctorDiscrete _ _
+
+open Limits
+
+instance SemGrammarFunctorHasColimits : HasColimits (Discrete (SemString Alphabet) ⥤ (Type (u + 1))) :=
+  functorCategoryHasColimitsOfSize
+
+instance SemGrammarHasColimits : HasColimits (SemString Alphabet → Type (u + 1)) :=
+  Adjunction.has_colimits_of_equivalence ((SemGrammarFunctorEquivalence Alphabet).functor)
+
 def Reduction (A B : SemGrammar Alphabet) := (w : SemString Alphabet) → A w → B w
 
 def constFamily : SemString Alphabet → Type (u + 1) := fun _ => Type u
@@ -28,10 +45,6 @@ def FamilyOfTypes : (w : SemString Alphabet) → Category (constFamily Alphabet 
 
 instance : Category (SemGrammar Alphabet) := pi (I := SemString Alphabet) _
 
-open Limits
-
-instance : HasColimits (SemGrammar Alphabet) := sorry
-
 def IdReduction {A : SemGrammar Alphabet} : Reduction Alphabet A A := fun _ a => a
 
 structure Splitting (w : SemString Alphabet) where
@@ -39,24 +52,12 @@ structure Splitting (w : SemString Alphabet) where
   right : SemString Alphabet
   concatEq : left ++ right = w
 
--- def Tensor (A B : SemGrammar Alphabet) : SemGrammar Alphabet :=
---   λ (w : SemString Alphabet) => (s : Splitting Alphabet w) × A (s.left) × B (s.right)
-
 structure TensorTy (A B : SemGrammar Alphabet) (w : SemString Alphabet) where
   split : Splitting Alphabet w
   left : A (split.left)
   right : B (split.right)
 
 def Tensor (A B : SemGrammar Alphabet) : SemGrammar Alphabet := λ (w : SemString Alphabet) => TensorTy Alphabet A B w
-
--- theorem Tensor.ext {A B : SemGrammar Alphabet} {w : SemString Alphabet}
---   (x y : Tensor Alphabet A B w) :
---   (hsplit : x.split = y.split) →
---   (hsplit ▸ x.left = y.left) →
---   (hsplit ▸ x.right = y.right) →
---   x = y := by
---   intro hsplit hleft hright
---   ext
 
 def Epsilon : SemGrammar Alphabet := λ (w : SemString Alphabet) => ULift (PLift (w = List.nil))
 
@@ -132,7 +133,7 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
     inv := EpsilonUnitLInv Alphabet
     hom_inv_id := by
       funext w ⟨s, ⟨⟨nil⟩⟩ , a⟩
-      unfold CategoryStruct.comp EpsilonUnitL EpsilonUnitLInv EpsilonIntro CategoryStruct.id instCategorySemGrammar pi
+      unfold CategoryStruct.comp EpsilonUnitL EpsilonUnitLInv EpsilonIntro CategoryStruct.id instCategorySemGrammar pi Tensor
       simp
       sorry
     inv_hom_id := sorry
