@@ -5,6 +5,7 @@
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
 \usepackage{amsmath}
+\usepackage{stmaryrd}
 
 \DeclareFontFamily{U}{dmjhira}{}
 \DeclareFontShape{U}{dmjhira}{m}{n}{ <-> dmjhira }{}
@@ -22,9 +23,12 @@
   \fi
 }
 
+\newcommand{\FKC}{\textrm{F}_{\textrm{KC}}}
+\newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\Set}{\cat{Set}}
 \newcommand{\lto}{\multimap}
 \newcommand{\grammar}{\Set^{\cat{\Sigma^*}}}
+\newcommand{\id}{\textrm{id}}
 \newtheorem*{construction}{Construction}
 
 %% Rights management information.  This information is sent to you
@@ -417,7 +421,7 @@ For now, we ignore the subtleties behind pseudomonads, 2-monads,
 lax algebras, etc.
 
 Let $\cat{C}$ be a category. It is more or less straightforward to
-define the free Kleene category $PKC(\cat{C})$. We can do that by
+define the free Kleene category $\FKC(\cat{C})$. We can do that by
 using the internal language of Kleene categories. Concretely, it
 will be a type theory with (non-commutative) tensors, sum types and
 a primitive type of lists $L(A)$ for every $A$. By type theoretic reasons, this
@@ -530,42 +534,160 @@ DFA functor and the Kleene category 2-monad.
 People have considered derivative-based parsing before, this would provide
 a semantic counterpart to those implementations.
 
+This should imply that the algebraic and coalgebraic semantics of regular grammars coincides?
 
-\section{Gluing Kleene categories}
+\section{Canonicity for Free Kleene Categories}
 
-The following theorems should be true
-\begin{theorem}
-  Given Kleene categories $\cat{L}$, $\cat{K}$, $\cat{K}'$
-  and functors $F : \cat{L} \to \cat{K}$, $p : \cat{K}' \to \cat{K}$
-  such that $F$ is lax monoidal such that it laxly preserves the initial
-  algebras and $p$ is a monoidal fibration strictly preserving the
-  Kleene category structure, then in the pullback diagram
-  % https://q.uiver.app/#q=WzAsNCxbMCwxLCJcXGNhdHtMfSJdLFsxLDEsIlxcY2F0e0t9Il0sWzEsMCwiXFxjYXR7S30nIl0sWzAsMCwiXFxjYXR7TH0nIl0sWzAsMSwiRiIsMl0sWzIsMSwicCJdLFszLDJdLFszLDBdLFszLDEsIiIsMSx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dXQ==
-\[\begin{tikzcd}
-	{\cat{L}'} & {\cat{K}'} \\
-	{\cat{L}} & {\cat{K}}
-	\arrow[from=1-1, to=1-2]
-	\arrow[from=1-1, to=2-1]
-	\arrow["\lrcorner"{anchor=center, pos=0.125}, draw=none, from=1-1, to=2-2]
-	\arrow["p", from=1-2, to=2-2]
-	\arrow["F"', from=2-1, to=2-2]
-\end{tikzcd}\]
-$\cat{L}'$ is a Kleene category and the functor $\cat{L}'\to \cat{L}$ is a
-monoidal fibration strictly preserving the Kleene category structure.
+Let $\Sigma$ be a set. Then the ``standard semantics'' of the free
+Kleene category $\FKC(\Sigma)$ is the unique functor $\sem{\cdot} :
+\FKC(\Sigma) \to \Set^{\Sigma^*}$ preserving the (Day convolution)
+Kleene category structure.
+
+We first address whether we can generalize Kozen's completeness
+theorems for Kleene algebras. Firstly, the fact that the Free Kleene
+category is complete for \emph{language} inclusion and \emph{weak}
+equivalence follows immediately from the fact that the free Kleene
+algebra is equivalent to the posetal reflection of the free Kleene
+category and the completeness theorem for Kleene algebras. That is,
+for any objects $A, B \in \FKC(\Sigma)$, if $|\sem{A}| \subseteq
+|\sem{B}|$ then there is a morphism $A \to B$ in $\FKC(\Sigma)$.
+
+The immediate generalization to strong equivalence is false. For
+example, we might ask that $\sem{\cdot}$ is a \emph{full} functor,
+that any semantic reduction of the formal grammars is the denotation
+of a morphism in the free Kleene category. But consider that the
+regular grammar $1^*$ denotes a discrete grammar of natural numbers
+and so morphisms $1^* \otimes \cdots \to 1^*$ are mapped into a set of
+multi-argument functions on natural numbers. So completeness would
+imply that all functions on natural numbers can be defined in the
+syntax of the free Kleene category, which fails as all such functions
+should be primitive recursive\footnote{flesh out the
+details?}.
+
+Failing completeness for definability of reductions, we could ask that
+the \emph{equational theory} of free Kleene categories is
+complete. This means that $\sem{\cdot}$ is a \emph{faithful} functor,
+i.e., if two syntactic morphisms denote the same reduction $\sem{M} =
+\sem{N}$, then they are provably equal $M = N$. I don't know if this
+is true yet, but it seems unlikely to me.
+
+However there is a (very) restricted form of completeness that is
+true. The denotation $\sem{\cdot}$ is fully faithful when restricting
+to hom sets of the form $\FKC(\Sigma)(\lceil w \rceil, A)$. The
+significance of this is that the denotation of such a morphism is
+equivalent to $\sem{A}\,w$, the set of ``parse trees'' for the grammar
+$A$. Then fullness says that the term syntax is at least complete
+enough to describe all parse trees, and faithfulness says that the
+equational theory is at least complete enough to prove that terms that
+represent the same parse tree are provably equal. In other words, for
+every parse tree, there is a unique equivalence class of terms that
+map to it. This theorem is called canonicity because it says that all
+terms of a certain type are provably equal to a term in a
+``canonical'' form.
+
+\begin{theorem}{Canonicity}
+  The denotation $\sem{\cdot}$ is bijective when restricting to hom
+  sets of the form $\FKC(\Sigma)(\lceil w \rceil, A)$.
+\end{theorem}
+
+To prove this theorem, we first change perspective. The function
+$\lceil \cdot \rceil : \Sigma^* \to \FKC(\Sigma)$ induces a restricted
+Yoneda embedding called the ``nerve'' functor $N : \FKC(\Sigma) \to
+\Set^{\Sigma^*}$ defined by
+\[ N(A)w = \FKC(\Sigma)(\lceil w \rceil, A) \]
+The action of $\sem{\cdot}$ on the restricted hom sets then induces a
+natural transformation
+\[ u : N \Rightarrow \sem{\cdot} \]
+defined as
+\[ u_w(f : \FKC(\Sigma)(\lceil w \rceil , A)) = \sem{f}(\iota_w) : A w \]
+where $\iota_w : \sem{\lceil w \rceil} w$ is the unique parse tree
+witnessing that the grammar $Y c_1 \otimes \cdots \otimes \varepsilon$
+matches the string $c_1\cdots$. This $\iota_w$ is a universal element
+of $\sem{\lceil w \rceil}$, meaning that evaluating at $\iota_w$ is a
+bijection between $\Set^{\Sigma^*}(\sem{\lceil w \rceil}, A)$ and $A w$. So we
+have that $\sem{\cdot}$ is fully faithful on these hom sets if and
+only if $u$ is a natural isomorphism.
+
+To do this we will explicitly construct an inverse natural
+transformation $q : \sem{\cdot} \to N$ which we call ``quote'' because it quotes
+a semantic parse tree back into the syntax. $q$ can be defined
+explicitly by recursion on syntactic types and naturality proven by
+induction over syntactic terms but we will develop a more structured
+proof using the universal property of the free Kleene category.  To do
+this we need to develop a Kleene category for which constructing a
+functor from $\FKC(\Sigma)$ into it is equivalent to defining such a
+natural transformation. We can do this by using the following
+properties of \emph{comma categories}.
+
+\begin{lemma}
+  Let $F : \cat C \to \cat E$ and $G : \cat D \to \cat E$ and let $F
+  \downarrow G$ be the comma category (i.e., whose objects are
+  morphisms $F c \to G d$) with projections $p_C,p_D$.
+  \begin{enumerate}
+  \item If $\cat C, \cat D, \cat E$ have a monoidal structure for
+    which $F$ is oplax and $G$ is lax monoidal, then $F \downarrow G$
+    can be equipped with a monoidal structure such that $p_C,p_D$ are
+    strict monoidal.
+  \item If $\cat C, \cat D$ have (specified) colimits of shape
+    $\mathcal I$ and $F$ preserves colimits of shape $\mathcal I$ then
+    $F \downarrow G$ has colimits of shape $\mathcal I$ and the
+    projections (strictly) preserve them.
+  \end{enumerate}
+\end{lemma}
+
+Then we can prove the following
+\begin{theorem}{Gluing for Kleene categories}
+  Let $\cat K, \cat L, \cat M$ be Kleene categories and $\Phi : \cat K
+  \to \cat M$ be a Kleene functor and $G : \cat L \to \cat M$ be a lax
+  monoidal functor. Then $\Phi \downarrow G$ is a Kleene category, and
+  the projections are (strict) Kleene functors.
 \end{theorem}
 \begin{proof}
-  It is known from linear logic reasons that the pullback is distributive monoidal.
-  The Kleene star should be defined much like the exponential in glued models of
-  linear logic. And the projection functor is a monoidal fibration because those
-  are stable under pullback.
+  The monoidal and coproduct aspects of Kleene categories are handled
+  by the previous lemma. We need to show that the monoidal structure
+  is distributive and construct the Kleene star.
+
+  For the Kleene star object, given $f :
+  \Phi(k) \Rightarrow G l$ we define the carrier as
+  \[ \Phi(k^*) \cong \Phi(k)^* \to (G l)^* \to G l^* \]
+  where $f^* : \Phi(k)^* \to (G l)^*$ and $g : (G l)^* \to G l^*$ is
+  defined by the induced cons-structure $G l \otimes G l^* \to G (l
+  \otimes l^*) \to G l^*$ and $I \to G I \to G l^*$. Then it is
+  routine to check that the nil, cons and fold all lift to commutative
+  squares.
+
+  TODO: address the snoc-part as well, and distributivity
 \end{proof}
 
-Recently I have been enjoying comma categories a bit more, which leads me to the follwing
-conjecture:
+Then $\sem {\cdot} : \FKC(\Sigma) \to \Set^{\Sigma^*}$ is a strict
+Kleene functor and $N : \FKC(\Sigma) \to \Set^{\Sigma^*}$ is a lax
+monoidal functor, and so $\sem{\cdot}\downarrow N$ is a Kleene
+category and the projection to $\FKC(\Sigma)^2$ is a strict Kleene
+functor. Then by the universal property of $\FKC(\Sigma)$, there is a
+unique strict Kleene functor $q$ from $\FKC(\Sigma)$ to
+$\sem{\cdot}\downarrow N$ and further the composition with the
+projection to $\FKC(\Sigma)^2$ is strict Kleene and so $q$ is
+equivalent to a natural transformation $\sem{\cdot} \Rightarrow N$.
 
-\begin{conjecture}
-  The 2-category of Kleene categories has comma objects.
-\end{conjecture}
+\begin{lemma}
+  $q \circ u$ is the identity
+\end{lemma}
+\begin{proof}
+  Let $f : \FKC(\Sigma)(\lceil w \rceil, A)$, then by naturality,
+  $q(\sem{f}(\iota)) = f \circ q(\sem{\id}(\iota))$ so it suffices to
+  show that $q(\iota) = \id$. This can be confirmed by calculation by
+  induction on the length of $w$.
+\end{proof}
 
+\begin{lemma}
+  $u \circ q$ is the identity
+\end{lemma}
+\begin{proof}
+  By the universal property of $\FKC(\Sigma)$, it suffices to show
+  that $u \circ q$ and $\id$ correspond to (strict?) Kleene functors
+  from $\FKC(\Sigma)$ to $\sem{\cdot} \downarrow \sem{\cdot}$. The
+  identity part should be a general theorem, and verifying the Kleene
+  category properties is done by cases.
+\end{proof}
 
 \end{document}
