@@ -1,15 +1,22 @@
 import Mathlib.CategoryTheory.Discrete.Basic
 import Mathlib.CategoryTheory.Pi.Basic
 import Mathlib.CategoryTheory.Types
-import Mathlib.CategoryTheory.Limits.HasLimits
-import Mathlib.CategoryTheory.Limits.FunctorCategory.Basic
-import Mathlib.CategoryTheory.Limits.Types.Colimits
+-- import Mathlib.CategoryTheory.Limits.HasLimits
+-- import Mathlib.CategoryTheory.Limits.FunctorCategory.Basic
+-- import Mathlib.CategoryTheory.Limits.Types.Colimits
+import Mathlib.CategoryTheory.Limits.Shapes.Products
 import Mathlib.CategoryTheory.Monoidal.Category
-import Mathlib.CategoryTheory.Adjunction.Limits
+-- import Mathlib.CategoryTheory.Adjunction.Limits
 import Mathlib.Data.List.Basic
 
 universe u
+class AlphabetStr where
+  Alphabet : Type u
+  readLit : String → Alphabet
+  instInahbited : Inhabited Alphabet
+  instDecEq : DecidableEq Alphabet
 
+variable [AlphabetStr]
 variable (Alphabet : Type u)
 variable [Inhabited Alphabet]
 variable [DecidableEq Alphabet]
@@ -18,24 +25,23 @@ open CategoryTheory
 
 abbrev SemString := List Alphabet
 
--- TODO can use piEquivalencefunctordiscrete to show that SemGrammar is equivalent to (StringCat ⇒ Type)
 def StringCat := CategoryTheory.Discrete (SemString Alphabet)
 
 def SemGrammar := SemString Alphabet → Type (u + 1)
 
 def SemGrammarFunctor := (Discrete (SemString Alphabet) ⥤ (Type (u + 1)))
 
-instance SemGrammarFunctorEquivalence :
-  (SemString Alphabet → Type (u + 1)) ≌ (Discrete (SemString Alphabet) ⥤ (Type (u + 1))) :=
-    piEquivalenceFunctorDiscrete _ _
+-- instance SemGrammarFunctorEquivalence :
+--   (SemString Alphabet → Type (u + 1)) ≌ (Discrete (SemString Alphabet) ⥤ (Type (u + 1))) :=
+--     piEquivalenceFunctorDiscrete _ _
 
-open Limits
+-- open Limits
 
-instance SemGrammarFunctorHasColimits : HasColimits (Discrete (SemString Alphabet) ⥤ (Type (u + 1))) :=
-  functorCategoryHasColimitsOfSize
+-- instance SemGrammarFunctorHasColimits : HasColimits (Discrete (SemString Alphabet) ⥤ (Type (u + 1))) :=
+--   functorCategoryHasColimitsOfSize
 
-instance SemGrammarHasColimits : HasColimits (SemString Alphabet → Type (u + 1)) :=
-  Adjunction.has_colimits_of_equivalence ((SemGrammarFunctorEquivalence Alphabet).functor)
+-- instance SemGrammarHasColimits : HasColimits (SemString Alphabet → Type (u + 1)) :=
+--   Adjunction.has_colimits_of_equivalence ((SemGrammarFunctorEquivalence Alphabet).functor)
 
 def Reduction (A B : SemGrammar Alphabet) := (w : SemString Alphabet) → A w → B w
 
@@ -47,6 +53,9 @@ instance : Category (SemGrammar Alphabet) := pi (I := SemString Alphabet) _
 
 def IdReduction {A : SemGrammar Alphabet} : Reduction Alphabet A A := fun _ a => a
 
+--------------------------------------------------------------------------------
+-- Monoidal Structure
+--------------------------------------------------------------------------------
 structure Splitting (w : SemString Alphabet) where
   left : SemString Alphabet
   right : SemString Alphabet
@@ -144,3 +153,90 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
     hom_inv_id := sorry
     inv_hom_id := sorry
   }
+
+--------------------------------------------------------------------------------
+-- Disjunction
+--------------------------------------------------------------------------------
+open Limits
+
+instance : HasCoproducts.{u} (SemGrammar Alphabet) := fun J =>
+  {
+  has_colimit F :=
+    let disj := fun w => Σ (j : J), F.obj (Discrete.mk j) w
+    let cocone := {
+      pt := disj,
+      ι := {
+        app j w a := ⟨Discrete.as j , a⟩,
+        naturality j j' f := by
+          funext w a
+          unfold CategoryStruct.comp instCategorySemGrammar pi
+          have jeq : j.as = j'.as := Discrete.eq_of_hom f
+          aesop_cat
+        }
+  }
+  let isColimit : IsColimit cocone :=
+    let descDef s w a :=
+      let f := s.ι.app (Discrete.mk a.fst)
+      by
+      unfold instCategorySemGrammar pi at f
+      simp at f
+      exact f w (a.snd)
+    {
+    desc := descDef
+    -- Discrete properties should make this trivial
+    fac s j := by tauto
+    uniq := by
+      intros s m f
+      unfold descDef
+      simp
+      funext w a
+      have p : cocone.ι.app { as := a.fst } ≫ m = s.ι.app { as := a.fst } := f (Discrete.mk a.fst)
+      have q : (cocone.ι.app { as := a.fst } ≫ m) w a.snd = s.ι.app { as := a.fst } w a.snd := congr_fun (congr_fun p w) a.snd
+      exact q
+  }
+  let colim := {cocone := cocone, isColimit := isColimit}
+  {exists_colimit := Nonempty.intro colim}
+}
+
+-- TODO redefine everything in terms of the above categorical structures
+def Disjunction {X : Type u} (A : X → SemGrammar Alphabet) : SemGrammar Alphabet :=
+  fun (w : SemString Alphabet) => Σ (x : X), A x w
+
+def DisjunctionIn {X : Type u} {A : X → SemGrammar Alphabet} (x : X) : Reduction Alphabet (A x) (Disjunction Alphabet A) :=
+  fun (w : SemString Alphabet) (a : A x w) => ⟨x , a⟩
+
+def DisjunctionElim {X : Type u} {A : SemGrammar Alphabet} {B : X → SemGrammar Alphabet}
+  (f : (x : X) → Reduction Alphabet (B x) A) : Reduction Alphabet (Disjunction Alphabet B) A :=
+  fun (w : SemString Alphabet) ⟨x , b⟩ => f x w b
+
+def Initial : SemGrammar Alphabet := Disjunction Alphabet (X := PEmpty) (fun x => PEmpty.elim x)
+
+def InitialElim {A : SemGrammar Alphabet} : Reduction Alphabet (Initial Alphabet) A :=
+  fun w x => by
+    unfold Initial Disjunction at x
+    exact (PEmpty.elim (x.fst))
+
+--------------------------------------------------------------------------------
+-- Conjunction
+--------------------------------------------------------------------------------
+def Conjunction {X : Type u} (A : X → SemGrammar Alphabet) : SemGrammar Alphabet :=
+  fun (w : SemString Alphabet) => (x : X) → A x w
+
+def ConjunctionIn {X : Type u} {A : SemGrammar Alphabet} {B : X → SemGrammar Alphabet}
+  (f : (x : X) → Reduction Alphabet A (B x)) : Reduction Alphabet A (Conjunction Alphabet B) :=
+  fun (w : SemString Alphabet) (a : A w) (x : X) => f x w a
+
+def ConjunctionElim {X : Type u} {A : X → SemGrammar Alphabet} (x : X) : Reduction Alphabet (Conjunction Alphabet A) (A x) :=
+  fun (w : SemString Alphabet) (f : (Conjunction Alphabet A) w) => f x
+
+def Terminal : SemGrammar Alphabet := Conjunction Alphabet (X := PEmpty) (fun x => PEmpty.elim x)
+
+def TerminalIn {A : SemGrammar Alphabet} : Reduction Alphabet A (Terminal Alphabet) :=
+  fun _ _ x => PEmpty.elim x
+
+--------------------------------------------------------------------------------
+-- Kleene Star
+--------------------------------------------------------------------------------
+inductive Star (A : SemGrammar Alphabet) : SemGrammar Alphabet where
+  | nil : Star A []
+  | cons : {w w' : SemString Alphabet} → A w → Star A w' → Star A (w ++ w')

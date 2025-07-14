@@ -1,85 +1,106 @@
 import Lean
 
-open Lean Elab Meta
+open Lean Elab Meta PrettyPrinter Delaborator
 
-section
-variable {Alphabet : Type}
-variable [Inhabited Alphabet]
-variable [DecidableEq Alphabet]
-include Alphabet
+universe u
+class AlphabetStr where
+  Alphabet : Type u
+  readLit : String → Alphabet
+  instInahbited : Inhabited Alphabet
+  instDecEq : DecidableEq Alphabet
+
+section LambekDSyntax
+variable [AlphabetStr]
+open AlphabetStr
 
 inductive Const
     | eps : Const
     | top : Const
     | bot : Const
-    | lit : Alphabet → Const
 
-inductive Binop
-    | disj : Binop
-    | concat : Binop
-
-inductive Unaryop
-    | star : Unaryop
+inductive Lit
+  | lit : Alphabet → Lit
 
 inductive Ty
     | const : Const → Ty
-    | un : Unaryop → Ty → Ty
-    | bin : Binop → Ty → Ty → Ty
+    | lit : Lit → Ty
+    | star : Ty → Ty
+    | concat : Ty → Ty → Ty
+    | disj : Ty → Ty → Ty
+    | lfun : Ty → Ty → Ty
+    | rfun : Ty → Ty → Ty
 
 declare_syntax_cat const
 syntax "I" : const
 syntax "⊤" : const
 syntax "⊥" : const
-syntax str : const
 
-declare_syntax_cat unaryop
-syntax "*" : unaryop
-
-declare_syntax_cat binop
-syntax "⊕" : binop
-syntax "⊗" : binop
+declare_syntax_cat literal
+syntax "lit" "(" str ")" : literal
 
 def elabConst : Syntax → MetaM Expr
-  | `(const| $c:str) => mkAppM ``Const.lit #[mkStrLit c.getString]
   | `(const| I) => mkAppM ``Const.eps #[]
   | `(const| ⊤) => mkAppM ``Const.top #[]
   | `(const| ⊥) => mkAppM ``Const.bot #[]
   | _ => throwError "Unsupported type syntax"
 
-def elabBinop : Syntax → MetaM Expr
-  | `(binop| ⊕) => return .const ``Binop.disj []
-  | `(binop| ⊗) => return .const ``Binop.concat []
+def elabLit : Syntax → MetaM Expr
+  | `(literal| lit($c:str)) => do
+    -- Get the string value from the syntax
+    let s := c.getString
+    -- Use readLit to convert the string to Alphabet
+    let a ← mkAppM ``AlphabetStr.readLit #[mkStrLit s]
+    -- Wrap in Lit.lit
+    mkAppM ``Lit.lit #[a]
   | _ => throwError "Unsupported type syntax"
-
-def elabUnaryop : Syntax → MetaM Expr
-  | `(unaryop| *) => return .const ``Unaryop.star []
-  | _ => throwError "Unsupported unary operator syntax"
 
 declare_syntax_cat ty
 syntax const : ty
-syntax ty unaryop : ty
-syntax ty binop ty : ty
-syntax "(" ty ")" : ty
+syntax literal : ty
+syntax:85 ty "*" : ty
+syntax:5 ty "⊸" ty : ty
+syntax:5 ty "⟜" ty : ty
+syntax:50 ty "⊕" ty : ty
+syntax:80 ty "⊗" ty : ty
+syntax:90 "(" ty ")" : ty
 
 partial def elabTy : Syntax → MetaM Expr
+  | `(ty| $l:literal) => do
+    let litExpr ← elabLit l
+    mkAppM ``Ty.lit #[litExpr]
   | `(ty| $c:const) => do
     let constExpr ← elabConst c
     mkAppM ``Ty.const #[constExpr]
-  | `(ty| $t:ty $u:unaryop) => do
+  | `(ty| $t:ty *) => do
     let t' ← elabTy t
-    let u' ← elabUnaryop u
-    mkAppM ``Ty.un #[u', t']
-  | `(ty| $t1:ty $b:binop $t2:ty) => do
+    mkAppM ``Ty.star #[t']
+  | `(ty| $t1:ty ⊗ $t2:ty) => do
     let t1' ← elabTy t1
     let t2' ← elabTy t2
-    let b' ← elabBinop b
-    mkAppM ``Ty.bin #[b', t1', t2']
+    mkAppM ``Ty.concat #[t1', t2']
+  | `(ty| $t1:ty ⊕ $t2:ty) => do
+    let t1' ← elabTy t1
+    let t2' ← elabTy t2
+    mkAppM ``Ty.disj #[t1', t2']
   | `(ty| ($t:ty)) => elabTy t
   | _ => throwError "Unsupported type syntax"
 
 elab "test_elabTy" t:ty : term => elabTy t
-end
+end LambekDSyntax
 
--- #reduce test_elabTy lit("hello")
--- #reduce test_elabTy (I ⊗ I)
--- #reduce test_elabTy ("hello" ⊗ I)
+instance : AlphabetStr where
+  Alphabet := String
+  readLit x := x
+  instInahbited := inferInstance
+  instDecEq := inferInstance
+
+-- This choice of alphabet doesn't work because there's some issue with readLit
+-- instance : AlphabetStr where
+--   Alphabet := Nat
+--   readLit x := x.toNat!
+--   instInahbited := inferInstance
+--   instDecEq := inferInstance
+
+#reduce test_elabTy lit("hello")
+#reduce test_elabTy lit("") ⊗ lit("asdf") ⊕ ⊤ ⊗ I
+#reduce test_elabTy I
