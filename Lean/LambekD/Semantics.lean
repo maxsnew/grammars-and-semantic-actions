@@ -236,6 +236,42 @@ def ConjunctionIn {X : Type u} {A : SemGrammar Alphabet} {B : X → SemGrammar A
 def ConjunctionElim {X : Type u} {A : X → SemGrammar Alphabet} (x : X) : Reduction Alphabet (Conjunction Alphabet A) (A x) :=
   fun (w : SemString Alphabet) (f : (Conjunction Alphabet A) w) => f x
 
+def ConeOf {J : Type u} (F : Discrete J ⥤ SemGrammar Alphabet) : Cone F where
+  pt := Conjunction Alphabet (F.obj ∘ Discrete.mk)
+  π := {
+    app j := ConjunctionElim Alphabet (Discrete.as j),
+    naturality j j' f := by
+      funext w a
+      unfold CategoryStruct.comp instCategorySemGrammar pi
+      have jeq : j.as = j'.as := Discrete.eq_of_hom f
+      aesop_cat
+  }
+
+def ConeOfReduction {J : Type u} (F : Discrete J ⥤ SemGrammar Alphabet) :
+   Reduction Alphabet (Conjunction Alphabet F.obj) (ConeOf Alphabet F).pt :=
+      fun _ f j => f (Discrete.mk j)
+
+def ConeOfIsLimit {J : Type u} (F : Discrete J ⥤ SemGrammar Alphabet) : IsLimit (ConeOf Alphabet F) where
+    lift (s : Cone F) w a := ConeOfReduction Alphabet F w (ConjunctionIn Alphabet s.π.app w a)
+    fac s j := by tauto
+    uniq :=  by
+      intros s m f
+      funext w a j
+      unfold ConeOfReduction ConjunctionIn
+      simp
+      unfold ConeOf at m
+      simp at m
+      have p : m ≫ (ConeOf Alphabet F).π.app (Discrete.mk j) = s.π.app (Discrete.mk j) := f (Discrete.mk j)
+      have q : (m ≫ (ConeOf Alphabet F).π.app (Discrete.mk j)) w a = (s.π.app (Discrete.mk j)) w a := congr_fun₂ p w a
+      exact q
+
+def LimitConeOf {J : Type u} (F : Discrete J ⥤ SemGrammar Alphabet) : LimitCone F where
+  cone := ConeOf Alphabet F
+  isLimit := ConeOfIsLimit Alphabet F
+
+instance : HasProducts.{u} (SemGrammar Alphabet) := fun _ =>
+  {has_limit F := {exists_limit := Nonempty.intro (LimitConeOf Alphabet F)}}
+
 def Terminal : SemGrammar Alphabet := Conjunction Alphabet (X := PEmpty) (fun x => PEmpty.elim x)
 
 def TerminalIn {A : SemGrammar Alphabet} : Reduction Alphabet A (Terminal Alphabet) :=
