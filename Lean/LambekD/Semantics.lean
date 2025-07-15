@@ -61,12 +61,34 @@ structure Splitting (w : SemString Alphabet) where
   right : SemString Alphabet
   concatEq : left ++ right = w
 
+@[ext]
+def Splitting.ext {w : SemString Alphabet} {s s' : Splitting Alphabet w} :
+   s.left = s'.left → s.right = s'.right → s = s' := by
+  intro hl hr
+  cases s with
+  | mk left right concatEq =>
+    cases s' with
+    | mk left' right' concatEq' =>
+       simp at hl hr
+       subst hl hr
+       rfl
+
 structure TensorTy (A B : SemGrammar Alphabet) (w : SemString Alphabet) where
   split : Splitting Alphabet w
   left : A (split.left)
   right : B (split.right)
 
+@[ext]
+def TensorTy.ext {w : SemString Alphabet} {A B : SemGrammar Alphabet} {ab ab' : TensorTy Alphabet A B w} :
+   (sEq : ab.split = ab'.split) →
+   ab.left ≍ ab'.left → ab.right ≍ ab'.right → ab = ab' := sorry
+
 def Tensor (A B : SemGrammar Alphabet) : SemGrammar Alphabet := λ (w : SemString Alphabet) => TensorTy Alphabet A B w
+
+@[ext]
+def Tensor.ext {w : SemString Alphabet} {A B : SemGrammar Alphabet} {ab ab' : Tensor Alphabet A B w} :
+   (sEq : ab.split = ab'.split) →
+   ab.left ≍ ab'.left → ab.right ≍ ab'.right → ab = ab' := sorry
 
 def SemLiteral (c : Alphabet) : SemGrammar Alphabet := λ w => ULift (PLift (w = [ c ]))
 
@@ -139,7 +161,15 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
   associator A B C := {
     hom := TensorAssoc Alphabet,
     inv := TensorAssocInv Alphabet,
-    hom_inv_id := by funext _ ⟨s, ⟨s' , a , b⟩, c⟩; sorry;
+    hom_inv_id := by
+      funext _ ⟨s, ⟨s' , a , b⟩, c⟩
+      unfold TensorAssoc TensorAssocInv CategoryStruct.comp instCategorySemGrammar pi
+      simp
+      ext
+      · simp; rw [s'.concatEq]
+      · simp
+      · simp; sorry
+      · simp
     inv_hom_id := sorry
   }
   leftUnitor A := {
