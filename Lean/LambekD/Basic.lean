@@ -1,14 +1,9 @@
 import Lean
+import LambekD.Semantics
 
 open Lean Elab Meta PrettyPrinter Delaborator
 
 universe u
-class AlphabetStr where
-  Alphabet : Type u
-  readLit : String → Alphabet
-  instInahbited : Inhabited Alphabet
-  instDecEq : DecidableEq Alphabet
-
 section LambekDSyntax
 variable [AlphabetStr]
 open AlphabetStr
@@ -27,8 +22,8 @@ inductive Ty
     | star : Ty → Ty
     | concat : Ty → Ty → Ty
     | disj : Ty → Ty → Ty
-    | lfun : Ty → Ty → Ty
-    | rfun : Ty → Ty → Ty
+    -- | lfun : Ty → Ty → Ty
+    -- | rfun : Ty → Ty → Ty
 
 declare_syntax_cat const
 syntax "I" : const
@@ -85,7 +80,25 @@ partial def elabTy : Syntax → MetaM Expr
   | `(ty| ($t:ty)) => elabTy t
   | _ => throwError "Unsupported type syntax"
 
-elab "test_elabTy" t:ty : term => elabTy t
+elab "ty!" t:ty : term => elabTy t
+
+def SemTy : Ty → SemGrammar Alphabet :=
+  fun t =>
+  match t with
+  | (Ty.const Const.eps) => Epsilon Alphabet
+  | (Ty.const Const.top) => Terminal Alphabet
+  | (Ty.const Const.bot) => Initial Alphabet
+  | (Ty.lit (Lit.lit c)) => SemLiteral Alphabet c
+  | (Ty.star A) => Star Alphabet (SemTy A)
+  | (Ty.concat A B) => Tensor Alphabet (SemTy A) (SemTy B)
+  | (Ty.disj A B) => Disjunction Alphabet (X := Bool)
+                       (fun b => match b with
+                        | true => SemTy A
+                        | false => SemTy B)
+  -- | (Ty.lfun x y) => sorry
+  -- | (Ty.rfun x y) => sorry
+  -- | _ => sorry
+
 end LambekDSyntax
 
 instance : AlphabetStr where
@@ -94,13 +107,9 @@ instance : AlphabetStr where
   instInahbited := inferInstance
   instDecEq := inferInstance
 
--- This choice of alphabet doesn't work because there's some issue with readLit
--- instance : AlphabetStr where
---   Alphabet := Nat
---   readLit x := x.toNat!
---   instInahbited := inferInstance
---   instDecEq := inferInstance
 
-#reduce test_elabTy lit("hello")
-#reduce test_elabTy lit("") ⊗ lit("asdf") ⊕ ⊤ ⊗ I
-#reduce test_elabTy I
+elab "semTy!" t:ty : term => do
+  let ty ← elabTy t
+  mkAppM ``SemTy #[ty]
+#reduce semTy! I
+#reduce semTy! lit("a") ⊗ lit("b")

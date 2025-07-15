@@ -9,7 +9,7 @@ import Mathlib.CategoryTheory.Monoidal.Category
 -- import Mathlib.CategoryTheory.Adjunction.Limits
 import Mathlib.Data.List.Basic
 
-universe u
+universe u v
 class AlphabetStr where
   Alphabet : Type u
   readLit : String → Alphabet
@@ -67,6 +67,11 @@ structure TensorTy (A B : SemGrammar Alphabet) (w : SemString Alphabet) where
   right : B (split.right)
 
 def Tensor (A B : SemGrammar Alphabet) : SemGrammar Alphabet := λ (w : SemString Alphabet) => TensorTy Alphabet A B w
+
+def SemLiteral (c : Alphabet) : SemGrammar Alphabet := λ w => ULift (PLift (w = [ c ]))
+
+def LiteralIntro : {w : SemString Alphabet} → {c : Alphabet} → (w = [ c ]) → SemLiteral Alphabet c w :=
+  fun p => ULift.up (PLift.up p)
 
 def Epsilon : SemGrammar Alphabet := λ (w : SemString Alphabet) => ULift (PLift (w = List.nil))
 
@@ -199,6 +204,10 @@ instance : HasCoproducts.{u} (SemGrammar Alphabet) := fun J =>
 }
 
 -- TODO redefine everything in terms of the above categorical structures
+-- The below definition is equivalent to disj in the HasCoproducts term above, but I'm
+-- curious if its better to define this as a universal construction, rather than proving
+-- that it is universal
+-- Need functor comprehension
 def Disjunction {X : Type u} (A : X → SemGrammar Alphabet) : SemGrammar Alphabet :=
   fun (w : SemString Alphabet) => Σ (x : X), A x w
 
