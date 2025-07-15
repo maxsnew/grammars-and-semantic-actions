@@ -23,6 +23,17 @@
   \fi
 }
 
+\usepackage{mdframed}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\newcommand\makenote[4]{\par\noindent\begin{tcolorbox}
+[size=small,colback=#2]\color{#3}\textbf{#4: }#1\end{tcolorbox}\noindent}
+\definecolor{cornellred}{RGB}{196,18,48}
+\definecolor{umichblue}{HTML}{00274C}
+
+\newcommand\pa[1]{\makenote{#1}{cornellred}{white}{PA}}
+\newcommand\msn[1]{\makenote{#1}{umichblue}{white}{MSN}}
+
 \newcommand{\FKC}{\textrm{F}_{\textrm{KC}}}
 \newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\Set}{\cat{Set}}
@@ -99,7 +110,7 @@ in Figure~\ref{fig:axioms}.
     x + 0 &= x & x + x &= x\\
     x(yz) &= (xy)z & x1 &= 1x = x\\
     x(y + z) &= xy + xz & (x + y)z &= xz + yz\\
-    x0 &= 0x = x & & \\
+    x0 &= 0x = 0 & & \\
     1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
      b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
   \end{align*}
@@ -460,9 +471,31 @@ following theorem pretty straightforward to prove:
 
 \section{Revisiting Brzozowski's Distributive Law}
 
+\begin{definition}
+  A distributive law between a monad $T$ and an endofunctor $T$ is a
+  natural transformation $\lambda : TF \to F T$ making the following
+  diagrams commute:
+% https://q.uiver.app/#q=WzAsOCxbMSwwLCJGIl0sWzAsMSwiVEYiXSxbMiwxLCJGVCJdLFswLDIsIlRURiJdLFsyLDIsIkZUVCJdLFsxLDIsIlRGVCJdLFswLDMsIlRGIl0sWzIsMywiRlQiXSxbMSwyLCJcXGxhbWJkYSIsMl0sWzAsMSwiXFxldGFfRiIsMl0sWzAsMiwiRlxcZXRhIl0sWzMsNiwiXFxtdV9GIiwyXSxbNiw3LCJcXGxhbWJkYSJdLFszLDUsIlRcXGxhbWJkYSJdLFs1LDQsIlxcbGFtYmRhIFQiXSxbNCw3LCJGIFxcbXUiXV0=
+\[\begin{tikzcd}
+	& F \\
+	TF && FT \\
+	TTF & TFT & FTT \\
+	TF && FT
+	\arrow["{\eta_F}"', from=1-2, to=2-1]
+	\arrow["{F\eta}", from=1-2, to=2-3]
+	\arrow["\lambda"', from=2-1, to=2-3]
+	\arrow["{T\lambda}", from=3-1, to=3-2]
+	\arrow["{\mu_F}"', from=3-1, to=4-1]
+	\arrow["{\lambda T}", from=3-2, to=3-3]
+	\arrow["{F \mu}", from=3-3, to=4-3]
+	\arrow["\lambda", from=4-1, to=4-3]
+\end{tikzcd}\]
+\end{definition}
+
+
 It has been observed that Brzozowski's derivative can be more conceptually
 explained as a distributive law between the Kleene algebra monad and the
-DFA functor $2 \times (\Sigma \Rightarrow -)$.
+DFA functor $2 \times (-)^\Sigma$.
 
 \begin{definition}
   We can equip the two element set $2 = \{0, 1 \}$ with the following KA structure
@@ -475,45 +508,107 @@ DFA functor $2 \times (\Sigma \Rightarrow -)$.
   \end{itemize}
 \end{definition}
 
-Since the axiomatization of Kleene algebras over an alphabet $\Sigma$
+\pa{I can't help but think that there's more to the construction
+below... It feels like $K^\Sigma \times K$ is ``fibered'' over $K$}
+
+\begin{definition}
+  \label{def:nonstandard}
+  If $K$ is a Kleene algebra over $\Sigma$, we can equip
+  $K^\Sigma \times K$ with the following Kleene algebra
+  structure.
+    \begin{align*}
+    (f_1, e_1) + (f_2, e_2) &= (f_1 + f_2, e_1 + e_2)\\
+    0 &= (\lambda c.\, 0, 0)\\
+    (f_1, e_1) \cdot (f_2, e_2) &= (\lambda c.\, f_1(c)\cdot e_2 + \alpha(e_1)\cdot f_2(c), e_1\cdot e_2)\\
+    1 &= (\lambda c.\, 0, 1)\\
+    (f, e)^* &= (\lambda c.\, f(c)\cdot e^*, e^*)
+    \end{align*}
+\end{definition}
+
+The proof that this is a Kleene algebra is boring, but unsurprising.
+Because the axiomatization of Kleene algebras over an alphabet $\Sigma$
 is a Horn theory, the category of Kleene algebras and Kleene algebra
-morphisms is monadic over $\Set$. Let $E_\Sigma : \Set \to \Set$. be the 
-Kleene algebra monad. It is possible to show the following theorem.
+morphisms is monadic over $\Set$. Let $E_\Sigma : \Set \to \Set$ be the 
+Kleene algebra monad.
+
+It is possible to show that there is a distributive law
+$E_\Sigma(2 \times X^\Sigma) \to 2 \times (E_\Sigma(X)^\Sigma)$.
+Its recursive definition is depicted in Figure~\ref{fig:distlaw}. 
+%
+\begin{figure}
+  \begin{align*}
+    \alpha : E_\Sigma(2 \times X^\Sigma) \to 2 \quad\quad & \delta : E_\Sigma(2 \times X^\Sigma) \to E_\Sigma(X)^\Sigma\\
+  \alpha(e_1 + e_2) = \alpha(e_1) + \alpha(e_2) \quad \quad & \delta_c(e_1 + e_2) = \delta_c(e_1) + \delta_c(e_2)\\ 
+  \alpha(e_1\cdot e_2) = \alpha(e_1) \land \alpha(e_2) \quad \quad& \delta_c(e_1\cdot e_2) = \delta_c(e_1)\cdot e_2 + \alpha(e_1)\cdot \delta_c(e_2)\\ 
+  \alpha(e^*) = 1 \quad \quad& \delta_c(e^*) = \delta_c(e)e^*\\ 
+  \alpha(1) = 1 \quad \quad& \delta_c(1) = 0\\ 
+  \alpha(0) = 0 \quad \quad& \delta_c(0) = 0\\ 
+  \alpha(d : \Sigma) = 0 \quad \quad& \delta_c(d : \Sigma) = [c = d]\\ 
+  \alpha(b, f) = b \quad \quad& \delta_c(b, f) = f(c)  
+\end{align*}
+\caption{Distributive law for Kleene algebras}
+\label{fig:distlaw}
+\end{figure}
 
 \begin{theorem}
-  There is a distributive law $E_\Sigma(2 \times (\Sigma \Rightarrow X)) \to 2 \times (\Sigma \Rightarrow E_\Sigma(X))$.
+  There is a distributive law $E_\Sigma(2 \times (X^\Sigma)) \to 2 \times (E_\Sigma(X)^\Sigma)$.
 \end{theorem}
 \begin{proof}
-  The component $E_\Sigma(2 \times (\Sigma \Rightarrow X)) \to 2$ is
+  The component $E_\Sigma(2 \times (X^\Sigma)) \to 2$ is
   defined using the universal property of free algebraic structures,
-  i.e. it suffices to define a morphism $2 \times (\Sigma \Rightarrow
-  X)) \to 2$, which we choose it to be the first projection
-  $\pi_1$. The component $E_\Sigma(2 \times (\Sigma \Rightarrow X))
-  \to (\Sigma \Rightarrow E_\Sigma(X))$ requires us to be more
-  clever. There is a ``non-standard'' Kleene algebra structure on
-  $(\Sigma \Rightarrow E_\Sigma(X)) \times E_\Sigma(X)$ that makes
-  this possible.
+  i.e. it suffices to define a morphism $2 \times X^\Sigma \to 2$,
+  which we choose it to be the first projection
+  $\pi_1$. The component $E_\Sigma(2 \times (X^\Sigma)) \to (E_\Sigma(X)^\Sigma)$
+  requires us to be more
+  clever. Instantiating the ``non-standard'' Kleene algebra structure from
+  Definition~\ref{def:nonstandard} to $E_\Sigma(X)$
+  gives us a morphism $\psi : E_\Sigma(2 \times X^\Sigma) \to E_\Sigma(X)^\Sigma \times E_\Sigma(X)$
+  by using the universal property of free Kleene
+  algebras and lifting the function
+  \[\lambda (b, f).\, (\lambda c.\, \eta(f(c)), 1) : 2 \times X^\Sigma \to E_\Sigma(X)^\Sigma \times E_\Sigma(X)\]
+  The derivative $\delta$ is the postcomposition of $\psi$ with the
+  projection function.
 \end{proof}
 
 \section{Generalization}
 
 We now want to prove that the distributive law above generalizes to
-the Kleene category case. We begin by showing that the ``non-standard''
+the Kleene category case. First, we have to define a natural
+transformation $K(\Set \times (-)^\Sigma) \to \Set \times (K -
+)^\Sigma$ making the appropriate diagrams commute. We decompose the
+natural transformation into two components.  The component $K(\Set
+\times (-)^\Sigma) \to \Set$ is by equipping $\Set$ with a Kleene
+category structure and then using the universal property of the free
+Kleene category. The Kleene category structure on $\Set$ is the usual
+(co)cartesian structure and $X^*$ are the lists on $X$. Therefore, it
+suffices to define a natural transformation $\Set \times (-)^\Sigma \to \Set$,
+which we define as the first projection.
+
+For the component $K(\Set \times (-)^\Sigma) \to (K - )^\Sigma$,
+we will once again use the universal property of free Kleene
+categories. We begin by showing that the ``non-standard''
 structure defined in the previous section can be extended to the
 proof-relevant setting.
 
+\pa{This is where a better understanding of what this ``non-standard''
+  construction is actually doing could come in handy. Showing that the
+  monoidal product satisfies all of the coherence diagrams is really gnarly.}
 \begin{lemma}
-  Let $\cat{K}$ and $\cat{L}$ be two Kleene categories, $F : \cat{L}
-  \to \cat{K}$ and $G : \cat{L} \to \cat{K}$ two Kleene category
-  morphisms. We can equip $\cat{K} \times \cat{L}$ with the following
-  Kleene category structure:
+  Let $\cat{K}$ and $\cat{L}$ be two Kleene categories, $F : \cat{L} \to \cat{K}$
+  and $G : \cat{L} \to \cat{K}$ two Kleene functors.
+  We can equip $\cat{K} \times \cat{L}$ with the following Kleene
+  category structure:
   \begin{itemize}
   \item $(A, X) + (B, Y) = (A + B, X + Y)$
   \item $0 = (0, 0)$
   \item $(A, X) \otimes (B, Y) = (A \otimes F(Y) + G(X) \otimes B, X \otimes Y)$
+  \item $I = (0, I)$
   \item $(A, X)^* = (A \otimes F(X^*), X^*)$
   \end{itemize}
 \end{lemma}
+
+Therefore we equip $K(\cat{C})^\Sigma \times K(\cat{C})$ with the
+Kleene category structure given by the lemma above.
 %% \begin{proof}
 %%   Since the morphism structure is defined componentwise, it is
 %%   immediate to show that the proposed cocartesian structure is
@@ -525,9 +620,7 @@ proof-relevant setting.
 %%   components of these morphisms are more interesting:
 %% \end{proof}
 
-With this lemma and the 2-monadicity of Kleene categories over $\cat{Cat}$,
-we can define the distributive law between the proof-relevant
-DFA functor and the Kleene category 2-monad.
+
 
 \paragraph{Possible motivations}
 
@@ -636,7 +729,7 @@ properties of \emph{comma categories}.
 \end{lemma}
 
 Then we can prove the following
-\begin{theorem}{Gluing for Kleene categories}
+\begin{theorem}[Gluing for Kleene categories]
   Let $\cat K, \cat L, \cat M$ be Kleene categories and $\Phi : \cat K
   \to \cat M$ be a Kleene functor and $G : \cat L \to \cat M$ be a lax
   monoidal functor. Then $\Phi \downarrow G$ is a Kleene category, and
