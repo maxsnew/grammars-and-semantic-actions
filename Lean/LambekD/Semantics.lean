@@ -164,50 +164,6 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
 --------------------------------------------------------------------------------
 open Limits
 
-instance : HasCoproducts.{u} (SemGrammar Alphabet) := fun J =>
-  {
-  has_colimit F :=
-    let disj := fun w => Σ (j : J), F.obj (Discrete.mk j) w
-    let cocone := {
-      pt := disj,
-      ι := {
-        app j w a := ⟨Discrete.as j , a⟩,
-        naturality j j' f := by
-          funext w a
-          unfold CategoryStruct.comp instCategorySemGrammar pi
-          have jeq : j.as = j'.as := Discrete.eq_of_hom f
-          aesop_cat
-        }
-  }
-  let isColimit : IsColimit cocone :=
-    let descDef s w a :=
-      let f := s.ι.app (Discrete.mk a.fst)
-      by
-      unfold instCategorySemGrammar pi at f
-      simp at f
-      exact f w (a.snd)
-    {
-    desc := descDef
-    -- Discrete properties should make this trivial
-    fac s j := by tauto
-    uniq := by
-      intros s m f
-      unfold descDef
-      simp
-      funext w a
-      have p : cocone.ι.app { as := a.fst } ≫ m = s.ι.app { as := a.fst } := f (Discrete.mk a.fst)
-      have q : (cocone.ι.app { as := a.fst } ≫ m) w a.snd = s.ι.app { as := a.fst } w a.snd := congr_fun (congr_fun p w) a.snd
-      exact q
-  }
-  let colim := {cocone := cocone, isColimit := isColimit}
-  {exists_colimit := Nonempty.intro colim}
-}
-
--- TODO redefine everything in terms of the above categorical structures
--- The below definition is equivalent to disj in the HasCoproducts term above, but I'm
--- curious if its better to define this as a universal construction, rather than proving
--- that it is universal
--- Need functor comprehension
 def Disjunction {X : Type u} (A : X → SemGrammar Alphabet) : SemGrammar Alphabet :=
   fun (w : SemString Alphabet) => Σ (x : X), A x w
 
@@ -218,12 +174,54 @@ def DisjunctionElim {X : Type u} {A : SemGrammar Alphabet} {B : X → SemGrammar
   (f : (x : X) → Reduction Alphabet (B x) A) : Reduction Alphabet (Disjunction Alphabet B) A :=
   fun (w : SemString Alphabet) ⟨x , b⟩ => f x w b
 
+def CoconeOf {J : Type u} (F : Discrete J ⥤ SemGrammar Alphabet) : Cocone F where
+  pt := Disjunction Alphabet (F.obj ∘ Discrete.mk)
+  ι := {
+    app j w a := DisjunctionIn Alphabet (Discrete.as j) w a
+    naturality j j' f := by
+      funext w a
+      unfold CategoryStruct.comp instCategorySemGrammar pi
+      have jeq : j.as = j'.as := Discrete.eq_of_hom f
+      aesop_cat
+    }
+
+def CoconeOfReduction {J : Type u} (F : Discrete J ⥤ SemGrammar Alphabet) :
+   Reduction Alphabet (CoconeOf Alphabet F).pt (Disjunction Alphabet F.obj) :=
+      fun _ a => ⟨Discrete.mk a.fst, a.snd⟩
+
+def CoconeOfIsColimit {J : Type u} (F : Discrete J ⥤ SemGrammar Alphabet) : IsColimit (CoconeOf Alphabet F) where
+    desc (s : Cocone F) w a := DisjunctionElim Alphabet (fun j => s.ι.app j) w (CoconeOfReduction Alphabet F w a)
+    -- Discrete properties should make this trivial
+    fac s j := by tauto -- nice
+    uniq := by
+      intros s m f
+      funext w a
+      have p : (CoconeOf Alphabet F).ι.app { as := a.fst } ≫ m = s.ι.app { as := a.fst } := f (Discrete.mk a.fst)
+      have q : ((CoconeOf Alphabet F).ι.app { as := a.fst } ≫ m) w a.snd = s.ι.app { as := a.fst } w a.snd :=
+        congr_fun (congr_fun p w) a.snd
+      exact q
+
+def ColimitCoconeOf {J : Type u} (F : Discrete J ⥤ SemGrammar Alphabet) : ColimitCocone F where
+  cocone := CoconeOf Alphabet F
+  isColimit := CoconeOfIsColimit Alphabet F
+
+instance : HasCoproducts.{u} (SemGrammar Alphabet) := fun _ =>
+  {has_colimit F := {exists_colimit := Nonempty.intro (ColimitCoconeOf Alphabet F)}}
+
 def Initial : SemGrammar Alphabet := Disjunction Alphabet (X := PEmpty) (fun x => PEmpty.elim x)
 
 def InitialElim {A : SemGrammar Alphabet} : Reduction Alphabet (Initial Alphabet) A :=
   fun w x => by
     unfold Initial Disjunction at x
     exact (PEmpty.elim (x.fst))
+
+def BinaryIndexedGrammar (A B : SemGrammar Alphabet) : Bool → SemGrammar Alphabet :=
+  fun b => match b with
+  | true => A
+  | false => B
+
+def BinaryDisjunction (A B : SemGrammar Alphabet) : SemGrammar Alphabet :=
+  Disjunction Alphabet (X := ULift Bool) (BinaryIndexedGrammar Alphabet A B ∘ ULift.down)
 
 --------------------------------------------------------------------------------
 -- Conjunction
