@@ -9,6 +9,10 @@ import Mathlib.CategoryTheory.Monoidal.Category
 -- import Mathlib.CategoryTheory.Adjunction.Limits
 import Mathlib.Data.List.Basic
 
+import Lean
+
+open Lean Elab Tactic
+
 universe u v
 class AlphabetStr where
   Alphabet : Type u
@@ -78,17 +82,26 @@ structure TensorTy (A B : SemGrammar Alphabet) (w : SemString Alphabet) where
   left : A (split.left)
   right : B (split.right)
 
-@[ext]
-def TensorTy.ext {w : SemString Alphabet} {A B : SemGrammar Alphabet} {ab ab' : TensorTy Alphabet A B w} :
-   (sEq : ab.split = ab'.split) →
-   ab.left ≍ ab'.left → ab.right ≍ ab'.right → ab = ab' := sorry
 
 def Tensor (A B : SemGrammar Alphabet) : SemGrammar Alphabet := λ (w : SemString Alphabet) => TensorTy Alphabet A B w
 
 @[ext]
 def Tensor.ext {w : SemString Alphabet} {A B : SemGrammar Alphabet} {ab ab' : Tensor Alphabet A B w} :
-   (sEq : ab.split = ab'.split) →
-   ab.left ≍ ab'.left → ab.right ≍ ab'.right → ab = ab' := sorry
+   (sEql : ab.split.left = ab'.split.left) →
+   (sEqr : ab.split.right = ab'.split.right) →
+   ab.left ≍ ab'.left → ab.right ≍ ab'.right → ab = ab' := by
+     intro sEql sEqr abl abr
+     have sEq : ab.split = ab'.split := by
+       apply Splitting.ext
+       · exact sEql
+       · exact sEqr
+     cases ab with
+     | mk s l r =>
+       cases ab' with
+       | mk s' l' r' =>
+         simp at sEq abl abr
+         subst sEq abl abr
+         rfl
 
 def SemLiteral (c : Alphabet) : SemGrammar Alphabet := λ w => ULift (PLift (w = [ c ]))
 
@@ -153,6 +166,7 @@ def TensorAssocInv {A B C : SemGrammar Alphabet} :
   let split' := {left := s.left, right := s'.left, concatEq := by tauto}
   ⟨split, ⟨split', a, b⟩, c⟩
 
+set_option pp.proofs true
 instance : MonoidalCategory (SemGrammar Alphabet) where
   tensorObj := Tensor Alphabet
   whiskerLeft A B C f _ := fun ⟨s , a , b⟩ => ⟨s , a, f _ b⟩
@@ -162,32 +176,37 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
     hom := TensorAssoc Alphabet,
     inv := TensorAssocInv Alphabet,
     hom_inv_id := by
-      funext _ ⟨s, ⟨s' , a , b⟩, c⟩
-      unfold TensorAssoc TensorAssocInv CategoryStruct.comp instCategorySemGrammar pi
-      simp
-      ext
-      · simp; rw [s'.concatEq]
-      · simp
-      · simp; sorry
-      · simp
-    inv_hom_id := sorry
+      funext w ⟨⟨l, r, ce⟩, ⟨⟨l', r', ce'⟩ , a , b⟩, c⟩
+      cases ce with | refl => cases ce' with | refl => tauto
+    inv_hom_id := by
+      funext w ⟨⟨l, r, ce⟩, a , ⟨l', r', ce'⟩ , b , c⟩
+      cases ce with | refl => cases ce' with | refl => tauto
   }
+  associator_naturality := sorry
   leftUnitor A := {
     hom := EpsilonUnitL Alphabet
     inv := EpsilonUnitLInv Alphabet
     hom_inv_id := by
-      funext w ⟨s, ⟨⟨nil⟩⟩ , a⟩
-      unfold CategoryStruct.comp EpsilonUnitL EpsilonUnitLInv EpsilonIntro CategoryStruct.id instCategorySemGrammar pi Tensor
-      simp
-      sorry
-    inv_hom_id := sorry
+      funext w ⟨⟨l, r, ce⟩, ⟨⟨nil⟩⟩ , a⟩
+      cases ce with | refl => cases nil with | refl => tauto
   }
+  leftUnitor_naturality := sorry
   rightUnitor A := {
     hom := EpsilonUnitR Alphabet
     inv := EpsilonUnitRInv Alphabet
-    hom_inv_id := sorry
-    inv_hom_id := sorry
+    hom_inv_id := by
+      funext w ⟨⟨l, r, ce⟩, a, ⟨⟨nil⟩⟩⟩
+      cases ce with | refl => cases nil with | refl =>
+        simp [EpsilonUnitR, EpsilonUnitRInv, CategoryStruct.comp, CategoryStruct.id, instCategorySemGrammar, pi]
+        ext
+        · simp
+        · simp
+        · simp
+        · tauto
   }
+  rightUnitor_naturality := sorry
+  triangle := sorry
+  pentagon := sorry
 
 --------------------------------------------------------------------------------
 -- Disjunction

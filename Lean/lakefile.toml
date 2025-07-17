@@ -10,6 +10,11 @@ autoImplicit = false
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
+rev = "308445d"
+
+[[require]]
+name = "Canonical"
+scope = "chasenorman"
 
 [[lean_lib]]
 name = "LambekD"
