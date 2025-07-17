@@ -214,13 +214,33 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
       simp [EpsilonUnitR, CategoryStruct.comp, CategoryStruct.id, instCategorySemGrammar, pi]
       simp at a nil
       let x := EpsilonUnitR._proof_1 Alphabet w l r ce nil
-      have h : l = w := sorry
+      have h : l = w := x
       rw [← h] at x
       cases x with | refl =>
         subst h
         rfl
-  triangle := sorry
-  pentagon := sorry
+  triangle A B := by
+    funext w ⟨⟨l, r, ce⟩, ⟨⟨l', r', ce'⟩, a, ⟨⟨nil⟩⟩⟩, b⟩
+    cases nil with | refl => cases ce with | refl => cases ce' with | refl =>
+      simp [EpsilonUnitR, EpsilonUnitRInv, TensorAssoc, CategoryStruct.comp, CategoryStruct.id, instCategorySemGrammar, pi]
+      ext
+      · simp
+      · simp
+      · simp
+      · simp [EpsilonUnitL]
+  pentagon A B C D := by
+    funext w ⟨⟨l, r, ce⟩, ⟨⟨l', r', ce'⟩, ⟨⟨l'', r'', ce''⟩, a, b⟩, c⟩, d⟩
+    cases ce with | refl => cases ce' with | refl => cases ce'' with | refl =>
+      simp [EpsilonUnitR, EpsilonUnitRInv, TensorAssoc, CategoryStruct.comp, CategoryStruct.id, instCategorySemGrammar, pi]
+      ext
+      · simp
+      · simp
+      · simp
+      · simp
+        conv =>
+          lhs;
+        sorry
+
 
 --------------------------------------------------------------------------------
 -- Disjunction
