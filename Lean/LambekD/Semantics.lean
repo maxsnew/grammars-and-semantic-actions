@@ -8,6 +8,7 @@ import Mathlib.CategoryTheory.Limits.Shapes.Products
 import Mathlib.CategoryTheory.Monoidal.Category
 -- import Mathlib.CategoryTheory.Adjunction.Limits
 import Mathlib.Data.List.Basic
+import Canonical
 
 import Lean
 
@@ -115,13 +116,13 @@ def EpsilonIntro : {w : SemString Alphabet} → (w = List.nil) → Epsilon Alpha
 
 def EpsilonUnitR : {A : SemGrammar Alphabet} →
   Reduction Alphabet (Tensor Alphabet A (Epsilon Alphabet)) A :=
-  fun w ⟨s , a , ⟨⟨nil⟩⟩⟩ =>
-  have p : s.left = w := by
-    let x := s.concatEq
-    rw [nil] at x
-    simp at x
-    exact x
-  p ▸ a
+  fun w ⟨⟨l, r, ce⟩ , a , ⟨⟨nil⟩⟩⟩ =>
+    let lw : l = w := by
+      simp at nil
+      rw [nil] at ce
+      simp at ce
+      exact ce
+    Eq.rec a lw
 
 def EpsilonUnitRInv : {A : SemGrammar Alphabet} →
   Reduction Alphabet A (Tensor Alphabet A (Epsilon Alphabet)) :=
@@ -182,7 +183,9 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
       funext w ⟨⟨l, r, ce⟩, a , ⟨l', r', ce'⟩ , b , c⟩
       cases ce with | refl => cases ce' with | refl => tauto
   }
-  associator_naturality := sorry
+  associator_naturality f g h := by
+      funext w ⟨⟨l, r, ce⟩, ⟨⟨l', r', ce'⟩ , a , b⟩, c⟩
+      cases ce with | refl => cases ce' with | refl => tauto
   leftUnitor A := {
     hom := EpsilonUnitL Alphabet
     inv := EpsilonUnitLInv Alphabet
@@ -190,7 +193,9 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
       funext w ⟨⟨l, r, ce⟩, ⟨⟨nil⟩⟩ , a⟩
       cases ce with | refl => cases nil with | refl => tauto
   }
-  leftUnitor_naturality := sorry
+  leftUnitor_naturality f := by
+      funext w ⟨⟨l, r, ce⟩, ⟨⟨nil⟩⟩ , a⟩
+      cases ce with | refl => cases nil with | refl => tauto
   rightUnitor A := {
     hom := EpsilonUnitR Alphabet
     inv := EpsilonUnitRInv Alphabet
@@ -204,7 +209,16 @@ instance : MonoidalCategory (SemGrammar Alphabet) where
         · simp
         · tauto
   }
-  rightUnitor_naturality := sorry
+  rightUnitor_naturality f := by
+      funext w ⟨⟨l, r, ce⟩, a, ⟨⟨nil⟩⟩⟩
+      simp [EpsilonUnitR, CategoryStruct.comp, CategoryStruct.id, instCategorySemGrammar, pi]
+      simp at a nil
+      let x := EpsilonUnitR._proof_1 Alphabet w l r ce nil
+      have h : l = w := sorry
+      rw [← h] at x
+      cases x with | refl =>
+        subst h
+        rfl
   triangle := sorry
   pentagon := sorry
 
