@@ -1,14 +1,10 @@
 import LambekD.Grammar
-
-import Lean
-
-open Lean Elab Tactic
+import LambekD.Monoidal
 
 universe u v
 variable [AlphabetStr.{u}]
 open AlphabetStr
 open CategoryTheory
-
 
 --------------------------------------------------------------------------------
 -- Kleene Star

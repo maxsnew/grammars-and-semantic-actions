@@ -1,25 +1,43 @@
-section
-  variable (Alphabet : Type)
-  variable [Inhabited Alphabet]
-  variable [DecidableEq Alphabet]
+import Mathlib.CategoryTheory.Category.Basic
+import Mathlib.CategoryTheory.Discrete.Basic
+import Mathlib.CategoryTheory.Pi.Basic
+import Mathlib.CategoryTheory.Types
+import Mathlib.CategoryTheory.Iso
 
-  namespace Grammar
+universe u v
+class AlphabetStr where
+ Alphabet : Type u
+ readLit : String → Alphabet
+ instInahbited : Inhabited Alphabet
+ instDecEq : DecidableEq Alphabet
 
-  abbrev SemString := List Alphabet
+variable [AlphabetStr]
+open AlphabetStr
 
-  def Grammar := SemString Alphabet → Type
+open CategoryTheory
+open Category
+open CategoryStruct
+open Quiver
 
-  -- TODO I can't figure out how to globally bind everything to the samee Alphabet,
-  -- so I have to thread an Alphabet parameter through everything which is annoying
-  structure Splitting (w : SemString Alphabet) where
-    left : SemString Alphabet
-    right : SemString Alphabet
-    concatEq : left ++ right = w
+abbrev SemString := List Alphabet
 
-  def Reduction (A B : Grammar Alphabet) := (w : SemString Alphabet) → A w → B w
+def StringCat := CategoryTheory.Discrete SemString
 
-  syntax term "⊢" term : term
-  macro_rules
-  | `($A:term ⊢ $B:term) => `(Reduction $A $B)
-  end Grammar
-end
+def SemGrammar := SemString.{u} → Type (u + 1)
+
+def SemGrammarFunctor := (Discrete SemString.{u} ⥤ (Type (u + 1)))
+
+instance SemGrammarCategory : Category SemGrammar.{u} := pi (I := SemString) _
+
+def Reduction (A B : SemGrammar.{u}) := (w : SemString) → A w → B w
+
+infixr:80 " ⊢ " => Quiver.Hom
+
+def constFamily : SemString.{u} → Type (u + 1) := fun _ => Type u
+
+def FamilyOfTypes : (w : SemString.{u}) → Category (constFamily w) := fun _ => CategoryTheory.types
+
+def IdReduction {A : SemGrammar.{u}} : Reduction A A := fun _ a => a
+
+def IdReduction' {A : SemGrammar.{u}} : A ⊢ A := id A
+-- TODO make all reductions morphisms in the grammar category
