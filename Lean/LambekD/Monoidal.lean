@@ -9,8 +9,8 @@ import Mathlib.Data.List.Basic
 import LambekD.Grammar
 import LambekD.CategoryTheory.Biclosed.Monoidal
 
-universe u v
-variable [AlphabetStr.{u}]
+universe u
+variable [AlphabetStr]
 open AlphabetStr
 open CategoryTheory
 open MonoidalCategory
@@ -186,16 +186,9 @@ instance : MonoidalCategory SemGrammar where
   funext w ⟨⟨l, r, ce⟩, ⟨⟨l', r', ce'⟩, ⟨⟨l'', r'', ce''⟩, a, b⟩, c⟩, d⟩
   simp
   cases ce with | refl => cases ce' with | refl => cases ce'' with | refl =>
-   -- simp
-   -- simp [EpsilonUnitR, EpsilonUnitRInv, TensorAssoc, CategoryStruct.comp, CategoryStruct.id, pi]
-   -- simp at a b c d
-   -- ext
-   -- · simp
-   -- · simp
-   -- · simp
-   -- · simp
-   --   -- TODO: Stuck on this because I don't know how to match on intermediate concatEq proofs
-   --   sorry
+    simp at a b c d
+    grind
+    -- TODO : ask on zulip
 
 --------------------------------------------------------------------------------
 -- Linear Functions
@@ -232,22 +225,51 @@ def rightClosureAdj (A : SemGrammar) : tensorLeft A ⊣ rightClosure A where
     funext w f
     simp
 
--- instance : MonoidalRightClosed SemGrammar where
---   right_closed A := {
---     rightAdj := rightClosure A
---     adj := sorry
---   }
+instance : MonoidalRightClosed SemGrammar where
+  right_closed A := {
+    rightAdj := rightClosure A
+    adj := rightClosureAdj A
+  }
 
--- def leftClosure (A : SemGrammar) : SemGrammar ⥤ SemGrammar := sorry
+@[simp]
+def leftClosure (A : SemGrammar) : SemGrammar ⥤ SemGrammar where
+  obj B w := ∀ (w' : SemString), A w' → B (w ++ w')
+  map f w g w' a := f _ (g _ a)
 
--- instance : MonoidalLeftClosed SemGrammar where
---   left_closed A := {
---     rightAdj := leftClosure A
---     adj := sorry
---   }
+@[simp]
+def leftClosureAdj (A : SemGrammar) : tensorRight A ⊣ leftClosure A where
+  unit := {
+    app B w b w' a := TensorTy.mk (eqSplit w w') b a
+    naturality B C f := by
+      funext w b w' a
+      simp[MonoidalCategoryStruct.whiskerRight]
+  }
+  counit := {
+    app B w x := match x with
+                 | TensorTy.mk ⟨l, r, ce⟩ b a => by
+                   exact Eq.rec (b r a) ce
+    naturality B C f := by
+      funext w ⟨⟨l, r, ce⟩, a, b⟩
+      simp[MonoidalCategoryStruct.whiskerLeft]
+      cases ce with | refl => simp
+  }
+  left_triangle_components B := by
+    simp[MonoidalCategoryStruct.whiskerLeft]
+    funext w ⟨⟨l, r, ce⟩, a, b⟩
+    cases ce with | refl => simp
+  right_triangle_components B := by
+    simp[MonoidalCategoryStruct.whiskerLeft]
+    funext w f
+    simp
 
--- instance : MonoidalBiclosed SemGrammar where
---   biclosed A := {left_closed := inferInstance, right_closed := inferInstance}
+instance : MonoidalLeftClosed SemGrammar where
+  left_closed A := {
+    rightAdj := leftClosure A
+    adj := leftClosureAdj A
+  }
+
+instance : MonoidalBiclosed SemGrammar where
+  biclosed _ := {left_closed := inferInstance, right_closed := inferInstance}
 
 -- -- ⊸
 -- @[simp]

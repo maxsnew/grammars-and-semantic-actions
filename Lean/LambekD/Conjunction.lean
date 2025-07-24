@@ -2,8 +2,8 @@ import Mathlib.CategoryTheory.Limits.Shapes.Products
 import Mathlib.CategoryTheory.Limits.Shapes.Terminal
 import LambekD.Grammar
 
-universe u v
-variable [AlphabetStr.{u}]
+universe u
+variable [AlphabetStr]
 open AlphabetStr
 open CategoryTheory
 
@@ -13,7 +13,7 @@ open Limits
 -- Conjunction
 --------------------------------------------------------------------------------
 @[simp]
-def Conjunction {X : Type u} (A : X → SemGrammar.{u}) : SemGrammar :=
+def Conjunction {X : Type u} (A : X → SemGrammar) : SemGrammar :=
  fun (w : SemString ) => (x : X) → A x w
 
 @[simp]
@@ -83,7 +83,7 @@ def TerminalLimitCone (F : Discrete PEmpty.{1} ⥤ SemGrammar) : LimitCone F whe
   cone := TerminalCone F
   isLimit := TerminalConeIsLimit F
 
-instance : HasTerminal SemGrammar where
+instance : HasTerminal SemGrammar.{0} where
  has_limit F := {exists_limit := Nonempty.intro (TerminalLimitCone F)}
 
 def Terminal : SemGrammar := ⊤_ SemGrammar

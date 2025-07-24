@@ -2,8 +2,8 @@ import Mathlib.CategoryTheory.Limits.Shapes.Products
 import Mathlib.CategoryTheory.Limits.Shapes.Terminal
 import LambekD.Grammar
 
-universe u v
-variable [AlphabetStr.{u}]
+universe u
+variable [AlphabetStr]
 open AlphabetStr
 open CategoryTheory
 
@@ -13,11 +13,11 @@ open CategoryTheory
 open Limits
 
 @[simp]
-def Disjunction {X : Type u} (A : X → SemGrammar.{u}) : SemGrammar :=
+def Disjunction {X : Type u} (A : X → SemGrammar) : SemGrammar :=
  fun (w : SemString ) => Σ (x : X), A x w
 
 @[simp]
-def DisjunctionIn {X : Type u} {A : X → SemGrammar.{u}} (x : X) : A x ⟶ Disjunction A :=
+def DisjunctionIn {X : Type u} {A : X → SemGrammar} (x : X) : A x ⟶ Disjunction A :=
  fun (w : SemString ) (a : A x w) => ⟨x , a⟩
 
 @[simp]
@@ -80,7 +80,8 @@ def InitialColimitCocone (F : Discrete PEmpty.{1} ⥤ SemGrammar) : ColimitCocon
   cocone := InitialCocone F
   isColimit := InitialCoconeIsColimit F
 
-instance : HasInitial SemGrammar where
+-- Do I want a universe polymorhpic version of this?
+instance : HasInitial SemGrammar.{0} where
  has_colimit F := {exists_colimit := Nonempty.intro (InitialColimitCocone F)}
 
 def Initial : SemGrammar := ⊥_ SemGrammar

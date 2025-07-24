@@ -21,4 +21,4 @@ open Quiver
 
 abbrev SemString := List Alphabet
 
-abbrev SemGrammar := SemString.{u} → Type v
+abbrev SemGrammar := SemString → Type v
