@@ -63,6 +63,12 @@ module _ {X : Type ℓX} {A : Grammar ℓA}{B : X → Grammar ℓB} where
         ⊕ᴰ-distR .fun ∘g id ,⊗ σ x ≡ σ x
       ⊕ᴰ-distR-β = refl
 
+      ⊕ᴰ≡-distR : (f f' : (A ⊗ (⊕[ x ∈ X ] B x)) ⊢ C)
+        → (∀ x → f ∘g (id ,⊗ σ x) ≡ f' ∘g (id ,⊗ σ x))
+        → f ≡ f'
+      ⊕ᴰ≡-distR f f' f≡f' i w p =
+        f≡f' (p .snd .snd .fst) i w (p .fst , p .snd .fst , p .snd .snd .snd)
+
 module _ {X : Type ℓX} {A : X → Grammar ℓA} {B : X → Grammar ℓB}
   (A≅B : ∀ (x : X) → A x ≅ B x)
   where

@@ -177,6 +177,7 @@ unambiguous-char+L = summand-R-is-unambig unambiguous-unrolled-string'
 &string≅ : A ≅ A & string
 &string≅ = &⊤≅ ≅∙ &≅ id≅ (sym≅ string≅⊤)
 
+-- This traverses the entire string, but only needs to inspect the head constructor
 &string-split≅ : A ≅ (A & ε) ⊕ (A & (char +))
 &string-split≅ =
   &string≅
