@@ -19,17 +19,53 @@ open import Grammar.Properties Alphabet
 open import Grammar.Sum.Binary.AsPrimitive.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Distributivity Alphabet
+open import Grammar.HLevels.Base Alphabet
 import Grammar.Sum.Binary.AsIndexed.Base Alphabet as Ind⊕
 open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
 open import Term.Base Alphabet
 
 private
   variable
-    ℓA ℓB ℓC ℓD  : Level
+    ℓA ℓB ℓC ℓD ℓE ℓF : Level
     A : Grammar ℓA
     B : Grammar ℓB
     C : Grammar ℓC
     D : Grammar ℓD
+    E : Grammar ℓE
+    F : Grammar ℓF
+
+opaque
+  unfolding _⊕_
+  isSetGrammar⊕ : isSetGrammar A → isSetGrammar B → isSetGrammar (A ⊕ B)
+  isSetGrammar⊕ isSetG isSetB = λ _ → Sum.isSet⊎ (isSetG _) (isSetB _)
+
+opaque
+  id,⊕id≡id : id ,⊕p id ≡ id {A = A ⊕ B}
+  id,⊕id≡id = ⊕-η id
+
+  ⊕p-seq : ∀ {f : A ⊢ B}{f' : C ⊢ D}
+           {f'' : E ⊢ A}
+           {f''' : F ⊢ C}
+         → f ,⊕p f' ∘g f'' ,⊕p f'''
+           ≡ (f ∘g f'') ,⊕p (f' ∘g f''')
+  ⊕p-seq {f = f} {f' = f'} {f'' = f''} {f''' = f'''} =
+    ⊕≡ _ _
+    (((f ,⊕p f') ∘g (f'' ,⊕p f''')) ∘g inl ≡⟨ cong ((f ,⊕p f') ∘g_)
+       ((f'' ,⊕p f''') ∘g inl ≡⟨ ⊕-βl _ _ ⟩ inl ∘g f'' ∎) ⟩
+       (f ,⊕p f') ∘g inl ∘g f'' ≡⟨ cong (_∘g f'')
+          ((f ,⊕p f') ∘g inl ≡⟨ ⊕-βl _ _ ⟩ inl ∘g f ∎) ⟩
+          sym ( -- start working at the problem from the right
+          ((f ∘g f'') ,⊕p (f' ∘g f''')) ∘g inl ≡⟨ ⊕-βl _ _ ⟩
+          inl ∘g f ∘g f'' ≡⟨⟩
+        (inl ∘g f) ∘g f'' ∎))
+     (((f ,⊕p f') ∘g (f'' ,⊕p f''')) ∘g inr ≡⟨ cong ((f ,⊕p f') ∘g_)
+        ( (f'' ,⊕p f''') ∘g inr ≡⟨ ⊕-βr _ _ ⟩ inr ∘g f''' ∎) ⟩
+     (f ,⊕p f') ∘g inr ∘g f''' ≡⟨ cong (_∘g f''')
+        ((f ,⊕p f') ∘g inr ≡⟨ ⊕-βr _ _ ⟩  inr ∘g f' ∎) ⟩
+        sym (
+         ((f ∘g f'') ,⊕p (f' ∘g f''')) ∘g inr ≡⟨ ⊕-βr _ _ ⟩
+         inr ∘g f' ∘g f''' ∎))
+
 
 open StrongEquivalence
 
