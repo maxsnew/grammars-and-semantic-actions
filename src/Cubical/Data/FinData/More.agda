@@ -17,7 +17,6 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.SumFin as SumFin
   using (fzero ; fsuc)
   renaming (Fin to SumFin)
-import Cubical.Data.SumFin.More as SumFinMore
 open import Cubical.Data.FinSet
 
 open import Cubical.Relation.Nullary
@@ -72,7 +71,7 @@ DecΣ : (n : ℕ) →
   (P : FinVec (Type ℓ) n) → (∀ k → Dec (P k)) → Dec (Σ (Fin n) P)
 DecΣ n P decP = EquivPresDec
   (Σ-cong-equiv-fst (invEquiv Fin≃SumFin))
-  (SumFinMore.DecΣ n (P ∘ SumFin→Fin) (decP ∘ SumFin→Fin))
+  (SumFin.DecΣ n (P ∘ SumFin→Fin) (decP ∘ SumFin→Fin))
 
 isFinSetFin' : ∀ {n} → isFinSet (Fin n)
 isFinSetFin' = subst isFinSet (sym Fin≡SumFin) isFinSetFin

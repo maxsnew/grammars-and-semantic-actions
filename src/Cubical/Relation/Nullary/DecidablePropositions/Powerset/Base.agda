@@ -19,6 +19,7 @@ open import Cubical.Data.FinSet.Constructors
 
 open import Cubical.HITs.PropositionalTruncation as PT
 
+open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 open Iso
