@@ -53,10 +53,11 @@ on:
 ## next PR.
 ########################################################################
 env:
-  AGDA_BRANCH: v2.7.0.1
-  GHC_VERSION: 9.8.2
-  CABAL_VERSION: 3.10.2.1
+  AGDA_BRANCH: v2.8.0
+  GHC_VERSION: 9.10.2
+  CABAL_VERSION: 3.12.1.0
   CABAL_INSTALL: cabal install --overwrite-policy=always --ghc-options='-O1 +RTS -M6G -RTS'
+  CUBICAL_COMMIT : 904aa215666ee6d6b2e9462d1944e230c971eaa3
   CACHE_PATHS: |
     ~/.cabal/packages
     ~/.cabal/store
@@ -87,7 +88,7 @@ jobs:
         id: cache-external-restore
         with:
           path: ${{ env.CACHE_PATHS }}
-          key: ${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}
+          key: ${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ env.CUBICAL_COMMIT }}
 
       ########################################################################
       ## INSTALLATION STEPS
@@ -110,7 +111,7 @@ jobs:
           cd ~
           git clone https://github.com/agda/cubical --branch master
           cd cubical
-          git checkout 904aa215666ee6d6b2e9462d1944e230c971eaa3
+          git checkout ${{ env.CUBICAL_COMMIT }}
           cd ..
           echo "CUBICAL_DIR=$PWD/cubical" >> "$GITHUB_ENV"
 
@@ -158,27 +159,27 @@ jobs:
         id: cache-library-restore
         with:
           path: ./src/_build
-          key: GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('src/**') }}
+          key: GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ env.CUBICAL_COMMIT }}-${{ hashFiles('src/**') }}
           restore-keys: |
-            GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+            GrammarsLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ env.CUBICAL_COMMIT }}-
 
       - name: Restore Cubical library cache
         uses: actions/cache/restore@v3
         id: cache-cubical-library-restore
         with:
           path: ~/cubical/_build
-          key: CubicalLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('~/cubical/cubical/**', '~/cubical/cubical.agda-lib') }}
+          key: CubicalLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ env.CUBICAL_COMMIT }}-${{ hashFiles('~/cubical/cubical/**', '~/cubical/cubical.agda-lib') }}
           restore-keys: |
-            CubicalLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+            CubicalLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ env.CUBICAL_COMMIT }}-
 
       - name: Restore Cubical Categorical Logic library cache
         uses: actions/cache/restore@v3
         id: cache-cubical-categorical-logic-library-restore
         with:
           path: ~/cubical-categorical-logic/_build
-          key: CubicalCategoricalLogicLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ hashFiles('~/cubical-categorical-logic/Cubical/**', '~/cubical-categorical-logic/cubical-categorical-logic.agda-lib') }}
+          key: CubicalCategoricalLogicLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ env.CUBICAL_COMMIT }}-${{ hashFiles('~/cubical-categorical-logic/Cubical/**', '~/cubical-categorical-logic/cubical-categorical-logic.agda-lib') }}
           restore-keys: |
-            CubicalCategoricalLogicLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-
+            CubicalCategoricalLogicLibrary-${{ runner.os }}-${{ env.GHC_VERSION }}-${{ env.CABAL_VERSION }}-${{ env.AGDA_BRANCH }}-${{ env.CUBICAL_COMMIT }}-
 
       - name: Put cabal programs in PATH
         run: echo "~/.cabal/bin" >> $GITHUB_PATH
