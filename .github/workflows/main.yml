@@ -185,8 +185,7 @@ jobs:
 
       - name: Test grammars-and-semantic-actions
         run: |
-          cd $CATLOG_DIR && make clean-everythings
-          cd $GITHUB_WORKSPACE/src && make test \
+          cd src && make test \
             AGDA_EXEC='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error'
 
       - name: Save library cache
