@@ -185,8 +185,8 @@ jobs:
 
       - name: Test grammars-and-semantic-actions
         run: |
-	  cd ~/cubical-categorical-logic && make clean-everythings \
-            && cd ~/grammars-and-semantic-actions/src && make test \
+	  cd ~/cubical-categorical-logic && make clean-everythings
+          cd ~/grammars-and-semantic-actions/src && make test \
             AGDA_EXEC='~/.cabal/bin/agda +RTS -M6G -RTS -WnoUnsupportedIndexedMatch -W error'
 
       - name: Save library cache
