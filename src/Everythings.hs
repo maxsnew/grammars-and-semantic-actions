@@ -66,22 +66,22 @@ checkEverythings :: [SplitFilePath] -> [String] -> IO ()
 checkEverythings excludes dirs = do
   missing_files <- concat <$> forM dirs (\dir -> do
     let ex = map reverse excludes
-    miss <- getMissingFiles [dir] (Just ["Everything",dir])
+    miss <- getMissingFiles [dir] (Just ["GarmmarEverything",dir])
     pure $ filter (\l -> not $ any (`isSuffixOf` l) ex) miss
     )
   if null missing_files then pure ()
-  else do putStrLn "Found some files which are not imported in any Everything.agda:"
+  else do putStrLn "Found some files which are not imported in any GrammarEverything.agda:"
           forM_ missing_files (putStrLn . (" " ++) . showFP '.')
           exitFailure
 
 checkREADME :: IO ()
 checkREADME = do
   (sub_dirs', _) <- getSubDirsFiles ["."]
-  let sub_dirs = filter (\d -> d `notElem` ["Everything.hs", "_build", "README.agda", "Makefile", "Dockerfile", "paper"]) sub_dirs'
+  let sub_dirs = filter (\d -> d `notElem` ["GrammarEverything.hs", "_build", "README.agda", "Makefile", "Dockerfile", "paper"]) sub_dirs'
   imported <- getImported ["README"]
-  let missing_files = fmap (\dir -> ["Everything",dir]) sub_dirs \\ imported
+  let missing_files = fmap (\dir -> ["GrammarEverything",dir]) sub_dirs \\ imported
   if null missing_files then pure ()
-  else do putStrLn "Found some Everything.agda's which are not imported in README.agda:"
+  else do putStrLn "Found some GrammarEverything.agda's which are not imported in README.agda:"
           forM_ missing_files (putStrLn . (" " ++) . showFP '.')
           exitFailure
 
@@ -92,30 +92,30 @@ genEverythings excludes =
     files' <- getMissingFiles fp Nothing
     let ex = map reverse excludes
     let files = filter (\l -> not $ any (`isSuffixOf` l) ex) files'
-    let ls = ["module " ++ showFP '.' (addToFP fp "Everything") ++ " where",[]]
+    let ls = ["module " ++ showFP '.' (addToFP fp "GrammarEverything") ++ " where",[]]
              ++ sort (fmap (\file -> do
                               "import " ++ showFP '.' file
                            )
-                           (delete (addToFP fp "Everything") files))
-    writeFile ("./" ++ showFP '/' (addToFP fp "Everything") ++ ".agda")
+                           (delete (addToFP fp "GrammarEverything") files))
+    writeFile ("./" ++ showFP '/' (addToFP fp "GrammarEverything") ++ ".agda")
               (unlines ls)
 
 helpText :: String
 helpText = unlines [
   "Accepted arguments: ",
-  " check d1 d2 ... dn         checks imports in the Everything files in the",
+  " check d1 d2 ... dn         checks imports in the GrammarEverything files in the",
   "                            given directories",
-  " check-except d1 d2 ... dn  checks imports in all Everything files except those",
+  " check-except d1 d2 ... dn  checks imports in all GrammarEverything files except those",
   "                            in the given directories",
-  " gen d1 d2 ... dn           generates Everything files in the given directories",
-  " gen-except d1 d2 ... dn    generates Everything files in all directories",
+  " gen d1 d2 ... dn           generates GrammarEverything files in the given directories",
+  " gen-except d1 d2 ... dn    generates GrammarEverything files in all directories",
   "                            except in those given",
-  " check-README               checks all Everything files are imported in README"]
+  " check-README               checks all GrammarEverything files are imported in README"]
 
 main :: IO ()
 main = do
   all_dirs' <- filter ('.' `notElem`) <$> getDirectoryContents "."
-  let all_dirs = filter (\d -> d `notElem` ["Everything.hs", "_build", "README.agda", "Makefile", "Dockerfile", "paper"]) all_dirs'
+  let all_dirs = filter (\d -> d `notElem` ["GrammarEverything.hs", "_build", "README.agda", "Makefile", "Dockerfile", "paper"]) all_dirs'
   args <- getArgs
   case args of
     "check":dirs -> checkEverythings [] dirs

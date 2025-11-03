@@ -7,10 +7,11 @@ open import Cubical.Foundations.Isomorphism
 module Thompson.Base (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.FinSet
-open import Cubical.Data.FinSet.More
+open import Cubical.Data.FinSet.Properties
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Bool
 
+open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 open import Grammar Alphabet
