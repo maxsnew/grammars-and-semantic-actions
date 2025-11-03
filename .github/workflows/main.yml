@@ -57,8 +57,8 @@ env:
   GHC_VERSION: 9.10.2
   CABAL_VERSION: 3.12.1.0
   CABAL_INSTALL: cabal install --overwrite-policy=always --ghc-options='-O1 +RTS -M6G -RTS'
-  CUBICAL_COMMIT : b150186d2544e7efeddd31e5d14a8b9ecbb100f7
-  CATLOG_COMMIT : 77cdea727d527363844dde6710ac388b0eab822c
+  CUBICAL_COMMIT: b150186d2544e7efeddd31e5d14a8b9ecbb100f7
+  CATLOG_COMMIT: 090a468158f22703bde0a0a33f4798dcad6ae945
   CACHE_PATHS: |
     ~/.cabal/packages
     ~/.cabal/store
