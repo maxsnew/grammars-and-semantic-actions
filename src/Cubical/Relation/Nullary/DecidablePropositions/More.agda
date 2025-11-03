@@ -27,7 +27,7 @@ open import Cubical.Data.Nat
 open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Cubical.Foundations.HLevels.MoreMore
-open import Cubical.Data.FinSet.More
+open import Cubical.Data.FinSet.Properties
 
 private
   variable
@@ -392,21 +392,6 @@ SplitSupport-FinOrd {A = A} (zero , A≃Fin) ∣a∣ =
   ⊥.rec (PT.rec isProp⊥ (A≃Fin .fst) ∣a∣)
 SplitSupport-FinOrd {A = A} (suc n , A≃Fin) ∣a∣ =
   A≃Fin .snd .equiv-proof (inl _) .fst .fst
-
-DecProp→isFinOrd :
-  ∀ {ℓ} → (A : DecProp ℓ) → isFinOrd (A .fst .fst)
-DecProp→isFinOrd A =
-  decRec
-    (λ a →
-      1 ,
-      isoToEquiv
-      (iso
-        (λ _ → inl _)
-        (λ { (inl tt) → a })
-        (λ { (inl tt) → refl })
-        (λ a → A .fst .snd _ _)))
-    (λ ¬a → 0 , uninhabEquiv ¬a (λ x → x))
-    (A .snd)
 
 witness-true :
   (A : DecProp' ℓ) → A .fst →
