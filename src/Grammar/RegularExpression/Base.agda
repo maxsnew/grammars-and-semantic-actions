@@ -38,11 +38,20 @@ RegularExpression→Grammar (r *r) = (RegularExpression→Grammar r) *
 
 infix 30 ＂_＂r
 
-infixr 20 _⊗r_
+infixr 25 _⊗r_
 
-infixr 20 _⊕r_
+infixr 18 _⊕r_
 
-infix 30 _*r
+infix 40 _*r
+
+private
+  test : ∀ (r1 r2 r3 : Grammar ℓ-zero)
+    → r1 ⊕ r2 ⊗ r3 * ≡ r1 ⊕ (r2 ⊗ (r3 *))
+  test _ _ _ = refl
+
+  test2 : ∀ r1 r2 r3
+    → r1 ⊕r r2 ⊗r r3 *r ≡ r1 ⊕r (r2 ⊗r (r3 *r))
+  test2 _ _ _ = refl
 
 _+r : RegularExpression → RegularExpression
 r +r = r ⊗r r *r
