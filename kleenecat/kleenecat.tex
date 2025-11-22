@@ -70,7 +70,6 @@
 
 \maketitle
 
-
 \section{Kleene Algebra and Kozen Categories}
 
 Kleene algebras are an important tool in the theory of regular
@@ -127,10 +126,10 @@ equivalence} of grammars.
 
 The most complex part of this generalization is the appropriate
 generalization of the Kleene star. For that we make the following
-definitions
+definitions:
 \begin{definition}
   Let $\cat C$ be a monoidal category. Given an object $A \in \cat C$,
-  a \textbf{parameterized cons-list object} consists of
+  a \textbf{parameterized $A$-cons-list object} consists of
   \begin{enumerate}
   \item an object $L \in \cat C$
   \item with morphisms $\textrm{nil} : I \to L$ and $\textrm{cons} : A \otimes L \to L$
@@ -152,9 +151,9 @@ definitions
 \end{tikzcd}\]
   \end{enumerate}
 
-  A \textbf{cons-list object} is like a parameterized cons-list object but where $P$ can only be $I$.
+  An \textbf{$A$-cons-list object} is like a parameterized cons-list object but where $P$ can only be $I$.
 
-  A \textbf{parameterized snoc-list object} is a cons-list object in
+  A \textbf{parameterized $A$-snoc-list object} is an $A$-cons-list object in
   the dual monoidal structure $\cat C^{co}$. In this case we call the
   $\textrm{cons}$ instead $\textrm{snoc}$ and the $\textrm{foldr}$
   morphism $\textrm{foldl}$. A non-parameterized snoc-list object is
@@ -162,7 +161,7 @@ definitions
 \end{definition}
 
 \begin{construction}
-  Given a cons-list object for $A$, we can define a morphism $\textrm{snoc} : L \otimes A \to L$ as $\textrm{foldr}(\eta, \textrm{cons})$
+  Given an $A$-cons-list object, we can define a morphism $\textrm{snoc} : L \otimes A \to L$ as $\textrm{foldr}(\eta, \textrm{cons})$
   where $\eta : A \to L$ is the composition
   % https://q.uiver.app/#q=WzAsNCxbMCwwLCJBIl0sWzEsMCwiQSBcXG90aW1lcyBJIl0sWzIsMCwiQSBcXG90aW1lcyBMIl0sWzMsMCwiTCJdLFswLDEsIiIsMCx7ImxldmVsIjoyLCJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzEsMiwiQSBcXG90aW1lcyBcXHRleHRybXtuaWx9Il0sWzIsMywiXFx0ZXh0cm17Y29uc30iXV0=
 \[\begin{tikzcd}[ampersand replacement=\&]
@@ -173,11 +172,50 @@ definitions
 \end{tikzcd}\]
 \end{construction}
 
+Here's a very concise formulation:
 \begin{definition}
-  A Kozen category is a distributive monoidal category $\cat{K}$ such
-  that for every object $A$, there is a cons-list object
-  $(A^*,\textrm{nil},\textrm{cons})$ such that $(A^*, \textrm{nil},
-  \textrm{snoc})$ is a snoc-list object.
+  An \textbf{$A$-$B$-cons-list object} is an initial algebra for the functor $\textrm{ConsF}({A,B})(X) = B + A \otimes X$.
+  An \textbf{$A$-$B$-snoc-list object} is an initial algebra for the functor $\textrm{SnocF}({A,B})(X) = B + X \otimes A$.
+
+  A \textbf{$A$-$B$-cons-list object} $c : B + A \otimes L \to L$ is
+  \emph{distributive} when for every $C$, the following induced
+  $\textrm{ConsF}({A,B\otimes C})$-algebra on $L \otimes C$ is
+  initial:
+% https://q.uiver.app/#q=WzAsMyxbMCwwLCIoQlxcb3RpbWVzIEMpK0FcXG90aW1lcyAoTFxcb3RpbWVzIEMpIl0sWzEsMCwiKEIrQVxcb3RpbWVzIEwpXFxvdGltZXMgQyJdLFsyLDAsIkwgXFxvdGltZXMgQyJdLFswLDEsIlxcZGVsdGEiXSxbMSwyLCJjIFxcb3RpbWVzIEMiXV0=
+  \[\begin{tikzcd}
+	{(B\otimes C)+A\otimes (L\otimes C)} & {(B+A\otimes L)\otimes C} & {L \otimes C}
+	\arrow["\delta", from=1-1, to=1-2]
+	\arrow["{c \otimes C}", from=1-2, to=1-3]
+  \end{tikzcd}\]
+  where $\delta$ is the obvious distribution isomorphism.
+
+  A distributive initial $\textrm{ConsF}(A,I)$ algebra on $L$ induces
+  a $\textrm{SnocF}(A,B)$-algebra on $L$ and vice-versa.
+\end{definition}
+
+\begin{lemma}
+  A parameterized $A$-cons list object is equivalent to a distributive
+  $A$-$I$-cons list object.
+\end{lemma}
+
+\begin{definition}
+  An {A}-dequeue object is an object $L$ equipped with the
+  structure of a distributive initial $\textrm{ConsF}(A,I)$ algebra $c
+  : I \oplus A\otimes L \to L$ and distributive initial
+  $\textrm{SnocF}(A,I)$ algebra $s : I \oplus L \otimes I \to L$ such
+  that the induced $\textrm{SnocF}(A,I)$ structure $s'$ from the cons
+  structure is equal to $s$ and vice-versa the induced cons algebra
+  $c'$ is equal to $c$.
+
+  Equivalently, an $A$-dequeue object is a distributive initial
+  $\textrm{ConsF}(A,I)$ algebra $c : I \oplus A\otimes L \to L$ such
+  that the induced $\textrm{SnocF}(A,I)$ algebra $s : I + L \otimes A
+  \to L$ is distributive initial.
+\end{definition}
+
+\begin{definition}
+  A Kozen category is a distributive monoidal category $\cat{K}$
+  with for every object $A$, an $A$-dequeue object $A^*$.
 \end{definition}
 
 As a sanity check, note that Kleene algebras are indeed examples of
@@ -308,6 +346,57 @@ the coend degenerates to a coproduct and the end ot a product.
   functor of $K$.
 \end{definition}
 
+\section{Proposed construction for free Kozen categories}
+
+For now, we ignore the subtleties behind pseudomonads, 2-monads,
+lax algebras, etc.
+
+Let $\cat{C}$ be a category. It is more or less straightforward to
+define the free Kozen category $\FKC(\cat{C})$. We can do that by
+using the internal language of Kozen categories. Concretely, it
+will be a type theory with (non-commutative) tensors, sum types and
+a primitive type of lists $L(A)$ for every $A$. By type theoretic reasons, this
+structure forces the coproduct to distribute over the tensor, where we
+can write the morphism $A \otimes (B + C) \to (A \otimes B) + (A
+\otimes C) $ as the term
+\begin{align*}
+  &z \vdash \mathsf{let}\, x \otimes y = z\, \mathsf{in}\\
+  &\mathsf{case}\, y \, \mathsf{with}\\
+  &| \mathsf{in}_1\, y_1 \Rightarrow \mathsf{in}_1\, (x \otimes y_1)\\
+  &| \mathsf{in}_2\,y_2\Rightarrow \mathsf{in}_2 \,(x \otimes y_2)\\
+  &\mathsf{end}
+\end{align*}
+%
+The list type includes primitive terms for $\textrm{cons}$,
+$\textrm{nil}$, $\textrm{foldr}$ and $\textrm{foldl}$ where
+$\textrm{foldr}$ and $\textrm{foldl}$ allow for a context to be used
+in the construction of the nil case, but no free variables can be used
+in the cons case:
+\begin{mathpar}
+  \inferrule
+  {\Gamma \vdash L : A^* \and \Delta \vdash N : B \and a:A,b:B \vdash M : B
+  }
+  {\Gamma,\Delta \vdash \textrm{foldr}(L,N,a.b.M) : B}
+\end{mathpar}
+
+We can prove directly by the equational theory of this type theory
+that this is an inverse to the canonical map going in the other
+direction. The inductive nature of type theories should make the
+following theorem pretty straightforward to prove:
+%
+\begin{theorem}
+  The forgetful functor $\cat{KC} \to \cat{Cat}$ has a left adjoint
+  $\textrm{Reg}$ in $\cat{2Cat}$.
+\end{theorem}
+We use the notation $\textrm{Reg}(\cat C)$ for the free Kozen category
+generated from $\cat C$ as its objects are the ``regular types''
+generated from $\cat C$. When $\Sigma$ is a (discrete, finite) set
+representing an alphabet we write $\textrm{Reg}(\Sigma)$ to mean the
+free Kozen category generated by the discrete category $\Sigma$. In
+this case, the objects of $\textrm{Reg}(\Sigma)$ are regular
+expressions over the alphabet $\Sigma$ and the morphisms are
+``primitive recursive parse transformers''.
+
 \section{Proof-Relevant Deterministic Automata}
 
 Now, we will consider a categorification of deterministic automata.
@@ -423,49 +512,6 @@ $\cat{SimDFA}$.
   the definitions and using the fact that $U$ is faithful.
 \end{proof}
 \end{comment}
-
-\section{Proposed construction for free Kozen categories}
-
-For now, we ignore the subtleties behind pseudomonads, 2-monads,
-lax algebras, etc.
-
-Let $\cat{C}$ be a category. It is more or less straightforward to
-define the free Kozen category $\FKC(\cat{C})$. We can do that by
-using the internal language of Kozen categories. Concretely, it
-will be a type theory with (non-commutative) tensors, sum types and
-a primitive type of lists $L(A)$ for every $A$. By type theoretic reasons, this
-structure forces the coproduct to distribute over the tensor, where we
-can write the morphism $A \otimes (B + C) \to (A \otimes B) + (A
-\otimes C) $ as the term
-\begin{align*}
-  &z \vdash \mathsf{let}\, x \otimes y = z\, \mathsf{in}\\
-  &\mathsf{case}\, y \, \mathsf{with}\\
-  &| \mathsf{in}_1\, y_1 \Rightarrow \mathsf{in}_1\, (x \otimes y_1)\\
-  &| \mathsf{in}_2\,y_2\Rightarrow \mathsf{in}_2 \,(x \otimes y_2)\\
-  &\mathsf{end}
-\end{align*}
-%
-The list type includes primitive terms for $\textrm{cons}$,
-$\textrm{nil}$, $\textrm{foldr}$ and $\textrm{foldl}$ where
-$\textrm{foldr}$ and $\textrm{foldl}$ allow for a context to be used
-in the construction of the nil case, but no free variables can be used
-in the cons case:
-\begin{mathpar}
-  \inferrule
-  {\Gamma \vdash L : A^* \and \Delta \vdash N : B \and a:A,b:B \vdash M : B
-  }
-  {\Gamma,\Delta \vdash \textrm{foldr}(L,N,a.b.M) : B}
-\end{mathpar}
-
-We can prove directly by the equational theory of this type theory
-that this is an inverse to the canonical map going in the other
-direction. The inductive nature of type theories should make the
-following theorem pretty straightforward to prove:
-%
-\begin{theorem}
-  The forgetful functor $\cat{KC} \to \cat{Cat}$ has a left adjoint
-  in $\cat{2Cat}$.
-\end{theorem}
 
 \section{Revisiting Brzozowski's Distributive Law}
 
