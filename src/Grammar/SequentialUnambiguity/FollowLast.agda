@@ -39,8 +39,16 @@ FollowLastG' A c = ((A & char +) ⊗ startsWith c) & A
 FollowLastG'+ : Grammar ℓA → ⟨ Alphabet ⟩ → Grammar ℓA
 FollowLastG'+ A c = ((A & char +) ⊗ startsWith c) & (A & char +)
 
+-- This is the version used in Edelman-Hamza-Kunčak
+FollowLastG'' : Grammar ℓA → ⟨ Alphabet ⟩ → Grammar ℓA
+FollowLastG'' A c = (A ⊗ startsWith c) & A
+
 FollowLastG'⊢FollowLastG : FollowLastG' A c ⊢ FollowLastG A c
 FollowLastG'⊢FollowLastG = (π₁ ,⊗ id) ,&p id
+
+_∉FollowLast''_ : ⟨ Alphabet ⟩ → Grammar ℓA → hProp ℓA
+(c ∉FollowLast'' A) .fst = uninhabited (FollowLastG'' A c)
+(c ∉FollowLast'' A) .snd = isProp-uninhabited
 
 _∉FollowLast'_ : ⟨ Alphabet ⟩ → Grammar ℓA → hProp ℓA
 (c ∉FollowLast' A) .fst = uninhabited (FollowLastG' A c)
