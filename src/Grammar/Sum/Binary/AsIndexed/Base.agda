@@ -4,7 +4,7 @@ open import Cubical.Foundations.Isomorphism
 
 module Grammar.Sum.Binary.AsIndexed.Base (Alphabet : hSet ℓ-zero) where
 
-open import Cubical.Data.Bool using (Bool ; true ; false)
+open import Cubical.Data.Bool as Bool using (Bool ; true ; false)
 
 open import Grammar.Base Alphabet
 open import Grammar.Sum.Base Alphabet
@@ -33,11 +33,7 @@ module _ {A : Bool → Grammar ℓA} where
   inr = σ false
 
   ⊕-elim : A true ⊢ B → A false ⊢ B → ⊕ᴰ A ⊢ B
-  ⊕-elim {B = B} e f = ⊕ᴰ-elim ⊕-elim'
-    where
-    ⊕-elim' : (b : Bool) → A b ⊢ B
-    ⊕-elim' false = f
-    ⊕-elim' true = e
+  ⊕-elim {B = B} e f = ⊕ᴰ-elim (Bool.elim e f)
 
 ⊕-βl : (e₁ : A ⊢ C) → (e₂ : B ⊢ C) →
   ⊕-elim {A = ⊕Ind _ _} e₁ e₂ ∘g inl ≡ e₁
