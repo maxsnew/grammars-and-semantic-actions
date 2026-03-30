@@ -1,10 +1,11 @@
-\documentclass[acmsmall,anonymous,review,screen]{acmart}
+\documentclass[sigplan,anonymous,review,screen]{acmart}
 \usepackage{mathpartir}
 \usepackage{quiver}
 \usepackage{enumitem}
 \usepackage{wrapfig}
 \usepackage{fancyvrb}
 \usepackage{amsmath}
+\usepackage{stmaryrd}
 
 \DeclareFontFamily{U}{dmjhira}{}
 \DeclareFontShape{U}{dmjhira}{m}{n}{ <-> dmjhira }{}
@@ -22,9 +23,23 @@
   \fi
 }
 
+\usepackage{mdframed}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\newcommand\makenote[4]{\par\noindent\begin{tcolorbox}
+[size=small,colback=#2]\color{#3}\textbf{#4: }#1\end{tcolorbox}\noindent}
+\definecolor{cornellred}{RGB}{196,18,48}
+\definecolor{umichblue}{HTML}{00274C}
+
+\newcommand\pa[1]{\makenote{#1}{cornellred}{white}{PA}}
+\newcommand\msn[1]{\makenote{#1}{umichblue}{white}{MSN}}
+
+\newcommand{\FKC}{\textrm{F}_{\textrm{KC}}}
+\newcommand{\sem}[1]{\llbracket{#1}\rrbracket}
 \newcommand{\Set}{\cat{Set}}
 \newcommand{\lto}{\multimap}
 \newcommand{\grammar}{\Set^{\cat{\Sigma^*}}}
+\newcommand{\id}{\textrm{id}}
 \newtheorem*{construction}{Construction}
 
 %% Rights management information.  This information is sent to you
@@ -47,30 +62,7 @@
 
 
 \begin{document}
-\title{Kleene Categories}
-\author{Steven Schaefer}
-\affiliation{
-  \department{Electrical Engineering and Computer Science}
-  \institution{University of Michigan}
-  \country{USA}
-}
-\email{stschaef@umich.edu}
-
-\author{Max S. New}
-\affiliation{
-  \department{Electrical Engineering and Computer Science}
-  \institution{University of Michigan}
-  \country{USA}
-}
-\email{maxsnew@umich.edu}
-
-\author{Pedro H. Azevedo de Amorim}
-\affiliation{
-  \department{Department of Computer Science}
-  \institution{University of Oxford}
-  \country{UK}
-}
-\email{pedro.azevedo.de.amorim@cs.ox.ac.uk}
+\title{Kozen Categories}
 
 \begin{abstract}
   We propose a categorification of Kleene algebras and study some of its basic properties.
@@ -78,8 +70,7 @@
 
 \maketitle
 
-
-\section{Kleene Algebra and Kleene Categories}
+\section{Kleene Algebra and Kozen Categories}
 
 Kleene algebras are an important tool in the theory of regular
 languages. More broadly, they serve as a theoretical substrate to
@@ -95,7 +86,7 @@ in Figure~\ref{fig:axioms}.
     x + 0 &= x & x + x &= x\\
     x(yz) &= (xy)z & x1 &= 1x = x\\
     x(y + z) &= xy + xz & (x + y)z &= xz + yz\\
-    x0 &= 0x = x & & \\
+    x0 &= 0x = 0 & & \\
     1 + aa^* &\leq a^* & 1 + a^*a &\leq a^*\\
      b + ax \leq x &\implies a^*b \leq x &  b + xa \leq x &\implies ba^* \leq x
   \end{align*}
@@ -127,7 +118,7 @@ Our goal is to provide a generalization of Kleene algebra that is
 regular expressions in the same way that Kleene algebra does for
 recognition. To do this we need to move beyond the view of a Kleene
 algebra as algebraic structure over sets, and instead as a kind of
-structured \emph{poset}. We then generalize this to a Kleene
+structured \emph{poset}. We then generalize this to a Kozen
 \emph{category}, where the morphisms of the category correspond to not
 just language inclusion but \emph{formal reductions} of grammars, and
 isomorphism is not language equivalence but instead \emph{strong
@@ -135,10 +126,10 @@ equivalence} of grammars.
 
 The most complex part of this generalization is the appropriate
 generalization of the Kleene star. For that we make the following
-definitions
+definitions:
 \begin{definition}
   Let $\cat C$ be a monoidal category. Given an object $A \in \cat C$,
-  a \textbf{parameterized cons-list object} consists of
+  a \textbf{parameterized $A$-cons-list object} consists of
   \begin{enumerate}
   \item an object $L \in \cat C$
   \item with morphisms $\textrm{nil} : I \to L$ and $\textrm{cons} : A \otimes L \to L$
@@ -160,9 +151,9 @@ definitions
 \end{tikzcd}\]
   \end{enumerate}
 
-  A \textbf{cons-list object} is like a parameterized cons-list object but where $P$ can only be $I$.
+  An \textbf{$A$-cons-list object} is like a parameterized cons-list object but where $P$ can only be $I$.
 
-  A \textbf{parameterized snoc-list object} is a cons-list object in
+  A \textbf{parameterized $A$-snoc-list object} is an $A$-cons-list object in
   the dual monoidal structure $\cat C^{co}$. In this case we call the
   $\textrm{cons}$ instead $\textrm{snoc}$ and the $\textrm{foldr}$
   morphism $\textrm{foldl}$. A non-parameterized snoc-list object is
@@ -170,7 +161,7 @@ definitions
 \end{definition}
 
 \begin{construction}
-  Given a cons-list object for $A$, we can define a morphism $\textrm{snoc} : L \otimes A \to L$ as $\textrm{foldr}(\eta, \textrm{cons})$
+  Given an $A$-cons-list object, we can define a morphism $\textrm{snoc} : L \otimes A \to L$ as $\textrm{foldr}(\eta, \textrm{cons})$
   where $\eta : A \to L$ is the composition
   % https://q.uiver.app/#q=WzAsNCxbMCwwLCJBIl0sWzEsMCwiQSBcXG90aW1lcyBJIl0sWzIsMCwiQSBcXG90aW1lcyBMIl0sWzMsMCwiTCJdLFswLDEsIiIsMCx7ImxldmVsIjoyLCJzdHlsZSI6eyJoZWFkIjp7Im5hbWUiOiJub25lIn19fV0sWzEsMiwiQSBcXG90aW1lcyBcXHRleHRybXtuaWx9Il0sWzIsMywiXFx0ZXh0cm17Y29uc30iXV0=
 \[\begin{tikzcd}[ampersand replacement=\&]
@@ -181,25 +172,64 @@ definitions
 \end{tikzcd}\]
 \end{construction}
 
+Here's a very concise formulation:
 \begin{definition}
-  A Kleene category is a distributive monoidal category $\cat{K}$ such
-  that for every object $A$, there is a cons-list object
-  $(A^*,\textrm{nil},\textrm{cons})$ such that $(A^*, \textrm{nil},
-  \textrm{snoc})$ is a snoc-list object.
+  An \textbf{$A$-$B$-cons-list object} is an initial algebra for the functor $\textrm{ConsF}({A,B})(X) = B + A \otimes X$.
+  An \textbf{$A$-$B$-snoc-list object} is an initial algebra for the functor $\textrm{SnocF}({A,B})(X) = B + X \otimes A$.
+
+  A \textbf{$A$-$B$-cons-list object} $c : B + A \otimes L \to L$ is
+  \emph{distributive} when for every $C$, the following induced
+  $\textrm{ConsF}({A,B\otimes C})$-algebra on $L \otimes C$ is
+  initial:
+% https://q.uiver.app/#q=WzAsMyxbMCwwLCIoQlxcb3RpbWVzIEMpK0FcXG90aW1lcyAoTFxcb3RpbWVzIEMpIl0sWzEsMCwiKEIrQVxcb3RpbWVzIEwpXFxvdGltZXMgQyJdLFsyLDAsIkwgXFxvdGltZXMgQyJdLFswLDEsIlxcZGVsdGEiXSxbMSwyLCJjIFxcb3RpbWVzIEMiXV0=
+  \[\begin{tikzcd}
+	{(B\otimes C)+A\otimes (L\otimes C)} & {(B+A\otimes L)\otimes C} & {L \otimes C}
+	\arrow["\delta", from=1-1, to=1-2]
+	\arrow["{c \otimes C}", from=1-2, to=1-3]
+  \end{tikzcd}\]
+  where $\delta$ is the obvious distribution isomorphism.
+
+  A distributive initial $\textrm{ConsF}(A,I)$ algebra on $L$ induces
+  a $\textrm{SnocF}(A,B)$-algebra on $L$ and vice-versa.
+\end{definition}
+
+\begin{lemma}
+  A parameterized $A$-cons list object is equivalent to a distributive
+  $A$-$I$-cons list object.
+\end{lemma}
+
+\begin{definition}
+  An {A}-dequeue object is an object $L$ equipped with the
+  structure of a distributive initial $\textrm{ConsF}(A,I)$ algebra $c
+  : I \oplus A\otimes L \to L$ and distributive initial
+  $\textrm{SnocF}(A,I)$ algebra $s : I \oplus L \otimes I \to L$ such
+  that the induced $\textrm{SnocF}(A,I)$ structure $s'$ from the cons
+  structure is equal to $s$ and vice-versa the induced cons algebra
+  $c'$ is equal to $c$.
+
+  Equivalently, an $A$-dequeue object is a distributive initial
+  $\textrm{ConsF}(A,I)$ algebra $c : I \oplus A\otimes L \to L$ such
+  that the induced $\textrm{SnocF}(A,I)$ algebra $s : I + L \otimes A
+  \to L$ is distributive initial.
+\end{definition}
+
+\begin{definition}
+  A Kozen category is a distributive monoidal category $\cat{K}$
+  with for every object $A$, an $A$-dequeue object $A^*$.
 \end{definition}
 
 As a sanity check, note that Kleene algebras are indeed examples of
-Kleene categories.
+Kozen categories.
 
 \begin{lemma}
-  A Kleene algebra is equivalent to a posetal Kleene category.
+  A Kleene algebra is equivalent to a posetal Kozen category.
 \end{lemma}
 
-% This isn't an example of a Kleene category, it's an example of a model of conjunctive ordered logic
+% This isn't an example of a Kozen category, it's an example of a model of conjunctive ordered logic
 An unexpected example comes from the theory of substructural logics.
 
 \begin{example}
-  The opposite category of every Kleene category is a model of a variant of
+  The opposite category of every Kozen category is a model of a variant of
   conjunctive ordered logic, where the Kleene star plays the role of the ``of
   course'' modality from substructural logics.
 \end{example}
@@ -207,16 +237,16 @@ An unexpected example comes from the theory of substructural logics.
 This proposed definition is sensible. After all, the proposed axioms
 are a direct translation of the Kleene algebra axioms to a categorical
 setting. Its most convoluted aspect is the axiomatization of the
-Kleene star as a parameterized list and snoc object. If the Kleene
+Kleene star as a parameterized list and snoc object. If the Kozen
 category $\cat{K}$ has more structure, then these isomorphisms hold
 ``for free''.
 
 \begin{definition}
-  A pre-Kleene category is a distributive monoidal category with a (non-parameterized) cons-list object.
+  A pre-Kozen category is a distributive monoidal category with a (non-parameterized) cons-list object.
 \end{definition}
 
 \begin{theorem}
-  If $\cat K$ is a pre-Kleene category that is also biclosed, then it is a Kleene category.
+  If $\cat K$ is a pre-Kozen category that is also biclosed, then it is a Kozen category.
 \end{theorem}
 \begin{proof}
   TODO: closed implies parameterized for free and that cons-list and snoc-list objects are equivalent.
@@ -224,7 +254,7 @@ category $\cat{K}$ has more structure, then these isomorphisms hold
 
 %% \begin{theorem}
 %%   \label{th:kleeneclosed}
-%%   Let $\cat{K}$ be a Kleene category such that it is also monoidal
+%%   Let $\cat{K}$ be a Kozen category such that it is also monoidal
 %%   closed.  Then, the initial algebras isomorphisms hold automatically.
 %% \end{theorem}
 %% \begin{proof}
@@ -283,7 +313,7 @@ the coend degenerates to a coproduct and the end ot a product.
 %% \end{theorem}
 \begin{theorem}
   If $\cat{C}$ is a locally small monoidal category, then
-  $\Set^{\cat{C}}$ is a Kleene category.
+  $\Set^{\cat{C}}$ is a Kozen category.
 \end{theorem}
 \begin{proof}
   By the lemma above, $\Set^{\cat{C}}$ is monoidal closed, and since it
@@ -302,7 +332,7 @@ the coend degenerates to a coproduct and the end ot a product.
 
 \begin{corollary}
   For every alphabet $\Sigma$, the presheaf category $\grammar$
-  is a Kleene category.
+  is a Kozen category.
 \end{corollary}
 \begin{proof}
   Note that string concatenation and the empty string make the
@@ -310,11 +340,62 @@ the coend degenerates to a coproduct and the end ot a product.
 \end{proof}
 
 \begin{definition}
-  Let $K$ be a Kleene category over alphabet $\Sigma$. This
+  Let $K$ be a Kozen category over alphabet $\Sigma$. This
   induces a strong monoidal functor $\Sigma^* \to K$. The
   nerve functor $w \mapsto K(w, -)$ is the grammar interpretation
   functor of $K$.
 \end{definition}
+
+\section{Proposed construction for free Kozen categories}
+
+For now, we ignore the subtleties behind pseudomonads, 2-monads,
+lax algebras, etc.
+
+Let $\cat{C}$ be a category. It is more or less straightforward to
+define the free Kozen category $\FKC(\cat{C})$. We can do that by
+using the internal language of Kozen categories. Concretely, it
+will be a type theory with (non-commutative) tensors, sum types and
+a primitive type of lists $L(A)$ for every $A$. By type theoretic reasons, this
+structure forces the coproduct to distribute over the tensor, where we
+can write the morphism $A \otimes (B + C) \to (A \otimes B) + (A
+\otimes C) $ as the term
+\begin{align*}
+  &z \vdash \mathsf{let}\, x \otimes y = z\, \mathsf{in}\\
+  &\mathsf{case}\, y \, \mathsf{with}\\
+  &| \mathsf{in}_1\, y_1 \Rightarrow \mathsf{in}_1\, (x \otimes y_1)\\
+  &| \mathsf{in}_2\,y_2\Rightarrow \mathsf{in}_2 \,(x \otimes y_2)\\
+  &\mathsf{end}
+\end{align*}
+%
+The list type includes primitive terms for $\textrm{cons}$,
+$\textrm{nil}$, $\textrm{foldr}$ and $\textrm{foldl}$ where
+$\textrm{foldr}$ and $\textrm{foldl}$ allow for a context to be used
+in the construction of the nil case, but no free variables can be used
+in the cons case:
+\begin{mathpar}
+  \inferrule
+  {\Gamma \vdash L : A^* \and \Delta \vdash N : B \and a:A,b:B \vdash M : B
+  }
+  {\Gamma,\Delta \vdash \textrm{foldr}(L,N,a.b.M) : B}
+\end{mathpar}
+
+We can prove directly by the equational theory of this type theory
+that this is an inverse to the canonical map going in the other
+direction. The inductive nature of type theories should make the
+following theorem pretty straightforward to prove:
+%
+\begin{theorem}
+  The forgetful functor $\cat{KC} \to \cat{Cat}$ has a left adjoint
+  $\textrm{Reg}$ in $\cat{2Cat}$.
+\end{theorem}
+We use the notation $\textrm{Reg}(\cat C)$ for the free Kozen category
+generated from $\cat C$ as its objects are the ``regular types''
+generated from $\cat C$. When $\Sigma$ is a (discrete, finite) set
+representing an alphabet we write $\textrm{Reg}(\Sigma)$ to mean the
+free Kozen category generated by the discrete category $\Sigma$. In
+this case, the objects of $\textrm{Reg}(\Sigma)$ are regular
+expressions over the alphabet $\Sigma$ and the morphisms are
+``primitive recursive parse transformers''.
 
 \section{Proof-Relevant Deterministic Automata}
 
@@ -327,11 +408,32 @@ Now, we will consider a categorification of deterministic automata.
 
 Assuming that the underlying category $\cat{C}$ is not discrete,
 arrows $f : X \to Y$ in $\cat{C}$ should be thought of as a proof that
-the state $X$ is related to the $Y$. This can be seen as a
+the state $X$ is related to $Y$. This can be seen as a
 generalization of simulation relations. After all, functoriality of $F
 : \cat{C} \times \Sigma \to \cat{C}$ implies that $F(f, id_c): F(X, c)
 \to F(Y, c)$, i.e. after one transition, the end states will also be
-related.
+related. We now formalize this intuition
+
+\begin{example}[Automata with simulation relation]
+  Various notions of simulation for automata can be formulated using
+  the language of fibered category theory and liftings of functors.
+  Assume that we have a determinisitc automaton over a state space $S$
+  with a simulation relation $\mathcal{R}$. We can see $S$ and $\mathcal{R}$
+  as a thin category and equip it with a canonical $F$-coalgebra structure.
+  \begin{itemize}
+  \item The component $(S, \mathcal{R}) \to \Set$ maps an element of $S$ to the
+    singleton set $\{*\}$ if it is an accepting state and to the empty set
+    otherwise. The action on morphisms is defined using the simulation
+    acceptance condition, i.e. if $(x, y) \in \mathcal{R}$, then
+    $\alpha(x) \leq \alpha(y)$. Functoriality follows from initiality/terminality
+    of the empty and singleton sets, respectively.
+  \item The component $(S, \mathcal{R}) \times \Sigma \to (S, \mathcal{R})$
+    is, as expected, the transition function $\delta : S \times \Sigma \to S$.
+    The action on morphisms is given by the transition condition of simulation
+    relations, i.e. if $(x, y) \in \mathcal{R})$ then for every $c \in \Sigma$
+    $(\delta(x, c), \delta(y, c)) \in \mathcal{R}$.
+  \end{itemize}
+\end{example}
 
 \begin{definition}
   We can equip $\grammar$ with the $F$-coalgebra structure $\langle \alpha_1, \alpha_2\rangle$,
@@ -411,54 +513,33 @@ $\cat{SimDFA}$.
 \end{proof}
 \end{comment}
 
-\section{Proposed construction for free Kleene categories}
-
-For now, we ignore the subtleties behind pseudomonads, 2-monads,
-lax algebras, etc.
-
-Let $\cat{C}$ be a category. It is more or less straightforward to
-define the free Kleene category $PKC(\cat{C})$. We can do that by
-using the internal language of Kleene categories. Concretely, it
-will be a type theory with (non-commutative) tensors, sum types and
-a primitive type of lists $L(A)$ for every $A$. By type theoretic reasons, this
-structure forces the coproduct to distribute over the tensor, where we
-can write the morphism $A \otimes (B + C) \to (A \otimes B) + (A
-\otimes C) $ as the term
-\begin{align*}
-  &z \vdash \mathsf{let}\, x \otimes y = z\, \mathsf{in}\\
-  &\mathsf{case}\, y \, \mathsf{with}\\
-  &| \mathsf{in}_1\, y_1 \Rightarrow \mathsf{in}_1\, (x \otimes y_1)\\
-  &| \mathsf{in}_2\,y_2\Rightarrow \mathsf{in}_2 \,(x \otimes y_2)\\
-  &\mathsf{end}
-\end{align*}
-%
-The list type includes primitive terms for $\textrm{cons}$,
-$\textrm{nil}$, $\textrm{foldr}$ and $\textrm{foldl}$ where
-$\textrm{foldr}$ and $\textrm{foldl}$ allow for a context to be used
-in the construction of the nil case, but no free variables can be used
-in the cons case:
-\begin{mathpar}
-  \inferrule
-  {\Gamma \vdash L : A^* \and \Delta \vdash N : B \and a:A,b:B \vdash M : B
-  }
-  {\Gamma,\Delta \vdash \textrm{foldr}(L,N,a.b.M) : B}
-\end{mathpar}
-
-We can prove directly by the equational theory of this type theory
-that this is an inverse to the canonical map going in the other
-direction. The inductive nature of type theories should make the
-following theorem pretty straightforward to prove:
-%
-\begin{theorem}
-  The forgetful functor $\cat{KC} \to \cat{Cat}$ has a left adjoint
-  in $\cat{2Cat}$.
-\end{theorem}
-
 \section{Revisiting Brzozowski's Distributive Law}
+
+\begin{definition}
+  A distributive law between a monad $T$ and an endofunctor $T$ is a
+  natural transformation $\lambda : TF \to F T$ making the following
+  diagrams commute:
+% https://q.uiver.app/#q=WzAsOCxbMSwwLCJGIl0sWzAsMSwiVEYiXSxbMiwxLCJGVCJdLFswLDIsIlRURiJdLFsyLDIsIkZUVCJdLFsxLDIsIlRGVCJdLFswLDMsIlRGIl0sWzIsMywiRlQiXSxbMSwyLCJcXGxhbWJkYSIsMl0sWzAsMSwiXFxldGFfRiIsMl0sWzAsMiwiRlxcZXRhIl0sWzMsNiwiXFxtdV9GIiwyXSxbNiw3LCJcXGxhbWJkYSJdLFszLDUsIlRcXGxhbWJkYSJdLFs1LDQsIlxcbGFtYmRhIFQiXSxbNCw3LCJGIFxcbXUiXV0=
+\[\begin{tikzcd}
+	& F \\
+	TF && FT \\
+	TTF & TFT & FTT \\
+	TF && FT
+	\arrow["{\eta_F}"', from=1-2, to=2-1]
+	\arrow["{F\eta}", from=1-2, to=2-3]
+	\arrow["\lambda"', from=2-1, to=2-3]
+	\arrow["{T\lambda}", from=3-1, to=3-2]
+	\arrow["{\mu_F}"', from=3-1, to=4-1]
+	\arrow["{\lambda T}", from=3-2, to=3-3]
+	\arrow["{F \mu}", from=3-3, to=4-3]
+	\arrow["\lambda", from=4-1, to=4-3]
+\end{tikzcd}\]
+\end{definition}
+
 
 It has been observed that Brzozowski's derivative can be more conceptually
 explained as a distributive law between the Kleene algebra monad and the
-DFA functor $2 \times (\Sigma \Rightarrow -)$.
+DFA functor $2 \times (-)^\Sigma$.
 
 \begin{definition}
   We can equip the two element set $2 = \{0, 1 \}$ with the following KA structure
@@ -471,45 +552,124 @@ DFA functor $2 \times (\Sigma \Rightarrow -)$.
   \end{itemize}
 \end{definition}
 
-Since the axiomatization of Kleene algebras over an alphabet $\Sigma$
+\pa{I can't help but think that there's more to the construction
+below... It feels like $K^\Sigma \times K$ is ``fibered'' over $K$}
+
+\begin{definition}
+  \label{def:nonstandard}
+  If $K$ is a Kleene algebra over $\Sigma$, we can equip
+  $K^\Sigma \times K$ with the following Kleene algebra
+  structure.
+    \begin{align*}
+    (f_1, e_1) + (f_2, e_2) &= (f_1 + f_2, e_1 + e_2)\\
+    0 &= (\lambda c.\, 0, 0)\\
+    (f_1, e_1) \cdot (f_2, e_2) &= (\lambda c.\, f_1(c)\cdot e_2 + \alpha(e_1)\cdot f_2(c), e_1\cdot e_2)\\
+    1 &= (\lambda c.\, 0, 1)\\
+    (f, e)^* &= (\lambda c.\, f(c)\cdot e^*, e^*)
+    \end{align*}
+\end{definition}
+
+The proof that this is a Kleene algebra is boring and unsurprising.
+Because the axiomatization of Kleene algebras over an alphabet $\Sigma$
 is a Horn theory, the category of Kleene algebras and Kleene algebra
-morphisms is monadic over $\Set$. Let $E_\Sigma : \Set \to \Set$. be the 
-Kleene algebra monad. It is possible to show the following theorem.
+morphisms is monadic over $\Set$. Let $E_\Sigma : \Set \to \Set$ be the 
+Kleene algebra monad.
+
+It is possible to show that there is a distributive law
+$E_\Sigma(2 \times X^\Sigma) \to 2 \times (E_\Sigma(X)^\Sigma)$.
+Its recursive definition is depicted in Figure~\ref{fig:distlaw}. 
+%
+\begin{figure}
+  \begin{align*}
+    \alpha : E_\Sigma(2 \times X^\Sigma) \to 2 \quad\quad & \delta : E_\Sigma(2 \times X^\Sigma) \to E_\Sigma(X)^\Sigma\\
+  \alpha(e_1 + e_2) = \alpha(e_1) + \alpha(e_2) \quad \quad & \delta_c(e_1 + e_2) = \delta_c(e_1) + \delta_c(e_2)\\ 
+  \alpha(e_1\cdot e_2) = \alpha(e_1) \land \alpha(e_2) \quad \quad& \delta_c(e_1\cdot e_2) = \delta_c(e_1)\cdot e_2 + \alpha(e_1)\cdot \delta_c(e_2)\\ 
+  \alpha(e^*) = 1 \quad \quad& \delta_c(e^*) = \delta_c(e)e^*\\ 
+  \alpha(1) = 1 \quad \quad& \delta_c(1) = 0\\ 
+  \alpha(0) = 0 \quad \quad& \delta_c(0) = 0\\ 
+  \alpha(d : \Sigma) = 0 \quad \quad& \delta_c(d : \Sigma) = [c = d]\\ 
+  \alpha(b, f) = b \quad \quad& \delta_c(b, f) = f(c)  
+\end{align*}
+\caption{Distributive law for Kleene algebras}
+\label{fig:distlaw}
+\end{figure}
 
 \begin{theorem}
-  There is a distributive law $E_\Sigma(2 \times (\Sigma \Rightarrow X)) \to 2 \times (\Sigma \Rightarrow E_\Sigma(X))$.
+  There is a distributive law $E_\Sigma(2 \times (X^\Sigma)) \to 2 \times (E_\Sigma(X)^\Sigma)$.
 \end{theorem}
 \begin{proof}
-  The component $E_\Sigma(2 \times (\Sigma \Rightarrow X)) \to 2$ is
+  The component $E_\Sigma(2 \times (X^\Sigma)) \to 2$ is
   defined using the universal property of free algebraic structures,
-  i.e. it suffices to define a morphism $2 \times (\Sigma \Rightarrow
-  X)) \to 2$, which we choose it to be the first projection
-  $\pi_1$. The component $E_\Sigma(2 \times (\Sigma \Rightarrow X))
-  \to (\Sigma \Rightarrow E_\Sigma(X))$ requires us to be more
-  clever. There is a ``non-standard'' Kleene algebra structure on
-  $(\Sigma \Rightarrow E_\Sigma(X)) \times E_\Sigma(X)$ that makes
-  this possible.
+  i.e. it suffices to define a morphism $2 \times X^\Sigma \to 2$,
+  which we choose it to be the first projection
+  $\pi_1$. The component $E_\Sigma(2 \times (X^\Sigma)) \to (E_\Sigma(X)^\Sigma)$
+  requires us to be more
+  clever. Instantiating the ``non-standard'' Kleene algebra structure from
+  Definition~\ref{def:nonstandard} to $E_\Sigma(X)$
+  gives us a morphism $\psi : E_\Sigma(2 \times X^\Sigma) \to E_\Sigma(X)^\Sigma \times E_\Sigma(X)$
+  by using the universal property of free Kleene
+  algebras and lifting the function
+  \[\lambda (b, f).\, (\lambda c.\, \eta(f(c)), 1) : 2 \times X^\Sigma \to E_\Sigma(X)^\Sigma \times E_\Sigma(X)\]
+  The derivative $\delta$ is the postcomposition of $\psi$ with the
+  projection function.
 \end{proof}
 
 \section{Generalization}
 
 We now want to prove that the distributive law above generalizes to
-the Kleene category case. We begin by showing that the ``non-standard''
+the Kozen category case. First, we have to define a natural
+transformation $K(\Set \times (-)^\Sigma) \to \Set \times (K -
+)^\Sigma$ making the appropriate diagrams commute. We decompose the
+natural transformation into two components.  The component $K(\Set
+\times (-)^\Sigma) \to \Set$ is by equipping $\Set$ with a Kozen
+category structure and then using the universal property of the free
+Kozen category. The Kozen category structure on $\Set$ is the usual
+(co)cartesian structure and $X^*$ are the lists on $X$. Therefore, it
+suffices to define a natural transformation $\Set \times (-)^\Sigma \to \Set$,
+which we define as the first projection.
+
+For the component $K(\Set \times (-)^\Sigma) \to (K - )^\Sigma$,
+we will once again use the universal property of free Kozen
+categories. We begin by showing that the ``non-standard''
 structure defined in the previous section can be extended to the
 proof-relevant setting.
 
+\pa{This is where a better understanding of what this ``non-standard''
+  construction is actually doing could come in handy. Showing that the
+  monoidal product satisfies all of the coherence diagrams is really gnarly.}
 \begin{lemma}
-  Let $\cat{K}$ and $\cat{L}$ be two Kleene categories, $F : \cat{L}
-  \to \cat{K}$ and $G : \cat{L} \to \cat{K}$ two Kleene category
-  morphisms. We can equip $\cat{K} \times \cat{L}$ with the following
-  Kleene category structure:
+  Let $\cat{K}$ and $\cat{L}$ be two Kozen categories, $F : \cat{L} \to \cat{K}$
+  and $G : \cat{L} \to \cat{K}$ two Kozen functors.
+  We can equip $\cat{K} \times \cat{L}$ with the following Kozen
+  category structure:
   \begin{itemize}
   \item $(A, X) + (B, Y) = (A + B, X + Y)$
   \item $0 = (0, 0)$
   \item $(A, X) \otimes (B, Y) = (A \otimes F(Y) + G(X) \otimes B, X \otimes Y)$
+  \item $I = (0, I)$
   \item $(A, X)^* = (A \otimes F(X^*), X^*)$
   \end{itemize}
 \end{lemma}
+
+Therefore we equip $K(\cat{C})^\Sigma \times K(\cat{C})$ with the
+Kozen category structure given by the lemma above.
+
+  In our case, we want to instantiate $F$ with the unit for the reader
+  monad $(-)^\Sigma$. The generalization of $G$ is a bit subtle, as it
+  is not enough to simply output weather a state accepts the empty
+  string or not, we have to carry around the the witnesses of such
+  parse trees. Usin the fact that $2$ is the free Kleene algebra with
+  zero generators on the empty alphabet, we instantiate $G$ to be a
+  ``prunning'' operation that factors through the free Kozen category
+  on the empty category. More concretely, we define a functor
+  $K(\cat{C}) \to K(\cat{C})^\Sigma$ by first defining a functor
+  $K(\cat{C}) \to K(\emptyset)$ by using the universal property of free
+  Kozen categories and mapping $\cat{C}$ to the constant $0$ object of
+  $K(\emptyset)$. The functor $K(\emptyset) \to K(\cat{C})^\Sigma$ is defined
+  using the fact that left adjoints preserve colimits, so $K(\emptyset)$
+  is initial in the category of Kozen categories.
+  
+
 %% \begin{proof}
 %%   Since the morphism structure is defined componentwise, it is
 %%   immediate to show that the proposed cocartesian structure is
@@ -521,51 +681,167 @@ proof-relevant setting.
 %%   components of these morphisms are more interesting:
 %% \end{proof}
 
-With this lemma and the 2-monadicity of Kleene categories over $\cat{Cat}$,
-we can define the distributive law between the proof-relevant
-DFA functor and the Kleene category 2-monad.
+
 
 \paragraph{Possible motivations}
 
 People have considered derivative-based parsing before, this would provide
 a semantic counterpart to those implementations.
 
+This should imply that the algebraic and coalgebraic semantics of regular grammars coincides?
 
-\section{Gluing Kleene categories}
+\section{Canonicity for Free Kozen Categories}
 
-The following theorems should be true
-\begin{theorem}
-  Given Kleene categories $\cat{L}$, $\cat{K}$, $\cat{K}'$
-  and functors $F : \cat{L} \to \cat{K}$, $p : \cat{K}' \to \cat{K}$
-  such that $F$ is lax monoidal such that it laxly preserves the initial
-  algebras and $p$ is a monoidal fibration strictly preserving the
-  Kleene category structure, then in the pullback diagram
-  % https://q.uiver.app/#q=WzAsNCxbMCwxLCJcXGNhdHtMfSJdLFsxLDEsIlxcY2F0e0t9Il0sWzEsMCwiXFxjYXR7S30nIl0sWzAsMCwiXFxjYXR7TH0nIl0sWzAsMSwiRiIsMl0sWzIsMSwicCJdLFszLDJdLFszLDBdLFszLDEsIiIsMSx7InN0eWxlIjp7Im5hbWUiOiJjb3JuZXIifX1dXQ==
-\[\begin{tikzcd}
-	{\cat{L}'} & {\cat{K}'} \\
-	{\cat{L}} & {\cat{K}}
-	\arrow[from=1-1, to=1-2]
-	\arrow[from=1-1, to=2-1]
-	\arrow["\lrcorner"{anchor=center, pos=0.125}, draw=none, from=1-1, to=2-2]
-	\arrow["p", from=1-2, to=2-2]
-	\arrow["F"', from=2-1, to=2-2]
-\end{tikzcd}\]
-$\cat{L}'$ is a Kleene category and the functor $\cat{L}'\to \cat{L}$ is a
-monoidal fibration strictly preserving the Kleene category structure.
+Let $\Sigma$ be a set. Then the ``standard semantics'' of the free
+Kozen category $\FKC(\Sigma)$ is the unique functor $\sem{\cdot} :
+\FKC(\Sigma) \to \Set^{\Sigma^*}$ preserving the (Day convolution)
+Kozen category structure.
+
+We first address whether we can generalize Kozen's completeness
+theorems for Kleene algebras. Firstly, the fact that the Free Kozen
+category is complete for \emph{language} inclusion and \emph{weak}
+equivalence follows immediately from the fact that the free Kleene
+algebra is equivalent to the posetal reflection of the free Kozen
+category and the completeness theorem for Kleene algebras. That is,
+for any objects $A, B \in \FKC(\Sigma)$, if $|\sem{A}| \subseteq
+|\sem{B}|$ then there is a morphism $A \to B$ in $\FKC(\Sigma)$.
+
+The immediate generalization to strong equivalence is false. For
+example, we might ask that $\sem{\cdot}$ is a \emph{full} functor,
+that any semantic reduction of the formal grammars is the denotation
+of a morphism in the free Kozen category. But consider that the
+regular grammar $1^*$ denotes a discrete grammar of natural numbers
+and so morphisms $1^* \otimes \cdots \to 1^*$ are mapped into a set of
+multi-argument functions on natural numbers. So completeness would
+imply that all functions on natural numbers can be defined in the
+syntax of the free Kozen category, which fails as all such functions
+should be primitive recursive\footnote{flesh out the
+details?}.
+
+Failing completeness for definability of reductions, we could ask that
+the \emph{equational theory} of free Kozen categories is
+complete. This means that $\sem{\cdot}$ is a \emph{faithful} functor,
+i.e., if two syntactic morphisms denote the same reduction $\sem{M} =
+\sem{N}$, then they are provably equal $M = N$. I don't know if this
+is true yet, but it seems unlikely to me.
+
+However there is a (very) restricted form of completeness that is
+true. The denotation $\sem{\cdot}$ is fully faithful when restricting
+to hom sets of the form $\FKC(\Sigma)(\lceil w \rceil, A)$. The
+significance of this is that the denotation of such a morphism is
+equivalent to $\sem{A}\,w$, the set of ``parse trees'' for the grammar
+$A$. Then fullness says that the term syntax is at least complete
+enough to describe all parse trees, and faithfulness says that the
+equational theory is at least complete enough to prove that terms that
+represent the same parse tree are provably equal. In other words, for
+every parse tree, there is a unique equivalence class of terms that
+map to it. This theorem is called canonicity because it says that all
+terms of a certain type are provably equal to a term in a
+``canonical'' form.
+
+\begin{theorem}{Canonicity}
+  The denotation $\sem{\cdot}$ is bijective when restricting to hom
+  sets of the form $\FKC(\Sigma)(\lceil w \rceil, A)$.
+\end{theorem}
+
+To prove this theorem, we first change perspective. The function
+$\lceil \cdot \rceil : \Sigma^* \to \FKC(\Sigma)$ induces a restricted
+Yoneda embedding called the ``nerve'' functor $N : \FKC(\Sigma) \to
+\Set^{\Sigma^*}$ defined by
+\[ N(A)w = \FKC(\Sigma)(\lceil w \rceil, A) \]
+The action of $\sem{\cdot}$ on the restricted hom sets then induces a
+natural transformation
+\[ u : N \Rightarrow \sem{\cdot} \]
+defined as
+\[ u_w(f : \FKC(\Sigma)(\lceil w \rceil , A)) = \sem{f}(\iota_w) : A w \]
+where $\iota_w : \sem{\lceil w \rceil} w$ is the unique parse tree
+witnessing that the grammar $Y c_1 \otimes \cdots \otimes \varepsilon$
+matches the string $c_1\cdots$. This $\iota_w$ is a universal element
+of $\sem{\lceil w \rceil}$, meaning that evaluating at $\iota_w$ is a
+bijection between $\Set^{\Sigma^*}(\sem{\lceil w \rceil}, A)$ and $A w$. So we
+have that $\sem{\cdot}$ is fully faithful on these hom sets if and
+only if $u$ is a natural isomorphism.
+
+To do this we will explicitly construct an inverse natural
+transformation $q : \sem{\cdot} \to N$ which we call ``quote'' because it quotes
+a semantic parse tree back into the syntax. $q$ can be defined
+explicitly by recursion on syntactic types and naturality proven by
+induction over syntactic terms but we will develop a more structured
+proof using the universal property of the free Kozen category.  To do
+this we need to develop a Kozen category for which constructing a
+functor from $\FKC(\Sigma)$ into it is equivalent to defining such a
+natural transformation. We can do this by using the following
+properties of \emph{comma categories}.
+
+\begin{lemma}
+  Let $F : \cat C \to \cat E$ and $G : \cat D \to \cat E$ and let $F
+  \downarrow G$ be the comma category (i.e., whose objects are
+  morphisms $F c \to G d$) with projections $p_C,p_D$.
+  \begin{enumerate}
+  \item If $\cat C, \cat D, \cat E$ have a monoidal structure for
+    which $F$ is oplax and $G$ is lax monoidal, then $F \downarrow G$
+    can be equipped with a monoidal structure such that $p_C,p_D$ are
+    strict monoidal.
+  \item If $\cat C, \cat D$ have (specified) colimits of shape
+    $\mathcal I$ and $F$ preserves colimits of shape $\mathcal I$ then
+    $F \downarrow G$ has colimits of shape $\mathcal I$ and the
+    projections (strictly) preserve them.
+  \end{enumerate}
+\end{lemma}
+
+Then we can prove the following
+\begin{theorem}[Gluing for Kozen categories]
+  Let $\cat K, \cat L, \cat M$ be Kozen categories and $\Phi : \cat K
+  \to \cat M$ be a Kozen functor and $G : \cat L \to \cat M$ be a lax
+  monoidal functor. Then $\Phi \downarrow G$ is a Kozen category, and
+  the projections are (strict) Kozen functors.
 \end{theorem}
 \begin{proof}
-  It is known from linear logic reasons that the pullback is distributive monoidal.
-  The Kleene star should be defined much like the exponential in glued models of
-  linear logic. And the projection functor is a monoidal fibration because those
-  are stable under pullback.
+  The monoidal and coproduct aspects of Kozen categories are handled
+  by the previous lemma. We need to show that the monoidal structure
+  is distributive and construct the Kleene star.
+
+  For the Kleene star object, given $f :
+  \Phi(k) \Rightarrow G l$ we define the carrier as
+  \[ \Phi(k^*) \cong \Phi(k)^* \to (G l)^* \to G l^* \]
+  where $f^* : \Phi(k)^* \to (G l)^*$ and $g : (G l)^* \to G l^*$ is
+  defined by the induced cons-structure $G l \otimes G l^* \to G (l
+  \otimes l^*) \to G l^*$ and $I \to G I \to G l^*$. Then it is
+  routine to check that the nil, cons and fold all lift to commutative
+  squares.
+
+  TODO: address the snoc-part as well, and distributivity
 \end{proof}
 
-Recently I have been enjoying comma categories a bit more, which leads me to the follwing
-conjecture:
+Then $\sem {\cdot} : \FKC(\Sigma) \to \Set^{\Sigma^*}$ is a strict
+Kozen functor and $N : \FKC(\Sigma) \to \Set^{\Sigma^*}$ is a lax
+monoidal functor, and so $\sem{\cdot}\downarrow N$ is a Kozen
+category and the projection to $\FKC(\Sigma)^2$ is a strict Kozen
+functor. Then by the universal property of $\FKC(\Sigma)$, there is a
+unique strict Kozen functor $q$ from $\FKC(\Sigma)$ to
+$\sem{\cdot}\downarrow N$ and further the composition with the
+projection to $\FKC(\Sigma)^2$ is strict Kozen and so $q$ is
+equivalent to a natural transformation $\sem{\cdot} \Rightarrow N$.
 
-\begin{conjecture}
-  The 2-category of Kleene categories has comma objects.
-\end{conjecture}
+\begin{lemma}
+  $q \circ u$ is the identity
+\end{lemma}
+\begin{proof}
+  Let $f : \FKC(\Sigma)(\lceil w \rceil, A)$, then by naturality,
+  $q(\sem{f}(\iota)) = f \circ q(\sem{\id}(\iota))$ so it suffices to
+  show that $q(\iota) = \id$. This can be confirmed by calculation by
+  induction on the length of $w$.
+\end{proof}
 
+\begin{lemma}
+  $u \circ q$ is the identity
+\end{lemma}
+\begin{proof}
+  By the universal property of $\FKC(\Sigma)$, it suffices to show
+  that $u \circ q$ and $\id$ correspond to (strict?) Kozen functors
+  from $\FKC(\Sigma)$ to $\sem{\cdot} \downarrow \sem{\cdot}$. The
+  identity part should be a general theorem, and verifying the Kozen
+  category properties is done by cases.
+\end{proof}
 
 \end{document}
