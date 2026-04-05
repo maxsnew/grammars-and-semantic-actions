@@ -28,32 +28,27 @@ instance : AlphabetStr where
 
 -- Identity: A ⊢ A
 def idMorph (A : Grammar) : A ⊢ A :=
-  [| input |]
+  [| x => x |]
 
--- Tensor intro: A ⊗ B ⊢ A ⊗ B (identity on tensor)
+-- Tensor intro: A ⊗ B ⊢ A ⊗ B (identity on tensor, single pattern)
 def tensorId (A B : Grammar) : A ⊗ B ⊢ A ⊗ B :=
-  [| input |]
+  [| x => x |]
 
--- Tensor elimination + rebuild: A ⊗ B ⊢ A ⊗ B
+-- Tensor elimination + rebuild: A ⊗ B ⊢ A ⊗ B (multi-pattern)
 def tensorLetId (A B : Grammar) : A ⊗ B ⊢ A ⊗ B :=
-  [| let (a, b) = input in (a, b) |]
+  [| a b => (a, b) |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Linear function examples
 -- ═══════════════════════════════════════════════════════════
 
--- Right lambda identity: ⊢ A ⊸ A
--- The elaborator needs an empty context for this. Let's use the escape hatch.
--- Actually, [| ... |] always starts with one input variable. For closed terms
--- we'd need a different entry point. Let's test with open terms instead.
-
 -- Evaluation: A ⊗ (A ⊸ B) ⊢ B  (argument LEFT of function → right-app)
 def evalR (A B : Grammar) : A ⊗ (A ⊸ B) ⊢ B :=
-  [| let (a, f) = input in f a |]
+  [| a f => f a |]
 
 -- Evaluation: (B ⟜ A) ⊗ A ⊢ B  (function LEFT of argument → left-app)
 def evalL (A B : Grammar) : (B ⟜ A) ⊗ A ⊢ B :=
-  [| let (f, a) = input in f a |]
+  [| f a => f a |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Sum examples
@@ -61,15 +56,15 @@ def evalL (A B : Grammar) : (B ⟜ A) ⊗ A ⊢ B :=
 
 -- Left injection: A ⊢ A ⊕ B
 def injLeftEx (A B : Grammar) : A ⊢ A ⊕ B :=
-  [| inl input |]
+  [| x => inl x |]
 
 -- Right injection: B ⊢ A ⊕ B
 def injRightEx (A B : Grammar) : B ⊢ A ⊕ B :=
-  [| inr input |]
+  [| x => inr x |]
 
 -- Case analysis: A ⊕ B ⊢ A ⊕ B (identity via case)
 def caseId (A B : Grammar) : A ⊕ B ⊢ A ⊕ B :=
-  [| case input of | inl x => inl x | inr y => inr y |]
+  [| x => case x of | inl a => inl a | inr b => inr b |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Additive product examples
@@ -77,15 +72,15 @@ def caseId (A B : Grammar) : A ⊕ B ⊢ A ⊕ B :=
 
 -- Pair: A ⊢ A & A (diagonal)
 def diag (A : Grammar) : A ⊢ A & A :=
-  [| ⟨input, input⟩ |]
+  [| x => ⟨x, x⟩ |]
 
 -- First projection: A & B ⊢ A
 def proj1 (A B : Grammar) : A & B ⊢ A :=
-  [| fst input |]
+  [| x => fst x |]
 
 -- Second projection: A & B ⊢ B
 def proj2 (A B : Grammar) : A & B ⊢ B :=
-  [| snd input |]
+  [| x => snd x |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Non-examples (should fail)
@@ -94,28 +89,28 @@ def proj2 (A B : Grammar) : A & B ⊢ B :=
 set_option linter.unusedVariables false in
 -- Contraction: A ⊢ A ⊗ A (uses variable twice — REJECTED)
 example (A : Grammar) : True := by
-  fail_if_success { have : A ⊢ A ⊗ A := [| (input, input) |] }
+  fail_if_success { have : A ⊢ A ⊗ A := [| x => (x, x) |] }
   trivial
 
 set_option linter.unusedVariables false in
 -- Exchange: A ⊗ B ⊢ B ⊗ A (reorders variables — REJECTED)
 example (A B : Grammar) : True := by
   fail_if_success {
-    have : A ⊗ B ⊢ B ⊗ A := [| let (a, b) = input in (b, a) |] }
+    have : A ⊗ B ⊢ B ⊗ A := [| a b => (b, a) |] }
   trivial
 
 set_option linter.unusedVariables false in
 -- Weakening: A ⊗ B ⊢ A (drops b — REJECTED)
 example (A B : Grammar) : True := by
   fail_if_success {
-    have : A ⊗ B ⊢ A := [| let (a, b) = input in a |] }
+    have : A ⊗ B ⊢ A := [| a b => a |] }
   trivial
 
 set_option linter.unusedVariables false in
 -- Wrong eval order: (A ⊸ B) ⊗ A ⊢ B (function LEFT of argument for ⊸ — REJECTED)
 example (A B : Grammar) : True := by
   fail_if_success {
-    have : (A ⊸ B) ⊗ A ⊢ B := [| let (f, a) = input in f a |] }
+    have : (A ⊸ B) ⊗ A ⊢ B := [| f a => f a |] }
   trivial
 
 -- ═══════════════════════════════════════════════════════════
@@ -124,15 +119,15 @@ example (A B : Grammar) : True := by
 
 -- Reassociate: (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C)
 def assocR (A B C : Grammar) : (A ⊗ B) ⊗ C ⊢ A ⊗ (B ⊗ C) :=
-  [| let (ab, c) = input in
-     let (a, b) = ab in
-     (a, (b, c)) |]
+  [| ab c => let (a, b) = ab in (a, (b, c)) |]
 
 -- Reassociate the other way: A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C
 def assocL (A B C : Grammar) : A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C :=
-  [| let (a, bc) = input in
-     let (b, c) = bc in
-     ((a, b), c) |]
+  [| a bc => let (b, c) = bc in ((a, b), c) |]
+
+-- Three-pattern reassociation
+def assocR' (A B C : Grammar) : A ⊗ (B ⊗ C) ⊢ A ⊗ (B ⊗ C) :=
+  [| a b c => (a, (b, c)) |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Case + tensor mixed
@@ -140,7 +135,7 @@ def assocL (A B C : Grammar) : A ⊗ (B ⊗ C) ⊢ (A ⊗ B) ⊗ C :=
 
 -- Distribute: A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C)
 def distribute (A B C : Grammar) : A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C) :=
-  [| let (a, bc) = input in
+  [| a bc =>
      case bc of
      | inl b => inl (a, b)
      | inr c => inr (a, c) |]
@@ -151,7 +146,7 @@ def distribute (A B C : Grammar) : A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C) :
 
 -- Right curry: (A ⊗ B ⊸ C) ⊢ (B ⊸ (A ⊸ C))
 def curryR (A B C : Grammar) : (A ⊗ B) ⊸ C ⊢ B ⊸ (A ⊸ C) :=
-  [| fun (b : B) => fun (a : A) => input (a, b) |]
+  [| g => fun (b : B) => fun (a : A) => g (a, b) |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Escape hatch example
@@ -160,30 +155,96 @@ def curryR (A B C : Grammar) : (A ⊗ B) ⊸ C ⊢ B ⊸ (A ⊸ C) :=
 def myMorph (A : Grammar) : A ⊢ A := fun _ a => a
 
 def escapedId (A : Grammar) : A ⊢ A :=
-  [| #[myMorph A] input |]
+  [| x => #[myMorph A] x |]
 
 -- Chain two morphisms
 def escapedChain (A B C : Grammar) (f : A ⊢ B) (g : B ⊢ C) : A ⊢ C :=
-  [| #[g] (#[f] input) |]
+  [| x => #[g] (#[f] x) |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Nonlinear type dependence
 -- ═══════════════════════════════════════════════════════════
 
--- The grammar can depend on a nonlinear parameter.
--- Here `F x` is a grammar that depends on an ordinary Lean value `x : X`.
--- The elaborator handles this because type annotations are elaborated by Lean.
 def idParam (X : Type) (F : X → Grammar) (x : X) : F x ⊢ F x :=
-  [| input |]
+  [| v => v |]
 
 -- Tensor of dependent grammars
 def tensorParam (X : Type) (F : X → Grammar) (x y : X) :
     F x ⊗ F y ⊢ F x ⊗ F y :=
-  [| let (a, b) = input in (a, b) |]
+  [| a b => (a, b) |]
 
 -- Nonlinear control flow: the grammar depends on a Bool
 def selectGrammar (A B : Grammar) (b : Bool) :
     (if b then A else B) ⊢ (if b then A else B) :=
-  [| input |]
+  [| x => x |]
+
+-- ═══════════════════════════════════════════════════════════
+-- Indexed product / coproduct examples
+-- ═══════════════════════════════════════════════════════════
+
+-- Indexed product intro: A ⊢ &[x ∈ X] A  (constant family)
+def idxProdConst (X : Type) (A : Grammar) : A ⊢ &[x ∈ X] A :=
+  [| v => Λ (x : X) => v |]
+
+-- Indexed product elim (projection): &[x ∈ Bool] F x ⊢ F true
+def idxProdProj (F : Bool → Grammar) : &[x ∈ Bool] F x ⊢ F true :=
+  [| v => v ⌈true⌉ |]
+
+-- Indexed coproduct intro: F true ⊢ ⊕[x ∈ Bool] F x
+def idxCoprodInj (F : Bool → Grammar) : F true ⊢ ⊕[x ∈ Bool] F x :=
+  [| v => σ⟨true, v⟩ |]
+
+-- Indexed coproduct elim: ⊕[x ∈ Bool] F x ⊢ ⊕[x ∈ Bool] F x
+def idxCoprodCase (F : Bool → Grammar) : ⊕[x ∈ Bool] F x ⊢ ⊕[x ∈ Bool] F x :=
+  [| v => caseDep v of | σ⟨x, y⟩ => σ⟨x, y⟩ |]
+
+-- ═══════════════════════════════════════════════════════════
+-- Sorry support
+-- ═══════════════════════════════════════════════════════════
+
+def sorryEx (A B : Grammar) : A ⊢ B := [| x => sorry |]
+def sorryLet (A B C : Grammar) : A ⊗ B ⊢ C := [| a b => sorry |]
+
+-- ═══════════════════════════════════════════════════════════
+-- Product patterns
+-- ═══════════════════════════════════════════════════════════
+
+-- First projection via product pattern
+def prodPatFst (A B : Grammar) : A & B ⊢ A := [| ⟨a, b⟩ => a |]
+
+-- Second projection via product pattern
+def prodPatSnd (A B : Grammar) : A & B ⊢ B := [| ⟨a, b⟩ => b |]
+
+-- Product pattern identity
+def prodPatId (A B : Grammar) : A & B ⊢ A & B := [| ⟨a, b⟩ => ⟨a, b⟩ |]
+
+-- Product pattern with tensor
+def prodTensor (A B C : Grammar) : (A & B) ⊗ C ⊢ A ⊗ C := [| ⟨a, b⟩ c => (a, c) |]
+
+-- Product pattern contraction (should fail)
+set_option linter.unusedVariables false in
+example (A B : Grammar) : True := by
+  fail_if_success { have : A & B ⊢ A ⊗ B := [| ⟨a, b⟩ => (a, b) |] }
+  trivial
+
+-- ═══════════════════════════════════════════════════════════
+-- grammar_inductive examples
+-- ═══════════════════════════════════════════════════════════
+
+grammar_inductive StarG (A : Grammar) where
+  | nil : Epsilon
+  | cons : A ⊗ StarG A
+
+def starNil (A : Grammar) : Epsilon ⊢ StarG A :=
+  [| x => fold nil x |]
+
+def starCons (A : Grammar) : A ⊗ StarG A ⊢ StarG A :=
+  [| x => fold cons x |]
+
+-- rec: eliminate a StarG value
+def starToSelf (A : Grammar) : StarG A ⊢ StarG A :=
+  [| x => rec x of
+     | nil y => fold nil y
+     | cons y => fold cons y |]
 
 end LambekD.ElabExamples

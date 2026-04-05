@@ -298,3 +298,6 @@ paper-difforigin/*
 
 .lake
 */.lake/*
+/Lean/LambekD/*.lean#
+*.scr
+/src/_build/
