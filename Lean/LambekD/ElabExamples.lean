@@ -236,15 +236,74 @@ grammar_inductive StarG (A : Grammar) where
   | cons : A ⊗ StarG A
 
 def starNil (A : Grammar) : Epsilon ⊢ StarG A :=
-  [| x => fold nil x |]
+  [| x => nil x |]
 
 def starCons (A : Grammar) : A ⊗ StarG A ⊢ StarG A :=
-  [| x => fold cons x |]
+  [| x => cons x |]
+
+-- let-tensor + constructor
+def starConsLet (A : Grammar) : A ⊗ StarG A ⊢ StarG A :=
+  [| x => let (a, s) = x in cons (a, s) |]
 
 -- rec: eliminate a StarG value
 def starToSelf (A : Grammar) : StarG A ⊢ StarG A :=
   [| x => rec x of
-     | nil y => fold nil y
-     | cons y => fold cons y |]
+     | nil y => nil y
+     | cons y => cons y |]
+
+-- ═══════════════════════════════════════════════════════════
+-- Constructor auto-detect (sugar for `fold ctor arg`)
+-- ═══════════════════════════════════════════════════════════
+
+-- Using constructor name directly instead of `fold`
+def starNil' (A : Grammar) : Epsilon ⊢ StarG A :=
+  [| x => nil x |]
+
+def starCons' (A : Grammar) : A ⊗ StarG A ⊢ StarG A :=
+  [| x => cons x |]
+
+-- ═══════════════════════════════════════════════════════════
+-- Multi-tensor grammar_inductive (Dyck grammar)
+-- ═══════════════════════════════════════════════════════════
+
+grammar_inductive Dyck where
+  | nil : Epsilon
+  | cons : Literal Paren.lparen ⊗ Dyck ⊗ Literal Paren.rparen ⊗ Dyck
+
+-- Constructor application without `fold` keyword
+def dyckCons : Literal Paren.lparen ⊗ Dyck ⊗ Literal Paren.rparen ⊗ Dyck ⊢ Dyck :=
+  [| x => cons x |]
+
+-- Explicit `fold` still works
+def dyckConsExplicit : Literal Paren.lparen ⊗ Dyck ⊗ Literal Paren.rparen ⊗ Dyck ⊢ Dyck :=
+  [| x => fold cons x |]
+
+-- Simple nil fold (to isolate rec issue)
+def dyckNil : Epsilon ⊢ Dyck :=
+  [| x => fold nil x |]
+
+-- rec with multi-tensor constructor
+def dyckToSelf : Dyck ⊢ Dyck :=
+  [| x => rec x of
+     | nil y => nil y
+     | cons y => cons y |]
+
+-- let-unit test
+def letUnit (A : Grammar) : Epsilon ⊗ A ⊢ A :=
+  [| x a => let ⟨⟩ = x in a |]
+
+-- Nonempty instance needed for `partial` definitions
+noncomputable instance (A B : Grammar) : Nonempty (A ⊢ B) := ⟨fun _ _ => sorry⟩
+
+partial def append : Dyck ⊗ Dyck ⊢ Dyck :=
+  [| d d' => rec d of
+     -- some sort of nullary let for epsilon elimination
+     | nil x => let () = x in d'
+     -- multi arity pattern match
+     | cons lp e rp e' =>
+       -- multi arity constructors, function application,
+       -- and can recurse using append
+       cons lp e rp (append e' d')
+   |]
 
 end LambekD.ElabExamples

@@ -21,7 +21,7 @@ structure Splitting (w : String) where
   right : String
   eq : left ++ right = w
 
-def splitting (l r : String) : Splitting (l ++ r) := ⟨l, r, rfl⟩
+@[reducible] def splitting (l r : String) : Splitting (l ++ r) := ⟨l, r, rfl⟩
 
 structure Tensor (A B : Grammar) (w : String) where
   split : Splitting w
@@ -70,6 +70,28 @@ def elimEpsilon (C : String → Sort _) {w : String}
 -- Using an index allows recursive occurrences to be partially applied (e.g., `StarG A`
 -- inside `A ⊗ StarG A`), which is required for grammar-level recursive types.
 -- Tensor (⊗) in ctor types is flattened to avoid Lean's nested inductive restrictions.
+
+/-- Walk right-associated tensor syntax `A ⊗ (B ⊗ (C ⊗ D))` and collect `#[A, B, C, D]`. -/
+partial def collectTensorComponents (ty : Lean.Syntax) : Array (Lean.TSyntax `term) :=
+  if ty.getKind == `LambekD.«term_⊗_» then
+    #[⟨ty[0]⟩] ++ collectTensorComponents ty[2]
+  else #[⟨ty⟩]
+
+partial def buildTensorCtorTy (components : Array (Lean.TSyntax `term))
+    (prev : Lean.TSyntax `term) (retTy : Lean.TSyntax `term) (idx : Nat)
+    : Lean.MacroM (Lean.TSyntax `term) := do
+  if components.size == 0 then
+    return retTy
+  else if components.size == 1 then
+    let comp := components[0]!
+    `(($comp) $prev → $retTy)
+  else
+    let sName := Lean.mkIdent (Lean.Name.mkSimple s!"s{idx}")
+    let comp := components[0]!
+    let rest := components[1:]
+    let inner ← buildTensorCtorTy rest.toArray (← `(Splitting.right $sName)) retTy (idx + 1)
+    `(∀ ($sName : Splitting $prev), ($comp) (Splitting.left $sName) → $inner)
+
 open Lean Elab Command in
 elab "grammar_inductive " name:ident params:bracketedBinder* " where"
     ctors:(ppLine "| " ident " : " term)* : command => do
@@ -99,13 +121,11 @@ elab "grammar_inductive " name:ident params:bracketedBinder* " where"
     let c := ctor.raw[1]
     let ty : TSyntax `term := ⟨ctor.raw[3]⟩
     -- Detect tensor: if ty has kind `LambekD.«term_⊗_»`, flatten to avoid nested inductive
-    -- A ⊗ B → ∀ (w : String) (s : Splitting w), A s.left → B s.right → RetTy w
+    -- A ⊗ B ⊗ C → ∀ (w : String) (s0 : Splitting w), A s0.left → ∀ (s1 : Splitting s0.right), B s1.left → C s1.right → RetTy
     let ctorTy ← if ty.raw.getKind == `LambekD.«term_⊗_» then do
-      let tyL : TSyntax `term := ⟨ty.raw[0]⟩
-      let tyR : TSyntax `term := ⟨ty.raw[2]⟩
-      let s := mkIdent `s
-      `(∀ ($w : LambekD.String) ($s : Splitting $w),
-          ($tyL) (Splitting.left $s) → ($tyR) (Splitting.right $s) → $retTy)
+      let components := collectTensorComponents ty.raw
+      let inner ← liftMacroM <| buildTensorCtorTy components w retTy 0
+      `(∀ ($w : LambekD.String), $inner)
     else
       `(∀ ($w : LambekD.String), ($ty) $w → $retTy)
     let typeSpec := Syntax.node SourceInfo.none ``Lean.Parser.Term.typeSpec
@@ -170,6 +190,7 @@ syntax "tt" : gterm
 syntax "(" gterm ", " gterm ")" : gterm
 syntax "let" "(" ident ", " ident ")" "=" gterm "in" gterm : gterm
 syntax "let" "⟨⟩" "=" gterm "in" gterm : gterm
+syntax "let" "(" ")" "=" gterm "in" gterm : gterm
 syntax "fun" "(" ident ":" term ")" "=>" gterm : gterm
 syntax "funL" "(" ident ":" term ")" "=>" gterm : gterm
 syntax:10 gterm:10 gterm:11 : gterm
@@ -187,7 +208,7 @@ syntax gterm:10 "⌈" term "⌉" : gterm
 syntax "σ⟨" term ", " gterm "⟩" : gterm
 syntax "caseDep" gterm "of" "|" "σ⟨" ident ", " ident "⟩" "=>" gterm : gterm
 syntax "fold" ident gterm:11 : gterm
-syntax (name := recGterm) "rec" gterm "of" ("|" ident ident "=>" gterm)* : gterm
+syntax (name := recGterm) "rec" gterm "of" ("|" ident ident+ "=>" gterm)* : gterm
 syntax "sorry" : gterm
 syntax "(" gterm ")" : gterm
 
@@ -274,6 +295,22 @@ def replaceSlice (ctx : OrderedCtx) (start stop tStart tStop : Nat)
   let newStart := start
   let newStop := start + (tStart - start) + newVars.size + (stop - tStop)
   (newCtx, newStart, newStop)
+
+/-- Abstract a type over a string variable to form a Grammar, with eta-reduction.
+    If `ty = F wVar` where `F` doesn't reference `wVar`, returns `F` directly
+    instead of `fun wVar => F wVar`. -/
+def abstractGrammar (wVar : Expr) (ty : Expr) : TermElabM Expr := do
+  -- Check if ty is `F wVar` where F doesn't contain wVar
+  if ty.isApp then
+    let fn := ty.appFn!
+    let arg := ty.appArg!
+    if arg == wVar && !fn.containsFVar wVar.fvarId! then
+      return fn
+  mkLambdaFVars #[wVar] ty
+
+/-- Like `abstractGrammar` but first does `Expr.replace` to swap `oldVar` for `wVar`. -/
+def abstractGrammarReplace (wVar : Expr) (ty : Expr) (oldVar : Expr) : TermElabM Expr :=
+  abstractGrammar wVar (ty.replace fun e => if e == oldVar then some wVar else none)
 
 def mkGrammarTy (cfg : ElabConfig) : MetaM Expr :=
   mkArrow cfg.stringTy (mkSort (.succ cfg.gramLevel))
@@ -475,36 +512,207 @@ def resolveCtorName (cfg : ElabConfig) (goal : Expr) (ctorName : Name)
       | throwError "constructor '{fullCtorName}' not found"
     return fullCtorName
 
-/-- Check if a constructor is tensor-flattened by inspecting its type.
-    Returns true if the ctor takes (w, Splitting w, left, right, → RetTy). -/
-def isTensorCtor (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
-    : TermElabM Bool := do
+/-- Like `resolveCtorName` but returns `Option Name` instead of throwing. -/
+def tryResolveCtorName (cfg : ElabConfig) (goal : Expr) (ctorName : Name)
+    : TermElabM (Option Name) := do
+  try
+    let name ← resolveCtorName cfg goal ctorName
+    return some name
+  catch _ =>
+    return none
+
+/-- Instantiate a ctor with the inductive's universe levels and parameters.
+    Returns (ctorTypeAfterParams, ctorConst, params) or `none`. -/
+def instantiateCtorFull (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
+    : TermElabM (Option (Expr × Expr × Array Expr)) := do
   withLocalDecl `w .default cfg.stringTy fun w => do
     let goalW ← whnf (mkApp goal w)
     let indName := goalW.getAppFn.constName!
     let env ← getEnv
-    let some ci := env.find? fullCtorName | return false
-    let some indVal := getInductiveVal env indName | return false
+    let some ci := env.find? fullCtorName | return none
+    let some indVal := getInductiveVal env indName | return none
     let numParams := indVal.numParams
     let args := goalW.getAppArgs
     let paramsOnly := args[:numParams]
-    let ctorInst := ci.type.instantiateLevelParams ci.levelParams
-      (goalW.getAppFn.constLevels!)
+    let indLevels := goalW.getAppFn.constLevels!
+    -- Map ctor level params to concrete levels from goal
+    let ctorLevels := ci.levelParams.map fun lp =>
+      match indLevels.zip indVal.levelParams |>.find? (·.2 == lp) with
+      | some (l, _) => l
+      | none => .zero
+    let ctorConst := Lean.mkConst fullCtorName ctorLevels
+    let ctorInst := ci.type.instantiateLevelParams ci.levelParams ctorLevels
     let mut ty := ctorInst
     for p in paramsOnly do
       match ty with
       | .forallE _ _ body _ => ty := body.instantiate1 p
-      | _ => return false
+      | _ => return none
+    return some (ty, ctorConst, paramsOnly.toArray)
+
+/-- Count the number of Splitting binders in a ctor type after the `w` parameter.
+    Returns 0 if not tensor-flattened. -/
+def countTensorSplittings (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
+    : TermElabM Nat := do
+  let some (ty, _, _) ← instantiateCtorFull cfg goal fullCtorName | return 0
+  withLocalDecl `w .default cfg.stringTy fun w => do
     -- ty: ∀ (w : String), ... → RetTy w
     match ty with
     | .forallE _ _ afterW _ =>
-      let afterWInst := afterW.instantiate1 w
-      match afterWInst with
-      | .forallE _ splitTy _ _ =>
-        let splitTyW ← whnf splitTy
-        return splitTyW.getAppFn.isConstOf ``Splitting
-      | _ => return false
-    | _ => return false
+      let mut body := afterW.instantiate1 w
+      let mut count := 0
+      -- Count consecutive Splitting binders (each followed by a component)
+      while true do
+        match body with
+        | .forallE _ splitTy afterS _ =>
+          let splitTyW ← whnf splitTy
+          if splitTyW.getAppFn.isConstOf ``Splitting then
+            count := count + 1
+            -- Skip the splitting binder and the left-component binder
+            let sVar ← mkFreshExprMVar (some splitTyW)
+            let afterSInst := afterS.instantiate1 sVar
+            match afterSInst with
+            | .forallE _ _ rest _ =>
+              let dummy ← mkFreshExprMVar none
+              body := rest.instantiate1 dummy
+            | _ => break
+          else
+            break
+        | _ => break
+      return count
+    | _ => return 0
+
+/-- Check if a constructor is tensor-flattened. -/
+def isTensorCtor (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
+    : TermElabM Bool := do
+  let n ← countTensorSplittings cfg goal fullCtorName
+  return n > 0
+
+/-- Recursively decompose a tensor value to produce ctor args for a multi-tensor flattened ctor.
+    `body` is the ctor type after params + w. For each Splitting binder, extracts `.split`, `.fst`,
+    and recurses into `.snd`. Returns the array of args to pass to the ctor. -/
+partial def decomposeTensorForCtor (tExpr : Expr) (body : Expr) : TermElabM (Array Expr) := do
+  -- body should be: ∀ (s : Splitting prev), compTy s.left → rest...
+  match body with
+  | .forallE _ splitTy afterS _ =>
+    let splitTyW ← whnf splitTy
+    if splitTyW.getAppFn.isConstOf ``Splitting then
+      -- This is a splitting binder → tensor component
+      let splitE ← mkAppM ``Tensor.split #[tExpr]
+      let fstE ← mkAppM ``Tensor.fst #[tExpr]
+      -- Skip past (s : Splitting _) and (a : compTy s.left)
+      -- Peek at what comes after the component binder
+      let sVar ← mkFreshExprMVar (some splitTyW)
+      let afterSInst := afterS.instantiate1 sVar
+      match afterSInst with
+      | .forallE _ _ rest _ =>
+        let dummy ← mkFreshExprMVar none
+        let restBody := rest.instantiate1 dummy
+        -- Check if there's another Splitting after this
+        match restBody with
+        | .forallE _ nextSplitTy _ _ =>
+          let nextSplitTyW ← whnf nextSplitTy
+          if nextSplitTyW.getAppFn.isConstOf ``Splitting then
+            -- More tensor components: recurse into .snd
+            let sndE ← mkAppM ``Tensor.snd #[tExpr]
+            let innerArgs ← decomposeTensorForCtor sndE restBody
+            return #[splitE, fstE] ++ innerArgs
+          else
+            -- Last component (not a Splitting) → this is the rightmost element
+            let sndE ← mkAppM ``Tensor.snd #[tExpr]
+            return #[splitE, fstE, sndE]
+        | _ =>
+          -- No more foralls → this is the return type, so snd is last component
+          let sndE ← mkAppM ``Tensor.snd #[tExpr]
+          return #[splitE, fstE, sndE]
+      | _ => throwError "unexpected tensor ctor shape in decomposeTensorForCtor"
+    else
+      -- Not a splitting → shouldn't happen for tensor ctors
+      return #[tExpr]
+  | _ => return #[tExpr]
+
+/-- CPS helper for rec branches of tensor-flattened constructors.
+    Walks the ctor type body (after params + w), introduces `withLocalDecl` for each
+    splitting and component variable, and builds the reconstructed tensor value from inside out.
+    Calls `k` with (all introduced fvars, tensor value, tensor grammar). -/
+partial def withTensorCtorBinders (cfg : ElabConfig) (body : Expr)
+    (k : Array Expr → Expr → Expr → TermElabM Expr) : TermElabM Expr := do
+  match body with
+  | .forallE _ splitTy afterS _ =>
+    let splitTyW ← whnf splitTy
+    if !splitTyW.getAppFn.isConstOf ``Splitting then
+      throwError "withTensorCtorBinders: expected Splitting, got {← ppExpr splitTyW}"
+    withLocalDecl `s .default splitTy fun sVar => do
+      let sLeft ← mkAppM ``Splitting.left #[sVar]
+      let sRight ← mkAppM ``Splitting.right #[sVar]
+      let afterSInst := afterS.instantiate1 sVar
+      match afterSInst with
+      | .forallE _ leftTy rest _ =>
+        withLocalDecl `a .default leftTy fun aVar => do
+          let leftGram ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+            abstractGrammarReplace ww leftTy sLeft
+          let restInst := rest.instantiate1 aVar
+          -- Check if rest starts with another Splitting (more tensor components)
+          match restInst with
+          | .forallE _ nextSplitTy _ _ =>
+            let nextSplitTyW ← whnf nextSplitTy
+            if nextSplitTyW.getAppFn.isConstOf ``Splitting then
+              -- Recurse into more tensor components
+              withTensorCtorBinders cfg restInst fun innerFvars innerVal innerGram => do
+                let tensorVal ← mkAppM ``Tensor.mk #[sVar, aVar, innerVal]
+                let tensorGram ← mkAppM ``Tensor #[leftGram, innerGram]
+                k (#[sVar, aVar] ++ innerFvars) tensorVal tensorGram
+            else
+              -- Last component: `restInst` is `rightTy → RetTy`
+              withLocalDecl `b .default nextSplitTy fun bVar => do
+                let rightGram ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+                  abstractGrammarReplace ww nextSplitTy sRight
+                let tensorVal ← mkAppM ``Tensor.mk #[sVar, aVar, bVar]
+                let tensorGram ← mkAppM ``Tensor #[leftGram, rightGram]
+                k #[sVar, aVar, bVar] tensorVal tensorGram
+          | _ =>
+            throwError "withTensorCtorBinders: unexpected shape after component"
+      | _ => throwError "withTensorCtorBinders: expected component after Splitting"
+  | _ => throwError "withTensorCtorBinders: expected forallE with Splitting"
+
+/-- CPS helper for multi-arity rec patterns. Walks a tensor-flattened ctor type (after params + w),
+    introducing `withLocalDecl` for each splitting and component variable.
+    Calls `k` with (all fvars, array of (grammar, strExpr, parseExpr) per component). -/
+partial def withTensorCtorComponents (cfg : ElabConfig) (body : Expr)
+    (k : Array Expr → Array (Expr × Expr × Expr) → TermElabM Expr) : TermElabM Expr := do
+  match body with
+  | .forallE _ splitTy afterS _ =>
+    let splitTyW ← whnf splitTy
+    if !splitTyW.getAppFn.isConstOf ``Splitting then
+      throwError "withTensorCtorComponents: expected Splitting, got {← ppExpr splitTyW}"
+    withLocalDecl `s .default splitTy fun sVar => do
+      let sLeft ← mkAppM ``Splitting.left #[sVar]
+      let sRight ← mkAppM ``Splitting.right #[sVar]
+      let afterSInst := afterS.instantiate1 sVar
+      match afterSInst with
+      | .forallE _ leftTy rest _ =>
+        withLocalDecl `a .default leftTy fun aVar => do
+          let leftGram ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+            abstractGrammarReplace ww leftTy sLeft
+          let restInst := rest.instantiate1 aVar
+          let comp := (leftGram, sLeft, aVar)
+          match restInst with
+          | .forallE _ nextSplitTy _ _ =>
+            let nextSplitTyW ← whnf nextSplitTy
+            if nextSplitTyW.getAppFn.isConstOf ``Splitting then
+              -- More tensor components: recurse
+              withTensorCtorComponents cfg restInst fun innerFvars innerComps => do
+                k (#[sVar, aVar] ++ innerFvars) (#[comp] ++ innerComps)
+            else
+              -- Last component
+              withLocalDecl `b .default nextSplitTy fun bVar => do
+                let rightGram ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+                  abstractGrammarReplace ww nextSplitTy sRight
+                let lastComp := (rightGram, sRight, bVar)
+                k #[sVar, aVar, bVar] #[comp, lastComp]
+          | _ =>
+            throwError "withTensorCtorComponents: unexpected shape after component"
+      | _ => throwError "withTensorCtorComponents: expected component after Splitting"
+  | _ => throwError "withTensorCtorComponents: expected forallE with Splitting"
 
 partial def elaborateOrderedTerm
     (cfg : ElabConfig)
@@ -595,10 +803,12 @@ partial def elaborateOrderedTerm
     let wLeft ← concatStrs cfg ctx start k
     let wRight ← concatStrs cfg ctx k stop
     let wFull ← concatStrs cfg ctx start stop
-    let sp ← mkAppM ``LambekD.splitting #[wLeft, wRight]
-    let tensor ← mkAppM ``Tensor.mk #[sp, e₁, e₂]
-    -- tensor : goal (wLeft ++ wRight). Cast to goal wFull if they differ.
     let wLR ← mkAppM ``HAppend.hAppend #[wLeft, wRight]
+    let rflExpr ← mkEqRefl wLR
+    let sp ← mkAppOptM ``Splitting.mk #[none, none, some wLeft, some wRight, some rflExpr]
+    -- Provide A, B explicitly to avoid mkAppM failing to infer through struct projection
+    let tensor ← mkAppOptM ``Tensor.mk #[none, some goalA, some goalB, none, some sp, some e₁, some e₂]
+    -- tensor : goal (wLeft ++ wRight). Cast to goal wFull if they differ.
     if ← isDefEq wLR wFull then
       return tensor
     else
@@ -657,7 +867,14 @@ partial def elaborateOrderedTerm
   -- ─── Let-unit ───────────────────────────────────────────
   | `(gterm| let ⟨⟩ = $t in $body) => do
     let (tStart, tStop) ← locateVars t ctx start stop aliases
-    let epsConst ← mkAppM ``Epsilon #[]
+    -- Build Epsilon grammar directly: fun w => ULift.{gramLevel,0} (PLift.{0} (w = []))
+    -- Using explicit universe levels to avoid inference issues with mkAppM
+    let epsConst ← withLocalDecl `_w .default cfg.stringTy fun ww => do
+      let nilExpr ← mkAppOptM ``List.nil #[some cfg.alphabetTy]
+      let eqTy ← mkEq ww nilExpr
+      let pliftTy := mkApp (mkConst ``PLift [.zero]) eqTy
+      let uliftTy := mkApp (mkConst ``ULift [cfg.gramLevel, .zero]) pliftTy
+      mkLambdaFVars #[ww] uliftTy
     let tExpr ← elaborateOrderedTerm cfg t ctx tStart tStop epsConst aliases
     let wAfter ← concatStrs cfg ctx tStop stop
     let motiveC ← withLocalDecl `s .default cfg.stringTy fun s => do
@@ -671,6 +888,11 @@ partial def elaborateOrderedTerm
     let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[]
     let bodyExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
     mkAppM ``elimEpsilon #[motiveC, tExpr, bodyExpr]
+
+  -- ─── Let-unit (parentheses alias) ──────────────────────
+  | `(gterm| let ( ) = $t in $body) => do
+    let stx' ← `(gterm| let ⟨⟩ = $t in $body)
+    elaborateOrderedTerm cfg stx' ctx start stop goal aliases
 
   -- ─── Right lambda ───────────────────────────────────────
   | `(gterm| fun ($x:ident : $tyStx) => $body) => do
@@ -698,6 +920,75 @@ partial def elaborateOrderedTerm
 
   -- ─── Application ────────────────────────────────────────
   | `(gterm| $f $a) => do
+    -- Collect full application spine: `f a b c` (parsed as `(((f a) b) c)`) → `(head, #[a, b, c])`
+    let appKind := stx.raw.getKind
+    let rec collectSpine (s : Syntax) (acc : Array (TSyntax `gterm))
+        : TSyntax `gterm × Array (TSyntax `gterm) :=
+      if s.getKind == appKind && s.getNumArgs == 2 then
+        collectSpine s[0] (#[⟨s[1]⟩] ++ acc)
+      else
+        (⟨s⟩, acc)
+    let (head, allArgs) := collectSpine stx.raw #[]
+    -- Check if head is an ident (potential constructor or external function)
+    if let `(gterm| $c:ident) := head then
+      let name := c.getId
+      let isLinVar := (List.range (stop - start)).any fun i =>
+        (ctx.getV (start + i)).userName == name
+      let isAlias := aliases.contains name
+      if !isLinVar && !isAlias then do
+        -- Try constructor (single-arg or multi-arg)
+        if let some fullCtorName ← tryResolveCtorName cfg goal name then
+          if allArgs.size == 1 then
+            -- Single arg: existing fold behavior
+            let foldStx ← `(gterm| fold $c $(allArgs[0]!))
+            return ← elaborateOrderedTerm cfg foldStx ctx start stop goal aliases
+          else
+            -- Multi-arg constructor: build right-nested pair and fold
+            let nSplittings ← countTensorSplittings cfg goal fullCtorName
+            if nSplittings == 0 then
+              throwError "constructor '{name}' takes 1 argument, got {allArgs.size}"
+            let expectedArgs := nSplittings + 1
+            if allArgs.size != expectedArgs then
+              throwError "constructor '{name}' expects {expectedArgs} arguments, got {allArgs.size}"
+            -- Build right-nested pair: (a₁, (a₂, (a₃, a₄)))
+            let mut pairStx := allArgs[allArgs.size - 1]!
+            for i in List.range (allArgs.size - 1) do
+              let idx := allArgs.size - 2 - i
+              pairStx ← `(gterm| ($(allArgs[idx]!), $pairStx))
+            let foldStx ← `(gterm| fold $c $pairStx)
+            return ← elaborateOrderedTerm cfg foldStx ctx start stop goal aliases
+        -- Try external function (Lean-level definition with type A ⊢ B)
+        else
+          let s ← saveState
+          let resolved ← try
+            let gramTy ← mkGrammarTy cfg
+            let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
+            let fExpectedTy ← withLocalDecl `w .default cfg.stringTy fun w => do
+              let aw ← whnf (mkApp mA w)
+              let bw ← whnf (mkApp goal w)
+              let fnBody ← mkArrow aw bw
+              mkForallFVars #[w] fnBody
+            let fExpr ← Lean.Elab.Term.elabTerm (← `($c)) (some fExpectedTy)
+            let gramA ← instantiateMVars mA
+            pure (some (fExpr, gramA))
+          catch _ =>
+            restoreState s
+            pure none
+          if let some (fExpr, gramA) := resolved then
+            -- Build argument (single or multi-arg)
+            let argStx ← if allArgs.size == 1 then
+              pure allArgs[0]!
+            else
+              -- Multi-arg: build right-nested pair
+              let mut p := allArgs[allArgs.size - 1]!
+              for i in List.range (allArgs.size - 1) do
+                let idx := allArgs.size - 2 - i
+                p ← `(gterm| ($(allArgs[idx]!), $p))
+              pure p
+            let tExpr ← elaborateOrderedTerm cfg argStx ctx start stop gramA aliases
+            let w ← concatStrs cfg ctx start stop
+            return ← mkAppM' fExpr #[w, tExpr]
+    -- Fall through: normal linear application (use original f and a)
     let fNames := collectAllIdents f
     let aNames := collectAllIdents a
     let mut fPositions : Array Nat := #[]
@@ -884,33 +1175,80 @@ partial def elaborateOrderedTerm
     let fullCtorName ← resolveCtorName cfg goal ctor.getId
     let isTensor ← isTensorCtor cfg goal fullCtorName
     let w ← concatStrs cfg ctx start stop
-    -- Get inductive params from goal for explicit application
-    let goalW ← whnf (mkApp goal w)
-    let indName := goalW.getAppFn.constName!
-    let env ← getEnv
-    let some indVal := getInductiveVal env indName
-      | throwError "'{indName}' is not an inductive type"
-    let allArgs := goalW.getAppArgs
-    let params := allArgs[:indVal.numParams]
+    -- Get ctor type with correct universe levels and params
+    let some (ctyAfterParams, ctorConst, params) ← instantiateCtorFull cfg goal fullCtorName
+      | throwError "cannot instantiate ctor '{fullCtorName}'"
+    -- ctyAfterParams: ∀ (w : String), ... → RetTy w
+    -- Extract the argument grammar from the ctor type so universe levels match exactly
+    let argGram ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+      let afterW := match ctyAfterParams with
+        | .forallE _ _ b _ => b.instantiate1 ww
+        | _ => ctyAfterParams
+      if isTensor then
+        -- Reconstruct the tensor grammar from the flattened ctor type
+        let rec buildTensorGram (body : Expr) : TermElabM Expr := do
+          match body with
+          | .forallE _ splitTy afterS _ =>
+            let splitTyW ← whnf splitTy
+            if !splitTyW.getAppFn.isConstOf ``Splitting then
+              abstractGrammar ww body
+            else
+              let sVar ← mkFreshExprMVar (some splitTyW)
+              let sLeft ← mkAppM ``Splitting.left #[sVar]
+              let afterSInst := afterS.instantiate1 sVar
+              match afterSInst with
+              | .forallE _ leftTy rest _ =>
+                let leftGram ← abstractGrammarReplace ww leftTy sLeft
+                let dummy ← mkFreshExprMVar none
+                let restBody := rest.instantiate1 dummy
+                match restBody with
+                | .forallE _ nextSplitTy _ _ =>
+                  let nextW ← whnf nextSplitTy
+                  if nextW.getAppFn.isConstOf ``Splitting then
+                    let sRight ← mkAppM ``Splitting.right #[sVar]
+                    let rightGram ← withLocalDecl `ww2 .default cfg.stringTy fun ww2 => do
+                      let restBody2 := restBody.replace fun e =>
+                        if e == sRight then some ww2 else none
+                      buildTensorGram restBody2
+                    mkAppM ``Tensor #[leftGram, rightGram]
+                  else
+                    let sRight ← mkAppM ``Splitting.right #[sVar]
+                    let rightGram ← abstractGrammarReplace ww nextSplitTy sRight
+                    mkAppM ``Tensor #[leftGram, rightGram]
+                | _ =>
+                  let sRight ← mkAppM ``Splitting.right #[sVar]
+                  let rightGram ← abstractGrammarReplace ww restBody sRight
+                  mkAppM ``Tensor #[leftGram, rightGram]
+              | _ => throwError "unexpected tensor ctor shape in fold"
+          | _ => abstractGrammar ww body
+        buildTensorGram afterW
+      else
+        -- Simple ctor: ∀ (w : String), ArgTy w → RetTy w
+        match afterW with
+        | .forallE _ argTy _ _ =>
+          abstractGrammar ww argTy
+        | _ => throwError "unexpected simple ctor shape in fold"
+    let tExpr ← elaborateOrderedTerm cfg t ctx start stop argGram aliases
     if isTensor then
-      -- Tensor ctor: the actual Lean ctor takes (params, w, split, fst, snd).
-      let gramTy ← mkGrammarTy cfg
-      let mArgGram ← mkFreshExprMVar (some gramTy) .natural `argGram
-      let tExpr ← elaborateOrderedTerm cfg t ctx start stop mArgGram aliases
-      let splitE ← mkAppM ``Tensor.split #[tExpr]
-      let fstE ← mkAppM ``Tensor.fst #[tExpr]
-      let sndE ← mkAppM ``Tensor.snd #[tExpr]
-      let mut args : Array (Option Expr) := params.toArray.map some
-      args := args.push (some w) |>.push (some splitE) |>.push (some fstE) |>.push (some sndE)
-      mkAppOptM fullCtorName args
+      -- Decompose the tensor value for the flattened ctor args
+      let afterW := match ctyAfterParams with
+        | .forallE _ _ b _ => b.instantiate1 w
+        | _ => ctyAfterParams
+      let tensorArgs ← decomposeTensorForCtor tExpr afterW
+      let mut result := ctorConst
+      for p in params do
+        result := mkApp result p
+      result := mkApp result w
+      for ta in tensorArgs do
+        result := mkApp result ta
+      return result
     else
-      -- Simple ctor: takes (params, w, arg)
-      let gramTy ← mkGrammarTy cfg
-      let mArgGram ← mkFreshExprMVar (some gramTy) .natural `argGram
-      let tExpr ← elaborateOrderedTerm cfg t ctx start stop mArgGram aliases
-      let mut args : Array (Option Expr) := params.toArray.map some
-      args := args.push (some w) |>.push (some tExpr)
-      mkAppOptM fullCtorName args
+      let mut result := ctorConst
+      for p in params do
+        result := mkApp result p
+      result := mkApp result w
+      result := mkApp result tExpr
+      return result
 
   -- ─── Escape hatch ───────────────────────────────────────
   | `(gterm| #[ $f ] $t) => do
@@ -954,11 +1292,20 @@ partial def elaborateOrderedTerm
       let numParams := indVal.numParams
       let allArgs := tGoalW.getAppArgs
       let paramsOnly := allArgs[:numParams]
-      -- Motive for index-based inductive: fun (w : String) (_ : IndTy w) => goal w
+      -- Motive: fun (w_mot : String) (_ : IndTy w_mot) => goal(before ++ w_mot ++ after)
+      -- where before/after are the context strings outside the scrutinee range.
       let motive ← withLocalDecl `w_mot .default cfg.stringTy fun wMot => do
         let indTyMot ← whnf (mkApp tGoalResolved wMot)
         withLocalDecl `t_mot .default indTyMot fun tMot => do
-          mkLambdaFVars #[wMot, tMot] (mkApp goal wMot)
+          -- Build full string with wMot replacing scrutinee's portion
+          let mut motiveStr := wMot
+          if tStop < stop then
+            let afterStr ← concatStrs cfg ctx tStop stop
+            motiveStr ← mkAppM ``HAppend.hAppend #[motiveStr, afterStr]
+          for i in List.range (tStart - start) do
+            let idx := tStart - 1 - i
+            motiveStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveStr]
+          mkLambdaFVars #[wMot, tMot] (mkApp goal motiveStr)
       -- Helper: instantiate ctor type with params, returning the remaining type
       let instantiateCtorParams (fullCtorName : Name) : TermElabM Expr := do
         let some ci := env.find? fullCtorName
@@ -976,7 +1323,7 @@ partial def elaborateOrderedTerm
       let mut branchLams : Array Expr := #[]
       for branch in branches do
         let ctorName := branch[1].getId
-        let varName := branch[2].getId
+        let varIdents := branch[2].getArgs  -- ident+ gives a null node of idents
         let body : TSyntax `gterm := ⟨branch[4]⟩
         let fullCtorName := indName ++ ctorName
         let isTensor ← isTensorCtor cfg tGoalResolved fullCtorName
@@ -987,42 +1334,44 @@ partial def elaborateOrderedTerm
           match cty with
           | .forallE _ _ afterW _ =>
             let afterWInst := afterW.instantiate1 wBr
-            if isTensor then
-              -- Tensor: (s : Splitting w) → L s.left → R s.right → IndTy w
-              match afterWInst with
-              | .forallE _ splitTy afterS _ =>
-                withLocalDecl `s .default splitTy fun sVar => do
-                let afterSInst := afterS.instantiate1 sVar
-                match afterSInst with
-                | .forallE _ leftTy afterLeft _ =>
-                  match afterLeft with
-                  | .forallE _ rightTy _ _ =>
-                    withLocalDecl `a .default leftTy fun aVar => do
-                    withLocalDecl `b .default rightTy fun bVar => do
-                      let tensorVal ← mkAppM ``Tensor.mk #[sVar, aVar, bVar]
-                      let sLeft ← mkAppM ``Splitting.left #[sVar]
-                      let sRight ← mkAppM ``Splitting.right #[sVar]
-                      let tensorGram ← mkAppM ``Tensor #[
-                        ← withLocalDecl `ww .default cfg.stringTy fun ww => do
-                          mkLambdaFVars #[ww] (leftTy.replace fun e =>
-                            if e == sLeft then some ww else none),
-                        ← withLocalDecl `ww .default cfg.stringTy fun ww => do
-                          mkLambdaFVars #[ww] (rightTy.replace fun e =>
-                            if e == sRight then some ww else none)]
-                      let tensorOV : OrderedVar := ⟨varName, tensorGram, wBr, tensorVal⟩
-                      let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[tensorOV]
-                      let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
-                      mkLambdaFVars #[wBr, sVar, aVar, bVar] branchExpr
-                  | _ => throwError "unexpected tensor ctor shape"
-                | _ => throwError "unexpected tensor ctor shape"
-              | _ => throwError "unexpected tensor ctor shape"
+            if isTensor && varIdents.size > 1 then
+              -- Multi-arity pattern: use single tensor var + nested let decomposition
+              withTensorCtorBinders cfg afterWInst fun fvars tensorVal tensorGram => do
+                let tensorName := Name.mkSimple s!"_tensor"
+                let tensorOV : OrderedVar := ⟨tensorName, tensorGram, wBr, tensorVal⟩
+                let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[tensorOV]
+                -- Build nested let-tensor: let (v0, _r0) = _t in let (v1, _r1) = _r0 in ... let (vN-2, vN-1) = _rN-3 in body
+                let names := varIdents.map (·.getId)
+                let n := names.size
+                let mut innerBody : TSyntax `gterm := body
+                for j in List.range (n - 1) do
+                  let i := n - 2 - j  -- iterate from innermost to outermost
+                  let leftName := names[i]!
+                  let rightName := if i == n - 2 then names[n - 1]! else Name.mkSimple s!"_rest{i}"
+                  let scrutName := if i == 0 then tensorName else Name.mkSimple s!"_rest{i - 1}"
+                  let leftIdent := mkIdent leftName
+                  let rightIdent := mkIdent rightName
+                  let scrutGterm ← `(gterm| $(mkIdent scrutName):ident)
+                  innerBody ← `(gterm| let ($leftIdent, $rightIdent) = $scrutGterm in $innerBody)
+                let branchExpr ← elaborateOrderedTerm cfg innerBody newCtx newStart newStop goal aliases
+                mkLambdaFVars (#[wBr] ++ fvars) branchExpr
+            else if isTensor then
+              -- Single-var tensor pattern: existing behavior
+              let varName := varIdents[0]!.getId
+              withTensorCtorBinders cfg afterWInst fun fvars tensorVal tensorGram => do
+                let tensorOV : OrderedVar := ⟨varName, tensorGram, wBr, tensorVal⟩
+                let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[tensorOV]
+                let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
+                mkLambdaFVars (#[wBr] ++ fvars) branchExpr
             else
               -- Simple: ArgTy w → IndTy w
+              if varIdents.size != 1 then
+                throwError "non-tensor constructor '{ctorName}' takes 1 argument, but pattern has {varIdents.size} variables"
+              let varName := varIdents[0]!.getId
               match afterWInst with
               | .forallE _ argTy _ _ =>
                 let argGrammar ← withLocalDecl `ww .default cfg.stringTy fun ww => do
-                  mkLambdaFVars #[ww] (argTy.replace fun e =>
-                    if e == wBr then some ww else none)
+                  abstractGrammarReplace ww argTy wBr
                 withLocalDecl varName .default argTy fun argVar => do
                   let argOV : OrderedVar := ⟨varName, argGrammar, wBr, argVar⟩
                   let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[argOV]
@@ -1039,7 +1388,24 @@ partial def elaborateOrderedTerm
       args := args.push (some tExpr)   -- target
       for lam in branchLams do
         args := args.push (some lam)
-      mkAppOptM casesOnName args
+      let casesResult ← mkAppOptM casesOnName args
+      -- casesOn returns goal(before ++ wT ++ after). If the scrutinee is a single
+      -- context position, this is definitionally equal to goal(concatStrs ctx start stop).
+      -- For multi-position scrutinees, we may need an associativity cast.
+      let fullStr ← concatStrs cfg ctx start stop
+      let mut motiveResultStr := wT
+      if tStop < stop then
+        let afterStr ← concatStrs cfg ctx tStop stop
+        motiveResultStr ← mkAppM ``HAppend.hAppend #[motiveResultStr, afterStr]
+      for i in List.range (tStart - start) do
+        let idx := tStart - 1 - i
+        motiveResultStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveResultStr]
+      if ← isDefEq motiveResultStr fullStr then
+        return casesResult
+      else
+        let strEq ← proveStrEq motiveResultStr fullStr
+        let goalEq ← mkAppM ``congrArg #[goal, strEq]
+        mkAppM ``cast #[goalEq, casesResult]
     else
       throwError "unsupported gterm syntax: {stx}"
 
