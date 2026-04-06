@@ -1,11 +1,13 @@
-import LambekD.Defs
+import LambekD.Core.Defs
 
 namespace LambekD
 
 open LambekD
 
-variable [AlphabetStr]
-variable {A B C : Grammar}
+universe uAlph
+
+variable {Alphabet : Type uAlph}
+variable {A B C : Grammar Alphabet}
 
 def prodProj₁ : A & B ⊢ A := fun w ⟨a, _⟩ => a
 
@@ -22,7 +24,7 @@ theorem prod_β₂ (f : C ⊢ A) (g : C ⊢ B) : prodProj₂ ∘g prodIntro f g 
 
 theorem prod_η (f : C ⊢ A & B) : prodIntro (prodProj₁ ∘g f) (prodProj₂ ∘g f) = f := rfl
 
-theorem prodIntro_comp (f : C ⊢ A) (g : C ⊢ B) {D : Grammar} (h : D ⊢ C) :
+theorem prodIntro_comp (f : C ⊢ A) (g : C ⊢ B) {D : Grammar Alphabet} (h : D ⊢ C) :
     prodIntro f g ∘g h = prodIntro (f ∘g h) (g ∘g h) := rfl
 
 end LambekD

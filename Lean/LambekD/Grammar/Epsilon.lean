@@ -1,11 +1,13 @@
-import LambekD.Defs
+import LambekD.Core.Defs
 
 namespace LambekD
 
 open LambekD
 
-variable [AlphabetStr]
+universe uAlph
 
-def εIntro : Epsilon ([] : String) := ⟨PLift.up rfl⟩
+variable {Alphabet : Type uAlph}
+
+def εIntro : Epsilon ([] : String Alphabet) := ⟨PLift.up rfl⟩
 
 end LambekD

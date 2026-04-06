@@ -1,11 +1,14 @@
-import LambekD.Defs
+import LambekD.Core.Defs
+import LambekD.Elab
 
 namespace LambekD
 
 open LambekD
 
-variable [AlphabetStr]
-variable {A B C D : Grammar}
+universe uAlph
+
+variable {Alphabet : Type uAlph}
+variable {A B C D : Grammar Alphabet}
 
 -- ═══════════════════════════════════════════════════════════
 -- Bifunctoriality
@@ -14,7 +17,10 @@ variable {A B C D : Grammar}
 def tensorIntro (f : A ⊢ B) (g : C ⊢ D) : A ⊗ C ⊢ B ⊗ D :=
   fun _ ⟨s, a, c⟩ => ⟨s, f _ a, g _ c⟩
 
-theorem tensorIntro_comp {E F : Grammar}
+def tensorIntro' (f : A ⊢ B) (g : C ⊢ D) : A ⊗ C ⊢ B ⊗ D :=
+  [| a c => ( #[f] a , #[g] c ) |]
+
+theorem tensorIntro_comp {E F : Grammar Alphabet}
     (f : A ⊢ B) (f' : B ⊢ E) (g : C ⊢ D) (g' : D ⊢ F) :
     tensorIntro (f' ∘g f) (g' ∘g g) = tensorIntro f' g' ∘g tensorIntro f g := rfl
 

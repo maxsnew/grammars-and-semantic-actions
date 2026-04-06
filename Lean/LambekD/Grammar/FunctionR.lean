@@ -4,8 +4,10 @@ namespace LambekD
 
 open LambekD
 
-variable [AlphabetStr]
-variable {A B C : Grammar}
+universe uAlph
+
+variable {Alphabet : Type uAlph}
+variable {A B C : Grammar Alphabet}
 
 -- ═══════════════════════════════════════════════════════════
 -- Right linear function: A ⊸ B
@@ -29,7 +31,7 @@ theorem limpR_η (f : B ⊢ A ⊸ C) :
     limpRIntro (limpRApp ∘g tensorIntro (gId A) f) = f := rfl
 
 -- Composition with the intro
-theorem limpRIntro_comp {D : Grammar} (f : A ⊗ B ⊢ C) (g : D ⊢ B) :
+theorem limpRIntro_comp {D : Grammar Alphabet} (f : A ⊗ B ⊢ C) (g : D ⊢ B) :
     limpRIntro f ∘g g = limpRIntro (f ∘g tensorIntro (gId A) g) := rfl
 
 end LambekD

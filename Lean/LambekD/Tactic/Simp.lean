@@ -1,4 +1,4 @@
-import LambekD.Tactic
+import LambekD.Tactic.Base
 import LambekD.Grammar.Tensor
 import LambekD.Grammar.Sum
 import LambekD.Grammar.Product

@@ -20,9 +20,9 @@ namespace LambekD
 universe u
 
 open CategoryTheory MonoidalCategory
-variable [AlphabetStr.{u}]
+variable {Alphabet : Type u}
 
-instance : MonoidalCategory (Grammar.{u, u}) where
+instance : MonoidalCategory (Grammar.{u, u} Alphabet) where
   tensorObj := Tensor
   whiskerLeft X _ _ f := tensorIntro (gId X) f
   whiskerRight f Z := tensorIntro f (gId Z)

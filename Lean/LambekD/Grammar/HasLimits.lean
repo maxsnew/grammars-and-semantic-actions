@@ -18,14 +18,14 @@ namespace LambekD
 universe u
 
 open CategoryTheory Limits
-variable [AlphabetStr.{u}]
+variable {Alphabet : Type u}
 
 -- ════════════════════════════════════════════════════════════
 -- Products
 -- ════════════════════════════════════════════════════════════
 
 /-- The cone for a discrete diagram given by indexed conjunction. -/
-def productCone {J : Type u} (F : Discrete J ⥤ Grammar.{u, u}) : Cone F where
+def productCone {J : Type u} (F : Discrete J ⥤ Grammar.{u, u} Alphabet) : Cone F where
   pt := IdxProduct J (F.obj ∘ Discrete.mk)
   π := {
     app j := fun w f => f (Discrete.as j)
@@ -35,7 +35,7 @@ def productCone {J : Type u} (F : Discrete J ⥤ Grammar.{u, u}) : Cone F where
   }
 
 /-- The product cone is a limit. -/
-def productConeIsLimit {J : Type u} (F : Discrete J ⥤ Grammar.{u, u}) :
+def productConeIsLimit {J : Type u} (F : Discrete J ⥤ Grammar.{u, u} Alphabet) :
     IsLimit (productCone F) where
   lift s w a j := s.π.app (Discrete.mk j) w a
   fac _ _ := rfl
@@ -43,7 +43,7 @@ def productConeIsLimit {J : Type u} (F : Discrete J ⥤ Grammar.{u, u}) :
     funext w a j
     exact congr_fun₂ (h (Discrete.mk j)) w a
 
-instance : HasProducts.{u} (Grammar.{u, u}) := fun _ =>
+instance : HasProducts.{u} (Grammar.{u, u} Alphabet) := fun _ =>
   { has_limit := fun F => ⟨⟨productCone F, productConeIsLimit F⟩⟩ }
 
 -- ════════════════════════════════════════════════════════════
@@ -51,24 +51,21 @@ instance : HasProducts.{u} (Grammar.{u, u}) := fun _ =>
 -- ════════════════════════════════════════════════════════════
 
 /-- Cone for the empty diagram, whose point is `Top`. -/
-def terminalCone.{v} [inst : AlphabetStr.{v}]
-    (F : Discrete PEmpty.{1} ⥤ @Grammar.{v, v} inst) :
-    Cone F where
-  pt := @Top.{v, v} inst
+def terminalCone (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) : Cone F where
+  pt := Top
   π := {
     app j := PEmpty.elim (Discrete.as j)
     naturality j := PEmpty.elim (Discrete.as j)
   }
 
 /-- The terminal cone is a limit. -/
-def terminalConeIsLimit.{v} [inst : AlphabetStr.{v}]
-    (F : Discrete PEmpty.{1} ⥤ @Grammar.{v, v} inst) :
+def terminalConeIsLimit (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) :
     IsLimit (terminalCone F) where
-  lift _ := @topIntro.{v, v} inst _
+  lift _ := topIntro _
   fac _ j := PEmpty.elim (Discrete.as j)
-  uniq _ m _ := @top_η.{v, v} inst _ m (@topIntro.{v, v} inst _)
+  uniq _ m _ := top_η m (topIntro _)
 
-instance : HasTerminal (Grammar.{u, u}) where
+instance : HasTerminal (Grammar.{u, u} Alphabet) where
   has_limit F := ⟨⟨terminalCone F, terminalConeIsLimit F⟩⟩
 
 -- ════════════════════════════════════════════════════════════
@@ -76,7 +73,7 @@ instance : HasTerminal (Grammar.{u, u}) where
 -- ════════════════════════════════════════════════════════════
 
 /-- The cocone for a discrete diagram given by indexed disjunction. -/
-def coproductCocone {J : Type u} (F : Discrete J ⥤ Grammar.{u, u}) : Cocone F where
+def coproductCocone {J : Type u} (F : Discrete J ⥤ Grammar.{u, u} Alphabet) : Cocone F where
   pt := IdxCoproduct J (F.obj ∘ Discrete.mk)
   ι := {
     app j w a := ⟨Discrete.as j, a⟩
@@ -86,7 +83,7 @@ def coproductCocone {J : Type u} (F : Discrete J ⥤ Grammar.{u, u}) : Cocone F 
   }
 
 /-- The coproduct cocone is a colimit. -/
-def coproductCoconeIsColimit {J : Type u} (F : Discrete J ⥤ Grammar.{u, u}) :
+def coproductCoconeIsColimit {J : Type u} (F : Discrete J ⥤ Grammar.{u, u} Alphabet) :
     IsColimit (coproductCocone F) where
   desc s w x := s.ι.app (Discrete.mk x.1) w x.2
   fac _ _ := rfl
@@ -94,7 +91,7 @@ def coproductCoconeIsColimit {J : Type u} (F : Discrete J ⥤ Grammar.{u, u}) :
     funext w ⟨j, a⟩
     exact congr_fun₂ (h (Discrete.mk j)) w a
 
-instance : HasCoproducts.{u} (Grammar.{u, u}) := fun _ =>
+instance : HasCoproducts.{u} (Grammar.{u, u} Alphabet) := fun _ =>
   { has_colimit := fun F => ⟨⟨coproductCocone F, coproductCoconeIsColimit F⟩⟩ }
 
 -- ════════════════════════════════════════════════════════════
@@ -102,24 +99,21 @@ instance : HasCoproducts.{u} (Grammar.{u, u}) := fun _ =>
 -- ════════════════════════════════════════════════════════════
 
 /-- Cocone for the empty diagram, whose point is `Bottom`. -/
-def initialCocone.{v} [inst : AlphabetStr.{v}]
-    (F : Discrete PEmpty.{1} ⥤ @Grammar.{v, v} inst) :
-    Cocone F where
-  pt := @Bottom.{v, v} inst
+def initialCocone (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) : Cocone F where
+  pt := Bottom
   ι := {
     app j := PEmpty.elim (Discrete.as j)
     naturality j := PEmpty.elim (Discrete.as j)
   }
 
 /-- The initial cocone is a colimit. -/
-def initialCoconeIsColimit.{v} [inst : AlphabetStr.{v}]
-    (F : Discrete PEmpty.{1} ⥤ @Grammar.{v, v} inst) :
+def initialCoconeIsColimit (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) :
     IsColimit (initialCocone F) where
-  desc s := @botElim.{v, v} inst _
+  desc s := botElim _
   fac _ j := PEmpty.elim (Discrete.as j)
-  uniq _ m _ := @bot_η.{v, v} inst _ m (@botElim.{v, v} inst _)
+  uniq _ m _ := bot_η m (botElim _)
 
-instance : HasInitial (Grammar.{u, u}) where
+instance : HasInitial (Grammar.{u, u} Alphabet) where
   has_colimit F := ⟨⟨initialCocone F, initialCoconeIsColimit F⟩⟩
 
 end LambekD

@@ -15,16 +15,16 @@ namespace LambekD
 universe u
 
 open CategoryTheory MonoidalCategory
-variable [AlphabetStr.{u}]
+variable {Alphabet : Type u}
 
 /-- The right internal hom functor: `B ↦ A ⊸ B` -/
-def rightClosureFunctor (A : Grammar.{u, u}) : Grammar.{u, u} ⥤ Grammar.{u, u} where
+def rightClosureFunctor (A : Grammar.{u, u} Alphabet) : Grammar.{u, u} Alphabet ⥤ Grammar.{u, u} Alphabet where
   obj B := FunctionR A B
   map f := limpRIntro (f ∘g limpRApp)
 
 /-- The adjunction `tensorLeft A ⊣ rightClosureFunctor A` witnessing
     that `A ⊸ -` is right adjoint to `A ⊗ -`. -/
-def rightClosureAdj (A : Grammar.{u, u}) : tensorLeft A ⊣ rightClosureFunctor A where
+def rightClosureAdj (A : Grammar.{u, u} Alphabet) : tensorLeft A ⊣ rightClosureFunctor A where
   unit := {
     app B w b w' a := ⟨splitting w' w, a, b⟩
     naturality _ _ _ := rfl
@@ -38,20 +38,20 @@ def rightClosureAdj (A : Grammar.{u, u}) : tensorLeft A ⊣ rightClosureFunctor 
     funext w ⟨⟨l, r, eq⟩, a, b⟩; cases eq with | refl => rfl
   right_triangle_components _ := rfl
 
-instance : MonoidalRightClosed (Grammar.{u, u}) where
+instance : MonoidalRightClosed (Grammar.{u, u} Alphabet) where
   right_closed A := {
     rightAdj := rightClosureFunctor A
     adj := rightClosureAdj A
   }
 
 /-- The left internal hom functor: `B ↦ B ⟜ A` -/
-def leftClosureFunctor (A : Grammar.{u, u}) : Grammar.{u, u} ⥤ Grammar.{u, u} where
+def leftClosureFunctor (A : Grammar.{u, u} Alphabet) : Grammar.{u, u} Alphabet ⥤ Grammar.{u, u} Alphabet where
   obj B := FunctionL B A
   map f := limpLIntro (f ∘g limpLApp)
 
 /-- The adjunction `tensorRight A ⊣ leftClosureFunctor A` witnessing
     that `- ⟜ A` is right adjoint to `- ⊗ A`. -/
-def leftClosureAdj (A : Grammar.{u, u}) : tensorRight A ⊣ leftClosureFunctor A where
+def leftClosureAdj (A : Grammar.{u, u} Alphabet) : tensorRight A ⊣ leftClosureFunctor A where
   unit := {
     app B w b w' a := ⟨splitting w w', b, a⟩
     naturality _ _ _ := rfl
@@ -65,13 +65,13 @@ def leftClosureAdj (A : Grammar.{u, u}) : tensorRight A ⊣ leftClosureFunctor A
     funext w ⟨⟨l, r, eq⟩, b, a⟩; cases eq with | refl => rfl
   right_triangle_components _ := rfl
 
-instance : MonoidalLeftClosed (Grammar.{u, u}) where
+instance : MonoidalLeftClosed (Grammar.{u, u} Alphabet) where
   left_closed A := {
     rightAdj := leftClosureFunctor A
     adj := leftClosureAdj A
   }
 
-instance : MonoidalBiclosed (Grammar.{u, u}) where
+instance : MonoidalBiclosed (Grammar.{u, u} Alphabet) where
   biclosed _ := { left_closed := inferInstance, right_closed := inferInstance }
 
 end LambekD

@@ -11,8 +11,10 @@ namespace LambekD.Tactic.Test
 
 open LambekD
 
-variable [AlphabetStr]
-variable {A B C D : Grammar}
+universe uAlph
+
+variable {Alphabet : Type uAlph}
+variable {A B C D : Grammar Alphabet}
 
 -- ═══════════════════════════════════════════════════════════
 -- grammar_ext: tensor associativity round-trips
@@ -78,7 +80,7 @@ example : tensorAssoc ∘g tensorAssocInv = gId (A := A ⊗ (B ⊗ C)) := by
 -- grammar_simp: composition laws
 -- ═══════════════════════════════════════════════════════════
 
-example {E : Grammar} (f : C ⊢ D) (g : B ⊢ C) (h : A ⊢ B) :
+example {E : Grammar Alphabet} (f : C ⊢ D) (g : B ⊢ C) (h : A ⊢ B) :
     f ∘g (g ∘g h) = (f ∘g g) ∘g h := by simp only [grammar_simp]
 
 example (f : A ⊢ B) : gId B ∘g f = f := by simp only [grammar_simp]

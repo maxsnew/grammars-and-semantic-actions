@@ -1,11 +1,13 @@
-import LambekD.Defs
+import LambekD.Core.Defs
 
 namespace LambekD
 
 open LambekD
 
-variable [AlphabetStr]
-variable {A B C : Grammar}
+universe uAlph
+
+variable {Alphabet : Type uAlph}
+variable {A B C : Grammar Alphabet}
 
 def sumInl : A ⊢ A ⊕ B := fun w a => _root_.Sum.inl a
 
@@ -21,7 +23,7 @@ theorem sum_βr (f : A ⊢ C) (g : B ⊢ C) : sumElim f g ∘g sumInr = g := rfl
 theorem sum_η (f : A ⊕ B ⊢ C) : sumElim (f ∘g sumInl) (f ∘g sumInr) = f := by
   funext w s; cases s <;> rfl
 
-theorem sumElim_comp (f : A ⊢ C) (g : B ⊢ C) {D : Grammar} (h : C ⊢ D) :
+theorem sumElim_comp (f : A ⊢ C) (g : B ⊢ C) {D : Grammar Alphabet} (h : C ⊢ D) :
     h ∘g sumElim f g = sumElim (h ∘g f) (h ∘g g) := by
   funext w s; cases s <;> rfl
 

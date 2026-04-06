@@ -1,14 +1,16 @@
-import LambekD.Defs
+import LambekD.Core.Defs
 
 namespace LambekD
 
 open LambekD
 
-variable [AlphabetStr]
+universe uAlph
 
-def botElim (A : Grammar) : ⊥g ⊢ A := fun _ e => PEmpty.elim e.down
+variable {Alphabet : Type uAlph}
 
-theorem bot_η {A : Grammar} (f g : ⊥g ⊢ A) : f = g := by
+def botElim (A : Grammar Alphabet) : ⊥g ⊢ A := fun _ e => PEmpty.elim e.down
+
+theorem bot_η {A : Grammar Alphabet} (f g : ⊥g ⊢ A) : f = g := by
   funext w e; exact PEmpty.elim e.down
 
 end LambekD

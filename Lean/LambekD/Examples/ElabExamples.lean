@@ -1,4 +1,5 @@
 import LambekD.Elab
+import LambekD.Tactic
 
 /-!
 # Elaborator examples and tests
@@ -287,13 +288,28 @@ def dyckToSelf : Dyck ⊢ Dyck :=
 def letUnit (A : Grammar Paren) : Epsilon ⊗ A ⊢ A :=
   [| x a => let ⟨⟩ = x in a |]
 
--- Nonempty instance needed for `partial` definitions
-noncomputable instance (A B : Grammar Paren) : Nonempty (A ⊢ B) := ⟨fun _ _ => sorry⟩
+-- ═══════════════════════════════════════════════════════════
+-- Recursive case analysis via `case ... of` + self-reference
+-- ═══════════════════════════════════════════════════════════
 
-partial def append : Dyck ⊗ Dyck ⊢ Dyck :=
-  [| d d' => rec d of
+-- ═══════════════════════════════════════════════════════════
+-- Recursive case analysis via `case ... of` + self-reference
+-- ═══════════════════════════════════════════════════════════
+
+-- StarG map: structural recursion via direct sub-term (no `partial` needed)
+def starMap (A B : Grammar Paren) (f : A ⊢ B) : StarG A ⊢ StarG B :=
+  [| s => case s of
+     | nil x => nil x
+     | cons a s' => cons (#[f] a) (#[starMap A B f] s')
+   |]
+
+-- append: recursion on tensor component
+def append : Dyck ⊗ Dyck ⊢ Dyck :=
+  [| d d' => case d of
      | nil x => let () = x in d'
      | cons lp e rp e' => cons lp e rp (append e' d')
    |]
+termination_by w _ => w.length
+decreasing_by all_goals grammar_decreasing
 
 end LambekD.ElabExamples
