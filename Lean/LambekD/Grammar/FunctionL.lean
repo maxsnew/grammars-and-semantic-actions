@@ -11,27 +11,27 @@ variable {A B C : Grammar Alphabet}
 
 -- ═══════════════════════════════════════════════════════════
 -- Left linear function: B ⟜ A
--- FunctionL B A w = ∀ w', A w' → B (w ++ w')
+-- FunctionL B A w = ∀ w', A w' → B (w' ++ w)
 -- ═══════════════════════════════════════════════════════════
 
--- Curry: (A ⊗ B ⊢ C) → (A ⊢ C ⟜ B)
-def limpLIntro (f : A ⊗ B ⊢ C) : A ⊢ C ⟜ B :=
-  fun w a w' b => f (w ++ w') ⟨splitting w w', a, b⟩
+-- Curry: (A ⊗ B ⊢ C) → (B ⊢ C ⟜ A)
+def limpLIntro (f : A ⊗ B ⊢ C) : B ⊢ C ⟜ A :=
+  fun w b w' a => f (w' ++ w) ⟨splitting w' w, a, b⟩
 
--- Eval: (B ⟜ A) ⊗ A ⊢ B
-def limpLApp : (B ⟜ A) ⊗ A ⊢ B :=
-  fun _ ⟨s, f, a⟩ => s.eq ▸ f s.right a
+-- Eval: A ⊗ (B ⟜ A) ⊢ B
+def limpLApp : A ⊗ (B ⟜ A) ⊢ B :=
+  fun _ ⟨s, a, g⟩ => s.eq ▸ g s.left a
 
 theorem limpL_β (f : A ⊗ B ⊢ C) :
-    limpLApp ∘g tensorIntro (limpLIntro f) (gId B) = f := by
+    limpLApp ∘g tensorIntro (gId A) (limpLIntro f) = f := by
   funext w ⟨⟨l, r, eq⟩, a, b⟩
   cases eq with | refl => rfl
 
-theorem limpL_η (f : A ⊢ C ⟜ B) :
-    limpLIntro (limpLApp ∘g tensorIntro f (gId B)) = f := rfl
+theorem limpL_η (f : B ⊢ C ⟜ A) :
+    limpLIntro (limpLApp ∘g tensorIntro (gId A) f) = f := rfl
 
 -- Composition with the intro
-theorem limpLIntro_comp {D : Grammar Alphabet} (f : A ⊗ B ⊢ C) (g : D ⊢ A) :
-    limpLIntro f ∘g g = limpLIntro (f ∘g tensorIntro g (gId B)) := rfl
+theorem limpLIntro_comp {D : Grammar Alphabet} (f : A ⊗ B ⊢ C) (g : D ⊢ B) :
+    limpLIntro f ∘g g = limpLIntro (f ∘g tensorIntro (gId A) g) := rfl
 
 end LambekD

@@ -1,6 +1,7 @@
 import Lean
 import LambekD.Core.Connectives
 import LambekD.Elab.Util
+import LambekD.Elab.Syntax
 
 /-!
 # Grammar inductive types and constructor helpers
@@ -343,14 +344,69 @@ def instantiateCtorFull (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
       | _ => return none
     return some (ty, ctorConst, paramsOnly.toArray)
 
+/-- Skip non-linear `∀` binders (from `&[x ∈ X]`) before the `w : String` binder.
+    Returns (count of non-linear binders, type starting from `∀ (w : String), ...`). -/
+def skipNonLinearBinders (cfg : ElabConfig) (ctyAfterParams : Expr)
+    : TermElabM (Nat × Expr) := do
+  let mut ty := ctyAfterParams
+  let mut count := 0
+  repeat
+    match ty with
+    | .forallE _ dom body _ =>
+      if ← isDefEq (← whnf dom) cfg.stringTy then break
+      count := count + 1
+      let mv ← mkFreshExprMVar (some dom)
+      ty := body.instantiate1 mv
+    | _ => break
+  return (count, ty)
+
+/-- Count consecutive non-linear `∀` binders before `w : String` in a ctor type (after params). -/
+def countNonLinearBinders (cfg : ElabConfig) (ctyAfterParams : Expr) : TermElabM Nat := do
+  let (count, _) ← skipNonLinearBinders cfg ctyAfterParams
+  return count
+
+/-- Check if a ctor is a zero-component ctor (arg type is Epsilon after non-linear binders + w).
+    Zero-component ctors arise from `↑(&[...] RetTy)` with no `⊸`. -/
+def isZeroComponentCtor (cfg : ElabConfig) (ctyAfterParams : Expr) : TermElabM Bool := do
+  let (_, ty) ← skipNonLinearBinders cfg ctyAfterParams
+  match ty with
+  | .forallE _ _ afterW _ =>
+    withLocalDecl `ww .default cfg.stringTy fun ww => do
+      let body := afterW.instantiate1 ww
+      match body with
+      | .forallE _ argTy _ _ =>
+        -- Check if arg type head is Epsilon (use withReducible to avoid unfolding the def)
+        let argTyH ← withReducible <| whnf argTy
+        return argTyH.isAppOf ``Epsilon
+      | _ => return false
+  | _ => return false
+
+/-- Convert simple gterm syntax to term syntax for non-linear arg elaboration.
+    Handles idents, nums, `#(term)`, parenthesized, and application forms. -/
+partial def gtermToTermSyntax (stx : TSyntax `gterm) : TermElabM (TSyntax `term) := do
+  match stx with
+  | `(gterm| $x:ident) => `($x)
+  | `(gterm| $n:num) => `($n)
+  | `(gterm| #($t:term)) => return t
+  | `(gterm| ($inner)) => do
+    let t ← gtermToTermSyntax inner
+    `(($t))
+  | `(gterm| $f $a) => do
+    let tf ← gtermToTermSyntax f
+    let ta ← gtermToTermSyntax a
+    `($tf $ta)
+  | _ => throwError "cannot convert gterm to term syntax: {stx}\nUse #(term) to embed arbitrary Lean terms"
+
 /-- Count the number of Splitting binders in a ctor type after the `w` parameter.
-    Returns 0 if not tensor-flattened. -/
+    Skips non-linear binders before `w`. Returns 0 if not tensor-flattened. -/
 def countTensorSplittings (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
     : TermElabM Nat := do
   let some (ty, _, _) ← instantiateCtorFull cfg goal fullCtorName | return 0
+  -- Skip non-linear binders before w : String
+  let (_, cty) ← skipNonLinearBinders cfg ty
   withLocalDecl `w .default cfg.stringTy fun w => do
-    -- ty: ∀ (w : String), ... → RetTy w
-    match ty with
+    -- cty: ∀ (w : String), ... → RetTy w
+    match cty with
     | .forallE _ _ afterW _ =>
       let mut body := afterW.instantiate1 w
       let mut count := 0

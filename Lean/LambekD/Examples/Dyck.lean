@@ -44,13 +44,13 @@ grammar_inductive DyckG : Grammar Bracket where
   | balanced : Literal Bracket.lp ⊗ DyckG ⊗ Literal Bracket.rp ⊗ DyckG
 
 -- Smart constructors
-def NIL : ε ⊢ DyckG :=
+def NIL : ↑g(ε ⊸ DyckG) :=
   [| x => nil x |]
 
-def BALANCED : Literal Bracket.lp ⊗ DyckG ⊗ Literal Bracket.rp ⊗ DyckG ⊢ DyckG :=
+def BALANCED : ↑g(Literal Bracket.lp ⊗ DyckG ⊗ Literal Bracket.rp ⊗ DyckG ⊸ DyckG) :=
   [| x => balanced x |]
 
-def append : DyckG ⊗ DyckG ⊢ DyckG :=
+def append : ↑g(DyckG ⊗ DyckG ⊸ DyckG) :=
   [| d d' => case d of
      | nil x => let () = x in d'
      | balanced lp e rp e' => balanced lp e rp (append e' d')
@@ -81,96 +81,108 @@ def DyckAut : DeterministicAutomaton Bracket (Option Nat) where
   δ := fun
     | none, _ => none
     | some n, .lp => some (n + 1)
-    | some 0, .rp => none
-    | some (n + 1), .rp => some n
+    | some n, .rp => match n with
+      | 0 => none
+      | n + 1 => some n
 
--- ═══════════════════════════════════════════════════════════
--- Trace combinators: smart constructors for automaton traces
--- ═══════════════════════════════════════════════════════════
+-- -- ═══════════════════════════════════════════════════════════
+-- -- Trace combinators: smart constructors for automaton traces
+-- -- ═══════════════════════════════════════════════════════════
 
--- End of file: accept empty string at state 0
-def EOF : ε ⊢ Trace (Option Nat) DyckAut true (some 0) :=
-  [| x => let () = x in sorry |]
-  -- fun w eps => Trace.stop (some 0) rfl w eps
+-- -- End of file: accept empty string at state 0
+-- def EOF : ↑g(ε ⊸ Trace (Option Nat) DyckAut true (some 0)) :=
+--   [| x => let () = x in stop (some 0) rfl |]
 
 -- -- Open bracket: consume '[', go from state n to state n+1
--- -- NOTE: With Alphabet as a concrete parameter, DyckAut.δ (some n) Bracket.lp
--- -- should now reduce definitionally to some (n+1).
 -- def OPEN {n : Nat} {b : Bool} :
---     Literal Bracket.lp ⊗ Trace (Option Nat) DyckAut b (some (n + 1)) ⊢
---     Trace (Option Nat) DyckAut b (some n) := sorry
+--     ↑g(Literal Bracket.lp ⊗ Trace (Option Nat) DyckAut b (some (n + 1)) ⊸
+--     Trace (Option Nat) DyckAut b (some n)) :=
+--   [| lp t => step (some n) Bracket.lp lp t |]
 
--- -- Close bracket: consume ']', go from state n to state n+1
+-- -- Close bracket: consume ']', go from state n+1 to state n
 -- def CLOSE {n : Nat} {b : Bool} :
---     Literal Bracket.rp ⊗ Trace (Option Nat) DyckAut b (some n) ⊢
---     Trace (Option Nat) DyckAut b (some (n + 1)) := sorry
-
--- -- Fail: any string has a rejecting trace from state nothing
--- def FAIL : string ⊢ Trace (Option Nat) DyckAut false none := sorry
+--     ↑g(Literal Bracket.rp ⊗ Trace (Option Nat) DyckAut b (some n) ⊸
+--     Trace (Option Nat) DyckAut b (some (n + 1))) :=
+--   [| rp t => step #(some (n + 1)) Bracket.rp rp t |]
 
 -- -- Leftovers: empty string from non-zero state (rejecting)
--- def LEFTOVERS {n : Nat} : ε ⊢ Trace (Option Nat) DyckAut false (some (n + 1)) :=
---   fun w eps => Trace.stop (some (n + 1)) rfl w eps
+-- def LEFTOVERS {n : Nat} : ↑g(ε ⊸ Trace (Option Nat) DyckAut false (some (n + 1))) :=
+--   [| x => let () = x in stop #(some (n + 1)) rfl |]
 
 -- -- Unexpected ']' at state 0 → rejecting trace
 -- def UNEXPECTED :
---     Literal Bracket.rp ⊗ Trace (Option Nat) DyckAut false none ⊢
---     Trace (Option Nat) DyckAut false (some 0) := sorry
+--     ↑g(Literal Bracket.rp ⊗ Trace (Option Nat) DyckAut false none ⊸
+--     Trace (Option Nat) DyckAut false (some 0)) :=
+--   [| rp t => step (some 0) Bracket.rp rp t |]
 
--- -- ═══════════════════════════════════════════════════════════
--- -- Generalized Dyck: trees with n unmatched opening brackets
--- -- ═══════════════════════════════════════════════════════════
+-- -- Fail: any string has a rejecting trace from state none.
+-- -- Uses foldStarR on string = char *.
+-- -- Relies on: DyckAut.isAcc none = false, DyckAut.δ none c = none
+-- def FAIL : ↑g(string ⊸ Trace (Option Nat) DyckAut false none) :=
+--   foldStarR
+--     [| x => let () = x in stop none rfl |]
+--     (fun w ⟨s, ⟨c, lit⟩, trace⟩ => Trace.step none c w s lit trace)
 
--- -- GenDyck 0 = DyckG
--- -- GenDyck (n+1) = DyckG ⊗ ] ⊗ GenDyck n
+-- ═══════════════════════════════════════════════════════════
+-- Generalized Dyck: trees with n unmatched opening brackets
+-- ═══════════════════════════════════════════════════════════
+
+-- GenDyck 0 = DyckG
+-- GenDyck (n+1) = DyckG ⊗ ] ⊗ GenDyck n
+-- TODO: universe constraint issue after FunctionR/FunctionL swap
 -- def GenDyck : Nat → Grammar Bracket := fun
 --   | 0 => DyckG
 --   | n + 1 => DyckG ⊗ Literal Bracket.rp ⊗ GenDyck n
+def GenDyck : Nat → Grammar.{0} Bracket := fun
+  | 0 => DyckG
+  | n + 1 => DyckG ⊗ Literal Bracket.rp ⊗ GenDyck n
 
--- -- ═══════════════════════════════════════════════════════════
--- -- Tree extraction: Trace → GenDyck
--- -- ═══════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
+-- Tree extraction: Trace → GenDyck
+-- ═══════════════════════════════════════════════════════════
 
--- -- Extract a Dyck tree from a balanced accepting trace.
--- -- Uses structural recursion on the trace.
--- def mkTree : Trace (Option Nat) DyckAut true (some 0) ⊢ DyckG := sorry
+-- Extract GenDyck n from an accepting trace at state (some n).
+def genMkTree (n : Nat) : ↑g(Trace (Option Nat) DyckAut true (some n) ⊸ GenDyck n) :=
+  [| tr => case tr of
+      | stop u v w => sorry -- Can't see u or v here
+      | step u v w z => sorry -- Need to further match on u
+                              -- Should be able to do that in pattern
+   |]
 
--- -- More generally: extract GenDyck n from Trace true (some n)
--- def genMkTree (n : Nat) : Trace (Option Nat) DyckAut true (some n) ⊢ GenDyck n := sorry
+-- Extract a Dyck tree from an accepting trace at state 0.
+def mkTree : ↑g(Trace (Option Nat) DyckAut true (some 0) ⊸ DyckG) := sorry
 
--- -- ═══════════════════════════════════════════════════════════
--- -- Trace building: DyckG → Trace
--- -- ═══════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
+-- Trace building: DyckG → Trace
+-- ═══════════════════════════════════════════════════════════
 
--- -- Build a trace from a Dyck tree (the inverse of mkTree).
--- -- A Dyck tree is balanced, so the builder takes a trace at state n
--- -- and returns a trace at state n (it doesn't change the paren depth).
--- def buildTrace :
---     DyckG ⊢ &[ n ∈ Nat ] (Trace (Option Nat) DyckAut true (some n) ⊸
---                           Trace (Option Nat) DyckAut true (some n)) := sorry
+-- Build a trace from a Dyck tree (the inverse of mkTree).
+def buildTrace :
+    ↑g(DyckG ⊸ (&[ n ∈ Nat ] (Trace (Option Nat) DyckAut true (some n) ⊸
+                          Trace (Option Nat) DyckAut true (some n)))) := sorry
 
--- -- ═══════════════════════════════════════════════════════════
--- -- Main results
--- -- ═══════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════
+-- Main results
+-- ═══════════════════════════════════════════════════════════
 
--- -- Strong equivalence: Dyck ≅ Trace true (some 0)
--- def Dyck_equiv_Trace : DyckG ≅g Trace (Option Nat) DyckAut true (some 0) where
---   to := sorry
---   from' := mkTree
---   to_from := sorry
---   from_to := sorry
+-- Strong equivalence: Dyck ≅ Trace true (some 0)
+def Dyck_equiv_Trace : DyckG ≅g Trace (Option Nat) DyckAut true (some 0) where
+  to := sorry
+  from' := mkTree
+  to_from := sorry
+  from_to := sorry
 
--- -- Fail state has no accepting traces
--- def failRejects : Trace (Option Nat) DyckAut true none ⊢ ⊥g := sorry
+-- Fail state has no accepting traces
+def failRejects : ↑g(Trace (Option Nat) DyckAut true none ⊸ ⊥g) := sorry
 
--- -- Disjointness of accepting and rejecting traces
--- def disjointAccRej (q : Option Nat) :
---     Disjoint (Trace (Option Nat) DyckAut true q) (Trace (Option Nat) DyckAut false q) := sorry
+-- Disjointness of accepting and rejecting traces
+def disjointAccRej (q : Option Nat) :
+    Disjoint (Trace (Option Nat) DyckAut true q) (Trace (Option Nat) DyckAut false q) := sorry
 
--- -- Parser for the Dyck grammar
--- -- Combines the trace parser (from DeterministicAutomaton) with the equivalence
--- def DyckParser : Parser DyckG (Trace (Option Nat) DyckAut false (some 0)) where
---   disj := sorry
---   parse := sorry
+-- Parser for the Dyck grammar
+-- Combines the trace parser (from DeterministicAutomaton) with the equivalence
+def DyckParser : Parser DyckG (Trace (Option Nat) DyckAut false (some 0)) where
+  disj := sorry
+  parse := sorry
 
--- end LambekD.Dyck
+end LambekD.Dyck

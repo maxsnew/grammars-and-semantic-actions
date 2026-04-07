@@ -53,6 +53,83 @@ partial def proveSplittingsEq (cfg : ElabConfig) (splittings : Array Expr) (idx 
     -- trans : s.left ++ innerConcat = parent
     mkAppM ``Eq.trans #[congrProof, sEq]
 
+/-- CPS helper: introduce non-linear binders from a constructor type using
+    names from the user's pattern. Walks the ctor type, introducing `withLocalDecl`
+    for each non-linear binder (stopping after exactly `nNonLin` binders or when
+    we reach `w : String`). Calls `k` with `(nlFvars, tyStartingFromW)`. -/
+partial def withNonLinearBranchBinders (cfg : ElabConfig) (cty : Expr)
+    (nlNames : Array Name) (nNonLin : Nat) (idx : Nat) (acc : Array Expr)
+    (k : Array Expr → Expr → TermElabM Expr) : TermElabM Expr := do
+  if idx >= nNonLin then
+    k acc cty
+  else
+    match cty with
+    | .forallE _ dom body _ =>
+      let domW ← whnf dom
+      let isStr ← withReducible <| isDefEq domW cfg.stringTy
+      if isStr then
+        k acc cty  -- reached w : String, stop early
+      else
+        let name := if h : idx < nlNames.size then nlNames[idx] else Name.mkSimple s!"_nl_{idx}"
+        withLocalDecl name .default dom fun nlVar => do
+          withNonLinearBranchBinders cfg (body.instantiate1 nlVar) nlNames nNonLin (idx + 1) (acc.push nlVar) k
+    | _ => k acc cty
+
+/-- Extract extra index expressions from a constructor's return type.
+    `tyFromW` starts at `∀ (w : String), ...` with NL fvars already instantiated.
+    Opens with `wExpr`, then opens remaining grammar foralls with metavars,
+    reads the return type's index positions (between params and w). -/
+def extractBranchIndexExprs (tyFromW : Expr) (wExpr : Expr)
+    (numParams numExtraIndices : Nat) : MetaM (Array Expr) := do
+  if numExtraIndices == 0 then return #[]
+  match tyFromW with
+  | .forallE _ _ afterW _ =>
+    let body := afterW.instantiate1 wExpr
+    let (_, _, retTy) ← forallMetaTelescope body
+    let retArgs := retTy.getAppArgs
+    -- retArgs = params ++ extraIndices ++ [w]
+    return retArgs[numParams : numParams + numExtraIndices].toArray
+  | _ => return #[]
+
+/-- CPS-introduce equality binders for casesOn branches.
+    `eqInfos` is an array of `(name, eqType)` pairs. -/
+partial def withEqBinders (eqInfos : Array (Name × Expr)) (idx : Nat)
+    (acc : Array Expr)
+    (k : Array Expr → TermElabM Expr) : TermElabM Expr := do
+  if h : idx < eqInfos.size then
+    let (nm, ty) := eqInfos[idx]
+    withLocalDecl nm .default ty fun fvar =>
+      withEqBinders eqInfos (idx + 1) (acc.push fvar) k
+  else
+    k acc
+
+/-- CPS-introduce motive index binders from the inductive type's foralls (after params).
+    Stops after `remaining` binders (= numExtraIndices). -/
+partial def withMotiveIdxBinders (tyRem : Expr) (remaining : Nat) (acc : Array Expr)
+    (k : Array Expr → TermElabM Expr) : TermElabM Expr := do
+  if remaining == 0 then k acc
+  else
+    match tyRem with
+    | .forallE _ dom body _ =>
+      let name := Name.mkSimple s!"_idx_{acc.size}"
+      withLocalDecl name .default dom fun fvar =>
+        withMotiveIdxBinders (body.instantiate1 fvar) (remaining - 1) (acc.push fvar) k
+    | _ => throwError "unexpected inductive type shape for index binder"
+
+/-- Check if a ctor type (after instantiating params) contains a genuine `w : String` binder.
+    When Lean promotes `w` to a parameter, the ctor type no longer has a String forall,
+    and all NL binders before `w` were also promoted. Returns `false` in that case. -/
+private def hasStringBinder (cfg : ElabConfig) (cty : Expr) : TermElabM Bool := do
+  let mut ty := cty
+  for _ in [:100] do
+    match ty with
+    | .forallE _ dom body _ =>
+      if ← withReducible <| isDefEq (← whnf dom) cfg.stringTy then return true
+      let mv ← mkFreshExprMVar (some dom)
+      ty := body.instantiate1 mv
+    | _ => return false
+  return false
+
 partial def elaborateOrderedTerm
     (cfg : ElabConfig)
     (stx : TSyntax `gterm)
@@ -86,7 +163,15 @@ partial def elaborateOrderedTerm
             (fun i => (ctx.getV (start + i)).userName) |>.filter (· != ctxName)
           throwError "linear variable(s) {unused} unused when accessing '{name}'"
         let w := (ctx.getV idx).strExpr
-        if ← isDefEq (mkApp alias.projGrammar w) (mkApp goal w) then
+        let gramW := mkApp alias.projGrammar w
+        let goalW := mkApp goal w
+        let ok ← isDefEq gramW goalW
+        let ok ← if ok then pure true else do
+          -- Retry with full reduction (handles computed indices like DyckAut.δ)
+          let gramWR ← reduce gramW (explicitOnly := false) (skipTypes := false)
+          let goalWR ← reduce goalW (explicitOnly := false) (skipTypes := false)
+          isDefEq gramWR goalWR
+        if ok then
           return alias.projExpr
         else
           throwError "variable '{name}' has grammar {← ppExpr alias.projGrammar} but expected {← ppExpr goal}"
@@ -105,7 +190,15 @@ partial def elaborateOrderedTerm
           throwError "linear variable(s) {unused} unused when accessing '{name}'"
         let v := ctx.getV idx
         let w := v.strExpr
-        if ← isDefEq (mkApp v.grammar w) (mkApp goal w) then
+        let gramW := mkApp v.grammar w
+        let goalW := mkApp goal w
+        let ok ← isDefEq gramW goalW
+        let ok ← if ok then pure true else do
+          -- Retry with full reduction (handles computed indices like DyckAut.δ)
+          let gramWR ← reduce gramW (explicitOnly := false) (skipTypes := false)
+          let goalWR ← reduce goalW (explicitOnly := false) (skipTypes := false)
+          isDefEq gramWR goalWR
+        if ok then
           return v.parseExpr
         else
           throwError "variable '{name}' has grammar {← ppExpr v.grammar} but expected {← ppExpr goal}"
@@ -241,8 +334,22 @@ partial def elaborateOrderedTerm
       let vTy ← whnf (mkApp goalA wPrime)
       withLocalDecl x.getId .default vTy fun vExpr => do
         let newVar : OrderedVar := ⟨x.getId, goalA, wPrime, vExpr⟩
-        let newCtx := ctx[0:start].toArray ++ #[newVar] ++ ctx[start:stop].toArray ++ ctx[stop:ctx.size].toArray
+        let newCtx := ctx[0:start].toArray ++ ctx[start:stop].toArray ++ #[newVar] ++ ctx[stop:ctx.size].toArray
         let bodyExpr ← elaborateOrderedTerm cfg body newCtx start (stop + 1) goalB aliases
+        -- bodyExpr : goalB (concatStrs newCtx start (stop+1))
+        -- Expected: goalB (concatStrs ctx start stop ++ wPrime)
+        -- These may differ by associativity when context has ≥ 2 vars; cast if needed.
+        let bodyExpr ← if stop - start >= 2 then do
+          let actualStr ← concatStrs cfg newCtx start (stop + 1)
+          let ctxStr ← concatStrs cfg ctx start stop
+          let expectedStr ← mkAppM ``HAppend.hAppend #[ctxStr, wPrime]
+          if ← isDefEq actualStr expectedStr then
+            pure bodyExpr
+          else
+            let strEq ← proveStrEq actualStr expectedStr
+            let goalEq ← mkAppM ``congrArg #[goalB, strEq]
+            mkAppM ``cast #[goalEq, bodyExpr]
+        else pure bodyExpr
         mkLambdaFVars #[wPrime, vExpr] bodyExpr
 
   -- ─── Left lambda ────────────────────────────────────────
@@ -253,7 +360,7 @@ partial def elaborateOrderedTerm
       let vTy ← whnf (mkApp goalA wPrime)
       withLocalDecl x.getId .default vTy fun vExpr => do
         let newVar : OrderedVar := ⟨x.getId, goalA, wPrime, vExpr⟩
-        let newCtx := ctx[0:start].toArray ++ ctx[start:stop].toArray ++ #[newVar] ++ ctx[stop:ctx.size].toArray
+        let newCtx := ctx[0:start].toArray ++ #[newVar] ++ ctx[start:stop].toArray ++ ctx[stop:ctx.size].toArray
         let bodyExpr ← elaborateOrderedTerm cfg body newCtx start (stop + 1) goalB aliases
         mkLambdaFVars #[wPrime, vExpr] bodyExpr
 
@@ -290,25 +397,142 @@ partial def elaborateOrderedTerm
               throwError "recursive call argument must be a variable name"
         -- Try constructor (single-arg or multi-arg)
         if let some fullCtorName ← tryResolveCtorName cfg goal name then
-          if allArgs.size == 1 then
-            -- Single arg: existing fold behavior
-            let foldStx ← `(gterm| fold $c $(allArgs[0]!))
-            return ← elaborateOrderedTerm cfg foldStx ctx start stop goal aliases
-          else
-            -- Multi-arg constructor: build right-nested pair and fold
+          let some (ctyAfterParams, ctorConst, params) ← instantiateCtorFull cfg goal fullCtorName
+            | throwError "cannot instantiate ctor '{fullCtorName}'"
+          let nNonLin ← countNonLinearBinders cfg ctyAfterParams
+          if nNonLin > 0 then
+            -- ═══ Constructor with non-linear binders ═══
             let nSplittings ← countTensorSplittings cfg goal fullCtorName
-            if nSplittings == 0 then
-              throwError "constructor '{name}' takes 1 argument, got {allArgs.size}"
-            let expectedArgs := nSplittings + 1
+            let isZeroComp ← isZeroComponentCtor cfg ctyAfterParams
+            let nGramArgs := if isZeroComp then 0
+                             else if nSplittings > 0 then nSplittings + 1
+                             else 1
+            let expectedArgs := nNonLin + nGramArgs
             if allArgs.size != expectedArgs then
-              throwError "constructor '{name}' expects {expectedArgs} arguments, got {allArgs.size}"
-            -- Build right-nested pair: (a₁, (a₂, (a₃, a₄)))
-            let mut pairStx := allArgs[allArgs.size - 1]!
-            for i in List.range (allArgs.size - 1) do
-              let idx := allArgs.size - 2 - i
-              pairStx ← `(gterm| ($(allArgs[idx]!), $pairStx))
-            let foldStx ← `(gterm| fold $c $pairStx)
-            return ← elaborateOrderedTerm cfg foldStx ctx start stop goal aliases
+              throwError "constructor '{name}' expects {expectedArgs} arguments ({nNonLin} non-linear + {nGramArgs} grammar), got {allArgs.size}"
+            -- 1. Elaborate non-linear args as Lean terms (sequential, types may depend)
+            let mut tyAfterNL := ctyAfterParams
+            let mut nlExprs : Array Expr := #[]
+            for i in [:nNonLin] do
+              match tyAfterNL with
+              | .forallE _ dom body _ =>
+                let termStx ← gtermToTermSyntax allArgs[i]!
+                let argExpr ← Lean.Elab.Term.elabTerm termStx (some dom)
+                nlExprs := nlExprs.push argExpr
+                tyAfterNL := body.instantiate1 argExpr
+              | _ => throwError "unexpected ctor shape (expected forallE for non-linear binder {i})"
+            -- tyAfterNL now starts with ∀ (w : String), ...
+            let w ← concatStrs cfg ctx start stop
+            if isZeroComp then
+              -- 2a. Zero grammar components: auto-synthesize epsilon witness
+              if start != stop then
+                let unused := (List.range (stop - start)).map (fun i => (ctx.getV (start + i)).userName)
+                throwError "constructor '{name}' takes no grammar arguments but linear variables {unused} remain"
+              -- Extract the expected epsilon type from the ctor type
+              let epsTy := match tyAfterNL with
+                | .forallE _ _ afterW _ =>
+                  let body := afterW.instantiate1 w
+                  match body with
+                  | .forallE _ argTy _ _ => argTy
+                  | _ => mkApp (mkConst ``Epsilon [cfg.gramLevel]) w
+                | _ => mkApp (mkConst ``Epsilon [cfg.gramLevel]) w
+              -- Construct epsilon witness using Lean's elaborator for correct universes
+              let epsWitness ← Lean.Elab.Term.elabTerm (← `(⟨⟨rfl⟩⟩)) (some epsTy)
+              let mut result := ctorConst
+              for p in params do result := mkApp result p
+              for nl in nlExprs do result := mkApp result nl
+              result := mkApp result w
+              result := mkApp result epsWitness
+              return result
+            else
+              -- 2b. Non-zero grammar components
+              let isTensor := nSplittings > 0
+              -- Build grammar arg syntax from remaining allArgs
+              let gramArgStx ← if nGramArgs == 1 then
+                pure allArgs[nNonLin]!
+              else
+                -- Build right-nested pair: (a₁, (a₂, (a₃, a₄)))
+                let mut pairStx := allArgs[allArgs.size - 1]!
+                for i in List.range (nGramArgs - 1) do
+                  let idx := allArgs.size - 2 - i
+                  pairStx ← `(gterm| ($(allArgs[idx]!), $pairStx))
+                pure pairStx
+              -- Extract argGram from tyAfterNL (same logic as fold path)
+              let argGram ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+                let afterW := match tyAfterNL with
+                  | .forallE _ _ b _ => b.instantiate1 ww
+                  | _ => tyAfterNL
+                if isTensor then
+                  let rec buildNLTensorGram (body : Expr) : TermElabM Expr := do
+                    match body with
+                    | .forallE _ splitTy afterS _ =>
+                      let splitTyW ← whnf splitTy
+                      if !splitTyW.getAppFn.isConstOf ``Splitting then
+                        abstractGrammar ww body
+                      else
+                        let sVar ← mkFreshExprMVar (some splitTyW)
+                        let sLeft ← mkAppM ``Splitting.left #[sVar]
+                        let afterSInst := afterS.instantiate1 sVar
+                        match afterSInst with
+                        | .forallE _ leftTy rest _ =>
+                          let leftGram ← abstractGrammarReplace ww leftTy sLeft
+                          let dummy ← mkFreshExprMVar none
+                          let restBody := rest.instantiate1 dummy
+                          match restBody with
+                          | .forallE _ nextSplitTy _ _ =>
+                            let nextW ← whnf nextSplitTy
+                            if nextW.getAppFn.isConstOf ``Splitting then
+                              let sRight ← mkAppM ``Splitting.right #[sVar]
+                              let rightGram ← withLocalDecl `ww2 .default cfg.stringTy fun ww2 => do
+                                let restBody2 := restBody.replace fun e =>
+                                  if e == sRight then some ww2 else none
+                                buildNLTensorGram restBody2
+                              mkAppM ``Tensor #[leftGram, rightGram]
+                            else
+                              let sRight ← mkAppM ``Splitting.right #[sVar]
+                              let rightGram ← abstractGrammarReplace ww nextSplitTy sRight
+                              mkAppM ``Tensor #[leftGram, rightGram]
+                          | _ =>
+                            let sRight ← mkAppM ``Splitting.right #[sVar]
+                            let rightGram ← abstractGrammarReplace ww restBody sRight
+                            mkAppM ``Tensor #[leftGram, rightGram]
+                        | _ => throwError "unexpected tensor ctor shape"
+                    | _ => abstractGrammar ww body
+                  buildNLTensorGram afterW
+                else
+                  match afterW with
+                  | .forallE _ argTy _ _ => abstractGrammar ww argTy
+                  | _ => throwError "unexpected ctor shape"
+              -- Elaborate the grammar arg
+              let tExpr ← elaborateOrderedTerm cfg gramArgStx ctx start stop argGram aliases
+              if isTensor then
+                let afterW := match tyAfterNL with
+                  | .forallE _ _ b _ => b.instantiate1 w
+                  | _ => tyAfterNL
+                let tensorArgs ← decomposeTensorForCtor tExpr afterW
+                let allCtorArgs := params ++ nlExprs ++ #[w] ++ tensorArgs
+                return ← mkAppOptM fullCtorName (allCtorArgs.map some)
+              else
+                let allCtorArgs := params ++ nlExprs ++ #[w, tExpr]
+                return ← mkAppOptM fullCtorName (allCtorArgs.map some)
+          else
+            -- ═══ EXISTING PATH (nNonLin == 0) ═══
+            if allArgs.size == 1 then
+              let foldStx ← `(gterm| fold $c $(allArgs[0]!))
+              return ← elaborateOrderedTerm cfg foldStx ctx start stop goal aliases
+            else
+              let nSplittings ← countTensorSplittings cfg goal fullCtorName
+              if nSplittings == 0 then
+                throwError "constructor '{name}' takes 1 argument, got {allArgs.size}"
+              let expectedArgs := nSplittings + 1
+              if allArgs.size != expectedArgs then
+                throwError "constructor '{name}' expects {expectedArgs} arguments, got {allArgs.size}"
+              let mut pairStx := allArgs[allArgs.size - 1]!
+              for i in List.range (allArgs.size - 1) do
+                let idx := allArgs.size - 2 - i
+                pairStx ← `(gterm| ($(allArgs[idx]!), $pairStx))
+              let foldStx ← `(gterm| fold $c $pairStx)
+              return ← elaborateOrderedTerm cfg foldStx ctx start stop goal aliases
         -- Try external function (Lean-level definition with type A ⊢ B)
         else
           let s ← saveState
@@ -355,31 +579,14 @@ partial def elaborateOrderedTerm
       if inA then aPositions := aPositions.push i
       if !inF && !inA then
         throwError "linear variable '{name}' unused in application (weakening)"
-    let isRightApp : Bool := match aPositions.back?, fPositions[0]? with
-      | some am, some fm => am < fm
-      | none, _          => true
-      | _, none           => false
+    let isRightApp : Bool := match fPositions.back?, aPositions[0]? with
+      | some fm, some am => fm < am
+      | _, none          => true
+      | none, _          => false
     let gramTy ← mkGrammarTy cfg
     if isRightApp == true then
       let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
       let fGoal ← mkAppM ``FunctionR #[mA, goal]
-      let k ← findSplit a f ctx start stop aliases
-      let eA ← elaborateOrderedTerm cfg a ctx start k mA aliases
-      let eF ← elaborateOrderedTerm cfg f ctx k stop fGoal aliases
-      let wA ← concatStrs cfg ctx start k
-      let result ← mkAppM' eF #[wA, eA]
-      let wF ← concatStrs cfg ctx k stop
-      let wAF ← mkAppM ``HAppend.hAppend #[wA, wF]
-      let wFull ← concatStrs cfg ctx start stop
-      if ← isDefEq wAF wFull then
-        return result
-      else
-        let strEq ← proveStrEq wAF wFull
-        let goalEq ← mkAppM ``congrArg #[goal, strEq]
-        mkAppM ``cast #[goalEq, result]
-    else
-      let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
-      let fGoal ← mkAppM ``FunctionL #[goal, mA]
       let k ← findSplit f a ctx start stop aliases
       let eF ← elaborateOrderedTerm cfg f ctx start k fGoal aliases
       let eA ← elaborateOrderedTerm cfg a ctx k stop mA aliases
@@ -392,6 +599,23 @@ partial def elaborateOrderedTerm
         return result
       else
         let strEq ← proveStrEq wFA wFull
+        let goalEq ← mkAppM ``congrArg #[goal, strEq]
+        mkAppM ``cast #[goalEq, result]
+    else
+      let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
+      let fGoal ← mkAppM ``FunctionL #[goal, mA]
+      let k ← findSplit a f ctx start stop aliases
+      let eA ← elaborateOrderedTerm cfg a ctx start k mA aliases
+      let eF ← elaborateOrderedTerm cfg f ctx k stop fGoal aliases
+      let wA ← concatStrs cfg ctx start k
+      let result ← mkAppM' eF #[wA, eA]
+      let wF ← concatStrs cfg ctx k stop
+      let wAF ← mkAppM ``HAppend.hAppend #[wA, wF]
+      let wFull ← concatStrs cfg ctx start stop
+      if ← isDefEq wAF wFull then
+        return result
+      else
+        let strEq ← proveStrEq wAF wFull
         let goalEq ← mkAppM ``congrArg #[goal, strEq]
         mkAppM ``cast #[goalEq, result]
 
@@ -530,6 +754,10 @@ partial def elaborateOrderedTerm
     -- Get ctor type with correct universe levels and params
     let some (ctyAfterParams, ctorConst, params) ← instantiateCtorFull cfg goal fullCtorName
       | throwError "cannot instantiate ctor '{fullCtorName}'"
+    -- Guard: fold doesn't support constructors with non-linear binders
+    let nNonLin ← countNonLinearBinders cfg ctyAfterParams
+    if nNonLin > 0 then
+      throwError "constructor '{ctor.getId}' has {nNonLin} non-linear parameter(s); use multi-arg syntax (e.g., '{ctor.getId} arg₁ arg₂ ...') instead of 'fold'"
     -- ctyAfterParams: ∀ (w : String), ... → RetTy w
     -- Extract the argument grammar from the ctor type so universe levels match exactly
     let argGram ← withLocalDecl `ww .default cfg.stringTy fun ww => do
@@ -651,25 +879,55 @@ partial def elaborateOrderedTerm
       let numParams := indVal.numParams
       let allArgs := tGoalW.getAppArgs
       let paramsOnly := allArgs[:numParams]
-      -- Motive: fun (w_mot : String) (_ : IndTy w_mot) => goal(before ++ w_mot ++ after)
-      -- where before/after are the context strings outside the scrutinee range.
-      let motive ← withLocalDecl `w_mot .default cfg.stringTy fun wMot => do
-        let indTyMot ← whnf (mkApp tGoalResolved wMot)
-        withLocalDecl `t_mot .default indTyMot fun tMot => do
-          -- Build full string with wMot replacing scrutinee's portion
-          let mut motiveStr := wMot
-          if tStop < stop then
-            let afterStr ← concatStrs cfg ctx tStop stop
-            motiveStr ← mkAppM ``HAppend.hAppend #[motiveStr, afterStr]
-          for i in List.range (tStart - start) do
-            let idx := tStart - 1 - i
-            motiveStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveStr]
-          let goalBody := mkApp goal motiveStr
-          let motiveBody ← if recName?.isNone then do
-            let eqTy ← mkEq wMot wT
-            pure (Expr.forallE `_h_idx eqTy goalBody .default)
-          else pure goalBody
-          mkLambdaFVars #[wMot, tMot] motiveBody
+      -- Detect extra indices (indices beyond w : String)
+      let numExtraIndices := indVal.numIndices - 1
+      let extraIdxArgs := allArgs[numParams : numParams + numExtraIndices].toArray
+      -- Get the inductive type's universe levels for motive construction
+      let indLevels := tGoalW.getAppFn.constLevels!
+      -- Motive: fun (idx₁ : T₁) ... (idxₖ : Tₖ) (w_mot : String) (_ : IndTy idx... w_mot) => body
+      -- For casesOn: body = ∀ (h_idx₁ : idx₁ = orig₁) ... (h_w : w_mot = wT), goal(...)
+      -- For rec: body = goal(...)
+      let motive ← do
+        -- Get index binder types from the inductive's type
+        let some indInfo := env.find? indName
+          | throwError "'{indName}' not found in environment"
+        let indType := indInfo.type.instantiateLevelParams indInfo.levelParams indLevels
+        let mut tyAfterParams := indType
+        for p in paramsOnly do
+          match tyAfterParams with
+          | .forallE _ _ body _ => tyAfterParams := body.instantiate1 p
+          | _ => throwError "unexpected inductive type shape"
+        -- Build motive with extra index binders via CPS
+        withMotiveIdxBinders tyAfterParams numExtraIndices #[] fun idxFvars => do
+          withLocalDecl `w_mot .default cfg.stringTy fun wMot => do
+            -- Build IndTy applied to idxFvars and wMot
+            let mut indApp := Lean.mkConst indName indLevels
+            for p in paramsOnly do indApp := mkApp indApp p
+            for fv in idxFvars do indApp := mkApp indApp fv
+            indApp := mkApp indApp wMot
+            let indTyMot ← whnf indApp
+            withLocalDecl `t_mot .default indTyMot fun tMot => do
+              -- Build full string with wMot replacing scrutinee's portion
+              let mut motiveStr := wMot
+              if tStop < stop then
+                let afterStr ← concatStrs cfg ctx tStop stop
+                motiveStr ← mkAppM ``HAppend.hAppend #[motiveStr, afterStr]
+              for i in List.range (tStart - start) do
+                let idx := tStart - 1 - i
+                motiveStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveStr]
+              let goalBody := mkApp goal motiveStr
+              let motiveBody ← if recName?.isNone then do
+                -- casesOn: add equality foralls for w and extra indices
+                let mut body := goalBody
+                let eqTyW ← mkEq wMot wT
+                body := Expr.forallE `_h_w eqTyW body .default
+                for i in List.range numExtraIndices do
+                  let j := numExtraIndices - 1 - i
+                  let eqTy ← mkEq idxFvars[j]! extraIdxArgs[j]!
+                  body := Expr.forallE (Name.mkSimple s!"_h_idx_{j}") eqTy body .default
+                pure body
+              else pure goalBody
+              mkLambdaFVars (idxFvars ++ #[wMot, tMot]) motiveBody
       -- Helper: instantiate ctor type with params, returning the remaining type
       let instantiateCtorParams (fullCtorName : Name) : TermElabM Expr := do
         let some ci := env.find? fullCtorName
@@ -683,7 +941,7 @@ partial def elaborateOrderedTerm
           | _ => throwError "unexpected ctor shape"
         return cty
       -- Build branch lambdas for each constructor
-      -- Each branch lambda starts with (w : String) since w is an index
+      -- Each branch lambda starts with NL binders (if any), then (w : String)
       let mut branchLams : Array Expr := #[]
       for branch in branches do
         let ctorName := branch[1].getId
@@ -692,40 +950,163 @@ partial def elaborateOrderedTerm
         let fullCtorName := indName ++ ctorName
         let isTensor ← isTensorCtor cfg tGoalResolved fullCtorName
         let cty ← instantiateCtorParams fullCtorName
-        -- cty: ∀ (w : String), ... → IndTy w
-        -- Branch lambda starts with (w : String)
-        let lam ← withLocalDecl `w_br .default cfg.stringTy fun wBr => do
-          match cty with
-          | .forallE _ _ afterW _ =>
-            let afterWInst := afterW.instantiate1 wBr
-            if let some recName := recName? then
-              -- ═══ .rec path: branches include IH binders ═══
-              if isTensor && varIdents.size > 1 then
-                -- Multi-arity tensor pattern with .rec
-                withTensorCtorComponents cfg afterWInst fun fvars comps => do
-                  let names := varIdents.map (·.getId)
-                  if names.size != comps.size then
-                    throwError "constructor '{ctorName}' has {comps.size} fields but pattern has {names.size} variables"
-                  -- Build ordered vars from components
-                  let mut componentOVs : Array OrderedVar := #[]
-                  for i in [:comps.size] do
-                    let (gram, str, parse) := comps[i]!
-                    componentOVs := componentOVs.push ⟨names[i]!, gram, str, parse⟩
-                  let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop componentOVs
-                  -- Identify recursive components and collect IH info
-                  let mut ihInfos : Array (Name × Expr) := #[]
-                  for i in [:comps.size] do
-                    let (gram, str, parse) := comps[i]!
-                    let isRec ← isRecursiveComponent cfg indName gram
-                    if isRec then
-                      ihInfos := ihInfos.push (names[i]!, mkApp2 motive str parse)
-                  -- CPS-introduce IH binders, elaborate body, build lambda
-                  withRecIHBinders ihInfos 0 #[] {} fun ihFvars ihMap => do
-                    let ri : RecCallInfo := ⟨recName, ihMap⟩
-                    let cfgRec := { cfg with recInfo := some ri }
-                    let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
-                    -- Cast from goal(componentConcat ++ after) to goal(wBr ++ after)
-                    -- The body uses component strings (s.left, s.right) but .rec expects wBr.
+        -- Split pattern variables: first nNonLin are non-linear, rest are grammar.
+        -- Guard: if w : String was promoted to a parameter, nNonLin = 0.
+        let hasW ← hasStringBinder cfg cty
+        let nNonLin ← if hasW then countNonLinearBinders cfg cty else pure 0
+        let nlNames := (varIdents[:nNonLin].toArray).map (·.getId)
+        let gramVarIdents := varIdents[nNonLin:].toArray
+        -- cty: ∀ (nl₁ : T₁) ... (w : String), ... → IndTy ...
+        let lam ← withNonLinearBranchBinders cfg cty nlNames nNonLin 0 #[] fun nlFvars tyFromW => do
+          withLocalDecl `w_br .default cfg.stringTy fun wBr => do
+            match tyFromW with
+            | .forallE _ _ afterW _ =>
+              let afterWInst := afterW.instantiate1 wBr
+              -- Extract branch's extra index expressions from ctor return type
+              let branchIdxExprs ← extractBranchIndexExprs tyFromW wBr numParams numExtraIndices
+              -- Helper: build full motive application (motive idx₁...idxₖ w t)
+              let mkMotiveApp (gram str parse : Expr) : TermElabM Expr := do
+                let mut app := motive
+                if numExtraIndices > 0 then
+                  let gramW ← whnf (mkApp gram str)
+                  let gramArgs := gramW.getAppArgs
+                  for j in [:numExtraIndices] do
+                    app := mkApp app gramArgs[numParams + j]!
+                app := mkApp (mkApp app str) parse
+                return app
+              if let some recName := recName? then
+                -- ═══ .rec path: branches include IH binders ═══
+                if isTensor && gramVarIdents.size > 1 then
+                  -- Multi-arity tensor pattern with .rec
+                  withTensorCtorComponents cfg afterWInst fun fvars comps => do
+                    let names := gramVarIdents.map (·.getId)
+                    if names.size != comps.size then
+                      throwError "constructor '{ctorName}' has {comps.size} fields but pattern has {names.size} variables"
+                    -- Build ordered vars from components
+                    let mut componentOVs : Array OrderedVar := #[]
+                    for i in [:comps.size] do
+                      let (gram, str, parse) := comps[i]!
+                      componentOVs := componentOVs.push ⟨names[i]!, gram, str, parse⟩
+                    let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop componentOVs
+                    -- Identify recursive components and collect IH info
+                    let mut ihInfos : Array (Name × Expr) := #[]
+                    for i in [:comps.size] do
+                      let (gram, str, parse) := comps[i]!
+                      let isRec ← isRecursiveComponent cfg indName gram
+                      if isRec then
+                        let ihTy ← mkMotiveApp gram str parse
+                        ihInfos := ihInfos.push (names[i]!, ihTy)
+                    -- CPS-introduce IH binders, elaborate body, build lambda
+                    withRecIHBinders ihInfos 0 #[] {} fun ihFvars ihMap => do
+                      let ri : RecCallInfo := ⟨recName, ihMap⟩
+                      let cfgRec := { cfg with recInfo := some ri }
+                      let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
+                      -- Cast from goal(componentConcat ++ after) to goal(wBr ++ after)
+                      -- The body uses component strings (s.left, s.right) but .rec expects wBr.
+                      let actualStr ← concatStrs cfg newCtx newStart newStop
+                      let mut motiveResultStr := wBr
+                      if tStop < stop then
+                        let afterStr ← concatStrs cfg ctx tStop stop
+                        motiveResultStr ← mkAppM ``HAppend.hAppend #[motiveResultStr, afterStr]
+                      for i in List.range (tStart - start) do
+                        let idx := tStart - 1 - i
+                        motiveResultStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveResultStr]
+                      let branchExpr ← if ← isDefEq actualStr motiveResultStr then
+                        pure branchExpr
+                      else
+                        -- Build proof: componentConcat = wBr using splitting equalities
+                        let splittings := (List.range ((comps.size - 1))).toArray.map
+                          fun i => fvars[2 * i]!
+                        let splitEq ← proveSplittingsEq cfg splittings 0
+                        -- Extend to full string proof with before/after context
+                        let mut fullEq := splitEq
+                        if tStop < stop then
+                          let afterStr ← concatStrs cfg ctx tStop stop
+                          let appendAfterFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
+                            let body ← mkAppM ``HAppend.hAppend #[x, afterStr]
+                            mkLambdaFVars #[x] body
+                          fullEq ← mkAppM ``congrArg #[appendAfterFn, fullEq]
+                        for i in List.range (tStart - start) do
+                          let idx := tStart - 1 - i
+                          let prefixStr := (ctx.getV idx).strExpr
+                          let prependFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
+                            let body ← mkAppM ``HAppend.hAppend #[prefixStr, x]
+                            mkLambdaFVars #[x] body
+                          fullEq ← mkAppM ``congrArg #[prependFn, fullEq]
+                        let fullEqLhs ← concatStrs cfg newCtx newStart (newStart + comps.size)
+                        let fullEqLhsFull ← if tStop < stop then do
+                          let afterStr ← concatStrs cfg ctx tStop stop
+                          mkAppM ``HAppend.hAppend #[fullEqLhs, afterStr]
+                        else pure fullEqLhs
+                        let mut finalFullEqLhs := fullEqLhsFull
+                        for i in List.range (tStart - start) do
+                          let idx := tStart - 1 - i
+                          finalFullEqLhs ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, finalFullEqLhs]
+                        if ← isDefEq actualStr finalFullEqLhs then
+                          let goalEq ← mkAppM ``congrArg #[goal, fullEq]
+                          mkAppM ``cast #[goalEq, branchExpr]
+                        else
+                          let assocEq ← proveStrEq actualStr finalFullEqLhs
+                          let assocGoalEq ← mkAppM ``congrArg #[goal, assocEq]
+                          let step1 ← mkAppM ``cast #[assocGoalEq, branchExpr]
+                          let goalEq ← mkAppM ``congrArg #[goal, fullEq]
+                          mkAppM ``cast #[goalEq, step1]
+                      mkLambdaFVars (nlFvars ++ #[wBr] ++ fvars ++ ihFvars) branchExpr
+                else if isTensor then
+                  -- Single-arity tensor with .rec: error, require multi-arity
+                  throwError "rec ... as: tensor constructor '{ctorName}' requires multi-arity pattern to access induction hypotheses (use '| {ctorName} x₁ x₂ ... =>' instead)"
+                else
+                  -- Non-tensor with .rec: single argument, may or may not be recursive
+                  if gramVarIdents.size != 1 then
+                    throwError "non-tensor constructor '{ctorName}' takes 1 argument, but pattern has {gramVarIdents.size} variables"
+                  let varName := gramVarIdents[0]!.getId
+                  match afterWInst with
+                  | .forallE _ argTy _ _ =>
+                    let argGrammar ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+                      abstractGrammarReplace ww argTy wBr
+                    withLocalDecl varName .default argTy fun argVar => do
+                      let argOV : OrderedVar := ⟨varName, argGrammar, wBr, argVar⟩
+                      let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[argOV]
+                      -- Check if this argument is recursive
+                      let isRec ← isRecursiveComponent cfg indName argGrammar
+                      if isRec then
+                        let ihTy ← mkMotiveApp argGrammar wBr argVar
+                        let ihDeclName := Name.mkSimple s!"_ih_{varName}"
+                        withLocalDecl ihDeclName .default ihTy fun ihVar => do
+                          let ri : RecCallInfo := ⟨recName, ({} : Std.HashMap Name Expr).insert varName ihVar⟩
+                          let cfgRec := { cfg with recInfo := some ri }
+                          let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
+                          mkLambdaFVars (nlFvars ++ #[wBr, argVar, ihVar]) branchExpr
+                      else
+                        -- Non-recursive argument: no IH, same as casesOn
+                        let ri : RecCallInfo := ⟨recName, {}⟩
+                        let cfgRec := { cfg with recInfo := some ri }
+                        let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
+                        mkLambdaFVars (nlFvars ++ #[wBr, argVar]) branchExpr
+                  | _ => throwError "unexpected ctor shape"
+              else
+                -- ═══ .casesOn path ═══
+                -- Build extra index + w equality info for casesOn branches
+                let mut eqInfos : Array (Name × Expr) := #[]
+                for i in [:numExtraIndices] do
+                  let eqTy ← mkEq branchIdxExprs[i]! extraIdxArgs[i]!
+                  eqInfos := eqInfos.push (Name.mkSimple s!"_h_idx_{i}", eqTy)
+                let eqTyW ← mkEq wBr wT
+                eqInfos := eqInfos.push (`_h_w, eqTyW)
+                if isTensor && gramVarIdents.size > 1 then
+                  -- Multi-arity pattern: place components directly (no elimTensor roundtrip)
+                  -- so structural recursion checker can trace sub-terms through casesOn.
+                  withTensorCtorComponents cfg afterWInst fun fvars comps => do
+                    let names := gramVarIdents.map (·.getId)
+                    if names.size != comps.size then
+                      throwError "constructor '{ctorName}' has {comps.size} fields but pattern has {names.size} variables"
+                    let mut componentOVs : Array OrderedVar := #[]
+                    for i in [:comps.size] do
+                      let (gram, str, parse) := comps[i]!
+                      componentOVs := componentOVs.push ⟨names[i]!, gram, str, parse⟩
+                    let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop componentOVs
+                    let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
+                    -- Cast from goal(componentConcat) to goal(wBr) if they differ
                     let actualStr ← concatStrs cfg newCtx newStart newStop
                     let mut motiveResultStr := wBr
                     if tStop < stop then
@@ -737,30 +1118,23 @@ partial def elaborateOrderedTerm
                     let branchExpr ← if ← isDefEq actualStr motiveResultStr then
                       pure branchExpr
                     else
-                      -- Build proof: componentConcat = wBr using splitting equalities
-                      let splittings := (List.range ((comps.size - 1))).toArray.map
-                        fun i => fvars[2 * i]!
+                      -- Build splitting equality proof: componentConcat = wBr
+                      let splittings := (List.range (comps.size - 1)).toArray.map fun i => fvars[2 * i]!
                       let splitEq ← proveSplittingsEq cfg splittings 0
-                      -- Extend to full string proof with before/after context
                       let mut fullEq := splitEq
                       if tStop < stop then
                         let afterStr ← concatStrs cfg ctx tStop stop
                         let appendAfterFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-                          let body ← mkAppM ``HAppend.hAppend #[x, afterStr]
-                          mkLambdaFVars #[x] body
+                          let bodyE ← mkAppM ``HAppend.hAppend #[x, afterStr]
+                          mkLambdaFVars #[x] bodyE
                         fullEq ← mkAppM ``congrArg #[appendAfterFn, fullEq]
                       for i in List.range (tStart - start) do
                         let idx := tStart - 1 - i
                         let prefixStr := (ctx.getV idx).strExpr
                         let prependFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-                          let body ← mkAppM ``HAppend.hAppend #[prefixStr, x]
-                          mkLambdaFVars #[x] body
+                          let bodyE ← mkAppM ``HAppend.hAppend #[prefixStr, x]
+                          mkLambdaFVars #[x] bodyE
                         fullEq ← mkAppM ``congrArg #[prependFn, fullEq]
-                      -- fullEq : componentConcat(+before/after) = wBr(+before/after)
-                      -- But actualStr may have different associativity. Try proveStrEq for the gap.
-                      let lhs ← mkAppM ``congrArg #[goal, fullEq]
-                      -- actualStr might differ from LHS of fullEq by associativity
-                      -- Use cast with associativity proof if needed
                       let fullEqLhs ← concatStrs cfg newCtx newStart (newStart + comps.size)
                       let fullEqLhsFull ← if tStop < stop then do
                         let afterStr ← concatStrs cfg ctx tStop stop
@@ -771,182 +1145,90 @@ partial def elaborateOrderedTerm
                         let idx := tStart - 1 - i
                         finalFullEqLhs ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, finalFullEqLhs]
                       if ← isDefEq actualStr finalFullEqLhs then
-                        -- No assoc mismatch, apply cast directly
                         let goalEq ← mkAppM ``congrArg #[goal, fullEq]
                         mkAppM ``cast #[goalEq, branchExpr]
                       else
-                        -- Assoc mismatch between actualStr and the LHS of fullEq
                         let assocEq ← proveStrEq actualStr finalFullEqLhs
                         let assocGoalEq ← mkAppM ``congrArg #[goal, assocEq]
                         let step1 ← mkAppM ``cast #[assocGoalEq, branchExpr]
                         let goalEq ← mkAppM ``congrArg #[goal, fullEq]
                         mkAppM ``cast #[goalEq, step1]
-                    mkLambdaFVars (#[wBr] ++ fvars ++ ihFvars) branchExpr
-              else if isTensor then
-                -- Single-arity tensor with .rec: error, require multi-arity
-                throwError "rec ... as: tensor constructor '{ctorName}' requires multi-arity pattern to access induction hypotheses (use '| {ctorName} x₁ x₂ ... =>' instead)"
-              else
-                -- Non-tensor with .rec: single argument, may or may not be recursive
-                if varIdents.size != 1 then
-                  throwError "non-tensor constructor '{ctorName}' takes 1 argument, but pattern has {varIdents.size} variables"
-                let varName := varIdents[0]!.getId
-                match afterWInst with
-                | .forallE _ argTy _ _ =>
-                  let argGrammar ← withLocalDecl `ww .default cfg.stringTy fun ww => do
-                    abstractGrammarReplace ww argTy wBr
-                  withLocalDecl varName .default argTy fun argVar => do
-                    let argOV : OrderedVar := ⟨varName, argGrammar, wBr, argVar⟩
-                    let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[argOV]
-                    -- Check if this argument is recursive
-                    let isRec ← isRecursiveComponent cfg indName argGrammar
-                    if isRec then
-                      let ihTy := mkApp2 motive wBr argVar
-                      let ihDeclName := Name.mkSimple s!"_ih_{varName}"
-                      withLocalDecl ihDeclName .default ihTy fun ihVar => do
-                        let ri : RecCallInfo := ⟨recName, ({} : Std.HashMap Name Expr).insert varName ihVar⟩
-                        let cfgRec := { cfg with recInfo := some ri }
-                        let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
-                        mkLambdaFVars #[wBr, argVar, ihVar] branchExpr
-                    else
-                      -- Non-recursive argument: no IH, same as casesOn
-                      let ri : RecCallInfo := ⟨recName, {}⟩
-                      let cfgRec := { cfg with recInfo := some ri }
-                      let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
-                      mkLambdaFVars #[wBr, argVar] branchExpr
-                | _ => throwError "unexpected ctor shape"
-            else
-              -- ═══ .casesOn path ═══
-              if isTensor && varIdents.size > 1 then
-                -- Multi-arity pattern: place components directly (no elimTensor roundtrip)
-                -- so structural recursion checker can trace sub-terms through casesOn.
-                withTensorCtorComponents cfg afterWInst fun fvars comps => do
-                  let names := varIdents.map (·.getId)
-                  if names.size != comps.size then
-                    throwError "constructor '{ctorName}' has {comps.size} fields but pattern has {names.size} variables"
-                  let mut componentOVs : Array OrderedVar := #[]
-                  for i in [:comps.size] do
-                    let (gram, str, parse) := comps[i]!
-                    componentOVs := componentOVs.push ⟨names[i]!, gram, str, parse⟩
-                  let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop componentOVs
-                  let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
-                  -- Cast from goal(componentConcat) to goal(wBr) if they differ
-                  let actualStr ← concatStrs cfg newCtx newStart newStop
-                  let mut motiveResultStr := wBr
-                  if tStop < stop then
-                    let afterStr ← concatStrs cfg ctx tStop stop
-                    motiveResultStr ← mkAppM ``HAppend.hAppend #[motiveResultStr, afterStr]
-                  for i in List.range (tStart - start) do
-                    let idx := tStart - 1 - i
-                    motiveResultStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveResultStr]
-                  let branchExpr ← if ← isDefEq actualStr motiveResultStr then
-                    pure branchExpr
-                  else
-                    -- Build splitting equality proof: componentConcat = wBr
-                    let splittings := (List.range (comps.size - 1)).toArray.map fun i => fvars[2 * i]!
-                    let splitEq ← proveSplittingsEq cfg splittings 0
-                    let mut fullEq := splitEq
-                    if tStop < stop then
-                      let afterStr ← concatStrs cfg ctx tStop stop
-                      let appendAfterFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-                        let bodyE ← mkAppM ``HAppend.hAppend #[x, afterStr]
-                        mkLambdaFVars #[x] bodyE
-                      fullEq ← mkAppM ``congrArg #[appendAfterFn, fullEq]
-                    for i in List.range (tStart - start) do
-                      let idx := tStart - 1 - i
-                      let prefixStr := (ctx.getV idx).strExpr
-                      let prependFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-                        let bodyE ← mkAppM ``HAppend.hAppend #[prefixStr, x]
-                        mkLambdaFVars #[x] bodyE
-                      fullEq ← mkAppM ``congrArg #[prependFn, fullEq]
-                    -- actualStr may differ from LHS of fullEq by associativity
-                    let fullEqLhs ← concatStrs cfg newCtx newStart (newStart + comps.size)
-                    let fullEqLhsFull ← if tStop < stop then do
-                      let afterStr ← concatStrs cfg ctx tStop stop
-                      mkAppM ``HAppend.hAppend #[fullEqLhs, afterStr]
-                    else pure fullEqLhs
-                    let mut finalFullEqLhs := fullEqLhsFull
-                    for i in List.range (tStart - start) do
-                      let idx := tStart - 1 - i
-                      finalFullEqLhs ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, finalFullEqLhs]
-                    if ← isDefEq actualStr finalFullEqLhs then
-                      let goalEq ← mkAppM ``congrArg #[goal, fullEq]
-                      mkAppM ``cast #[goalEq, branchExpr]
-                    else
-                      let assocEq ← proveStrEq actualStr finalFullEqLhs
-                      let assocGoalEq ← mkAppM ``congrArg #[goal, assocEq]
-                      let step1 ← mkAppM ``cast #[assocGoalEq, branchExpr]
-                      let goalEq ← mkAppM ``congrArg #[goal, fullEq]
-                      mkAppM ``cast #[goalEq, step1]
-                  -- Add Literal/Epsilon length let-bindings for WF termination
-                  let mut enrichedExpr := branchExpr
-                  for i in [:comps.size] do
-                    let (gram, _str, parse) := comps[i]!
-                    if gram.isAppOf ``Literal then
-                      let proof ← mkAppM ``Literal.length_eq #[parse]
-                      let proofTy ← inferType proof
-                      enrichedExpr ← withLetDecl (.mkSimple s!"_h_len_{i}") proofTy proof fun h =>
-                        mkLetFVars #[h] enrichedExpr (usedLetOnly := false)
-                    else if gram.isAppOf ``Epsilon then
-                      let proof ← mkAppM ``Epsilon.length_eq #[parse]
-                      let proofTy ← inferType proof
-                      enrichedExpr ← withLetDecl (.mkSimple s!"_h_len_{i}") proofTy proof fun h =>
-                        mkLetFVars #[h] enrichedExpr (usedLetOnly := false)
-                  -- Add index equation parameter for WF termination
-                  let eqTy ← mkEq wBr wT
-                  withLocalDecl `_h_idx .default eqTy fun hEq => do
-                    mkLambdaFVars (#[wBr] ++ fvars ++ #[hEq]) enrichedExpr
-              else if isTensor then
-                -- Single-var tensor pattern
-                let varName := varIdents[0]!.getId
-                withTensorCtorBinders cfg afterWInst fun fvars tensorVal tensorGram => do
-                  let tensorOV : OrderedVar := ⟨varName, tensorGram, wBr, tensorVal⟩
-                  let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[tensorOV]
-                  let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
-                  let eqTy ← mkEq wBr wT
-                  withLocalDecl `_h_idx .default eqTy fun hEq => do
-                    mkLambdaFVars (#[wBr] ++ fvars ++ #[hEq]) branchExpr
-              else
-                -- Simple: ArgTy w → IndTy w
-                if varIdents.size != 1 then
-                  throwError "non-tensor constructor '{ctorName}' takes 1 argument, but pattern has {varIdents.size} variables"
-                let varName := varIdents[0]!.getId
-                match afterWInst with
-                | .forallE _ argTy _ _ =>
-                  let argGrammar ← withLocalDecl `ww .default cfg.stringTy fun ww => do
-                    abstractGrammarReplace ww argTy wBr
-                  withLocalDecl varName .default argTy fun argVar => do
-                    let argOV : OrderedVar := ⟨varName, argGrammar, wBr, argVar⟩
-                    let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[argOV]
+                    -- Add Literal/Epsilon length let-bindings for WF termination
+                    let mut enrichedExpr := branchExpr
+                    for i in [:comps.size] do
+                      let (gram, _str, parse) := comps[i]!
+                      if gram.isAppOf ``Literal then
+                        let proof ← mkAppM ``Literal.length_eq #[parse]
+                        let proofTy ← inferType proof
+                        enrichedExpr ← withLetDecl (.mkSimple s!"_h_len_{i}") proofTy proof fun h =>
+                          mkLetFVars #[h] enrichedExpr (usedLetOnly := false)
+                      else if gram.isAppOf ``Epsilon then
+                        let proof ← mkAppM ``Epsilon.length_eq #[parse]
+                        let proofTy ← inferType proof
+                        enrichedExpr ← withLetDecl (.mkSimple s!"_h_len_{i}") proofTy proof fun h =>
+                          mkLetFVars #[h] enrichedExpr (usedLetOnly := false)
+                    -- Add equality parameters for WF termination
+                    withEqBinders eqInfos 0 #[] fun eqFvars => do
+                      mkLambdaFVars (nlFvars ++ #[wBr] ++ fvars ++ eqFvars) enrichedExpr
+                else if isTensor then
+                  -- Single-var tensor pattern
+                  let varName := gramVarIdents[0]!.getId
+                  withTensorCtorBinders cfg afterWInst fun fvars tensorVal tensorGram => do
+                    let tensorOV : OrderedVar := ⟨varName, tensorGram, wBr, tensorVal⟩
+                    let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[tensorOV]
                     let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
-                    let eqTy ← mkEq wBr wT
-                    withLocalDecl `_h_idx .default eqTy fun hEq => do
-                      mkLambdaFVars #[wBr, argVar, hEq] branchExpr
-                | _ => throwError "unexpected ctor shape"
-          | _ => throwError "unexpected ctor shape (no w binder)"
+                    withEqBinders eqInfos 0 #[] fun eqFvars => do
+                      mkLambdaFVars (nlFvars ++ #[wBr] ++ fvars ++ eqFvars) branchExpr
+                else
+                  -- Simple: ArgTy w → IndTy w
+                  if gramVarIdents.size != 1 then
+                    throwError "non-tensor constructor '{ctorName}' takes 1 argument, but pattern has {gramVarIdents.size} variables"
+                  let varName := gramVarIdents[0]!.getId
+                  match afterWInst with
+                  | .forallE _ argTy _ _ =>
+                    let argGrammar ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+                      abstractGrammarReplace ww argTy wBr
+                    withLocalDecl varName .default argTy fun argVar => do
+                      let argOV : OrderedVar := ⟨varName, argGrammar, wBr, argVar⟩
+                      let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[argOV]
+                      let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
+                      withEqBinders eqInfos 0 #[] fun eqFvars => do
+                        mkLambdaFVars (nlFvars ++ #[wBr, argVar] ++ eqFvars) branchExpr
+                  | _ => throwError "unexpected ctor shape"
+            | _ => throwError "unexpected ctor shape (no w binder)"
         branchLams := branchLams.push lam
       -- Apply .rec or .casesOn depending on whether `as` was specified
       let elimResult ← if recName?.isSome then do
-        -- .rec signature: {params...} → {motive} → branches... → {w} → (target) → motive w target
+        -- .rec signature: {params...} → {motive} → branches... → {idx₁}...{idxₖ} → {w} → (target) → motive ...
         let recFnName := indName ++ `rec
         let mut args : Array (Option Expr) := paramsOnly.toArray.map some
         args := args.push (some motive)
         for lam in branchLams do
           args := args.push (some lam)
+        for _ in [:numExtraIndices] do
+          args := args.push none         -- extra index (inferred)
         args := args.push none           -- w index (inferred)
         args := args.push (some tExpr)   -- target
         mkAppOptM recFnName args
       else do
-        -- .casesOn signature: {params...} → {motive} → {w} → (target) → branches...
+        -- .casesOn signature: {params...} → {motive} → {idx₁}...{idxₖ} → {w} → (target) → branches...
         let casesOnName := indName ++ `casesOn
         let mut args : Array (Option Expr) := paramsOnly.toArray.map some
         args := args.push (some motive)
+        for _ in [:numExtraIndices] do
+          args := args.push none         -- extra index (inferred from tExpr)
         args := args.push none           -- w index (inferred from tExpr)
         args := args.push (some tExpr)   -- target
         for lam in branchLams do
           args := args.push (some lam)
-        let casesResult ← mkAppOptM casesOnName args
-        let rflExpr ← mkEqRefl wT
-        pure (mkApp casesResult rflExpr)
+        let mut casesResult ← mkAppOptM casesOnName args
+        -- Apply rfl for each extra index equality, then for w
+        for i in [:numExtraIndices] do
+          let rflI ← mkEqRefl extraIdxArgs[i]!
+          casesResult := mkApp casesResult rflI
+        let rflW ← mkEqRefl wT
+        casesResult := mkApp casesResult rflW
+        pure casesResult
       -- Handle string associativity cast (shared by both paths)
       let fullStr ← concatStrs cfg ctx start stop
       let mut motiveResultStr := wT
@@ -1102,6 +1384,16 @@ elab "[|" pats:gpat+ " => " body:gterm "|]" : term <= expectedType => do
       | .sort (.succ l) => l
       | _ => .zero
     let cfg : ElabConfig := { stringTy, alphabetTy, gramLevel }
+    -- Normalize aw/bw to reduce e.g. [] ++ w → w (from ↑g(X ⊸ Y) types).
+    -- We target HAppend.hAppend applications only, to avoid unfolding grammar defs.
+    let normalizeAppend (e : Expr) : MetaM Expr :=
+      Lean.Meta.transform e (pre := fun e => do
+        if e.isApp && e.getAppFn.isConstOf ``HAppend.hAppend then
+          let e' ← whnf e
+          if e' != e then return .done e'
+        return .continue)
+    let aw ← normalizeAppend aw
+    let bw ← normalizeAppend bw
     let gramA ← mkLambdaFVars #[w] aw
     let gramB ← mkLambdaFVars #[w] bw
     withLocalDecl `v .default aw fun v => do

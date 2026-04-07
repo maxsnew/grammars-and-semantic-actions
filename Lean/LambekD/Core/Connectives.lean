@@ -22,9 +22,9 @@ structure Tensor
 
 def Epsilon.{u} : Grammar.{u} Alphabet := fun w => ULift.{u} (PLift (w = []))
 def Literal.{u} (c : Alphabet) : Grammar.{u} Alphabet := fun w => ULift.{u} (PLift (w = [c]))
-def FunctionR (A B : Grammar Alphabet) : Grammar Alphabet := fun w => ∀ w', A w' → B (w' ++ w)
+def FunctionR (A B : Grammar Alphabet) : Grammar Alphabet := fun w => ∀ w', A w' → B (w ++ w')
 def FunctionL (B A : Grammar Alphabet)
-  : Grammar Alphabet := fun w => ∀ w', A w' → B (w ++ w')
+  : Grammar Alphabet := fun w => ∀ w', A w' → B (w' ++ w)
 def Sum (A : Grammar Alphabet) (B : Grammar Alphabet)
   : Grammar Alphabet := fun w => A w ⊕ B w
 def Product (A : Grammar Alphabet) (B : Grammar Alphabet)
@@ -36,12 +36,16 @@ def IdxCoproduct.{v} (X : Type v) (F : X → Grammar Alphabet) : Grammar Alphabe
 
 def GrammarTerm (A B : Grammar Alphabet) := ∀ w, A w → B w
 
+/-- Parses of grammar A at the empty string. `↑g(A ⊸ B) ≅ A ⊢ B`. -/
+def Element (A : Grammar Alphabet) := A []
+
 scoped infixr:70 " ⊗ "  => Tensor
 scoped infixr:60 " ⊸ "  => FunctionR
 scoped infixl:60 " ⟜ "  => FunctionL
 scoped infixl:65 " ⊕ "  => Sum
 scoped infixl:70 " & "  => Product
 scoped infixl:25 " ⊢ "  => GrammarTerm
+scoped prefix:max "↑g" => Element
 scoped notation "⊤g" => Top
 scoped notation "⊥g" => Bottom
 scoped notation "lit(" c ")" => Literal c

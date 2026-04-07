@@ -117,11 +117,11 @@ def BinOpAut : DeterministicAutomaton Tok (Bool × Nat × AutomatonState) where
 
 -- Soundness: from every accepting trace we can extract an EXP parse
 def buildExp :
-    Trace (Bool × Nat × AutomatonState) BinOpAut true BinOpAut.init ⊢ EXP := sorry
+    ↑g(Trace (Bool × Nat × AutomatonState) BinOpAut true BinOpAut.init ⊸ EXP) := sorry
 
 -- Completeness: from every EXP parse we can build an accepting trace
 def mkTrace :
-    EXP ⊢ Trace (Bool × Nat × AutomatonState) BinOpAut true BinOpAut.init := sorry
+    ↑g(EXP ⊸ Trace (Bool × Nat × AutomatonState) BinOpAut true BinOpAut.init) := sorry
 
 -- Weak equivalence between accepting traces and EXP
 def AccTrace_weakEquiv_EXP :
