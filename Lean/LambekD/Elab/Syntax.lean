@@ -36,8 +36,12 @@ syntax gterm:10 "⌈" term "⌉" : gterm
 syntax "σ⟨" term ", " gterm "⟩" : gterm
 syntax "caseDep" gterm "of" "|" "σ⟨" ident ", " ident "⟩" "=>" gterm : gterm
 syntax "fold" ident gterm:11 : gterm
-syntax (name := recGterm) "rec" gterm ("as" ident)? "of" ("|" ident ident+ "=>" gterm)* : gterm
-syntax (name := caseIndGterm) "case" gterm "of" ("|" ident ident+ "=>" gterm)+ : gterm
+declare_syntax_cat gbranchVar
+syntax ident : gbranchVar
+syntax "(" term ")" : gbranchVar
+
+syntax (name := recGterm) "rec" gterm ("as" ident)? "of" ("|" ident gbranchVar+ "=>" gterm)* : gterm
+syntax (name := caseIndGterm) "case" gterm "of" ("|" ident gbranchVar+ "=>" gterm)+ : gterm
 syntax "sorry" : gterm
 syntax "(" gterm ")" : gterm
 

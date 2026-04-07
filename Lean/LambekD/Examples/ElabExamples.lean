@@ -246,7 +246,7 @@ def starConsLet (A : Grammar Paren) : ↑g(A ⊗ StarG A ⊸ StarG A) :=
 def starToSelf (A : Grammar Paren) : ↑g(StarG A ⊸ StarG A) :=
   [| x => rec x of
      | nil y => nil y
-     | cons y => cons y |]
+     | cons y => cons y
 
 -- ═══════════════════════════════════════════════════════════
 -- Constructor auto-detect (sugar for `fold ctor arg`)

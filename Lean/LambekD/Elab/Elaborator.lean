@@ -75,6 +75,157 @@ partial def withNonLinearBranchBinders (cfg : ElabConfig) (cty : Expr)
           withNonLinearBranchBinders cfg (body.instantiate1 nlVar) nlNames nNonLin (idx + 1) (acc.push nlVar) k
     | _ => k acc cty
 
+/-- Info about a pattern match on a non-linear binder.
+    Used to wrap the branch body in casesOn after elaboration. -/
+structure NLPatternInfo where
+  binderIdx : Nat           -- index in nlFvars array
+  nlFvar : Expr             -- the lambda parameter fvar (of the original binder type)
+  patVarFvars : Array Expr  -- pattern variable fvars
+  ctorIdx : Nat             -- which constructor arm matches
+
+/-- Parse pattern head: `some n` → (`some`, #[n]), `none` → (`none`, #[]),
+    `0` → (`zero`, #[]). -/
+def parseNLPatternHead (stx : Syntax) : TermElabM (Name × Array Syntax) := do
+  if let some n := stx.isNatLit? then
+    if n == 0 then return (`zero, #[])
+    else throwError "numeric literal patterns > 0 not yet supported in NL patterns"
+  if stx.getKind == ``Lean.Parser.Term.app then
+    let head := stx[0]
+    let argNode := stx[1]
+    unless head.isIdent do
+      throwError "pattern head must be an identifier, got {head}"
+    let headName := head.getId
+    let args := if argNode.getKind == `null then argNode.getArgs else #[argNode]
+    return (headName, args)
+  if stx.isIdent then
+    return (stx.getId, #[])
+  throwError "unsupported pattern syntax: {stx}"
+
+/-- Resolve a pattern syntax against a type to get (ctorIdx, patVarNames, patVarTypes). -/
+def resolveNLPattern (ty : Expr) (patStx : Syntax) : TermElabM (Nat × Array Name × Array Expr) := do
+  let tyW ← whnf ty
+  let indName := tyW.getAppFn.constName!
+  let env ← getEnv
+  let some indVal := getInductiveVal env indName
+    | throwError "pattern match on non-inductive type {indName}"
+  let (ctorShortName, argStxs) ← parseNLPatternHead patStx
+  let mut foundCtor : Option (Nat × Name) := none
+  for (cn, i) in indVal.ctors.zipIdx.toArray do
+    let shortName := cn.replacePrefix indName .anonymous
+    if shortName == ctorShortName then
+      foundCtor := some (i, cn)
+      break
+  let some (idx, fullCtorName) := foundCtor
+    | throwError "constructor '{ctorShortName}' not found in {indName}"
+  let some ci := env.find? fullCtorName | throwError "ctor not found: {fullCtorName}"
+  let indLevels := tyW.getAppFn.constLevels!
+  let ctorTy := ci.type.instantiateLevelParams ci.levelParams indLevels
+  let indArgs := tyW.getAppArgs
+  let numParams := indVal.numParams
+  let mut cty := ctorTy
+  for p in indArgs[:numParams] do
+    match cty with
+    | .forallE _ _ b _ => cty := b.instantiate1 p
+    | _ => throwError "unexpected ctor shape"
+  let mut names : Array Name := #[]
+  let mut types : Array Expr := #[]
+  let mut argIdx := 0
+  let mut curTy := cty
+  for _ in [:100] do
+    match curTy with
+    | .forallE n d b _ =>
+      if b.hasLooseBVars then
+        let mv ← mkFreshExprMVar (some d)
+        curTy := b.instantiate1 mv
+      else
+        curTy := b
+      let argName := if h : argIdx < argStxs.size then
+        if argStxs[argIdx].isIdent then argStxs[argIdx].getId
+        else Name.mkSimple s!"_pat_{argIdx}"
+      else n
+      names := names.push argName
+      types := types.push d
+      argIdx := argIdx + 1
+    | _ => break
+  return (idx, names, types)
+
+/-- CPS helper: like withNonLinearBranchBinders but supports patterns.
+    For bare idents: introduces withLocalDecl as before.
+    For patterns: introduces the binder AND pattern variables, instantiates
+    ctor type with the constructor expression (not the raw binder).
+    Calls `k` with `(nlFvars, patternInfos, tyStartingFromW)`. -/
+partial def withNonLinearBranchBindersExt (cfg : ElabConfig) (cty : Expr)
+    (nlInfos : Array NLBinderInfo) (nNonLin : Nat) (idx : Nat)
+    (accFvars : Array Expr) (accPats : Array NLPatternInfo)
+    (k : Array Expr → Array NLPatternInfo → Expr → TermElabM Expr) : TermElabM Expr := do
+  if idx >= nNonLin then
+    k accFvars accPats cty
+  else
+    match cty with
+    | .forallE _ dom body _ =>
+      let domW ← whnf dom
+      let isStr ← withReducible <| isDefEq domW cfg.stringTy
+      if isStr then
+        k accFvars accPats cty  -- reached w : String, stop early
+      else
+        let info := if h : idx < nlInfos.size then nlInfos[idx] else .ident (Name.mkSimple s!"_nl_{idx}")
+        match info with
+        | .ident name =>
+          withLocalDecl name .default dom fun nlVar => do
+            withNonLinearBranchBindersExt cfg (body.instantiate1 nlVar) nlInfos nNonLin (idx + 1)
+              (accFvars.push nlVar) accPats k
+        | .pattern freshName patternStx =>
+          -- Introduce the binder (lambda parameter)
+          withLocalDecl freshName .default dom fun nlVar => do
+            -- Elaborate the pattern to determine the constructor and pattern variables
+            -- We build: fun (x : dom) => match x with | pattern => True
+            -- and inspect the match to extract pattern info
+            let patVarsAndCtor ← resolveNLPattern dom patternStx
+            let (ctorIdx, patVarNames, patVarTypes) := patVarsAndCtor
+            -- Introduce pattern variables
+            let rec introPatVars (names : Array Name) (types : Array Expr) (i : Nat)
+                (acc : Array Expr) (k' : Array Expr → TermElabM Expr) : TermElabM Expr := do
+              if h : i < names.size then
+                withLocalDecl names[i] .default types[i]! fun fv =>
+                  introPatVars names types (i + 1) (acc.push fv) k'
+              else k' acc
+            introPatVars patVarNames patVarTypes 0 #[] fun patVarFvars => do
+              -- Build the constructor expression from pattern vars
+              let ctorExpr ← buildCtorExpr dom ctorIdx patVarFvars
+              -- Instantiate ctor type with the constructor expression
+              let instBody := body.instantiate1 ctorExpr
+              let patInfo : NLPatternInfo := ⟨accFvars.size, nlVar, patVarFvars, ctorIdx⟩
+              withNonLinearBranchBindersExt cfg instBody nlInfos nNonLin (idx + 1)
+                (accFvars.push nlVar) (accPats.push patInfo) k
+    | _ => k accFvars accPats cty
+where
+  resolveNLPattern := LambekD.Elab.resolveNLPattern
+  parsePatternHead := parseNLPatternHead
+  /-- Build a constructor expression from pattern variable fvars.
+      Uses the inductive type info from `ty` to find the right constructor. -/
+  buildCtorExpr (ty : Expr) (ctorIdx : Nat) (patVarFvars : Array Expr) : TermElabM Expr := do
+    let tyW ← whnf ty
+    let indName := tyW.getAppFn.constName!
+    let env ← getEnv
+    let some indVal := getInductiveVal env indName
+      | throwError "not an inductive: {indName}"
+    let ctorName := indVal.ctors[ctorIdx]!
+    let indLevels := tyW.getAppFn.constLevels!
+    let indArgs := tyW.getAppArgs
+    let numParams := indVal.numParams
+    -- Look up ctor level params
+    let some ci := env.find? ctorName | throwError "ctor not found: {ctorName}"
+    let ctorLevels := ci.levelParams.map fun lp =>
+      match indLevels.zip indVal.levelParams |>.find? (·.2 == lp) with
+      | some (l, _) => l
+      | none => .zero
+    let mut result := Lean.mkConst ctorName ctorLevels
+    for p in indArgs[:numParams] do
+      result := mkApp result p
+    for fv in patVarFvars do
+      result := mkApp result fv
+    return result
+
 /-- Extract extra index expressions from a constructor's return type.
     `tyFromW` starts at `∀ (w : String), ...` with NL fvars already instantiated.
     Opens with `wExpr`, then opens remaining grammar foralls with metavars,
@@ -130,6 +281,15 @@ private def hasStringBinder (cfg : ElabConfig) (cty : Expr) : TermElabM Bool := 
     | _ => return false
   return false
 
+/-- CPS helper: introduce pattern variable local decls, then call k with the fvars. -/
+partial def withPatternVarDecls {α : Type} (names : Array Name) (types : Array Expr) (idx : Nat) (acc : Array Expr)
+    (k : Array Expr → TermElabM α) : TermElabM α := do
+  if h : idx < names.size then
+    withLocalDecl names[idx] .default types[idx]! fun fv =>
+      withPatternVarDecls names types (idx + 1) (acc.push fv) k
+  else k acc
+
+set_option maxHeartbeats 400000 in
 partial def elaborateOrderedTerm
     (cfg : ElabConfig)
     (stx : TSyntax `gterm)
@@ -140,7 +300,7 @@ partial def elaborateOrderedTerm
     : TermElabM Expr := do
   withRef stx do
   -- Register linear context in info tree for IDE hover
-  registerLinearCtxInfo stx ctx start stop aliases goal
+  registerLinearCtxInfo stx ctx start stop aliases goal cfg.nlBinders
   match stx with
 
   -- ─── Variable ───────────────────────────────────────────
@@ -940,24 +1100,169 @@ partial def elaborateOrderedTerm
           | .forallE _ _ b _ => cty := b.instantiate1 p
           | _ => throwError "unexpected ctor shape"
         return cty
-      -- Build branch lambdas for each constructor
-      -- Each branch lambda starts with NL binders (if any), then (w : String)
+      -- Validate and group branches by constructor
+      let ctorShortNames := indVal.ctors.map fun n => n.replacePrefix indName .anonymous
+      let ctorList := ", ".intercalate (ctorShortNames.map (·.toString))
+      -- Validate all branch names and group by constructor (preserving order)
+      let mut branchGroups : Std.HashMap Name (Array Syntax) := {}
+      let mut lastCtorIdx : Int := -1
+      for b in branches do
+        let bname := b[1].getId
+        let some ctorIdx := ctorShortNames.findIdx? (· == bname)
+          | throwErrorAt b[1] "'{bname}' is not a constructor of '{indName}'; constructors are: {ctorList}"
+        -- Check ordering: constructors must appear in declaration order (groups are consecutive)
+        if branchGroups.contains bname then
+          -- Same ctor again: must be consecutive (lastCtorIdx must match)
+          if lastCtorIdx != ctorIdx then
+            throwErrorAt b[1] "branches for '{bname}' must be consecutive"
+        else
+          -- New ctor: must come after all previous ones
+          if ctorIdx < lastCtorIdx then
+            throwErrorAt b[1] "branch '{bname}' is out of order (branches must match constructor order)"
+        lastCtorIdx := ctorIdx
+        branchGroups := branchGroups.insert bname
+          ((branchGroups.getD bname #[]).push b)
+      -- Check all constructors are covered
+      for cn in ctorShortNames do
+        unless branchGroups.contains cn do
+          throwError "missing branch for constructor '{cn}'; constructors are: {ctorList}"
+      -- Build branch lambdas for each constructor (one lambda per constructor)
       let mut branchLams : Array Expr := #[]
-      for branch in branches do
-        let ctorName := branch[1].getId
-        let varIdents := branch[2].getArgs  -- ident+ gives a null node of idents
-        let body : TSyntax `gterm := ⟨branch[4]⟩
-        let fullCtorName := indName ++ ctorName
+      for fullCtorName in indVal.ctors do
+        let ctorName := fullCtorName.replacePrefix indName .anonymous
+        let group := branchGroups.getD ctorName #[]
+        let branch := group[0]!  -- representative branch for shared ctor info
+        let varNodes := branch[2].getArgs
         let isTensor ← isTensorCtor cfg tGoalResolved fullCtorName
         let cty ← instantiateCtorParams fullCtorName
-        -- Split pattern variables: first nNonLin are non-linear, rest are grammar.
-        -- Guard: if w : String was promoted to a parameter, nNonLin = 0.
         let hasW ← hasStringBinder cfg cty
         let nNonLin ← if hasW then countNonLinearBinders cfg cty else pure 0
-        let nlNames := (varIdents[:nNonLin].toArray).map (·.getId)
-        let gramVarIdents := varIdents[nNonLin:].toArray
-        -- cty: ∀ (nl₁ : T₁) ... (w : String), ... → IndTy ...
-        let lam ← withNonLinearBranchBinders cfg cty nlNames nNonLin 0 #[] fun nlFvars tyFromW => do
+        -- Parse NL binder infos and grammar var idents from the representative branch
+        let nlBinderInfos := (varNodes[:nNonLin].toArray).mapIdx fun i s => parseGBranchVar s i
+        let gramVarNodes := varNodes[nNonLin:].toArray
+        let gramVarIdents ← gramVarNodes.mapM fun s => do
+          if s.isIdent then pure s
+          else if s.getNumArgs == 1 && s[0].isIdent then pure s[0]
+          else if s.getNumArgs >= 3 && s[1].isIdent then pure s[1]
+          else throwError "patterns only allowed in non-linear positions, not grammar positions"
+        -- Check for NL patterns + rec (not yet supported)
+        let hasNLPatterns := nlBinderInfos.any fun | .pattern .. => true | _ => false
+        if hasNLPatterns && recName?.isSome then
+          throwError "NL patterns + rec not yet supported"
+        if group.size > 1 && recName?.isSome then
+          throwError "multi-branch NL patterns + rec not yet supported"
+        -- ─── Multi-branch path: merge sub-branches via NL casesOn ───
+        let lam ← if group.size > 1 then do
+          -- All sub-branches share the same NL binder count.
+          -- Introduce NL binders as raw idents (no pattern matching).
+          let nlNames := nlBinderInfos.map fun | .ident n => n | .pattern n _ => n
+          withNonLinearBranchBinders cfg cty nlNames nNonLin 0 #[] fun nlFvars tyFromW => do
+          let cfgNL := { cfg with nlBinders := cfg.nlBinders ++ nlFvars }
+          -- Find which NL binder position is split (has different patterns across sub-branches)
+          let mut splitIdx : Option Nat := none
+          for i in [:nNonLin] do
+            let pats := group.map fun b => parseGBranchVar b[2].getArgs[i]! i
+            let allSame := pats.all fun p => match p, pats[0]! with
+              | .ident n1, .ident n2 => n1 == n2
+              | _, _ => false
+            if !allSame then
+              splitIdx := some i
+              break
+          let some splitPos := splitIdx
+            | throwError "multi-branch group for '{ctorName}' but no NL binder differs between branches"
+          let splitFvar := nlFvars[splitPos]!
+          let splitTy ← whnf (← inferType splitFvar)
+          let splitIndName := splitTy.getAppFn.constName!
+          let some splitIndVal := getInductiveVal env splitIndName
+            | throwError "NL binder type '{splitIndName}' is not an inductive type"
+          -- For each sub-branch, resolve its NL pattern for the split binder and elaborate body
+          let mut armMap : Std.HashMap Nat Expr := {}
+          for subBranch in group do
+            let subVarNodes := subBranch[2].getArgs
+            let subBody : TSyntax `gterm := ⟨subBranch[4]⟩
+            let subPatStx := subVarNodes[splitPos]!
+            let patInfo := parseGBranchVar subPatStx splitPos
+            let patSyntax ← match patInfo with
+              | .pattern _ stx => pure stx
+              | .ident n => pure (Lean.mkIdent n : Syntax)
+            let (subCtorIdx, patVarNames, patVarTypes) ←
+              resolveNLPattern splitTy patSyntax
+            -- Introduce pattern variables, elaborate body, collect arm.
+            -- The arm lambda already has patVars abstracted (via mkLambdaFVars).
+            let armLam ← withPatternVarDecls patVarNames patVarTypes 0 #[] fun patFvars => do
+              let cfgSub := { cfgNL with nlBinders := cfgNL.nlBinders ++ patFvars }
+              let innerBody ← withLocalDecl `w_br .default cfg.stringTy fun wBr => do
+                match tyFromW with
+                | .forallE _ _ afterW _ =>
+                  let afterWInst := afterW.instantiate1 wBr
+                  let branchIdxExprs ← extractBranchIndexExprs tyFromW wBr numParams numExtraIndices
+                  let mut eqInfos : Array (Name × Expr) := #[]
+                  for j in [:numExtraIndices] do
+                    let eqTy ← mkEq branchIdxExprs[j]! extraIdxArgs[j]!
+                    eqInfos := eqInfos.push (Name.mkSimple s!"_h_idx_{j}", eqTy)
+                  let eqTyW ← mkEq wBr wT
+                  eqInfos := eqInfos.push (`_h_w, eqTyW)
+                  if isTensor && gramVarIdents.size > 1 then
+                    withTensorCtorComponents cfg afterWInst fun fvars comps => do
+                      let names' := gramVarIdents.map (·.getId)
+                      if names'.size != comps.size then
+                        throwError "constructor '{ctorName}' has {comps.size} fields but pattern has {names'.size} variables"
+                      let mut componentOVs : Array OrderedVar := #[]
+                      for j in [:comps.size] do
+                        let (gram, str, parse) := comps[j]!
+                        componentOVs := componentOVs.push ⟨names'[j]!, gram, str, parse⟩
+                      let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop componentOVs
+                      let branchExpr ← elaborateOrderedTerm cfgSub subBody newCtx newStart newStop goal aliases
+                      withEqBinders eqInfos 0 #[] fun eqFvars => do
+                        mkLambdaFVars (#[wBr] ++ fvars ++ eqFvars) branchExpr
+                  else
+                    if gramVarIdents.size != 1 then
+                      throwError "non-tensor constructor '{ctorName}' takes 1 argument, but pattern has {gramVarIdents.size} variables"
+                    let varName' := gramVarIdents[0]!.getId
+                    match afterWInst with
+                    | .forallE _ argTy _ _ =>
+                      let argGrammar ← withLocalDecl `ww .default cfg.stringTy fun ww => do
+                        abstractGrammarReplace ww argTy wBr
+                      withLocalDecl varName' .default argTy fun argVar => do
+                        let argOV : OrderedVar := ⟨varName', argGrammar, wBr, argVar⟩
+                        let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[argOV]
+                        let branchExpr ← elaborateOrderedTerm cfgSub subBody newCtx newStart newStop goal aliases
+                        withEqBinders eqInfos 0 #[] fun eqFvars => do
+                          mkLambdaFVars (#[wBr, argVar] ++ eqFvars) branchExpr
+                    | _ => throwError "unexpected ctor shape"
+                | _ => throwError "unexpected ctor shape (no w binder)"
+              -- Abstract pattern vars to form the casesOn arm lambda
+              mkLambdaFVars patFvars innerBody
+            if armMap.contains subCtorIdx then
+              throwError "duplicate NL pattern for the same constructor of '{splitIndName}'"
+            armMap := armMap.insert subCtorIdx armLam
+          -- Verify all constructors of the split type are covered
+          for (_, i) in splitIndVal.ctors.zipIdx.toArray do
+            unless armMap.contains i do
+              let missing := splitIndVal.ctors[i]!.replacePrefix splitIndName .anonymous
+              throwError "missing NL pattern branch for '{missing}' of type '{splitIndName}'"
+          -- Build the arms array in constructor order
+          let mut arms : Array Expr := #[]
+          for (_, i) in splitIndVal.ctors.zipIdx.toArray do
+            arms := arms.push armMap[i]!
+          -- Compute body type by peeling foralls from the first arm's type
+          let bodyTy ← forallTelescopeReducing (← inferType arms[0]!) fun _ b => pure b
+          -- Build casesOn on the split NL binder
+          let matchExpr ← wrapWithNLMatchAll splitFvar bodyTy arms
+          mkLambdaFVars nlFvars matchExpr
+        else do
+          -- ─── Single-branch path (existing logic) ───
+          let nlNames := nlBinderInfos.map fun | .ident n => n | .pattern n _ => n
+          let body : TSyntax `gterm := ⟨branch[4]⟩
+          withNonLinearBranchBindersExt cfg cty nlBinderInfos nNonLin 0 #[] #[] fun nlFvars patInfos tyFromW => do
+          let allPatVarFvars := patInfos.flatMap (·.patVarFvars)
+          let cfgNL := { cfg with nlBinders := cfg.nlBinders ++ nlFvars ++ allPatVarFvars }
+          -- Helper: wrap expression in NL pattern casesOn matches (no-op if no patterns)
+          let wrapNLPatterns (e : Expr) : TermElabM Expr := do
+            let mut wrapped := e
+            for pi in patInfos.reverse do
+              wrapped ← wrapWithNLMatch pi.nlFvar pi.patVarFvars pi.ctorIdx wrapped
+            return wrapped
           withLocalDecl `w_br .default cfg.stringTy fun wBr => do
             match tyFromW with
             | .forallE _ _ afterW _ =>
@@ -999,7 +1304,7 @@ partial def elaborateOrderedTerm
                     -- CPS-introduce IH binders, elaborate body, build lambda
                     withRecIHBinders ihInfos 0 #[] {} fun ihFvars ihMap => do
                       let ri : RecCallInfo := ⟨recName, ihMap⟩
-                      let cfgRec := { cfg with recInfo := some ri }
+                      let cfgRec := { cfgNL with recInfo := some ri }
                       let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
                       -- Cast from goal(componentConcat ++ after) to goal(wBr ++ after)
                       -- The body uses component strings (s.left, s.right) but .rec expects wBr.
@@ -1074,13 +1379,13 @@ partial def elaborateOrderedTerm
                         let ihDeclName := Name.mkSimple s!"_ih_{varName}"
                         withLocalDecl ihDeclName .default ihTy fun ihVar => do
                           let ri : RecCallInfo := ⟨recName, ({} : Std.HashMap Name Expr).insert varName ihVar⟩
-                          let cfgRec := { cfg with recInfo := some ri }
+                          let cfgRec := { cfgNL with recInfo := some ri }
                           let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
                           mkLambdaFVars (nlFvars ++ #[wBr, argVar, ihVar]) branchExpr
                       else
                         -- Non-recursive argument: no IH, same as casesOn
                         let ri : RecCallInfo := ⟨recName, {}⟩
-                        let cfgRec := { cfg with recInfo := some ri }
+                        let cfgRec := { cfgNL with recInfo := some ri }
                         let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
                         mkLambdaFVars (nlFvars ++ #[wBr, argVar]) branchExpr
                   | _ => throwError "unexpected ctor shape"
@@ -1105,7 +1410,7 @@ partial def elaborateOrderedTerm
                       let (gram, str, parse) := comps[i]!
                       componentOVs := componentOVs.push ⟨names[i]!, gram, str, parse⟩
                     let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop componentOVs
-                    let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
+                    let branchExpr ← elaborateOrderedTerm cfgNL body newCtx newStart newStop goal aliases
                     -- Cast from goal(componentConcat) to goal(wBr) if they differ
                     let actualStr ← concatStrs cfg newCtx newStart newStop
                     let mut motiveResultStr := wBr
@@ -1168,15 +1473,17 @@ partial def elaborateOrderedTerm
                         enrichedExpr ← withLetDecl (.mkSimple s!"_h_len_{i}") proofTy proof fun h =>
                           mkLetFVars #[h] enrichedExpr (usedLetOnly := false)
                     -- Add equality parameters for WF termination
+                    let finalExpr ← wrapNLPatterns enrichedExpr
                     withEqBinders eqInfos 0 #[] fun eqFvars => do
-                      mkLambdaFVars (nlFvars ++ #[wBr] ++ fvars ++ eqFvars) enrichedExpr
+                      mkLambdaFVars (nlFvars ++ #[wBr] ++ fvars ++ eqFvars) finalExpr
                 else if isTensor then
                   -- Single-var tensor pattern
                   let varName := gramVarIdents[0]!.getId
                   withTensorCtorBinders cfg afterWInst fun fvars tensorVal tensorGram => do
                     let tensorOV : OrderedVar := ⟨varName, tensorGram, wBr, tensorVal⟩
                     let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[tensorOV]
-                    let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
+                    let branchExpr ← elaborateOrderedTerm cfgNL body newCtx newStart newStop goal aliases
+                    let branchExpr ← wrapNLPatterns branchExpr
                     withEqBinders eqInfos 0 #[] fun eqFvars => do
                       mkLambdaFVars (nlFvars ++ #[wBr] ++ fvars ++ eqFvars) branchExpr
                 else
@@ -1191,7 +1498,8 @@ partial def elaborateOrderedTerm
                     withLocalDecl varName .default argTy fun argVar => do
                       let argOV : OrderedVar := ⟨varName, argGrammar, wBr, argVar⟩
                       let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[argOV]
-                      let branchExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
+                      let branchExpr ← elaborateOrderedTerm cfgNL body newCtx newStart newStop goal aliases
+                      let branchExpr ← wrapNLPatterns branchExpr
                       withEqBinders eqInfos 0 #[] fun eqFvars => do
                         mkLambdaFVars (nlFvars ++ #[wBr, argVar] ++ eqFvars) branchExpr
                   | _ => throwError "unexpected ctor shape"

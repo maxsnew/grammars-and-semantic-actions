@@ -53,7 +53,7 @@ private partial def collectFVarIds : Expr → FVarIdHashSet → FVarIdHashSet
 /-- Register the linear context in the info tree so the IDE infoview
     shows linear variables when the cursor is on a gterm node. -/
 def registerLinearCtxInfo (stx : Syntax) (ctx : OrderedCtx) (start stop : Nat)
-    (aliases : AliasMap) (goal : Expr) : TermElabM Unit := do
+    (aliases : AliasMap) (goal : Expr) (nlBinders : Array Expr := #[]) : TermElabM Unit := do
   -- Identify synthetic product-pattern variables
   let mut syntheticNames : Lean.NameSet := {}
   for (_, alias) in aliases.toList do
@@ -71,7 +71,11 @@ def registerLinearCtxInfo (stx : Syntax) (ctx : OrderedCtx) (start stop : Nat)
     refFVars := collectFVarIds g refFVars
   let goalReduced ← etaReduceGrammar goal
   refFVars := collectFVarIds goalReduced refFVars
-  -- Build custom lctx: referenced non-linear vars + linear vars
+  -- Also collect fvar IDs referenced by non-linear binder types
+  for nlFvar in nlBinders do
+    let nlTy ← inferType nlFvar
+    refFVars := collectFVarIds nlTy refFVars
+  -- Build custom lctx: referenced non-linear vars + NL binders + linear vars
   let currentLctx ← getLCtx
   let mut lctx : LocalContext := {}
   lctx ← currentLctx.foldlM (init := lctx) fun acc decl =>
@@ -79,6 +83,11 @@ def registerLinearCtxInfo (stx : Syntax) (ctx : OrderedCtx) (start stop : Nat)
       return acc.mkLocalDecl decl.fvarId decl.userName decl.type decl.binderInfo
     else
       return acc
+  -- Add non-linear binders from case branches (with their actual types)
+  for nlFvar in nlBinders do
+    if let some decl := currentLctx.find? nlFvar.fvarId! then
+      if !lctx.contains decl.fvarId then
+        lctx := lctx.mkLocalDecl decl.fvarId decl.userName decl.type decl.binderInfo
   -- Add linear variables (annotated so they're distinguishable)
   for i in [start : stop] do
     let v := ctx.getV i

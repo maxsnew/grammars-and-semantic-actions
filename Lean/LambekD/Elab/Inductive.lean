@@ -551,4 +551,110 @@ def isRecursiveComponent (cfg : ElabConfig) (indName : Name) (gram : Expr) : Ter
     let ty ← whnf (mkApp gram w)
     return ty.getAppFn.isConstOf indName
 
+/-- Information about a non-linear binder position in a case branch.
+    Either a bare ident (just a name) or a pattern (with variables and match info). -/
+inductive NLBinderInfo where
+  | ident (name : Name)
+  | pattern (freshName : Name) (patternStx : Syntax)
+deriving Inhabited
+
+/-- Parse a gbranchVar syntax node: returns `NLBinderInfo`.
+    For bare idents: `.ident name`. For `(term)`: `.pattern freshName termStx`. -/
+def parseGBranchVar (stx : Syntax) (idx : Nat) : NLBinderInfo :=
+  -- Direct ident (e.g., from old-style syntax)
+  if stx.isIdent then
+    .ident stx.getId
+  -- gbranchVar wrapping a bare ident: 1 child which is the ident
+  else if stx.getNumArgs == 1 && stx[0].isIdent then
+    .ident stx[0].getId
+  -- `( term )` form: 3 children = "(", term, ")"
+  else if stx.getNumArgs >= 3 then
+    .pattern (Name.mkSimple s!"_nlpat_{idx}") stx[1]
+  else
+    .ident (Name.mkSimple s!"_nl_{idx}")
+
+/-- Build a casesOn wrapper for a non-linear binder pattern match.
+    Given `nlFvar : InductiveTy`, pattern var fvars, the matching constructor index,
+    and a body expression that references the pattern vars, builds:
+    `InductiveTy.casesOn nlFvar <sorry>... (fun patVars => body) ...<sorry>` -/
+def wrapWithNLMatch (nlFvar : Expr) (patVarFvars : Array Expr)
+    (ctorIdx : Nat) (bodyExpr : Expr) : TermElabM Expr := do
+  let nlTy ← whnf (← inferType nlFvar)
+  let indName := nlTy.getAppFn.constName!
+  let env ← getEnv
+  let some indVal := getInductiveVal env indName
+    | throwError "not an inductive: {indName}"
+  let indArgs := nlTy.getAppArgs
+  let indParams := indArgs[:indVal.numParams]
+  let indLevels := nlTy.getAppFn.constLevels!
+  let bodyTy ← inferType bodyExpr
+  -- Build motive: fun (x : nlTy) => bodyTy (constant motive, body type doesn't depend on x)
+  let motive ← withLocalDecl `_x .default nlTy fun x =>
+    mkLambdaFVars #[x] bodyTy
+  -- Build casesOn args
+  let casesOnName := indName ++ `casesOn
+  -- casesOn signature: {params...} → {motive} → (target) → branches...
+  let mut args : Array (Option Expr) := #[]
+  for p in indParams do
+    args := args.push (some p)
+  args := args.push (some motive)
+  args := args.push (some nlFvar)  -- discriminant
+  -- Build arms
+  for (ctorName, i) in indVal.ctors.zipIdx.toArray do
+    if i == ctorIdx then
+      -- Matching arm: abstract pattern vars from body
+      let arm ← mkLambdaFVars patVarFvars bodyExpr
+      args := args.push (some arm)
+    else
+      -- Non-matching arm: build lambda with the right arity, body is sorry
+      let some ci := env.find? ctorName | throwError "ctor not found: {ctorName}"
+      let ctorTy := ci.type.instantiateLevelParams ci.levelParams indLevels
+      let mut ty := ctorTy
+      for p in indParams do
+        match ty with
+        | .forallE _ _ b _ => ty := b.instantiate1 p
+        | _ => throwError "unexpected ctor shape in wrapWithNLMatch"
+      -- ty: ∀ (args...) → IndTy ...
+      -- Build: fun args => sorry
+      let mut fvars : Array Expr := #[]
+      let mut curTy := ty
+      for _ in [:100] do
+        match curTy with
+        | .forallE n d b bi =>
+          let fvar ← withLocalDecl n bi d fun fv => pure fv
+          fvars := fvars.push fvar
+          curTy := b.instantiate1 fvar
+        | _ => break
+      -- Actually we need to use withLocalDecl in CPS... let me use forallBoundedTelescope
+      let arm ← forallBoundedTelescope ty none fun fvs _ => do
+        let sorryExpr ← mkSorry bodyTy (synthetic := true)
+        mkLambdaFVars fvs sorryExpr
+      args := args.push (some arm)
+  mkAppOptM casesOnName args
+
+/-- Build a casesOn wrapper with ALL arms filled in (for multi-branch NL pattern matching).
+    `arms[i]` is a pre-abstracted lambda for constructor `i`'s casesOn branch. -/
+def wrapWithNLMatchAll (nlFvar : Expr) (bodyTy : Expr)
+    (arms : Array Expr)
+    : TermElabM Expr := do
+  let nlTy ← whnf (← inferType nlFvar)
+  let indName := nlTy.getAppFn.constName!
+  let env ← getEnv
+  let some indVal := getInductiveVal env indName
+    | throwError "not an inductive: {indName}"
+  let indArgs := nlTy.getAppArgs
+  let indParams := indArgs[:indVal.numParams]
+  -- Build motive: fun (x : nlTy) => bodyTy (constant motive)
+  let motive ← withLocalDecl `_x .default nlTy fun x =>
+    mkLambdaFVars #[x] bodyTy
+  let casesOnName := indName ++ `casesOn
+  let mut args : Array (Option Expr) := #[]
+  for p in indParams do
+    args := args.push (some p)
+  args := args.push (some motive)
+  args := args.push (some nlFvar)
+  for arm in arms do
+    args := args.push (some arm)
+  mkAppOptM casesOnName args
+
 end LambekD.Elab

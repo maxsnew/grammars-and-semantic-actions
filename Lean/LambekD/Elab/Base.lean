@@ -51,5 +51,6 @@ structure ElabConfig where
   alphabetTy : Expr    -- The alphabet type (e.g., `Paren`)
   gramLevel : Level     -- The universe level of Grammar (e.g., `0`)
   recInfo : Option RecCallInfo := none  -- set inside `rec ... as f of` branches
+  nlBinders : Array Expr := #[]  -- non-linear binder fvars in scope (for IDE display)
 
 end LambekD.Elab

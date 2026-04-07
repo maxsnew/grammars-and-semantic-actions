@@ -144,9 +144,9 @@ def GenDyck : Nat → Grammar.{0} Bracket := fun
 -- Extract GenDyck n from an accepting trace at state (some n).
 def genMkTree (n : Nat) : ↑g(Trace (Option Nat) DyckAut true (some n) ⊸ GenDyck n) :=
   [| tr => case tr of
-      | stop u v w => sorry -- Can't see u or v here
-      | step u v w z => sorry -- Need to further match on u
-                              -- Should be able to do that in pattern
+      | stop u v w => sorry
+      | step (some m) c lp tr => sorry
+      | step none c lp tr => sorry
    |]
 
 -- Extract a Dyck tree from an accepting trace at state 0.
