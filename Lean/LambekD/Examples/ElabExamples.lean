@@ -61,7 +61,7 @@ def injRightEx (A B : Grammar Paren) : ↑g(B ⊸ (A ⊕ B)) :=
 
 -- Case analysis (identity via case)
 def caseId (A B : Grammar Paren) : ↑g((A ⊕ B) ⊸ (A ⊕ B)) :=
-  [| x => case x of | inl a => inl a | inr b => inr b |]
+  [| x => match x with | inl a => inl a | inr b => inr b |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Additive product examples
@@ -133,7 +133,7 @@ def assocR' (A B C : Grammar Paren) : ↑g(A ⊗ (B ⊗ C) ⊸ A ⊗ (B ⊗ C)) 
 -- Distribute: A ⊗ (B ⊕ C) ⊸ (A ⊗ B) ⊕ (A ⊗ C)
 def distribute (A B C : Grammar Paren) : ↑g(A ⊗ (B ⊕ C) ⊸ (A ⊗ B) ⊕ (A ⊗ C)) :=
   [| a bc =>
-     case bc of
+     match bc with
      | inl b => inl (a, b)
      | inr c => inr (a, c) |]
 
@@ -244,7 +244,7 @@ def starConsLet (A : Grammar Paren) : ↑g(A ⊗ StarG A ⊸ StarG A) :=
 
 -- rec: eliminate a StarG value
 def starToSelf (A : Grammar Paren) : ↑g(StarG A ⊸ StarG A) :=
-  [| x => rec x of
+  [| x => match x with
      | nil y => nil y
      | cons y => cons y |]
 
@@ -281,7 +281,7 @@ def dyckNil : ↑g(GEpsilon ⊸ Dyck) :=
 
 -- rec with multi-tensor constructor
 def dyckToSelf : ↑g(Dyck ⊸ Dyck) :=
-  [| x => rec x of
+  [| x => match x with
      | nil y => nil y
      | cons y => cons y |]
 
@@ -295,14 +295,14 @@ def letUnit (A : Grammar Paren) : ↑g(GEpsilon ⊗ A ⊸ A) :=
 
 -- StarG map: structural recursion via direct sub-term (no `partial` needed)
 def starMap (A B : Grammar Paren) (f : A ⊢ B) : ↑g(StarG A ⊸ StarG B) :=
-  [| s => case s of
+  [| s => match s with
      | nil x => nil x
      | cons a s' => cons (#[f] a) (#[starMap A B f] s')
    |]
 
 -- append: recursion on tensor component
 def append : ↑g(Dyck ⊗ Dyck ⊸ Dyck) :=
-  [| d d' => case d of
+  [| d d' => match d with
      | nil x => let () = x in d'
      | cons lp e rp e' => cons lp e rp (append e' d')
    |]
@@ -321,13 +321,13 @@ grammar_inductive Counted : Grammar Paren where
 
 -- casesOn with single NL binder
 def countedCase : ↑g(Counted ⊸ Counted) :=
-  [| t => case t of
+  [| t => match t with
      | mk n x => let () = x in mk n
   |]
 
 -- rec with single NL binder
 def countedRec : ↑g(Counted ⊸ Counted) :=
-  [| t => rec t of
+  [| t => match t with
      | mk n x => let () = x in mk n
   |]
 
@@ -336,7 +336,7 @@ grammar_inductive Counted2 : Grammar Paren where
   | mk : ↑(&[ n ∈ Nat ] &[ m ∈ Nat ] Counted2)
 
 def counted2Case : ↑g(Counted2 ⊸ Counted2) :=
-  [| t => case t of
+  [| t => match t with
      | mk n m x => let () = x in mk n m
   |]
 

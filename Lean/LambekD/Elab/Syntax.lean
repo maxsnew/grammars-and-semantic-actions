@@ -27,8 +27,6 @@ syntax "fst" gterm:11 : gterm
 syntax "snd" gterm:11 : gterm
 syntax "inl" gterm:11 : gterm
 syntax "inr" gterm:11 : gterm
-syntax "case" gterm "of" "|" "inl" ident "=>" gterm
-                         "|" "inr" ident "=>" gterm : gterm
 syntax "absurd" gterm : gterm
 syntax "#[" term "]" gterm:11 : gterm
 syntax "Λ" "(" ident ":" term ")" "=>" gterm : gterm
@@ -40,8 +38,9 @@ declare_syntax_cat gbranchVar
 syntax ident : gbranchVar
 syntax "(" term ")" : gbranchVar
 
-syntax (name := recGterm) "rec" gterm ("as" ident)? "of" ("|" ident gbranchVar+ "=>" gterm)* : gterm
-syntax (name := caseIndGterm) "case" gterm "of" ("|" ident gbranchVar+ "=>" gterm)+ : gterm
+syntax "match" gterm "with" "|" "inl" ident "=>" gterm
+                            "|" "inr" ident "=>" gterm : gterm
+syntax (name := matchGterm) "match" gterm "with" ("|" ident gbranchVar* "=>" gterm)+ : gterm
 syntax "sorry" : gterm
 syntax "(" gterm ")" : gterm
 

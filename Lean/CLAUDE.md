@@ -60,7 +60,7 @@ def curryR (A B C : Grammar) : (A ⊗ B) ⊸ C ⊢ B ⊸ (A ⊸ C) :=
 
 -- Case analysis
 def distribute (A B C : Grammar) : A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C) :=
-  [| a bc => case bc of | inl b => inl (a, b) | inr c => inr (a, c) |]
+  [| a bc => match bc with | inl b => inl (a, b) | inr c => inr (a, c) |]
 
 -- Escape hatch to Lean-level function
 def chain (A B C : Grammar) (f : A ⊢ B) (g : B ⊢ C) : A ⊢ C :=
@@ -92,17 +92,19 @@ grammar_inductive Dyck where
 
 Constructor types like `A ⊗ B ⊗ C` are internally **tensor-flattened** to avoid Lean's nested inductive restrictions. Constructors are usable directly in `[| ... |]`.
 
-### Structural Recursion (`rec ... as ... of`)
+### Recursion via `match ... with` + `termination_by`
 
 ```lean
-def append : Dyck ⊗ Dyck ⊢ Dyck :=
-  [| d d' => rec d as append of
+def append : ↑g(Dyck ⊗ Dyck ⊸ Dyck) :=
+  [| d d' => match d with
      | nil x => let () = x in d'
-     | cons lp e rp e' => cons lp e rp (append e')
+     | cons lp e rp e' => cons lp e rp (append e' d')
    |]
+termination_by w _ => w.length
+decreasing_by all_goals grammar_decreasing
 ```
 
-Uses the `.rec` eliminator from `grammar_inductive`. IHs introduced automatically for recursive fields. This is the mechanism for guaranteed-terminating recursion — no `partial` needed.
+Uses `.casesOn` with Lean's termination checker. The `grammar_decreasing` tactic discharges the termination obligations from tensor-flattened constructor fields.
 
 ## Tactics
 

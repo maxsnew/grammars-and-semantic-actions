@@ -482,12 +482,6 @@ partial def withTensorCtorComponents (cfg : ElabConfig) (body : Expr)
       | _ => throwError "withTensorCtorComponents: expected component after Splitting"
   | _ => throwError "withTensorCtorComponents: expected forallE with Splitting"
 
-/-- Check if a component grammar references the given inductive type (i.e., is a recursive field). -/
-def isRecursiveComponent (cfg : ElabConfig) (indName : Name) (gram : Expr) : TermElabM Bool := do
-  withLocalDecl `_w .default cfg.stringTy fun w => do
-    let ty ← whnf (mkApp gram w)
-    return ty.getAppFn.isConstOf indName
-
 /-- Information about a non-linear binder position in a case branch.
     Either a bare ident (just a name) or a pattern (with variables and match info). -/
 inductive NLBinderInfo where

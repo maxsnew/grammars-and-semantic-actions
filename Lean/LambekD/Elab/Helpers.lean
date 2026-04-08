@@ -19,21 +19,6 @@ open LambekD
     back into `elaborateOrderedTerm` without circular imports. -/
 abbrev ElabFn := ElabConfig → TSyntax `gterm → OrderedCtx → Nat → Nat → Expr → AliasMap → TermElabM Expr
 
-/-- CPS-introduce IH binders for recursive components of a `.rec` branch.
-    `ihInfos` is an array of `(userName, ihType)` pairs. Calls `k` with the
-    accumulated IH fvars and a map from user variable names to IH expressions. -/
-partial def withRecIHBinders (ihInfos : Array (Name × Expr)) (idx : Nat)
-    (accFvars : Array Expr) (accMap : Std.HashMap Name Expr)
-    (k : Array Expr → Std.HashMap Name Expr → TermElabM Expr)
-    : TermElabM Expr := do
-  if h : idx < ihInfos.size then
-    let (nm, ty) := ihInfos[idx]
-    let ihDeclName := Name.mkSimple s!"_ih_{nm}"
-    withLocalDecl ihDeclName .default ty fun ihVar =>
-      withRecIHBinders ihInfos (idx + 1) (accFvars.push ihVar) (accMap.insert nm ihVar) k
-  else
-    k accFvars accMap
-
 /-- Build proof that the concatenation of component strings equals `wBr`,
     given the splitting fvars from `withTensorCtorComponents`.
     `splittings[0] : Splitting wBr`, `splittings[i+1] : Splitting splittings[i].right`.

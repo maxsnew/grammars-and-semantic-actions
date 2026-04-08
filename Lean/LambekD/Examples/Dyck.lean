@@ -51,7 +51,7 @@ def BALANCED : ↑g(GLiteral Bracket.lp ⊗ DyckG ⊗ GLiteral Bracket.rp ⊗ Dy
   [| x => balanced x |]
 
 def append : ↑g(DyckG ⊗ DyckG ⊸ DyckG) :=
-  [| d d' => case d of
+  [| d d' => match d with
      | nil x => let () = x in d'
      | balanced lp e rp e' => balanced lp e rp (append e' d')
   |]
@@ -143,7 +143,7 @@ def GenDyck : Nat → Grammar.{0} Bracket := fun
 
 -- Extract GenDyck n from an accepting trace at state (some n).
 def genMkTree (n : Nat) : ↑g(Trace (Option Nat) DyckAut true (some n) ⊸ GenDyck n) :=
-  [| tr => case tr of
+  [| tr => match tr with
       | stop u v w => sorry
       | step (some m) c lp tr => sorry
       | step none c lp tr => sorry

@@ -59,7 +59,7 @@ def injRightEx (A B : Grammar Paren) : B ⊢ A ⊕ B :=
 
 -- Case analysis: A ⊕ B ⊢ A ⊕ B (identity via case)
 def caseId (A B : Grammar Paren) : A ⊕ B ⊢ A ⊕ B :=
-  [| x => case x of | inl a => inl a | inr b => inr b |]
+  [| x => match x with | inl a => inl a | inr b => inr b |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Additive product examples
@@ -131,7 +131,7 @@ def assocR' (A B C : Grammar Paren) : A ⊗ (B ⊗ C) ⊢ A ⊗ (B ⊗ C) :=
 -- Distribute: A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C)
 def distribute (A B C : Grammar Paren) : A ⊗ (B ⊕ C) ⊢ (A ⊗ B) ⊕ (A ⊗ C) :=
   [| a bc =>
-     case bc of
+     match bc with
      | inl b => inl (a, b)
      | inr c => inr (a, c) |]
 
@@ -242,7 +242,7 @@ def starConsLet (A : Grammar Paren) : A ⊗ StarG A ⊢ StarG A :=
 
 -- rec: eliminate a StarG value
 def starToSelf (A : Grammar Paren) : StarG A ⊢ StarG A :=
-  [| x => rec x of
+  [| x => match x with
      | nil y => nil y
      | cons y => cons y |]
 
@@ -279,7 +279,7 @@ def dyckNil : GEpsilon ⊢ Dyck :=
 
 -- rec with multi-tensor constructor
 def dyckToSelf : Dyck ⊢ Dyck :=
-  [| x => rec x of
+  [| x => match x with
      | nil y => nil y
      | cons y => cons y |]
 
@@ -291,7 +291,7 @@ def letUnit (A : Grammar Paren) : GEpsilon ⊗ A ⊢ A :=
 noncomputable instance (A B : Grammar Paren) : Nonempty (A ⊢ B) := ⟨fun _ _ => sorry⟩
 
 partial def append : Dyck ⊗ Dyck ⊢ Dyck :=
-  [| d d' => rec d of
+  [| d d' => match d with
      | nil x => let () = x in d'
      | cons lp e rp e' => cons lp e rp (append e' d')
    |]

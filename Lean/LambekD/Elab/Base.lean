@@ -40,17 +40,10 @@ def resolveAliases (aliases : AliasMap) (names : Lean.NameSet) : Lean.NameSet :=
     | some a => acc.insert a.ctxName
     | none   => acc.insert n
 
-/-- Info for resolving recursive calls inside `rec d as f of` branches.
-    Maps sub-term variable names to their induction hypothesis expressions. -/
-structure RecCallInfo where
-  recName : Name
-  ihMap   : Std.HashMap Name Expr
-
 structure ElabConfig where
   stringTy : Expr      -- The string type (e.g., `List Paren`)
   alphabetTy : Expr    -- The alphabet type (e.g., `Paren`)
   gramLevel : Level     -- The universe level of Grammar (e.g., `0`)
-  recInfo : Option RecCallInfo := none  -- set inside `rec ... as f of` branches
   nlBinders : Array Expr := #[]  -- non-linear binder fvars in scope (for IDE display)
 
 end LambekD.Elab
