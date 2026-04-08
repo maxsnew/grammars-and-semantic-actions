@@ -91,12 +91,12 @@ elab "splitting_cases" : tactic => do
 -- ═══════════════════════════════════════════════════════════
 
 /-- Check if a type is a grammar structure we should destructure
-    (Tensor, Splitting, PLift — possibly hidden behind Epsilon/Literal). -/
+    (GTensor, Splitting, PLift — possibly hidden behind GEpsilon/GLiteral). -/
 private def isGrammarStructTy (ty : Expr) : MetaM Bool := do
-  if ty.isAppOf ``LambekD.Tensor || ty.isAppOf ``LambekD.Splitting || ty.isAppOf ``PLift || ty.isAppOf ``ULift then
+  if ty.isAppOf ``LambekD.GTensor || ty.isAppOf ``LambekD.Splitting || ty.isAppOf ``PLift || ty.isAppOf ``ULift then
     return true
   let ty' ← whnf ty
-  return ty'.isAppOf ``LambekD.Tensor || ty'.isAppOf ``LambekD.Splitting || ty'.isAppOf ``PLift || ty'.isAppOf ``ULift
+  return ty'.isAppOf ``LambekD.GTensor || ty'.isAppOf ``LambekD.Splitting || ty'.isAppOf ``PLift || ty'.isAppOf ``ULift
 
 /-- Try to `cases` one hypothesis whose type is a grammar structure. -/
 private def tryCasesStruct (goal : MVarId) : MetaM (Option (Array MVarId)) := goal.withContext do
@@ -109,7 +109,7 @@ private def tryCasesStruct (goal : MVarId) : MetaM (Option (Array MVarId)) := go
       catch _ => continue
   return none
 
-/-- Repeatedly destruct all grammar structures (Tensor → Splitting + fields). -/
+/-- Repeatedly destruct all grammar structures (GTensor → Splitting + fields). -/
 private partial def destructAll (goals : Array MVarId) : MetaM (Array MVarId) := do
   let mut result : Array MVarId := #[]
   for goal in goals do
@@ -121,7 +121,7 @@ private partial def destructAll (goals : Array MVarId) : MetaM (Array MVarId) :=
 
 /-- `grammar_ext` proves equalities of grammar morphisms by:
     1. `funext` to introduce string and parse-tree arguments
-    2. Recursively destructuring Tensor/Splitting/PLift in the context
+    2. Recursively destructuring GTensor/Splitting/PLift in the context
     3. Eliminating equalities via subst/cases
     4. Closing with `rfl` or `simp_all`
 
@@ -165,7 +165,7 @@ private def tryAssertLitEpsFact (goal : MVarId) (decl : LocalDecl) (ty' : Expr) 
   let some (_, _, rhs) := eqTy.eq? | return goal
   let rhs' ← whnf rhs
   if !(rhs'.isAppOf ``List.cons || rhs'.isAppOf ``List.nil) then return goal
-  for lemName in [``LambekD.Literal.length_eq, ``LambekD.Epsilon.length_eq] do
+  for lemName in [``LambekD.GLiteral.length_eq, ``LambekD.GEpsilon.length_eq] do
     let r ← tryCatch
       (do let proof ← mkAppM lemName #[decl.toExpr]
           let proofTy ← inferType proof
@@ -197,7 +197,7 @@ private def zetaReduceHyps (goal : MVarId) : MetaM MVarId := goal.withContext do
       g ← g.replaceLocalDeclDefEq decl.fvarId ty'
   return g
 
-/-- Extract length facts from Splitting, Literal, and Epsilon hypotheses,
+/-- Extract length facts from Splitting, GLiteral, and GEpsilon hypotheses,
     then close with omega. Used in `decreasing_by` for recursive grammar
     definitions where termination follows from string length decrease. -/
 elab "grammar_decreasing" : tactic => do

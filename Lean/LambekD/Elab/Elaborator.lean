@@ -1,7 +1,5 @@
-import LambekD.Elab.Syntax
+import LambekD.Elab.Helpers
 import LambekD.Elab.IDE
-import LambekD.Elab.Match
-import LambekD.Elab.Inductive
 
 /-!
 # The ordered linear term elaborator
@@ -13,281 +11,6 @@ namespace LambekD.Elab
 
 open Lean Elab Term Meta
 open LambekD
-
-/-- CPS-introduce IH binders for recursive components of a `.rec` branch.
-    `ihInfos` is an array of `(userName, ihType)` pairs. Calls `k` with the
-    accumulated IH fvars and a map from user variable names to IH expressions. -/
-partial def withRecIHBinders (ihInfos : Array (Name × Expr)) (idx : Nat)
-    (accFvars : Array Expr) (accMap : Std.HashMap Name Expr)
-    (k : Array Expr → Std.HashMap Name Expr → TermElabM Expr)
-    : TermElabM Expr := do
-  if h : idx < ihInfos.size then
-    let (nm, ty) := ihInfos[idx]
-    let ihDeclName := Name.mkSimple s!"_ih_{nm}"
-    withLocalDecl ihDeclName .default ty fun ihVar =>
-      withRecIHBinders ihInfos (idx + 1) (accFvars.push ihVar) (accMap.insert nm ihVar) k
-  else
-    k accFvars accMap
-
-/-- Build proof that the concatenation of component strings equals `wBr`,
-    given the splitting fvars from `withTensorCtorComponents`.
-    `splittings[0] : Splitting wBr`, `splittings[i+1] : Splitting splittings[i].right`.
-    Returns: `componentConcat = wBr`. -/
-partial def proveSplittingsEq (cfg : ElabConfig) (splittings : Array Expr) (idx : Nat)
-    : TermElabM Expr := do
-  let s := splittings[idx]!
-  if idx == splittings.size - 1 then
-    -- Base: s.eq : s.left ++ s.right = parent
-    mkAppM ``Splitting.eq #[s]
-  else
-    -- Recursive: innerProof : innerConcat = s.right
-    let innerProof ← proveSplittingsEq cfg splittings (idx + 1)
-    -- congrArg (s.left ++ ·) innerProof : s.left ++ innerConcat = s.left ++ s.right
-    let sLeft ← mkAppM ``Splitting.left #[s]
-    let appendFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-      let body ← mkAppM ``HAppend.hAppend #[sLeft, x]
-      mkLambdaFVars #[x] body
-    let congrProof ← mkAppM ``congrArg #[appendFn, innerProof]
-    -- s.eq : s.left ++ s.right = parent
-    let sEq ← mkAppM ``Splitting.eq #[s]
-    -- trans : s.left ++ innerConcat = parent
-    mkAppM ``Eq.trans #[congrProof, sEq]
-
-/-- CPS helper: introduce non-linear binders from a constructor type using
-    names from the user's pattern. Walks the ctor type, introducing `withLocalDecl`
-    for each non-linear binder (stopping after exactly `nNonLin` binders or when
-    we reach `w : String`). Calls `k` with `(nlFvars, tyStartingFromW)`. -/
-partial def withNonLinearBranchBinders (cfg : ElabConfig) (cty : Expr)
-    (nlNames : Array Name) (nNonLin : Nat) (idx : Nat) (acc : Array Expr)
-    (k : Array Expr → Expr → TermElabM Expr) : TermElabM Expr := do
-  if idx >= nNonLin then
-    k acc cty
-  else
-    match cty with
-    | .forallE _ dom body _ =>
-      let domW ← whnf dom
-      let isStr ← withReducible <| isDefEq domW cfg.stringTy
-      if isStr then
-        k acc cty  -- reached w : String, stop early
-      else
-        let name := if h : idx < nlNames.size then nlNames[idx] else Name.mkSimple s!"_nl_{idx}"
-        withLocalDecl name .default dom fun nlVar => do
-          withNonLinearBranchBinders cfg (body.instantiate1 nlVar) nlNames nNonLin (idx + 1) (acc.push nlVar) k
-    | _ => k acc cty
-
-/-- Info about a pattern match on a non-linear binder.
-    Used to wrap the branch body in casesOn after elaboration. -/
-structure NLPatternInfo where
-  binderIdx : Nat           -- index in nlFvars array
-  nlFvar : Expr             -- the lambda parameter fvar (of the original binder type)
-  patVarFvars : Array Expr  -- pattern variable fvars
-  ctorIdx : Nat             -- which constructor arm matches
-
-/-- Parse pattern head: `some n` → (`some`, #[n]), `none` → (`none`, #[]),
-    `0` → (`zero`, #[]). -/
-def parseNLPatternHead (stx : Syntax) : TermElabM (Name × Array Syntax) := do
-  if let some n := stx.isNatLit? then
-    if n == 0 then return (`zero, #[])
-    else throwError "numeric literal patterns > 0 not yet supported in NL patterns"
-  if stx.getKind == ``Lean.Parser.Term.app then
-    let head := stx[0]
-    let argNode := stx[1]
-    unless head.isIdent do
-      throwError "pattern head must be an identifier, got {head}"
-    let headName := head.getId
-    let args := if argNode.getKind == `null then argNode.getArgs else #[argNode]
-    return (headName, args)
-  if stx.isIdent then
-    return (stx.getId, #[])
-  throwError "unsupported pattern syntax: {stx}"
-
-/-- Resolve a pattern syntax against a type to get (ctorIdx, patVarNames, patVarTypes). -/
-def resolveNLPattern (ty : Expr) (patStx : Syntax) : TermElabM (Nat × Array Name × Array Expr) := do
-  let tyW ← whnf ty
-  let indName := tyW.getAppFn.constName!
-  let env ← getEnv
-  let some indVal := getInductiveVal env indName
-    | throwError "pattern match on non-inductive type {indName}"
-  let (ctorShortName, argStxs) ← parseNLPatternHead patStx
-  let mut foundCtor : Option (Nat × Name) := none
-  for (cn, i) in indVal.ctors.zipIdx.toArray do
-    let shortName := cn.replacePrefix indName .anonymous
-    if shortName == ctorShortName then
-      foundCtor := some (i, cn)
-      break
-  let some (idx, fullCtorName) := foundCtor
-    | throwError "constructor '{ctorShortName}' not found in {indName}"
-  let some ci := env.find? fullCtorName | throwError "ctor not found: {fullCtorName}"
-  let indLevels := tyW.getAppFn.constLevels!
-  let ctorTy := ci.type.instantiateLevelParams ci.levelParams indLevels
-  let indArgs := tyW.getAppArgs
-  let numParams := indVal.numParams
-  let mut cty := ctorTy
-  for p in indArgs[:numParams] do
-    match cty with
-    | .forallE _ _ b _ => cty := b.instantiate1 p
-    | _ => throwError "unexpected ctor shape"
-  let mut names : Array Name := #[]
-  let mut types : Array Expr := #[]
-  let mut argIdx := 0
-  let mut curTy := cty
-  for _ in [:100] do
-    match curTy with
-    | .forallE n d b _ =>
-      if b.hasLooseBVars then
-        let mv ← mkFreshExprMVar (some d)
-        curTy := b.instantiate1 mv
-      else
-        curTy := b
-      let argName := if h : argIdx < argStxs.size then
-        if argStxs[argIdx].isIdent then argStxs[argIdx].getId
-        else Name.mkSimple s!"_pat_{argIdx}"
-      else n
-      names := names.push argName
-      types := types.push d
-      argIdx := argIdx + 1
-    | _ => break
-  return (idx, names, types)
-
-/-- CPS helper: like withNonLinearBranchBinders but supports patterns.
-    For bare idents: introduces withLocalDecl as before.
-    For patterns: introduces the binder AND pattern variables, instantiates
-    ctor type with the constructor expression (not the raw binder).
-    Calls `k` with `(nlFvars, patternInfos, tyStartingFromW)`. -/
-partial def withNonLinearBranchBindersExt (cfg : ElabConfig) (cty : Expr)
-    (nlInfos : Array NLBinderInfo) (nNonLin : Nat) (idx : Nat)
-    (accFvars : Array Expr) (accPats : Array NLPatternInfo)
-    (k : Array Expr → Array NLPatternInfo → Expr → TermElabM Expr) : TermElabM Expr := do
-  if idx >= nNonLin then
-    k accFvars accPats cty
-  else
-    match cty with
-    | .forallE _ dom body _ =>
-      let domW ← whnf dom
-      let isStr ← withReducible <| isDefEq domW cfg.stringTy
-      if isStr then
-        k accFvars accPats cty  -- reached w : String, stop early
-      else
-        let info := if h : idx < nlInfos.size then nlInfos[idx] else .ident (Name.mkSimple s!"_nl_{idx}")
-        match info with
-        | .ident name =>
-          withLocalDecl name .default dom fun nlVar => do
-            withNonLinearBranchBindersExt cfg (body.instantiate1 nlVar) nlInfos nNonLin (idx + 1)
-              (accFvars.push nlVar) accPats k
-        | .pattern freshName patternStx =>
-          -- Introduce the binder (lambda parameter)
-          withLocalDecl freshName .default dom fun nlVar => do
-            -- Elaborate the pattern to determine the constructor and pattern variables
-            -- We build: fun (x : dom) => match x with | pattern => True
-            -- and inspect the match to extract pattern info
-            let patVarsAndCtor ← resolveNLPattern dom patternStx
-            let (ctorIdx, patVarNames, patVarTypes) := patVarsAndCtor
-            -- Introduce pattern variables
-            let rec introPatVars (names : Array Name) (types : Array Expr) (i : Nat)
-                (acc : Array Expr) (k' : Array Expr → TermElabM Expr) : TermElabM Expr := do
-              if h : i < names.size then
-                withLocalDecl names[i] .default types[i]! fun fv =>
-                  introPatVars names types (i + 1) (acc.push fv) k'
-              else k' acc
-            introPatVars patVarNames patVarTypes 0 #[] fun patVarFvars => do
-              -- Build the constructor expression from pattern vars
-              let ctorExpr ← buildCtorExpr dom ctorIdx patVarFvars
-              -- Instantiate ctor type with the constructor expression
-              let instBody := body.instantiate1 ctorExpr
-              let patInfo : NLPatternInfo := ⟨accFvars.size, nlVar, patVarFvars, ctorIdx⟩
-              withNonLinearBranchBindersExt cfg instBody nlInfos nNonLin (idx + 1)
-                (accFvars.push nlVar) (accPats.push patInfo) k
-    | _ => k accFvars accPats cty
-where
-  resolveNLPattern := LambekD.Elab.resolveNLPattern
-  parsePatternHead := parseNLPatternHead
-  /-- Build a constructor expression from pattern variable fvars.
-      Uses the inductive type info from `ty` to find the right constructor. -/
-  buildCtorExpr (ty : Expr) (ctorIdx : Nat) (patVarFvars : Array Expr) : TermElabM Expr := do
-    let tyW ← whnf ty
-    let indName := tyW.getAppFn.constName!
-    let env ← getEnv
-    let some indVal := getInductiveVal env indName
-      | throwError "not an inductive: {indName}"
-    let ctorName := indVal.ctors[ctorIdx]!
-    let indLevels := tyW.getAppFn.constLevels!
-    let indArgs := tyW.getAppArgs
-    let numParams := indVal.numParams
-    -- Look up ctor level params
-    let some ci := env.find? ctorName | throwError "ctor not found: {ctorName}"
-    let ctorLevels := ci.levelParams.map fun lp =>
-      match indLevels.zip indVal.levelParams |>.find? (·.2 == lp) with
-      | some (l, _) => l
-      | none => .zero
-    let mut result := Lean.mkConst ctorName ctorLevels
-    for p in indArgs[:numParams] do
-      result := mkApp result p
-    for fv in patVarFvars do
-      result := mkApp result fv
-    return result
-
-/-- Extract extra index expressions from a constructor's return type.
-    `tyFromW` starts at `∀ (w : String), ...` with NL fvars already instantiated.
-    Opens with `wExpr`, then opens remaining grammar foralls with metavars,
-    reads the return type's index positions (between params and w). -/
-def extractBranchIndexExprs (tyFromW : Expr) (wExpr : Expr)
-    (numParams numExtraIndices : Nat) : MetaM (Array Expr) := do
-  if numExtraIndices == 0 then return #[]
-  match tyFromW with
-  | .forallE _ _ afterW _ =>
-    let body := afterW.instantiate1 wExpr
-    let (_, _, retTy) ← forallMetaTelescope body
-    let retArgs := retTy.getAppArgs
-    -- retArgs = params ++ extraIndices ++ [w]
-    return retArgs[numParams : numParams + numExtraIndices].toArray
-  | _ => return #[]
-
-/-- CPS-introduce equality binders for casesOn branches.
-    `eqInfos` is an array of `(name, eqType)` pairs. -/
-partial def withEqBinders (eqInfos : Array (Name × Expr)) (idx : Nat)
-    (acc : Array Expr)
-    (k : Array Expr → TermElabM Expr) : TermElabM Expr := do
-  if h : idx < eqInfos.size then
-    let (nm, ty) := eqInfos[idx]
-    withLocalDecl nm .default ty fun fvar =>
-      withEqBinders eqInfos (idx + 1) (acc.push fvar) k
-  else
-    k acc
-
-/-- CPS-introduce motive index binders from the inductive type's foralls (after params).
-    Stops after `remaining` binders (= numExtraIndices). -/
-partial def withMotiveIdxBinders (tyRem : Expr) (remaining : Nat) (acc : Array Expr)
-    (k : Array Expr → TermElabM Expr) : TermElabM Expr := do
-  if remaining == 0 then k acc
-  else
-    match tyRem with
-    | .forallE _ dom body _ =>
-      let name := Name.mkSimple s!"_idx_{acc.size}"
-      withLocalDecl name .default dom fun fvar =>
-        withMotiveIdxBinders (body.instantiate1 fvar) (remaining - 1) (acc.push fvar) k
-    | _ => throwError "unexpected inductive type shape for index binder"
-
-/-- Check if a ctor type (after instantiating params) contains a genuine `w : String` binder.
-    When Lean promotes `w` to a parameter, the ctor type no longer has a String forall,
-    and all NL binders before `w` were also promoted. Returns `false` in that case. -/
-private def hasStringBinder (cfg : ElabConfig) (cty : Expr) : TermElabM Bool := do
-  let mut ty := cty
-  for _ in [:100] do
-    match ty with
-    | .forallE _ dom body _ =>
-      if ← withReducible <| isDefEq (← whnf dom) cfg.stringTy then return true
-      let mv ← mkFreshExprMVar (some dom)
-      ty := body.instantiate1 mv
-    | _ => return false
-  return false
-
-/-- CPS helper: introduce pattern variable local decls, then call k with the fvars. -/
-partial def withPatternVarDecls {α : Type} (names : Array Name) (types : Array Expr) (idx : Nat) (acc : Array Expr)
-    (k : Array Expr → TermElabM α) : TermElabM α := do
-  if h : idx < names.size then
-    withLocalDecl names[idx] .default types[idx]! fun fv =>
-      withPatternVarDecls names types (idx + 1) (acc.push fv) k
-  else k acc
 
 set_option maxHeartbeats 400000 in
 partial def elaborateOrderedTerm
@@ -399,7 +122,7 @@ partial def elaborateOrderedTerm
     let rflExpr ← mkEqRefl wLR
     let sp ← mkAppOptM ``Splitting.mk #[none, none, some wLeft, some wRight, some rflExpr]
     -- Provide A, B explicitly to avoid mkAppM failing to infer through struct projection
-    let tensor ← mkAppOptM ``Tensor.mk #[none, some goalA, some goalB, none, some sp, some e₁, some e₂]
+    let tensor ← mkAppOptM ``GTensor.mk #[none, some goalA, some goalB, none, some sp, some e₁, some e₂]
     -- tensor : goal (wLeft ++ wRight). Cast to goal wFull if they differ.
     if ← isDefEq wLR wFull then
       return tensor
@@ -414,7 +137,7 @@ partial def elaborateOrderedTerm
     let gramTy ← mkGrammarTy cfg
     let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
     let mB ← mkFreshExprMVar (some gramTy) .natural `goalB
-    let tGoal ← mkAppM ``Tensor #[mA, mB]
+    let tGoal ← mkAppM ``GTensor #[mA, mB]
     let tExpr ← elaborateOrderedTerm cfg t ctx tStart tStop tGoal aliases
     let gramA ← instantiateMVars mA
     let gramB ← instantiateMVars mB
@@ -454,7 +177,7 @@ partial def elaborateOrderedTerm
         else
           pure bodyExpr
         let bodyLam ← mkLambdaFVars #[wL, wR, aVar, bVar] finalBody
-        mkAppM ``elimTensor #[motiveC, tExpr, bodyLam]
+        mkAppM ``gelimTensor #[motiveC, tExpr, bodyLam]
 
   -- ─── Let-unit ───────────────────────────────────────────
   | `(gterm| let ⟨⟩ = $t in $body) => do
@@ -479,7 +202,7 @@ partial def elaborateOrderedTerm
       mkLambdaFVars #[s] (mkApp goal fullStr)
     let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop #[]
     let bodyExpr ← elaborateOrderedTerm cfg body newCtx newStart newStop goal aliases
-    mkAppM ``elimEpsilon #[motiveC, tExpr, bodyExpr]
+    mkAppM ``gelimEpsilon #[motiveC, tExpr, bodyExpr]
 
   -- ─── Let-unit (parentheses alias) ──────────────────────
   | `(gterm| let ( ) = $t in $body) => do
@@ -556,7 +279,7 @@ partial def elaborateOrderedTerm
             else
               throwError "recursive call argument must be a variable name"
         -- Try constructor (single-arg or multi-arg)
-        if let some fullCtorName ← tryResolveCtorName cfg goal name then
+        if let some fullCtorName ← (try pure (some (← resolveCtorName cfg goal name)) catch _ => pure none) then
           let some (ctyAfterParams, ctorConst, params) ← instantiateCtorFull cfg goal fullCtorName
             | throwError "cannot instantiate ctor '{fullCtorName}'"
           let nNonLin ← countNonLinearBinders cfg ctyAfterParams
@@ -594,8 +317,8 @@ partial def elaborateOrderedTerm
                   let body := afterW.instantiate1 w
                   match body with
                   | .forallE _ argTy _ _ => argTy
-                  | _ => mkApp (mkConst ``Epsilon [cfg.gramLevel]) w
-                | _ => mkApp (mkConst ``Epsilon [cfg.gramLevel]) w
+                  | _ => mkApp (mkConst ``GEpsilon [cfg.gramLevel]) w
+                | _ => mkApp (mkConst ``GEpsilon [cfg.gramLevel]) w
               -- Construct epsilon witness using Lean's elaborator for correct universes
               let epsWitness ← Lean.Elab.Term.elabTerm (← `(⟨⟨rfl⟩⟩)) (some epsTy)
               let mut result := ctorConst
@@ -606,7 +329,7 @@ partial def elaborateOrderedTerm
               return result
             else
               -- 2b. Non-zero grammar components
-              let isTensor := nSplittings > 0
+              let isTensor := nSplittings != 0
               -- Build grammar arg syntax from remaining allArgs
               let gramArgStx ← if nGramArgs == 1 then
                 pure allArgs[nNonLin]!
@@ -623,42 +346,7 @@ partial def elaborateOrderedTerm
                   | .forallE _ _ b _ => b.instantiate1 ww
                   | _ => tyAfterNL
                 if isTensor then
-                  let rec buildNLTensorGram (body : Expr) : TermElabM Expr := do
-                    match body with
-                    | .forallE _ splitTy afterS _ =>
-                      let splitTyW ← whnf splitTy
-                      if !splitTyW.getAppFn.isConstOf ``Splitting then
-                        abstractGrammar ww body
-                      else
-                        let sVar ← mkFreshExprMVar (some splitTyW)
-                        let sLeft ← mkAppM ``Splitting.left #[sVar]
-                        let afterSInst := afterS.instantiate1 sVar
-                        match afterSInst with
-                        | .forallE _ leftTy rest _ =>
-                          let leftGram ← abstractGrammarReplace ww leftTy sLeft
-                          let dummy ← mkFreshExprMVar none
-                          let restBody := rest.instantiate1 dummy
-                          match restBody with
-                          | .forallE _ nextSplitTy _ _ =>
-                            let nextW ← whnf nextSplitTy
-                            if nextW.getAppFn.isConstOf ``Splitting then
-                              let sRight ← mkAppM ``Splitting.right #[sVar]
-                              let rightGram ← withLocalDecl `ww2 .default cfg.stringTy fun ww2 => do
-                                let restBody2 := restBody.replace fun e =>
-                                  if e == sRight then some ww2 else none
-                                buildNLTensorGram restBody2
-                              mkAppM ``Tensor #[leftGram, rightGram]
-                            else
-                              let sRight ← mkAppM ``Splitting.right #[sVar]
-                              let rightGram ← abstractGrammarReplace ww nextSplitTy sRight
-                              mkAppM ``Tensor #[leftGram, rightGram]
-                          | _ =>
-                            let sRight ← mkAppM ``Splitting.right #[sVar]
-                            let rightGram ← abstractGrammarReplace ww restBody sRight
-                            mkAppM ``Tensor #[leftGram, rightGram]
-                        | _ => throwError "unexpected tensor ctor shape"
-                    | _ => abstractGrammar ww body
-                  buildNLTensorGram afterW
+                  buildTensorGram cfg ww afterW
                 else
                   match afterW with
                   | .forallE _ argTy _ _ => abstractGrammar ww argTy
@@ -746,7 +434,7 @@ partial def elaborateOrderedTerm
     let gramTy ← mkGrammarTy cfg
     if isRightApp == true then
       let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
-      let fGoal ← mkAppM ``FunctionR #[mA, goal]
+      let fGoal ← mkAppM ``GFunctionR #[mA, goal]
       let k ← findSplit f a ctx start stop aliases
       let eF ← elaborateOrderedTerm cfg f ctx start k fGoal aliases
       let eA ← elaborateOrderedTerm cfg a ctx k stop mA aliases
@@ -763,7 +451,7 @@ partial def elaborateOrderedTerm
         mkAppM ``cast #[goalEq, result]
     else
       let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
-      let fGoal ← mkAppM ``FunctionL #[goal, mA]
+      let fGoal ← mkAppM ``GFunctionL #[goal, mA]
       let k ← findSplit a f ctx start stop aliases
       let eA ← elaborateOrderedTerm cfg a ctx start k mA aliases
       let eF ← elaborateOrderedTerm cfg f ctx k stop fGoal aliases
@@ -790,14 +478,14 @@ partial def elaborateOrderedTerm
   | `(gterm| fst $t) => do
     let gramTy ← mkGrammarTy cfg
     let mB ← mkFreshExprMVar (some gramTy) .natural `goalB
-    let tGoal ← mkAppM ``Product #[goal, mB]
+    let tGoal ← mkAppM ``GProduct #[goal, mB]
     let tExpr ← elaborateOrderedTerm cfg t ctx start stop tGoal aliases
     mkAppM ``Prod.fst #[tExpr]
 
   | `(gterm| snd $t) => do
     let gramTy ← mkGrammarTy cfg
     let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
-    let tGoal ← mkAppM ``Product #[mA, goal]
+    let tGoal ← mkAppM ``GProduct #[mA, goal]
     let tExpr ← elaborateOrderedTerm cfg t ctx start stop tGoal aliases
     mkAppM ``Prod.snd #[tExpr]
 
@@ -822,7 +510,7 @@ partial def elaborateOrderedTerm
     let gramTy ← mkGrammarTy cfg
     let mA ← mkFreshExprMVar (some gramTy) .natural `goalA
     let mB ← mkFreshExprMVar (some gramTy) .natural `goalB
-    let tGoal ← mkAppM ``Sum #[mA, mB]
+    let tGoal ← mkAppM ``GSum #[mA, mB]
     let tExpr ← elaborateOrderedTerm cfg t ctx tStart tStop tGoal aliases
     let gramA ← instantiateMVars mA
     let gramB ← instantiateMVars mB
@@ -847,7 +535,7 @@ partial def elaborateOrderedTerm
 
   -- ─── Absurd ─────────────────────────────────────────────
   | `(gterm| absurd $t) => do
-    let botConst ← mkAppM ``Bottom #[]
+    let botConst ← mkAppM ``GBottom #[]
     let tExpr ← elaborateOrderedTerm cfg t ctx start stop botConst aliases
     let tDown ← mkAppM ``ULift.down #[tExpr]
     mkAppM ``PEmpty.elim #[tDown]
@@ -909,7 +597,7 @@ partial def elaborateOrderedTerm
   -- ─── Fold (inductive constructor) ─────────────────────────
   | `(gterm| fold $ctor:ident $t) => do
     let fullCtorName ← resolveCtorName cfg goal ctor.getId
-    let isTensor ← isTensorCtor cfg goal fullCtorName
+    let isTensor ← do pure ((← countTensorSplittings cfg goal fullCtorName) != 0)
     let w ← concatStrs cfg ctx start stop
     -- Get ctor type with correct universe levels and params
     let some (ctyAfterParams, ctorConst, params) ← instantiateCtorFull cfg goal fullCtorName
@@ -926,42 +614,7 @@ partial def elaborateOrderedTerm
         | _ => ctyAfterParams
       if isTensor then
         -- Reconstruct the tensor grammar from the flattened ctor type
-        let rec buildTensorGram (body : Expr) : TermElabM Expr := do
-          match body with
-          | .forallE _ splitTy afterS _ =>
-            let splitTyW ← whnf splitTy
-            if !splitTyW.getAppFn.isConstOf ``Splitting then
-              abstractGrammar ww body
-            else
-              let sVar ← mkFreshExprMVar (some splitTyW)
-              let sLeft ← mkAppM ``Splitting.left #[sVar]
-              let afterSInst := afterS.instantiate1 sVar
-              match afterSInst with
-              | .forallE _ leftTy rest _ =>
-                let leftGram ← abstractGrammarReplace ww leftTy sLeft
-                let dummy ← mkFreshExprMVar none
-                let restBody := rest.instantiate1 dummy
-                match restBody with
-                | .forallE _ nextSplitTy _ _ =>
-                  let nextW ← whnf nextSplitTy
-                  if nextW.getAppFn.isConstOf ``Splitting then
-                    let sRight ← mkAppM ``Splitting.right #[sVar]
-                    let rightGram ← withLocalDecl `ww2 .default cfg.stringTy fun ww2 => do
-                      let restBody2 := restBody.replace fun e =>
-                        if e == sRight then some ww2 else none
-                      buildTensorGram restBody2
-                    mkAppM ``Tensor #[leftGram, rightGram]
-                  else
-                    let sRight ← mkAppM ``Splitting.right #[sVar]
-                    let rightGram ← abstractGrammarReplace ww nextSplitTy sRight
-                    mkAppM ``Tensor #[leftGram, rightGram]
-                | _ =>
-                  let sRight ← mkAppM ``Splitting.right #[sVar]
-                  let rightGram ← abstractGrammarReplace ww restBody sRight
-                  mkAppM ``Tensor #[leftGram, rightGram]
-              | _ => throwError "unexpected tensor ctor shape in fold"
-          | _ => abstractGrammar ww body
-        buildTensorGram afterW
+        buildTensorGram cfg ww afterW
       else
         -- Simple ctor: ∀ (w : String), ArgTy w → RetTy w
         match afterW with
@@ -1068,13 +721,7 @@ partial def elaborateOrderedTerm
             let indTyMot ← whnf indApp
             withLocalDecl `t_mot .default indTyMot fun tMot => do
               -- Build full string with wMot replacing scrutinee's portion
-              let mut motiveStr := wMot
-              if tStop < stop then
-                let afterStr ← concatStrs cfg ctx tStop stop
-                motiveStr ← mkAppM ``HAppend.hAppend #[motiveStr, afterStr]
-              for i in List.range (tStart - start) do
-                let idx := tStart - 1 - i
-                motiveStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveStr]
+              let motiveStr ← buildMotiveStr cfg ctx start stop tStart tStop wMot
               let goalBody := mkApp goal motiveStr
               let motiveBody ← if recName?.isNone then do
                 -- casesOn: add equality foralls for w and extra indices
@@ -1133,7 +780,7 @@ partial def elaborateOrderedTerm
         let group := branchGroups.getD ctorName #[]
         let branch := group[0]!  -- representative branch for shared ctor info
         let varNodes := branch[2].getArgs
-        let isTensor ← isTensorCtor cfg tGoalResolved fullCtorName
+        let isTensor ← do pure ((← countTensorSplittings cfg tGoalResolved fullCtorName) != 0)
         let cty ← instantiateCtorParams fullCtorName
         let hasW ← hasStringBinder cfg cty
         let nNonLin ← if hasW then countNonLinearBinders cfg cty else pure 0
@@ -1306,56 +953,8 @@ partial def elaborateOrderedTerm
                       let ri : RecCallInfo := ⟨recName, ihMap⟩
                       let cfgRec := { cfgNL with recInfo := some ri }
                       let branchExpr ← elaborateOrderedTerm cfgRec body newCtx newStart newStop goal aliases
-                      -- Cast from goal(componentConcat ++ after) to goal(wBr ++ after)
-                      -- The body uses component strings (s.left, s.right) but .rec expects wBr.
-                      let actualStr ← concatStrs cfg newCtx newStart newStop
-                      let mut motiveResultStr := wBr
-                      if tStop < stop then
-                        let afterStr ← concatStrs cfg ctx tStop stop
-                        motiveResultStr ← mkAppM ``HAppend.hAppend #[motiveResultStr, afterStr]
-                      for i in List.range (tStart - start) do
-                        let idx := tStart - 1 - i
-                        motiveResultStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveResultStr]
-                      let branchExpr ← if ← isDefEq actualStr motiveResultStr then
-                        pure branchExpr
-                      else
-                        -- Build proof: componentConcat = wBr using splitting equalities
-                        let splittings := (List.range ((comps.size - 1))).toArray.map
-                          fun i => fvars[2 * i]!
-                        let splitEq ← proveSplittingsEq cfg splittings 0
-                        -- Extend to full string proof with before/after context
-                        let mut fullEq := splitEq
-                        if tStop < stop then
-                          let afterStr ← concatStrs cfg ctx tStop stop
-                          let appendAfterFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-                            let body ← mkAppM ``HAppend.hAppend #[x, afterStr]
-                            mkLambdaFVars #[x] body
-                          fullEq ← mkAppM ``congrArg #[appendAfterFn, fullEq]
-                        for i in List.range (tStart - start) do
-                          let idx := tStart - 1 - i
-                          let prefixStr := (ctx.getV idx).strExpr
-                          let prependFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-                            let body ← mkAppM ``HAppend.hAppend #[prefixStr, x]
-                            mkLambdaFVars #[x] body
-                          fullEq ← mkAppM ``congrArg #[prependFn, fullEq]
-                        let fullEqLhs ← concatStrs cfg newCtx newStart (newStart + comps.size)
-                        let fullEqLhsFull ← if tStop < stop then do
-                          let afterStr ← concatStrs cfg ctx tStop stop
-                          mkAppM ``HAppend.hAppend #[fullEqLhs, afterStr]
-                        else pure fullEqLhs
-                        let mut finalFullEqLhs := fullEqLhsFull
-                        for i in List.range (tStart - start) do
-                          let idx := tStart - 1 - i
-                          finalFullEqLhs ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, finalFullEqLhs]
-                        if ← isDefEq actualStr finalFullEqLhs then
-                          let goalEq ← mkAppM ``congrArg #[goal, fullEq]
-                          mkAppM ``cast #[goalEq, branchExpr]
-                        else
-                          let assocEq ← proveStrEq actualStr finalFullEqLhs
-                          let assocGoalEq ← mkAppM ``congrArg #[goal, assocEq]
-                          let step1 ← mkAppM ``cast #[assocGoalEq, branchExpr]
-                          let goalEq ← mkAppM ``congrArg #[goal, fullEq]
-                          mkAppM ``cast #[goalEq, step1]
+                      let branchExpr ← castViaSplittings cfg goal ctx start stop tStart tStop
+                        branchExpr newCtx newStart newStop comps fvars wBr
                       mkLambdaFVars (nlFvars ++ #[wBr] ++ fvars ++ ihFvars) branchExpr
                 else if isTensor then
                   -- Single-arity tensor with .rec: error, require multi-arity
@@ -1411,64 +1010,19 @@ partial def elaborateOrderedTerm
                       componentOVs := componentOVs.push ⟨names[i]!, gram, str, parse⟩
                     let (newCtx, newStart, newStop) := replaceSlice ctx start stop tStart tStop componentOVs
                     let branchExpr ← elaborateOrderedTerm cfgNL body newCtx newStart newStop goal aliases
-                    -- Cast from goal(componentConcat) to goal(wBr) if they differ
-                    let actualStr ← concatStrs cfg newCtx newStart newStop
-                    let mut motiveResultStr := wBr
-                    if tStop < stop then
-                      let afterStr ← concatStrs cfg ctx tStop stop
-                      motiveResultStr ← mkAppM ``HAppend.hAppend #[motiveResultStr, afterStr]
-                    for i in List.range (tStart - start) do
-                      let idx := tStart - 1 - i
-                      motiveResultStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveResultStr]
-                    let branchExpr ← if ← isDefEq actualStr motiveResultStr then
-                      pure branchExpr
-                    else
-                      -- Build splitting equality proof: componentConcat = wBr
-                      let splittings := (List.range (comps.size - 1)).toArray.map fun i => fvars[2 * i]!
-                      let splitEq ← proveSplittingsEq cfg splittings 0
-                      let mut fullEq := splitEq
-                      if tStop < stop then
-                        let afterStr ← concatStrs cfg ctx tStop stop
-                        let appendAfterFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-                          let bodyE ← mkAppM ``HAppend.hAppend #[x, afterStr]
-                          mkLambdaFVars #[x] bodyE
-                        fullEq ← mkAppM ``congrArg #[appendAfterFn, fullEq]
-                      for i in List.range (tStart - start) do
-                        let idx := tStart - 1 - i
-                        let prefixStr := (ctx.getV idx).strExpr
-                        let prependFn ← withLocalDecl `_x .default cfg.stringTy fun x => do
-                          let bodyE ← mkAppM ``HAppend.hAppend #[prefixStr, x]
-                          mkLambdaFVars #[x] bodyE
-                        fullEq ← mkAppM ``congrArg #[prependFn, fullEq]
-                      let fullEqLhs ← concatStrs cfg newCtx newStart (newStart + comps.size)
-                      let fullEqLhsFull ← if tStop < stop then do
-                        let afterStr ← concatStrs cfg ctx tStop stop
-                        mkAppM ``HAppend.hAppend #[fullEqLhs, afterStr]
-                      else pure fullEqLhs
-                      let mut finalFullEqLhs := fullEqLhsFull
-                      for i in List.range (tStart - start) do
-                        let idx := tStart - 1 - i
-                        finalFullEqLhs ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, finalFullEqLhs]
-                      if ← isDefEq actualStr finalFullEqLhs then
-                        let goalEq ← mkAppM ``congrArg #[goal, fullEq]
-                        mkAppM ``cast #[goalEq, branchExpr]
-                      else
-                        let assocEq ← proveStrEq actualStr finalFullEqLhs
-                        let assocGoalEq ← mkAppM ``congrArg #[goal, assocEq]
-                        let step1 ← mkAppM ``cast #[assocGoalEq, branchExpr]
-                        let goalEq ← mkAppM ``congrArg #[goal, fullEq]
-                        mkAppM ``cast #[goalEq, step1]
+                    let branchExpr ← castViaSplittings cfg goal ctx start stop tStart tStop
+                      branchExpr newCtx newStart newStop comps fvars wBr
                     -- Add Literal/Epsilon length let-bindings for WF termination
                     let mut enrichedExpr := branchExpr
                     for i in [:comps.size] do
                       let (gram, _str, parse) := comps[i]!
-                      if gram.isAppOf ``Literal then
-                        let proof ← mkAppM ``Literal.length_eq #[parse]
+                      if gram.isAppOf ``GLiteral then
+                        let proof ← mkAppM ``GLiteral.length_eq #[parse]
                         let proofTy ← inferType proof
                         enrichedExpr ← withLetDecl (.mkSimple s!"_h_len_{i}") proofTy proof fun h =>
                           mkLetFVars #[h] enrichedExpr (usedLetOnly := false)
-                      else if gram.isAppOf ``Epsilon then
-                        let proof ← mkAppM ``Epsilon.length_eq #[parse]
+                      else if gram.isAppOf ``GEpsilon then
+                        let proof ← mkAppM ``GEpsilon.length_eq #[parse]
                         let proofTy ← inferType proof
                         enrichedExpr ← withLetDecl (.mkSimple s!"_h_len_{i}") proofTy proof fun h =>
                           mkLetFVars #[h] enrichedExpr (usedLetOnly := false)
@@ -1539,13 +1093,7 @@ partial def elaborateOrderedTerm
         pure casesResult
       -- Handle string associativity cast (shared by both paths)
       let fullStr ← concatStrs cfg ctx start stop
-      let mut motiveResultStr := wT
-      if tStop < stop then
-        let afterStr ← concatStrs cfg ctx tStop stop
-        motiveResultStr ← mkAppM ``HAppend.hAppend #[motiveResultStr, afterStr]
-      for i in List.range (tStart - start) do
-        let idx := tStart - 1 - i
-        motiveResultStr ← mkAppM ``HAppend.hAppend #[(ctx.getV idx).strExpr, motiveResultStr]
+      let motiveResultStr ← buildMotiveStr cfg ctx start stop tStart tStop wT
       if ← isDefEq motiveResultStr fullStr then
         return elimResult
       else
@@ -1658,7 +1206,6 @@ partial def elaborateMultiPatterns
             let needsCast ← do pure (!(← isDefEq wLwR strExpr))
             let castExpr ← if needsCast then do
               -- Build motive for cast: fun s => goal (ctx_prefix ++ s)
-              let hasAfter := ctx.size > 0
               let motiveC ← withLocalDecl `s .default cfg.stringTy fun s => do
                 let mut fullStr := s
                 for i in List.range ctx.size do

@@ -24,16 +24,16 @@ attribute [grammar_simp] List.append_assoc List.nil_append List.append_nil
 attribute [grammar_simp] gComp_assoc gId_comp gComp_id
 
 -- Tensor bifunctoriality
-attribute [grammar_simp] tensorIntro_comp tensorIntro_id
+attribute [grammar_simp] gtensorIntro_comp gtensorIntro_id
 
 -- Sum β/η
-attribute [grammar_simp] sum_βl sum_βr sum_η sumElim_comp
+attribute [grammar_simp] gsum_βl gsum_βr gsum_η gsumElim_comp
 
 -- Product β/η
-attribute [grammar_simp] prod_β₁ prod_β₂ prod_η prodIntro_comp
+attribute [grammar_simp] gprod_β₁ gprod_β₂ gprod_η gprodIntro_comp
 
 -- Linear function η
-attribute [grammar_simp] limpR_η limpL_η
+attribute [grammar_simp] glimpR_η glimpL_η
 
 -- Linear function intro composition
-attribute [grammar_simp] limpRIntro_comp limpLIntro_comp
+attribute [grammar_simp] glimpRIntro_comp glimpLIntro_comp

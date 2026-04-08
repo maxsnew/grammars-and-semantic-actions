@@ -152,55 +152,7 @@ partial def extractIndexTypes (ty : Syntax) : Option (Array (TSyntax `term)) :=
         none
 
 -- ═══════════════════════════════════════════════════════════
--- Old-style grammar_inductive (backward compatible)
--- ═══════════════════════════════════════════════════════════
-
-open Lean Elab Command in
-elab "grammar_inductive " name:ident params:bracketedBinder* " where"
-    ctors:(ppLine "| " ident " : " term)* : command => do
-  let w := mkIdent `w
-  -- Use a hole `_` for the alphabet since old-style doesn't specify it explicitly
-  let alphHole : TSyntax `term :=
-    ⟨Syntax.node SourceInfo.none ``Lean.Parser.Term.hole #[Syntax.atom SourceInfo.none "_"]⟩
-  -- Build return type: name p₁ ... pₙ w
-  let mut retTy : TSyntax `term ← `($name)
-  for param in params do
-    for id in param.raw[1].getArgs do
-      let idStx : TSyntax `ident := ⟨id⟩
-      retTy ← `($retTy $idStx)
-  retTy ← `($retTy $w)
-  -- Build base command with w as index: `inductive Name params : LambekD.String _ → Type _ where`
-  let baseCmd ← `(inductive $name $[$params]* : LambekD.String $alphHole → Type _ where)
-  let emptyDeclMods := Syntax.node SourceInfo.none
-    ``Lean.Parser.Command.declModifiers
-    #[.node .none `null #[], .node .none `null #[], .node .none `null #[],
-      .node .none `null #[], .node .none `null #[], .node .none `null #[]]
-  let mut ctorNodes : Array Syntax := #[]
-  for ctor in ctors do
-    let c := ctor.raw[1]
-    let ty : TSyntax `term := ⟨ctor.raw[3]⟩
-    let ctorTy ← if ty.raw.getKind == `LambekD.«term_⊗_» then do
-      let components := collectTensorComponents ty.raw
-      let inner ← liftMacroM <| buildTensorCtorTy components w retTy 0
-      `(∀ ($w : LambekD.String $alphHole), $inner)
-    else
-      `(∀ ($w : LambekD.String $alphHole), ($ty) $w → $retTy)
-    let typeSpec := Syntax.node SourceInfo.none ``Lean.Parser.Term.typeSpec
-      #[.atom .none ":", ctorTy.raw]
-    let optSig := Syntax.node SourceInfo.none ``Lean.Parser.Command.optDeclSig
-      #[.node .none `null #[],
-        .node .none `null #[typeSpec]]
-    ctorNodes := ctorNodes.push <|
-      Syntax.node SourceInfo.none ``Lean.Parser.Command.ctor
-        #[.node .none `null #[], .atom .none "|", emptyDeclMods, c, optSig]
-  let cmdRaw := baseCmd.raw
-  let indNode := cmdRaw[1]
-  let indNode' := indNode.setArg 4 (.node .none `null ctorNodes)
-  let cmdRaw' := cmdRaw.setArg 1 indNode'
-  elabCommand ((⟨cmdRaw'⟩ : TSyntax `command))
-
--- ═══════════════════════════════════════════════════════════
--- New-style grammar_inductive with ↑(gcBody) and optional indices
+-- grammar_inductive with ↑(gcBody) and optional indices
 -- ═══════════════════════════════════════════════════════════
 
 open Lean Elab Command in
@@ -307,15 +259,6 @@ def resolveCtorName (cfg : ElabConfig) (goal : Expr) (ctorName : Name)
       | throwError "constructor '{fullCtorName}' not found"
     return fullCtorName
 
-/-- Like `resolveCtorName` but returns `Option Name` instead of throwing. -/
-def tryResolveCtorName (cfg : ElabConfig) (goal : Expr) (ctorName : Name)
-    : TermElabM (Option Name) := do
-  try
-    let name ← resolveCtorName cfg goal ctorName
-    return some name
-  catch _ =>
-    return none
-
 /-- Instantiate a ctor with the inductive's universe levels and parameters.
     Returns (ctorTypeAfterParams, ctorConst, params) or `none`. -/
 def instantiateCtorFull (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
@@ -377,7 +320,7 @@ def isZeroComponentCtor (cfg : ElabConfig) (ctyAfterParams : Expr) : TermElabM B
       | .forallE _ argTy _ _ =>
         -- Check if arg type head is Epsilon (use withReducible to avoid unfolding the def)
         let argTyH ← withReducible <| whnf argTy
-        return argTyH.isAppOf ``Epsilon
+        return argTyH.isAppOf ``GEpsilon
       | _ => return false
   | _ => return false
 
@@ -431,12 +374,6 @@ def countTensorSplittings (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
       return count
     | _ => return 0
 
-/-- Check if a constructor is tensor-flattened. -/
-def isTensorCtor (cfg : ElabConfig) (goal : Expr) (fullCtorName : Name)
-    : TermElabM Bool := do
-  let n ← countTensorSplittings cfg goal fullCtorName
-  return n > 0
-
 /-- Recursively decompose a tensor value to produce ctor args for a multi-tensor flattened ctor.
     `body` is the ctor type after params + w. For each Splitting binder, extracts `.split`, `.fst`,
     and recurses into `.snd`. Returns the array of args to pass to the ctor. -/
@@ -445,8 +382,8 @@ partial def decomposeTensorForCtor (tExpr : Expr) (body : Expr) : TermElabM (Arr
   | .forallE _ splitTy afterS _ =>
     let splitTyW ← whnf splitTy
     if splitTyW.getAppFn.isConstOf ``Splitting then
-      let splitE ← mkAppM ``Tensor.split #[tExpr]
-      let fstE ← mkAppM ``Tensor.fst #[tExpr]
+      let splitE ← mkAppM ``GTensor.split #[tExpr]
+      let fstE ← mkAppM ``GTensor.fst #[tExpr]
       let sVar ← mkFreshExprMVar (some splitTyW)
       let afterSInst := afterS.instantiate1 sVar
       match afterSInst with
@@ -457,14 +394,14 @@ partial def decomposeTensorForCtor (tExpr : Expr) (body : Expr) : TermElabM (Arr
         | .forallE _ nextSplitTy _ _ =>
           let nextSplitTyW ← whnf nextSplitTy
           if nextSplitTyW.getAppFn.isConstOf ``Splitting then
-            let sndE ← mkAppM ``Tensor.snd #[tExpr]
+            let sndE ← mkAppM ``GTensor.snd #[tExpr]
             let innerArgs ← decomposeTensorForCtor sndE restBody
             return #[splitE, fstE] ++ innerArgs
           else
-            let sndE ← mkAppM ``Tensor.snd #[tExpr]
+            let sndE ← mkAppM ``GTensor.snd #[tExpr]
             return #[splitE, fstE, sndE]
         | _ =>
-          let sndE ← mkAppM ``Tensor.snd #[tExpr]
+          let sndE ← mkAppM ``GTensor.snd #[tExpr]
           return #[splitE, fstE, sndE]
       | _ => throwError "unexpected tensor ctor shape in decomposeTensorForCtor"
     else
@@ -494,15 +431,15 @@ partial def withTensorCtorBinders (cfg : ElabConfig) (body : Expr)
             let nextSplitTyW ← whnf nextSplitTy
             if nextSplitTyW.getAppFn.isConstOf ``Splitting then
               withTensorCtorBinders cfg restInst fun innerFvars innerVal innerGram => do
-                let tensorVal ← mkAppM ``Tensor.mk #[sVar, aVar, innerVal]
-                let tensorGram ← mkAppM ``Tensor #[leftGram, innerGram]
+                let tensorVal ← mkAppM ``GTensor.mk #[sVar, aVar, innerVal]
+                let tensorGram ← mkAppM ``GTensor #[leftGram, innerGram]
                 k (#[sVar, aVar] ++ innerFvars) tensorVal tensorGram
             else
               withLocalDecl `b .default nextSplitTy fun bVar => do
                 let rightGram ← withLocalDecl `ww .default cfg.stringTy fun ww => do
                   abstractGrammarReplace ww nextSplitTy sRight
-                let tensorVal ← mkAppM ``Tensor.mk #[sVar, aVar, bVar]
-                let tensorGram ← mkAppM ``Tensor #[leftGram, rightGram]
+                let tensorVal ← mkAppM ``GTensor.mk #[sVar, aVar, bVar]
+                let tensorGram ← mkAppM ``GTensor #[leftGram, rightGram]
                 k #[sVar, aVar, bVar] tensorVal tensorGram
           | _ =>
             throwError "withTensorCtorBinders: unexpected shape after component"

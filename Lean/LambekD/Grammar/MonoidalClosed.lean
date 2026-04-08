@@ -19,8 +19,8 @@ variable {Alphabet : Type u}
 
 /-- The right internal hom functor: `B ↦ A ⊸ B` -/
 def rightClosureFunctor (A : Grammar.{u, u} Alphabet) : Grammar.{u, u} Alphabet ⥤ Grammar.{u, u} Alphabet where
-  obj B := FunctionR A B
-  map f := limpRIntro (f ∘g limpRApp)
+  obj B := GFunctionR A B
+  map f := glimpRIntro (f ∘g glimpRApp)
 
 /-- The adjunction `tensorRight A ⊣ rightClosureFunctor A` witnessing
     that `A ⊸ -` is right adjoint to `- ⊗ A`. -/
@@ -30,7 +30,7 @@ def rightClosureAdj (A : Grammar.{u, u} Alphabet) : tensorRight A ⊣ rightClosu
     naturality _ _ _ := rfl
   }
   counit := {
-    app B := limpRApp
+    app B := glimpRApp
     naturality _ _ f := by
       funext w ⟨⟨l, r, eq⟩, g, a⟩; cases eq with | refl => rfl
   }
@@ -46,8 +46,8 @@ instance : MonoidalLeftClosed (Grammar.{u, u} Alphabet) where
 
 /-- The left internal hom functor: `B ↦ B ⟜ A` -/
 def leftClosureFunctor (A : Grammar.{u, u} Alphabet) : Grammar.{u, u} Alphabet ⥤ Grammar.{u, u} Alphabet where
-  obj B := FunctionL B A
-  map f := limpLIntro (f ∘g limpLApp)
+  obj B := GFunctionL B A
+  map f := glimpLIntro (f ∘g glimpLApp)
 
 /-- The adjunction `tensorLeft A ⊣ leftClosureFunctor A` witnessing
     that `- ⟜ A` is right adjoint to `A ⊗ -`. -/
@@ -57,7 +57,7 @@ def leftClosureAdj (A : Grammar.{u, u} Alphabet) : tensorLeft A ⊣ leftClosureF
     naturality _ _ _ := rfl
   }
   counit := {
-    app B := limpLApp
+    app B := glimpLApp
     naturality _ _ f := by
       funext w ⟨⟨l, r, eq⟩, a, g⟩; cases eq with | refl => rfl
   }

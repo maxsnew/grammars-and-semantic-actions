@@ -21,36 +21,36 @@ variable {A B C D : Grammar Alphabet}
 -- Previously 2 lines each, now 1 line
 -- ═══════════════════════════════════════════════════════════
 
-example : tensorAssoc ∘g tensorAssocInv = gId (A := A ⊗ (B ⊗ C)) := by grammar_ext
-example : tensorAssocInv ∘g tensorAssoc = gId (A := (A ⊗ B) ⊗ C) := by grammar_ext
+example : gtensorAssoc ∘g gtensorAssocInv = gId (A := A ⊗ (B ⊗ C)) := by grammar_ext
+example : gtensorAssocInv ∘g gtensorAssoc = gId (A := (A ⊗ B) ⊗ C) := by grammar_ext
 
 -- ═══════════════════════════════════════════════════════════
 -- grammar_ext: naturality
 -- ═══════════════════════════════════════════════════════════
 
 example (f : A ⊢ A) (g : B ⊢ B) (h : C ⊢ C) :
-    tensorAssoc ∘g tensorIntro (tensorIntro f g) h =
-    tensorIntro f (tensorIntro g h) ∘g tensorAssoc := by grammar_ext
+    gtensorAssoc ∘g gtensorIntro (gtensorIntro f g) h =
+    gtensorIntro f (gtensorIntro g h) ∘g gtensorAssoc := by grammar_ext
 
 -- ═══════════════════════════════════════════════════════════
 -- grammar_ext: ε unit (simple direction)
 -- ═══════════════════════════════════════════════════════════
 
--- Was: funext w a; simp only [gComp, εUnitRInv, εUnitR, gId]
-example : εUnitR ∘g εUnitRInv = gId (A := A) := by grammar_ext
-example : εUnitL ∘g εUnitLInv = gId (A := A) := by grammar_ext
+-- Was: funext w a; simp only [gComp, gεUnitRInv, gεUnitR, gId]
+example : gεUnitR ∘g gεUnitRInv = gId (A := A) := by grammar_ext
+example : gεUnitL ∘g gεUnitLInv = gId (A := A) := by grammar_ext
 
 -- ε unit inverse round-trips need simp normalization of l ++ [] = w
 -- before subst. grammar_ext handles the destructuring, leaving a
 -- goal that simp_all can close.
 -- Was: funext w ⟨⟨l, r, eq⟩, a, ⟨nil⟩⟩
 --      cases nil with | refl => simp at eq; cases eq with | refl => rfl
-example : εUnitRInv ∘g εUnitR = gId (A := A ⊗ Epsilon) := by
-  funext w ⟨⟨l, r, eq⟩, a, ⟨nil⟩⟩
+example : gεUnitRInv ∘g gεUnitR = gId (A := A ⊗ GEpsilon) := by
+  funext w ⟨⟨l, r, eq⟩, a, ⟨⟨nil⟩⟩⟩
   cases nil with | refl => simp at eq; cases eq with | refl => rfl
 
-example : εUnitLInv ∘g εUnitL = gId (A := Epsilon ⊗ A) := by
-  funext w ⟨⟨l, r, eq⟩, ⟨nil⟩, a⟩
+example : gεUnitLInv ∘g gεUnitL = gId (A := GEpsilon ⊗ A) := by
+  funext w ⟨⟨l, r, eq⟩, ⟨⟨nil⟩⟩, a⟩
   cases nil with | refl => simp at eq; cases eq with | refl => rfl
 
 -- ═══════════════════════════════════════════════════════════
@@ -59,21 +59,21 @@ example : εUnitLInv ∘g εUnitL = gId (A := Epsilon ⊗ A) := by
 -- ═══════════════════════════════════════════════════════════
 
 example (f : A ⊗ B ⊢ C) :
-    limpRApp ∘g tensorIntro (gId A) (limpRIntro f) = f := by grammar_ext
+    glimpRApp ∘g gtensorIntro (glimpRIntro f) (gId B) = f := by grammar_ext
 
 example (f : A ⊗ B ⊢ C) :
-    limpLApp ∘g tensorIntro (limpLIntro f) (gId B) = f := by grammar_ext
+    glimpLApp ∘g gtensorIntro (gId A) (glimpLIntro f) = f := by grammar_ext
 
 -- ═══════════════════════════════════════════════════════════
 -- splitting_cases standalone
 -- ═══════════════════════════════════════════════════════════
 
 -- With named variables
-example : tensorAssoc ∘g tensorAssocInv = gId (A := A ⊗ (B ⊗ C)) := by
+example : gtensorAssoc ∘g gtensorAssocInv = gId (A := A ⊗ (B ⊗ C)) := by
   funext w ⟨⟨l, r, eq⟩, a, ⟨⟨l', r', eq'⟩, b, c⟩⟩; splitting_cases
 
 -- With anonymous variables
-example : tensorAssoc ∘g tensorAssocInv = gId (A := A ⊗ (B ⊗ C)) := by
+example : gtensorAssoc ∘g gtensorAssocInv = gId (A := A ⊗ (B ⊗ C)) := by
   funext _ ⟨⟨_, _, _⟩, _, ⟨⟨_, _, _⟩, _, _⟩⟩; splitting_cases
 
 -- ═══════════════════════════════════════════════════════════
@@ -90,25 +90,25 @@ example (f : A ⊢ B) : f ∘g gId A = f := by simp only [grammar_simp]
 -- grammar_simp: connective laws
 -- ═══════════════════════════════════════════════════════════
 
-example : tensorIntro (gId A) (gId B) = gId (A ⊗ B) := by simp only [grammar_simp]
+example : gtensorIntro (gId A) (gId B) = gId (A ⊗ B) := by simp only [grammar_simp]
 
-example (f : C ⊢ A) (g : C ⊢ B) : prodProj₁ ∘g prodIntro f g = f := by
+example (f : C ⊢ A) (g : C ⊢ B) : gprodProj₁ ∘g gprodIntro f g = f := by
   simp only [grammar_simp]
-example (f : C ⊢ A) (g : C ⊢ B) : prodProj₂ ∘g prodIntro f g = g := by
+example (f : C ⊢ A) (g : C ⊢ B) : gprodProj₂ ∘g gprodIntro f g = g := by
   simp only [grammar_simp]
 
-example (f : A ⊢ C) (g : B ⊢ C) : sumElim f g ∘g sumInl = f := by
+example (f : A ⊢ C) (g : B ⊢ C) : gsumElim f g ∘g gsumInl = f := by
   simp only [grammar_simp]
-example (f : A ⊢ C) (g : B ⊢ C) : sumElim f g ∘g sumInr = g := by
+example (f : A ⊢ C) (g : B ⊢ C) : gsumElim f g ∘g gsumInr = g := by
   simp only [grammar_simp]
 
 -- ═══════════════════════════════════════════════════════════
 -- StrongEquiv via grammar_ext
 -- ═══════════════════════════════════════════════════════════
 
-def tensorAssocEquiv : (A ⊗ B) ⊗ C ≅g A ⊗ (B ⊗ C) where
-  to := tensorAssoc
-  from' := tensorAssocInv
+def gtensorAssocEquiv : (A ⊗ B) ⊗ C ≅g A ⊗ (B ⊗ C) where
+  to := gtensorAssoc
+  from' := gtensorAssocInv
   to_from := by grammar_ext
   from_to := by grammar_ext
 

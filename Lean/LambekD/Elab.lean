@@ -7,4 +7,5 @@ import LambekD.Elab.Util
 import LambekD.Elab.IDE
 import LambekD.Elab.Match
 import LambekD.Elab.Inductive
+import LambekD.Elab.Helpers
 import LambekD.Elab.Elaborator

@@ -33,11 +33,11 @@ universe uAlph
 variable {Alphabet : Type uAlph}
 
 def toGrammar.{u} : RegularExpression.{uAlph} Alphabet → Grammar.{max u uAlph, uAlph} Alphabet
-  | .eps => Epsilon
-  | .bot => Bottom
-  | .tensor r r' => Tensor r.toGrammar r'.toGrammar
-  | .literal c => Literal c
-  | .sum r r' => Sum r.toGrammar r'.toGrammar
+  | .eps => GEpsilon
+  | .bot => GBottom
+  | .tensor r r' => GTensor r.toGrammar r'.toGrammar
+  | .literal c => GLiteral c
+  | .sum r r' => GSum r.toGrammar r'.toGrammar
   | .star r => KleeneStar r.toGrammar
 
 scoped notation "⟦" r "⟧r" => toGrammar r

@@ -57,9 +57,9 @@ inductive Nonterminal where
 -- Single indexed inductive encoding both EXP and ATOM
 grammar_inductive BinOpG : Nonterminal → Grammar Tok where
   | done : ↑(BinOpG Nonterminal.Atom ⊸ BinOpG Nonterminal.Exp)
-  | add : ↑(BinOpG Nonterminal.Atom ⊗ Literal Tok.plus ⊗ BinOpG Nonterminal.Exp ⊸ BinOpG Nonterminal.Exp)
+  | add : ↑(BinOpG Nonterminal.Atom ⊗ GLiteral Tok.plus ⊗ BinOpG Nonterminal.Exp ⊸ BinOpG Nonterminal.Exp)
   | num : ↑(anyNum ⊸ BinOpG Nonterminal.Atom)
-  | parens : ↑(Literal Tok.lparen ⊗ BinOpG Nonterminal.Exp ⊗ Literal Tok.rparen ⊸ BinOpG Nonterminal.Atom)
+  | parens : ↑(GLiteral Tok.lparen ⊗ BinOpG Nonterminal.Exp ⊗ GLiteral Tok.rparen ⊸ BinOpG Nonterminal.Atom)
 
 -- Abbreviations for the two nonterminals
 abbrev EXP : Grammar Tok := BinOpG Nonterminal.Exp

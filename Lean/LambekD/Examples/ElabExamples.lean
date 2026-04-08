@@ -229,10 +229,10 @@ example (A B : Grammar Paren) : True := by
 -- ═══════════════════════════════════════════════════════════
 
 grammar_inductive StarG (A : Grammar Paren) : Grammar Paren where
-  | nil : Epsilon
+  | nil : GEpsilon
   | cons : A ⊗ StarG A
 
-def starNil (A : Grammar Paren) : ↑g(Epsilon ⊸ StarG A) :=
+def starNil (A : Grammar Paren) : ↑g(GEpsilon ⊸ StarG A) :=
   [| x => nil x |]
 
 def starCons (A : Grammar Paren) : ↑g(A ⊗ StarG A ⊸ StarG A) :=
@@ -246,14 +246,14 @@ def starConsLet (A : Grammar Paren) : ↑g(A ⊗ StarG A ⊸ StarG A) :=
 def starToSelf (A : Grammar Paren) : ↑g(StarG A ⊸ StarG A) :=
   [| x => rec x of
      | nil y => nil y
-     | cons y => cons y
+     | cons y => cons y |]
 
 -- ═══════════════════════════════════════════════════════════
 -- Constructor auto-detect (sugar for `fold ctor arg`)
 -- ═══════════════════════════════════════════════════════════
 
 -- Using constructor name directly instead of `fold`
-def starNil' (A : Grammar Paren) : ↑g(Epsilon ⊸ StarG A) :=
+def starNil' (A : Grammar Paren) : ↑g(GEpsilon ⊸ StarG A) :=
   [| x => nil x |]
 
 def starCons' (A : Grammar Paren) : ↑g(A ⊗ StarG A ⊸ StarG A) :=
@@ -264,19 +264,19 @@ def starCons' (A : Grammar Paren) : ↑g(A ⊗ StarG A ⊸ StarG A) :=
 -- ═══════════════════════════════════════════════════════════
 
 grammar_inductive Dyck : Grammar Paren where
-  | nil : Epsilon
-  | cons : Literal Paren.lparen ⊗ Dyck ⊗ Literal Paren.rparen ⊗ Dyck
+  | nil : GEpsilon
+  | cons : GLiteral Paren.lparen ⊗ Dyck ⊗ GLiteral Paren.rparen ⊗ Dyck
 
 -- Constructor application without `fold` keyword
-def dyckCons : ↑g(Literal Paren.lparen ⊗ Dyck ⊗ Literal Paren.rparen ⊗ Dyck ⊸ Dyck) :=
+def dyckCons : ↑g(GLiteral Paren.lparen ⊗ Dyck ⊗ GLiteral Paren.rparen ⊗ Dyck ⊸ Dyck) :=
   [| x => cons x |]
 
 -- Explicit `fold` still works
-def dyckConsExplicit : ↑g(Literal Paren.lparen ⊗ Dyck ⊗ Literal Paren.rparen ⊗ Dyck ⊸ Dyck) :=
+def dyckConsExplicit : ↑g(GLiteral Paren.lparen ⊗ Dyck ⊗ GLiteral Paren.rparen ⊗ Dyck ⊸ Dyck) :=
   [| x => fold cons x |]
 
 -- Simple nil fold (to isolate rec issue)
-def dyckNil : ↑g(Epsilon ⊸ Dyck) :=
+def dyckNil : ↑g(GEpsilon ⊸ Dyck) :=
   [| x => fold nil x |]
 
 -- rec with multi-tensor constructor
@@ -286,7 +286,7 @@ def dyckToSelf : ↑g(Dyck ⊸ Dyck) :=
      | cons y => cons y |]
 
 -- let-unit test
-def letUnit (A : Grammar Paren) : ↑g(Epsilon ⊗ A ⊸ A) :=
+def letUnit (A : Grammar Paren) : ↑g(GEpsilon ⊗ A ⊸ A) :=
   [| x a => let ⟨⟩ = x in a |]
 
 -- ═══════════════════════════════════════════════════════════

@@ -327,15 +327,15 @@ def starNFA_equiv (N : NFA Alphabet) : NFA.Parse (starNFA N) ≅g ((NFA.Parse N)
 
 def tensor_congr {A B C D : Grammar Alphabet}
     (e₁ : A ≅g C) (e₂ : B ≅g D) : (A ⊗ B) ≅g (C ⊗ D) where
-  to := tensorIntro e₁.to e₂.to
-  from' := tensorIntro e₁.from' e₂.from'
-  to_from := by rw [← tensorIntro_comp, e₁.to_from, e₂.to_from, tensorIntro_id]
-  from_to := by rw [← tensorIntro_comp, e₁.from_to, e₂.from_to, tensorIntro_id]
+  to := gtensorIntro e₁.to e₂.to
+  from' := gtensorIntro e₁.from' e₂.from'
+  to_from := by rw [← gtensorIntro_comp, e₁.to_from, e₂.to_from, gtensorIntro_id]
+  from_to := by rw [← gtensorIntro_comp, e₁.from_to, e₂.from_to, gtensorIntro_id]
 
 def sum_congr {A B C D : Grammar Alphabet}
     (e₁ : A ≅g C) (e₂ : B ≅g D) : (A ⊕ B) ≅g (C ⊕ D) where
-  to := sumElim (sumInl ∘g e₁.to) (sumInr ∘g e₂.to)
-  from' := sumElim (sumInl ∘g e₁.from') (sumInr ∘g e₂.from')
+  to := gsumElim (gsumInl ∘g e₁.to) (gsumInr ∘g e₂.to)
+  from' := gsumElim (gsumInl ∘g e₁.from') (gsumInr ∘g e₂.from')
   to_from := by
     funext w s; match s with
     | .inl c => exact congrArg _root_.Sum.inl (congrFun (congrFun e₁.to_from w) c)
@@ -347,8 +347,8 @@ def sum_congr {A B C D : Grammar Alphabet}
 
 def star_congr {A B : Grammar Alphabet}
     (e : A ≅g B) : (A *) ≅g (B *) where
-  to := foldStarR (NIL B) (CONS B ∘g tensorIntro e.to (gId (B *)))
-  from' := foldStarR (NIL A) (CONS A ∘g tensorIntro e.from' (gId (A *)))
+  to := foldStarR (NIL B) (CONS B ∘g gtensorIntro e.to (gId (B *)))
+  from' := foldStarR (NIL A) (CONS A ∘g gtensorIntro e.from' (gId (A *)))
   to_from := sorry
   from_to := sorry
 

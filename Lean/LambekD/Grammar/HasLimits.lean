@@ -10,7 +10,7 @@ import Mathlib.CategoryTheory.Limits.Shapes.Terminal
 /-! # Limits and colimits for Grammar
 
 Products, coproducts, terminal, and initial objects in the category of grammars,
-using `IdxProduct`, `IdxCoproduct`, `Top`, and `Bottom` from the core definitions.
+using `GIdxProduct`, `GIdxCoproduct`, `GTop`, and `GBottom` from the core definitions.
 -/
 
 namespace LambekD
@@ -26,7 +26,7 @@ variable {Alphabet : Type u}
 
 /-- The cone for a discrete diagram given by indexed conjunction. -/
 def productCone {J : Type u} (F : Discrete J ⥤ Grammar.{u, u} Alphabet) : Cone F where
-  pt := IdxProduct J (F.obj ∘ Discrete.mk)
+  pt := GIdxProduct J (F.obj ∘ Discrete.mk)
   π := {
     app j := fun w f => f (Discrete.as j)
     naturality j j' g := by
@@ -50,9 +50,9 @@ instance : HasProducts.{u} (Grammar.{u, u} Alphabet) := fun _ =>
 -- Terminal
 -- ════════════════════════════════════════════════════════════
 
-/-- Cone for the empty diagram, whose point is `Top`. -/
+/-- Cone for the empty diagram, whose point is `GTop`. -/
 def terminalCone (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) : Cone F where
-  pt := Top
+  pt := GTop
   π := {
     app j := PEmpty.elim (Discrete.as j)
     naturality j := PEmpty.elim (Discrete.as j)
@@ -61,9 +61,9 @@ def terminalCone (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) : Cone F 
 /-- The terminal cone is a limit. -/
 def terminalConeIsLimit (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) :
     IsLimit (terminalCone F) where
-  lift _ := topIntro _
+  lift _ := gtopIntro _
   fac _ j := PEmpty.elim (Discrete.as j)
-  uniq _ m _ := top_η m (topIntro _)
+  uniq _ m _ := gtop_η m (gtopIntro _)
 
 instance : HasTerminal (Grammar.{u, u} Alphabet) where
   has_limit F := ⟨⟨terminalCone F, terminalConeIsLimit F⟩⟩
@@ -74,7 +74,7 @@ instance : HasTerminal (Grammar.{u, u} Alphabet) where
 
 /-- The cocone for a discrete diagram given by indexed disjunction. -/
 def coproductCocone {J : Type u} (F : Discrete J ⥤ Grammar.{u, u} Alphabet) : Cocone F where
-  pt := IdxCoproduct J (F.obj ∘ Discrete.mk)
+  pt := GIdxCoproduct J (F.obj ∘ Discrete.mk)
   ι := {
     app j w a := ⟨Discrete.as j, a⟩
     naturality j j' g := by
@@ -98,9 +98,9 @@ instance : HasCoproducts.{u} (Grammar.{u, u} Alphabet) := fun _ =>
 -- Initial
 -- ════════════════════════════════════════════════════════════
 
-/-- Cocone for the empty diagram, whose point is `Bottom`. -/
+/-- Cocone for the empty diagram, whose point is `GBottom`. -/
 def initialCocone (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) : Cocone F where
-  pt := Bottom
+  pt := GBottom
   ι := {
     app j := PEmpty.elim (Discrete.as j)
     naturality j := PEmpty.elim (Discrete.as j)
@@ -109,9 +109,9 @@ def initialCocone (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) : Cocone
 /-- The initial cocone is a colimit. -/
 def initialCoconeIsColimit (F : Discrete PEmpty.{1} ⥤ Grammar.{u, u} Alphabet) :
     IsColimit (initialCocone F) where
-  desc s := botElim _
+  desc s := gbotElim _
   fac _ j := PEmpty.elim (Discrete.as j)
-  uniq _ m _ := bot_η m (botElim _)
+  uniq _ m _ := gbot_η m (gbotElim _)
 
 instance : HasInitial (Grammar.{u, u} Alphabet) where
   has_colimit F := ⟨⟨initialCocone F, initialCoconeIsColimit F⟩⟩

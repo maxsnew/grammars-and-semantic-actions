@@ -13,7 +13,7 @@ variable {Alphabet : Type uAlph}
 -- The Kleene star A * is the inductive grammar with
 -- nil : ε → A * (empty repetition), cons : A ⊗ A * → A * (one more)
 grammar_inductive KleeneStar (A : Grammar Alphabet) : Grammar Alphabet where
-  | nil : Epsilon
+  | nil : GEpsilon
   | cons : A ⊗ KleeneStar A
 
 scoped postfix:max " * " => KleeneStar

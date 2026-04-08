@@ -40,14 +40,14 @@ inductive Bracket where
 
 -- Dyck = nil (empty) | balanced ([ Dyck ] Dyck)
 grammar_inductive DyckG : Grammar Bracket where
-  | nil : Epsilon
-  | balanced : Literal Bracket.lp ⊗ DyckG ⊗ Literal Bracket.rp ⊗ DyckG
+  | nil : GEpsilon
+  | balanced : GLiteral Bracket.lp ⊗ DyckG ⊗ GLiteral Bracket.rp ⊗ DyckG
 
 -- Smart constructors
 def NIL : ↑g(ε ⊸ DyckG) :=
   [| x => nil x |]
 
-def BALANCED : ↑g(Literal Bracket.lp ⊗ DyckG ⊗ Literal Bracket.rp ⊗ DyckG ⊸ DyckG) :=
+def BALANCED : ↑g(GLiteral Bracket.lp ⊗ DyckG ⊗ GLiteral Bracket.rp ⊗ DyckG ⊸ DyckG) :=
   [| x => balanced x |]
 
 def append : ↑g(DyckG ⊗ DyckG ⊸ DyckG) :=
@@ -95,13 +95,13 @@ def DyckAut : DeterministicAutomaton Bracket (Option Nat) where
 
 -- -- Open bracket: consume '[', go from state n to state n+1
 -- def OPEN {n : Nat} {b : Bool} :
---     ↑g(Literal Bracket.lp ⊗ Trace (Option Nat) DyckAut b (some (n + 1)) ⊸
+--     ↑g(GLiteral Bracket.lp ⊗ Trace (Option Nat) DyckAut b (some (n + 1)) ⊸
 --     Trace (Option Nat) DyckAut b (some n)) :=
 --   [| lp t => step (some n) Bracket.lp lp t |]
 
 -- -- Close bracket: consume ']', go from state n+1 to state n
 -- def CLOSE {n : Nat} {b : Bool} :
---     ↑g(Literal Bracket.rp ⊗ Trace (Option Nat) DyckAut b (some n) ⊸
+--     ↑g(GLiteral Bracket.rp ⊗ Trace (Option Nat) DyckAut b (some n) ⊸
 --     Trace (Option Nat) DyckAut b (some (n + 1))) :=
 --   [| rp t => step #(some (n + 1)) Bracket.rp rp t |]
 
@@ -111,7 +111,7 @@ def DyckAut : DeterministicAutomaton Bracket (Option Nat) where
 
 -- -- Unexpected ']' at state 0 → rejecting trace
 -- def UNEXPECTED :
---     ↑g(Literal Bracket.rp ⊗ Trace (Option Nat) DyckAut false none ⊸
+--     ↑g(GLiteral Bracket.rp ⊗ Trace (Option Nat) DyckAut false none ⊸
 --     Trace (Option Nat) DyckAut false (some 0)) :=
 --   [| rp t => step (some 0) Bracket.rp rp t |]
 
@@ -132,10 +132,10 @@ def DyckAut : DeterministicAutomaton Bracket (Option Nat) where
 -- TODO: universe constraint issue after FunctionR/FunctionL swap
 -- def GenDyck : Nat → Grammar Bracket := fun
 --   | 0 => DyckG
---   | n + 1 => DyckG ⊗ Literal Bracket.rp ⊗ GenDyck n
+--   | n + 1 => DyckG ⊗ GLiteral Bracket.rp ⊗ GenDyck n
 def GenDyck : Nat → Grammar.{0} Bracket := fun
   | 0 => DyckG
-  | n + 1 => DyckG ⊗ Literal Bracket.rp ⊗ GenDyck n
+  | n + 1 => DyckG ⊗ GLiteral Bracket.rp ⊗ GenDyck n
 
 -- ═══════════════════════════════════════════════════════════
 -- Tree extraction: Trace → GenDyck

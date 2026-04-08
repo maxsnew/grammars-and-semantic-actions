@@ -8,6 +8,6 @@ universe uAlph
 
 variable {Alphabet : Type uAlph}
 
-def εIntro : Epsilon ([] : String Alphabet) := ⟨PLift.up rfl⟩
+def gεIntro : GEpsilon ([] : String Alphabet) := ⟨PLift.up rfl⟩
 
 end LambekD
