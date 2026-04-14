@@ -1,6 +1,7 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Data.Sigma.Properties using (Σ-Π-Iso)
 
 module Automata.Deterministic (Alphabet : hSet ℓ-zero) where
 
@@ -49,7 +50,31 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   STEP : ∀ c b q → ＂ c ＂ ⊗ Trace b (δ q c) ⊢ Trace b q
   STEP c b q = roll ∘g σ step ∘g σ (lift c) ∘g (liftG ∘g liftG) ,⊗ liftG
 
+  data Tag' : Type ℓ where
+    stop√ stop× step : Tag'
+
+  TraceF' : (q : Q) → Functor Q
+  TraceF' q = ⊕e Tag' λ {
+      stop√ → ⊕e (Lift (true Eq.≡ isAcc q)) λ { (lift acc) → k ε* }
+      ; stop× → ⊕e (Lift (false Eq.≡ isAcc q)) λ { (lift acc) → k ε* }
+      ; step → ⊕e (Lift ⟨ Alphabet ⟩) (λ { (lift c) → (k (literal* c)) ⊗e (Var (δ q c)) }) }
+
   open StrongEquivalence
+
+  module _ (X : Grammar ℓ) where
+    private --else in where clause
+      foo : (LiftG ℓ (λ w → Σ ⟨ Alphabet ⟩ (λ x → literal x w)) ⊗ LiftG ℓ-zero X) ⊢ ⊕ᴰ (λ y → LiftG ℓ (literal* (y .lower)) ⊗ LiftG ℓ X)
+      foo = ⊕ᴰ-distL .fun ∘g ⊗-intro (λ w z → lift (z .lower .fst) , lift (lift (z .lower .snd))) (liftG ∘g lowerG)
+    parseNatTrans : (q : Q) → ⟦ *Ty char _ ⟧ (λ _ → X) ⊢ ⟦ TraceF' q ⟧ (λ _ → X)
+    parseNatTrans q with (isAcc q) in eq
+    ... | true = ⊕ᴰ-elim λ
+      { nil →
+        (λ w x → stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
+      ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo z))
+      }
+    ... | false = ⊕ᴰ-elim λ
+      { nil → (λ w x → stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
+      ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo z)) }
 
   parse : string ⊢ &[ q ∈ Q ] (⊕[ b ∈ Bool ] Trace b q)
   parse =
