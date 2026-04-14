@@ -35,7 +35,7 @@ open Iso
 isSetAlphabet' : isSet Alphabet'
 isSetAlphabet' =
   isSetRetract (Alphabet'Rep .fun) (Alphabet'Rep .inv)
-               (Alphabet'Rep .leftInv) isSetFin
+               (Alphabet'Rep .ret) isSetFin
 
 Alphabet : hSet ℓ-zero
 Alphabet = Alphabet' , isSetAlphabet'

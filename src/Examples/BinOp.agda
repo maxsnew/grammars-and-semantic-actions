@@ -38,7 +38,7 @@ opaque
 
   isSetTok : isSet Tok
   isSetTok =
-    isSetRetract (TokRep .fun) (TokRep .inv) (TokRep .leftInv)
+    isSetRetract (TokRep .fun) (TokRep .inv) (TokRep .ret)
       (Sum.isSet⊎ isSetBool (Sum.isSet⊎ isSetUnit isSetℕ))
 
 Alphabet : hSet ℓ-zero

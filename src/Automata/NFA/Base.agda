@@ -47,12 +47,12 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
     ⟨ Q ⟩ → DecProp ℓN
   matchesTransition discAlphabet t src' label' dst' =
      DecProp×
-         (DecProp≡ (discreteLift {L' = ℓN} discAlphabet)
+         (DecProp≡ (discreteLift ℓN discAlphabet)
            (lift label') (lift (label t)))
          (DecProp×
-           (DecProp≡ (discreteLift {L' = ℓN} decEqQ)
+           (DecProp≡ (discreteLift ℓN decEqQ)
              (lift src') (lift (src t)))
-           (DecProp≡ (discreteLift {L' = ℓN} decEqQ)
+           (DecProp≡ (discreteLift ℓN decEqQ)
              (lift dst') (lift (dst t)))
           )
 
@@ -97,7 +97,7 @@ record NFA ℓN : Type (ℓ-suc ℓN) where
 
     TraceTy : Bool → (q : ⟨ Q ⟩) → Functor ⟨ Q ⟩
     TraceTy b q = ⊕e Tag λ {
-        stop → ⊕e (Lift (b Eq.≡ isAcc q)) (λ
+        stop → ⊕e (Lift ℓN (b Eq.≡ isAcc q)) (λ
           (lift acc) → k (LiftG ℓN ε) )
       ; step → ⊕e (Eq.fiber src q) λ {
           (t , Eq.refl ) →

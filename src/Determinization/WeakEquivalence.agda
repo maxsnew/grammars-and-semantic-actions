@@ -299,7 +299,7 @@ module Determinization
       ∣q,q∈X,acc?∣ =
         subst
         (λ y → y .fst)
-        (Bool-iso-DecProp' .Isom.Iso.rightInv (ℙNAcc-DecProp' X))
+        (Bool-iso-DecProp' .Isom.Iso.sec (ℙNAcc-DecProp' X))
           (truth→witness (ℙN.isAcc X) accX)
       in
       SplitSupport-FinOrd (isFinOrd-q∈X-acc X)

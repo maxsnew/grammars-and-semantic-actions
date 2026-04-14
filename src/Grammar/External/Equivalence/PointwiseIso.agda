@@ -32,5 +32,5 @@ module _
     pointwiseIso→≅ : A ≅ B
     pointwiseIso→≅ .fun w = pwIso w .fun
     pointwiseIso→≅ .inv w = pwIso w .inv
-    pointwiseIso→≅ .sec = funExt λ w → funExt (pwIso w .rightInv)
-    pointwiseIso→≅ .ret = funExt λ w → funExt (pwIso w .leftInv)
+    pointwiseIso→≅ .sec = funExt λ w → funExt (pwIso w .sec)
+    pointwiseIso→≅ .ret = funExt λ w → funExt (pwIso w .ret)

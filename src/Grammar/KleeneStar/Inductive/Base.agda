@@ -60,16 +60,16 @@ module _ (A : Grammar ℓA) where
     nil  → [nil] ∘g lowerG ∘g lowerG
     cons → [cons] ∘g lowerG ,⊗ lowerG)
 
-  repeatTy : Lift {j = ℓA} ℕ → Functor (Lift ℕ)
+  repeatTy : Lift ℓA ℕ → Functor (Lift ℓA ℕ)
   repeatTy (lift zero) = k ε*
   repeatTy (lift (suc n)) = (k A) ⊗e (Var (lift n))
 
-  repeat' : Lift ℕ → Grammar ℓA
+  repeat' : Lift ℓA ℕ → Grammar ℓA
   repeat' n = μ repeatTy n
 
   open StrongEquivalence
 
-  repeat = ⊕[ n ∈ (Lift ℕ) ] repeat' n
+  repeat = ⊕[ n ∈ (Lift ℓA ℕ) ] repeat' n
 
   gradeAlg : Algebra *Ty λ _ → repeat
   gradeAlg _ = ⊕ᴰ-elim (λ {
@@ -180,11 +180,11 @@ module _ (A : Grammar ℓA) where
   *L≅unrolled*L : *L ≅ unrolled*L
   *L≅unrolled*L = unroll≅ *LTy _
 
-  repeatTyL : Lift {j = ℓA} ℕ → Functor (Lift ℕ)
+  repeatTyL : Lift ℓA ℕ → Functor (Lift ℓA ℕ)
   repeatTyL (lift zero) = k ε*
   repeatTyL (lift (suc n)) = (Var (lift n)) ⊗e (k A)
 
-  repeat'L : Lift ℕ → Grammar ℓA
+  repeat'L : Lift ℓA ℕ → Grammar ℓA
   repeat'L n = μ repeatTyL n
 
   iterated-tensor : ∀ (n : ℕ) → Grammar ℓA
@@ -234,7 +234,7 @@ module _ (A : Grammar ℓA) where
     ≅∙ iter≅iterL n
     ≅∙ sym≅ (repeatL≅iterL n)
 
-  repeatL = ⊕[ n ∈ (Lift ℕ) ] repeat'L n
+  repeatL = ⊕[ n ∈ (Lift ℓA ℕ) ] repeat'L n
 
   repeat≅repeatL : repeat ≅ repeatL
   repeat≅repeatL = ⊕ᴰ≅ (λ (lift n) → repeat'≅repeat'L n)

@@ -146,7 +146,7 @@ module _ {X : Type ℓX} where
       → ∀ ix → isSet (μIW F ix)
     isSetμIW F isSetF = isOfHLevelSuc-IW 1 λ ix →
       isSet⟦F⟧ (F (ix .fst)) (isSetF (ix .fst))
-        (λ x → (λ _ → Lift Unit) , λ _ → isSetUnit*)
+        (λ x → (λ _ → Lift ℓX Unit) , λ _ → isSetUnit*)
         (ix .snd)
 
   {-# TERMINATING #-}
