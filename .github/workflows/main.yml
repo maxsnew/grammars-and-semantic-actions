@@ -120,7 +120,7 @@ jobs:
         if: steps.cache-external-restore.outputs.cache-hit != 'true'
         run : |
           cd ~
-          git clone https://github.com/maxsnew/cubical-categorical-logic --branch main
+          git clone https://github.com/um-catlab/cubical-categorical-logic --branch main
           cd cubical-categorical-logic
           git checkout ${{ env.CATLOG_COMMIT }}
           cd ..
