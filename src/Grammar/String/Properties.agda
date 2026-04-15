@@ -11,7 +11,7 @@ import Cubical.Data.Sum as Sum
 open import Cubical.Data.Nat
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
 
-open import Cubical.Relation.Nullary.DecidablePropositions.More
+open import Cubical.Relation.Nullary.DecidablePropositions
 
 open import Grammar.Base Alphabet
 open import Grammar.Product.Binary.AsPrimitive Alphabet

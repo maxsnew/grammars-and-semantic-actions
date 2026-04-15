@@ -27,8 +27,8 @@ LiftDomIso : ∀ {A : Grammar ℓA}{B : Grammar ℓB} ℓC
   → Iso (A ⊢ B) (LiftG ℓC A ⊢ B)
 LiftDomIso ℓC .fun e = e ∘g lowerG
 LiftDomIso ℓC .inv e = e ∘g liftG
-LiftDomIso ℓC .rightInv e = refl
-LiftDomIso ℓC .leftInv e = refl
+LiftDomIso ℓC .sec e = refl
+LiftDomIso ℓC .ret e = refl
 
 opaque
   unfolding ⊗-intro
@@ -38,8 +38,8 @@ opaque
     → Iso (A ⊗ C ⊢ B) (LiftG ℓD A ⊗ LiftG ℓE C ⊢ B)
   LiftDom⊗Iso ℓD ℓE .fun e = e ∘g (lowerG ,⊗ lowerG)
   LiftDom⊗Iso ℓD ℓE .inv e = e ∘g liftG ,⊗ liftG
-  LiftDom⊗Iso ℓD ℓE .rightInv e = refl
-  LiftDom⊗Iso ℓD ℓE .leftInv e = refl
+  LiftDom⊗Iso ℓD ℓE .sec e = refl
+  LiftDom⊗Iso ℓD ℓE .ret e = refl
 
 open StrongEquivalence
 module _ ℓC ℓD (A : Grammar ℓA) (B : Grammar ℓB) where

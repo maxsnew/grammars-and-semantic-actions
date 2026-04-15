@@ -17,7 +17,7 @@ private
     D : Grammar ℓD
 
 LiftG : ∀ ℓB → Grammar ℓA → Grammar (ℓ-max ℓA ℓB)
-LiftG ℓB A w = Lift {j = ℓB} (A w)
+LiftG ℓB A w = Lift ℓB (A w)
 
 open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.Equiv

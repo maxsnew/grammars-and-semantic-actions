@@ -18,7 +18,7 @@ import      Cubical.Data.Equality as Eq
 open import Cubical.Data.List hiding (init ; rec ; map)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Bool hiding (_⊕_)
-open import Cubical.Data.FinSet.More
+open import Cubical.Data.FinSet.Properties
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)

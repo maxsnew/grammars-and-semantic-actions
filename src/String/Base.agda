@@ -127,7 +127,7 @@ splittingTrichotomyIso :
     (splittingTrichotomyTy w s s')
     (splittingTrichotomyTy' w s s')
 splittingTrichotomyIso w s s' =
-  ⊎Iso idIso (ΣDistR⊎Iso _ _ _)
+  ⊎Iso idIso ΣDistR⊎Iso
 
 isPropSplittingTrichotomyTy :
   (w : String) →

@@ -411,7 +411,7 @@ genMkTreeAlg nothing = ⊕ᴰ-elim λ where
   stop → ⊕ᴰ-elim (λ ())
   step → ⊕ᴰ-elim (λ (lift c) → ⊥-elim ∘g ⊗⊥ ∘g id ,⊗ lowerG)
 genMkTreeAlg (just n) = ⊕ᴰ-elim λ where
-  stop → Nat.elim {A = λ n → ⊕[ _ ∈ Lift (true Eq.≡ isAcc (just n)) ] (LiftG ℓ-zero ε*) ⊢ GenDyck n}
+  stop → Nat.elim {A = λ n → ⊕[ _ ∈ Lift ℓ-zero (true Eq.≡ isAcc (just n)) ] (LiftG ℓ-zero ε*) ⊢ GenDyck n}
       (⊕ᴰ-elim λ where (lift Eq.refl) → NIL ∘g lowerG ∘g lowerG)
       (λ n' _ → ⊕ᴰ-elim λ ())
       n

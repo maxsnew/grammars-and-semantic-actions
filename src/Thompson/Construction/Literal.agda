@@ -18,7 +18,7 @@ import      Cubical.Data.Equality as Eq
 open import Cubical.Data.List hiding (init ; rec ; map)
 open import Cubical.Data.FinSet
 open import Cubical.Data.Bool hiding (_⊕_)
-open import Cubical.Data.FinSet.More
+open import Cubical.Data.FinSet.Properties
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.FinSet.Constructors
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
@@ -53,14 +53,14 @@ module _ (c : ⟨ Alphabet ⟩) where
   STATE≅Fin2 .Iso.fun ε-st = Sum.inr fzero
   STATE≅Fin2 .Iso.inv fzero = c-st
   STATE≅Fin2 .Iso.inv (Sum.inr x) = ε-st
-  STATE≅Fin2 .Iso.rightInv fzero = refl
-  STATE≅Fin2 .Iso.rightInv (Sum.inr fzero) = refl
-  STATE≅Fin2 .Iso.leftInv c-st = refl
-  STATE≅Fin2 .Iso.leftInv ε-st = refl
+  STATE≅Fin2 .Iso.sec fzero = refl
+  STATE≅Fin2 .Iso.sec (Sum.inr fzero) = refl
+  STATE≅Fin2 .Iso.ret c-st = refl
+  STATE≅Fin2 .Iso.ret ε-st = refl
 
   isSetSTATE : isSet STATE
   isSetSTATE = isSetRetract (STATE≅Fin2 .fun) (STATE≅Fin2 .inv)
-    (STATE≅Fin2 .leftInv)
+    (STATE≅Fin2 .ret)
     isSetFin
 
   isDiscSTATE : Discrete STATE

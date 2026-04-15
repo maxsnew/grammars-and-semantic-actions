@@ -19,6 +19,7 @@ open import Cubical.Data.FinSet.Constructors
 
 open import Cubical.HITs.PropositionalTruncation as PT
 
+open import Cubical.Relation.Nullary.DecidablePropositions
 open import Cubical.Relation.Nullary.DecidablePropositions.More
 
 open Iso
@@ -35,12 +36,10 @@ module DecidablePowerset (A : Type ℓ) where
   Decℙ' = A → DecProp' ℓ
 
   DecℙIso : Iso Decℙ Decℙ'
-  fun DecℙIso x a = DecPropIso .fun (x a)
-  inv DecℙIso x' a = DecPropIso .inv (x' a)
-  rightInv DecℙIso b =
-    funExt (λ x → DecPropIso .rightInv _)
-  leftInv DecℙIso a =
-    funExt (λ x → DecPropIso .leftInv _)
+  DecℙIso .fun x a = DecPropIso .fun (x a)
+  DecℙIso .inv x' a = DecPropIso .inv (x' a)
+  DecℙIso .sec b = funExt (λ x → DecPropIso .sec _)
+  DecℙIso .ret b = funExt (λ x → DecPropIso .ret _)
 
   ∅ℙ : Decℙ
   ∅ℙ x = (⊥* , isProp⊥*) , (no lower)
@@ -124,7 +123,7 @@ module DecidableFinitePowerset ((A , isFinSetA) : FinSet ℓ) where
 open DecidablePowerset
 
 LiftDecℙ' : ∀ {L}{L'} (A : Type L) →
-  (Decℙ' {L} A) → (Decℙ' {ℓ-max L L'} (Lift {L}{L'} A))
+  (Decℙ' {L} A) → (Decℙ' {ℓ-max L L'} (Lift L' A))
 LiftDecℙ' {L}{L'} A x a = LiftDecProp' {L}{L'} (x (lower a))
 
 open DecidableFinitePowerset

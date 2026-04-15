@@ -169,10 +169,10 @@ module _
         (y .fst .fst) , ((y .snd .fst) ,
         ((subst C (x .fst) (y .fst .snd)) ,
         (subst D (x .snd) (y .snd .snd))))
-      toTrichotomyIso (inl x) .rightInv y =
+      toTrichotomyIso (inl x) .sec y =
         ≡-× (≡-× refl (subst⁻Subst C (x .fst) (y .fst .snd)))
             (≡-× refl (subst⁻Subst D (x .snd) (y .snd .snd)))
-      toTrichotomyIso (inl x) .leftInv y =
+      toTrichotomyIso (inl x) .ret y =
         ≡-× refl (≡-× refl
           (≡-×
             (substSubst⁻ C (x .fst) (y .snd .snd .fst))
@@ -191,14 +191,14 @@ module _
         y .snd .fst ,
         y .snd .snd .fst ,
         y .snd .snd .snd .fst
-      toTrichotomyIso (inr (inl ((c ∷ v , _) , st))) .rightInv y i =
+      toTrichotomyIso (inr (inl ((c ∷ v , _) , st))) .sec y i =
         y .fst ,
         y .snd .fst ,
         y .snd .snd .fst ,
         y .snd .snd .snd .fst ,
         isSetString _ _ (st .fst) (y .snd .snd .snd .snd .fst) i ,
         isSetString _ _ (st .snd) (y .snd .snd .snd .snd .snd) i
-      toTrichotomyIso (inr (inl ((c ∷ v , _) , st))) .leftInv y = refl
+      toTrichotomyIso (inr (inl ((c ∷ v , _) , st))) .ret y = refl
       toTrichotomyIso (inr (inr (([] , notmt) , st))) =
         Empty.rec (notmt refl)
       toTrichotomyIso (inr (inr ((c ∷ v , _) , st))) .fun y =
@@ -213,14 +213,14 @@ module _
         y .snd .fst ,
         y .snd .snd .fst ,
         y .snd .snd .snd .fst
-      toTrichotomyIso (inr (inr ((c ∷ v , _) , st))) .rightInv y i =
+      toTrichotomyIso (inr (inr ((c ∷ v , _) , st))) .sec y i =
         y .fst ,
         y .snd .fst ,
         y .snd .snd .fst ,
         y .snd .snd .snd .fst ,
         isSetString _ _ (st .fst) (y .snd .snd .snd .snd .fst) i ,
         isSetString _ _ (st .snd) (y .snd .snd .snd .snd .snd) i
-      toTrichotomyIso (inr (inr ((c ∷ v , _) , st))) .leftInv y = refl
+      toTrichotomyIso (inr (inr ((c ∷ v , _) , st))) .ret y = refl
 
   open Iso
   opaque
@@ -242,13 +242,13 @@ module _
       s , (s' , toTrichotomyIso w s s' (splittingTrichotomy' w s s') .fun p)
     toTrichotomyIso' w .inv (s , s' , p) =
      s , (s' , (toTrichotomyIso w s s' (splittingTrichotomy' w s s') .inv p))
-    toTrichotomyIso' w .rightInv (s , s' , p) =
+    toTrichotomyIso' w .sec (s , s' , p) =
       ΣPathP (refl , (ΣPathP (refl ,
-        toTrichotomyIso w s s' (splittingTrichotomy' w s s') .rightInv p
+        toTrichotomyIso w s s' (splittingTrichotomy' w s s') .sec p
       )))
-    toTrichotomyIso' w .leftInv (s , s' , p) =
+    toTrichotomyIso' w .ret (s , s' , p) =
       ΣPathP (refl , (ΣPathP (refl ,
-        toTrichotomyIso w s s' (splittingTrichotomy' w s s') .leftInv p
+        toTrichotomyIso w s s' (splittingTrichotomy' w s s') .ret p
       )))
 
     splittingTrichotomyGTy-inl≅ :
@@ -264,8 +264,8 @@ module _
       s , ((p .fst) , (p .snd))
     splittingTrichotomyGTy-inl≅ w .inv (s , pAC , pBD) =
       s , s , (refl , refl) , pAC , pBD
-    splittingTrichotomyGTy-inl≅ w .rightInv (s , pAC , pBD) = refl
-    splittingTrichotomyGTy-inl≅ w .leftInv (s , s' , x , p) =
+    splittingTrichotomyGTy-inl≅ w .sec (s , pAC , pBD) = refl
+    splittingTrichotomyGTy-inl≅ w .ret (s , s' , x , p) =
       ΣPathP (refl , (ΣPathP ((Splitting≡ (≡-× (x .fst) (x .snd))) ,
         (ΣPathP ((ΣPathP (
           isProp→PathP (λ _ → isSetString _ _) refl (x .fst) ,
@@ -333,12 +333,12 @@ module _
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ z (t' .fst .snd) pz)
             ∙ (⌈⌉→≡ z (s' .fst .snd) (pD .snd)))
-    splittingTrichotomyGTy-inr-inl≅ ww .rightInv
+    splittingTrichotomyGTy-inr-inl≅ ww .sec
       (w , x , y , z , ([] , notmt) ,
       (s , (pC , (t , pw , pv)) , pD) ,
       (s' , pA , (pB , (t' , pv' , pz)))) =
       Empty.rec (notmt refl)
-    splittingTrichotomyGTy-inr-inl≅ ww .rightInv
+    splittingTrichotomyGTy-inr-inl≅ ww .sec
       (w , x , y , z , (c ∷ v , notmt) ,
       (s , (pC , (t , pw , pv)) , pD) ,
       (s' , pA , (pB , (t' , pv' , pz)))) =
@@ -442,7 +442,7 @@ module _
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ z (t' .fst .snd) pz)
             ∙ (⌈⌉→≡ z (s .fst .snd) (pD .snd)))
-    splittingTrichotomyGTy-inr-inl≅ ww .leftInv
+    splittingTrichotomyGTy-inr-inl≅ ww .ret
       (s , s' , ((c ∷ v , notmt) , split++) , p) =
       ΣPathP3 (
         refl ,
@@ -523,12 +523,12 @@ module _
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ x (t' .fst .snd) px)
             ∙ (⌈⌉→≡ x (s' .fst .snd) (pB .snd)))
-    splittingTrichotomyGTy-inr-inr≅ ww .rightInv
+    splittingTrichotomyGTy-inr-inr≅ ww .sec
       (w , x , y , z , ([] , notmt) ,
       (s , (pC , (t , pw , pv)) , pD) ,
       (s' , pA , (pB , (t' , pv' , pz)))) =
       Empty.rec (notmt refl)
-    splittingTrichotomyGTy-inr-inr≅ ww .rightInv
+    splittingTrichotomyGTy-inr-inr≅ ww .sec
       (w , x , y , z , (c ∷ v , notmt) ,
       (s , (pA , (t , py , pv)) , pB) ,
       (s' , pC , (pD , (t' , pv' , px)))) =
@@ -632,7 +632,7 @@ module _
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ x (t' .fst .snd) px)
             ∙ (⌈⌉→≡ x (s .fst .snd) (pB .snd)))
-    splittingTrichotomyGTy-inr-inr≅ ww .leftInv
+    splittingTrichotomyGTy-inr-inr≅ ww .ret
       (s , s' , ((c ∷ v , notmt) , split++) , p) =
       ΣPathP3 (
         refl ,
@@ -673,7 +673,7 @@ module _
             Σ⊎Iso
           ))
           (compIso
-            (ΣDistR⊎Iso _ _ _)
+            ΣDistR⊎Iso
             (⊎Iso
               (compIso Σ-assoc-Iso (splittingTrichotomyGTy-inl≅ w))
               (compIso
@@ -681,7 +681,7 @@ module _
                   Σ⊎Iso
                 ))
                 (compIso
-                  (ΣDistR⊎Iso _ _ _)
+                  ΣDistR⊎Iso
                   (⊎Iso
                     (compIso Σ-assoc-Iso (splittingTrichotomyGTy-inr-inl≅ w))
                     (compIso Σ-assoc-Iso (splittingTrichotomyGTy-inr-inr≅ w))
@@ -706,8 +706,8 @@ module _
       s , s' , pA , pB , pC , pD
     ⊗&⊗parse≅ w .inv (s , s' , pA , pB , pC , pD) =
       (s , pA , pB) , (s' , pC , pD)
-    ⊗&⊗parse≅ w .rightInv _ = refl
-    ⊗&⊗parse≅ w .leftInv _ = refl
+    ⊗&⊗parse≅ w .sec _ = refl
+    ⊗&⊗parse≅ w .ret _ = refl
 
     opaque
       unfolding _⊕_

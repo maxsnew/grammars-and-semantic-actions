@@ -2,6 +2,7 @@ module Cubical.Relation.Nullary.DecidablePropositions.More where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.HLevels.More
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Univalence
@@ -26,8 +27,7 @@ open import Cubical.Data.Nat
 
 open import Cubical.HITs.PropositionalTruncation as PT
 
-open import Cubical.Foundations.HLevels.MoreMore
-open import Cubical.Data.FinSet.More
+open import Cubical.Data.FinSet.Properties
 
 private
   variable
@@ -64,17 +64,16 @@ doubleNegDecProp' A x = Dec→Stable (A .snd) x
 ¬¬elimDecProp A a  = doubleNegDecProp' A a
 
 DecLift :
-  {L L' : Level} →
-  {A : Type L} →
-  Dec A → Dec (Lift {L}{L'} A)
+  {A : Type ℓ} →
+  Dec A → Dec (Lift ℓ' A)
 DecLift {L} {L'} {A} (yes p) = yes (lift p)
 DecLift {L} {L'} {A} (no ¬p) = no (λ x → ¬p (lower x))
 
 discreteLift :
-  {L L' : Level} →
-  {A : Type L} →
-  Discrete A → Discrete (Lift {L}{L'} A)
-discreteLift discreteA x y =
+  {A : Type ℓ}
+  (ℓ' : Level)
+  → Discrete A → Discrete (Lift ℓ' A)
+discreteLift ℓ' discreteA x y =
   decRec
     (λ lx≡ly → yes (liftExt lx≡ly))
     (λ lx≢ly → no (λ p → lx≢ly (cong lower p)))
@@ -88,16 +87,16 @@ DecPropIso .fun (A , dec) = ⟨ A ⟩ , decRec
   dec
 DecPropIso .inv (A , isDecPropA) =
   (A , isDecProp→isProp isDecPropA) , isDecProp→Dec isDecPropA
-rightInv DecPropIso (a , false , c) =
+DecPropIso .sec (a , false , c) =
   ΣPathP (refl , (ΣPathP (refl ,
     isPropCod→isProp≃ isProp⊥ _ c )))
-rightInv DecPropIso (a , true , c) =
+DecPropIso .sec (a , true , c) =
   ΣPathP (refl , (ΣPathP (refl ,
     isPropCod→isProp≃ isPropUnit _ c)))
-leftInv DecPropIso (A , yes p) =
+DecPropIso .ret (A , yes p) =
   Σ≡Prop (λ x → isPropDec (x .snd))
     (ΣPathP (refl , (isPropIsProp _ _)))
-leftInv DecPropIso (A , no ¬p) =
+DecPropIso .ret (A , no ¬p) =
   Σ≡Prop (λ x → isPropDec (x .snd))
     (ΣPathP (refl , (isPropIsProp _ _)))
 
@@ -221,16 +220,16 @@ DecProp'× A B = (A .fst × B .fst) , (isDecProp× A B)
 DecProp≡ : ∀ {ℓ} {A : Type ℓ} → Discrete A → A → A → DecProp ℓ
 DecProp≡ disc x y = ((x ≡ y) , Discrete→isSet disc x y) , disc x y
 
-Bool-iso-DecProp' : ∀ {ℓ} → Iso (Bool) (DecProp' ℓ)
-fst (fun Bool-iso-DecProp' false) = ⊥*
-fst (fun Bool-iso-DecProp' true) = Unit*
-snd (fun Bool-iso-DecProp' false) =
-  false , (uninhabEquiv lower (λ x → x))
-snd (fun Bool-iso-DecProp' true) =
-  true , (isContr→Equiv isContrUnit* isContrUnit)
-inv Bool-iso-DecProp' (a , false , c) = false
-inv Bool-iso-DecProp' (a , true , c) = true
-rightInv Bool-iso-DecProp' (a , false , c) =
+Bool-iso-DecProp' : ∀ {ℓ} → Iso Bool (DecProp' ℓ)
+Bool-iso-DecProp' .fun false .fst = ⊥*
+Bool-iso-DecProp' .fun false .snd .fst = false
+Bool-iso-DecProp' .fun false .snd .snd = uninhabEquiv lower (λ x → x)
+Bool-iso-DecProp' .fun true .fst = Unit*
+Bool-iso-DecProp' .fun true .snd .fst = true
+Bool-iso-DecProp' .fun true .snd .snd = isContr→Equiv isContrUnit* isContrUnit
+Bool-iso-DecProp' .inv (a , false , c) = false
+Bool-iso-DecProp' .inv (a , true , c) = true
+Bool-iso-DecProp' .sec (a , false , c) =
   ΣPathP
     (sym (ua (compEquiv c ⊥≃⊥*)) ,
       (ΣPathP
@@ -240,15 +239,15 @@ rightInv Bool-iso-DecProp' (a , false , c) =
   where
   ⊥≃⊥* : ⊥ ≃ ⊥*
   ⊥≃⊥* = uninhabEquiv (λ x → x) lower
-rightInv Bool-iso-DecProp' (a , true , c) =
+Bool-iso-DecProp' .sec (a , true , c) =
   ΣPathP
     ((sym (ua (compEquiv c Unit≃Unit*))) ,
       (ΣPathP
         (refl ,
         isProp→PathP (λ i → λ x y →
           Σ≡Prop isPropIsEquiv (isProp→ isPropUnit _ _)) _ _)))
-leftInv Bool-iso-DecProp' false = refl
-leftInv Bool-iso-DecProp' true = refl
+Bool-iso-DecProp' .ret false = refl
+Bool-iso-DecProp' .ret true = refl
 
 Bool≃DecProp' : ∀ {ℓ} → Bool ≃ DecProp' ℓ
 Bool≃DecProp' = isoToEquiv Bool-iso-DecProp'
@@ -278,7 +277,7 @@ LiftDecProp'' :
   ∀ {L}{L'} →
   DecProp L →
   DecProp (ℓ-max L L')
-LiftDecProp'' {L} {L'} (p , _) .fst .fst = Lift {L}{L'} (p .fst)
+LiftDecProp'' {L} {L'} (p , _) .fst .fst = Lift L' (p .fst)
 LiftDecProp'' {L} {L'} (p , _) .fst .snd = isPropLift (p .snd)
 LiftDecProp'' (p , yes yep) .snd = yes (lift yep)
 LiftDecProp'' (p , no nope) .snd = no (λ lyep → nope (lyep .lower))
@@ -288,18 +287,18 @@ LiftDecProp :
   DecProp L →
   DecProp (ℓ-max L L')
 LiftDecProp {L} {L'} (a , yes p) =
-  ((Lift {L}{L'} (a .fst)) , (isPropLift (a .snd))) , (yes (lift p))
+  ((Lift L' (a .fst)) , (isPropLift (a .snd))) , (yes (lift p))
 LiftDecProp {L} {L'} (a , no ¬p) =
-  ((Lift {L}{L'} (a .fst)) , (isPropLift (a .snd))) , (no λ x → ¬p (lower x))
+  ((Lift L' (a .fst)) , (isPropLift (a .snd))) , (no λ x → ¬p (lower x))
 
 LiftDecProp' :
   ∀ {L}{L'} →
   DecProp' L →
   DecProp' (ℓ-max L L')
 LiftDecProp' {L} {L'} (a , false , c) =
-  (Lift {L}{L'} a) , (false , (compEquiv (invEquiv LiftEquiv) c))
+  (Lift L' a) , (false , (compEquiv (invEquiv LiftEquiv) c))
 LiftDecProp' {L} {L'} (a , true , c) =
-  (Lift {L}{L'} a) , (true , (compEquiv (invEquiv LiftEquiv) c))
+  (Lift L' a) , (true , (compEquiv (invEquiv LiftEquiv) c))
 
 LiftDecProp'Witness :
   ∀ {L}{L'} →
@@ -392,21 +391,6 @@ SplitSupport-FinOrd {A = A} (zero , A≃Fin) ∣a∣ =
   ⊥.rec (PT.rec isProp⊥ (A≃Fin .fst) ∣a∣)
 SplitSupport-FinOrd {A = A} (suc n , A≃Fin) ∣a∣ =
   A≃Fin .snd .equiv-proof (inl _) .fst .fst
-
-DecProp→isFinOrd :
-  ∀ {ℓ} → (A : DecProp ℓ) → isFinOrd (A .fst .fst)
-DecProp→isFinOrd A =
-  decRec
-    (λ a →
-      1 ,
-      isoToEquiv
-      (iso
-        (λ _ → inl _)
-        (λ { (inl tt) → a })
-        (λ { (inl tt) → refl })
-        (λ a → A .fst .snd _ _)))
-    (λ ¬a → 0 , uninhabEquiv ¬a (λ x → x))
-    (A .snd)
 
 witness-true :
   (A : DecProp' ℓ) → A .fst →
