@@ -76,17 +76,19 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
           lift (lift (liftChar .lower .snd)) ,
           lift (liftAndQ .lower (δ q (liftChar .lower .fst)))
 
-    parseNatTrans : (u : Unit*) → (q : Q) → ⟦ *Ty char u ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
-    parseNatTrans _ q with (isAcc q) in eq
-    ... | true = ⊕ᴰ-elim λ
-      { nil →
-        (λ w x → stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
-      ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo q z))
-      }
-    ... | false = ⊕ᴰ-elim λ
-      { nil → (λ w x → stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
-      ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo q z))
-      }
+    parseNatTrans : (u : Unit*) → ⟦ *Ty char u ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ &[ q ∈ Q ] ⟦ TraceF' q ⟧ X
+    parseNatTrans u = &ᴰ-intro (parseNatTrans' {u = u}) where
+      parseNatTrans' : ∀ {u} (q : Q) → ⟦ *Ty char u ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
+      parseNatTrans' q with (isAcc q) in eq
+      ... | true = ⊕ᴰ-elim λ
+        { nil →
+          (λ w x → stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
+        ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo q z))
+        }
+      ... | false = ⊕ᴰ-elim λ
+        { nil → (λ w x → stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
+        ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo q z))
+        }
 
   module _ {ℓ2 : Level} (X : Grammar ℓ2) where
     parseNatTrans2 : ⟦ *Ty char _ ⟧ (λ _ → X) ⊢ &[ q ∈ Q ] ⟦ TraceF' q ⟧ (λ _ → X)
@@ -109,8 +111,11 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   bez : Algebra TraceF' (μ TraceF')
   bez = initialAlgebra TraceF'
 
-  biz : Algebra (*Ty char) (λ _ → &[ q ∈ Q ] ⟦ TraceF' q ⟧ (μ TraceF')) -- (λ q → (⟦ TraceF' q ⟧ (λ _ → (μ TraceF'))))
-  biz x = {! TraceF' -- (parseNatTrans (μ TraceF') x) !}
+  biz : Algebra (*Ty char) (λ _ → &[ q ∈ Q ] ((μ TraceF') q)) -- ideally, use `bez`, the `μ.roll` term was `C-c C-a`-ed.
+  biz x = (λ w z x₁ → μ.roll w (z x₁)) ∘g parseNatTrans (μ TraceF') x
+
+  parse1 : string ⊢ (&[ q ∈ Q ] (μ TraceF') q)
+  parse1 = fold*r' char biz
 
   parse : string ⊢ &[ q ∈ Q ] (⊕[ b ∈ Bool ] Trace b q)
   parse =
