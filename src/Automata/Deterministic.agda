@@ -7,6 +7,7 @@ module Automata.Deterministic (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 
+open import Cubical.Data.Unit
 open import Cubical.Data.Bool
 import Cubical.Data.Equality as Eq
 
@@ -61,20 +62,31 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   open StrongEquivalence
 
-  module _ (X : Grammar ℓ) where
+  module _ {ℓ2 : Level} (X : Q → Grammar ℓ2) where
     private --else in where clause
-      foo : (LiftG ℓ (λ w → Σ ⟨ Alphabet ⟩ (λ x → literal x w)) ⊗ LiftG ℓ-zero X) ⊢ ⊕ᴰ (λ y → LiftG ℓ (literal* (y .lower)) ⊗ LiftG ℓ X)
-      foo = ⊕ᴰ-distL .fun ∘g ⊗-intro (λ w z → lift (z .lower .fst) , lift (lift (z .lower .snd))) (liftG ∘g lowerG)
-    parseNatTrans : (q : Q) → ⟦ *Ty char _ ⟧ (λ _ → X) ⊢ ⟦ TraceF' q ⟧ (λ _ → X)
-    parseNatTrans q with (isAcc q) in eq
+      opaque
+        unfolding _⊗_
+        foo : (q : Q) →
+          (LiftG (ℓ-max ℓ2 ℓ) char ⊗ LiftG ℓ-zero (&[ q ∈ Q ] X q))
+           ⊢ ⊕[ y ∈ Lift {i = ℓ-zero} {j = ℓ} ⟨ Alphabet ⟩ ]
+           (LiftG {ℓA = ℓ} ℓ2 (literal* (y .lower)) ⊗ LiftG ℓ (X (δ q (y .lower))))
+        foo q w (s , liftChar , liftAndQ) = -- TODO: Rewrite w `⟜-intro⁻`
+          lift (liftChar .lower .fst) ,
+          s ,
+          lift (lift (liftChar .lower .snd)) ,
+          lift (liftAndQ .lower (δ q (liftChar .lower .fst)))
+
+    parseNatTrans : (u : Unit*) → (q : Q) → ⟦ *Ty char u ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
+    parseNatTrans _ q with (isAcc q) in eq
     ... | true = ⊕ᴰ-elim λ
       { nil →
         (λ w x → stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
-      ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo z))
+      ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo q z))
       }
     ... | false = ⊕ᴰ-elim λ
       { nil → (λ w x → stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
-      ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo z)) }
+      ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo q z))
+      }
 
   module _ {ℓ2 : Level} (X : Grammar ℓ2) where
     parseNatTrans2 : ⟦ *Ty char _ ⟧ (λ _ → X) ⊢ &[ q ∈ Q ] ⟦ TraceF' q ⟧ (λ _ → X)
@@ -94,8 +106,11 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   baz : Algebra (*Ty char) λ _ → KL* char
   baz = initialAlgebra (*Ty char)
 
+  bez : Algebra TraceF' (μ TraceF')
+  bez = initialAlgebra TraceF'
+
   biz : Algebra (*Ty char) (λ _ → &[ q ∈ Q ] ⟦ TraceF' q ⟧ (μ TraceF')) -- (λ q → (⟦ TraceF' q ⟧ (λ _ → (μ TraceF'))))
-  biz = {!parseNatTrans (KL* char)!}
+  biz x = {! TraceF' -- (parseNatTrans (μ TraceF') x) !}
 
   parse : string ⊢ &[ q ∈ Q ] (⊕[ b ∈ Bool ] Trace b q)
   parse =
