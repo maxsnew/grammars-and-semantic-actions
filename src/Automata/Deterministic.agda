@@ -76,6 +76,27 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
       { nil → (λ w x → stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
       ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo z)) }
 
+  module _ {ℓ2 : Level} (X : Grammar ℓ2) where
+    parseNatTrans2 : ⟦ *Ty char _ ⟧ (λ _ → X) ⊢ &[ q ∈ Q ] ⟦ TraceF' q ⟧ (λ _ → X)
+    parseNatTrans2 =
+     ⊕ᴰ-elim λ
+      { nil → λ w llεw q →  foo llεw q
+      ; cons → &ᴰ-intro λ q w → Σ-Π-Iso .inv ((λ _ → step) , baz w) -- (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo z))
+      } where
+      foo : {w : String} → (Lift (Lift (ε w))) → (q : Q) → ⟦ TraceF' q ⟧ (λ _ → X) w
+      foo llεw q with (isAcc q) in eq
+      ... | false = stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower llεw))))
+      ... | true  = stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower llεw))))
+      baz : (LiftG ℓ2 char ⊗ LiftG ℓ-zero X) ⊢ ⊕ᴰ (λ y → LiftG ℓ2 (literal* (y .lower)) ⊗ LiftG ℓ X)
+      baz = ⊕ᴰ-distL .fun ∘g ⊗-intro (λ w z → lift (z .lower .fst) , lift (lift (z .lower .snd))) (liftG ∘g lowerG)
+
+
+  baz : Algebra (*Ty char) λ _ → KL* char
+  baz = initialAlgebra (*Ty char)
+
+  biz : Algebra (*Ty char) (λ _ → &[ q ∈ Q ] ⟦ TraceF' q ⟧ (μ TraceF')) -- (λ q → (⟦ TraceF' q ⟧ (λ _ → (μ TraceF'))))
+  biz = {!parseNatTrans (KL* char)!}
+
   parse : string ⊢ &[ q ∈ Q ] (⊕[ b ∈ Bool ] Trace b q)
   parse =
     fold*r char
