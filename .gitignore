@@ -297,6 +297,10 @@ paper-difforigin/*
 /paper/paper-oldtmp-26829.tex
 /paper/paper-oldtmp-*.tex
 
-
 _build
 *.agdai
+
+# nix / direnv
+.direnv/
+result
+result-*
