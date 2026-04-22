@@ -105,7 +105,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
       baz = ⊕ᴰ-distL .fun ∘g ⊗-intro (λ w z → lift (z .lower .fst) , lift (lift (z .lower .snd))) (liftG ∘g lowerG)
 
 
-  baz : Algebra (*Ty char) λ _ → KL* char
+  baz : Algebra (*Ty char) λ _ → string
   baz = initialAlgebra (*Ty char)
 
   bez : Algebra TraceF' (μ TraceF')
@@ -113,6 +113,9 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
 
   biz : Algebra (*Ty char) (λ _ → &[ q ∈ Q ] ((μ TraceF') q)) -- ideally, use `bez`, the `μ.roll` term was `C-c C-a`-ed.
   biz x = (λ w &[q∈Q]etc q → μ.roll w (&[q∈Q]etc q)) ∘g parseNatTrans (μ TraceF') x
+
+  fiz : Coalgebra TraceF' (λ _ → string)
+  fiz x = π x ∘g parseNatTrans (λ _ → string) tt* ∘g map (*Ty char tt*) (λ _ → Δ) ∘g unroll (*Ty char) tt*
 
   parse1 : string ⊢ (&[ q ∈ Q ] (μ TraceF') q)
   parse1 = fold*r' char biz
