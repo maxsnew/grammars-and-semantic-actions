@@ -111,8 +111,8 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   bez : Algebra TraceF' (μ TraceF')
   bez = initialAlgebra TraceF'
 
-  biz : Algebra (*Ty char) (λ _ → &[ q ∈ Q ] ((μ TraceF') q)) -- ideally, use `bez`, the `μ.roll` term was `C-c C-a`-ed.
-  biz x = (λ w &[q∈Q]etc q → μ.roll w (&[q∈Q]etc q)) ∘g parseNatTrans (μ TraceF') x
+  biz : Algebra (*Ty char) (λ _ → &[ q ∈ Q ] ((μ TraceF') q))
+  biz x = map&ᴰ bez ∘g parseNatTrans (μ TraceF') x
 
   fiz : Coalgebra TraceF' (λ _ → string)
   fiz x = π x ∘g parseNatTrans (λ _ → string) tt* ∘g map (*Ty char tt*) (λ _ → Δ) ∘g unroll (*Ty char) tt*
