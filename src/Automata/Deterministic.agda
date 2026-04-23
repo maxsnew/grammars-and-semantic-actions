@@ -51,13 +51,9 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   STEP : ∀ c b q → ＂ c ＂ ⊗ Trace b (δ q c) ⊢ Trace b q
   STEP c b q = roll ∘g σ step ∘g σ (lift c) ∘g (liftG ∘g liftG) ,⊗ liftG
 
-  data Tag' : Type ℓ where
-    stop√ stop× step : Tag'
-
   TraceF' : (q : Q) → Functor Q
-  TraceF' q = ⊕e Tag' λ {
-      stop√ → ⊕e (Lift (true Eq.≡ isAcc q)) λ { (lift acc) → k ε* }
-      ; stop× → ⊕e (Lift (false Eq.≡ isAcc q)) λ { (lift acc) → k ε* }
+  TraceF' q = ⊕e Tag λ {
+      stop → ⊕e (Lift Bool) λ {(lift b) → (⊕e (Lift (b Eq.≡ isAcc q)) λ { (lift acc) → k ε* })}
       ; step → ⊕e (Lift ⟨ Alphabet ⟩) (λ { (lift c) → (k (literal* c)) ⊗e (Var (δ q c)) }) }
 
   open StrongEquivalence
@@ -69,9 +65,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
       ; cons → &ᴰ⊕ᴰ-dist≅ .inv ∘g σ (λ _ → step) ∘g (&ᴰ-intro consCase)
       } where
       nilCase : (q : Q) → ⟦ k {X = Unit*} ε* ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
-      nilCase q with (isAcc q) in eq
-      ... | true  = ε-elim (stop√ , ((lift (Eq.sym eq)) , (lift (lift ε-intro)))) ∘g lowerG ∘g lowerG
-      ... | false = ε-elim (stop× , ((lift (Eq.sym eq)) , (lift (lift ε-intro)))) ∘g lowerG ∘g lowerG
+      nilCase q = ε-elim (stop , ((lift (isAcc q)) , ((lift Eq.refl) , ((lift (lift ε-intro)))))) ∘g lowerG ∘g lowerG
       consCase : (q : Q) →
          (LiftG (ℓ-max ℓ2 ℓ) char ⊗ LiftG ℓ-zero (&[ q ∈ Q ] X q))
          ⊢ ⊕[ y ∈ Lift {i = ℓ-zero} {j = ℓ} ⟨ Alphabet ⟩ ]
