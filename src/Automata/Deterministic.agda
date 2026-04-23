@@ -63,47 +63,23 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   open StrongEquivalence
 
   module _ {ℓ2 : Level} (X : Q → Grammar ℓ2) where
-    private --else in where clause
-      opaque
-        unfolding _⊗_
-        foo : (q : Q) →
-          (LiftG (ℓ-max ℓ2 ℓ) char ⊗ LiftG ℓ-zero (&[ q ∈ Q ] X q))
-           ⊢ ⊕[ y ∈ Lift {i = ℓ-zero} {j = ℓ} ⟨ Alphabet ⟩ ]
-           (LiftG {ℓA = ℓ} ℓ2 (literal* (y .lower)) ⊗ LiftG ℓ (X (δ q (y .lower))))
-        foo q w (s , liftChar , liftAndQ) = -- TODO: Rewrite w `⟜-intro⁻`
-          lift (liftChar .lower .fst) ,
-          s ,
-          lift (lift (liftChar .lower .snd)) ,
-          lift (liftAndQ .lower (δ q (liftChar .lower .fst)))
-
     parseNatTrans : (u : Unit*) → ⟦ *Ty char u ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ &[ q ∈ Q ] ⟦ TraceF' q ⟧ X
-    parseNatTrans u = &ᴰ-intro (parseNatTrans' {u = u}) where
-      parseNatTrans' : ∀ {u} (q : Q) → ⟦ *Ty char u ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
-      parseNatTrans' q with (isAcc q) in eq
-      ... | true = ⊕ᴰ-elim λ
-        { nil →
-          (λ w x → stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
-        ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo q z))
-        }
-      ... | false = ⊕ᴰ-elim λ
-        { nil → (λ w x → stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
-        ; cons → (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo q z))
-        }
-
-  module _ {ℓ2 : Level} (X : Grammar ℓ2) where
-    parseNatTrans2 : ⟦ *Ty char _ ⟧ (λ _ → X) ⊢ &[ q ∈ Q ] ⟦ TraceF' q ⟧ (λ _ → X)
-    parseNatTrans2 =
-     ⊕ᴰ-elim λ
-      { nil → λ w llεw q →  foo llεw q
-      ; cons → &ᴰ-intro λ q w → Σ-Π-Iso .inv ((λ _ → step) , baz w) -- (λ z → Σ-Π-Iso .inv ((λ _ → step) , foo z))
+    parseNatTrans u = ⊕ᴰ-elim λ
+      { nil → &ᴰ-intro nilCase
+      ; cons → &ᴰ⊕ᴰ-dist≅ .inv ∘g σ (λ _ → step) ∘g (&ᴰ-intro consCase)
       } where
-      foo : {w : String} → (Lift (Lift (ε w))) → (q : Q) → ⟦ TraceF' q ⟧ (λ _ → X) w
-      foo llεw q with (isAcc q) in eq
-      ... | false = stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower llεw))))
-      ... | true  = stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower llεw))))
-      baz : (LiftG ℓ2 char ⊗ LiftG ℓ-zero X) ⊢ ⊕ᴰ (λ y → LiftG ℓ2 (literal* (y .lower)) ⊗ LiftG ℓ X)
-      baz = ⊕ᴰ-distL .fun ∘g ⊗-intro (λ w z → lift (z .lower .fst) , lift (lift (z .lower .snd))) (liftG ∘g lowerG)
-
+      nilCase : (q : Q) → ⟦ k {X = Unit*} ε* ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
+      nilCase q with (isAcc q) in eq
+      ... | true = (λ w x → stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
+      ... | false = (λ w x → stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
+      consCase : (q : Q) →
+         (LiftG (ℓ-max ℓ2 ℓ) char ⊗ LiftG ℓ-zero (&[ q ∈ Q ] X q))
+         ⊢ ⊕[ y ∈ Lift {i = ℓ-zero} {j = ℓ} ⟨ Alphabet ⟩ ]
+         (LiftG {ℓA = ℓ} ℓ2 (literal* (y .lower)) ⊗ LiftG ℓ (X (δ q (y .lower))))
+      consCase q =
+        ⊕ᴰ-elim (λ c → σ (lift c) ∘g (liftG ∘g liftG) ,⊗ (liftG ∘g π (δ q c)))
+        ∘g ⊕ᴰ-distL .fun
+        ∘g lowerG ,⊗ lowerG
 
   baz : Algebra (*Ty char) λ _ → string
   baz = initialAlgebra (*Ty char)
