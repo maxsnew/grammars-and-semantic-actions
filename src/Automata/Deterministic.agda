@@ -70,8 +70,8 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
       } where
       nilCase : (q : Q) → ⟦ k {X = Unit*} ε* ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
       nilCase q with (isAcc q) in eq
-      ... | true = (λ w x → stop√ , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
-      ... | false = (λ w x → stop× , ((lift (Eq.sym eq)) , lift (lift (lower (lower x)))))
+      ... | true  = ε-elim (stop√ , ((lift (Eq.sym eq)) , (lift (lift ε-intro)))) ∘g lowerG ∘g lowerG
+      ... | false = ε-elim (stop× , ((lift (Eq.sym eq)) , (lift (lift ε-intro)))) ∘g lowerG ∘g lowerG
       consCase : (q : Q) →
          (LiftG (ℓ-max ℓ2 ℓ) char ⊗ LiftG ℓ-zero (&[ q ∈ Q ] X q))
          ⊢ ⊕[ y ∈ Lift {i = ℓ-zero} {j = ℓ} ⟨ Alphabet ⟩ ]
