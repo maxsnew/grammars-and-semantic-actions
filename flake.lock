@@ -20,23 +20,6 @@
         "type": "github"
       }
     },
-    "canonical": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1751312720,
-        "narHash": "sha256-vQ1rhZvYLcfCy9Yr9bnLmAkZPJiLUjPPLNhgDgaaNmc=",
-        "owner": "chasenorman",
-        "repo": "CanonicalLean",
-        "rev": "062f62a0bc9aeb4fe9a747fdb7b1aa568d08596c",
-        "type": "github"
-      },
-      "original": {
-        "owner": "chasenorman",
-        "repo": "CanonicalLean",
-        "rev": "062f62a0bc9aeb4fe9a747fdb7b1aa568d08596c",
-        "type": "github"
-      }
-    },
     "cubical": {
       "inputs": {
         "agda": [
@@ -61,6 +44,35 @@
       "original": {
         "owner": "agda",
         "repo": "cubical",
+        "type": "github"
+      }
+    },
+    "cubical-categorical-logic": {
+      "inputs": {
+        "agda": [
+          "agda"
+        ],
+        "cubical": [
+          "cubical"
+        ],
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1776209706,
+        "narHash": "sha256-SuRvJuvrRfBoC6AzaH3Ibctb7+s9xK/XQ98fVsNBVeE=",
+        "owner": "um-catlab",
+        "repo": "cubical-categorical-logic",
+        "rev": "c000b8e3f0ecb734ba9a12e971c43329d6c1491b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "um-catlab",
+        "repo": "cubical-categorical-logic",
         "type": "github"
       }
     },
@@ -90,24 +102,6 @@
         "owner": "hercules-ci",
         "repo": "flake-parts",
         "rev": "34fed993f1674c8d06d58b37ce1e0fe5eebcb9f5",
-        "type": "github"
-      },
-      "original": {
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
-        "type": "github"
-      }
-    },
-    "flake-parts_2": {
-      "inputs": {
-        "nixpkgs-lib": "nixpkgs-lib_2"
-      },
-      "locked": {
-        "lastModified": 1765835352,
-        "narHash": "sha256-XswHlK/Qtjasvhd1nOa1e8MgZ8GS//jBoTqWtrS1Giw=",
-        "owner": "hercules-ci",
-        "repo": "flake-parts",
-        "rev": "a34fae9c08a15ad73f295041fec82323541400a9",
         "type": "github"
       },
       "original": {
@@ -171,44 +165,6 @@
         "url": "https://gitlab.haskell.org/haskell-wasm/ghc-wasm-meta.git"
       }
     },
-    "lean4-nix": {
-      "inputs": {
-        "flake-parts": "flake-parts_2",
-        "nixpkgs": [
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1775267043,
-        "narHash": "sha256-yUCn4Wc5kLboN9JHom/SJAknn7aoSEDyerqFq3k7g0I=",
-        "owner": "lenianiva",
-        "repo": "lean4-nix",
-        "rev": "56e917e2766385d0b096ea8be9c40ae54bfe138a",
-        "type": "github"
-      },
-      "original": {
-        "owner": "lenianiva",
-        "repo": "lean4-nix",
-        "type": "github"
-      }
-    },
-    "mathlib": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1751257978,
-        "narHash": "sha256-njLDi5pc8vL5juagHGBzZHgOssTsyZR/hB9ZKZ/y7eQ=",
-        "owner": "leanprover-community",
-        "repo": "mathlib4",
-        "rev": "308445d7985027f538e281e18df29ca16ede2ba3",
-        "type": "github"
-      },
-      "original": {
-        "owner": "leanprover-community",
-        "repo": "mathlib4",
-        "rev": "308445d7985027f538e281e18df29ca16ede2ba3",
-        "type": "github"
-      }
-    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1759326671,
@@ -240,21 +196,6 @@
         "owner": "NixOS",
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nixpkgs-lib_2": {
-      "locked": {
-        "lastModified": 1765674936,
-        "narHash": "sha256-k00uTP4JNfmejrCLJOwdObYC9jHRrr/5M/a/8L2EIdo=",
-        "owner": "nix-community",
-        "repo": "nixpkgs.lib",
-        "rev": "2075416fcb47225d9b68ac469a5c4801a9c4dd85",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "nixpkgs.lib",
         "type": "github"
       }
     },
@@ -293,11 +234,9 @@
     "root": {
       "inputs": {
         "agda": "agda",
-        "canonical": "canonical",
         "cubical": "cubical",
+        "cubical-categorical-logic": "cubical-categorical-logic",
         "flake-utils": "flake-utils_2",
-        "lean4-nix": "lean4-nix",
-        "mathlib": "mathlib",
         "nixpkgs": "nixpkgs_3"
       }
     },

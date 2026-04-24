@@ -284,8 +284,6 @@ TSWLatexianTemp*
 !logo-agda.pdf
 /code/Cubical/Automaton/Everything.agda
 /dist-newstyle/
-Everything.agda
-GrammarEverything.agda
 
 CubicalDockerfile
 Agda2.7.0.1Dockerfile
