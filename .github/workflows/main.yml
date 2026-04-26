@@ -67,4 +67,4 @@ jobs:
         run: nix develop --profile .nix-dev-profile --command true
 
       - name: Typecheck grammars-and-semantic-actions
-        run: nix develop --command make -C src check
+        run: nix develop --command make -C src check AGDA_FLAGS="-j4"
