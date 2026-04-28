@@ -8,6 +8,7 @@ module Grammar.LinearFunction.Base (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
@@ -41,11 +42,11 @@ opaque
     A ⊗ B ⊢ C →
     B ⊢ C ⟜ A
   ⟜-intro e _ p w' q =
-    e _ ((_ , refl) , (q , p))
+    e _ ((_ , Eq.refl) , (q , p))
 
   ⟜-app :
     A ⊗ (B ⟜ A) ⊢ B
-  ⟜-app {B = B} _ p = subst B (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
+  ⟜-app {B = B} _ p = Eq.transport B (Eq.sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
 
 ⟜-intro-ε :
   A ⊢ C → ε ⊢ C ⟜ A
@@ -69,17 +70,15 @@ opaque
     (⟜-intro⁻ (⟜-intro m))
       ≡
     m
-  ⟜-β {C = C} m = funExt (λ w → funExt (λ p⊗ →
-    fromPathP {A = λ i → C (p⊗ .fst .snd (~ i))}
-      (congP (λ _ → m _) (⊗PathP refl refl))))
+  ⟜-β m = funExt λ w → funExt λ where
+    (((_ , _) , Eq.refl) , a , b) → refl
 
   ⟜-η :
     (f : A ⊢ B ⟜ C) →
     f
       ≡
     (⟜-intro (⟜-intro⁻ f))
-  ⟜-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
-    (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
+  ⟜-η f = refl
 
 ⟜UMP : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC}
   → Iso (A ⊗ B ⊢ C) (B ⊢ C ⟜ A)
@@ -94,12 +93,12 @@ opaque
     A ⊗ B ⊢  C →
     A ⊢ B ⊸ C
   ⊸-intro e _ p w' q =
-    e _ ((_ , refl) , p , q)
+    e _ ((_ , Eq.refl) , p , q)
 
   ⊸-app :
     (A ⊸ B) ⊗ A ⊢ B
   ⊸-app {B = B} _ (((w' , w'') , w≡w'++w'') , f , inp) =
-    subst B (sym w≡w'++w'') (f _ inp)
+    Eq.transport B (Eq.sym w≡w'++w'') (f _ inp)
 
 ⊸-intro⁻ :
   A ⊢ B ⊸ C →
@@ -112,15 +111,13 @@ opaque
   ⊸-η :
     (e : A ⊢ B ⊸ C) →
     ⊸-intro (⊸-intro⁻ e) ≡ e
-  ⊸-η e = funExt λ w → funExt λ pA →
-    funExt λ w' → funExt λ pB → transportRefl _
+  ⊸-η e = refl
 
   ⊸-β :
     (e : A ⊗ B ⊢ C) →
     ⊸-intro⁻ (⊸-intro e) ≡ e
-  ⊸-β e = funExt λ w → funExt λ p⊗ →
-    fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-      (⊗PathP refl refl))
+  ⊸-β e = funExt λ w → funExt λ where
+    (((_ , _) , Eq.refl) , a , b) → refl
 
 -- THE ORDER SWAPS!
 ⊸-mapCod : C ⊢ D → A ⊸ C ⊢ A ⊸ D
@@ -133,9 +130,7 @@ opaque
   unfolding ⊸-intro
   ⊸-mapCod-precomp : (e : A ⊢ B)(f : C ⊗ D ⊢ A) →
     ⊸-mapCod e ∘g ⊸-intro f ≡ ⊸-intro (e ∘g f)
-  ⊸-mapCod-precomp {A = A}{B = B}{D = D} e f =
-    funExt λ w → funExt λ p → funExt λ w' → funExt λ q →
-    cong (e (w ++ w')) (transportRefl (⊸-intro {B = D} f w p w' q))
+  ⊸-mapCod-precomp e f = refl
 
 opaque
   unfolding ⊗-intro
@@ -311,7 +306,7 @@ opaque
               (sym (ε-elim-natural ε-intro (⊸-intro (e ∘g ⊗-unit-l))))⟩
         ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l) ∘g ε-elim ε-intro) ,⊗ id ∘g ⊗-unit-l⁻
           ≡⟨ cong (λ z → ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l) ∘g z) ,⊗ id ∘g ⊗-unit-l⁻)
-               (funExt λ w → funExt λ p → isSetString w [] (ε-elim {A = ε} ε-intro w p) p)⟩
+               (funExt λ w → funExt λ p → isSetEqString w [] (ε-elim {A = ε} ε-intro w p) p)⟩
         ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l)) ,⊗ id ∘g ⊗-unit-l⁻
           ≡⟨ cong (_∘g ⊗-unit-l⁻) (⊸-β (e ∘g ⊗-unit-l)) ⟩
         e ∘g ⊗-unit-l ∘g ⊗-unit-l⁻

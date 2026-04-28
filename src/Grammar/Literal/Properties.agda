@@ -7,6 +7,7 @@ module Grammar.Literal.Properties (Alphabet : hSet ℓ-zero) where
 
 import Cubical.Data.Empty as Empty
 open import Cubical.Data.List
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.Properties Alphabet
@@ -34,7 +35,7 @@ module _ (c : ⟨ Alphabet ⟩) where
         same-literal w (p , p') = c≡c' , p
           where
           c≡c' : c ≡ c'
-          c≡c' = cons-inj₁ ((sym p) ∙ p')
+          c≡c' = cons-inj₁ ((sym (Eq.eqToPath p)) ∙ Eq.eqToPath p')
 
         opaque
           unfolding _⊗_
@@ -44,10 +45,10 @@ module _ (c : ⟨ Alphabet ⟩) where
             c≡c' : c ≡ c'
             c≡c' =
               cons-inj₁
-              (cong (_++ s .fst .snd) (sym pc)
-              ∙ (sym (s .snd)
-              ∙ (s' .snd))
-              ∙ cong (_++ s' .fst .snd) pc')
+              (cong (_++ s .fst .snd) (sym (Eq.eqToPath pc))
+              ∙ (sym (Eq.eqToPath (s .snd))
+              ∙ (Eq.eqToPath (s' .snd)))
+              ∙ cong (_++ s' .fst .snd) (Eq.eqToPath pc'))
 
     disjoint-literals : (c ≡ c' → Empty.⊥) → disjoint ＂ c ＂ ＂ c' ＂
     disjoint-literals c≢c' = ⊕ᴰ-elim (Empty.rec ∘ c≢c') ∘g same-literal

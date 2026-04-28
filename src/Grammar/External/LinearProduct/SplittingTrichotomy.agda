@@ -17,6 +17,7 @@ open import Cubical.Data.Sum.More
 open import Cubical.Data.FinSet
 open import Cubical.Data.Nat
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥* ; rec)
+import Cubical.Data.Equality as Eq
 
 open import Cubical.Relation.Nullary.Base
 
@@ -261,12 +262,13 @@ module _
          )
         (sameSplittingG w)
     splittingTrichotomyGTy-inl≅ w .fun (s , s' , x , p) =
-      s , ((p .fst) , (p .snd))
+      splittingPath→Eq s , ((p .fst) , (p .snd))
     splittingTrichotomyGTy-inl≅ w .inv (s , pAC , pBD) =
-      s , s , (refl , refl) , pAC , pBD
-    splittingTrichotomyGTy-inl≅ w .sec (s , pAC , pBD) = refl
+      splittingEq→Path s , splittingEq→Path s , (refl , refl) , pAC , pBD
+    splittingTrichotomyGTy-inl≅ w .sec (s , pAC , pBD) =
+      ΣPathP (SplittingEq≡ refl , refl)
     splittingTrichotomyGTy-inl≅ w .ret (s , s' , x , p) =
-      ΣPathP (refl , (ΣPathP ((Splitting≡ (≡-× (x .fst) (x .snd))) ,
+      ΣPathP (Splitting≡ refl , (ΣPathP ((Splitting≡ (≡-× (x .fst) (x .snd))) ,
         (ΣPathP ((ΣPathP (
           isProp→PathP (λ _ → isSetString _ _) refl (x .fst) ,
           isProp→PathP (λ _ → isSetString _ _) refl (x .snd)
@@ -287,12 +289,12 @@ module _
         s' .fst .fst , s' .fst .snd ,
         s .fst .fst , s .fst .snd ,
         ((c ∷ v , notmt)) ,
-        (s , ((mk&⌈⌉ C (p .snd .snd .fst) ,
-          (_ , (sym (split++ .fst))) , ((mk⌈⌉ (s' .fst .fst)) , (mk⌈⌉ (c ∷ v)))) ,
+        (splittingPath→Eq s , ((mk&⌈⌉ C (p .snd .snd .fst) ,
+          (_ , Eq.pathToEq (sym (split++ .fst))) , ((mk⌈⌉ (s' .fst .fst)) , (mk⌈⌉ (c ∷ v)))) ,
           mk&⌈⌉ D (p .snd .snd .snd .fst))) ,
-        s' , ((mk&⌈⌉ A (p .fst)) ,
+        splittingPath→Eq s' , ((mk&⌈⌉ A (p .fst)) ,
           ((mk&⌈⌉ B (p .snd .fst)) ,
-          ((_ , split++ .snd) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s .fst .snd))))))
+          ((_ , Eq.pathToEq (split++ .snd)) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s .fst .snd))))))
     splittingTrichotomyGTy-inr-inl≅ ww .inv
       (w , x , y , z , ([] , notmt) ,
       (s , (pA , (t , py , pv)) , pB) ,
@@ -304,7 +306,7 @@ module _
       (s' , (pC , (t , pw , pv)) , pD) ,
       (s , pA , (pB , (t' , pv' , pz)))
       ) =
-      s , s' ,
+      splittingEq→Path s , splittingEq→Path s' ,
       ((c ∷ v , notmt) ,
         s'11≡ ,
         s12≡) ,
@@ -324,11 +326,11 @@ module _
       cv≡t12 = ⌈⌉→≡ (c ∷ v) (t .fst .snd) pv
 
       s'11≡ : s .fst .fst ++ c ∷ v ≡ s' .fst .fst
-      s'11≡ = cong₂ _++_ s11≡t11 cv≡t12 ∙ sym (t .snd)
+      s'11≡ = cong₂ _++_ s11≡t11 cv≡t12 ∙ sym (Eq.eqToPath (t .snd))
 
       s12≡ : s .fst .snd ≡ c ∷ v ++ s' .fst .snd
       s12≡ =
-        t' .snd
+        Eq.eqToPath (t' .snd)
         ∙ cong₂ _++_
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ z (t' .fst .snd) pz)
@@ -350,10 +352,10 @@ module _
         refl ,
         ΣPathP5 (
           ΣPathP2 (
-            refl ,
+            SplittingEq≡ refl ,
             ΣPathP3 (
               ΣPathPProp (λ _ → isLang⌈⌉ y (s .fst .fst)) refl ,
-              Splitting≡
+              SplittingEq≡
                 (≡-×
                   (sym (⌈⌉→≡ w (s' .fst .fst) (pA .snd)) ∙ ⌈⌉→≡ w (t .fst .fst) pw)
                   (⌈⌉→≡ _ _ pv)
@@ -362,7 +364,7 @@ module _
                 (λ i →
                   isLang⌈⌉
                   (⌈⌉→≡ w (s' .fst .fst) (pA .snd) (~ i) )
-                  (Splitting≡ {s = _ , sym s11≡} {s' = t}
+                  (Splitting≡ {s = _ , sym s11≡} {s' = splittingEq→Path t}
                     (≡-×
                      ((λ i₁ → ⌈⌉→≡ w (s' .fst .fst) (pA .snd) (~ i₁)) ∙
                       ⌈⌉→≡ w (t .fst .fst) pw)
@@ -375,7 +377,7 @@ module _
                 (λ i →
                   isLang⌈⌉
                   (c ∷ v)
-                  (Splitting≡ {s = _ , sym s11≡} {s' = t}
+                  (Splitting≡ {s = _ , sym s11≡} {s' = splittingEq→Path t}
                     (≡-×
                      ((λ i₁ → ⌈⌉→≡ w (s' .fst .fst) (pA .snd) (~ i₁)) ∙
                       ⌈⌉→≡ w (t .fst .fst) pw)
@@ -387,10 +389,10 @@ module _
               ) ,
             ΣPathPProp (λ _ → isLang⌈⌉ z (s .fst .snd)) refl
             ) ,
-          refl ,
+          SplittingEq≡ refl ,
           ΣPathPProp (λ _ → isLang⌈⌉ w (s' .fst .fst)) refl ,
           ΣPathPProp (λ _ → isLang⌈⌉ x (s' .fst .snd)) refl ,
-          Splitting≡
+          SplittingEq≡
             (≡-×
               (⌈⌉→≡ _ _ pv')
               (sym (⌈⌉→≡ z _ (pD .snd)) ∙ ⌈⌉→≡ z _ pz)
@@ -400,7 +402,7 @@ module _
                 (λ i →
                   isLang⌈⌉
                   (c ∷ v)
-                  (Splitting≡ {s = _ , s'12≡} {s' = t'}
+                  (Splitting≡ {s = _ , s'12≡} {s' = splittingEq→Path t'}
                    (≡-× (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv')
                     ((λ i₁ → ⌈⌉→≡ z (s .fst .snd) (pD .snd) (~ i₁)) ∙
                      ⌈⌉→≡ z (t' .fst .snd) pz))
@@ -412,7 +414,7 @@ module _
                 (λ i →
                   isLang⌈⌉
                   (⌈⌉→≡ z (s .fst .snd) (pD .snd) (~ i))
-                  (Splitting≡ {s = _ , s'12≡} {s' = t'}
+                  (Splitting≡ {s = _ , s'12≡} {s' = splittingEq→Path t'}
                    (≡-× (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv')
                     ((λ i₁ → ⌈⌉→≡ z (s .fst .snd) (pD .snd) (~ i₁)) ∙
                      ⌈⌉→≡ z (t' .fst .snd) pz))
@@ -433,11 +435,11 @@ module _
       cv≡t12 = ⌈⌉→≡ (c ∷ v) (t .fst .snd) pv
 
       s11≡ : s' .fst .fst ++ c ∷ v ≡ s .fst .fst
-      s11≡ = cong₂ _++_ s'11≡t11 cv≡t12 ∙ sym (t .snd)
+      s11≡ = cong₂ _++_ s'11≡t11 cv≡t12 ∙ sym (Eq.eqToPath (t .snd))
 
       s'12≡ : s' .fst .snd ≡ c ∷ v ++ s .fst .snd
       s'12≡ =
-        t' .snd
+        Eq.eqToPath (t' .snd)
         ∙ cong₂ _++_
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ z (t' .fst .snd) pz)
@@ -445,8 +447,8 @@ module _
     splittingTrichotomyGTy-inr-inl≅ ww .ret
       (s , s' , ((c ∷ v , notmt) , split++) , p) =
       ΣPathP3 (
-        refl ,
-        refl ,
+        Splitting≡ refl ,
+        Splitting≡ refl ,
         ΣPathP2 (
           refl ,
           isSetString _ _ _ _ ,
@@ -476,12 +478,12 @@ module _
       s' .fst .fst , s' .fst .snd ,
       s .fst .fst , s .fst .snd ,
       ((c ∷ v , notmt)) ,
-      (s' , ((mk&⌈⌉ A (p .fst) ,
-        (_ , (sym (split++ .fst))) , ((mk⌈⌉ (s .fst .fst)) , (mk⌈⌉ (c ∷ v)))) ,
+      (splittingPath→Eq s' , ((mk&⌈⌉ A (p .fst) ,
+        (_ , Eq.pathToEq (sym (split++ .fst))) , ((mk⌈⌉ (s .fst .fst)) , (mk⌈⌉ (c ∷ v)))) ,
         mk&⌈⌉ B (p .snd .fst))) ,
-      (s , ((mk&⌈⌉ C (p .snd .snd .fst)) ,
+      (splittingPath→Eq s , ((mk&⌈⌉ C (p .snd .snd .fst)) ,
         ((mk&⌈⌉ D (p .snd .snd .snd .fst)) ,
-        ((_ , split++ .snd) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s' .fst .snd)))))))
+        ((_ , Eq.pathToEq (split++ .snd)) , ((mk⌈⌉ (c ∷ v)) , (mk⌈⌉ (s' .fst .snd)))))))
     splittingTrichotomyGTy-inr-inr≅ ww .inv
       (w , x , y , z , ([] , notmt) ,
       (s , (pA , (t , py , pv)) , pB) ,
@@ -493,8 +495,8 @@ module _
       (s' , (pA , (t , py , pv)) , pB) ,
       (s , pC , (pD , (t' , pv' , px)))
       ) =
-      s' ,
-      s ,
+      splittingEq→Path s' ,
+      splittingEq→Path s ,
       ((c ∷ v , notmt) ,
         s'11≡ ,
         s12≡) ,
@@ -514,11 +516,11 @@ module _
       cv≡t12 = ⌈⌉→≡ (c ∷ v) (t .fst .snd) pv
 
       s'11≡ : s .fst .fst ++ c ∷ v ≡ s' .fst .fst
-      s'11≡ = cong₂ _++_ s11≡t11 cv≡t12 ∙ sym (t .snd)
+      s'11≡ = cong₂ _++_ s11≡t11 cv≡t12 ∙ sym (Eq.eqToPath (t .snd))
 
       s12≡ : s .fst .snd ≡ c ∷ v ++ s' .fst .snd
       s12≡ =
-        t' .snd
+        Eq.eqToPath (t' .snd)
         ∙ cong₂ _++_
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ x (t' .fst .snd) px)
@@ -540,10 +542,10 @@ module _
         refl ,
         ΣPathP5 (
           ΣPathP2 (
-            refl ,
+            SplittingEq≡ refl ,
             ΣPathP3 (
               ΣPathPProp (λ _ → isLang⌈⌉ w (s .fst .fst)) refl ,
-              Splitting≡
+              SplittingEq≡
                 (≡-×
                   (sym (⌈⌉→≡ y (s' .fst .fst) (pC .snd))
                     ∙ ⌈⌉→≡ y (t .fst .fst) py)
@@ -553,7 +555,7 @@ module _
                 (λ i →
                   isLang⌈⌉
                   (⌈⌉→≡ y (s' .fst .fst) (pC .snd) (~ i) )
-                  (Splitting≡ {s = _ , sym s11≡} {s' = t}
+                  (Splitting≡ {s = _ , sym s11≡} {s' = splittingEq→Path t}
                     (≡-×
                      ((λ i₁ → ⌈⌉→≡ y (s' .fst .fst) (pC .snd) (~ i₁)) ∙
                       ⌈⌉→≡ y (t .fst .fst) py)
@@ -566,7 +568,7 @@ module _
                 (λ i →
                   isLang⌈⌉
                   (c ∷ v)
-                  (Splitting≡ {s = _ , sym s11≡} {s' = t}
+                  (Splitting≡ {s = _ , sym s11≡} {s' = splittingEq→Path t}
                     (≡-×
                      ((λ i₁ → ⌈⌉→≡ y (s' .fst .fst) (pC .snd) (~ i₁)) ∙
                       ⌈⌉→≡ y (t .fst .fst) py)
@@ -578,10 +580,10 @@ module _
               ) ,
             ΣPathPProp (λ _ → isLang⌈⌉ x (s .fst .snd)) refl
             ) ,
-          refl ,
+          SplittingEq≡ refl ,
           ΣPathPProp (λ _ → isLang⌈⌉ y (s' .fst .fst)) refl ,
           ΣPathPProp (λ _ → isLang⌈⌉ z (s' .fst .snd)) refl ,
-          Splitting≡
+          SplittingEq≡
             (≡-×
               (⌈⌉→≡ _ _ pv')
               (sym (⌈⌉→≡ x _ (pB .snd)) ∙ ⌈⌉→≡ x _ px)
@@ -591,7 +593,7 @@ module _
                 (λ i →
                   isLang⌈⌉
                   (c ∷ v)
-                  (Splitting≡ {s = _ , s'12≡} {s' = t'}
+                  (Splitting≡ {s = _ , s'12≡} {s' = splittingEq→Path t'}
                    (≡-× (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv')
                     ((λ i₁ → ⌈⌉→≡ x (s .fst .snd) (pB .snd) (~ i₁)) ∙
                      ⌈⌉→≡ x (t' .fst .snd) px))
@@ -603,7 +605,7 @@ module _
                 (λ i →
                   isLang⌈⌉
                   (⌈⌉→≡ x (s .fst .snd) (pB .snd) (~ i))
-                  (Splitting≡ {s = _ , s'12≡} {s' = t'}
+                  (Splitting≡ {s = _ , s'12≡} {s' = splittingEq→Path t'}
                    (≡-× (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv')
                     ((λ i₁ → ⌈⌉→≡ x (s .fst .snd) (pB .snd) (~ i₁)) ∙
                      ⌈⌉→≡ x (t' .fst .snd) px))
@@ -623,11 +625,11 @@ module _
       cv≡t12 = ⌈⌉→≡ (c ∷ v) (t .fst .snd) pv
 
       s11≡ : s' .fst .fst ++ c ∷ v ≡ s .fst .fst
-      s11≡ = cong₂ _++_ s'11≡t11 cv≡t12 ∙ sym (t .snd)
+      s11≡ = cong₂ _++_ s'11≡t11 cv≡t12 ∙ sym (Eq.eqToPath (t .snd))
 
       s'12≡ : s' .fst .snd ≡ c ∷ v ++ s .fst .snd
       s'12≡ =
-        t' .snd
+        Eq.eqToPath (t' .snd)
         ∙ cong₂ _++_
           (sym (⌈⌉→≡ (c ∷ v) (t' .fst .fst) pv'))
           (sym (⌈⌉→≡ x (t' .fst .snd) px)
@@ -635,8 +637,8 @@ module _
     splittingTrichotomyGTy-inr-inr≅ ww .ret
       (s , s' , ((c ∷ v , notmt) , split++) , p) =
       ΣPathP3 (
-        refl ,
-        refl ,
+        Splitting≡ refl ,
+        Splitting≡ refl ,
         ΣPathP2 (
           refl ,
           isSetString _ _ _ _ ,
@@ -703,11 +705,13 @@ module _
            C (s' .fst .fst) ×
            D (s' .fst .snd)))
     ⊗&⊗parse≅ w .fun ((s , pA , pB) , (s' , pC , pD)) =
-      s , s' , pA , pB , pC , pD
+      splittingEq→Path s , splittingEq→Path s' , pA , pB , pC , pD
     ⊗&⊗parse≅ w .inv (s , s' , pA , pB , pC , pD) =
-      (s , pA , pB) , (s' , pC , pD)
-    ⊗&⊗parse≅ w .sec _ = refl
-    ⊗&⊗parse≅ w .ret _ = refl
+      (splittingPath→Eq s , pA , pB) , (splittingPath→Eq s' , pC , pD)
+    ⊗&⊗parse≅ w .sec (s , s' , pA , pB , pC , pD) =
+      ΣPathP (Splitting≡ refl , ΣPathP (Splitting≡ refl , refl))
+    ⊗&⊗parse≅ w .ret ((s , pA , pB) , (s' , pC , pD)) =
+      ΣPathP (ΣPathP (SplittingEq≡ refl , refl) , ΣPathP (SplittingEq≡ refl , refl))
 
     opaque
       unfolding _⊕_

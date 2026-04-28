@@ -10,6 +10,7 @@ open import Cubical.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
 open import Cubical.Data.Empty as Empty
+import Cubical.Data.Equality as Eq
 
 open import Cubical.Foundations.Structure
 
@@ -57,8 +58,8 @@ stringL = *L char
 opaque
   unfolding ⊗-intro ε literal
   mk⌈⌉ : ∀ w → ⌈ w ⌉ w
-  mk⌈⌉ [] = refl
-  mk⌈⌉ (c ∷ w) = (_ , refl) , (refl , (mk⌈⌉ w))
+  mk⌈⌉ [] = Eq.refl
+  mk⌈⌉ (c ∷ w) = (_ , Eq.refl) , (Eq.refl , (mk⌈⌉ w))
 
 mk⌈⌉' : ∀ w → ⌈ w ⌉' w
 mk⌈⌉' w = refl
@@ -71,9 +72,11 @@ opaque
   uniquely-supported-⌈⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
   uniquely-supported-⌈⌉ [] [] p = refl
   uniquely-supported-⌈⌉ [] (x ∷ w') p =
-    Empty.rec (¬cons≡nil p)
+    Empty.rec (¬cons≡nil (Eq.eqToPath p))
   uniquely-supported-⌈⌉ (x ∷ w) [] p =
-    Empty.rec (¬nil≡cons (p .fst .snd ∙ cong (_++ p .fst .fst .snd) (p .snd .fst)))
+    Empty.rec (¬nil≡cons
+      (Eq.eqToPath (p .fst .snd)
+       ∙ cong (_++ p .fst .fst .snd) (Eq.eqToPath (p .snd .fst))))
   uniquely-supported-⌈⌉ (x ∷ w) (y ∷ w') p =
     cong₂ _∷_
       (cons-inj₁ w≡)
@@ -81,7 +84,8 @@ opaque
         cons-inj₂ w≡)
     where
     w≡ : x ∷ p .fst .fst .snd ≡ y ∷ w'
-    w≡ = ( (sym (cong (_++ p .fst .fst .snd) (p .snd .fst))) ∙ sym (p .fst .snd))
+    w≡ = sym (cong (_++ p .fst .fst .snd) (Eq.eqToPath (p .snd .fst)))
+       ∙ sym (Eq.eqToPath (p .fst .snd))
 
 ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
 ⌈⌉→≡ = uniquely-supported-⌈⌉
@@ -92,7 +96,7 @@ opaque
 opaque
   unfolding ε _⊗_ uniquely-supported-⌈⌉ mk⌈⌉
   ⌈⌉'→⌈⌉ : ∀ w → ⌈ w ⌉' ⊢ ⌈ w ⌉
-  ⌈⌉'→⌈⌉ [] = λ _ → sym
+  ⌈⌉'→⌈⌉ [] = λ _ p → Eq.pathToEq (sym p)
   ⌈⌉'→⌈⌉ (c ∷ w) w' cw≡w' = J (λ w'' cw≡w'' → (＂ c ＂ ⊗ ⌈ w ⌉) w'') (mk⌈⌉ (c ∷ w)) cw≡w'
 
   open StrongEquivalence
@@ -100,13 +104,28 @@ opaque
   ⌈⌉≅⌈⌉' w .fun = ⌈⌉→⌈⌉' w
   ⌈⌉≅⌈⌉' w .inv = ⌈⌉'→⌈⌉ w
   ⌈⌉≅⌈⌉' w .sec = funExt λ w' → funExt λ p → isSetString w w' _ _
-  ⌈⌉≅⌈⌉' [] .ret = funExt λ w' → funExt λ p → isSetString w' [] _ _
+  ⌈⌉≅⌈⌉' [] .ret = funExt λ w' → funExt λ p → isSetEqString w' [] _ _
   ⌈⌉≅⌈⌉' (c ∷ w) .ret = funExt λ w' → funExt λ p →
-    Σ≡Prop
-     (λ s → isProp× (isLangLiteral c (s .fst .fst))
-                    (isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w) (s .fst .snd)))
-     (Splitting≡ (≡-× (transportRefl [ c ] ∙ sym (p .snd .fst))
-                 (transportRefl w ∙ ⌈⌉→⌈⌉' w _ (p .snd .snd))))
+    isProp→PathP
+      (λ _ → isPropLitTimes c w w')
+      _ p
+    where
+    isPropLitTimes : (c : ⟨ Alphabet ⟩) (w w' : String)
+      → isProp ((literal c ⊗ ⌈ w ⌉) w')
+    isPropLitTimes c w w' (s , l , r) (s' , l' , r') =
+      let
+        sFst≡ : s .fst ≡ s' .fst
+        sFst≡ = ≡-×
+          (Eq.eqToPath l ∙ sym (Eq.eqToPath l'))
+          (sym (⌈⌉→⌈⌉' w _ r) ∙ ⌈⌉→⌈⌉' w _ r')
+        s≡ : s ≡ s'
+        s≡ = SplittingEq≡ sFst≡
+      in ΣPathP
+        ( s≡
+        , isProp→PathP
+            (λ i → isProp× (isLangLiteral c (s≡ i .fst .fst))
+                            (isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w) (s≡ i .fst .snd)))
+            _ _ )
 
 isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
 isLang⌈⌉ w = isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w)

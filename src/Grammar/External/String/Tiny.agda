@@ -19,6 +19,7 @@ open import Cubical.Data.List as List hiding (rec)
 open import Cubical.Data.List.More
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Sigma
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.Top Alphabet
@@ -103,11 +104,11 @@ opaque
     same-splits {w = λ _ → w} p q
   unique-splitting-charL  w (s , (c , p) , q) (s' , (c' , p') , q') =
     ≡-×
-      (p ∙ cong (_∷ []) (cons-inj₁ w≡) ∙ sym p')
+      (Eq.eqToPath p ∙ cong (_∷ []) (cons-inj₁ w≡) ∙ sym (Eq.eqToPath p'))
       (cons-inj₂ w≡)
     where
     w≡ : [ c ] ++ s .fst .snd ≡ [ c' ] ++ s' .fst .snd
-    w≡ = sym (s .snd ∙ cong (_++ s. fst .snd) p) ∙ s' .snd ∙ cong (_++ s' .fst .snd) p'
+    w≡ = sym (Eq.eqToPath (s .snd) ∙ cong (_++ s. fst .snd) (Eq.eqToPath p)) ∙ Eq.eqToPath (s' .snd) ∙ cong (_++ s' .fst .snd) (Eq.eqToPath p')
 
 
   opaque
@@ -129,10 +130,10 @@ opaque
   unique-splitting-charR {A = A} w (s , p , (c , q)) (s' , p' , (c' , q')) =
     ≡-×
       (snoc-inj₁ w≡)
-      (q ∙ cong (_∷ []) (snoc-inj₂ w≡) ∙ sym q')
+      (Eq.eqToPath q ∙ cong (_∷ []) (snoc-inj₂ w≡) ∙ sym (Eq.eqToPath q'))
     where
     w≡ : s .fst .fst ++ [ c ] ≡ s' .fst .fst ++ [ c' ]
-    w≡ = sym (s .snd ∙ cong (s .fst .fst ++_) q) ∙ s' .snd ∙ cong (s' .fst .fst ++_) q'
+    w≡ = sym (Eq.eqToPath (s .snd) ∙ cong (s .fst .fst ++_) (Eq.eqToPath q)) ∙ Eq.eqToPath (s' .snd) ∙ cong (s' .fst .fst ++_) (Eq.eqToPath q')
 
   opaque
     unfolding ⊗-intro
@@ -160,7 +161,7 @@ module _ (x : String) where
         sym (dropLength++ (s' .fst .fst))
         ∙ cong (drop (length (s' .fst .fst)))
           (cong (_++ s .fst .snd) (sym 11≡)
-          ∙ sym (s .snd) ∙ (s' .snd))
+          ∙ sym (Eq.eqToPath (s .snd)) ∙ (Eq.eqToPath (s' .snd)))
         ∙ dropLength++ (s' .fst .fst)
         )
         where
@@ -177,7 +178,7 @@ module _ (x : String) where
         (
         sym (dropBackLength++ (s .fst .fst) (s .fst .snd))
         ∙ cong (dropBack (length (s .fst .snd)))
-           (sym (s .snd) ∙ (s' .snd) ∙ cong (s' .fst .fst ++_) (sym 12≡))
+           (sym (Eq.eqToPath (s .snd)) ∙ (Eq.eqToPath (s' .snd)) ∙ cong (s' .fst .fst ++_) (sym 12≡))
         ∙ dropBackLength++ (s' .fst .fst) (s .fst .snd)
         )
         12≡
@@ -194,11 +195,13 @@ opaque
     where
     s≡ : s' .fst .snd ≡ s .fst .snd
     s≡ = cons-inj₂
-      (cong (_++ s' .fst .snd) (sym (p' .snd))
-      ∙ sym (s' .snd)
-      ∙ s .snd
-      ∙ cong (_++ s .fst .snd) (p .snd)
+      (cong (_++ s' .fst .snd) (sym (Eq.eqToPath (p' .snd)))
+      ∙ sym (Eq.eqToPath (s' .snd))
+      ∙ Eq.eqToPath (s .snd)
+      ∙ cong (_++ s .fst .snd) (Eq.eqToPath (p .snd))
       )
+
+
 
   ⌈⌉-⊗&-distL⁻ :
     (⌈ w ⌉ ⊗ A) & (⌈ w ⌉ ⊗ B) ⊢ ⌈ w ⌉ ⊗ (A & B)
@@ -260,7 +263,7 @@ char-⊗&-distR≅ {A = A} {B = B} .sec = the-sec
     the-sec = funExt λ w → funExt λ p →
       ΣPathP (refl ,
         ΣPathP (
-          (Splitting≡ (unique-splitting-charR w (p .fst) (p .snd))) ,
+          (SplittingEq≡ (unique-splitting-charR w (p .fst) (p .snd))) ,
           ΣPathP (
             symP (transport-filler _ (fst (p .snd .snd))) ,
             isProp→PathP (λ i → unambiguous→isLang unambiguous-char _) _ _
@@ -300,7 +303,7 @@ char-⊗&-distR≅ .ret = the-ret
       ΣPathP (
         refl ,
         (ΣPathP (
-          Splitting≡
+          SplittingEq≡
             (unique-splitting-⌈⌉R w w' (p .fst) (p .snd))
             ,
           ΣPathP (
