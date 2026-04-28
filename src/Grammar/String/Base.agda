@@ -1,3 +1,4 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch --lossy-unification #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 
@@ -69,23 +70,19 @@ isLang⌈⌉' = isSetString
 
 opaque
   unfolding ε _⊗_ literal
+  uniquely-supported-⌈⌉Eq : ∀ w w' → ⌈ w ⌉ w' → w Eq.≡ w'
+  uniquely-supported-⌈⌉Eq [] [] _ = Eq.refl
+  uniquely-supported-⌈⌉Eq [] (x ∷ w') ()
+  uniquely-supported-⌈⌉Eq (x ∷ w) [] (((w₁ , w₂) , e) , p₁ , _) =
+    Eq.J (λ ww _ → [] Eq.≡ ww ++ w₂ → x ∷ w Eq.≡ [])
+         (λ ()) (Eq.sym p₁) e
+  uniquely-supported-⌈⌉Eq (x ∷ w) (y ∷ w') (((w₁ , w₂) , e) , p₁ , p) =
+    Eq.ap (x ∷_) (uniquely-supported-⌈⌉Eq w w₂ p)
+      Eq.∙ Eq.ap (_++ w₂) (Eq.sym p₁)
+      Eq.∙ Eq.sym e
+
   uniquely-supported-⌈⌉ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
-  uniquely-supported-⌈⌉ [] [] p = refl
-  uniquely-supported-⌈⌉ [] (x ∷ w') p =
-    Empty.rec (¬cons≡nil (Eq.eqToPath p))
-  uniquely-supported-⌈⌉ (x ∷ w) [] p =
-    Empty.rec (¬nil≡cons
-      (Eq.eqToPath (p .fst .snd)
-       ∙ cong (_++ p .fst .fst .snd) (Eq.eqToPath (p .snd .fst))))
-  uniquely-supported-⌈⌉ (x ∷ w) (y ∷ w') p =
-    cong₂ _∷_
-      (cons-inj₁ w≡)
-      (uniquely-supported-⌈⌉ w (p .fst .fst .snd) (p .snd .snd) ∙
-        cons-inj₂ w≡)
-    where
-    w≡ : x ∷ p .fst .fst .snd ≡ y ∷ w'
-    w≡ = sym (cong (_++ p .fst .fst .snd) (Eq.eqToPath (p .snd .fst)))
-       ∙ sym (Eq.eqToPath (p .fst .snd))
+  uniquely-supported-⌈⌉ w w' p = Eq.eqToPath (uniquely-supported-⌈⌉Eq w w' p)
 
 ⌈⌉→≡ : ∀ w w' → ⌈ w ⌉ w' → w ≡ w'
 ⌈⌉→≡ = uniquely-supported-⌈⌉
@@ -131,7 +128,7 @@ isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
 isLang⌈⌉ w = isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w)
 
 pick-parse : ∀ (w : String) → (A : Grammar ℓA) → A w → ⌈ w ⌉ ⊢ A
-pick-parse w A pA w' p⌈⌉ = subst A (uniquely-supported-⌈⌉ w w' p⌈⌉) pA
+pick-parse w A pA w' p⌈⌉ = Eq.transport A (uniquely-supported-⌈⌉Eq w w' p⌈⌉) pA
 
 ⌈⌉→string : ∀ w → ⌈ w ⌉ ⊢ string
 ⌈⌉→string [] = NIL
@@ -139,4 +136,3 @@ pick-parse w A pA w' p⌈⌉ = subst A (uniquely-supported-⌈⌉ w w' p⌈⌉) 
 
 mkstring : (w : String) → string w
 mkstring w = (⌈⌉→string w) w (mk⌈⌉ w)
-
