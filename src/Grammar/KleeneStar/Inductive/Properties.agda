@@ -4,6 +4,8 @@ open import Cubical.Foundations.Structure
 
 module Grammar.KleeneStar.Inductive.Properties (Alphabet : hSet ℓ-zero) where
 
+open import Cubical.Data.Unit
+
 open import Grammar.Base Alphabet
 open import Grammar.Sum Alphabet
 open import Grammar.Sum.Binary.AsPrimitive Alphabet
@@ -112,3 +114,8 @@ module _
                 (fold*r' B the-B*-alg ∘g lowerG)
               }))
         (recHomo (*Ty A) the-A*-alg)) _
+
+opaque
+  unfolding unrolled*≅ε⊕A⊗A* unrolled*L≅ε⊕A*L⊗A *≅
+  unfoldKleeneStarDefs : Unit
+  unfoldKleeneStarDefs = tt

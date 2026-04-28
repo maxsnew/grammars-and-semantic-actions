@@ -9,6 +9,7 @@ open import Cubical.Functions.Embedding
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.String.Base Alphabet
@@ -24,9 +25,7 @@ private
     B : Grammar ℓB
 
 pick-parse≡ : (w : String) → (x : A w) → (pick-parse w A x) w (mk⌈⌉ w) ≡ x
-pick-parse≡ {A = A} w x =
-  cong (λ a → transport (λ i → A (a i)) x) (isSetString _ _ _ _)
-  ∙ transportRefl x
+pick-parse≡ {A = A} w x = cong (λ q → Eq.transport A q x) (isSetEqString w w _ Eq.refl)
 
 pick-parse≡' : (w : String) → (x y : A w) → pick-parse w A x ≡ pick-parse w A y → x ≡ y
 pick-parse≡' {A = A} w x y parse≡ =

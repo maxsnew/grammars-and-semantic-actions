@@ -22,7 +22,7 @@ open NFA.Accepting hiding (Trace)
 module _ (r : RegularExpression)
   (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ )
   where
-  open Determinization (regex→NFA r) isFinSetAlphabet
+  open Determinization (regex→NFA r) (isFinSet→Discrete isFinSetAlphabet)
     (isFinOrdStates r) (isFinOrdTransition r) (isFinOrdεTransition r)
   open DeterministicAutomaton ℙN
 

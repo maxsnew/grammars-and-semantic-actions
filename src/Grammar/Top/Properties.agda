@@ -4,6 +4,8 @@ open import Cubical.Foundations.Structure
 
 module Grammar.Top.Properties (Alphabet : hSet ℓ-zero) where
 
+open import Cubical.Data.Unit
+
 open import Grammar.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
 open import Grammar.Properties Alphabet
@@ -38,3 +40,9 @@ opaque
 
 isSetGrammar⊤ : isSetGrammar ⊤
 isSetGrammar⊤ = isLang→isSetGrammar isLang⊤
+
+opaque
+  unfolding ⊤ ⊤* ⊤-intro ⊤*-intro is-terminal-⊤ is-terminal-⊤*
+            unambiguous'⊤ unambiguous'⊤* isLang⊤
+  unfoldTopDefs : Unit
+  unfoldTopDefs = tt

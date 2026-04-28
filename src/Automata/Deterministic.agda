@@ -49,6 +49,35 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   STEP : ∀ c b q → ＂ c ＂ ⊗ Trace b (δ q c) ⊢ Trace b q
   STEP c b q = roll ∘g σ step ∘g σ (lift c) ∘g (liftG ∘g liftG) ,⊗ liftG
 
+  STEP' : ∀ c b q →  Trace b q ⊗ ＂ c ＂ ⊢ ⊕[ b' ∈ Bool ] Trace b' q
+  STEP' c₀ b q = ⊸-intro⁻ (rec (TraceTy b) (extendAlg c₀) q)
+    where
+    extendAlg : (c : ⟨ Alphabet ⟩) →
+      Algebra (TraceTy b) (λ q' → ＂ c ＂ ⊸ ⊕[ b' ∈ Bool ] Trace b' q')
+    extendAlg c q' = ⊕ᴰ-elim λ where
+      stop → ⊕ᴰ-elim λ where
+        (lift Eq.refl) →
+          ⊸-intro
+            ( σ (isAcc (δ q' c))
+            ∘g STEP c (isAcc (δ q' c)) q'
+            ∘g id ,⊗ (roll ∘g σ stop ∘g σ (lift Eq.refl) ∘g liftG ∘g liftG)
+            ∘g ⊗-unit-r⁻
+            ∘g ⊗-unit-l
+            ∘g (lowerG ∘g lowerG) ,⊗ id
+            )
+      step → ⊕ᴰ-elim λ where
+        (lift c') →
+          ⊸-intro
+            ( map⊕ᴰ (λ b' → STEP c' b' q')
+            ∘g ⊕ᴰ-distR .StrongEquivalence.fun
+            ∘g id ,⊗ ⊸-app
+            ∘g ⊗-assoc⁻
+            ∘g ((lowerG ∘g lowerG) ,⊗ lowerG) ,⊗ id
+            )
+
+  STEP'char : ∀ b q →  Trace b q ⊗ char ⊢ ⊕[ b' ∈ Bool ] Trace b' q
+  STEP'char b q = ⊕ᴰ-elim (λ c → STEP' c b q) ∘g ⊕ᴰ-distR .StrongEquivalence.fun
+
   open StrongEquivalence
 
   parse : string ⊢ &[ q ∈ Q ] (⊕[ b ∈ Bool ] Trace b q)

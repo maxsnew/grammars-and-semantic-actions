@@ -9,6 +9,7 @@ open import Cubical.Data.Nat.Order
 open import Cubical.Data.Empty as Empty
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as Sum
+import Cubical.Data.Equality as Eq
 
 module _ {ℓ : Level} {A : Type ℓ} where
   revLength : (xs : List A) → length xs ≡ length (rev xs)
@@ -53,6 +54,46 @@ module _ {ℓ : Level} {A : Type ℓ} where
     Split++ (x ∷ xs) ys (z ∷ zs) ws us
   extendSplit++ xs yz zs ws us x z x≡z split =
     cong₂ _∷_ x≡z (split .fst) , split .snd
+
+  ++-unit-r-Eq : (xs : List A) → xs ++ [] Eq.≡ xs
+  ++-unit-r-Eq [] = Eq.refl
+  ++-unit-r-Eq (x ∷ xs) = Eq.ap (_∷_ x) (++-unit-r-Eq xs)
+
+  ++-assoc-Eq : (xs ys zs : List A) → (xs ++ ys) ++ zs Eq.≡ xs ++ ys ++ zs
+  ++-assoc-Eq [] ys zs = Eq.refl
+  ++-assoc-Eq (x ∷ xs) ys zs = Eq.ap (_∷_ x) (++-assoc-Eq xs ys zs)
+
+  cons-inj₂Eq : ∀ {x y : A}{xs ys : List A}
+              → x ∷ xs Eq.≡ y ∷ ys → xs Eq.≡ ys
+  cons-inj₂Eq = Eq.ap tail
+
+  ++-cancelˡEq : ∀ (w : List A) {xs ys : List A}
+              → w ++ xs Eq.≡ w ++ ys → xs Eq.≡ ys
+  ++-cancelˡEq [] p = p
+  ++-cancelˡEq (c ∷ w) p = ++-cancelˡEq w (cons-inj₂Eq p)
+
+  ++-rev-Eq : (xs ys : List A) → List.rev (xs ++ ys) Eq.≡ List.rev ys ++ List.rev xs
+  ++-rev-Eq [] ys = Eq.sym (++-unit-r-Eq (List.rev ys))
+  ++-rev-Eq (x ∷ xs) ys =
+    Eq.ap (_++ (x ∷ [])) (++-rev-Eq xs ys)
+    Eq.∙ ++-assoc-Eq (List.rev ys) (List.rev xs) (x ∷ [])
+
+  rev-rev-Eq : (xs : List A) → List.rev (List.rev xs) Eq.≡ xs
+  rev-rev-Eq [] = Eq.refl
+  rev-rev-Eq (x ∷ xs) =
+    ++-rev-Eq (List.rev xs) (x ∷ [])
+    Eq.∙ Eq.ap (x ∷_) (rev-rev-Eq xs)
+
+  ++-cancelʳEq : ∀ {xs ys : List A} (w : List A)
+              → xs ++ w Eq.≡ ys ++ w → xs Eq.≡ ys
+  ++-cancelʳEq {xs = xs} {ys = ys} w p =
+    Eq.sym (rev-rev-Eq xs)
+    Eq.∙ Eq.ap List.rev
+         (++-cancelˡEq (List.rev w)
+           (Eq.sym (++-rev-Eq xs w)
+            Eq.∙ Eq.ap List.rev p
+            Eq.∙ ++-rev-Eq ys w))
+    Eq.∙ rev-rev-Eq ys
 
   module _ (isSetA : isSet A) where
     isPropSplit++ : ∀ xs ys zs ws us →
