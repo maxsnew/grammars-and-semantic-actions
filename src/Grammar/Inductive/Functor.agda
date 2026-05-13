@@ -76,6 +76,9 @@ module _ where
     Algebra : (X → Grammar ℓA) → Type (ℓ-max ℓX ℓA)
     Algebra A = ∀ x → ⟦ F x ⟧ A ⊢ A x
 
+    Coalgebra : (X → Grammar ℓA) → Type (ℓ-max ℓX ℓA)
+    Coalgebra A = ∀ x → A x ⊢ ⟦ F x ⟧ A
+
     module _ {A : X → Grammar ℓA}{B : X → Grammar ℓB} (α : Algebra A) (β : Algebra B) where
       isHomo : (∀ x → A x ⊢ B x) → Type _
       isHomo ϕ = (∀ x → ϕ x ∘g α x ≡ β x ∘g map (F x) ϕ)

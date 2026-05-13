@@ -48,6 +48,12 @@ mkInput (suc (suc n)) with n mod 2
 -- _ : length (mkInput 31) ≡ 196544
 -- _ = refl
 
+open import Automata.Deterministic
+module _ where
+   open DeterministicAutomaton DyckAut renaming (init to start)
+--   testParseOne = {! (parse (LP ∷ RP ∷ []) (mkstring (LP ∷ RP ∷ []))) start !}
+--   testParseTwo = {! (parse1 (LP ∷ RP ∷ []) (mkstring (LP ∷ RP ∷ []))) start!}
+
 opaque
   unfolding run ⊕-elim inr ⊗-intro ⊸-intro ⟜-intro ⊕ᴰ-distL ⊕ᴰ-distR
   -- Uncomment these individually to run
@@ -60,8 +66,8 @@ opaque
   -- _ = refl
 
   -- 10s
-  _ : accept? (mkInput 25) ≡ true
-  _ = refl
+  -- _ : accept? (mkInput 25) ≡ true
+  -- _ = refl
 
   -- 10s
   -- _ : accept? (mkInput 25 ++ [ RP ]) ≡ false

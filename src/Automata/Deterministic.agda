@@ -1,11 +1,13 @@
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
+open import Cubical.Data.Sigma.Properties using (Σ-Π-Iso)
 
 module Automata.Deterministic (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Foundations.Structure
 
+open import Cubical.Data.Unit
 open import Cubical.Data.Bool
 import Cubical.Data.Equality as Eq
 
@@ -49,7 +51,44 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
   STEP : ∀ c b q → ＂ c ＂ ⊗ Trace b (δ q c) ⊢ Trace b q
   STEP c b q = roll ∘g σ step ∘g σ (lift c) ∘g (liftG ∘g liftG) ,⊗ liftG
 
+  TraceF' : (q : Q) → Functor Q
+  TraceF' q = ⊕e Tag λ {
+      stop → ⊕e (Lift Bool) λ {(lift b) → (⊕e (Lift (b Eq.≡ isAcc q)) λ { (lift acc) → k ε* })}
+      ; step → ⊕e (Lift ⟨ Alphabet ⟩) (λ { (lift c) → (k (literal* c)) ⊗e (Var (δ q c)) }) }
+
   open StrongEquivalence
+
+  module _ {ℓ2 : Level} (X : Q → Grammar ℓ2) where
+    parseNatTrans : (u : Unit*) → ⟦ *Ty char u ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ &[ q ∈ Q ] ⟦ TraceF' q ⟧ X
+    parseNatTrans u = ⊕ᴰ-elim λ
+      { nil → &ᴰ-intro nilCase
+      ; cons → &ᴰ⊕ᴰ-dist≅ .inv ∘g σ (λ _ → step) ∘g (&ᴰ-intro consCase)
+      } where
+      nilCase : (q : Q) → ⟦ k {X = Unit*} ε* ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
+      nilCase q = (λ w x → (stop , ((lift (isAcc q)) , ((lift Eq.refl) , ((lift (lift x))))))) ∘g lowerG ∘g lowerG
+      consCase : (q : Q) →
+         (LiftG (ℓ-max ℓ2 ℓ) char ⊗ LiftG ℓ-zero (&[ q ∈ Q ] X q))
+         ⊢ ⊕[ y ∈ Lift {i = ℓ-zero} {j = ℓ} ⟨ Alphabet ⟩ ]
+         (LiftG {ℓA = ℓ} ℓ2 (literal* (y .lower)) ⊗ LiftG ℓ (X (δ q (y .lower))))
+      consCase q =
+        ⊕ᴰ-elim (λ c → σ (lift c) ∘g (liftG ∘g liftG) ,⊗ (liftG ∘g π (δ q c)))
+        ∘g ⊕ᴰ-distL .fun
+        ∘g lowerG ,⊗ lowerG
+
+  baz : Algebra (*Ty char) λ _ → string
+  baz = initialAlgebra (*Ty char)
+
+  bez : Algebra TraceF' (μ TraceF')
+  bez = initialAlgebra TraceF'
+
+  biz : Algebra (*Ty char) (λ _ → &[ q ∈ Q ] ((μ TraceF') q))
+  biz x = map&ᴰ bez ∘g parseNatTrans (μ TraceF') x
+
+  fiz : Coalgebra TraceF' (λ _ → string)
+  fiz x = π x ∘g parseNatTrans (λ _ → string) tt* ∘g map (*Ty char tt*) (λ _ → Δ) ∘g unroll (*Ty char) tt*
+
+  parse1 : string ⊢ (&[ q ∈ Q ] (μ TraceF') q)
+  parse1 = fold*r' char biz
 
   parse : string ⊢ &[ q ∈ Q ] (⊕[ b ∈ Bool ] Trace b q)
   parse =
