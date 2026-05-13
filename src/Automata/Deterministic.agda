@@ -65,7 +65,7 @@ record DeterministicAutomaton (Q : Type ℓ) : Type (ℓ-suc ℓ) where
       ; cons → &ᴰ⊕ᴰ-dist≅ .inv ∘g σ (λ _ → step) ∘g (&ᴰ-intro consCase)
       } where
       nilCase : (q : Q) → ⟦ k {X = Unit*} ε* ⟧ (λ _ → &[ q ∈ Q ] (X q)) ⊢ ⟦ TraceF' q ⟧ X
-      nilCase q = ε-elim (stop , ((lift (isAcc q)) , ((lift Eq.refl) , ((lift (lift ε-intro)))))) ∘g lowerG ∘g lowerG
+      nilCase q = (λ w x → (stop , ((lift (isAcc q)) , ((lift Eq.refl) , ((lift (lift x))))))) ∘g lowerG ∘g lowerG
       consCase : (q : Q) →
          (LiftG (ℓ-max ℓ2 ℓ) char ⊗ LiftG ℓ-zero (&[ q ∈ Q ] X q))
          ⊢ ⊕[ y ∈ Lift {i = ℓ-zero} {j = ℓ} ⟨ Alphabet ⟩ ]
