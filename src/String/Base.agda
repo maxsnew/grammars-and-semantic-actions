@@ -10,7 +10,7 @@ open import Cubical.Relation.Nullary.Base
 
 open import Cubical.Data.List
 open import Cubical.Data.Nat
-open import Cubical.Data.List.More
+open import Cubical.Data.List.More public
 open import Cubical.Data.FinSet
 open import Cubical.Data.Sum as Sum
 open import Cubical.Data.Sum.More
@@ -34,21 +34,9 @@ isSetString = isOfHLevelList 0 (str Alphabet)
 isGroupoidString : isGroupoid String
 isGroupoidString = isSet→isGroupoid isSetString
 
--- Inductive-equality variants used by the AsEquality grammar modules
--- (Grammar.Epsilon.AsEquality, Grammar.Literal.AsEquality, Grammar.LinearProduct.AsEquality).
--- These let constructors pattern-match on Eq.refl, giving definitional reductions
--- that path equality can't.
 isSetEqString : ∀ (w w' : String) → isProp (w Eq.≡ w')
 isSetEqString _ _ =
   isPropRetract Eq.eqToPath Eq.pathToEq Eq.pathToEq-eqToPath (isSetString _ _)
-
-++-unit-r-Eq : (xs : String) → xs ++ [] Eq.≡ xs
-++-unit-r-Eq [] = Eq.refl
-++-unit-r-Eq (x ∷ xs) = Eq.ap (_∷_ x) (++-unit-r-Eq xs)
-
-++-assoc-Eq : (xs ys zs : String) → (xs ++ ys) ++ zs Eq.≡ xs ++ ys ++ zs
-++-assoc-Eq [] ys zs = Eq.refl
-++-assoc-Eq (x ∷ xs) ys zs = Eq.ap (_∷_ x) (++-assoc-Eq xs ys zs)
 
 SplittingEq : String → Type ℓ-zero
 SplittingEq w = Σ[ (w₁ , w₂) ∈ String × String ] (w Eq.≡ w₁ ++ w₂)

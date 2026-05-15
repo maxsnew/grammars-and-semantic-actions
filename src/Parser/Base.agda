@@ -23,24 +23,30 @@ record Parser (A : Grammar ℓA) (B : Grammar ℓB) : Type (ℓ-max ℓA ℓB) w
     disj : disjoint A B
     fun : string ⊢ A ⊕ B
 
-  -- Utilities to benchmark a Parser
-  module _ where
-    opaque
-      unfolding _⊕_
-      run : (w : String) → (A w) Sum.⊎ (B w)
-      run w = fun w (mkstring w)
+  retTy : Grammar _
+  retTy = A ⊕ B
 
-    private
-      is-inl? : ∀ {X : Type ℓX} {Y : Type ℓY} →
-        X Sum.⊎ Y → Bool
-      is-inl? (Sum.inl x) = true
-      is-inl? (Sum.inr y) = false
+open Parser
+open WeakEquivalence
+
+-- Utilities to benchmark a Parser
+module _ {A : Grammar ℓA} {B : Grammar ℓB} (P : Parser A B) where
+  private
+    is-inl? : ∀ {X : Type ℓX} {Y : Type ℓY} →
+      X Sum.⊎ Y → Bool
+    is-inl? (Sum.inl x) = true
+    is-inl? (Sum.inr y) = false
+
+  opaque
+    unfolding unfoldGrammarDefs
+    run : (w : String) → Parser.retTy P w
+    run w = P .fun w (mkstring w)
 
     accept? : (w : String) → Bool
     accept? w = is-inl? (run w)
 
-open Parser
-open WeakEquivalence
+  ParserTest : (w : String) → Type _
+  ParserTest w = Σ[ x ∈ Parser.retTy P w ] run w ≡ x
 
 module _ {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC}
   (P : Parser A B) (A≈C : A ≈ C) where

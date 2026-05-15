@@ -6,6 +6,7 @@ module Grammar.Literal.AsEquality.Base (Alphabet : hSet ℓ-zero) where
 open import Cubical.Foundations.Structure
 
 open import Cubical.Data.List
+open import Cubical.Data.Unit
 import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
@@ -38,3 +39,8 @@ isSetGrammarLiteral c = isLang→isSetGrammar (isLangLiteral c)
 
 literal* : ∀ {ℓ : Level} → ⟨ Alphabet ⟩ → Grammar ℓ
 literal* {ℓ = ℓ} c = LiftG ℓ (literal c)
+
+opaque
+  unfolding literal lit-intro isLangLiteral
+  unfoldLiteralDefs : Unit
+  unfoldLiteralDefs = tt

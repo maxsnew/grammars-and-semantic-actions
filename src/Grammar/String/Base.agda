@@ -11,6 +11,7 @@ open import Cubical.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.FinSet
 open import Cubical.Data.Empty as Empty
+open import Cubical.Data.Unit
 import Cubical.Data.Equality as Eq
 
 open import Cubical.Foundations.Structure
@@ -56,6 +57,9 @@ stringL = *L char
 ⌈_⌉' : String → Grammar ℓ-zero
 ⌈ w ⌉' w' = w ≡ w'
 
+⌈_⌉Eq : String → Grammar ℓ-zero
+⌈ w ⌉Eq w' = w Eq.≡ w'
+
 opaque
   unfolding ⊗-intro ε literal
   mk⌈⌉ : ∀ w → ⌈ w ⌉ w
@@ -65,8 +69,14 @@ opaque
 mk⌈⌉' : ∀ w → ⌈ w ⌉' w
 mk⌈⌉' w = refl
 
+mk⌈⌉Eq : ∀ w → ⌈ w ⌉Eq w
+mk⌈⌉Eq w = Eq.refl
+
 isLang⌈⌉' : ∀ w → isLang (⌈ w ⌉')
 isLang⌈⌉' = isSetString
+
+isLang⌈⌉Eq : ∀ w → isLang (⌈ w ⌉Eq)
+isLang⌈⌉Eq w = isSetEqString w
 
 opaque
   unfolding ε _⊗_ literal
@@ -127,6 +137,21 @@ opaque
 isLang⌈⌉ : ∀ w → isLang ⌈ w ⌉
 isLang⌈⌉ w = isLang≅ (sym≅ (⌈⌉≅⌈⌉' w)) (isLang⌈⌉' w)
 
+⌈⌉→⌈⌉Eq : ∀ w → ⌈ w ⌉ ⊢ ⌈ w ⌉Eq
+⌈⌉→⌈⌉Eq = uniquely-supported-⌈⌉Eq
+
+opaque
+  unfolding mk⌈⌉
+  ⌈⌉Eq→⌈⌉ : ∀ w → ⌈ w ⌉Eq ⊢ ⌈ w ⌉
+  ⌈⌉Eq→⌈⌉ w w' p = Eq.J (λ z _ → ⌈ w ⌉ z) (mk⌈⌉ w) p
+
+  open StrongEquivalence
+  ⌈⌉≅⌈⌉Eq : ∀ w → ⌈ w ⌉ ≅ ⌈ w ⌉Eq
+  ⌈⌉≅⌈⌉Eq w .fun = ⌈⌉→⌈⌉Eq w
+  ⌈⌉≅⌈⌉Eq w .inv = ⌈⌉Eq→⌈⌉ w
+  ⌈⌉≅⌈⌉Eq w .sec = funExt λ w' → funExt λ p → isSetEqString w w' _ _
+  ⌈⌉≅⌈⌉Eq w .ret = funExt λ w' → funExt λ p → isLang⌈⌉ w w' _ _
+
 pick-parse : ∀ (w : String) → (A : Grammar ℓA) → A w → ⌈ w ⌉ ⊢ A
 pick-parse w A pA w' p⌈⌉ = Eq.transport A (uniquely-supported-⌈⌉Eq w w' p⌈⌉) pA
 
@@ -136,3 +161,10 @@ pick-parse w A pA w' p⌈⌉ = Eq.transport A (uniquely-supported-⌈⌉Eq w w' 
 
 mkstring : (w : String) → string w
 mkstring w = (⌈⌉→string w) w (mk⌈⌉ w)
+
+opaque
+  unfolding mk⌈⌉
+            uniquely-supported-⌈⌉Eq uniquely-supported-⌈⌉
+            ⌈⌉'→⌈⌉ ⌈⌉≅⌈⌉' ⌈⌉Eq→⌈⌉ ⌈⌉≅⌈⌉Eq
+  unfoldStringDefs : Unit
+  unfoldStringDefs = tt

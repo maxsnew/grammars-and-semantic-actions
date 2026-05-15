@@ -40,6 +40,8 @@ module _ (ℓ : Level) where
   GRAMMAR .monstr .tenstr .─⊗─ .F-ob (A , B) =
     ⟨ A ⟩ LP.⊗ ⟨ B ⟩ , isSetGrammar⊗ (A .snd) (B .snd)
   GRAMMAR .monstr .tenstr .─⊗─ .F-hom (f , g) = f ,⊗ g
+  -- Note that with ⊗ implemented with SplittingEq,
+  -- both F-id and F-seq of ─⊗─ unfold to each be identity
   GRAMMAR .monstr .tenstr .─⊗─ .F-id = id,⊗id≡id
   GRAMMAR .monstr .tenstr .─⊗─ .F-seq _ _ = sym ⊗-intro⊗-intro
   GRAMMAR .monstr .α .trans .N-ob ABC = ⊗-assoc

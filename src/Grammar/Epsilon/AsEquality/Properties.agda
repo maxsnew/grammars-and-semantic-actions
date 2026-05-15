@@ -4,6 +4,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.Epsilon.AsEquality.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List
+open import Cubical.Data.Unit
 import Cubical.Data.Equality as Eq
 import Cubical.Data.Empty as Empty
 open import Cubical.Functions.FunExtEquiv
@@ -67,9 +68,16 @@ opaque
       (εPath.ε-elim-natural a f)
 
   ε-β : ∀ (a : ε⊢ A) → ε-elim {A = A} a ∘ε ε-intro ≡ a
-  ε-β {A = A} a =
-    transport (λ i → ε-elim≡ {A = A} i a ∘ε ε-intro≡ i ≡ a)
-      (εPath.ε-β {A = A} a)
+  ε-β {A = A} a = refl
 
   ε-length0 : ∀ w → ε w → length w ≡ 0
-  ε-length0 = transport (λ i → ∀ w → ε≡ i w → length w ≡ 0) εPath.ε-length0
+  ε-length0 _ Eq.refl = refl
+
+opaque
+  unfolding ε ε-intro ε-elim ε*-intro ε*-elim
+            ε≡ ε*≡ ε-β ε-elim-natural ε-length0
+            isLangε isLangε* isLangε≡
+            isSetGrammarε isSetGrammarε*
+            ε-intro≡ ε-elim≡
+  unfoldEpsilonDefs : Unit
+  unfoldEpsilonDefs = tt

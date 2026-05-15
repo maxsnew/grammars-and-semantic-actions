@@ -110,33 +110,17 @@ equalizer-ind-unit : (F : Functor Unit) {A : Grammar ℓA}
 equalizer-ind-unit F {A = A} pf = equalizer-ind {X = Unit} (λ _ → F) (λ _ → A) _ _ (λ _ → pf) tt
 
 open import Grammar.LinearFunction Alphabet
-eq-π-pf-⊸-intro :
-  (f f' : A ⊗ B ⊢ C) →
-  f ∘g (eq-π (⊸-intro f) (⊸-intro f') ,⊗ id) ≡ f' ∘g eq-π (⊸-intro f) (⊸-intro f') ,⊗ id
-eq-π-pf-⊸-intro f f' =
-  isoFunInjective ⊸UMP _ _
-    (⊸-intro (f ∘g eq-π (⊸-intro f) (⊸-intro f') ,⊗ id)
-      ≡⟨ sym (⊸-intro-natural {f = f} {f' = eq-π (⊸-intro f) (⊸-intro f')}) ⟩
-    ⊸-intro f ∘g eq-π (⊸-intro f) (⊸-intro f')
-      ≡⟨ eq-π-pf (⊸-intro f) (⊸-intro f') ⟩
-    ⊸-intro f' ∘g eq-π (⊸-intro f) (⊸-intro f')
-      ≡⟨ ⊸-intro-natural {f = f'} {f' = eq-π (⊸-intro f) (⊸-intro f')} ⟩
-     ⊸-intro (f' ∘g eq-π (⊸-intro f) (⊸-intro f') ,⊗ id)
-     ∎)
+opaque
+  unfolding ⊸-intro
+  eq-π-pf-⊸-intro :
+    (f f' : A ⊗ B ⊢ C) →
+    f ∘g (eq-π (⊸-intro f) (⊸-intro f') ,⊗ id) ≡ f' ∘g eq-π (⊸-intro f) (⊸-intro f') ,⊗ id
+  eq-π-pf-⊸-intro f f' = isoFunInjective ⊸UMP _ _ (eq-π-pf _ _)
 
-eq-π-pf-⟜-intro :
-  (f f' : A ⊗ B ⊢ C) →
-  f ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f') ≡ f' ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f')
-eq-π-pf-⟜-intro f f' =
-  isoFunInjective ⟜UMP _ _
-    (⟜-intro (f ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f'))
-      ≡⟨ sym (⟜-intro-natural {f = f} {f' = eq-π (⟜-intro f) (⟜-intro f')}) ⟩
-    ⟜-intro f ∘g eq-π (⟜-intro f) (⟜-intro f')
-      ≡⟨ eq-π-pf (⟜-intro f) (⟜-intro f') ⟩
-    ⟜-intro f' ∘g eq-π (⟜-intro f) (⟜-intro f')
-      ≡⟨ ⟜-intro-natural {f = f'} {f' = eq-π (⟜-intro f) (⟜-intro f')} ⟩
-     ⟜-intro (f' ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f'))
-     ∎)
+  eq-π-pf-⟜-intro :
+    (f f' : A ⊗ B ⊢ C) →
+    f ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f') ≡ f' ∘g id ,⊗ eq-π (⟜-intro f) (⟜-intro f')
+  eq-π-pf-⟜-intro f f' = isoFunInjective ⟜UMP _ _ (eq-π-pf _ _)
 
 module _ {X : Type ℓX}
     (tag : X → Type ℓX)
@@ -163,50 +147,13 @@ module _ {X : Type ℓX}
             (λ x' → eq-π (⊸-intro (e x')) (⊸-intro (e' x')))
           ∘g σ t) ,⊗ id)
     where
-    equalizer-ind-⊗l : ∀ (x : X) → e x ≡ e' x
-    equalizer-ind-⊗l x =
-      isoFunInjective ⊸UMP _ _
-        (equalizer-ind
-          F'
-          (λ x → B x ⊸ A x)
-          (λ x → ⊸-intro (e x))
-          (λ x → ⊸-intro (e' x))
-          (λ x →
-            ⊕ᴰ≡ _ _ (λ t →
-              isoInvInjective ⊸UMP _ _
-                (
-                (λ i →
-                  ⊸-intro⁻
-                    (⊸-intro-natural
-                      {f = e x}
-                      {f' =
-                        roll
-                        ∘g map (F' x)
-                            (λ x' →
-                              eq-π (⊸-intro (e x'))
-                                   (⊸-intro (e' x')))
-                        ∘g σ t}
-                      i)
-                ) ∙
-                ⊸-β _ ∙
-                pf x t ∙
-                sym (⊸-β _) ∙
-                (λ i →
-                  ⊸-intro⁻
-                    (⊸-intro-natural
-                      {f = e' x}
-                      {f' =
-                        roll
-                        ∘g map (F' x)
-                            (λ x' →
-                              eq-π (⊸-intro (e x'))
-                                   (⊸-intro (e' x')))
-                        ∘g σ t}
-                      (~ i)))
-                )
-            ))
-          x
-          )
+    opaque
+      unfolding ⊸-intro
+      equalizer-ind-⊗l : ∀ (x : X) → e x ≡ e' x
+      equalizer-ind-⊗l x =
+        isoFunInjective ⊸UMP _ _
+          (equalizer-ind _ _ _ _
+            (λ x → ⊕ᴰ≡ _ _ λ t → isoInvInjective ⊸UMP _ _ (⊸-β _ ∙ pf x t ∙ sym (⊸-β _))) x)
 
   module _
     (A : X → Grammar ℓA)
@@ -224,48 +171,10 @@ module _ {X : Type ℓX}
             (λ x' → eq-π (⟜-intro (e x')) (⟜-intro (e' x')))
           ∘g σ t))
     where
-    equalizer-ind-⊗r : ∀ (x : X) → e x ≡ e' x
-    equalizer-ind-⊗r x =
-      isoFunInjective ⟜UMP _ _
-        (equalizer-ind
-          F'
-          (λ x → A x ⟜ B x)
-          (λ x → ⟜-intro (e x))
-          (λ x → ⟜-intro (e' x))
-          (λ x →
-            ⊕ᴰ≡ _ _ (λ t →
-              isoInvInjective ⟜UMP _ _
-                (
-                (λ i →
-                  ⟜-intro⁻
-                    (⟜-intro-natural
-                      {f = e x}
-                      {f' =
-                        roll
-                        ∘g map (F' x)
-                            (λ x' →
-                              eq-π (⟜-intro (e x'))
-                                   (⟜-intro (e' x')))
-                        ∘g σ t}
-                      i)
-                ) ∙
-                ⟜-β _ ∙
-                pf x t ∙
-                sym (⟜-β _) ∙
-                (λ i →
-                  ⟜-intro⁻
-                    (⟜-intro-natural
-                      {f = e' x}
-                      {f' =
-                        roll
-                        ∘g map (F' x)
-                            (λ x' →
-                              eq-π (⟜-intro (e x'))
-                                   (⟜-intro (e' x')))
-                        ∘g σ t}
-                      (~ i)))
-                )
-            )
-            )
-          x
-          )
+    opaque
+      unfolding ⟜-intro
+      equalizer-ind-⊗r : ∀ (x : X) → e x ≡ e' x
+      equalizer-ind-⊗r x =
+        isoFunInjective ⟜UMP _ _
+          (equalizer-ind _ _ _ _
+            (λ x → ⊕ᴰ≡ _ _ (λ t → isoInvInjective ⟜UMP _ _ (⟜-β _ ∙ pf x t ∙ sym (⟜-β _)))) x)

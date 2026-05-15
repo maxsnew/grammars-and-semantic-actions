@@ -6,6 +6,7 @@ module Grammar.LinearProduct.AsEquality.Properties (Alphabet : hSet ℓ-zero) wh
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
+open import Cubical.Data.Unit
 import Cubical.Data.Equality as Eq
 open import Cubical.Functions.FunExtEquiv
 
@@ -53,9 +54,6 @@ private
     f f' f'' f''' f'''' f''''' : A ⊢ B
     g : C ⊢ D
 
--- Bridge between the path-flavored ⊗ and the equality-flavored ⊗.
--- Since Splitting≡SplittingEq holds pointwise, the underlying Σ-types
--- of the two ⊗s are propositionally equal as Grammars.
 opaque
   unfolding _⊗_ ⊗Path._⊗_
 
@@ -159,42 +157,27 @@ opaque
   ⊗-assoc⊗-intro = funExt λ w → funExt λ where
     (((_ , _) , Eq.refl) , _ , ((_ , _) , Eq.refl) , _ , _) → refl
 
-  -- Helper: relate Eq.transport to PathP along Eq.eqToPath
-  Eq-transp-path : ∀ {ℓX ℓY} {X : Type ℓX} (Y : X → Type ℓY)
-    → {x y : X} (p : x Eq.≡ y) (b : Y x)
-    → PathP (λ i → Y (Eq.eqToPath p i)) b (Eq.transport Y p b)
-  Eq-transp-path Y Eq.refl b = refl
-
-  rectify : ∀ {w w' : String} {A : Grammar ℓA}
-    → {p : A w}{q : A w'}
-    → {w≡ w≡' : w ≡ w'}
-    → PathP (λ i → A (w≡  i)) p q
-    → PathP (λ i → A (w≡' i)) p q
-  rectify {A = A}{p = p}{q = q} =
-    subst (λ w≡ → PathP (λ i → A (w≡ i)) p q) (isSetString _ _ _ _)
-
   ⊗-unit-rr⁻ : ∀ {A : Grammar ℓA}
     → ⊗-unit-r⁻ {A = A} ∘g ⊗-unit-r ≡ id
   ⊗-unit-rr⁻ {A = A} = funExt λ w → funExt λ where
-    ((_ , Eq.refl) , a , Eq.refl) →
+    (((w' , _) , Eq.refl) , a , Eq.refl) →
       ΣPathP
         ( ΣPathP
-          ( ≡-× (Eq.eqToPath (++-unit-r-Eq _)) refl
+          ( ≡-× (Eq.eqToPath (Eq.sym (Eq.sym (++-unit-r-Eq w') Eq.∙ Eq.refl))) refl
           , isProp→PathP (λ _ → isSetEqString _ _) _ _)
         , ΣPathP
-          ( rectify {A = A} (symP (Eq-transp-path A _ a))
-          , refl))
-
-  -- Transport along a propositional loop equality is the identity
-  Eq-transport-loop : ∀ {ℓA} {A : Grammar ℓA} {w : String}
-    → (p : w Eq.≡ w) (a : A w)
-    → Eq.transport A p a ≡ a
-  Eq-transport-loop {A = A} p a =
-    cong (λ q → Eq.transport A q a) (isSetEqString _ _ p Eq.refl)
+          ( Eq.J
+              (λ z q → PathP (λ i → A (Eq.eqToPath (Eq.sym q) i))
+                              (Eq.transport A q a) a)
+              refl
+              (Eq.sym (++-unit-r-Eq w') Eq.∙ Eq.refl)
+          , isProp→PathP (λ _ → isSetEqString _ _) _ _))
 
   ⊗-unit-r⁻r : ∀ {A : Grammar ℓA}
     → ⊗-unit-r {A = A} ∘g ⊗-unit-r⁻ ≡ id
-  ⊗-unit-r⁻r {A = A} = funExt λ w → funExt λ a → Eq-transport-loop _ a
+  ⊗-unit-r⁻r {A = A} =
+    funExt λ w → funExt λ a →
+      cong (λ q → Eq.transport A q a) (isSetEqString w w _ Eq.refl)
 
   ⊗-unit-ll⁻ : ∀ {A : Grammar ℓA}
     → ⊗-unit-l⁻ {A = A} ∘g ⊗-unit-l ≡ id
@@ -361,7 +344,7 @@ opaque
     ≡ id ,⊗ id ,⊗ ⊗-unit-r⁻
   ⊗-assoc⁻3⊗-unit-r⁻ =
     cong (id ,⊗ ⊗-assoc⁻ ∘g_) ⊗-assoc⁻⊗-unit-r⁻
-    ∙ ⊗-intro⊗-intro {f = id} {f' = ⊗-assoc⁻} {f'' = id} {f''' = ⊗-unit-r⁻}
+    -- ∙ ⊗-intro⊗-intro {f = id} {f' = ⊗-assoc⁻} {f'' = id} {f''' = ⊗-unit-r⁻}
     ∙ cong (id ,⊗_) ⊗-assoc⁻⊗-unit-r⁻
 
   ⊗-assoc⁻4⊗-unit-r⁻ :
@@ -369,7 +352,7 @@ opaque
     ≡ id ,⊗ id ,⊗ id ,⊗ ⊗-unit-r⁻
   ⊗-assoc⁻4⊗-unit-r⁻ {A = A}{B = B}{C = C}{D = D} =
     cong (id ,⊗ ⊗-assoc⁻3 ∘g_) ⊗-assoc⁻⊗-unit-r⁻
-    ∙ ⊗-intro⊗-intro {f = id} {f' = ⊗-assoc⁻3} {f'' = id} {f''' = ⊗-unit-r⁻}
+    -- ∙ ⊗-intro⊗-intro {f = id} {f' = ⊗-assoc⁻3} {f'' = id} {f''' = ⊗-unit-r⁻}
     ∙ (λ i → ⊗-intro (id {A = A}) (⊗-assoc⁻3⊗-unit-r⁻ {A = B}{B = C}{C = D} i))
 
   ⊗-assoc⁻4⊗-intro :
@@ -439,11 +422,14 @@ opaque
   ⊗-triangle {A = A}{B = B} = funExt λ w → funExt λ where
     (((wa , _) , Eq.refl)
       , a , (((_ , wc) , Eq.refl) , (lift Eq.refl) , b)) →
-      ⊗≡ _ _ (≡-× (++-unit-r wa) refl)
+      ⊗≡ _ _
+        (≡-× (Eq.eqToPath (Eq.sym (Eq.sym (++-unit-r-Eq wa) Eq.∙ Eq.refl))) refl)
         (ΣPathP
-          ( rectify {A = A}
-              (symP (Eq-transp-path A
-                (Eq.sym (++-unit-r-Eq wa) Eq.∙ Eq.refl) a))
+          ( Eq.J
+              (λ z q → PathP (λ i → A (Eq.eqToPath (Eq.sym q) i))
+                              (Eq.transport A q a) a)
+              refl
+              (Eq.sym (++-unit-r-Eq wa) Eq.∙ Eq.refl)
           , refl))
 
   ⊗-pentagon :
@@ -511,3 +497,27 @@ module _
 εl≅ .inv = ⊗-unit-l
 εl≅ .sec = ⊗-unit-ll⁻
 εl≅ .ret = ⊗-unit-l⁻l
+
+opaque
+  unfolding _⊗_ ⊗-intro ⊗-mk
+            ⊗-unit-r ⊗-unit-r⁻ ⊗-unit-l ⊗-unit-l⁻
+            ⊗-assoc ⊗-assoc⁻
+            ⊗Path≡⊗Eq isSetGrammar⊗
+            has-split isProp-has-split the-split
+            same-parses ⊗PathP ⊗≡
+            ⊗-intro⊗-intro id,⊗id≡id
+            ⊗-unit-l⁻⊗-intro ⊗-unit-r⁻⊗-intro
+            ⊗-assoc⁻⊗-intro ⊗-assoc⊗-intro
+            ⊗-unit-rr⁻ ⊗-unit-r⁻r ⊗-unit-ll⁻ ⊗-unit-l⁻l
+            cong-∘g⊗-unit-l⁻ cong-∘g⊗-unit-r⁻
+            ⊗-unit-rl⁻ ⊗-unit-lr⁻
+            ⊗-assoc∘⊗-assoc⁻≡id ⊗-assoc⁻∘⊗-assoc≡id
+            ⊗-assoc⁻⊗-unit-r⁻ ⊗-assoc⊗-unit-l⁻
+            ⊗-assoc⁻3⊗-unit-r⁻ ⊗-assoc⁻4⊗-unit-r⁻
+            ⊗-assoc⁻4⊗-intro
+            ⊗-assoc3⊗-assoc⁻3 ⊗-assoc4⊗-assoc⁻4
+            ⊗-assoc⁻3⊗-assoc3 ⊗-assoc⁻4⊗-assoc4
+            ⊗-assoc4⊗-intro
+            ⊗-triangle ⊗-pentagon
+  unfoldLinearProductDefs : Unit
+  unfoldLinearProductDefs = tt

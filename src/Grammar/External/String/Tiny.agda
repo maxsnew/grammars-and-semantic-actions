@@ -16,9 +16,9 @@ open import Cubical.Foundations.Structure
 module Grammar.External.String.Tiny (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List as List hiding (rec)
-open import Cubical.Data.List.More
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Sigma
+open import Cubical.Data.Unit
 import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
@@ -44,45 +44,6 @@ private
     B : Grammar ℓB
     C : Grammar ℓC
     D : Grammar ℓD
-
-private
-  -- Local Eq-world list helpers, used by the Eq-world distributors below.
-  -- They mirror the Eq.J-based defs in `Grammar.Later.Properties`.
-  tail-Eq : String → String
-  tail-Eq [] = []
-  tail-Eq (_ ∷ xs) = xs
-
-  cons-inj₂Eq : ∀ {x y : ⟨ Alphabet ⟩}{xs ys : String}
-              → x ∷ xs Eq.≡ y ∷ ys → xs Eq.≡ ys
-  cons-inj₂Eq = Eq.ap tail-Eq
-
-  ++-cancelˡEq : ∀ (w : String) {xs ys : String}
-              → w ++ xs Eq.≡ w ++ ys → xs Eq.≡ ys
-  ++-cancelˡEq [] p = p
-  ++-cancelˡEq (c ∷ w) p = ++-cancelˡEq w (cons-inj₂Eq p)
-
-  ++-rev-Eq : (xs ys : String) → List.rev (xs ++ ys) Eq.≡ List.rev ys ++ List.rev xs
-  ++-rev-Eq [] ys = Eq.sym (++-unit-r-Eq (List.rev ys))
-  ++-rev-Eq (x ∷ xs) ys =
-    Eq.ap (_++ (x ∷ [])) (++-rev-Eq xs ys)
-    Eq.∙ ++-assoc-Eq (List.rev ys) (List.rev xs) (x ∷ [])
-
-  rev-rev-Eq : (xs : String) → List.rev (List.rev xs) Eq.≡ xs
-  rev-rev-Eq [] = Eq.refl
-  rev-rev-Eq (x ∷ xs) =
-    ++-rev-Eq (List.rev xs) (x ∷ [])
-    Eq.∙ Eq.ap (x ∷_) (rev-rev-Eq xs)
-
-  ++-cancelʳEq : ∀ {xs ys : String} (w : String)
-              → xs ++ w Eq.≡ ys ++ w → xs Eq.≡ ys
-  ++-cancelʳEq {xs = xs} {ys = ys} w p =
-    Eq.sym (rev-rev-Eq xs)
-    Eq.∙ Eq.ap List.rev
-         (++-cancelˡEq (List.rev w)
-           (Eq.sym (++-rev-Eq xs w)
-            Eq.∙ Eq.ap List.rev p
-            Eq.∙ ++-rev-Eq ys w))
-    Eq.∙ rev-rev-Eq ys
 
 open StrongEquivalence
 
@@ -240,8 +201,6 @@ opaque
       ∙ cong (_++ s .fst .snd) (Eq.eqToPath (p .snd))
       )
 
-
-
   ⌈⌉-⊗&-distL⁻ :
     (⌈ w ⌉ ⊗ A) & (⌈ w ⌉ ⊗ B) ⊢ ⌈ w ⌉ ⊗ (A & B)
   ⌈⌉-⊗&-distL⁻ {w = w} {A = A} {B = B} w' ((s , p , q) , (s' , p' , q')) =
@@ -291,21 +250,21 @@ opaque
         p')
       ) , q
 
-  -- ===== Eq-world variants for parser-evaluation =====
-  --
-  -- The path-world `⌈⌉-⊗&-distL⁻` / `⌈⌉-⊗&-distR⁻` above build their
-  -- result with a path-typed `subst B path q'`. When such a term is
-  -- evaluated on a concrete parser input it expands into nested
-  -- `hcomp (λ i → empty)` / `transp (λ i → …) i0 …` layers, even when
-  -- the path is propositionally `refl`. The auto-generated indexed-data
-  -- transport for `μ` (`transpX-μ`) ends up driving the resulting normal
-  -- form, blowing up internal witness evaluation.
-  --
-  -- These Eq-world variants compute the splitting-merger via
-  -- `Eq.transport B 12≡-Eq q'`, where `12≡-Eq` is built directly from
-  -- `uniquely-supported-⌈⌉Eq`, `Eq.∙`, `Eq.ap`, `Eq.sym`. Each step
-  -- bottoms out at `Eq.refl` on canonical `mkstring` inputs, so the
-  -- transport reduces away definitionally (`Eq.transport B Eq.refl q' = q'`).
+  char-⊗&-distL⁻Eq :
+    (char ⊗ A) & (char ⊗ B) ⊢ char ⊗ (A & B)
+  char-⊗&-distL⁻Eq {B = B} w ((s , p , q) , (s' , p' , q')) =
+    s , (p , q , Eq.transport B s≡-Eq q')
+    where
+    chain : p' .fst ∷ s' .fst .snd Eq.≡ p .fst ∷ s .fst .snd
+    chain =
+      Eq.ap (_++ s' .fst .snd) (Eq.sym (p' .snd))
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+      Eq.∙ Eq.ap (_++ s .fst .snd) (p .snd)
+
+    s≡-Eq : s' .fst .snd Eq.≡ s .fst .snd
+    s≡-Eq = cons-inj₂Eq chain
+
   ⌈⌉-⊗&-distL⁻Eq :
     (⌈ w ⌉ ⊗ A) & (⌈ w ⌉ ⊗ B) ⊢ ⌈ w ⌉ ⊗ (A & B)
   ⌈⌉-⊗&-distL⁻Eq {w = w} {B = B} w' ((s , p , q) , (s' , p' , q')) =
@@ -328,6 +287,35 @@ opaque
 
     12≡-Eq : s' .fst .snd Eq.≡ s .fst .snd
     12≡-Eq = ++-cancelˡEq (s .fst .fst) chain
+
+  char-⊗&-distR⁻Eq :
+    (A ⊗ char) & (B ⊗ char) ⊢ (A & B) ⊗ char
+  char-⊗&-distR⁻Eq {A = A} {B = B} w ((s , p , q) , (s' , p' , q')) =
+    s , (p , Eq.transport B 11≡-Eq p') , q
+    where
+    chain : s' .fst .fst ++ (q' .fst ∷ []) Eq.≡ s .fst .fst ++ (q .fst ∷ [])
+    chain =
+      Eq.ap (s' .fst .fst ++_) (Eq.sym (q' .snd))
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+      Eq.∙ Eq.ap (s .fst .fst ++_) (q .snd)
+
+    rev-chain :
+      q' .fst ∷ List.rev (s' .fst .fst)
+        Eq.≡ q .fst ∷ List.rev (s .fst .fst)
+    rev-chain =
+      Eq.sym (++-rev-Eq (s' .fst .fst) (q' .fst ∷ []))
+      Eq.∙ Eq.ap List.rev chain
+      Eq.∙ ++-rev-Eq (s .fst .fst) (q .fst ∷ [])
+
+    rev≡ : List.rev (s' .fst .fst) Eq.≡ List.rev (s .fst .fst)
+    rev≡ = cons-inj₂Eq rev-chain
+
+    11≡-Eq : s' .fst .fst Eq.≡ s .fst .fst
+    11≡-Eq =
+      Eq.sym (rev-rev-Eq (s' .fst .fst))
+      Eq.∙ Eq.ap List.rev rev≡
+      Eq.∙ rev-rev-Eq (s .fst .fst)
 
   ⌈⌉-⊗&-distR⁻Eq :
     (A ⊗ ⌈ w ⌉) & (B ⊗ ⌈ w ⌉) ⊢ (A & B) ⊗ ⌈ w ⌉
@@ -432,3 +420,14 @@ char-⊗&-distR≅ .ret = the-ret
           refl
         ))
       )
+
+opaque
+  unfolding unique-splitting-charL unique-splitting-charR
+            unique-splitting-literalL unique-splitting-literalR
+            unique-splitting-⌈⌉L unique-splitting-⌈⌉R
+            char-⊗&-distL⁻ char-⊗&-distR⁻
+            ⌈⌉-⊗&-distL⁻ ⌈⌉-⊗&-distR⁻
+            char-⊗&-distL⁻Eq char-⊗&-distR⁻Eq
+            ⌈⌉-⊗&-distL⁻Eq ⌈⌉-⊗&-distR⁻Eq
+  unfoldTinyDefs : Unit
+  unfoldTinyDefs = tt

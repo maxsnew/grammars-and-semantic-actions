@@ -7,6 +7,7 @@ module Grammar.Sum.Binary.AsPrimitive.Properties (Alphabet : hSet ℓ-zero) wher
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Bool using (Bool ; false ; true ; _≟_ ; isSetBool ; true≢false)
 open import Cubical.Data.FinSet
+open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
 
 open import Grammar.Base Alphabet
@@ -199,3 +200,10 @@ isMono-⊕-inr {B = B}{A = A}{C = C} e e' inr∘e≡inr∘e' =
 
   r : (id {A = C} ,& e) ≡ (id ,& e')
   r = isMono-distiso∘inr (id ,& e) (id ,& e') q
+
+opaque
+  unfolding _⊕_ inl inr ⊕-elim ⊕≡ ⊕-βl ⊕-βr ⊕-η
+            ⊕-swap-invol ⊗⊕-distL ⊗⊕-distR
+            isSetGrammar⊕ id,⊕id≡id ⊕p-seq
+  unfoldSumBinaryDefs : Unit
+  unfoldSumBinaryDefs = tt
