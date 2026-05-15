@@ -9,6 +9,7 @@ open import Cubical.Functions.Embedding
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.String.Base Alphabet
@@ -23,10 +24,12 @@ private
     A : Grammar ℓA
     B : Grammar ℓB
 
+-- pick-parse w A x w (mk⌈⌉ w) = Eq.transport A (uniquely-supported-⌈⌉Eq w w (mk⌈⌉ w)) x.
+-- The Eq-proof is a `w Eq.≡ w` which is prop, so equals `Eq.refl`, and
+-- `Eq.transport A Eq.refl x` reduces to `x` definitionally.
 pick-parse≡ : (w : String) → (x : A w) → (pick-parse w A x) w (mk⌈⌉ w) ≡ x
 pick-parse≡ {A = A} w x =
-  cong (λ a → transport (λ i → A (a i)) x) (isSetString _ _ _ _)
-  ∙ transportRefl x
+  cong (λ q → Eq.transport A q x) (isSetEqString w w _ Eq.refl)
 
 pick-parse≡' : (w : String) → (x y : A w) → pick-parse w A x ≡ pick-parse w A y → x ≡ y
 pick-parse≡' {A = A} w x y parse≡ =

@@ -45,6 +45,45 @@ private
     C : Grammar ℓC
     D : Grammar ℓD
 
+private
+  -- Local Eq-world list helpers, used by the Eq-world distributors below.
+  -- They mirror the Eq.J-based defs in `Grammar.Later.Properties`.
+  tail-Eq : String → String
+  tail-Eq [] = []
+  tail-Eq (_ ∷ xs) = xs
+
+  cons-inj₂Eq : ∀ {x y : ⟨ Alphabet ⟩}{xs ys : String}
+              → x ∷ xs Eq.≡ y ∷ ys → xs Eq.≡ ys
+  cons-inj₂Eq = Eq.ap tail-Eq
+
+  ++-cancelˡEq : ∀ (w : String) {xs ys : String}
+              → w ++ xs Eq.≡ w ++ ys → xs Eq.≡ ys
+  ++-cancelˡEq [] p = p
+  ++-cancelˡEq (c ∷ w) p = ++-cancelˡEq w (cons-inj₂Eq p)
+
+  ++-rev-Eq : (xs ys : String) → List.rev (xs ++ ys) Eq.≡ List.rev ys ++ List.rev xs
+  ++-rev-Eq [] ys = Eq.sym (++-unit-r-Eq (List.rev ys))
+  ++-rev-Eq (x ∷ xs) ys =
+    Eq.ap (_++ (x ∷ [])) (++-rev-Eq xs ys)
+    Eq.∙ ++-assoc-Eq (List.rev ys) (List.rev xs) (x ∷ [])
+
+  rev-rev-Eq : (xs : String) → List.rev (List.rev xs) Eq.≡ xs
+  rev-rev-Eq [] = Eq.refl
+  rev-rev-Eq (x ∷ xs) =
+    ++-rev-Eq (List.rev xs) (x ∷ [])
+    Eq.∙ Eq.ap (x ∷_) (rev-rev-Eq xs)
+
+  ++-cancelʳEq : ∀ {xs ys : String} (w : String)
+              → xs ++ w Eq.≡ ys ++ w → xs Eq.≡ ys
+  ++-cancelʳEq {xs = xs} {ys = ys} w p =
+    Eq.sym (rev-rev-Eq xs)
+    Eq.∙ Eq.ap List.rev
+         (++-cancelˡEq (List.rev w)
+           (Eq.sym (++-rev-Eq xs w)
+            Eq.∙ Eq.ap List.rev p
+            Eq.∙ ++-rev-Eq ys w))
+    Eq.∙ rev-rev-Eq ys
+
 open StrongEquivalence
 
 char-⊗⊕-distL⁻ : (char ⊗ A) ⊕ (char ⊗ B) ⊢ char ⊗ (A ⊕ B)
@@ -251,6 +290,67 @@ opaque
         )))
         p')
       ) , q
+
+  -- ===== Eq-world variants for parser-evaluation =====
+  --
+  -- The path-world `⌈⌉-⊗&-distL⁻` / `⌈⌉-⊗&-distR⁻` above build their
+  -- result with a path-typed `subst B path q'`. When such a term is
+  -- evaluated on a concrete parser input it expands into nested
+  -- `hcomp (λ i → empty)` / `transp (λ i → …) i0 …` layers, even when
+  -- the path is propositionally `refl`. The auto-generated indexed-data
+  -- transport for `μ` (`transpX-μ`) ends up driving the resulting normal
+  -- form, blowing up internal witness evaluation.
+  --
+  -- These Eq-world variants compute the splitting-merger via
+  -- `Eq.transport B 12≡-Eq q'`, where `12≡-Eq` is built directly from
+  -- `uniquely-supported-⌈⌉Eq`, `Eq.∙`, `Eq.ap`, `Eq.sym`. Each step
+  -- bottoms out at `Eq.refl` on canonical `mkstring` inputs, so the
+  -- transport reduces away definitionally (`Eq.transport B Eq.refl q' = q'`).
+  ⌈⌉-⊗&-distL⁻Eq :
+    (⌈ w ⌉ ⊗ A) & (⌈ w ⌉ ⊗ B) ⊢ ⌈ w ⌉ ⊗ (A & B)
+  ⌈⌉-⊗&-distL⁻Eq {w = w} {B = B} w' ((s , p , q) , (s' , p' , q')) =
+    s , (p , q , Eq.transport B 12≡-Eq q')
+    where
+    w≡s11 : w Eq.≡ s .fst .fst
+    w≡s11 = uniquely-supported-⌈⌉Eq w (s .fst .fst) p
+
+    w≡s'11 : w Eq.≡ s' .fst .fst
+    w≡s'11 = uniquely-supported-⌈⌉Eq w (s' .fst .fst) p'
+
+    s11≡ : s .fst .fst Eq.≡ s' .fst .fst
+    s11≡ = Eq.sym w≡s11 Eq.∙ w≡s'11
+
+    chain : s .fst .fst ++ s' .fst .snd Eq.≡ s .fst .fst ++ s .fst .snd
+    chain =
+      Eq.ap (_++ s' .fst .snd) s11≡
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+
+    12≡-Eq : s' .fst .snd Eq.≡ s .fst .snd
+    12≡-Eq = ++-cancelˡEq (s .fst .fst) chain
+
+  ⌈⌉-⊗&-distR⁻Eq :
+    (A ⊗ ⌈ w ⌉) & (B ⊗ ⌈ w ⌉) ⊢ (A & B) ⊗ ⌈ w ⌉
+  ⌈⌉-⊗&-distR⁻Eq {w = w} {B = B} w' ((s , p , q) , (s' , p' , q')) =
+    s , (p , Eq.transport B 11≡-Eq p') , q
+    where
+    w≡s12 : w Eq.≡ s .fst .snd
+    w≡s12 = uniquely-supported-⌈⌉Eq w (s .fst .snd) q
+
+    w≡s'12 : w Eq.≡ s' .fst .snd
+    w≡s'12 = uniquely-supported-⌈⌉Eq w (s' .fst .snd) q'
+
+    s12≡ : s' .fst .snd Eq.≡ s .fst .snd
+    s12≡ = Eq.sym w≡s'12 Eq.∙ w≡s12
+
+    chain : s' .fst .fst ++ s .fst .snd Eq.≡ s .fst .fst ++ s .fst .snd
+    chain =
+      Eq.ap (s' .fst .fst ++_) (Eq.sym s12≡)
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+
+    11≡-Eq : s' .fst .fst Eq.≡ s .fst .fst
+    11≡-Eq = ++-cancelʳEq (s .fst .snd) chain
 
 char-⊗&-distR≅ : (A & B) ⊗ char ≅ (A ⊗ char) & (B ⊗ char)
 char-⊗&-distR≅ .fun = ⊗&-distR

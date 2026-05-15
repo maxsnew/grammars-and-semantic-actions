@@ -9,6 +9,7 @@ open import Cubical.Functions.Embedding
 
 open import Cubical.Data.FinSet
 open import Cubical.Data.Unit
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.Top.Base Alphabet
@@ -34,14 +35,18 @@ isLang→unambiguous' {A = A} unambig' e e' _ =
 
 opaque
   unfolding ⊤
+  -- Post-merge `pick-parse` lands in the Eq-world via
+  --   pick-parse w A x w (mk⌈⌉ w) = Eq.transport A (uniquely-supported-⌈⌉Eq w w (mk⌈⌉ w)) x.
+  -- The internal Eq-proof inhabits `w Eq.≡ w`, which is propositional, so
+  -- it agrees with `Eq.refl` and the whole transport is the identity. We
+  -- stay in Eq world by moving along that proof-irrelevance path; no
+  -- cubical `transp` / `subst` is needed on the witness.
   isMono⊤→injective : {e : B ⊢ ⊤} →
     isMono e → ∀ w p p' → e w p ≡ e w p' → p ≡ p'
   isMono⊤→injective {B = B}{e = e} mono-e w p p' ewp≡ =
-    sym (transportRefl p)
-    ∙ cong (λ a → transp (λ i → B (a i)) i0 p) (isSetString _ w refl _)
+    cong (λ q → Eq.transport B q p) (isSetEqString w w Eq.refl _)
     ∙ funExt⁻ (funExt⁻ (mono-e (pick-parse w B p) (pick-parse w B p') refl) w) (mk⌈⌉ w)
-    ∙ cong (λ a → transp (λ i → B (a i)) i0 p') (isSetString _ w _ refl)
-    ∙ transportRefl p'
+    ∙ cong (λ q → Eq.transport B q p') (isSetEqString w w _ Eq.refl)
 
 opaque
   unfolding ⊤
