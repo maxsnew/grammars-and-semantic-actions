@@ -155,6 +155,10 @@ opaque
 pick-parse : ∀ (w : String) → (A : Grammar ℓA) → A w → ⌈ w ⌉ ⊢ A
 pick-parse w A pA w' p⌈⌉ = Eq.transport A (uniquely-supported-⌈⌉Eq w w' p⌈⌉) pA
 
+⌈⌉-++ : ∀ w w' → ⌈ w ⌉ ⊗ ⌈ w' ⌉ ⊢ ⌈ w ++ w' ⌉
+⌈⌉-++ [] w' = ⊗-unit-l
+⌈⌉-++ (c ∷ w) w' = id ,⊗ ⌈⌉-++ w w' ∘g ⊗-assoc⁻
+
 ⌈⌉→string : ∀ w → ⌈ w ⌉ ⊢ string
 ⌈⌉→string [] = NIL
 ⌈⌉→string (c ∷ w) = CONS ∘g σ c ,⊗ ⌈⌉→string w

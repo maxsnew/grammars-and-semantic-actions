@@ -5,6 +5,7 @@ open import Cubical.Foundations.Structure
 module Parser.Base (Alphabet : hSet ℓ-zero) where
 
 import Cubical.Data.Sum as Sum
+open import Cubical.Data.Unit
 open import Cubical.Data.Bool using (Bool ; true ; false)
 
 open import Grammar Alphabet
@@ -30,7 +31,10 @@ open Parser
 open WeakEquivalence
 
 -- Utilities to benchmark a Parser
-module _ {A : Grammar ℓA} {B : Grammar ℓB} (P : Parser A B) where
+-- We actually don't need the disjointness to run the test,
+-- so this isn't actually about the whole Parser type, just the fun field
+-- This should probably get moved elsewhere then
+module RunIncompleteParser {A : Grammar ℓA} {B : Grammar ℓB} (P : string ⊢ A ⊕ B) where
   private
     is-inl? : ∀ {X : Type ℓX} {Y : Type ℓY} →
       X Sum.⊎ Y → Bool
@@ -39,14 +43,22 @@ module _ {A : Grammar ℓA} {B : Grammar ℓB} (P : Parser A B) where
 
   opaque
     unfolding unfoldGrammarDefs
-    run : (w : String) → Parser.retTy P w
-    run w = P .fun w (mkstring w)
+    run : (w : String) → (A ⊕ B) w
+    run w = P w (mkstring w)
 
     accept? : (w : String) → Bool
     accept? w = is-inl? (run w)
 
-  ParserTest : (w : String) → Type _
-  ParserTest w = Σ[ x ∈ Parser.retTy P w ] run w ≡ x
+  parse? : (w : String) → Type _
+  parse? w = Σ[ x ∈ (A ⊕ B) w ] run w ≡ x
+
+module RunParser {ℓA} {ℓB} {A : Grammar ℓA} {B : Grammar ℓB} (P : Parser A B)
+  = RunIncompleteParser (P .fun)
+
+opaque
+  unfolding RunIncompleteParser.run
+  unfoldParserDefs : Unit
+  unfoldParserDefs = tt
 
 module _ {A : Grammar ℓA} {B : Grammar ℓB} {C : Grammar ℓC}
   (P : Parser A B) (A≈C : A ≈ C) where
