@@ -387,5 +387,29 @@ opaque
   _ : prettyD.tokenize-and-parse? "[[]]"
   _ = Sum.inl (bal (bal mt mt) mt , tt) , refl
 
-  _ : prettyD.tokenize-and-parse? "[[][]]"
-  _ = Sum.inl (bal (bal mt (bal mt mt)) mt , tt) , refl
+  -- This case is a bit slower than the rest
+  -- I think its due to tokenization overhead for longer strings
+  _ : prettyD.tokenize-and-parse? "[[][]][][][][][[[[[[]]]]]][][][][[]][[[][][[]][[]][[[]]][[[][][][[]]]]]]"
+  _ = Sum.inl
+       (bal (bal mt (bal mt mt))
+        (bal mt
+         (bal mt
+          (bal mt
+           (bal mt
+            (bal (bal (bal (bal (bal (bal mt mt) mt) mt) mt) mt)
+             (bal mt
+              (bal mt
+               (bal mt
+                (bal (bal mt mt)
+                 (bal
+                  (bal
+                   (bal mt
+                    (bal mt
+                     (bal (bal mt mt)
+                      (bal (bal mt mt)
+                       (bal (bal (bal mt mt) mt)
+                        (bal (bal (bal mt (bal mt (bal mt (bal (bal mt mt) mt)))) mt)
+                         mt))))))
+                   mt)
+                  mt))))))))))
+        , tt) , refl
