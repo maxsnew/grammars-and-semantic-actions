@@ -29,7 +29,7 @@ open StrongEquivalence
 dyck-prefix-¬null : ⟨ ¬Nullable (literal LP ⊗ Dyck ⊗ literal RP) ⟩
 dyck-prefix-¬null = ¬Nullable⊗l (disjoint-ε-literal LP)
 
-fallback-nil : ∀  {A : Grammar ℓA} → A ⊢ MaybeLeft Dyck
+fallback-nil : ∀  {ℓA} {A : Grammar ℓA} → A ⊢ MaybeLeft Dyck
 fallback-nil = just ∘g NIL ,⊗ id ∘g ⊗-unit-l⁻ ∘g string-intro
 
 -- just nil
