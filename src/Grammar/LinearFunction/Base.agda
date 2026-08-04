@@ -8,6 +8,8 @@ module Grammar.LinearFunction.Base (Alphabet : hSet ℓ-zero) where
 open import Cubical.Data.List
 open import Cubical.Data.Sigma
 open import Cubical.Data.Nat
+open import Cubical.Data.Unit
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.HLevels.Base Alphabet
@@ -41,11 +43,11 @@ opaque
     A ⊗ B ⊢ C →
     B ⊢ C ⟜ A
   ⟜-intro e _ p w' q =
-    e _ ((_ , refl) , (q , p))
+    e _ ((_ , Eq.refl) , (q , p))
 
   ⟜-app :
     A ⊗ (B ⟜ A) ⊢ B
-  ⟜-app {B = B} _ p = subst B (sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
+  ⟜-app {B = B} _ p = Eq.transport B (Eq.sym (p .fst .snd)) (p .snd .snd _ (p .snd .fst))
 
 ⟜-intro-ε :
   A ⊢ C → ε ⊢ C ⟜ A
@@ -64,22 +66,18 @@ opaque
   ⟜-curry {A = A} =
     ⟜-intro (⟜-intro {C = A}(⟜-app ∘g ⊗-assoc))
 
+  -- Now refl if the witness to splitting is Eq.refl
   ⟜-β :
     (m : (A ⊗ B) ⊢ C) →
-    (⟜-intro⁻ (⟜-intro m))
-      ≡
-    m
-  ⟜-β {C = C} m = funExt (λ w → funExt (λ p⊗ →
-    fromPathP {A = λ i → C (p⊗ .fst .snd (~ i))}
-      (congP (λ _ → m _) (⊗PathP refl refl))))
+    (⟜-intro⁻ (⟜-intro m)) ≡ m
+  ⟜-β m = funExt λ w → funExt λ where
+    (((_ , _) , Eq.refl) , a , b) → refl
 
+  -- Definitional η from using Splitting Eq!
   ⟜-η :
     (f : A ⊢ B ⟜ C) →
-    f
-      ≡
-    (⟜-intro (⟜-intro⁻ f))
-  ⟜-η f = funExt (λ w → funExt (λ p⊗ → funExt (λ w' → funExt
-    (λ q⊗ → sym (transportRefl (f _ p⊗ w' q⊗))))))
+    f ≡ (⟜-intro (⟜-intro⁻ f))
+  ⟜-η f = refl
 
 ⟜UMP : ∀ {A : Grammar ℓA}{B : Grammar ℓB}{C : Grammar ℓC}
   → Iso (A ⊗ B ⊢ C) (B ⊢ C ⟜ A)
@@ -94,12 +92,12 @@ opaque
     A ⊗ B ⊢  C →
     A ⊢ B ⊸ C
   ⊸-intro e _ p w' q =
-    e _ ((_ , refl) , p , q)
+    e _ ((_ , Eq.refl) , p , q)
 
   ⊸-app :
     (A ⊸ B) ⊗ A ⊢ B
   ⊸-app {B = B} _ (((w' , w'') , w≡w'++w'') , f , inp) =
-    subst B (sym w≡w'++w'') (f _ inp)
+    Eq.transport B (Eq.sym w≡w'++w'') (f _ inp)
 
 ⊸-intro⁻ :
   A ⊢ B ⊸ C →
@@ -112,15 +110,13 @@ opaque
   ⊸-η :
     (e : A ⊢ B ⊸ C) →
     ⊸-intro (⊸-intro⁻ e) ≡ e
-  ⊸-η e = funExt λ w → funExt λ pA →
-    funExt λ w' → funExt λ pB → transportRefl _
+  ⊸-η e = refl
 
   ⊸-β :
     (e : A ⊗ B ⊢ C) →
     ⊸-intro⁻ (⊸-intro e) ≡ e
-  ⊸-β e = funExt λ w → funExt λ p⊗ →
-    fromPathP (congP₂ (λ _ → e) (sym (p⊗ .fst .snd))
-      (⊗PathP refl refl))
+  ⊸-β e = funExt λ w → funExt λ where
+    (((_ , _) , Eq.refl) , a , b) → refl
 
 -- THE ORDER SWAPS!
 ⊸-mapCod : C ⊢ D → A ⊸ C ⊢ A ⊸ D
@@ -133,9 +129,7 @@ opaque
   unfolding ⊸-intro
   ⊸-mapCod-precomp : (e : A ⊢ B)(f : C ⊗ D ⊢ A) →
     ⊸-mapCod e ∘g ⊸-intro f ≡ ⊸-intro (e ∘g f)
-  ⊸-mapCod-precomp {A = A}{B = B}{D = D} e f =
-    funExt λ w → funExt λ p → funExt λ w' → funExt λ q →
-    cong (e (w ++ w')) (transportRefl (⊸-intro {B = D} f w p w' q))
+  ⊸-mapCod-precomp e f = refl
 
 opaque
   unfolding ⊗-intro
@@ -156,8 +150,10 @@ opaque
   unfolding ⊸-intro
   ⊸-mapDom-precomp : (e : A ⊢ B)(f : C ⊗ B ⊢ B) →
     ⊸-mapDom e ∘g ⊸-intro f ≡ ⊸-intro (f ∘g id ,⊗ e)
-  ⊸-mapDom-precomp {A = A}{B = B} e f =
-      ⊸-η {C = B} (⊸-intro (f ∘g id ,⊗ e))
+  ⊸-mapDom-precomp {A = A}{B = B} e f = refl
+     -- With the path-based splitting this was
+     -- ⊸-η {C = B} (⊸-intro (f ∘g id ,⊗ e))
+     -- but now we have definitonal η
 
 opaque
   unfolding ⊗-intro
@@ -245,36 +241,31 @@ opaque
     cong ((⊸-app ∘g id ,⊗ x) ∘g_) ⊗-unit-r⁻⊗-intro
     ∙ λ i → ⊸-β f i ∘g (id ,⊗ x) ∘g ⊗-unit-r⁻
 
-⊸≡ : ∀ (f f' : A ⊢ C ⊸ B)
-  → ⊸-app ∘g (f ,⊗ id) ≡ ⊸-app ∘g (f' ,⊗ id)
-  → f ≡ f'
-⊸≡ f f' p =
-  sym (⊸-η f)
-  ∙ cong ⊸-intro p
-  ∙ ⊸-η f'
-
-⟜≡ : ∀ (f f' : A ⊢ C ⟜ B)
-  → ⟜-app ∘g (id ,⊗ f) ≡ ⟜-app ∘g (id ,⊗ f')
-  → f ≡ f'
-⟜≡ f f' p =
-  ⟜-η f
-  ∙ cong ⟜-intro p
-  ∙ sym (⟜-η f')
+opaque
+  unfolding _⊸_ ⊸-app
+  ⊸≡ : ∀ (f f' : A ⊢ C ⊸ B)
+    → ⊸-app ∘g (f ,⊗ id) ≡ ⊸-app ∘g (f' ,⊗ id)
+    → f ≡ f'
+  ⊸≡ f f' = cong ⊸-intro
 
 opaque
-  unfolding ⊗-intro
+  unfolding _⟜_
+  ⟜≡ : ∀ (f f' : A ⊢ C ⟜ B)
+    → ⟜-app ∘g (id ,⊗ f) ≡ ⟜-app ∘g (id ,⊗ f')
+    → f ≡ f'
+  ⟜≡ f f' = cong ⟜-intro
+
+opaque
+  unfolding ⊗-intro ⊸-intro
+
+  -- Definitional naturality now using SplittingEq
   ⊸-intro-natural :
     ⊸-intro f ∘g f' ≡ ⊸-intro (f ∘g f' ,⊗ id)
-  ⊸-intro-natural {f = f}{f' = f'} = ⊸≡ _ _
-    ((λ i → ⊸-β f i ∘g (f' ,⊗ id))
-    ∙ sym (⊸-β _) )
+  ⊸-intro-natural {f = f}{f' = f'} = refl
 
   ⟜-intro-natural :
     ⟜-intro f ∘g f' ≡ ⟜-intro (f ∘g id ,⊗ f')
-  ⟜-intro-natural {f = f}{f' = f'} =
-    ⟜≡ _ _
-      ((λ i → ⟜-β f i ∘g (id ,⊗ f'))
-      ∙ sym (⟜-β _))
+  ⟜-intro-natural {f = f}{f' = f'} = refl
 
 opaque
   unfolding _⊸_
@@ -296,25 +287,20 @@ Term→Element : A ⊢ B → ↑ (A ⊸ B)
 Term→Element e = ⊸-intro (e ∘g ⊗-unit-l) [] ε-intro
 
 opaque
-  unfolding ε-elim
+  unfolding ε-elim ⊸-intro ⊗-unit-l⁻
   Term≅Element : Iso (A ⊢ B) (↑ (A ⊸ B))
   Term≅Element {A = A} {B = B} =
-    iso Term→Element Element→Term
-      (λ b →
-        cong (λ z → ⊸-intro (⊸-app ∘g (ε-elim b) ,⊗ id ∘g z) [] ε-intro) ⊗-unit-ll⁻
-        ∙ cong (λ z → z [] ε-intro) (⊸-η (ε-elim b))
-        ∙ ε-β {A = A ⊸ B} b
-      )
-      (λ e →
-        ⊸-app ∘g ε-elim (⊸-intro (e ∘g ⊗-unit-l) ∘ε ε-intro) ,⊗ id ∘g ⊗-unit-l⁻
-          ≡⟨ cong (λ z → ⊸-app ∘g z ,⊗ id ∘g ⊗-unit-l⁻)
-              (sym (ε-elim-natural ε-intro (⊸-intro (e ∘g ⊗-unit-l))))⟩
-        ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l) ∘g ε-elim ε-intro) ,⊗ id ∘g ⊗-unit-l⁻
-          ≡⟨ cong (λ z → ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l) ∘g z) ,⊗ id ∘g ⊗-unit-l⁻)
-               (funExt λ w → funExt λ p → isSetString w [] (ε-elim {A = ε} ε-intro w p) p)⟩
-        ⊸-app ∘g (⊸-intro (e ∘g ⊗-unit-l)) ,⊗ id ∘g ⊗-unit-l⁻
-          ≡⟨ cong (_∘g ⊗-unit-l⁻) (⊸-β (e ∘g ⊗-unit-l)) ⟩
-        e ∘g ⊗-unit-l ∘g ⊗-unit-l⁻
-          ≡⟨ cong (e ∘g_) ⊗-unit-l⁻l ⟩
-        e
-        ∎)
+    -- With SplittingEq, this is a defintional iso
+    iso Term→Element Element→Term (λ _ → refl) λ _ → refl
+
+opaque
+  unfolding _⟜_ _⊸_
+            ⟜-intro ⟜-app ⟜-curry ⟜-β ⟜-η ⟜≡ ⟜-intro-natural
+            ⊸-intro ⊸-app ⊸-β ⊸-η ⊸≡ ⊸-intro-natural
+            ⊸-mapCod-precomp ⊸-mapCod-postcompε
+            ⊸-mapDom-precomp ⊸-mapDom-postcompε
+            ⊸-app⟜0⊗
+            isSetGrammar⊸ isSetGrammar⟜
+            Term≅Element
+  unfoldLinearFunctionDefs : Unit
+  unfoldLinearFunctionDefs = tt

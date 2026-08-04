@@ -16,9 +16,10 @@ open import Cubical.Foundations.Structure
 module Grammar.External.String.Tiny (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.List as List hiding (rec)
-open import Cubical.Data.List.More
 import Cubical.Data.Sum as Sum
 open import Cubical.Data.Sigma
+open import Cubical.Data.Unit
+import Cubical.Data.Equality as Eq
 
 open import Grammar.Base Alphabet
 open import Grammar.Top Alphabet
@@ -103,11 +104,11 @@ opaque
     same-splits {w = λ _ → w} p q
   unique-splitting-charL  w (s , (c , p) , q) (s' , (c' , p') , q') =
     ≡-×
-      (p ∙ cong (_∷ []) (cons-inj₁ w≡) ∙ sym p')
+      (Eq.eqToPath p ∙ cong (_∷ []) (cons-inj₁ w≡) ∙ sym (Eq.eqToPath p'))
       (cons-inj₂ w≡)
     where
     w≡ : [ c ] ++ s .fst .snd ≡ [ c' ] ++ s' .fst .snd
-    w≡ = sym (s .snd ∙ cong (_++ s. fst .snd) p) ∙ s' .snd ∙ cong (_++ s' .fst .snd) p'
+    w≡ = sym (Eq.eqToPath (s .snd) ∙ cong (_++ s. fst .snd) (Eq.eqToPath p)) ∙ Eq.eqToPath (s' .snd) ∙ cong (_++ s' .fst .snd) (Eq.eqToPath p')
 
 
   opaque
@@ -129,10 +130,10 @@ opaque
   unique-splitting-charR {A = A} w (s , p , (c , q)) (s' , p' , (c' , q')) =
     ≡-×
       (snoc-inj₁ w≡)
-      (q ∙ cong (_∷ []) (snoc-inj₂ w≡) ∙ sym q')
+      (Eq.eqToPath q ∙ cong (_∷ []) (snoc-inj₂ w≡) ∙ sym (Eq.eqToPath q'))
     where
     w≡ : s .fst .fst ++ [ c ] ≡ s' .fst .fst ++ [ c' ]
-    w≡ = sym (s .snd ∙ cong (s .fst .fst ++_) q) ∙ s' .snd ∙ cong (s' .fst .fst ++_) q'
+    w≡ = sym (Eq.eqToPath (s .snd) ∙ cong (s .fst .fst ++_) (Eq.eqToPath q)) ∙ Eq.eqToPath (s' .snd) ∙ cong (s' .fst .fst ++_) (Eq.eqToPath q')
 
   opaque
     unfolding ⊗-intro
@@ -160,7 +161,7 @@ module _ (x : String) where
         sym (dropLength++ (s' .fst .fst))
         ∙ cong (drop (length (s' .fst .fst)))
           (cong (_++ s .fst .snd) (sym 11≡)
-          ∙ sym (s .snd) ∙ (s' .snd))
+          ∙ sym (Eq.eqToPath (s .snd)) ∙ (Eq.eqToPath (s' .snd)))
         ∙ dropLength++ (s' .fst .fst)
         )
         where
@@ -177,7 +178,7 @@ module _ (x : String) where
         (
         sym (dropBackLength++ (s .fst .fst) (s .fst .snd))
         ∙ cong (dropBack (length (s .fst .snd)))
-           (sym (s .snd) ∙ (s' .snd) ∙ cong (s' .fst .fst ++_) (sym 12≡))
+           (sym (Eq.eqToPath (s .snd)) ∙ (Eq.eqToPath (s' .snd)) ∙ cong (s' .fst .fst ++_) (sym 12≡))
         ∙ dropBackLength++ (s' .fst .fst) (s .fst .snd)
         )
         12≡
@@ -194,10 +195,10 @@ opaque
     where
     s≡ : s' .fst .snd ≡ s .fst .snd
     s≡ = cons-inj₂
-      (cong (_++ s' .fst .snd) (sym (p' .snd))
-      ∙ sym (s' .snd)
-      ∙ s .snd
-      ∙ cong (_++ s .fst .snd) (p .snd)
+      (cong (_++ s' .fst .snd) (sym (Eq.eqToPath (p' .snd)))
+      ∙ sym (Eq.eqToPath (s' .snd))
+      ∙ Eq.eqToPath (s .snd)
+      ∙ cong (_++ s .fst .snd) (Eq.eqToPath (p .snd))
       )
 
   ⌈⌉-⊗&-distL⁻ :
@@ -218,6 +219,30 @@ opaque
         w'
         (s , p , q)
         (s' , p' , q')
+
+    12≡ : s' .fst .snd ≡ s .fst .snd
+    12≡ = sym (cong snd s≡)
+
+  -- Generalization of ⌈⌉-⊗&-distL⁻ where the left factor P of the
+  -- first ⊗ is any grammar with a chosen morphism P ⊢ ⌈ w ⌉.  The
+  -- output keeps P (not just ⌈ w ⌉), so we can refine the right
+  -- factor while preserving the original prefix witness.
+  ⌈⌉-prefix-push : ∀ {w} {P : Grammar ℓA} {A : Grammar ℓB} {B : Grammar ℓC}
+    → (P ⊢ ⌈ w ⌉)
+    → (P ⊗ A) & (⌈ w ⌉ ⊗ B) ⊢ P ⊗ (A & B)
+  ⌈⌉-prefix-push {w = w} {A = A} {B = B} P→⌈⌉ w'
+    ((s , p , q) , (s' , p' , q')) =
+    s , (p , q , subst B 12≡ q')
+    where
+    pw : ⌈ w ⌉ (s .fst .fst)
+    pw = P→⌈⌉ (s .fst .fst) p
+
+    s≡ : same-splits
+           {A = ⌈ w ⌉} {B = A} {C = ⌈ w ⌉} {D = B}
+           {w = λ _ → w'}
+           (s , pw , q) (s' , p' , q')
+    s≡ = unique-splitting-⌈⌉L w {A = A} {B = B} w'
+           (s , pw , q) (s' , p' , q')
 
     12≡ : s' .fst .snd ≡ s .fst .snd
     12≡ = sym (cong snd s≡)
@@ -249,6 +274,124 @@ opaque
         p')
       ) , q
 
+  char-⊗&-distL⁻Eq :
+    (char ⊗ A) & (char ⊗ B) ⊢ char ⊗ (A & B)
+  char-⊗&-distL⁻Eq {B = B} w ((s , p , q) , (s' , p' , q')) =
+    s , (p , q , Eq.transport B s≡-Eq q')
+    where
+    chain : p' .fst ∷ s' .fst .snd Eq.≡ p .fst ∷ s .fst .snd
+    chain =
+      Eq.ap (_++ s' .fst .snd) (Eq.sym (p' .snd))
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+      Eq.∙ Eq.ap (_++ s .fst .snd) (p .snd)
+
+    s≡-Eq : s' .fst .snd Eq.≡ s .fst .snd
+    s≡-Eq = cons-inj₂Eq chain
+
+  ⌈⌉-⊗&-distL⁻Eq :
+    (⌈ w ⌉ ⊗ A) & (⌈ w ⌉ ⊗ B) ⊢ ⌈ w ⌉ ⊗ (A & B)
+  ⌈⌉-⊗&-distL⁻Eq {w = w} {B = B} w' ((s , p , q) , (s' , p' , q')) =
+    s , (p , q , Eq.transport B 12≡-Eq q')
+    where
+    w≡s11 : w Eq.≡ s .fst .fst
+    w≡s11 = uniquely-supported-⌈⌉Eq w (s .fst .fst) p
+
+    w≡s'11 : w Eq.≡ s' .fst .fst
+    w≡s'11 = uniquely-supported-⌈⌉Eq w (s' .fst .fst) p'
+
+    s11≡ : s .fst .fst Eq.≡ s' .fst .fst
+    s11≡ = Eq.sym w≡s11 Eq.∙ w≡s'11
+
+    chain : s .fst .fst ++ s' .fst .snd Eq.≡ s .fst .fst ++ s .fst .snd
+    chain =
+      Eq.ap (_++ s' .fst .snd) s11≡
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+
+    12≡-Eq : s' .fst .snd Eq.≡ s .fst .snd
+    12≡-Eq = ++-cancelˡEq (s .fst .fst) chain
+
+  -- "Keep" variant: when the left factor carries an extra `P`-witness
+  -- alongside the `⌈ w ⌉` prefix, the merged splitting preserves it.
+  ⌈⌉-⊗&-keep-distL⁻Eq :
+    ∀ {ℓP ℓQ ℓR} {P : Grammar ℓP} {Q : Grammar ℓQ} {R : Grammar ℓR}
+      {w : String} →
+    ((P & ⌈ w ⌉) ⊗ Q) & (⌈ w ⌉ ⊗ R) ⊢ (P & ⌈ w ⌉) ⊗ (Q & R)
+  ⌈⌉-⊗&-keep-distL⁻Eq {R = R} {w = w} w'
+    ((s , (pP , p⌈⌉) , q) , (s' , p' , q')) =
+    s , ((pP , p⌈⌉) , q , Eq.transport R 12≡-Eq q')
+    where
+    w≡s11 : w Eq.≡ s .fst .fst
+    w≡s11 = uniquely-supported-⌈⌉Eq w (s .fst .fst) p⌈⌉
+
+    w≡s'11 : w Eq.≡ s' .fst .fst
+    w≡s'11 = uniquely-supported-⌈⌉Eq w (s' .fst .fst) p'
+
+    s11≡ : s .fst .fst Eq.≡ s' .fst .fst
+    s11≡ = Eq.sym w≡s11 Eq.∙ w≡s'11
+
+    chain : s .fst .fst ++ s' .fst .snd Eq.≡ s .fst .fst ++ s .fst .snd
+    chain =
+      Eq.ap (_++ s' .fst .snd) s11≡
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+
+    12≡-Eq : s' .fst .snd Eq.≡ s .fst .snd
+    12≡-Eq = ++-cancelˡEq (s .fst .fst) chain
+
+  char-⊗&-distR⁻Eq :
+    (A ⊗ char) & (B ⊗ char) ⊢ (A & B) ⊗ char
+  char-⊗&-distR⁻Eq {A = A} {B = B} w ((s , p , q) , (s' , p' , q')) =
+    s , (p , Eq.transport B 11≡-Eq p') , q
+    where
+    chain : s' .fst .fst ++ (q' .fst ∷ []) Eq.≡ s .fst .fst ++ (q .fst ∷ [])
+    chain =
+      Eq.ap (s' .fst .fst ++_) (Eq.sym (q' .snd))
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+      Eq.∙ Eq.ap (s .fst .fst ++_) (q .snd)
+
+    rev-chain :
+      q' .fst ∷ List.rev (s' .fst .fst)
+        Eq.≡ q .fst ∷ List.rev (s .fst .fst)
+    rev-chain =
+      Eq.sym (++-rev-Eq (s' .fst .fst) (q' .fst ∷ []))
+      Eq.∙ Eq.ap List.rev chain
+      Eq.∙ ++-rev-Eq (s .fst .fst) (q .fst ∷ [])
+
+    rev≡ : List.rev (s' .fst .fst) Eq.≡ List.rev (s .fst .fst)
+    rev≡ = cons-inj₂Eq rev-chain
+
+    11≡-Eq : s' .fst .fst Eq.≡ s .fst .fst
+    11≡-Eq =
+      Eq.sym (rev-rev-Eq (s' .fst .fst))
+      Eq.∙ Eq.ap List.rev rev≡
+      Eq.∙ rev-rev-Eq (s .fst .fst)
+
+  ⌈⌉-⊗&-distR⁻Eq :
+    (A ⊗ ⌈ w ⌉) & (B ⊗ ⌈ w ⌉) ⊢ (A & B) ⊗ ⌈ w ⌉
+  ⌈⌉-⊗&-distR⁻Eq {w = w} {B = B} w' ((s , p , q) , (s' , p' , q')) =
+    s , (p , Eq.transport B 11≡-Eq p') , q
+    where
+    w≡s12 : w Eq.≡ s .fst .snd
+    w≡s12 = uniquely-supported-⌈⌉Eq w (s .fst .snd) q
+
+    w≡s'12 : w Eq.≡ s' .fst .snd
+    w≡s'12 = uniquely-supported-⌈⌉Eq w (s' .fst .snd) q'
+
+    s12≡ : s' .fst .snd Eq.≡ s .fst .snd
+    s12≡ = Eq.sym w≡s'12 Eq.∙ w≡s12
+
+    chain : s' .fst .fst ++ s .fst .snd Eq.≡ s .fst .fst ++ s .fst .snd
+    chain =
+      Eq.ap (s' .fst .fst ++_) (Eq.sym s12≡)
+      Eq.∙ Eq.sym (s' .snd)
+      Eq.∙ s .snd
+
+    11≡-Eq : s' .fst .fst Eq.≡ s .fst .fst
+    11≡-Eq = ++-cancelʳEq (s .fst .snd) chain
+
 char-⊗&-distR≅ : (A & B) ⊗ char ≅ (A ⊗ char) & (B ⊗ char)
 char-⊗&-distR≅ .fun = ⊗&-distR
 char-⊗&-distR≅ .inv = char-⊗&-distR⁻
@@ -260,7 +403,7 @@ char-⊗&-distR≅ {A = A} {B = B} .sec = the-sec
     the-sec = funExt λ w → funExt λ p →
       ΣPathP (refl ,
         ΣPathP (
-          (Splitting≡ (unique-splitting-charR w (p .fst) (p .snd))) ,
+          (SplittingEq≡ (unique-splitting-charR w (p .fst) (p .snd))) ,
           ΣPathP (
             symP (transport-filler _ (fst (p .snd .snd))) ,
             isProp→PathP (λ i → unambiguous→isLang unambiguous-char _) _ _
@@ -300,7 +443,7 @@ char-⊗&-distR≅ .ret = the-ret
       ΣPathP (
         refl ,
         (ΣPathP (
-          Splitting≡
+          SplittingEq≡
             (unique-splitting-⌈⌉R w w' (p .fst) (p .snd))
             ,
           ΣPathP (
@@ -329,3 +472,15 @@ char-⊗&-distR≅ .ret = the-ret
           refl
         ))
       )
+
+opaque
+  unfolding unique-splitting-charL unique-splitting-charR
+            unique-splitting-literalL unique-splitting-literalR
+            unique-splitting-⌈⌉L unique-splitting-⌈⌉R
+            char-⊗&-distL⁻ char-⊗&-distR⁻
+            ⌈⌉-⊗&-distL⁻ ⌈⌉-⊗&-distR⁻
+            char-⊗&-distL⁻Eq char-⊗&-distR⁻Eq
+            ⌈⌉-⊗&-distL⁻Eq ⌈⌉-⊗&-distR⁻Eq
+            ⌈⌉-⊗&-keep-distL⁻Eq
+  unfoldTinyDefs : Unit
+  unfoldTinyDefs = tt

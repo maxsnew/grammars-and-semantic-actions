@@ -3,6 +3,8 @@ open import Cubical.Foundations.HLevels
 
 module Grammar.Function.AsPrimitive.Base (Alphabet : hSet ℓ-zero) where
 
+open import Cubical.Data.Unit
+
 open import Grammar.Base Alphabet
 open import Grammar.Product.Binary.AsPrimitive.Base Alphabet
 open import Grammar.LinearProduct.Base Alphabet
@@ -79,3 +81,8 @@ id⇒ = term⇒ id
   B ⊢ A ⇒ C
   → A & B ⊢ C
 ⇐-intro⁻ f = ⇒-app ∘g &-intro (f ∘g π₂) π₁
+
+opaque
+  unfolding _⇒_ ⇒-intro ⇒-app ⇒-β ⇒-η
+  unfoldFunctionDefs : Unit
+  unfoldFunctionDefs = tt

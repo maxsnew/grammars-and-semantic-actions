@@ -4,6 +4,7 @@ open import Cubical.Foundations.HLevels
 module Grammar.Sum.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.Unit
 import Cubical.Data.Empty as Empty
 open import Cubical.Data.Maybe hiding (rec)
 
@@ -123,3 +124,8 @@ module _
 
   isSetGrammar⊕ᴰ : isSet X → (∀ x → isSetGrammar (A x)) → isSetGrammar (⊕ᴰ A)
   isSetGrammar⊕ᴰ isSetX isSetGrammarA w = isSetΣ isSetX (λ x → isSetGrammarA x w)
+
+opaque
+  unfolding ⊕ᴰ-distL ⊕ᴰ-distR ⊕ᴰ-distL-β ⊕ᴰ-distR-β
+  unfoldSumIndexedDefs : Unit
+  unfoldSumIndexedDefs = tt

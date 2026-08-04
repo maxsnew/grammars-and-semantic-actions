@@ -7,6 +7,7 @@ module Grammar.Product.Binary.AsPrimitive.Properties (Alphabet : hSet ℓ-zero) 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
 open import Cubical.Data.Bool
+open import Cubical.Data.Unit
 
 open import Grammar.Base Alphabet
 open import Grammar.Properties.Base Alphabet
@@ -62,3 +63,9 @@ module _ (A B : Grammar ℓA) where
   &≅Ind& .inv = Ind&→&
   &≅Ind& .sec = the-sec
   &≅Ind& .ret = the-ret
+
+opaque
+  unfolding _&_ &-intro π₁ π₂ &-β₁ &-β₂ &-η &-η' &≡
+            &-swap-invol isSetGrammar&
+  unfoldProductBinaryDefs : Unit
+  unfoldProductBinaryDefs = tt

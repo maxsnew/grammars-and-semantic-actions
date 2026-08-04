@@ -6,6 +6,7 @@ module Grammar.Bottom.Properties (Alphabet : hSet ℓ-zero) where
 
 open import Cubical.Data.Empty as Empty hiding (⊥ ; ⊥*)
 import Cubical.Data.Sum as Sum
+open import Cubical.Data.Unit
 
 open import Grammar.Base Alphabet
 open import Grammar.Properties Alphabet
@@ -161,3 +162,9 @@ module _ (A : Grammar ℓA) where
 
 ⊥⊗ : ⊥ ⊗ A ⊢ ⊥
 ⊥⊗ = ⊸-app ∘g ⊥-elim ,⊗ id
+
+opaque
+  unfolding ⊥ ⊥* ⊥-elim ⊥*-elim ⊥-η get⊥
+            is-initial-⊥ is-initial-⊥* is-strict-initial-⊥
+  unfoldBottomDefs : Unit
+  unfoldBottomDefs = tt

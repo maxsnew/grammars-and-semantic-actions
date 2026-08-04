@@ -1,3 +1,4 @@
+{-# OPTIONS -WnoUnsupportedIndexedMatch #-}
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.HLevels
@@ -45,7 +46,7 @@ open StrongEquivalence
 
 module Determinization
   (N : NFA ℓN)
-  (isFinSetAlphabet : isFinSet ⟨ Alphabet ⟩ )
+  (discAlphabet : Discrete ⟨ Alphabet ⟩)
   (isFinOrd-Q : isFinOrd ⟨ N .Q ⟩)
   (isFinOrd-transition : isFinOrd ⟨ N .transition ⟩)
   (isFinOrd-ε-transition : isFinOrd ⟨ N .ε-transition ⟩)
@@ -163,6 +164,24 @@ module Determinization
               ((∥ Walk' q q' ∥₁ , isPropPropTrunc) ,
               DecReachable isFinOrd-ε-transition q q')
 
+    witness-ε-bounded :
+      (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
+      q ∈ε (ε-closure X) →
+      (Σ[ q' ∈ ⟨ N.Q ⟩ ]
+       Σ[ q'∈X ∈ X q' .fst .fst ]
+       Σ[ k ∈ FD.Fin (N.Q .snd .fst) ]
+       Walk q q' (FD.toℕ k))
+    witness-ε-bounded q X q∈εX =
+      let
+        q' , q'∈X , ∣walk'∣ =
+          SplitSupport-FinOrd (isFinOrd-εclosure-witnesses q X q∈εX) q∈εX in
+      let
+        n , walk , uniq =
+          SplitSupport-FinOrd
+            (isFinOrdUniqueWalk isFinOrd-ε-transition q q')
+            (PT.map (λ (n , walk) → Walk→UniqueWalk walk) ∣walk'∣) in
+      q' , q'∈X , n , walk
+
     witness-ε :
       (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →
       q ∈ε (ε-closure X) →
@@ -172,20 +191,29 @@ module Determinization
        Walk q q' n)
     witness-ε q X q∈εX =
       let
-        q' , q'∈X , ∣walk'∣ =
-          SplitSupport-FinOrd (isFinOrd-εclosure-witnesses q X q∈εX) q∈εX in
-      let
-        n , walk , uniq =
-          SplitSupport-FinOrd
-            (isFinOrdUniqueWalk isFinOrd-ε-transition q q')
-            (PT.map (λ (n , walk) → Walk→UniqueWalk walk) ∣walk'∣) in
-      q' , q'∈X , FD.toℕ n , walk
+        w = witness-ε-bounded q X q∈εX
+      in
+      w .fst , w .snd .fst , FD.toℕ (w .snd .snd .fst) , w .snd .snd .snd
+
+  -- Walks compose with the ε-closure property: if X is ε-closed and a walk
+  -- starts inside X, every state on the walk is also inside X.
+  ε-closure-walk-closed :
+    (X : εClosedℙQ) →
+    (q-end q-start : ⟨ N.Q ⟩) →
+    (m : ℕ) →
+    Walk q-end q-start m →
+    q-start ∈ε X →
+    q-end ∈ε X
+  ε-closure-walk-closed X q-end .q-end zero nil q-start∈X = q-start∈X
+  ε-closure-walk-closed X q-end .(N.ε-src e) (suc m) (cons _ e walk) q-start∈X =
+    ε-closure-walk-closed X q-end (N.ε-dst e) m walk
+      (ε-closure-transition e X q-start∈X)
 
   opaque
     unfolding ε-closure
     lit-reach : ⟨ Alphabet ⟩ → ⟨ N.Q ⟩ → ⟨ FinSetDecℙ N.Q ⟩
     lit-reach c q-start =
-      N.hasTransition (isFinSet→Discrete isFinSetAlphabet) q-start c
+      N.hasTransition discAlphabet q-start c
 
     lit-closure : ⟨ Alphabet ⟩ → ⟨ FinSetDecℙ N.Q ⟩ → ⟨ FinSetDecℙ N.Q ⟩
     lit-closure c X = FinSetDecℙ∃ N.Q N.Q X (lit-reach c)
@@ -211,7 +239,7 @@ module Determinization
          isFinOrdΣ ⟨ N.transition ⟩ isFinOrd-transition
               _ λ t →
               isFinOrdΣ (N.label t Eq.≡ c)
-                (DecProp→isFinOrd (isFinSet→DecProp-Eq≡ isFinSetAlphabet (N.label t) c)) _
+                (DecProp→isFinOrd (Discrete→DecProp-Eq≡ discAlphabet (N.label t) c)) _
                (λ _ → isFinOrdΣ _ (DecProp→isFinOrd (isFinSet→DecProp-Eq≡ (str N.Q) (N.src t) q')) _
                  λ _ → DecProp→isFinOrd (isFinSet→DecProp-Eq≡ (str N.Q) (N.dst t) q))
 
@@ -232,6 +260,16 @@ module Determinization
         isFinOrdΣ (X q' .fst .fst) (DecProp→isFinOrd (X q')) _
           λ q'∈X →
             isFinOrd∥∥ _ (isFinOrd-matching-transition c q q') )
+
+    -- Builder for lit-closure membership: a transition t from q' ∈ X yields
+    -- N.dst t ∈ lit-closure (N.label t) X.  Dual to `witness-lit`.
+    lit-closure-mk :
+      (t : ⟨ N.transition ⟩) →
+      (X : ⟨ FinSetDecℙ N.Q ⟩) →
+      X (N.src t) .fst .fst →
+      (lit-closure (N.label t) X) (N.dst t) .fst .fst
+    lit-closure-mk t X src∈X =
+      ∣ N.src t , (src∈X , ∣ t , refl , refl , refl ∣₁) ∣₁
 
     witness-lit :
       (c : ⟨ Alphabet ⟩) → (q : ⟨ N.Q ⟩) → (X : ⟨ FinSetDecℙ N.Q ⟩ ) →

@@ -375,15 +375,22 @@ isSet→prop-Eq≡ isSetA a b Eq.refl y =
   cong (Eq.pathToEq) (isSetA a b (Eq.eqToPath Eq.refl) (Eq.eqToPath y)) ∙
   Eq.pathToEq-eqToPath y
 
+Discrete→DecProp-Eq≡ :
+  ∀ {ℓ} → {A : Type ℓ} →
+  Discrete A →
+  (a b : A) →
+  DecProp ℓ
+Discrete→DecProp-Eq≡ discA a b =
+  ((a Eq.≡ b) ,
+  (isSet→prop-Eq≡ (Discrete→isSet discA) a b)) ,
+  Discrete→dec-Eq≡ discA a b
+
 isFinSet→DecProp-Eq≡ :
   ∀ {ℓ} → {A : Type ℓ} →
   isFinSet A →
   (a b : A) →
   DecProp ℓ
-isFinSet→DecProp-Eq≡ isFinSetA a b =
-  ((a Eq.≡ b) ,
-  (isSet→prop-Eq≡ (isFinSet→isSet isFinSetA) a b)) ,
-  Discrete→dec-Eq≡ (isFinSet→Discrete isFinSetA) a b
+isFinSet→DecProp-Eq≡ isFinSetA = Discrete→DecProp-Eq≡ (isFinSet→Discrete isFinSetA)
 
 SplitSupport-FinOrd : ∀ {ℓ} → {A : Type ℓ} →
   isFinOrd A → SplitSupport A
